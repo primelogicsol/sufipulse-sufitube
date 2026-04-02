@@ -1,0 +1,340 @@
+/*
+ * Global Institutional Form System
+ * Refined, disciplined focus states for all form elements
+ * Follows research-institute aesthetic: calm, authoritative, accessible
+ */
+
+:root {
+  /* Focus State Colors */
+  --form-focus-gold: #C8A75E;
+  --form-hover-gold: #A8904F;
+  --form-error-red: #B23A3A;
+  --form-success-green: #2F6B4F;
+
+  /* Border Colors */
+  --form-border-default: rgba(255, 255, 255, 0.25);
+  --form-border-hover: var(--form-hover-gold);
+  --form-border-focus: var(--form-focus-gold);
+  --form-border-error: var(--form-error-red);
+
+  /* Focus Ring */
+  --form-focus-ring: rgba(200, 167, 94, 0.25);
+
+  /* Background Adjustments */
+  --form-bg-default: rgba(26, 35, 50, 0.6);
+  --form-bg-hover-adjust: rgba(255, 255, 255, 0.03);
+  --form-bg-active-adjust: rgba(0, 0, 0, 0.03);
+
+  /* Transitions */
+  --form-transition: all 200ms ease-in-out;
+}
+
+/* Base Form Input Styles */
+.form-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select {
+  background-color: var(--form-bg-default);
+  border: 2px solid var(--form-border-default);
+  transition: var(--form-transition);
+  outline: none;
+  color: #ffffff;
+}
+
+/* Hover State - Subtle acknowledgment */
+.form-input:hover:not(:disabled),
+input[type="text"]:hover:not(:disabled),
+input[type="email"]:hover:not(:disabled),
+input[type="password"]:hover:not(:disabled),
+input[type="number"]:hover:not(:disabled),
+input[type="tel"]:hover:not(:disabled),
+input[type="url"]:hover:not(:disabled),
+input[type="search"]:hover:not(:disabled),
+input[type="date"]:hover:not(:disabled),
+input[type="time"]:hover:not(:disabled),
+input[type="datetime-local"]:hover:not(:disabled),
+textarea:hover:not(:disabled),
+select:hover:not(:disabled) {
+  border-color: var(--form-border-hover);
+  background-color: var(--form-bg-hover-adjust);
+}
+
+/* Focus State - Disciplined, visible, accessible */
+.form-input:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="search"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--form-border-focus);
+  box-shadow: 0 0 0 2px var(--form-focus-ring);
+  outline: none;
+}
+
+/* Active State - Subtle darkening */
+.form-input:active:not(:disabled),
+input[type="text"]:active:not(:disabled),
+input[type="email"]:active:not(:disabled),
+input[type="password"]:active:not(:disabled),
+input[type="number"]:active:not(:disabled),
+input[type="tel"]:active:not(:disabled),
+input[type="url"]:active:not(:disabled),
+input[type="search"]:active:not(:disabled),
+input[type="date"]:active:not(:disabled),
+input[type="time"]:active:not(:disabled),
+input[type="datetime-local"]:active:not(:disabled),
+textarea:active:not(:disabled),
+select:active:not(:disabled) {
+  background-color: var(--form-bg-active-adjust);
+  border-color: var(--form-border-focus);
+}
+
+/* Error State */
+.form-input.error,
+.form-input[aria-invalid="true"],
+input.error,
+textarea.error,
+select.error {
+  border-color: var(--form-border-error);
+}
+
+.form-input.error:focus,
+.form-input[aria-invalid="true"]:focus,
+input.error:focus,
+textarea.error:focus,
+select.error:focus {
+  border-color: var(--form-border-error);
+  box-shadow: 0 0 0 2px rgba(178, 58, 58, 0.2);
+}
+
+/* Success State */
+.form-input.success,
+input.success,
+textarea.success,
+select.success {
+  border-color: var(--form-success-green);
+}
+
+.form-input.success:focus,
+input.success:focus,
+textarea.success:focus,
+select.success:focus {
+  border-color: var(--form-success-green);
+  box-shadow: 0 0 0 2px rgba(47, 107, 79, 0.2);
+}
+
+/* Disabled State */
+.form-input:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: var(--form-border-default);
+}
+
+.form-input:disabled:hover,
+input:disabled:hover,
+textarea:disabled:hover,
+select:disabled:hover {
+  border-color: var(--form-border-default);
+  background-color: transparent;
+}
+
+/* Checkbox & Radio Buttons */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--form-border-default);
+  transition: var(--form-transition);
+  cursor: pointer;
+  outline: none;
+}
+
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) {
+  border-color: var(--form-border-hover);
+}
+
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+  border-color: var(--form-border-focus);
+  box-shadow: 0 0 0 2px var(--form-focus-ring);
+  outline: none;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  border-color: var(--form-border-focus);
+  background-color: var(--form-focus-gold);
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* File Input */
+input[type="file"] {
+  transition: var(--form-transition);
+  cursor: pointer;
+}
+
+input[type="file"]:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+input[type="file"]:focus {
+  outline: 2px solid var(--form-border-focus);
+  outline-offset: 2px;
+}
+
+input[type="file"]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Custom Tailwind Integration - Override existing focus utilities */
+.focus\:outline-none:focus,
+.focus\:border-\[var\(--color-gold\)\]:focus,
+.focus\:ring-2:focus,
+.focus\:border-amber-400\/50:focus,
+.focus\:border-neutral-700:focus {
+  border-color: var(--form-border-focus) !important;
+  box-shadow: 0 0 0 2px var(--form-focus-ring) !important;
+  outline: none !important;
+}
+
+/* Ensure consistency across custom React components */
+.form-field input,
+.form-field textarea,
+.form-field select,
+[class*="form-"] input,
+[class*="form-"] textarea,
+[class*="form-"] select {
+  border: 1px solid var(--form-border-default);
+  transition: var(--form-transition);
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus,
+[class*="form-"] input:focus,
+[class*="form-"] textarea:focus,
+[class*="form-"] select:focus {
+  border-color: var(--form-border-focus);
+  box-shadow: 0 0 0 2px var(--form-focus-ring);
+  outline: none;
+}
+
+/* Keyboard Navigation Enhancement */
+*:focus-visible {
+  outline: 2px solid var(--form-border-focus);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--form-focus-ring);
+  border-color: var(--form-border-focus);
+}
+
+/* Remove default browser styling that conflicts */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Select dropdown styling */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23C8A75E' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center;
+  background-size: 12px !important;
+  padding-right: 2.5rem;
+}
+
+select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23C8A75E' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-size: 12px !important;
+}
+
+/* Ensure dropdown arrow works with Tailwind bg classes */
+select[class*="bg-"] {
+  background-repeat: no-repeat !important;
+  background-size: 12px !important;
+  background-position: right 0.75rem center !important;
+}
+
+/* Select option styling - fix dropdown background */
+select option {
+  background-color: #171717 !important;
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+select option:checked {
+  background-color: #2563eb !important;
+  background-image: none !important;
+  color: #ffffff;
+}
+
+select option:hover {
+  background-color: #262626 !important;
+  background-image: none !important;
+  color: #ffffff;
+}
+
+/* Placeholder text styling */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+  color: rgba(200, 167, 94, 0.6);
+}
+
+/* Autofill styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: inherit;
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  transition: background-color 5000s ease-in-out 0s;
+  border-color: var(--form-border-focus);
+}
