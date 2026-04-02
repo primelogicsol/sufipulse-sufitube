@@ -9,7 +9,17 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.next
+.vercel
+build
+coverage
+
 *.local
+.env
+.env.local
+.env.production
+.env.development
+frontend.env
 
 .vscode/*
 !.vscode/extensions.json
@@ -20,4 +30,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env
