@@ -234,9 +234,33 @@ export async function getReleaseCreds(releaseId: string): Promise<cms.ReleaseCre
   return stored ? JSON.parse(stored) : [];
 }
 
+export async function saveReleaseCreds(
+  releaseId: string,
+  credits: cms.ReleaseCredit[],
+  options?: { append?: boolean }
+): Promise<cms.ReleaseCredit[]> {
+  const append = options?.append !== false;
+  const existing = append ? await getReleaseCreds(releaseId) : [];
+  const merged = [...existing, ...credits];
+  localStorage.setItem(`cms_credits_${releaseId}`, JSON.stringify(merged));
+  return merged;
+}
+
 export async function getReleaseLyrics(releaseId: string): Promise<cms.ReleaseLyrics[]> {
   const stored = localStorage.getItem(`cms_lyrics_${releaseId}`);
   return stored ? JSON.parse(stored) : [];
+}
+
+export async function saveReleaseLyrics(
+  releaseId: string,
+  lyrics: cms.ReleaseLyrics[],
+  options?: { append?: boolean }
+): Promise<cms.ReleaseLyrics[]> {
+  const append = options?.append !== false;
+  const existing = append ? await getReleaseLyrics(releaseId) : [];
+  const merged = [...existing, ...lyrics];
+  localStorage.setItem(`cms_lyrics_${releaseId}`, JSON.stringify(merged));
+  return merged;
 }
 
 // Bulk Import

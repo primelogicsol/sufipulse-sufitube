@@ -3,8 +3,14 @@
 
 import { useEffect, useState } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import { getBulkImports, createBulkImport } from '@/lib/cms-api';
-import type { BulkImport } from '@/lib/cms-types';
+import {
+  getBulkImports,
+  createBulkImport,
+  getReleaseById,
+  saveReleaseCreds,
+  saveReleaseLyrics,
+} from '@/lib/cms-api';
+import type { BulkImport, ReleaseCredit, ReleaseLyrics } from '@/lib/cms-types';
 import { Upload, Download, CheckCircle, AlertCircle, Clock, Trash2 } from 'lucide-react';
 
 export default function BulkImportPage() {
@@ -144,6 +150,83 @@ export default function BulkImportPage() {
     });
   };
 
+  const parseCreditsCsv = (content: string) => {
+    const rows = parseCsvRows(content);
+    if (rows.length < 2) return [];
+
+    const headers = rows[0].map((h) => h.trim().toLowerCase());
+    const records = rows.slice(1);
+
+    return records.flatMap((cells, idx) => {
+      const row: Record<string, string> = {};
+      headers.forEach((header, hIdx) => {
+        row[header] = (cells[hIdx] || '').replace(/^"|"$/g, '').trim();
+      });
+
+      const releaseId = row.release_id || '';
+      const creditType = row.credit_type || '';
+      const namesRaw = row.names || '';
+
+      if (!releaseId || !creditType || !namesRaw) {
+        throw new Error(`Row ${idx + 2}: release_id, credit_type, and names are required`);
+      }
+
+      const names = namesRaw.split('|').map((n) => n.trim()).filter(Boolean);
+      if (!names.length) {
+        throw new Error(`Row ${idx + 2}: names must contain at least one value`);
+      }
+
+      return names.map((name, nameIdx) => ({
+        id: `credit_${Date.now()}_${idx}_${nameIdx}`,
+        release_id: releaseId,
+        role: row.category ? `${row.category}:${creditType}` : creditType,
+        name,
+        created_at: new Date().toISOString(),
+      }));
+    });
+  };
+
+  const parseLyricsCsv = (content: string) => {
+    const rows = parseCsvRows(content);
+    if (rows.length < 2) return [];
+
+    const headers = rows[0].map((h) => h.trim().toLowerCase());
+    const records = rows.slice(1);
+
+    return records.map((cells, idx) => {
+      const row: Record<string, string> = {};
+      headers.forEach((header, hIdx) => {
+        row[header] = (cells[hIdx] || '').replace(/^"|"$/g, '').trim();
+      });
+
+      const releaseId = row.release_id || '';
+      const languageCode = row.language_code || '';
+      const contentValue = row.content || '';
+
+      if (!releaseId || !languageCode || !contentValue) {
+        throw new Error(`Row ${idx + 2}: release_id, language_code, and content are required`);
+      }
+
+      return {
+        id: `lyrics_${Date.now()}_${idx}`,
+        release_id: releaseId,
+        language: languageCode,
+        title: row.format || undefined,
+        lyrics_text: contentValue,
+        metadata: row.format ? { format: row.format } : undefined,
+        created_at: new Date().toISOString(),
+      };
+    });
+  };
+
+  const groupByReleaseId = <T extends { release_id: string }>(items: T[]): Record<string, T[]> => {
+    return items.reduce((acc, item) => {
+      if (!acc[item.release_id]) acc[item.release_id] = [];
+      acc[item.release_id].push(item);
+      return acc;
+    }, {} as Record<string, T[]>);
+  };
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -157,47 +240,92 @@ export default function BulkImportPage() {
 
       const text = await file.text();
 
-      if (importType !== 'releases') {
+      let successCount = 0;
+      let failCount = 0;
+      const errors: string[] = [];
+
+      let totalRows = 0;
+
+      if (importType === 'releases') {
+        const parsed = parseReleaseCsv(text);
+        totalRows = parsed.length;
+
+        for (let i = 0; i < parsed.length; i++) {
+          const payload = parsed[i];
+          try {
+            const response = await fetch('/api/releases', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}));
+              failCount++;
+              errors.push(`Row ${i + 2}: ${data?.error || 'Save failed'}`);
+              continue;
+            }
+
+            successCount++;
+          } catch (error: any) {
+            failCount++;
+            errors.push(`Row ${i + 2}: ${error?.message || 'Unknown error'}`);
+          }
+        }
+      } else if (importType === 'credits') {
+        const parsedCredits = parseCreditsCsv(text);
+        totalRows = parsedCredits.length;
+        const grouped = groupByReleaseId(parsedCredits);
+
+        for (const [releaseId, credits] of Object.entries(grouped)) {
+          try {
+            const release = await getReleaseById(releaseId);
+            if (!release) {
+              failCount += credits.length;
+              errors.push(`Release not found: ${releaseId}`);
+              continue;
+            }
+
+            await saveReleaseCreds(releaseId, credits as ReleaseCredit[], { append: true });
+            successCount += credits.length;
+          } catch (error: any) {
+            failCount += credits.length;
+            errors.push(`Release ${releaseId}: ${error?.message || 'Failed to save credits'}`);
+          }
+        }
+      } else if (importType === 'lyrics') {
+        const parsedLyrics = parseLyricsCsv(text);
+        totalRows = parsedLyrics.length;
+        const grouped = groupByReleaseId(parsedLyrics);
+
+        for (const [releaseId, lyrics] of Object.entries(grouped)) {
+          try {
+            const release = await getReleaseById(releaseId);
+            if (!release) {
+              failCount += lyrics.length;
+              errors.push(`Release not found: ${releaseId}`);
+              continue;
+            }
+
+            await saveReleaseLyrics(releaseId, lyrics as ReleaseLyrics[], { append: true });
+            successCount += lyrics.length;
+          } catch (error: any) {
+            failCount += lyrics.length;
+            errors.push(`Release ${releaseId}: ${error?.message || 'Failed to save lyrics'}`);
+          }
+        }
+      } else {
         const importLog = await createBulkImport(importType, file.name, [], {
           successfulItems: 0,
           failedItems: 0,
           status: 'completed',
-          errorLog: 'Parser currently enabled for releases CSV only.',
+          errorLog: 'Parser not implemented yet for this import type.',
         });
         setImports([importLog, ...imports]);
         return;
       }
 
-      const parsed = parseReleaseCsv(text);
-
-      let successCount = 0;
-      let failCount = 0;
-      const errors: string[] = [];
-
-      for (let i = 0; i < parsed.length; i++) {
-        const payload = parsed[i];
-        try {
-          const response = await fetch('/api/releases', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-
-          if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            failCount++;
-            errors.push(`Row ${i + 2}: ${data?.error || 'Save failed'}`);
-            continue;
-          }
-
-          successCount++;
-        } catch (error: any) {
-          failCount++;
-          errors.push(`Row ${i + 2}: ${error?.message || 'Unknown error'}`);
-        }
-      }
-
-      const importLog = await createBulkImport(importType, file.name, parsed, {
+      const importLog = await createBulkImport(importType, file.name, Array.from({ length: totalRows }), {
         successfulItems: successCount,
         failedItems: failCount,
         status: failCount > 0 ? 'failed' : 'completed',
@@ -207,7 +335,7 @@ export default function BulkImportPage() {
       setImports([importLog, ...imports]);
 
       if (failCount > 0) {
-        alert(`Imported ${successCount}/${parsed.length} releases. ${failCount} failed.`);
+        alert(`Imported ${successCount}/${totalRows} ${importType}. ${failCount} failed.`);
       }
     } catch (error) {
       console.error('Error uploading:', error);
