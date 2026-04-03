@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { upsertAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 
 /**
  * GET /api/adoptions/[id]/google-oauth/callback
@@ -56,22 +57,41 @@ export async function GET(
       throw new Error(tokens.error_description || 'Token exchange failed');
     }
 
-    // Store tokens against the adoption record via internal PATCH
-    // In a database backend you would persist refresh_token securely.
-    // In the localStorage standalone app the client must apply this via the
-    // redirect URL parameters (the server cannot write to the browser's localStorage).
-    const tokenPayload = encodeURIComponent(
-      JSON.stringify({
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token || null,
-        expires_in: tokens.expires_in,
-        token_type: tokens.token_type,
-      })
-    );
+    // Optional: discover accounts this token can access (for launch-time validation)
+    let accessibleCustomerIds: string[] = [];
+    try {
+      const accessibleRes = await fetch('https://googleads.googleapis.com/v17/customers:listAccessibleCustomers', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+          'developer-token': process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
+        },
+      });
+      const accessiblePayload = await accessibleRes.json();
+      if (accessibleRes.ok && Array.isArray(accessiblePayload?.resourceNames)) {
+        accessibleCustomerIds = accessiblePayload.resourceNames
+          .map((name: string) => String(name || '').split('/').pop() || '')
+          .filter(Boolean)
+          .map((id: string) => {
+            if (id.length === 10) return `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}`;
+            return id;
+          });
+      }
+    } catch {
+      // Non-fatal — we'll still persist token and validate later at launch time.
+    }
 
-    // Redirect back to the page — client will read the params and update storage
+    await upsertAdoptionGoogleOAuthRecord({
+      adoptionId,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token || null,
+      tokenType: tokens.token_type,
+      expiresInSeconds: Number(tokens.expires_in || 0),
+      accessibleCustomerIds,
+    });
+
     return NextResponse.redirect(
-      `${appUrl}/?adoption_oauth=success&adoption_id=${adoptionId}&tokens=${tokenPayload}`
+      `${appUrl}/?adoption_oauth=success&adoption_id=${adoptionId}`
     );
   } catch (err: any) {
     console.error('Google OAuth callback error:', err);

@@ -33,6 +33,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
   const [adoption, setAdoption] = useState<SongAdoption | null>(null);
+  const [oauthConnected, setOauthConnected] = useState<boolean>(false);
+  const [oauthChecked, setOauthChecked] = useState<boolean>(false);
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   // Load packages on mount
@@ -44,6 +46,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
     };
     loadPackages();
   }, []);
+
+  useEffect(() => {
+    async function checkOAuthStatus() {
+      if (!adoption?.id || selectedMethod !== 'use_my_google_ads') {
+        setOauthConnected(false);
+        setOauthChecked(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/adoptions/${adoption.id}/google-oauth/status`);
+        const payload = await res.json();
+        setOauthConnected(Boolean(payload?.connected));
+      } catch {
+        setOauthConnected(false);
+      } finally {
+        setOauthChecked(true);
+      }
+    }
+
+    checkOAuthStatus();
+  }, [adoption?.id, selectedMethod]);
 
   const handleMethodSelect = (method: 'managed_sufitube' | 'use_my_google_ads') => {
     setSelectedMethod(method);
@@ -645,11 +669,18 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <p className="text-sm text-neutral-400">
             Next step: authorize SufiPulse to set up the campaign structure in your Google Ads account.
           </p>
+          {oauthChecked && (
+            <p className={`text-xs ${oauthConnected ? 'text-green-400' : 'text-amber-300'}`}>
+              {oauthConnected
+                ? 'Google Ads OAuth connected for this adoption. Admin can launch campaign after approval + payment confirmation.'
+                : 'Google Ads OAuth not connected yet.'}
+            </p>
+          )}
           <a
             href={`/api/adoptions/${adoption.id}/google-oauth`}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Connect Google Ads Account
+            {oauthConnected ? 'Reconnect Google Ads Account' : 'Connect Google Ads Account'}
           </a>
         </div>
       )}

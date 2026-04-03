@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 
 /**
  * POST /api/admin/google-ads/create-campaign
@@ -120,11 +121,11 @@ export async function POST(request: NextRequest) {
     customerId = studioCustomerId;
   } else {
     // use_my_google_ads
-    if (!sponsor_access_token || !sponsor_customer_id) {
+    if (!sponsor_customer_id) {
       return NextResponse.json(
         {
           error:
-            "Sponsor's Google Ads access token and customer ID are required. The sponsor must complete the Google OAuth2 authorization first.",
+            "Sponsor's Google Ads customer ID is required.",
         },
         { status: 400 }
       );
@@ -135,7 +136,37 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
-    accessToken = sponsor_access_token;
+
+    // Prefer server-stored OAuth token bound to adoption_id; do not trust browser token payload.
+    const oauthRecord = await getAdoptionGoogleOAuthRecord(adoption_id);
+    const resolvedAccessToken = oauthRecord?.accessToken || sponsor_access_token;
+
+    if (!resolvedAccessToken) {
+      return NextResponse.json(
+        {
+          error:
+            "Sponsor Google OAuth token not found. Complete the Google OAuth connection step first.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // If we have discovered accessible customer IDs for this OAuth token, enforce membership.
+    if (oauthRecord?.accessibleCustomerIds?.length) {
+      const normalized = sponsor_customer_id.replace(/-/g, '');
+      const allowed = oauthRecord.accessibleCustomerIds.some((cid) => cid.replace(/-/g, '') === normalized);
+      if (!allowed) {
+        return NextResponse.json(
+          {
+            error:
+              `The provided customer ID (${sponsor_customer_id}) is not in the authorized Google Ads accounts for this adoption OAuth connection.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    accessToken = resolvedAccessToken;
     developerToken = studioDevToken;
     customerId = sponsor_customer_id;
     // No login-customer-id needed when acting as the account owner
