@@ -33,8 +33,7 @@ import {
   parseAssFile,
   parseAssStyles,
 } from './subtitle-utils';
-import { ReleaseFeaturesSection } from './components/ReleaseFeaturesSection';
-import { ReleaseMediaInfoSection } from './components/ReleaseMediaInfoSection';
+import { ReleaseFeaturesSection, ReleaseMediaInfoSection } from './components';
 export default function EditReleasePage() {
   const { user } = useAuth();
   const router = useRouter();
