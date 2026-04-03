@@ -8,326 +8,31 @@ import Link from 'next/link';
 import JSZip from 'jszip';
 import type { CMSRelease } from '@/lib/cms-storage';
 
-type SubtitleStatus = 'draft' | 'in_translation' | 'under_review' | 'verified' | 'published' | 'archived';
-
-type LyricsSectionType = 'intro' | 'verse' | 'chorus' | 'bridge' | 'hook' | 'refrain' | 'outro' | 'other';
-
-const LYRICS_SECTION_TYPES: LyricsSectionType[] = ['intro', 'verse', 'chorus', 'bridge', 'hook', 'refrain', 'outro', 'other'];
-
-const ALL_LANGUAGES: { code: string; label: string }[] = [
-  { code: 'en',     label: 'English' },
-  { code: 'ur',     label: 'Urdu' },
-  { code: 'ar',     label: 'Arabic' },
-  { code: 'fa',     label: 'Persian / Farsi' },
-  { code: 'hi',     label: 'Hindi' },
-  { code: 'pa',     label: 'Punjabi' },
-  { code: 'tr',     label: 'Turkish' },
-  { code: 'sd',     label: 'Sindhi' },
-  { code: 'skr',    label: 'Saraiki' },
-  { code: 'bal',    label: 'Balochi' },
-  { code: 'ps',     label: 'Pashto' },
-  { code: 'ks',     label: 'Kashmiri' },
-  { code: 'bn',     label: 'Bengali' },
-  { code: 'gu',     label: 'Gujarati' },
-  { code: 'mr',     label: 'Marathi' },
-  { code: 'ta',     label: 'Tamil' },
-  { code: 'en-rom', label: 'Roman Transliteration' },
-];
-
-type ASSStylePack = {
-  fontFamily?: string;
-  fontSize?: number;
-  primaryColor?: string;
-  secondaryColor?: string;
-  outlineColor?: string;
-  backColor?: string;
-  bold?: boolean;
-  italic?: boolean;
-  outline?: number;
-  shadow?: number;
-  alignment?: number;
-  marginL?: number;
-  marginR?: number;
-  marginV?: number;
-  maxWidthPercent?: number;
-};
-
-const DEFAULT_STYLE_NAME = 'Mystic_Default';
-const DEFAULT_STYLE_PACK: ASSStylePack = {
-  fontFamily: 'Arial',
-  fontSize: 42,
-  primaryColor: '#FFFFFF',
-  secondaryColor: '#FFFF00',
-  outlineColor: '#202020',
-  backColor: '#000000',
-  bold: true,
-  italic: false,
-  outline: 2,
-  shadow: 0,
-  alignment: 2,
-  marginL: 40,
-  marginR: 40,
-  marginV: 28,
-  maxWidthPercent: 82,
-};
-
-const assColorToHex = (value?: string, fallback = '#FFFFFF') => {
-  const source = String(value || '').trim();
-  if (!source) return fallback;
-  if (source.startsWith('#') && source.length === 7) return source.toUpperCase();
-
-  const match = source.match(/&?H([0-9A-Fa-f]{8})/);
-  if (!match) return fallback;
-
-  const hex = match[1].toUpperCase();
-  const bb = hex.slice(2, 4);
-  const gg = hex.slice(4, 6);
-  const rr = hex.slice(6, 8);
-  return `#${rr}${gg}${bb}`;
-};
-
-const normalizeHexColor = (value?: string, fallback = '#FFFFFF') => {
-  const candidate = String(value || '').trim();
-  if (/^#[0-9A-Fa-f]{6}$/.test(candidate)) return candidate.toUpperCase();
-  return fallback;
-};
-
-const assColorToRgba = (value?: string, fallback = 'rgba(0, 0, 0, 0.55)') => {
-  const source = String(value || '').trim();
-  if (!source) return fallback;
-
-  if (/^#[0-9A-Fa-f]{6}$/.test(source)) {
-    const hex = source.replace('#', '');
-    const rr = parseInt(hex.slice(0, 2), 16);
-    const gg = parseInt(hex.slice(2, 4), 16);
-    const bb = parseInt(hex.slice(4, 6), 16);
-    return `rgba(${rr}, ${gg}, ${bb}, 0.7)`;
-  }
-
-  const match = source.match(/&?H([0-9A-Fa-f]{8})/);
-  if (!match) return fallback;
-
-  const hex = match[1].toUpperCase();
-  const aa = parseInt(hex.slice(0, 2), 16);
-  const bb = parseInt(hex.slice(2, 4), 16);
-  const gg = parseInt(hex.slice(4, 6), 16);
-  const rr = parseInt(hex.slice(6, 8), 16);
-  const opacity = Math.max(0, Math.min(1, 1 - aa / 255));
-  return `rgba(${rr}, ${gg}, ${bb}, ${opacity.toFixed(3)})`;
-};
-
-const resolvePreviewAnchor = (alignment?: number) => {
-  const safe = Number.isFinite(alignment as number) ? Number(alignment) : 2;
-  if ([1, 4, 7].includes(safe)) return { x: 'left', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
-  if ([3, 6, 9].includes(safe)) return { x: 'right', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
-  return { x: 'center', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
-};
-
-const getAlignmentLabel = (alignment?: number) => {
-  const labels: Record<number, string> = {
-    1: 'Bottom Left',
-    2: 'Bottom Center',
-    3: 'Bottom Right',
-    4: 'Middle Left',
-    5: 'Middle Center',
-    6: 'Middle Right',
-    7: 'Top Left',
-    8: 'Top Center',
-    9: 'Top Right',
-  };
-  return labels[alignment || 2] || 'Bottom Center';
-};
-
-const normalizeCueTime = (input: string): string => {
-  const cleaned = (input || '').trim().replace(',', '.');
-  const parts = cleaned.split(':');
-  if (parts.length < 2) return '00:00:00.000';
-
-  const padded = [...parts];
-  while (padded.length < 3) padded.unshift('00');
-  const [hh, mm, ssMs] = padded;
-  const [ss, ms = '000'] = (ssMs || '0').split('.');
-
-  const h = String(Number(hh || 0)).padStart(2, '0');
-  const m = String(Number(mm || 0)).padStart(2, '0');
-  const s = String(Number(ss || 0)).padStart(2, '0');
-  const milli = String(Number(ms || 0)).padStart(3, '0').slice(0, 3);
-  return `${h}:${m}:${s}.${milli}`;
-};
-
-const cueTimeToSeconds = (input?: string): number => {
-  const normalized = normalizeCueTime(input || '00:00:00.000');
-  const [hh, mm, ssMs] = normalized.split(':');
-  const [ss, ms = '000'] = ssMs.split('.');
-  return Number(hh) * 3600 + Number(mm) * 60 + Number(ss) + Number(ms) / 1000;
-};
-
-const secondsToCueTime = (seconds: number): string => {
-  const safe = Math.max(0, seconds || 0);
-  const h = Math.floor(safe / 3600);
-  const m = Math.floor((safe % 3600) / 60);
-  const s = Math.floor(safe % 60);
-  const ms = Math.floor((safe % 1) * 1000);
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
-};
-
-const formatPreviewSeconds = (value: number) => {
-  const safe = Math.max(0, value || 0);
-  const hours = Math.floor(safe / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const seconds = Math.floor(safe % 60);
-  const fractional = Math.floor((safe % 1) * 10);
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${fractional}`;
-  }
-  return `${minutes}:${String(seconds).padStart(2, '0')}.${fractional}`;
-};
-
-const triggerBlobDownload = (blob: Blob, filename: string) => {
-  const url = window.URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  window.URL.revokeObjectURL(url);
-};
-
-const extractFilenameFromDisposition = (headerValue: string | null, fallback: string) => {
-  if (!headerValue) return fallback;
-  const match = headerValue.match(/filename="?([^";]+)"?/i);
-  if (!match) return fallback;
-  return match[1] || fallback;
-};
-
-const parseSubtitleFile = (content: string, format: 'srt' | 'vtt') => {
-  const rows = content.replace(/\r/g, '').split('\n');
-  const cues: Array<{ cueNumber: number; startTime: string; endTime: string; text: string }> = [];
-
-  if (format === 'vtt' && rows[0]?.toUpperCase().includes('WEBVTT')) {
-    rows.shift();
-  }
-
-  const blocks = rows.join('\n').split('\n\n').map((b) => b.trim()).filter(Boolean);
-
-  for (const block of blocks) {
-    const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
-    if (!lines.length) continue;
-
-    let idx = 0;
-    if (/^\d+$/.test(lines[idx])) {
-      idx += 1;
-    }
-
-    const timing = lines[idx] || '';
-    if (!timing.includes('-->')) continue;
-    idx += 1;
-
-    const [startRaw, endRaw] = timing.split('-->').map((part) => part.trim());
-    const text = lines.slice(idx).join(' ').trim();
-
-    cues.push({
-      cueNumber: cues.length + 1,
-      startTime: normalizeCueTime(startRaw),
-      endTime: normalizeCueTime(endRaw),
-      text,
-    });
-  }
-
-  return cues;
-};
-
-const parseAssFile = (content: string) => {
-  const lines = content.replace(/\r/g, '').split('\n');
-  const cues: Array<{
-    cueNumber: number;
-    startTime: string;
-    endTime: string;
-    text: string;
-    styleName: string;
-    alignment?: number;
-    positionX?: number;
-    positionY?: number;
-  }> = [];
-
-  const dialogueLines = lines.filter((line) => line.trim().startsWith('Dialogue:'));
-  for (const raw of dialogueLines) {
-    const payload = raw.replace(/^Dialogue:\s*/i, '');
-    const fields = payload.split(',');
-    if (fields.length < 10) continue;
-
-    const start = normalizeCueTime(fields[1] || '00:00:00.000');
-    const end = normalizeCueTime(fields[2] || '00:00:02.000');
-    const styleName = (fields[3] || 'Mystic_Default').trim();
-    const textRaw = fields.slice(9).join(',').trim();
-
-    const alignmentMatch = textRaw.match(/\\an([1-9])/i);
-    const posMatch = textRaw.match(/\\pos\((\d+(?:\.\d+)?),(\d+(?:\.\d+)?)\)/i);
-    const positionX = posMatch ? Math.max(0, Math.min(100, (Number(posMatch[1]) / 1920) * 100)) : undefined;
-    const positionY = posMatch ? Math.max(0, Math.min(100, (Number(posMatch[2]) / 1080) * 100)) : undefined;
-
-    const text = textRaw
-      .replace(/\{[^}]*\}/g, '')
-      .replace(/\\N/gi, '\n')
-      .trim();
-
-    cues.push({
-      cueNumber: cues.length + 1,
-      startTime: start,
-      endTime: end,
-      styleName,
-      alignment: alignmentMatch ? Number(alignmentMatch[1]) : undefined,
-      positionX,
-      positionY,
-      text,
-    });
-  }
-
-  return cues;
-};
-
-const parseAssStyles = (content: string): Record<string, ASSStylePack> => {
-  const lines = content.replace(/\r/g, '').split('\n');
-  const styles: Record<string, ASSStylePack> = {};
-  let inStyleSection = false;
-
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) continue;
-
-    if (line.startsWith('[') && line.endsWith(']')) {
-      inStyleSection = line.toLowerCase() === '[v4+ styles]';
-      continue;
-    }
-
-    if (!inStyleSection || !line.toLowerCase().startsWith('style:')) continue;
-    const fields = line.replace(/^Style:\s*/i, '').split(',').map((v) => v.trim());
-    if (fields.length < 23) continue;
-
-    const name = fields[0] || DEFAULT_STYLE_NAME;
-    styles[name] = {
-      fontFamily: fields[1] || DEFAULT_STYLE_PACK.fontFamily,
-      fontSize: Number(fields[2] || DEFAULT_STYLE_PACK.fontSize),
-      primaryColor: assColorToHex(fields[3], DEFAULT_STYLE_PACK.primaryColor),
-      secondaryColor: assColorToHex(fields[4], DEFAULT_STYLE_PACK.secondaryColor),
-      outlineColor: assColorToHex(fields[5], DEFAULT_STYLE_PACK.outlineColor),
-      backColor: assColorToHex(fields[6], DEFAULT_STYLE_PACK.backColor),
-      bold: Number(fields[7]) === -1,
-      italic: Number(fields[8]) === -1,
-      outline: Number(fields[16] || DEFAULT_STYLE_PACK.outline),
-      shadow: Number(fields[17] || DEFAULT_STYLE_PACK.shadow),
-      alignment: Number(fields[18] || DEFAULT_STYLE_PACK.alignment),
-      marginL: Number(fields[19] || DEFAULT_STYLE_PACK.marginL),
-      marginR: Number(fields[20] || DEFAULT_STYLE_PACK.marginR),
-      marginV: Number(fields[21] || DEFAULT_STYLE_PACK.marginV),
-      maxWidthPercent: DEFAULT_STYLE_PACK.maxWidthPercent,
-    };
-  }
-
-  return styles;
-};
-
+import {
+  type SubtitleStatus,
+  type LyricsSectionType,
+  type ASSStylePack,
+  LYRICS_SECTION_TYPES,
+  ALL_LANGUAGES,
+  DEFAULT_STYLE_NAME,
+  DEFAULT_STYLE_PACK,
+} from './release-constants';
+import {
+  assColorToHex,
+  normalizeHexColor,
+  assColorToRgba,
+  resolvePreviewAnchor,
+  getAlignmentLabel,
+  normalizeCueTime,
+  cueTimeToSeconds,
+  secondsToCueTime,
+  formatPreviewSeconds,
+  triggerBlobDownload,
+  extractFilenameFromDisposition,
+  parseSubtitleFile,
+  parseAssFile,
+  parseAssStyles,
+} from './subtitle-utils';
 export default function EditReleasePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -1520,8 +1225,8 @@ export default function EditReleasePage() {
 
       if (!options?.silent) {
         setSuccessMessage(
-          `‚úì YouTube subtitle sync complete\n` +
-          `‚úì Success: ${data.successCount} | ‚è≠Ô∏è Skipped: ${data.skippedCount} | ‚úó Failed: ${data.failedCount}`
+          `G£Ù YouTube subtitle sync complete\n` +
+          `G£Ù Success: ${data.successCount} | G≈°n+≈ Skipped: ${data.skippedCount} | G£˘ Failed: ${data.failedCount}`
         );
       }
 
@@ -1551,7 +1256,7 @@ export default function EditReleasePage() {
         <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No release exists with ID &ldquo;{params.id}&rdquo;.</p>
         <Link href="/admin/cms-releases">
           <button className="dashboard-btn-primary px-5 py-2 rounded-lg text-sm font-medium">
-            ‚Üê Back to Releases
+            GÂ… Back to Releases
           </button>
         </Link>
       </div>
@@ -1618,7 +1323,7 @@ export default function EditReleasePage() {
         {/* Keyboard Shortcuts Help */}
         <div className="mb-6 p-4 dashboard-card">
           <div className="text-sm space-y-1" style={{color: 'var(--dash-text-primary)'}}>
-            <p><strong>‚å®Ô∏è Shortcuts:</strong></p>
+            <p><strong>GÓøn+≈ Shortcuts:</strong></p>
             <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs mt-2">
               <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+S</kbd> Save</div>
               <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+Z</kbd> Undo</div>
@@ -1675,7 +1380,7 @@ export default function EditReleasePage() {
                 </div>
                 {fieldErrors.slug
                   ? <p className="form-error-message">{fieldErrors.slug}</p>
-                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Auto-generated from title ‚Äî edit to customise</p>
+                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Auto-generated from title G«ˆ edit to customise</p>
                 }
               </div>
 
@@ -1690,7 +1395,7 @@ export default function EditReleasePage() {
                   onChange={handleInputChange}
                   onPaste={handleYouTubePaste}
                   className={`form-input w-full${fieldErrors.youtubeId ? ' form-error' : ''}`}
-                  placeholder="Paste YouTube URL or ID ‚Äî e.g., LXb3EKWsInQ"
+                  placeholder="Paste YouTube URL or ID G«ˆ e.g., LXb3EKWsInQ"
                 />
                 {fieldErrors.youtubeId
                   ? <p className="form-error-message">{fieldErrors.youtubeId}</p>
@@ -1985,8 +1690,8 @@ export default function EditReleasePage() {
                               if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                             }}
                           />
-                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">‚úì</button>
-                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">‚úó</button>
+                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">G£Ù</button>
+                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">G£˘</button>
                         </div>
                       ) : (
                         <button
@@ -1995,7 +1700,7 @@ export default function EditReleasePage() {
                           className="text-xs text-left mt-1"
                           style={{color: 'var(--dash-text-muted)'}}
                         >
-                          ‚úé Rename label
+                          G£ƒ Rename label
                         </button>
                       )
                     )}
@@ -2057,8 +1762,8 @@ export default function EditReleasePage() {
                                   if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                                 }}
                               />
-                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">‚úì</button>
-                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">‚úó</button>
+                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">G£Ù</button>
+                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">G£˘</button>
                             </>
                           ) : (
                             <>
@@ -2068,7 +1773,7 @@ export default function EditReleasePage() {
                                 className="text-xs flex-1 text-left"
                                 style={{color: 'var(--dash-text-muted)'}}
                               >
-                                ‚úé Rename
+                                G£ƒ Rename
                               </button>
                               <button
                                 type="button"
@@ -2077,7 +1782,7 @@ export default function EditReleasePage() {
                                 style={{color: 'var(--dash-status-rejected)'}}
                                 title="Delete this custom language"
                               >
-                                üóë
+                                =É˘Ê
                               </button>
                             </>
                           )}
@@ -2151,11 +1856,11 @@ export default function EditReleasePage() {
                           onChange={(e) => setLanguageTone(code, e.target.value)}
                           className="form-input text-sm flex-1"
                         >
-                          <option value="literal">Literal ‚Äî word-for-word accuracy</option>
-                          <option value="mystic">Mystic ‚Äî spiritual / Sufi essence</option>
-                          <option value="poetic">Poetic ‚Äî lyrical and flowing</option>
-                          <option value="scholarly">Scholarly ‚Äî academic precision</option>
-                          <option value="contemporary">Contemporary ‚Äî modern everyday language</option>
+                          <option value="literal">Literal G«ˆ word-for-word accuracy</option>
+                          <option value="mystic">Mystic G«ˆ spiritual / Sufi essence</option>
+                          <option value="poetic">Poetic G«ˆ lyrical and flowing</option>
+                          <option value="scholarly">Scholarly G«ˆ academic precision</option>
+                          <option value="contemporary">Contemporary G«ˆ modern everyday language</option>
                         </select>
                       </div>
                     ))}
@@ -2519,8 +2224,8 @@ export default function EditReleasePage() {
                     title={`Auto-translate all cues from master language (${getLanguageLabel(form.defaultLanguage || 'en')}) to ${getLanguageLabel(selectedSubtitleLanguage)}`}
                   >
                     {autoTranslatingLang === selectedSubtitleLanguage
-                      ? '‚è≥ Translating‚Ä¶'
-                      : `‚ü≥ Auto-translate from ${getLanguageLabel(form.defaultLanguage || 'en')}`}
+                      ? 'G≈¶ TranslatingG«™'
+                      : `GÉ¶ Auto-translate from ${getLanguageLabel(form.defaultLanguage || 'en')}`}
                   </button>
                 )}
               </div>
@@ -2826,7 +2531,7 @@ export default function EditReleasePage() {
                       style={{ left: `${previewDuration > 0 ? (previewTime / previewDuration) * 100 : 0}%`, transform: 'translateX(-50%)', backgroundColor: 'var(--dash-accent)' }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center text-xs pointer-events-none" style={{color: 'var(--dash-text-muted)'}}>
-                      Click to scrub ‚Ä¢ {formatPreviewSeconds(previewTime)} / {formatPreviewSeconds(previewDuration)}
+                      Click to scrub G«Û {formatPreviewSeconds(previewTime)} / {formatPreviewSeconds(previewDuration)}
                     </div>
                   </div>
                 </div>
@@ -3109,32 +2814,32 @@ export default function EditReleasePage() {
                         <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
                           {cueReviewStatus === 'ai' && (
                             <>
-                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-pending-bg)', color: 'var(--dash-status-pending)', border: '1px solid var(--dash-status-pending)'}}>‚ü≥ AI translated ¬∑ review needed</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-pending-bg)', color: 'var(--dash-status-pending)', border: '1px solid var(--dash-status-pending)'}}>GÉ¶ AI translated -+ review needed</span>
                               <button
                                 type="button"
                                 onClick={() => acceptCueTranslation(selectedSubtitleLanguage, cue.id)}
                                 className="text-xs px-2 py-0.5 rounded-full transition"
                                 style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}
                               >
-                                ‚úì Accept
+                                G£Ù Accept
                               </button>
                             </>
                           )}
                           {cueReviewStatus === 'manual' && (
                             <>
-                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-bg-hover)', color: 'var(--dash-text-secondary)', border: '1px solid var(--dash-border)'}}>‚úé Manually edited</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-bg-hover)', color: 'var(--dash-text-secondary)', border: '1px solid var(--dash-border)'}}>G£ƒ Manually edited</span>
                               <button
                                 type="button"
                                 onClick={() => acceptCueTranslation(selectedSubtitleLanguage, cue.id)}
                                 className="text-xs px-2 py-0.5 rounded-full transition"
                                 style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}
                               >
-                                ‚úì Accept
+                                G£Ù Accept
                               </button>
                             </>
                           )}
                           {cueReviewStatus === 'accepted' && (
-                            <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}>‚úì Accepted</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}>G£Ù Accepted</span>
                           )}
                         </div>
                       )}
@@ -3369,3 +3074,4 @@ export default function EditReleasePage() {
     </div>
   );
 }
+
