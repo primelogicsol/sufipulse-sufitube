@@ -33,6 +33,7 @@ import {
   parseAssFile,
   parseAssStyles,
 } from './subtitle-utils';
+import { ReleaseFeaturesSection } from './components/ReleaseFeaturesSection';
 export default function EditReleasePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -1225,8 +1226,8 @@ export default function EditReleasePage() {
 
       if (!options?.silent) {
         setSuccessMessage(
-          `G£ô YouTube subtitle sync complete\n` +
-          `G£ô Success: ${data.successCount} | GÅ¡n+Å Skipped: ${data.skippedCount} | G£ù Failed: ${data.failedCount}`
+          `Gï¿½ï¿½ YouTube subtitle sync complete\n` +
+          `Gï¿½ï¿½ Success: ${data.successCount} | GÅ¡n+ï¿½ Skipped: ${data.skippedCount} | Gï¿½ï¿½ Failed: ${data.failedCount}`
         );
       }
 
@@ -1256,7 +1257,7 @@ export default function EditReleasePage() {
         <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No release exists with ID &ldquo;{params.id}&rdquo;.</p>
         <Link href="/admin/cms-releases">
           <button className="dashboard-btn-primary px-5 py-2 rounded-lg text-sm font-medium">
-            GåÉ Back to Releases
+            Gï¿½ï¿½ Back to Releases
           </button>
         </Link>
       </div>
@@ -1323,7 +1324,7 @@ export default function EditReleasePage() {
         {/* Keyboard Shortcuts Help */}
         <div className="mb-6 p-4 dashboard-card">
           <div className="text-sm space-y-1" style={{color: 'var(--dash-text-primary)'}}>
-            <p><strong>Gî¿n+Å Shortcuts:</strong></p>
+            <p><strong>Gï¿½n+ï¿½ Shortcuts:</strong></p>
             <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs mt-2">
               <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+S</kbd> Save</div>
               <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+Z</kbd> Undo</div>
@@ -1380,7 +1381,7 @@ export default function EditReleasePage() {
                 </div>
                 {fieldErrors.slug
                   ? <p className="form-error-message">{fieldErrors.slug}</p>
-                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Auto-generated from title GÇö edit to customise</p>
+                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Auto-generated from title Gï¿½ï¿½ edit to customise</p>
                 }
               </div>
 
@@ -1395,7 +1396,7 @@ export default function EditReleasePage() {
                   onChange={handleInputChange}
                   onPaste={handleYouTubePaste}
                   className={`form-input w-full${fieldErrors.youtubeId ? ' form-error' : ''}`}
-                  placeholder="Paste YouTube URL or ID GÇö e.g., LXb3EKWsInQ"
+                  placeholder="Paste YouTube URL or ID Gï¿½ï¿½ e.g., LXb3EKWsInQ"
                 />
                 {fieldErrors.youtubeId
                   ? <p className="form-error-message">{fieldErrors.youtubeId}</p>
@@ -1561,71 +1562,7 @@ export default function EditReleasePage() {
           </div>
 
           {/* Features */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-6" style={{color: 'var(--dash-text-primary)'}}>Features</h2>
-
-            <div className="space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="enableLyrics"
-                  checked={form.enableLyrics !== false}
-                  onChange={handleCheckboxChange}
-                  className="w-4 h-4 rounded"
-                  style={{accentColor: 'var(--dash-accent)'}}
-                />
-                <span style={{color: 'var(--dash-text-primary)'}}>Enable Lyrics</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="enableCommentary"
-                  checked={form.enableCommentary !== false}
-                  onChange={handleCheckboxChange}
-                  className="w-4 h-4 rounded"
-                  style={{accentColor: 'var(--dash-accent)'}}
-                />
-                <span style={{color: 'var(--dash-text-primary)'}}>Enable Commentary</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="enableAdoption"
-                  checked={form.enableAdoption !== false}
-                  onChange={handleCheckboxChange}
-                  className="w-4 h-4 rounded"
-                  style={{accentColor: 'var(--dash-accent)'}}
-                />
-                <span style={{color: 'var(--dash-text-primary)'}}>Enable Adoption</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="enableCredits"
-                  checked={form.enableCredits !== false}
-                  onChange={handleCheckboxChange}
-                  className="w-4 h-4 rounded"
-                  style={{accentColor: 'var(--dash-accent)'}}
-                />
-                <span style={{color: 'var(--dash-text-primary)'}}>Enable Credits</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="enableSponsors"
-                  checked={form.enableSponsors || false}
-                  onChange={handleCheckboxChange}
-                  className="w-4 h-4 rounded"
-                  style={{accentColor: 'var(--dash-accent)'}}
-                />
-                <span style={{color: 'var(--dash-text-primary)'}}>Enable Sponsors</span>
-              </label>
-            </div>
-          </div>
+          <ReleaseFeaturesSection form={form} onCheckboxChange={handleCheckboxChange} />
 
           {/* Language Management */}
           <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
@@ -1690,8 +1627,8 @@ export default function EditReleasePage() {
                               if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                             }}
                           />
-                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">G£ô</button>
-                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">G£ù</button>
+                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Gï¿½ï¿½</button>
+                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Gï¿½ï¿½</button>
                         </div>
                       ) : (
                         <button
@@ -1700,7 +1637,7 @@ export default function EditReleasePage() {
                           className="text-xs text-left mt-1"
                           style={{color: 'var(--dash-text-muted)'}}
                         >
-                          G£Ä Rename label
+                          Gï¿½ï¿½ Rename label
                         </button>
                       )
                     )}
@@ -1762,8 +1699,8 @@ export default function EditReleasePage() {
                                   if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                                 }}
                               />
-                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">G£ô</button>
-                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">G£ù</button>
+                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Gï¿½ï¿½</button>
+                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Gï¿½ï¿½</button>
                             </>
                           ) : (
                             <>
@@ -1773,7 +1710,7 @@ export default function EditReleasePage() {
                                 className="text-xs flex-1 text-left"
                                 style={{color: 'var(--dash-text-muted)'}}
                               >
-                                G£Ä Rename
+                                Gï¿½ï¿½ Rename
                               </button>
                               <button
                                 type="button"
@@ -1782,7 +1719,7 @@ export default function EditReleasePage() {
                                 style={{color: 'var(--dash-status-rejected)'}}
                                 title="Delete this custom language"
                               >
-                                =ƒùæ
+                                =ï¿½ï¿½ï¿½
                               </button>
                             </>
                           )}
@@ -1856,11 +1793,11 @@ export default function EditReleasePage() {
                           onChange={(e) => setLanguageTone(code, e.target.value)}
                           className="form-input text-sm flex-1"
                         >
-                          <option value="literal">Literal GÇö word-for-word accuracy</option>
-                          <option value="mystic">Mystic GÇö spiritual / Sufi essence</option>
-                          <option value="poetic">Poetic GÇö lyrical and flowing</option>
-                          <option value="scholarly">Scholarly GÇö academic precision</option>
-                          <option value="contemporary">Contemporary GÇö modern everyday language</option>
+                          <option value="literal">Literal Gï¿½ï¿½ word-for-word accuracy</option>
+                          <option value="mystic">Mystic Gï¿½ï¿½ spiritual / Sufi essence</option>
+                          <option value="poetic">Poetic Gï¿½ï¿½ lyrical and flowing</option>
+                          <option value="scholarly">Scholarly Gï¿½ï¿½ academic precision</option>
+                          <option value="contemporary">Contemporary Gï¿½ï¿½ modern everyday language</option>
                         </select>
                       </div>
                     ))}
@@ -2225,7 +2162,7 @@ export default function EditReleasePage() {
                   >
                     {autoTranslatingLang === selectedSubtitleLanguage
                       ? 'GÅ¦ TranslatingGÇª'
-                      : `Gƒ¦ Auto-translate from ${getLanguageLabel(form.defaultLanguage || 'en')}`}
+                      : `Gï¿½ï¿½ Auto-translate from ${getLanguageLabel(form.defaultLanguage || 'en')}`}
                   </button>
                 )}
               </div>
@@ -2531,7 +2468,7 @@ export default function EditReleasePage() {
                       style={{ left: `${previewDuration > 0 ? (previewTime / previewDuration) * 100 : 0}%`, transform: 'translateX(-50%)', backgroundColor: 'var(--dash-accent)' }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center text-xs pointer-events-none" style={{color: 'var(--dash-text-muted)'}}>
-                      Click to scrub GÇó {formatPreviewSeconds(previewTime)} / {formatPreviewSeconds(previewDuration)}
+                      Click to scrub Gï¿½ï¿½ {formatPreviewSeconds(previewTime)} / {formatPreviewSeconds(previewDuration)}
                     </div>
                   </div>
                 </div>
@@ -2814,32 +2751,32 @@ export default function EditReleasePage() {
                         <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
                           {cueReviewStatus === 'ai' && (
                             <>
-                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-pending-bg)', color: 'var(--dash-status-pending)', border: '1px solid var(--dash-status-pending)'}}>Gƒ¦ AI translated -+ review needed</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-pending-bg)', color: 'var(--dash-status-pending)', border: '1px solid var(--dash-status-pending)'}}>Gï¿½ï¿½ AI translated -+ review needed</span>
                               <button
                                 type="button"
                                 onClick={() => acceptCueTranslation(selectedSubtitleLanguage, cue.id)}
                                 className="text-xs px-2 py-0.5 rounded-full transition"
                                 style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}
                               >
-                                G£ô Accept
+                                Gï¿½ï¿½ Accept
                               </button>
                             </>
                           )}
                           {cueReviewStatus === 'manual' && (
                             <>
-                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-bg-hover)', color: 'var(--dash-text-secondary)', border: '1px solid var(--dash-border)'}}>G£Ä Manually edited</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-bg-hover)', color: 'var(--dash-text-secondary)', border: '1px solid var(--dash-border)'}}>Gï¿½ï¿½ Manually edited</span>
                               <button
                                 type="button"
                                 onClick={() => acceptCueTranslation(selectedSubtitleLanguage, cue.id)}
                                 className="text-xs px-2 py-0.5 rounded-full transition"
                                 style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}
                               >
-                                G£ô Accept
+                                Gï¿½ï¿½ Accept
                               </button>
                             </>
                           )}
                           {cueReviewStatus === 'accepted' && (
-                            <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}>G£ô Accepted</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}>Gï¿½ï¿½ Accepted</span>
                           )}
                         </div>
                       )}
