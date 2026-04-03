@@ -192,6 +192,13 @@ const buildCmsCaptionTrack = (release: any, selected: string): LyricsTrack | nul
     return null;
 };
 
+const extractYouTubeChannelIdFromUrl = (url?: string): string => {
+    if (!url) return '';
+    const normalized = url.trim();
+    const match = normalized.match(/youtube\.com\/channel\/([A-Za-z0-9_-]+)/i);
+    return match?.[1] || '';
+};
+
 function Release() {
     const params = useParams();
     const slug = params?.slug as string;
@@ -217,8 +224,31 @@ function Release() {
     const [playbackRate, setPlaybackRate] = useState<number>(1);
     const [playbackQuality, setPlaybackQuality] = useState<string>('auto');
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isVideoEnded, setIsVideoEnded] = useState(false);
     const [videoDuration, setVideoDuration] = useState(0);
+    const [officialSubscribeReady, setOfficialSubscribeReady] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const releaseChannelId =
+        release?.youtube_channel_id ||
+        release?.youtubeChannelId ||
+        release?.public_youtube_channel_id ||
+        release?.publicYouTubeChannelId ||
+        '';
+    const releaseChannelUrl =
+        release?.youtube_channel_url ||
+        release?.youtubeChannelUrl ||
+        release?.public_youtube_channel_url ||
+        release?.publicYouTubeChannelUrl ||
+        '';
+
+    const envChannelId = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ';
+    const envChannelUrl = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL || `https://www.youtube.com/channel/${envChannelId}`;
+
+    const effectiveYouTubeChannelId = releaseChannelId || extractYouTubeChannelIdFromUrl(releaseChannelUrl) || envChannelId;
+    const effectiveYouTubeChannelUrl = releaseChannelUrl || envChannelUrl || `https://www.youtube.com/channel/${effectiveYouTubeChannelId}`;
+    const youtubeSubscribeUrl = `${effectiveYouTubeChannelUrl}${effectiveYouTubeChannelUrl.includes('?') ? '&' : '?'}sub_confirmation=1`;
+    const joinSufiPulseUrl = process.env.NEXT_PUBLIC_JOIN_URL || '/register';
 
     const resolvedVideoId = release?.youtube_video_id || getYouTubeVideoId(release?.youtube_url) || slug;
     const thumbnailCandidates = buildYouTubeThumbnailCandidates(resolvedVideoId, [
@@ -259,6 +289,37 @@ function Release() {
             setShowPlayerSettings(false);
         }
     }, [videoLoaded]);
+
+    useEffect(() => {
+        if (!effectiveYouTubeChannelId) {
+            return;
+        }
+
+        const existingScript = document.querySelector('script[data-ytsubscribe-script="1"]') as HTMLScriptElement | null;
+
+        const initializeSubscribe = () => {
+            try {
+                (window as any)?.gapi?.ytsubscribe?.go?.();
+                setOfficialSubscribeReady(true);
+            } catch {
+                setOfficialSubscribeReady(false);
+            }
+        };
+
+        if (existingScript) {
+            initializeSubscribe();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://apis.google.com/js/platform.js';
+        script.async = true;
+        script.defer = true;
+        script.setAttribute('data-ytsubscribe-script', '1');
+        script.onload = initializeSubscribe;
+        script.onerror = () => setOfficialSubscribeReady(false);
+        document.body.appendChild(script);
+    }, [effectiveYouTubeChannelId]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -841,6 +902,12 @@ function Release() {
                                                     onStateChange={(event) => {
                                                         const state = event?.data;
                                                         setIsPlaying(state === 1);
+                                                        if (state === 1) {
+                                                            setIsVideoEnded(false);
+                                                        }
+                                                        if (state === 0) {
+                                                            setIsVideoEnded(true);
+                                                        }
                                                     }}
                                                     className="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full"
                                                 />
@@ -999,6 +1066,44 @@ function Release() {
                             </div>
                         )}
 
+                        {isVideoEnded && (
+                            <div className="mb-8 rounded-xl border border-amber-500/20 bg-gradient-to-r from-neutral-900 via-neutral-900/95 to-neutral-900 p-4 sm:p-5">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-[0.2em] text-amber-300">Playback Complete</p>
+                                        <h3 className="mt-1 text-lg font-semibold text-neutral-100">Continue the SufiPulse Journey</h3>
+                                        <p className="mt-1 text-sm text-neutral-400">Listen to another release, subscribe on YouTube, or join SufiPulse.</p>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Link
+                                            href="/releases"
+                                            className="inline-flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
+                                        >
+                                            <Music className="h-4 w-4" />
+                                            Next Song
+                                        </Link>
+                                        <a
+                                            href={youtubeSubscribeUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                                        >
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                            </svg>
+                                            Subscribe
+                                        </a>
+                                        <Link
+                                            href={joinSufiPulseUrl}
+                                            className="inline-flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 transition-colors hover:bg-amber-500/20"
+                                        >
+                                            Join SufiPulse
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Tabs & Action Buttons */}
                         <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-4 mb-8 border-b border-neutral-800">
                             {/* Tabs Navigation */}
@@ -1129,6 +1234,41 @@ function Release() {
 
                             {/* Action Buttons */}
                             <div className="flex items-center gap-3 lg:pb-2">
+                                {effectiveYouTubeChannelId && (
+                                    <div className="hidden xl:flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900/70 px-3 py-2">
+                                        <span className="text-[11px] uppercase tracking-wide text-neutral-400 whitespace-nowrap">Subscribe</span>
+                                        <div
+                                            className="g-ytsubscribe"
+                                            data-channelid={effectiveYouTubeChannelId}
+                                            data-layout="default"
+                                            data-count="hidden"
+                                        />
+                                        {!officialSubscribeReady && (
+                                            <a
+                                                href={youtubeSubscribeUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                                            >
+                                                Subscribe
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
+                                {effectiveYouTubeChannelId && (
+                                    <a
+                                        href={youtubeSubscribeUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-700 hover:bg-red-800 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-red-900/30 whitespace-nowrap xl:hidden"
+                                        aria-label="Subscribe to SufiPulse on YouTube"
+                                    >
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                        </svg>
+                                        Subscribe
+                                    </a>
+                                )}
                                 {resolvedVideoId && (
                                     <a
                                         href={`https://www.youtube.com/watch?v=${resolvedVideoId}`}
