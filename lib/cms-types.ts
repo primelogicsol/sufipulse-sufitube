@@ -18,6 +18,8 @@ export interface Release {
   archived_at?: string;
   youtube_id?: string;
   youtube_url?: string;
+  youtube_channel_id?: string;
+  youtube_channel_url?: string;
   primary_video_url?: string;
   thumbnail_url?: string;
   poster_url?: string;

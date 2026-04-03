@@ -11,6 +11,8 @@ export interface CMSRelease {
   slug: string;
   youtubeId: string;
   youtubeUrl?: string;
+  youtubeChannelId?: string;
+  youtubeChannelUrl?: string;
   thumbnailUrl?: string;
   posterUrl?: string;
   description: string;

@@ -44,6 +44,8 @@ export default function EditReleasePage() {
     title: '',
     slug: '',
     youtubeId: '',
+    youtubeChannelId: '',
+    youtubeChannelUrl: '',
     description: '',
     releaseDate: new Date().toISOString().split('T')[0],
     durationSeconds: 0,
@@ -1413,6 +1415,41 @@ export default function EditReleasePage() {
                     <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Thumbnail preview</p>
                   </div>
                 )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    YouTube Channel ID
+                  </label>
+                  <input
+                    type="text"
+                    name="youtubeChannelId"
+                    value={form.youtubeChannelId || ''}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                    placeholder="e.g., UCraDr3i5A3k0j7typ6tOOsQ"
+                  />
+                  <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>
+                    Optional per-release override for Subscribe CTA.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    YouTube Channel URL
+                  </label>
+                  <input
+                    type="text"
+                    name="youtubeChannelUrl"
+                    value={form.youtubeChannelUrl || ''}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                    placeholder="https://www.youtube.com/channel/..."
+                  />
+                  <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>
+                    If set, this URL is used by subscribe actions on the public release page.
+                  </p>
+                </div>
               </div>
 
               <div>

@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
       slug: body.slug,
       youtubeId: body.youtubeId,
       youtubeUrl: body.youtubeUrl,
+      youtubeChannelId: body.youtubeChannelId,
+      youtubeChannelUrl: body.youtubeChannelUrl,
       thumbnailUrl: body.thumbnailUrl,
       posterUrl: body.posterUrl,
       description: body.description || '',
