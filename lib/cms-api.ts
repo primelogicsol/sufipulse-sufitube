@@ -248,16 +248,27 @@ export async function getBulkImports(): Promise<cms.BulkImport[]> {
 export async function createBulkImport(
   importType: string,
   fileName: string,
-  items: any[]
+  items: any[],
+  options?: {
+    successfulItems?: number;
+    failedItems?: number;
+    status?: 'pending' | 'processing' | 'completed' | 'failed';
+    errorLog?: string;
+  }
 ): Promise<cms.BulkImport> {
+  const successfulItems = options?.successfulItems ?? items.length;
+  const failedItems = options?.failedItems ?? 0;
+  const totalItems = successfulItems + failedItems;
+
   const bulkImport: cms.BulkImport = {
     id: `${Date.now()}`,
     import_type: importType as any,
-    status: 'completed',
+    status: options?.status || (failedItems > 0 ? 'failed' : 'completed'),
     file_name: fileName,
-    total_items: items.length,
-    successful_items: items.length,
-    failed_items: 0,
+    total_items: totalItems,
+    successful_items: successfulItems,
+    failed_items: failedItems,
+    error_log: options?.errorLog,
     created_at: new Date().toISOString(),
   };
 

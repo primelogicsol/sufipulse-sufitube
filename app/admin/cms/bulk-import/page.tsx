@@ -1,7 +1,7 @@
 // app/admin/cms/bulk-import/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { getBulkImports, createBulkImport } from '@/lib/cms-api';
 import type { BulkImport } from '@/lib/cms-types';
@@ -14,9 +14,9 @@ export default function BulkImportPage() {
   const [importType, setImportType] = useState<'releases' | 'credits' | 'lyrics' | 'media'>('releases');
 
   const templates = {
-    releases: `title,slug,youtube_id,category,duration_formatted,status
-"Qawwali Journey","qawwali-journey","lJIrF4E69e8","Qawwali","8:45","draft"
-"Divine Love","divine-love","LS8qPHGjQZU","Sufi Poetry","12:30","draft"`,
+    releases: `title,slug,youtube_id,youtube_channel_id,youtube_channel_url,category,duration_formatted,status
+"Qawwali Journey","qawwali-journey","lJIrF4E69e8","UCraDr3i5A3k0j7typ6tOOsQ","https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ","Qawwali","8:45","draft"
+"Divine Love","divine-love","LS8qPHGjQZU","","https://www.youtube.com/@SufiPulse","Sufi Poetry","12:30","draft"`,
     credits: `release_id,category,credit_type,names
 "abc-123","artistic","Lead Vocalist","Nusrat Fateh Ali Khan"
 "abc-123","production","Producer","Ahmed Hassan|Hamza Malik"`,
@@ -28,33 +28,193 @@ export default function BulkImportPage() {
 "abc-123","poster.png","https://...png","poster","image/png"`
   };
 
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        setLoading(true);
+        const history = await getBulkImports();
+        setImports(history.slice().reverse());
+      } catch (error) {
+        console.error('Failed to load bulk import history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, []);
+
+  const normalizeStatus = (value: string): 'draft' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived' => {
+    const cleaned = (value || '').trim().toLowerCase();
+    const valid = ['draft', 'in_review', 'approved', 'published', 'unpublished', 'archived'];
+    return valid.includes(cleaned) ? (cleaned as any) : 'draft';
+  };
+
+  const parseDurationToSeconds = (duration: string): number => {
+    const input = (duration || '').trim();
+    if (!input) return 0;
+    const parts = input.split(':').map((p) => Number(p));
+    if (parts.some((n) => Number.isNaN(n))) return 0;
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return parts[0] || 0;
+  };
+
+  const parseCsvRows = (content: string): string[][] => {
+    const rows: string[][] = [];
+    let currentField = '';
+    let currentRow: string[] = [];
+    let inQuotes = false;
+
+    for (let i = 0; i < content.length; i++) {
+      const char = content[i];
+      const next = content[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && next === '"') {
+          currentField += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+
+      if (char === ',' && !inQuotes) {
+        currentRow.push(currentField.trim());
+        currentField = '';
+        continue;
+      }
+
+      if ((char === '\n' || char === '\r') && !inQuotes) {
+        if (char === '\r' && next === '\n') i++;
+        currentRow.push(currentField.trim());
+        currentField = '';
+        const hasValue = currentRow.some((cell) => cell.length > 0);
+        if (hasValue) rows.push(currentRow);
+        currentRow = [];
+        continue;
+      }
+
+      currentField += char;
+    }
+
+    if (currentField.length > 0 || currentRow.length > 0) {
+      currentRow.push(currentField.trim());
+      const hasValue = currentRow.some((cell) => cell.length > 0);
+      if (hasValue) rows.push(currentRow);
+    }
+
+    return rows;
+  };
+
+  const parseReleaseCsv = (content: string) => {
+    const rows = parseCsvRows(content);
+    if (rows.length < 2) return [];
+
+    const headers = rows[0].map((h) => h.trim().toLowerCase());
+    const records = rows.slice(1);
+
+    return records.map((cells, idx) => {
+      const row: Record<string, string> = {};
+      headers.forEach((header, hIdx) => {
+        row[header] = (cells[hIdx] || '').replace(/^"|"$/g, '').trim();
+      });
+
+      const title = row.title || '';
+      const slug = row.slug || '';
+      const youtubeId = row.youtube_id || '';
+      const durationFormatted = row.duration_formatted || '0:00';
+
+      if (!title || !slug || !youtubeId) {
+        throw new Error(`Row ${idx + 2}: title, slug, and youtube_id are required`);
+      }
+
+      return {
+        title,
+        slug,
+        youtubeId,
+        youtubeChannelId: row.youtube_channel_id || '',
+        youtubeChannelUrl: row.youtube_channel_url || '',
+        category: row.category || '',
+        durationFormatted,
+        durationSeconds: parseDurationToSeconds(durationFormatted),
+        status: normalizeStatus(row.status || 'draft'),
+      };
+    });
+  };
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       setUploading(true);
-      // Upload logic would go here
-      console.log('Importing', file.name);
-      
-      // Simulate import
-      const newImport: BulkImport = {
-        id: Date.now().toString(),
-        file_name: file.name,
-        import_type: importType as any,
-        status: 'processing',
-        total_items: 10,
-        successful_items: 0,
-        failed_items: 0,
-        created_at: new Date().toISOString()
-      };
-      
-      setImports([newImport, ...imports]);
+
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        throw new Error('Only CSV upload is supported for now.');
+      }
+
+      const text = await file.text();
+
+      if (importType !== 'releases') {
+        const importLog = await createBulkImport(importType, file.name, [], {
+          successfulItems: 0,
+          failedItems: 0,
+          status: 'completed',
+          errorLog: 'Parser currently enabled for releases CSV only.',
+        });
+        setImports([importLog, ...imports]);
+        return;
+      }
+
+      const parsed = parseReleaseCsv(text);
+
+      let successCount = 0;
+      let failCount = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < parsed.length; i++) {
+        const payload = parsed[i];
+        try {
+          const response = await fetch('/api/releases', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            failCount++;
+            errors.push(`Row ${i + 2}: ${data?.error || 'Save failed'}`);
+            continue;
+          }
+
+          successCount++;
+        } catch (error: any) {
+          failCount++;
+          errors.push(`Row ${i + 2}: ${error?.message || 'Unknown error'}`);
+        }
+      }
+
+      const importLog = await createBulkImport(importType, file.name, parsed, {
+        successfulItems: successCount,
+        failedItems: failCount,
+        status: failCount > 0 ? 'failed' : 'completed',
+        errorLog: errors.length ? errors.slice(0, 5).join(' | ') : undefined,
+      });
+
+      setImports([importLog, ...imports]);
+
+      if (failCount > 0) {
+        alert(`Imported ${successCount}/${parsed.length} releases. ${failCount} failed.`);
+      }
     } catch (error) {
       console.error('Error uploading:', error);
-      alert('Upload failed');
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   }
 
@@ -148,7 +308,11 @@ export default function BulkImportPage() {
             <h2 className="text-base font-semibold text-[var(--dash-text-primary)]">Import History</h2>
           </div>
 
-          {imports.length === 0 ? (
+          {loading ? (
+            <div className="p-12 text-center">
+              <p className="text-[var(--dash-text-muted)]">Loading history...</p>
+            </div>
+          ) : imports.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-[var(--dash-text-muted)]">No imports yet</p>
             </div>
