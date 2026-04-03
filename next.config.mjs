@@ -6,8 +6,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // optimizePackageImports is stable in Next.js 15 (no longer experimental)
-  optimizePackageImports: ['lucide-react'],
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   output: undefined,
   trailingSlash: true,
   images: {

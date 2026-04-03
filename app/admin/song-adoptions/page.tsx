@@ -39,6 +39,16 @@ interface GoogleAdsSummary {
     videoViews: number;
 }
 
+interface ServerPaymentRecord {
+    adoptionId: string;
+    paymentStatus: 'unpaid' | 'pending' | 'paid' | 'failed';
+    adoptionStatus: string;
+    amountPaid: number;
+    stripeSessionId?: string;
+    lastEventType?: string;
+    updatedAt: string;
+}
+
 export default function AdminSongAdoptions() {
     const [adoptions, setAdoptions] = useState<AdoptionWithSponsor[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,6 +56,7 @@ export default function AdminSongAdoptions() {
     const [launchingId, setLaunchingId] = useState<string | null>(null);
     const [googleAdsSummary, setGoogleAdsSummary] = useState<GoogleAdsSummary | null>(null);
     const [googleAdsError, setGoogleAdsError] = useState<string | null>(null);
+    const [serverPaymentRecords, setServerPaymentRecords] = useState<Record<string, ServerPaymentRecord | null>>({});
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [methodFilter, setMethodFilter] = useState<string>('all');
@@ -94,6 +105,21 @@ export default function AdminSongAdoptions() {
             }
 
             setAdoptions(adoptionsWithSponsors);
+
+            const paymentEntries = await Promise.all(
+                adoptionsWithSponsors.map(async (item) => {
+                    try {
+                        const res = await fetch(`/api/adoptions/${item.id}`);
+                        if (!res.ok) return [item.id, null] as const;
+                        const payload = await res.json();
+                        return [item.id, (payload?.payment_record || null) as ServerPaymentRecord | null] as const;
+                    } catch {
+                        return [item.id, null] as const;
+                    }
+                })
+            );
+
+            setServerPaymentRecords(Object.fromEntries(paymentEntries));
 
             const customerIds = adoptionsWithSponsors
                 .map((item) => item.googleAdsCustomerId)
@@ -163,8 +189,16 @@ export default function AdminSongAdoptions() {
     };
 
     const launchCampaign = async (adoption: AdoptionWithSponsor) => {
-        if (adoption.payment_status !== 'paid') {
+        const serverRecord = serverPaymentRecords[adoption.id];
+        const effectivePaymentStatus = serverRecord?.paymentStatus || adoption.payment_status;
+
+        if (effectivePaymentStatus !== 'paid') {
             alert('Cannot launch campaign — payment not confirmed.');
+            return;
+        }
+
+        if (serverRecord && serverRecord.paymentStatus !== adoption.payment_status) {
+            alert('Payment status mismatch detected between local and server reconciliation. Please re-check this adoption before launching.');
             return;
         }
         if (!adoption.release_id) {
@@ -280,6 +314,15 @@ export default function AdminSongAdoptions() {
         };
         const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.unpaid;
         return <Badge variant={config.variant}>{config.label}</Badge>;
+    };
+
+    const hasPaymentMismatch = (adoption: AdoptionWithSponsor) => {
+        const server = serverPaymentRecords[adoption.id];
+        return !!server && server.paymentStatus !== adoption.payment_status;
+    };
+
+    const getEffectivePaymentStatus = (adoption: AdoptionWithSponsor) => {
+        return serverPaymentRecords[adoption.id]?.paymentStatus || adoption.payment_status;
     };
 
     const totalAdopters = new Set(
@@ -489,7 +532,14 @@ export default function AdminSongAdoptions() {
                                                 {getStatusBadge(adoption.adoption_status)}
                                             </td>
                                             <td>
-                                                {getPaymentStatusBadge(adoption.payment_status)}
+                                                <div className="flex items-center gap-2">
+                                                    {getPaymentStatusBadge(getEffectivePaymentStatus(adoption))}
+                                                    {hasPaymentMismatch(adoption) && (
+                                                        <span title="Mismatch between local and server payment status">
+                                                            <AlertCircle className="w-4 h-4 text-amber-400" />
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td>
                                                 <div className="flex items-center">
@@ -534,7 +584,7 @@ export default function AdminSongAdoptions() {
                                                         {adoption.public_listing_approved ? <Eye /> : <Eye className="opacity-50" />}
                                                     </button>
                                                     {/* Launch Campaign — visible once approved and paid */}
-                                                    {(adoption.adoption_status === 'approved') && adoption.payment_status === 'paid' && (
+                                                    {(adoption.adoption_status === 'approved') && getEffectivePaymentStatus(adoption) === 'paid' && !hasPaymentMismatch(adoption) && (
                                                         <button
                                                             onClick={() => launchCampaign(adoption)}
                                                             disabled={launchingId === adoption.id}
@@ -581,9 +631,22 @@ export default function AdminSongAdoptions() {
                                         </div>
                                         <div>
                                             <label className="block text-sm text-neutral-500 mb-1">Payment</label>
-                                            {getPaymentStatusBadge(selectedAdoption.payment_status)}
+                                            <div className="flex items-center gap-2">
+                                                {getPaymentStatusBadge(getEffectivePaymentStatus(selectedAdoption))}
+                                                {hasPaymentMismatch(selectedAdoption) && (
+                                                    <span className="text-xs text-amber-400">Mismatch detected</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
+
+                                    {hasPaymentMismatch(selectedAdoption) && (
+                                        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+                                            Local payment status is <strong>{selectedAdoption.payment_status}</strong>,
+                                            but server reconciliation shows <strong>{serverPaymentRecords[selectedAdoption.id]?.paymentStatus}</strong>.
+                                            Resolve this mismatch before launching campaigns.
+                                        </div>
+                                    )}
 
                                     <div>
                                         <h4 className="text-lg font-medium text-neutral-100 mb-3">Sponsor Information</h4>

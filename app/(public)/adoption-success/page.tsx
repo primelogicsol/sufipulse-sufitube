@@ -25,17 +25,37 @@ export default function AdoptionSuccessPage() {
     // Apply the payment confirmation to localStorage
     async function confirm() {
       try {
+        let verifiedAmountPaid: number | undefined;
+
+        // If Stripe redirected us with session_id, confirm payment on server first.
+        if (sessionId) {
+          const res = await fetch(`/api/adoptions/${adoptionId}/confirm`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId }),
+          });
+
+          const payload = await res.json();
+          if (!res.ok || !payload?.verified) {
+            throw new Error(payload?.reason || 'Payment could not be verified.');
+          }
+
+          verifiedAmountPaid = payload?.payment_record?.amountPaid;
+        }
+
         await storage.updateSongAdoption(adoptionId!, {
           payment_status: 'paid',
           adoption_status: 'pending_review',
           stripe_session_id: sessionId || undefined,
-          amount_paid: undefined, // amount already set at submission
+          amount_paid: verifiedAmountPaid,
         });
 
         await storage.createSongAdoptionEvent({
           adoption_id: adoptionId,
           event_type: 'payment_completed',
-          event_label: 'Stripe payment completed',
+          event_label: sessionId
+            ? 'Stripe payment completed (server-verified)'
+            : 'Payment marked completed',
           actor_type: 'system',
           metadata: { stripe_session_id: sessionId },
         });

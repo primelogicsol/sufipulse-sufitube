@@ -49,10 +49,11 @@ export async function PUT(
 // DELETE /api/releases/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const deleted = cmsStorage.deleteRelease(params.id);
+    const deleted = cmsStorage.deleteRelease(id);
     if (!deleted) {
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }

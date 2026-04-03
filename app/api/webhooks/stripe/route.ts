@@ -1,15 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { applyWebhookEventIfNew } from '@/app/lib/server/adoption-payment-store';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-01-27.acacia',
-});
+const getStripeClient = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return null;
+  }
+
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-01-27.acacia',
+  });
+};
 
 // Stripe requires the raw body to verify signatures — disable Next.js body parsing
 export const config = { api: { bodyParser: false } };
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripeClient();
+
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return NextResponse.json(
+      { error: 'Stripe webhook not configured.' },
+      { status: 503 }
+    );
+  }
+
+  if (!stripe) {
     return NextResponse.json(
       { error: 'Stripe webhook not configured.' },
       { status: 503 }
@@ -52,20 +68,17 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Update the adoption record in localStorage via the internal update API
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      await fetch(`${appUrl}/api/adoptions/${adoptionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-webhook-secret': process.env.STRIPE_WEBHOOK_SECRET! },
-        body: JSON.stringify({
-          payment_status: 'paid',
-          amount_paid: amountPaid,
-          stripe_session_id: stripeSessionId,
-          adoption_status: 'pending_review',
-        }),
+      await applyWebhookEventIfNew({
+        eventId: event.id,
+        adoptionId,
+        paymentStatus: 'paid',
+        adoptionStatus: 'pending_review',
+        amountPaid,
+        stripeSessionId: stripeSessionId || undefined,
+        eventType: event.type,
       });
     } catch (err) {
-      console.error('Failed to update adoption after Stripe payment:', err);
+      console.error('Failed to persist adoption payment after Stripe payment:', err);
       // Still return 200 — Stripe will not retry if we return 200
     }
   }
@@ -80,14 +93,15 @@ export async function POST(request: NextRequest) {
 
     if (adoptionId) {
       try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        await fetch(`${appUrl}/api/adoptions/${adoptionId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'x-webhook-secret': process.env.STRIPE_WEBHOOK_SECRET! },
-          body: JSON.stringify({ payment_status: 'failed' }),
+        await applyWebhookEventIfNew({
+          eventId: event.id,
+          adoptionId,
+          paymentStatus: 'failed',
+          adoptionStatus: 'pending_review',
+          eventType: event.type,
         });
       } catch (err) {
-        console.error('Failed to mark adoption payment as failed:', err);
+        console.error('Failed to persist adoption payment failure:', err);
       }
     }
   }
