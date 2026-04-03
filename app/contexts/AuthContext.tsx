@@ -4,7 +4,7 @@ import { storage } from "@/app/lib/storage"
 import { useRouter } from "next/navigation";
 import { Loader } from "lucide-react";
 
-type User = { id: string, role: string, email: string, full_name: string, is_verified: boolean };
+type User = { id: string, role: string, assigned_roles?: string[], email: string, full_name: string, is_verified: boolean };
 type AuthContextType = {
     user: User | null,
     accessToken: string | null,

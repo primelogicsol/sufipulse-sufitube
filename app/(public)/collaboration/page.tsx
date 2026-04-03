@@ -4,7 +4,7 @@ import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Globe, BookOpen, Video, Shield } from 'lucide-react';
-// import { supabase } from '../../lib/supabase';
+import { storage } from '../../lib/storage';
 
 export default function InstitutionalCollaboration() {
     const [formData, setFormData] = useState({
@@ -37,32 +37,32 @@ export default function InstitutionalCollaboration() {
         setSubmitting(true);
         setError(null);
 
-        // try {
-        //   const { error: submitError } = await supabase
-        //     .from('institutional_partnership_proposals')
-        //     .insert([formData]);
+        try {
+            await storage.create('partnership', {
+                ...formData,
+                proposal_type: formData.partnership_type,
+                status: 'pending',
+            });
 
-        //   if (submitError) throw submitError;
-
-        //   setSubmitted(true);
-        //   setFormData({
-        //     contact_name: '',
-        //     email: '',
-        //     organization_name: '',
-        //     role_title: '',
-        //     organization_type: '',
-        //     partnership_type: '',
-        //     organization_website: '',
-        //     proposal_description: '',
-        //     proposed_timeline: '',
-        //     resources_offered: '',
-        //     partnership_goals: ''
-        //   });
-        // } catch (err) {
-        //   setError(err instanceof Error ? err.message : 'Failed to submit proposal');
-        // } finally {
-        //   setSubmitting(false);
-        // }
+            setSubmitted(true);
+            setFormData({
+                contact_name: '',
+                email: '',
+                organization_name: '',
+                role_title: '',
+                organization_type: '',
+                partnership_type: '',
+                organization_website: '',
+                proposal_description: '',
+                proposed_timeline: '',
+                resources_offered: '',
+                partnership_goals: ''
+            });
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to submit proposal. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const organizationTypes = [

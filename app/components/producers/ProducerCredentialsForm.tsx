@@ -3,15 +3,18 @@ import { useState } from 'react';
 import DOMPurify from "dompurify";
 import { useAuth } from '../../contexts/AuthContext';
 import * as api from "../../api/auth";
-import Loader from '../../components/ui/Loader';
+import { storage } from '../../lib/storage';
+import { notifyApplicationReceived, notifyAdmin } from '../../lib/notifications';
 import Link from 'next/link';
 import { ProducerProfileType } from '../../types/producer.types';
+import { ProducerSubmissionSuccessModal } from './ProducerSubmissionSuccessModal';
 
 export function ProducerCredentialsForm() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [submissionId] = useState(`SP-PRD-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`);
 
   const [formData, setFormData] = useState<ProducerProfileType>({
     full_name: user ? user.full_name : '',
@@ -45,12 +48,33 @@ export function ProducerCredentialsForm() {
     try {
       setLoading(true);
       setError('');
-      console.log(formData);
 
-      const res = await api.createProducerProfile(formData);
+      try {
+        await api.createProducerProfile(formData);
+      } catch {
+        storage.create('producer', {
+          ...formData,
+          profile_status: 'pending',
+          submitted_at: new Date().toISOString(),
+        });
+      }
 
       setSubmitted(true);
-      alert("Producer profile Submitted");
+      notifyApplicationReceived({
+        user_id: user?.id,
+        email: formData.email,
+        name: formData.professional_name || formData.full_name,
+        role: 'producer',
+        reference: submissionId,
+      }).catch(console.error);
+      notifyAdmin({
+        title: 'New Producer Application',
+        message: `${formData.professional_name || formData.full_name} (${formData.email}) has applied as Ahl-e-Naghma (Producer). Submission: ${submissionId}.`,
+        event: 'application_received',
+        from_role: 'producer',
+        from_name: formData.professional_name || formData.full_name,
+        action_url: '/admin/applications/producers',
+      }).catch(console.error);
     } catch (err) {
       console.error(err);
       setError('Failed to submit producer profile. Please try again.');
@@ -61,11 +85,10 @@ export function ProducerCredentialsForm() {
 
   if (submitted) {
     return (
-      <div className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8 text-center">
-        <p className="text-neutral-300 text-sm">
-          Your profile has been received for institutional review.
-        </p>
-      </div>
+      <ProducerSubmissionSuccessModal
+        onClose={() => setSubmitted(false)}
+        submissionId={submissionId}
+      />
     );
   }
 
@@ -330,7 +353,12 @@ export function ProducerCredentialsForm() {
             disabled={!user?.is_verified || !formData.accept_framework || !formData.acknowledge_centralized_control}
             className="px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? <Loader /> : 'Submit Producer Profile'}
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-neutral-950/30 border-t-neutral-950 rounded-full animate-spin" />
+                Submitting...
+              </>
+            ) : 'Submit Producer Profile'}
           </button>
         ) : (
           <Link

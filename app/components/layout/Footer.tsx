@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Logo } from './Logo';
+import Image from 'next/image';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -206,34 +206,29 @@ export function Footer() {
           `.trim()}
         >
           <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-6">
-            <div className="flex items-start gap-3">
-              <Logo showText={false} />
-              <div>
-                <h3
-                  className={`
-                    text-[var(--text-lg)]
-                    font-[var(--font-headline)]
-                    font-semibold
-                    leading-tight
-                    mb-2
-                  `.trim()}
-                  style={{ color: '#F4D03F' }}
-                >
-                  SufiPulse
-                </h3>
-                <p
-                  className={`
-                    text-[var(--text-sm)]
-                    text-[var(--color-text-secondary)]
-                    leading-[var(--leading-relaxed)]
-                  `.trim()}
-                >
-                  Institutional stewardship of sacred kalam through transparent governance and disciplined production.
-                </p>
-                <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mt-3">
-                  &copy; {currentYear} All rights reserved.
-                </p>
+            <div className="flex flex-col items-start gap-4">
+              <div className="flex items-center gap-4">
+                <Image
+                  src="/sufipulse-logo-v5.png"
+                  alt="SufiPulse"
+                  width={140}
+                  height={44}
+                  className="h-11 w-auto object-contain object-left"
+                />
+                <Image
+                  src="/sufitube-logo-v5.png"
+                  alt="SufiTube Studio"
+                  width={140}
+                  height={44}
+                  className="h-11 w-auto object-contain object-left"
+                />
               </div>
+              <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)]">
+                Institutional stewardship of sacred kalam through transparent governance and disciplined production.
+              </p>
+              <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
+                &copy; {currentYear} All rights reserved.
+              </p>
             </div>
 
             <div>

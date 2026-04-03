@@ -12,6 +12,7 @@ import Link from 'next/link';
 import Loader from './components/ui/Loader';
 import { literaryArticles } from './data/literary-articles';
 import Image from 'next/image';
+import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 
 interface FeaturedArticle {
   id: string;
@@ -46,14 +47,20 @@ export default function Home() {
   const [articlesLoading, setArticlesLoading] = useState(true);
   const [latestPublications, setLatestPublications] = useState<Publication[]>([]);
   const [pubsLoading, setPubsLoading] = useState(true);
+  const [lastReleaseSync, setLastReleaseSync] = useState<string | null>(null);
 
   const featuredReleases = latestPublications.filter(p => p.type === 'music');
+  const activeRelease = featuredReleases[currentSlide];
+  const activeVideoId = activeRelease?.youtube_video_id || activeRelease?.slug;
+  const activeThumbnailCandidates = buildYouTubeThumbnailCandidates(activeVideoId, [activeRelease?.artwork_url]);
 
   const nextSlide = () => {
+    if (featuredReleases.length <= 1) return;
     setCurrentSlide((prev) => (prev + 1) % featuredReleases.length);
   };
 
   const prevSlide = () => {
+    if (featuredReleases.length <= 1) return;
     setCurrentSlide((prev) => (prev - 1 + featuredReleases.length) % featuredReleases.length);
   };
 
@@ -69,52 +76,80 @@ export default function Home() {
     // Latest publications
     const fetchLatestPublications = async () => {
       try {
-        const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || 'AIzaSyCw34bUCxl_8S5R8I-380YyFOLDqpWL-R4';
-        const CHANNEL_ID = 'UCraDr3i5A3k0j7typ6tOOsQ';
+        const { youtubeService } = await import('../lib/youtube-service');
+        const videos = await youtubeService.getLatestVideos(8);
 
-        const searchRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=2&order=date&type=video&key=${YOUTUBE_API_KEY}`
-        );
-        const searchData = await searchRes.json();
-
-        const music: Publication[] = [];
-        if (searchData.items && searchData.items.length > 0) {
-          const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
-          const videosRes = await fetch(
-            `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`
-          );
-          const videosData = await videosRes.json();
-
-          (videosData.items || []).forEach((video: any) => {
-            music.push({
-              id: video.id,
-              type: 'music',
-              title: video.snippet.title,
-              slug: video.id,
-              published_at: video.snippet.publishedAt,
-              description: video.snippet.description,
-              artwork_url: video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high?.url,
-              youtube_video_id: video.id
-            });
-          });
-        }
+        const music: Publication[] = videos.map((video: any) => ({
+          id: video.id,
+          type: 'music',
+          title: video.title,
+          slug: video.id,
+          published_at: video.publishedDate,
+          description: video.description,
+          artwork_url: video.thumbnailUrl,
+          youtube_video_id: video.id
+        }));
 
         // We only want music videos for latest releases
-        const combined = [...music].sort((a, b) => {
+        const combined = music.sort((a, b) => {
           return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-        }).slice(0, 2);
+        }).slice(0, 8);
 
         setLatestPublications(combined);
+        setLastReleaseSync(new Date().toISOString());
       } catch (err) {
         console.error('Error fetching latest music releases:', err);
-        setLatestPublications([]);
+        // Fallback to mock data when API fails (e.g., quota exceeded)
+        const mockReleases: Publication[] = [
+          {
+            id: 'demo-1',
+            type: 'music',
+            title: 'SufiPulse - Sacred Recitations',
+            slug: 'demo-1',
+            published_at: new Date().toISOString(),
+            description: 'A collection of soul-stirring Sufi recitations from our institutional archive.',
+            artwork_url: 'https://via.placeholder.com/480x360/8B5CF6/FFFFFF?text=SufiPulse',
+            youtube_video_id: 'demo-1'
+          },
+          {
+            id: 'demo-2',
+            type: 'music',
+            title: 'Mystic Melodies - Live Session',
+            slug: 'demo-2',
+            published_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+            description: 'Experience the live recording session of our latest mystical compositions.',
+            artwork_url: 'https://via.placeholder.com/480x360/10B981/FFFFFF?text=Live+Session',
+            youtube_video_id: 'demo-2'
+          }
+        ];
+        setLatestPublications(mockReleases);
+        setLastReleaseSync(new Date().toISOString());
       } finally {
         setPubsLoading(false);
       }
     };
 
     fetchLatestPublications();
+
+    // Auto-refresh latest releases every 15 minutes.
+    const refreshTimer = setInterval(fetchLatestPublications, 15 * 60 * 1000);
+    return () => clearInterval(refreshTimer);
   }, []);
+
+  useEffect(() => {
+    if (currentSlide >= featuredReleases.length) {
+      setCurrentSlide(0);
+    }
+  }, [currentSlide, featuredReleases.length]);
+
+  useEffect(() => {
+    if (featuredReleases.length <= 1) return;
+    const carouselTimer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % featuredReleases.length);
+    }, 7000);
+
+    return () => clearInterval(carouselTimer);
+  }, [featuredReleases.length]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -462,25 +497,13 @@ export default function Home() {
                       {featuredReleases[currentSlide]?.youtube_video_id || featuredReleases[currentSlide]?.slug ? (
                         <div className="relative w-full overflow-hidden rounded-lg shadow-2xl" style={{ aspectRatio: '16/9' }}>
                           <img
-                            src={
-                              featuredReleases[currentSlide]?.artwork_url ||
-                              `https://i.ytimg.com/vi/${featuredReleases[currentSlide]?.youtube_video_id}/maxresdefault.jpg`
-                            }
+                            src={activeThumbnailCandidates[0]}
                             alt={featuredReleases[currentSlide]?.title}
                             className="w-full h-full object-cover bg-black group-hover:scale-[1.02] transition-transform duration-[var(--transition-base)]"
                             loading="lazy"
+                            data-thumb-index="0"
                             onError={(e) => {
-                              const target = e.currentTarget;
-                              const videoId = featuredReleases[currentSlide]?.youtube_video_id;
-                              if (videoId) {
-                                if (target.src.includes('maxresdefault')) {
-                                  target.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-                                } else if (target.src.includes('hqdefault')) {
-                                  target.src = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-                                } else if (target.src.includes('mqdefault')) {
-                                  target.src = `https://i.ytimg.com/vi/${videoId}/default.jpg`;
-                                }
-                              }
+                              advanceThumbnailFallback(e.currentTarget, activeThumbnailCandidates);
                             }}
                           />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--transition-base)] flex items-center justify-center">
@@ -529,6 +552,11 @@ export default function Home() {
               </div>
 
               <div className="text-center mt-12">
+                {lastReleaseSync && (
+                  <div className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-3">
+                    Auto-synced: {formatDate(lastReleaseSync)}
+                  </div>
+                )}
                 <Link href="/releases">
                   <PrimaryButton variant="secondary" size="large">
                     View Full Registry

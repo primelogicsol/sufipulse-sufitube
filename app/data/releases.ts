@@ -45,7 +45,7 @@ export const releases: Release[] = [
     },
     releaseDate: '2024-03-15',
     coverImage: 'https://images.pexels.com/photos/3944091/pexels-photo-3944091.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeId: 'dQw4w9WgXcQ',
+    youtubeId: 'LwnPXSEJJHI',
     description: 'A soulful exploration of divine love and spiritual yearning, expressed through classical Sufi poetry.',
     lyrics: [
       {
@@ -80,7 +80,7 @@ export const releases: Release[] = [
     },
     releaseDate: '2024-02-28',
     coverImage: 'https://images.pexels.com/photos/1699161/pexels-photo-1699161.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeId: 'dQw4w9WgXcQ',
+    youtubeId: 'XPaJu3lHd5Y',
     description: 'A heartfelt conversation with the Divine, exploring themes of surrender and devotion.',
     lyrics: [
       {
@@ -109,7 +109,7 @@ export const releases: Release[] = [
     },
     releaseDate: '2024-01-20',
     coverImage: 'https://images.pexels.com/photos/1261180/pexels-photo-1261180.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeId: 'dQw4w9WgXcQ',
+    youtubeId: '24SrdzzLYus',
     description: 'Journey through the path of divine love, inspired by classical Sufi traditions.',
     lyrics: [
       {

@@ -19,64 +19,43 @@ export default function YouTubeSync() {
         setProgress(0);
 
         try {
-            const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || 'AIzaSyCw34bUCxl_8S5R8I-380YyFOLDqpWL-R4';
-            const CHANNEL_ID = 'UCraDr3i5A3k0j7typ6tOOsQ';
+            const { youtubeService } = await import('../../../lib/youtube-service');
 
-            let allVideoIds: string[] = [];
-            let nextPageToken = '';
-
-            do {
-                const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=50&order=date&type=video&key=${YOUTUBE_API_KEY}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
-                const searchRes = await fetch(searchUrl);
-                const searchData = await searchRes.json();
-
-                if (searchData.items && searchData.items.length > 0) {
-                    const videoIds = searchData.items.map((item: any) => item.id.videoId);
-                    allVideoIds = [...allVideoIds, ...videoIds];
-                }
-
-                nextPageToken = searchData.nextPageToken || '';
-            } while (nextPageToken);
-
-            setTotal(allVideoIds.length);
-            setMessage(`Found ${allVideoIds.length} videos. Syncing to database...`);
-
-            const allVideos: any[] = [];
-            for (let i = 0; i < allVideoIds.length; i += 50) {
-                const batchIds = allVideoIds.slice(i, i + 50).join(',');
-                const videosRes = await fetch(
-                    `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${batchIds}&key=${YOUTUBE_API_KEY}`
-                );
-                const videosData = await videosRes.json();
-
-                if (videosData.items) {
-                    allVideos.push(...videosData.items);
-                }
+            // Check if quota is exceeded
+            if (youtubeService.isQuotaExceeded()) {
+                const resetTime = youtubeService.getQuotaResetTime();
+                setStatus('error');
+                setMessage(`YouTube API quota exceeded. ${resetTime ? `Resets at ${resetTime.toLocaleString()}` : 'Please try again later.'}`);
+                setSyncing(false);
+                return;
             }
 
-            let syncedCount = 0;
-            for (const video of allVideos) {
-                const match = video.contentDetails.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-                let h = 0, m = 0, s = 0;
-                if (match) {
-                    h = parseInt(match[1]) || 0;
-                    m = parseInt(match[2]) || 0;
-                    s = parseInt(match[3]) || 0;
-                }
-                const totalSeconds = h * 3600 + m * 60 + s;
+            // Get all videos (this will use the service's search method)
+            const videos = await youtubeService.searchVideos('', 50, 'date'); // Get latest 50 videos
 
+            if (!supabase) {
+                setStatus('error');
+                setMessage('Supabase is not configured. Cannot sync to database in standalone mode.');
+                setSyncing(false);
+                return;
+            }
+
+            setTotal(videos.length);
+            setMessage(`Found ${videos.length} videos. Syncing to database...`);
+
+            let syncedCount = 0;
+            for (const video of videos) {
                 const { error } = await supabase
                     .from('releases')
                     .upsert({
                         youtube_video_id: video.id,
                         slug: video.id,
-                        release_title: video.snippet.title,
-                        description: video.snippet.description,
-                        release_date: video.snippet.publishedAt,
-                        duration_seconds: totalSeconds,
-                        views: parseInt(video.statistics.viewCount || '0'),
-                        likes: parseInt(video.statistics.likeCount || '0'),
-                        thumbnail_url: video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                        release_title: video.title,
+                        description: video.description,
+                        release_date: video.publishedDate,
+                        duration_seconds: video.durationSeconds,
+                        views: video.views,
+                        thumbnail_url: video.thumbnailUrl,
                         source: 'youtube_legacy',
                         workflow_state: 'published',
                         is_published: true
@@ -89,7 +68,7 @@ export default function YouTubeSync() {
                 }
 
                 setProgress(syncedCount);
-                setMessage(`Synced ${syncedCount} of ${allVideos.length} videos...`);
+                setMessage(`Synced ${syncedCount} of ${videos.length} videos...`);
             }
 
             setStatus('success');

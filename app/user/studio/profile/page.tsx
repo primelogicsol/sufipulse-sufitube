@@ -7,6 +7,7 @@ import * as api from "../../../api/auth"
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { StudioProfileType } from '@/app/types/studio.types';
+import { hasRoleAccess } from '@/app/lib/role-access';
 
 
 
@@ -55,8 +56,19 @@ export default function UserProfile() {
   };
 
   useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!hasRoleAccess(user as any, 'studio')) {
+      alert('You do not have studio role access.');
+      router.push('/');
+      return;
+    }
+
     loadStudioProfile();
-  }, [])
+  }, [user])
 
 
 

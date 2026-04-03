@@ -1,17 +1,17 @@
 "use client"
 import { useState } from 'react';
-import { Building2, Radio, FileCheck, UserCheck, Settings, Database, ArrowRight } from 'lucide-react';
+import { Building2, Radio, FileCheck, UserCheck, Settings, Database, ArrowRight, KeyRound, ChevronDown, ChevronUp } from 'lucide-react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-// import { Link } from 'react-router-dom';
 import { SessionRequestForm } from '../../components/studio/SessionRequestForm';
+import { StudioAccessCodeRequestForm } from '../../components/studio/StudioAccessCodeRequestForm';
 import Link from 'next/link';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 
 export default function StudioSessions() {
-    const [showInPersonForm, setShowInPersonForm] = useState(false);
-    const [showRemoteForm, setShowRemoteForm] = useState(false);
+    const [activeForm, setActiveForm] = useState<'in_person' | 'remote' | null>(null);
+    const [showCodeRequest, setShowCodeRequest] = useState(false);
     const sessionAccessRequirements = [
         'Approved Writers (Ahl-e-Qalam)',
         'Approved Vocalists (Ahl-e-Sada)',
@@ -147,10 +147,37 @@ export default function StudioSessions() {
                             Recording Modalities
                         </h2>
 
-                        <div className="bg-neutral-950/30 border border-amber-400/30 rounded-lg p-6 mb-8">
+                        <div className="bg-neutral-950/30 border border-amber-400/30 rounded-lg p-6 mb-6">
                             <p className="text-amber-400/90 text-sm leading-relaxed">
                                 <span className="font-semibold">Approval Required:</span> Session coordination requires a valid approval reference code. This code is issued to approved contributors after credential review. Submit your credentials through the appropriate contributor page to receive your reference code before requesting session access.
                             </p>
+                        </div>
+
+                        {/* ── Request Access Code ── */}
+                        <div className="mb-8">
+                          <button
+                            onClick={() => setShowCodeRequest(!showCodeRequest)}
+                            className="w-full flex items-center justify-between px-5 py-4 bg-neutral-900/40 border border-neutral-700 hover:border-amber-400/40 rounded-lg transition-colors group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-1.5 bg-amber-400/10 rounded border border-amber-400/20 group-hover:border-amber-400/40 transition-colors">
+                                <KeyRound className="w-4 h-4 text-amber-400" />
+                              </div>
+                              <div className="text-left">
+                                <p className="text-sm font-medium text-white">Don&apos;t have a reference code?</p>
+                                <p className="text-xs text-neutral-400">Request one from the admin team — approved contributors only</p>
+                              </div>
+                            </div>
+                            {showCodeRequest
+                              ? <ChevronUp className="w-4 h-4 text-neutral-400" />
+                              : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                          </button>
+
+                          {showCodeRequest && (
+                            <div className="mt-4">
+                              <StudioAccessCodeRequestForm />
+                            </div>
+                          )}
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-6">
@@ -182,10 +209,10 @@ export default function StudioSessions() {
                                 </div>
 
                                 <button
-                                    onClick={() => setShowInPersonForm(!showInPersonForm)}
+                                    onClick={() => setActiveForm(activeForm === 'in_person' ? null : 'in_person')}
                                     className="w-full px-6 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 hover:border-amber-400/50 text-amber-400 rounded-lg text-sm font-medium transition-all"
                                 >
-                                    {showInPersonForm ? 'Hide Form' : 'Request Session Coordination'}
+                                    {activeForm === 'in_person' ? 'Hide Form' : 'Request Session Coordination'}
                                 </button>
                             </div>
 
@@ -217,18 +244,19 @@ export default function StudioSessions() {
                                 </div>
 
                                 <button
-                                    onClick={() => setShowRemoteForm(!showRemoteForm)}
+                                    onClick={() => setActiveForm(activeForm === 'remote' ? null : 'remote')}
                                     className="w-full px-6 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 hover:border-amber-400/50 text-amber-400 rounded-lg text-sm font-medium transition-all"
                                 >
-                                    {showRemoteForm ? 'Hide Form' : 'Initiate Remote Coordination'}
+                                    {activeForm === 'remote' ? 'Hide Form' : 'Initiate Remote Coordination'}
                                 </button>
                             </div>
                         </div>
 
-                        {(showInPersonForm || showRemoteForm) && (
+                        {activeForm && (
                             <div className="mt-8">
                                 <SessionRequestForm
-                                    sessionType={showInPersonForm ? 'in_person' : 'remote'}
+                                    sessionType={activeForm}
+                                    onClose={() => setActiveForm(null)}
                                 />
                             </div>
                         )}

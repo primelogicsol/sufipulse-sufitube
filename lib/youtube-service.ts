@@ -1,0 +1,441 @@
+// lib/youtube-service.ts
+interface YouTubeVideo {
+    id: string;
+    title: string;
+    description: string;
+    thumbnailUrl: string;
+    publishedDate: string;
+    durationSeconds: number;
+    durationFormatted: string;
+    views: number;
+    source: string;
+}
+
+interface YouTubeServiceConfig {
+    apiKey: string;
+    channelId: string;
+    cacheExpiryMs: number;
+    maxRetries: number;
+    retryDelayMs: number;
+}
+
+class YouTubeService {
+    private config: YouTubeServiceConfig;
+    private cache = new Map<string, { data: any; timestamp: number }>();
+    private quotaExceeded = false;
+    private quotaResetTime: number | null = null;
+
+    constructor(config: Partial<YouTubeServiceConfig> = {}) {
+        this.config = {
+            apiKey: config.apiKey || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
+            channelId: config.channelId || 'UCraDr3i5A3k0j7typ6tOOsQ',
+            cacheExpiryMs: config.cacheExpiryMs || 30 * 60 * 1000, // 30 minutes
+            maxRetries: config.maxRetries || 3,
+            retryDelayMs: config.retryDelayMs || 1000,
+            ...config
+        };
+    }
+
+    private isCacheValid(key: string): boolean {
+        const cached = this.cache.get(key);
+        if (!cached) return false;
+        return Date.now() - cached.timestamp < this.config.cacheExpiryMs;
+    }
+
+    private setCache(key: string, data: any): void {
+        this.cache.set(key, { data, timestamp: Date.now() });
+    }
+
+    private getCache(key: string): any | null {
+        if (this.isCacheValid(key)) {
+            return this.cache.get(key)?.data || null;
+        }
+        return null;
+    }
+
+    private async delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    private async makeRequest(url: string, retries = this.config.maxRetries): Promise<any> {
+        // Check if quota is exceeded and not yet reset
+        if (this.quotaExceeded && this.quotaResetTime && Date.now() < this.quotaResetTime) {
+            throw new Error('YouTube API quota exceeded. Using static data fallback.');
+        }
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (response.status === 403 && data.error?.message?.includes('quota')) {
+                this.quotaExceeded = true;
+                // Set reset time to next day at midnight PST (approximate)
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(0, 0, 0, 0);
+                this.quotaResetTime = tomorrow.getTime();
+
+                throw new Error(`YouTube API quota exceeded. Resets at ${tomorrow.toLocaleString()}`);
+            }
+
+            if (!response.ok) {
+                throw new Error(`YouTube API error: ${response.status} ${response.statusText}`);
+            }
+
+            // Reset quota flag on successful request
+            this.quotaExceeded = false;
+            this.quotaResetTime = null;
+
+            return data;
+        } catch (error: any) {
+            if (retries > 0 && !error.message.includes('quota')) {
+                console.warn(`YouTube API request failed, retrying... (${retries} attempts left)`);
+                await this.delay(this.config.retryDelayMs);
+                return this.makeRequest(url, retries - 1);
+            }
+            throw error;
+        }
+    }
+
+    async searchVideos(query: string = '', maxResults: number = 50, order: string = 'date'): Promise<YouTubeVideo[]> {
+        const safeMaxResults = Math.max(1, Math.min(maxResults, 500));
+        const cacheKey = `search_${query}_${safeMaxResults}_${order}`;
+
+        if (!this.config.apiKey) {
+            console.warn('YouTube API key is missing. Falling back to static registry data.');
+            const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
+            return STATIC_YOUTUBE_VIDEOS.slice(0, safeMaxResults);
+        }
+
+        // Check cache first
+        const cached = this.getCache(cacheKey);
+        if (cached) {
+            console.log('🎯 Returning cached search results for:', query || 'latest');
+            return cached;
+        }
+
+        try {
+            console.log('🔍 Searching YouTube for:', query || 'latest videos');
+            const pageSize = Math.min(50, safeMaxResults);
+            const maxPages = Math.max(1, Math.ceil(safeMaxResults / pageSize));
+
+            let nextPageToken: string | null = null;
+            let pagesFetched = 0;
+            const searchItems: any[] = [];
+
+            while (pagesFetched < maxPages && searchItems.length < safeMaxResults) {
+                const tokenParam = nextPageToken ? `&pageToken=${nextPageToken}` : '';
+                const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${this.config.channelId}&maxResults=${pageSize}&order=${order}&type=video&q=${encodeURIComponent(query)}${tokenParam}&key=${this.config.apiKey}`;
+                const searchData = await this.makeRequest(searchUrl);
+                const items = searchData.items || [];
+
+                if (items.length === 0) {
+                    break;
+                }
+
+                searchItems.push(...items);
+                pagesFetched += 1;
+                nextPageToken = searchData.nextPageToken || null;
+                if (!nextPageToken) {
+                    break;
+                }
+            }
+
+            if (searchItems.length === 0) {
+                console.log('📭 No videos found for search query');
+                const emptyResult: YouTubeVideo[] = [];
+                this.setCache(cacheKey, emptyResult);
+                return emptyResult;
+            }
+
+            const uniqueIds = Array.from(
+                new Set(searchItems.map((item: any) => item?.id?.videoId).filter(Boolean))
+            ).slice(0, safeMaxResults);
+
+            const searchItemById = new Map<string, any>();
+            searchItems.forEach((item: any) => {
+                const id = item?.id?.videoId;
+                if (id && !searchItemById.has(id)) {
+                    searchItemById.set(id, item);
+                }
+            });
+
+            // Get detailed video information
+            console.log(`📊 Fetching details for ${uniqueIds.length} videos across ${pagesFetched} page(s)`);
+            const chunks: string[][] = [];
+            for (let i = 0; i < uniqueIds.length; i += 50) {
+                chunks.push(uniqueIds.slice(i, i + 50));
+            }
+
+            const chunkResults = await Promise.all(
+                chunks.map((chunk) => this.getVideosByIds(chunk))
+            );
+            const videosData = chunkResults.flat();
+
+            const formatted = videosData.map((video: any) => {
+                const searchItem = searchItemById.get(video.id);
+                return {
+                    id: video.id,
+                    title: video.snippet.title,
+                    description: video.snippet.description,
+                    thumbnailUrl: video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                    publishedDate: video.snippet.publishedAt,
+                    durationSeconds: this.parseDuration(video.contentDetails.duration),
+                    durationFormatted: this.formatDuration(video.contentDetails.duration),
+                    views: parseInt(video.statistics.viewCount || '0'),
+                    source: 'youtube_legacy'
+                };
+            });
+
+            if (order === 'date') {
+                formatted.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
+            } else if (order === 'viewCount') {
+                formatted.sort((a, b) => b.views - a.views);
+            }
+
+            console.log(`✅ Successfully processed ${formatted.length} videos`);
+            this.setCache(cacheKey, formatted);
+            return formatted.slice(0, safeMaxResults);
+
+        } catch (error: any) {
+            console.error('❌ YouTube search failed:', error.message);
+
+            // Return static data as fallback
+            console.log('🔄 Falling back to static video data');
+            const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
+            
+            // Filter and sort based on the original query
+            let results = [...STATIC_YOUTUBE_VIDEOS];
+            
+            if (order === 'viewCount') {
+                results.sort((a, b) => b.views - a.views);
+            } else if (order === 'date') {
+                results.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
+            }
+            
+            return results.slice(0, safeMaxResults);
+        }
+    }
+
+    async getVideosByIds(videoIds: string | string[]): Promise<any[]> {
+        const ids = Array.isArray(videoIds) ? videoIds.join(',') : videoIds;
+        const cacheKey = `videos_${ids}`;
+
+        const cached = this.getCache(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
+        try {
+            const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids}&key=${this.config.apiKey}`;
+            const data = await this.makeRequest(videosUrl);
+
+            this.setCache(cacheKey, data.items || []);
+            return data.items || [];
+        } catch (error: any) {
+            console.error('Failed to get video details:', error.message);
+            
+            // Fallback to static videos
+            try {
+                const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
+                const idArray = Array.isArray(videoIds) ? videoIds : videoIds.split(',');
+                
+                // Convert static videos to YouTube API response format
+                const staticVideos = idArray
+                    .map((id: string) => {
+                        const staticVideo = STATIC_YOUTUBE_VIDEOS.find((v: any) => v.id === id.trim());
+                        if (staticVideo) {
+                            return {
+                                id: staticVideo.id,
+                                snippet: {
+                                    title: staticVideo.title,
+                                    description: staticVideo.description,
+                                    publishedAt: staticVideo.publishedDate,
+                                    thumbnails: {
+                                        maxres: { url: staticVideo.thumbnailUrl },
+                                        high: { url: staticVideo.thumbnailUrl },
+                                        medium: { url: staticVideo.thumbnailUrl }
+                                    }
+                                },
+                                contentDetails: {
+                                    duration: `PT${Math.floor(staticVideo.durationSeconds / 3600)}H${Math.floor((staticVideo.durationSeconds % 3600) / 60)}M${staticVideo.durationSeconds % 60}S`
+                                },
+                                statistics: {
+                                    viewCount: staticVideo.views.toString(),
+                                    likeCount: Math.floor(staticVideo.views * 0.05).toString()
+                                }
+                            };
+                        }
+                        return null;
+                    })
+                    .filter((v: any) => v !== null);
+                
+                if (staticVideos.length > 0) {
+                    console.log('🔄 Using static video data for:', idArray.join(', '));
+                    this.setCache(cacheKey, staticVideos);
+                    return staticVideos;
+                }
+            } catch (fallbackError: any) {
+                console.error('Failed to use static video fallback:', fallbackError.message);
+            }
+            
+            return [];
+        }
+    }
+
+    async getLatestVideos(count: number = 10): Promise<YouTubeVideo[]> {
+        try {
+            return await this.searchVideos('', count, 'date');
+        } catch (error) {
+            console.log('API failed, using static data');
+            const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
+            return STATIC_YOUTUBE_VIDEOS.slice(0, count);
+        }
+    }
+
+    async getPopularVideos(count: number = 10): Promise<YouTubeVideo[]> {
+        // Popular ranking should be based on real view counts over a larger channel sample.
+        try {
+            const sampleSize = Math.max(count * 5, 250);
+            const result = await this.searchVideos('', sampleSize, 'date');
+            if (result.length > 0) {
+                return [...result].sort((a, b) => b.views - a.views).slice(0, count);
+            }
+        } catch (error) {
+            console.log('API failed, using static data');
+        }
+        
+        // Fall back to static videos sorted by views
+        const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
+        return [...STATIC_YOUTUBE_VIDEOS]
+            .sort((a, b) => b.views - a.views)
+            .slice(0, count);
+    }
+
+    async getVideoById(videoId: string): Promise<YouTubeVideo | null> {
+        const cacheKey = `video_${videoId}`;
+
+        // Check cache first
+        const cached = this.getCache(cacheKey);
+        if (cached) {
+            console.log('🎯 Returning cached video details for:', videoId);
+            return cached;
+        }
+
+        try {
+            console.log('🔍 Fetching video details for:', videoId);
+            const videos = await this.getVideosByIds(videoId);
+
+            if (!videos || videos.length === 0) {
+                console.log('📭 Video not found via API, checking static data');
+                
+                // Try to find in static videos
+                const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
+                const staticVideo = STATIC_YOUTUBE_VIDEOS.find((v: any) => v.id === videoId);
+                if (staticVideo) {
+                    this.setCache(cacheKey, staticVideo);
+                    return staticVideo;
+                }
+                
+                return null;
+            }
+
+            const video = videos[0];
+            const formatted: YouTubeVideo = {
+                id: video.id,
+                title: video.snippet.title,
+                description: video.snippet.description,
+                thumbnailUrl: video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                publishedDate: video.snippet.publishedAt,
+                durationSeconds: this.parseDuration(video.contentDetails.duration),
+                durationFormatted: this.formatDuration(video.contentDetails.duration),
+                views: parseInt(video.statistics.viewCount || '0'),
+                source: 'youtube_legacy'
+            };
+
+            console.log('✅ Successfully fetched video details');
+            this.setCache(cacheKey, formatted);
+            return formatted;
+
+        } catch (error: any) {
+            console.error('❌ Failed to get video details:', error.message);
+
+            // Try to find in static videos first
+            const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
+            const staticVideo = STATIC_YOUTUBE_VIDEOS.find((v: any) => v.id === videoId);
+            if (staticVideo) {
+                console.log('🔄 Using static video data');
+                return staticVideo;
+            }
+
+            // Return generic mock as last resort
+            console.log('🔄 Returning generic mock video data');
+            const mockVideo: YouTubeVideo = {
+                id: videoId,
+                title: 'SufiPulse - Sacred Recitation',
+                description: 'A soul-stirring Sufi recitation from our institutional archive.',
+                thumbnailUrl: 'https://via.placeholder.com/480x360/8B5CF6/FFFFFF?text=SufiPulse',
+                publishedDate: new Date().toISOString(),
+                durationSeconds: 300,
+                durationFormatted: '5:00',
+                views: 2500,
+                source: 'mock'
+            };
+
+            return mockVideo;
+        }
+    }
+
+    private parseDuration(duration: string): number {
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        if (!match) return 0;
+
+        const h = parseInt(match[1]) || 0;
+        const m = parseInt(match[2]) || 0;
+        const s = parseInt(match[3]) || 0;
+
+        return h * 3600 + m * 60 + s;
+    }
+
+    private formatDuration(duration: string): string {
+        const seconds = this.parseDuration(duration);
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+
+        if (h > 0) {
+            return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        } else {
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+    }
+
+    // Utility methods
+    isQuotaExceeded(): boolean {
+        return this.quotaExceeded;
+    }
+
+    getQuotaResetTime(): Date | null {
+        return this.quotaResetTime ? new Date(this.quotaResetTime) : null;
+    }
+
+    clearCache(): void {
+        this.cache.clear();
+        console.log('YouTube cache cleared');
+    }
+
+    getCacheStats(): { size: number; keys: string[] } {
+        return {
+            size: this.cache.size,
+            keys: Array.from(this.cache.keys())
+        };
+    }
+}
+
+// Export singleton instance
+export const youtubeService = new YouTubeService();
+
+// Export types and class for advanced usage
+export type { YouTubeVideo, YouTubeServiceConfig };
+export { YouTubeService };

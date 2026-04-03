@@ -1,15 +1,23 @@
-import { useState } from 'react';
-// import { supabase } from '../../lib/supabase';
-import { Calendar, FileText, User, Shield } from 'lucide-react';
-// import { DOMPurify.sanitize } from '../../lib/sanitization';
+import { useState, useEffect } from 'react';
+import { Calendar, FileText, User, Shield, Mail } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { SessionRequestSuccessModal } from './SessionRequestSuccessModal';
+import { notifyAdmin } from '@/app/lib/notifications';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { getAllReleases } from '@/lib/cms-api';
+import type { Release } from '@/lib/cms-types';
 
 interface SessionRequestFormProps {
   sessionType: 'in_person' | 'remote';
+  onClose?: () => void;
 }
 
-export function SessionRequestForm({ sessionType }: SessionRequestFormProps) {
+export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormProps) {
+  const { user } = useAuth();
+  const [cmsReleases, setCmsReleases] = useState<Release[]>([]);
   const [formData, setFormData] = useState({
+    requester_name: '',
+    email: '',
     approval_reference_code: '',
     release_id: '',
     role_type: 'vocalist' as 'writer' | 'vocalist' | 'producer',
@@ -21,50 +29,91 @@ export function SessionRequestForm({ sessionType }: SessionRequestFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [requestId, setRequestId] = useState<string | undefined>();
+
+  useEffect(() => {
+    getAllReleases({ status: 'published' }).then(setCmsReleases).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // try {
-    //   const { error: submitError } = await supabase
-    //     .from('session_requests')
-    //     .insert([{
-    //       approval_reference_code: formData.approval_reference_code,
-    //       release_id: formData.release_id || null,
-    //       role_type: formData.role_type,
-    //       session_type: sessionType,
-    //       preferred_date_start: formData.preferred_date_start,
-    //       preferred_date_end: formData.preferred_date_end,
-    //       production_reference: formData.production_reference || null,
-    //       additional_notes: formData.additional_notes || null
-    //     }]);
+    try {
+      // ── Validate reference code against issued access codes ──────────────
+      const codeRecords: any[] = typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('sufipulse_studio_access_requests') || '[]')
+        : [];
+      const matchedCode = codeRecords.find(
+        (r) =>
+          r.issued_code &&
+          r.issued_code.toUpperCase() === formData.approval_reference_code.toUpperCase() &&
+          r.status === 'issued'
+      );
+      if (!matchedCode) {
+        setError(
+          'Invalid or unrecognized reference code. Please ensure you have been issued a Studio Session access code by the admin team. Use the "Don\'t have a reference code?" section above to request one.'
+        );
+        setLoading(false);
+        return;
+      }
 
-    //   if (submitError) throw submitError;
+      const STORAGE_KEY = 'sufipulse_session_requests';
+      const existing: any[] = typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+        : [];
 
-    //   setSuccess(true);
-    //   setTimeout(() => {
-    //     setFormData({
-    //       approval_reference_code: '',
-    //       release_id: '',
-    //       role_type: 'vocalist',
-    //       preferred_date_start: '',
-    //       preferred_date_end: '',
-    //       production_reference: '',
-    //       additional_notes: ''
-    //     });
-    //     setSuccess(false);
-    //   }, 3000);
-    // } catch (err) {
-    //   setError(err instanceof Error ? err.message : 'An error occurred while submitting your request.');
-    // } finally {
-    //   setLoading(false);
-    // }
+      const newRequest = {
+        id: `SR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        ...formData,
+        user_id: user?.id,
+        session_type: sessionType,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, newRequest]));
+
+      const sessionLabel = sessionType === 'in_person' ? 'In-Person' : 'Remote';
+      await notifyAdmin({
+        title: 'New Studio Session Request',
+        message: `${DOMPurify.sanitize(formData.requester_name)} (${DOMPurify.sanitize(formData.email)}) submitted a ${sessionLabel} session coordination request. Ref code: ${formData.approval_reference_code}.`,
+        event: 'application_received',
+        from_role: formData.role_type,
+        from_name: DOMPurify.sanitize(formData.requester_name),
+        action_url: '/admin/session-requests',
+      });
+
+      setRequestId(newRequest.id);
+      setSuccess(true);
+      setFormData({
+        requester_name: '',
+        email: '',
+        approval_reference_code: '',
+        release_id: '',
+        role_type: 'vocalist',
+        preferred_date_start: '',
+        preferred_date_end: '',
+        production_reference: '',
+        additional_notes: '',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while submitting your request.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg">
+      {success && requestId !== undefined && (
+        <SessionRequestSuccessModal
+          sessionType={sessionType}
+          requestId={requestId}
+          onClose={() => { setSuccess(false); onClose?.(); }}
+        />
+      )}
       <div className="border-b border-neutral-800 p-6">
         <h3 className="text-xl font-bold text-white mb-1">
           {sessionType === 'in_person' ? 'In-Person' : 'Remote'} Session Request
@@ -74,29 +123,49 @@ export function SessionRequestForm({ sessionType }: SessionRequestFormProps) {
         </p>
       </div>
 
-      {success ? (
-        <div className="p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-8 h-8 text-green-500" />
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+            <p className="text-red-400 text-sm">{error}</p>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Request Submitted</h3>
-          <p className="text-neutral-400 text-sm">
-            Your session coordination request has been submitted for governance review.
+        )}
+
+        <div className="bg-amber-400/5 border border-amber-400/20 rounded-lg p-4">
+          <p className="text-amber-400/90 text-xs leading-relaxed">
+            Session access requires a valid approval reference code. If you don&apos;t have one yet, use the <strong>&quot;Don&apos;t have a reference code?&quot;</strong> section above to request one from the admin team.
           </p>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
 
-          <div className="bg-amber-400/5 border border-amber-400/20 rounded-lg p-4">
-            <p className="text-amber-400/90 text-xs leading-relaxed">
-              Session access requires a valid approval reference code. This code is issued to approved contributors after credential review. Submit your credentials through the appropriate contributor page (Writers, Vocalists, or Producers) to receive your reference code.
-            </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-neutral-300 mb-2">
+              <User className="w-4 h-4 text-amber-400" />
+              Full Name
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Your registered name"
+              value={formData.requester_name}
+              onChange={(e) => setFormData({ ...formData, requester_name: DOMPurify.sanitize(e.target.value) })}
+              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500"
+            />
           </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-neutral-300 mb-2">
+              <Mail className="w-4 h-4 text-amber-400" />
+              Email Address
+            </label>
+            <input
+              type="email"
+              required
+              placeholder="Your registered email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })}
+              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500"
+            />
+          </div>
+        </div>
 
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-neutral-300 mb-2">
@@ -138,15 +207,20 @@ export function SessionRequestForm({ sessionType }: SessionRequestFormProps) {
               <FileText className="w-4 h-4 text-amber-400" />
               Release ID
             </label>
-            <input
-              type="text"
-              placeholder="Release UUID (if applicable)"
+            <select
               value={formData.release_id}
-              onChange={(e) => setFormData({ ...formData, release_id: DOMPurify.sanitize(e.target.value) })}
-              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500"
-            />
+              onChange={(e) => setFormData({ ...formData, release_id: e.target.value })}
+              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white"
+            >
+              <option value="">— Not tied to a specific release —</option>
+              {cmsReleases.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.title}
+                </option>
+              ))}
+            </select>
             <p className="text-xs text-neutral-500 mt-1">
-              Optional: Reference approved release if session is for existing production
+              Optional: Select the approved release this session is for
             </p>
           </div>
 
@@ -216,7 +290,6 @@ export function SessionRequestForm({ sessionType }: SessionRequestFormProps) {
             </button>
           </div>
         </form>
-      )}
     </div>
   );
 }

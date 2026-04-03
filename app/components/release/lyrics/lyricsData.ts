@@ -27,6 +27,20 @@ export type CaptionCue = {
   text: string;
   stanza?: number;
   line?: number;
+  styleName?: string;
+  alignment?: number;
+  positionX?: number;
+  positionY?: number;
+  fontFamily?: string;
+  fontSize?: number;
+  primaryColor?: string;
+  outlineColor?: string;
+  backColor?: string;
+  bold?: boolean;
+  italic?: boolean;
+  outline?: number;
+  shadow?: number;
+  maxWidthPercent?: number;
 };
 
 export type LyricsTrack = {

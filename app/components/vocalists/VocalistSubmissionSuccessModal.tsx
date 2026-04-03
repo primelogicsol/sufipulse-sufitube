@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CircleCheck as CheckCircle, FileCheck, Clock, Mail, Hop as Home, X } from 'lucide-react';
-import { useRouter } from 'next/router';
-// import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 interface VocalistSubmissionSuccessModalProps {
   onClose: () => void;

@@ -235,6 +235,16 @@ export function Header() {
             <AvatarMenu />
           </nav>
 
+          <Link href="/" className="lg:hidden mt-1" aria-label="Go to homepage">
+            <Image
+              src="/sufipulse-logo-v5.png"
+              alt="sufipulse Studio"
+              width={84}
+              height={84}
+              className="py-1"
+            />
+          </Link>
+
           <button
             onClick={() => setIsMobileMenuOpen(true)}
             className={`
@@ -315,7 +325,7 @@ export function Header() {
 
             <nav className="p-[var(--space-4)]">
               <Link
-                href="/releases"
+                href="/"
                 className={`
                   flex
                   items-center
@@ -329,25 +339,19 @@ export function Header() {
                   setIsMobileMenuOpen(false);
                 }}
               >
-                <img src="/sufitube-logo.png" alt="SufiTube Studio" className="h-8 w-auto object-contain" />
+                <Image
+                  src="/sufitube-logo-v5.png"
+                  alt="SufiTube Studio"
+                  width={120}
+                  height={32}
+                  className="h-8 w-auto object-contain"
+                />
               </Link>
 
               <Link
                 href="/literary-journal"
-                className={`
-                  block
-                  py-[var(--space-4)]
-                  text-[var(--color-text-primary)]
-                  hover:text-[var(--color-gold)]
-                  font-medium
-                  border-b
-                  border-[var(--color-border)]
-                  transition-colors
-                  duration-[var(--transition-base)]
-                `.trim()}
-                onClick={(e) => {
-                  setIsMobileMenuOpen(false);
-                }}
+                className="block text-left py-[var(--space-4)] text-[var(--color-text-primary)] hover:text-[var(--color-gold)] font-medium border-b border-[var(--color-border)] transition-colors duration-[var(--transition-base)]"
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Literary Journal
               </Link>
@@ -377,26 +381,10 @@ function MobileNavSection({ title, items }: MobileNavSectionProps) {
     <div className="border-b border-[var(--color-border)]">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`
-          w-full
-          flex
-          items-center
-          justify-between
-          py-[var(--space-4)]
-          text-[var(--color-text-primary)]
-          font-medium
-          transition-colors
-          duration-[var(--transition-base)]
-        `.trim()}
+        style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', padding: '1rem 0', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-primary)', fontWeight: 600 }}
       >
         <span>{title}</span>
-        <span
-          className={`
-            transition-transform
-            duration-[var(--transition-base)]
-            ${isOpen ? 'rotate-180' : ''}
-          `.trim()}
-        >
+        <span style={{ transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
           ▼
         </span>
       </button>
@@ -407,19 +395,8 @@ function MobileNavSection({ title, items }: MobileNavSectionProps) {
             <Link
               key={index}
               href={item.href}
-              className={`
-                block
-                py-[var(--space-2)]
-                pl-[var(--space-4)]
-                text-[var(--text-sm)]
-                text-[var(--color-text-secondary)]
-                hover:text-[var(--color-gold)]
-                transition-colors
-                duration-[var(--transition-base)]
-              `.trim()}
-              onClick={(e) => {
-                setIsOpen(false);
-              }}
+              className="block text-left py-[var(--space-2)] pl-[var(--space-4)] text-[var(--text-sm)] text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors duration-[var(--transition-base)]"
+              onClick={() => setIsOpen(false)}
             >
               {item.label}
             </Link>
@@ -442,26 +419,10 @@ function MobileDualNameSection({ title, items }: MobileDualNameSectionProps) {
     <div className="border-b border-[var(--color-border)]">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`
-          w-full
-          flex
-          items-center
-          justify-between
-          py-[var(--space-4)]
-          text-[var(--color-text-primary)]
-          font-medium
-          transition-colors
-          duration-[var(--transition-base)]
-        `.trim()}
+        style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', padding: '1rem 0', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-primary)', fontWeight: 600 }}
       >
         <span>{title}</span>
-        <span
-          className={`
-            transition-transform
-            duration-[var(--transition-base)]
-            ${isOpen ? 'rotate-180' : ''}
-          `.trim()}
-        >
+        <span style={{ transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
           ▼
         </span>
       </button>
@@ -472,17 +433,8 @@ function MobileDualNameSection({ title, items }: MobileDualNameSectionProps) {
             <Link
               key={index}
               href={item.href}
-              className={`
-                block
-                py-[var(--space-3)]
-                pl-[var(--space-4)]
-                hover:bg-[var(--color-midnight)]
-                transition-colors
-                duration-[var(--transition-base)]
-              `.trim()}
-              onClick={(e) => {
-                // Let React Router handle navigation
-              }}
+              className="block text-left py-[var(--space-3)] pl-[var(--space-4)] hover:bg-[var(--color-midnight)] transition-colors duration-[var(--transition-base)]"
+              onClick={() => {}}
               aria-label={item.ariaLabel}
             >
               <div className="flex flex-col gap-1">

@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-01-27.acacia',
+});
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json(
+      { error: 'Stripe is not configured. Set STRIPE_SECRET_KEY.' },
+      { status: 503 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const {
+      amountUSD,
+      releasTitle,
+      sponsorName,
+      sponsorEmail,
+      methodType,
+      packageName,
+    } = body;
+
+    if (!amountUSD || amountUSD <= 0) {
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: sponsorEmail || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            unit_amount: Math.round(amountUSD * 100), // cents
+            product_data: {
+              name: packageName
+                ? `Song Adoption – ${packageName}`
+                : 'Song Adoption – Custom Budget',
+              description: releasTitle
+                ? `Sponsor the spread of "${releasTitle}" via ${methodType === 'managed_sufitube' ? 'SufiTube Managed Promotion' : 'Your Google Ads Account'}`
+                : 'Sufi kalam sponsorship',
+              images: [],
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        adoption_id: params.id,
+        sponsor_name: sponsorName || '',
+        method_type: methodType || '',
+      },
+      success_url: `${appUrl}/adoption-success?adoption_id=${params.id}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/adoption-cancel?adoption_id=${params.id}`,
+    });
+
+    return NextResponse.json({ url: session.url, sessionId: session.id });
+  } catch (error: any) {
+    console.error('Stripe checkout error:', error);
+    return NextResponse.json(
+      { error: error?.message || 'Failed to create checkout session' },
+      { status: 500 }
+    );
+  }
+}

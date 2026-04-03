@@ -9,6 +9,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { VocalistProfileType } from '@/app/types/vocalist.types';
 import { WriterFormData } from '@/app/types/writer.types';
+import { hasRoleAccess } from '@/app/lib/role-access';
+import { ProfileCardEditor } from '@/app/components/profile/ProfileCardEditor';
+import { getUserNotifications } from '@/app/lib/notifications';
 
 interface Submission {
   id: string;
@@ -105,9 +108,21 @@ export default function UserProfile() {
     }
   };
   useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!hasRoleAccess(user as any, 'vocalist')) {
+      alert('You do not have vocalist role access.');
+      router.push('/');
+      return;
+    }
+
     loadVocalistProfile();
+    setNotifications(getUserNotifications(user.id).map(n => ({ ...n, notification_type: n.event })));
     console.log(vocalist.languages_performed)
-  }, [])
+  }, [user])
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
     if (statusLower === 'approved' || statusLower === 'published') return 'text-green-400';
@@ -224,6 +239,7 @@ export default function UserProfile() {
       setActiveTab={setActiveTab}
       notifications={notifications}
     >
+      <ProfileCardEditor role="vocalist" displayName={vocalist.performance_name || vocalist.full_name} status={status} />
       <div className="space-y-4">
 
 

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Mail, MapPin, Globe, Send } from 'lucide-react';
+import { Mail, MapPin, Globe, Send, CheckCircle } from 'lucide-react';
+import { storage } from '../../lib/storage';
 
 export default function Contact() {
     const [formData, setFormData] = useState({
@@ -13,6 +14,10 @@ export default function Contact() {
         customSubject: '',
         message: ''
     });
+
+    const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const subjectOptions = [
         'General Inquiry',
@@ -27,10 +32,27 @@ export default function Contact() {
         'Custom'
     ];
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const finalSubject = formData.subject === 'Custom' ? formData.customSubject : formData.subject;
-        console.log('Form submitted:', { ...formData, finalSubject });
+        setSubmitting(true);
+        setError(null);
+
+        try {
+            const finalSubject = formData.subject === 'Custom' ? formData.customSubject : formData.subject;
+            await storage.create('contact_message', {
+                name: formData.name,
+                email: formData.email,
+                subject: finalSubject,
+                message: formData.message,
+                status: 'unread',
+            });
+            setSubmitted(true);
+            setFormData({ name: '', email: '', subject: '', customSubject: '', message: '' });
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -62,6 +84,26 @@ export default function Contact() {
                         </h2>
 
                         <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
+                            {submitted ? (
+                                <div className="text-center py-8">
+                                    <div className="flex justify-center mb-4">
+                                        <div className="w-16 h-16 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                                            <CheckCircle className="w-8 h-8 text-amber-400" strokeWidth={1.5} />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-white mb-2">Message Sent Successfully</h3>
+                                    <p className="text-neutral-300 text-sm mb-2 max-w-md mx-auto">
+                                        Your message has been received. Our institutional team will respond within the Standard Response Protocol timeframe.
+                                    </p>
+                                    <p className="text-neutral-400 text-xs mb-6">General inquiries: 3–5 business days</p>
+                                    <button
+                                        onClick={() => setSubmitted(false)}
+                                        className="text-amber-400 hover:text-amber-300 text-sm underline transition-colors"
+                                    >
+                                        Send another message
+                                    </button>
+                                </div>
+                            ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
@@ -153,13 +195,21 @@ export default function Contact() {
                                 <div className="flex justify-end">
                                     <button
                                         type="submit"
-                                        className="flex items-center gap-2 px-8 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded-lg font-medium transition-colors"
+                                        disabled={submitting}
+                                        className="flex items-center gap-2 px-8 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Send size={18} />
-                                        Send Message
+                                        {submitting ? 'Sending…' : 'Send Message'}
                                     </button>
                                 </div>
+
+                                {error && (
+                                    <div className="bg-red-950/30 border border-red-800/50 text-red-400 px-4 py-3 rounded text-sm">
+                                        {error}
+                                    </div>
+                                )}
                             </form>
+                            )}
                         </div>
                     </div>
                 </PageContainer>

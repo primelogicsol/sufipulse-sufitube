@@ -4,6 +4,7 @@ import { User, LogOut, LayoutDashboard, FileText, CircleUser as UserCircle, Note
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as api from "../../api/auth"
+import { hasRoleAccess } from '@/app/lib/role-access';
 
 export function AvatarMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -154,35 +155,35 @@ export function AvatarMenu() {
                     </Link>
                   </>
                 )}
-                {userProfiles.writer && <Link
+                {hasRoleAccess(user as any, 'writer') && userProfiles.writer && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/writer/dashboard">
                   <NotebookPen size={18} />
                   <span>Writer Dashboard</span>
                 </Link>}
-                {userProfiles.vocalist && <Link
+                {hasRoleAccess(user as any, 'vocalist') && userProfiles.vocalist && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
-                  href="/user/writer/dashboard">
+                  href="/user/vocalist/dashboard">
                   <Mic size={18} />
                   <span>Vocalist Dashboard</span>
                 </Link>}
-                {userProfiles.producer && <Link
+                {hasRoleAccess(user as any, 'producer') && userProfiles.producer && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/producer/dashboard">
                   <KeyboardMusic size={18} />
                   <span>Producer Dashboard</span>
                 </Link>}
-                {userProfiles.studio && <Link
+                {hasRoleAccess(user as any, 'studio') && userProfiles.studio && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/studio/dashboard">
                   <FolderDot size={18} />
                   <span>Studio Dashboard</span>
                 </Link>}
-                {userProfiles.literaryCollaborator && <Link
+                {hasRoleAccess(user as any, 'literary') && userProfiles.literaryCollaborator && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/literary-contributor/dashboard">

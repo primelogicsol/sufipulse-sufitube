@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, CircleAlert as AlertCircle, RefreshCw, FileText } from 'lucide-react';
-// import { notifyStatusChange, createSubmissionTracking } from '../services/notificationService';
+import { notifyStatusChange } from '@/app/lib/notifications';
 import { useAuth } from '../../../contexts/AuthContext';
 import * as api from "../../../api/auth";
 import { WriterFormData } from '@/app/types/writer.types';
+import { storage } from '@/app/lib/storage';
 // import { WriterFormData } from '@/app/components/writers/WriterCredentialsForm';
 
 interface WriterApplication {
@@ -59,12 +60,31 @@ export default function AdminWriterApplications() {
             console.log('[AdminWriterApplications] Current user:', user);
             console.log('[AdminWriterApplications] Auth loading:', authLoading);
 
-            const res = await api.getAllWriter() as any
-            console.log(res)
-            setApplications(res.data?.writers || []);
+            const response = await api.getAllWriter();
+            let payload: any = null;
+
+            if (response && typeof (response as any).json === 'function') {
+                payload = await (response as any).json();
+            } else {
+                payload = response;
+            }
+
+            const apiApplications =
+                payload?.data?.writers ||
+                payload?.writers ||
+                payload?.data ||
+                [];
+
+            if (Array.isArray(apiApplications) && apiApplications.length > 0) {
+                setApplications(apiApplications);
+            } else {
+                const localApplications = await storage.getAll('writer');
+                setApplications(Array.isArray(localApplications) ? localApplications : []);
+            }
         } catch (error) {
             console.error('[AdminWriterApplications] Error loading applications:', error);
-            alert(`Failed to load applications. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            const localApplications = await storage.getAll('writer');
+            setApplications(Array.isArray(localApplications) ? localApplications : []);
         } finally {
             setLoading(false);
         }
@@ -119,20 +139,31 @@ export default function AdminWriterApplications() {
         }
     }
     const handleUpdateStatus = async (id: string | undefined, status: string) => {
-        // if (!kalam) return;
-        if (!id) return
+        if (!id) return;
+        const app = applications.find(a => (a as any).id === id);
         try {
-            await api.updateWriterStatus(
-                id,
-                status,
-            );
-
-            alert("Status updated");
+            try {
+                await api.updateWriterStatus(id, status);
+            } catch {
+                await storage.update('writer', id, {
+                    profile_status: status,
+                    reviewed_at: new Date().toISOString(),
+                });
+            }
+            // Fire notification + email
+            if (app) {
+                await notifyStatusChange({
+                    user_id: (app as any).user_id,
+                    email: app.email,
+                    name: app.pen_name || app.full_name || app.email,
+                    role: 'writer',
+                    status: status as any,
+                });
+            }
             setSelectedApp(null);
             loadApplications();
-
         } catch (err: any) {
-            alert(err.response?.data?.error || err.message);
+            alert(err?.message || 'Failed to update status');
         }
     };
 
@@ -204,16 +235,17 @@ export default function AdminWriterApplications() {
                                         <tr>
                                             <th>Pen Name</th>
                                             <th>Applicant</th>
+                                            <th>Experience</th>
+                                            <th>Country</th>
+                                            <th>Languages</th>
                                             <th>Status</th>
-                                            <th>Submitted</th>
-                                            <th>Reviewed</th>
                                             <th className="text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredApplications.length === 0 ? (
                                             <tr>
-                                                <td colSpan={6} className="text-center py-12 text-[var(--dash-text-muted)]">
+                                                <td colSpan={7} className="text-center py-12 text-[var(--dash-text-muted)]">
                                                     {searchQuery ? 'No applications match your search' : 'No applications found'}
                                                 </td>
                                             </tr>
@@ -227,11 +259,11 @@ export default function AdminWriterApplications() {
                                                             </div>
                                                             <div>
                                                                 <div className="font-medium text-[var(--dash-text-primary)]">
-                                                                    {app.pen_name}
+                                                                    {app.pen_name || '—'}
                                                                 </div>
-                                                                {/* <div className="text-xs text-[var(--dash-text-muted)] line-clamp-1">
-                                                                    {app.bio.substring(0, 50)}...
-                                                                </div> */}
+                                                                <div className="text-xs text-[var(--dash-text-muted)]">
+                                                                    {app.city ? `${app.city}, ` : ''}{app.country || ''}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </td>
@@ -239,41 +271,32 @@ export default function AdminWriterApplications() {
                                                         <div className="flex items-center gap-2 text-[var(--dash-text-secondary)]">
                                                             <User className="w-4 h-4 text-[var(--dash-text-muted)]" />
                                                             <div>
-                                                                <div>{app.full_name || app.email || 'No name'}</div>
-                                                                <div className="text-xs text-[var(--dash-text-muted)]">
-                                                                    {app.email || app.email || 'No email'}
-                                                                </div>
+                                                                <div>{app.full_name || '—'}</div>
+                                                                <div className="text-xs text-[var(--dash-text-muted)]">{app.email}</div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    {/* <td>
-                                                        <span className={`${getStatusBadgeClass(app.profile_status)} flex items-center gap-1 w-fit p-2 rounded-lg`}>
-                                                            {getStatusIcon(app.profile_status)}
-                                                            {app.profile_status.replace(/_/g, ' ')}
-                                                        </span>
+                                                    <td className="text-[var(--dash-text-secondary)]">
+                                                        {app.years_experience ? `${app.years_experience} yrs` : '—'}
                                                     </td>
                                                     <td className="text-[var(--dash-text-secondary)]">
-                                                        {new Date(app.created_at).toLocaleDateString()}
-                                                    </td> */}
-                                                    {/* <td className="text-[var(--dash-text-secondary)]">
-                                                        {app.reviewed_at ? (
-                                                            <div>
-                                                                <div>{new Date(app.reviewed_at).toLocaleDateString()}</div>
-                                                                {app.reviewer && (
-                                                                    <div className="text-xs text-[var(--dash-text-muted)]">
-                                                                        by {app.reviewer.full_name || app.reviewer.email}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-[var(--dash-text-muted)]">Not reviewed</span>
-                                                        )}
-                                                    </td> */}
+                                                        {app.country || '—'}
+                                                    </td>
+                                                    <td className="text-[var(--dash-text-secondary)]">
+                                                        {Array.isArray(app.primary_languages)
+                                                            ? app.primary_languages.join(', ')
+                                                            : app.primary_languages || '—'}
+                                                    </td>
+                                                    <td>
+                                                        <span className={`${getStatusBadgeClass(app.profile_status || 'pending')} flex items-center gap-1 w-fit px-2 py-1 rounded-lg text-xs`}>
+                                                            {getStatusIcon(app.profile_status || 'pending')}
+                                                            {(app.profile_status || 'pending').replace(/_/g, ' ')}
+                                                        </span>
+                                                    </td>
                                                     <td className="text-right">
                                                         <button
                                                             onClick={() => {
                                                                 setSelectedApp(app);
-                                                                // setAdminNotes(app.admin_notes || '');
                                                             }}
                                                             className="dashboard-btn-primary text-sm flex items-center gap-2 ml-auto"
                                                             disabled={processingAction}
@@ -281,7 +304,6 @@ export default function AdminWriterApplications() {
                                                             <Eye className="w-4 h-4" />
                                                             Review
                                                         </button>
-
                                                     </td>
                                                 </tr>
                                             ))
@@ -328,34 +350,95 @@ export default function AdminWriterApplications() {
 
                             <div className="dashboard-modal-body max-h-[60vh] overflow-y-auto">
                                 <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="dashboard-label">Applicant Email</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.email}</p>
-                                        </div>
-
+                                    {/* Identity */}
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="dashboard-label">Full Name</label>
+                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.full_name || '—'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="dashboard-label">Email</label>
+                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.email}</p>
+                                        </div>
+                                        <div>
+                                            <label className="dashboard-label">Pen Name</label>
+                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.pen_name || '—'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="dashboard-label">Location</label>
+                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.city ? `${selectedApp.city}, ` : ''}{selectedApp.country || '—'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="dashboard-label">Experience</label>
+                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.years_experience ? `${selectedApp.years_experience} years` : '—'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="dashboard-label">Languages</label>
                                             <p className="text-[var(--dash-text-primary)]">
-                                                {selectedApp.full_name || 'Not provided'}
+                                                {Array.isArray(selectedApp.primary_languages)
+                                                    ? selectedApp.primary_languages.join(', ')
+                                                    : selectedApp.primary_languages || '—'}
                                             </p>
                                         </div>
                                     </div>
+
+                                    {/* Writing styles */}
+                                    {Array.isArray(selectedApp.writing_styles) && selectedApp.writing_styles.length > 0 && (
+                                        <div>
+                                            <label className="dashboard-label">Writing Styles</label>
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {selectedApp.writing_styles.map((s: string) => (
+                                                    <span key={s} className="dashboard-badge dashboard-badge-pending text-xs">{s}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Literary background */}
+                                    {selectedApp.literary_background && (
+                                        <div>
+                                            <label className="dashboard-label">Literary Background</label>
+                                            <div className="bg-[var(--dash-bg-secondary)] rounded-lg p-4 border border-[var(--dash-border)]">
+                                                <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap text-sm">{selectedApp.literary_background}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Thematic focus */}
+                                    {selectedApp.thematic_focus && (
+                                        <div>
+                                            <label className="dashboard-label">Thematic Focus</label>
+                                            <div className="bg-[var(--dash-bg-secondary)] rounded-lg p-4 border border-[var(--dash-border)]">
+                                                <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap text-sm">{selectedApp.thematic_focus}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Sample Kalam */}
                                     <div>
-                                        <label className="dashboard-label">Sample Work</label>
+                                        <label className="dashboard-label">Sample Kalam</label>
                                         <div className="bg-[var(--dash-bg-secondary)] rounded-lg p-4 max-h-80 overflow-y-auto border border-[var(--dash-border)]">
-                                            <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap">{selectedApp.sample_kalam}</p>
+                                            <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap font-mono text-sm">{selectedApp.sample_kalam || '—'}</p>
                                         </div>
                                     </div>
 
+                                    {/* Previous publications */}
                                     {selectedApp.previous_publications && (
                                         <div>
                                             <label className="dashboard-label">Previous Publications</label>
                                             <div className="bg-[var(--dash-bg-secondary)] rounded-lg p-4 border border-[var(--dash-border)]">
-                                                <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap">
+                                                <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap text-sm">
                                                     {selectedApp.previous_publications}
                                                 </p>
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* Submission date */}
+                                    {(selectedApp as any).submitted_at && (
+                                        <div>
+                                            <label className="dashboard-label">Submitted</label>
+                                            <p className="text-[var(--dash-text-secondary)] text-sm">{new Date((selectedApp as any).submitted_at).toLocaleString()}</p>
                                         </div>
                                     )}
 
@@ -406,7 +489,7 @@ export default function AdminWriterApplications() {
                                         Approve
                                     </button>
                                     <button
-                                        // onClick={() => updateApplicationStatus(selectedApp.id, 'under_review')}
+                                        onClick={() => handleUpdateStatus(selectedApp.id, 'under_review')}
                                         disabled={processingAction}
                                         className="dashboard-btn-secondary flex items-center justify-center gap-2"
                                     >

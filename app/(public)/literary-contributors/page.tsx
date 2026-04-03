@@ -3,16 +3,14 @@
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Pen, BookOpen, Compass, Shield, ArrowRight, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Pen, BookOpen, Compass, Shield, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { LiteraryContributorCredentialsForm } from '../../components/literary/LiteraryContributorCredentialsForm';
-import { ArticleSubmissionForm } from '../../components/literary/ArticleSubmissionForm';
 import Link from 'next/link';
 
 export default function LiteraryContributors() {
     const workflowScrollRef = useRef<HTMLDivElement>(null);
     const [showApplicationForm, setShowApplicationForm] = useState(false);
-    const [showSubmissionForm, setShowSubmissionForm] = useState(false);
 
     useEffect(() => {
         if (window.location.hash === '#apply') {
@@ -344,13 +342,6 @@ export default function LiteraryContributors() {
                                     {showApplicationForm ? 'Hide Application Form' : 'Apply as Literary Contributor'}
                                 </button>
 
-                                <button
-                                    onClick={() => setShowSubmissionForm(!showSubmissionForm)}
-                                    className="w-full bg-blue-400/10 hover:bg-blue-400/20 border border-blue-400/30 text-blue-400 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                                >
-                                    <FileText className="w-4 h-4" />
-                                    {showSubmissionForm ? 'Hide Submission Form' : 'Submit Article for Review'}
-                                </button>
                             </div>
                         </div>
 
@@ -368,18 +359,6 @@ export default function LiteraryContributors() {
                             </div>
                         )}
 
-                        {showSubmissionForm && (
-                            <div className="mt-8">
-                                <h3 className="text-2xl font-bold text-white mb-2">
-                                    Submit Article for Editorial Review
-                                </h3>
-                                <p className="text-lg text-blue-400 mb-4">Article Submission Portal</p>
-                                <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                                    Submit your literary work for editorial review. All articles undergo review by the Editorial Council before publication in the Literary Journal.
-                                </p>
-                                <ArticleSubmissionForm />
-                            </div>
-                        )}
                     </div>
                 </PageContainer>
             </Section>

@@ -371,7 +371,7 @@ export default function Writers() {
                   onClick={() => setShowApplicationForm(!showApplicationForm)}
                   className="w-full bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
                 >
-                  {showApplicationForm ? 'Hide Form' : 'Submit Writer Profile for Review'}
+                  {showApplicationForm ? 'Hide Application Form' : 'Apply as Writer'}
                 </button>
               </div>
             </div>

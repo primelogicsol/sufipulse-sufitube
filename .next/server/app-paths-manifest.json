@@ -1,3 +1,11 @@
 {
-  "/page": "app/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(public)/collaboration/page": "app/(public)/collaboration/page.js",
+  "/(public)/contact/page": "app/(public)/contact/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(public)/about/what-is-sufipulse/page": "app/(public)/about/what-is-sufipulse/page.js",
+  "/(public)/about/founder/page": "app/(public)/about/founder/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/releases/route": "app/api/releases/route.js",
+  "/admin/partnerships/page": "app/admin/partnerships/page.js"
 }

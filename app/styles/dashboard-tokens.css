@@ -1,73 +1,75 @@
 /**
- * Dashboard Design System
+ * Dashboard Design System - Aligned with Global Design Tokens
  *
- * Minimal Institutional Theme
- * For operational control surfaces - not marketing
+ * Minimal Institutional Theme for operational control surfaces
  *
  * Philosophy:
  * - Control, Clarity, Authority, Calm
  * - High contrast readability
  * - Minimal motion
  * - Structural precision
+ * - USES GLOBAL DESIGN TOKENS as primary source
  */
 
 :root {
-  /* ===== BACKGROUNDS ===== */
-  --dash-bg-primary: #0F172A;
-  --dash-bg-secondary: #111827;
+  /* ===== MAP TO GLOBAL DESIGN TOKENS ===== */
+  --dash-bg-primary: var(--color-midnight);              /* #0F172A */
+  --dash-bg-secondary: var(--color-slate);              /* #1E293B */
   --dash-bg-divider: #0B1220;
   --dash-bg-hover: rgba(255, 255, 255, 0.03);
 
-  /* ===== INSTITUTIONAL GOLD ===== */
-  --dash-accent: #C6A85A;
-  --dash-accent-hover: #D4B76A;
-  --dash-accent-muted: rgba(198, 168, 90, 0.1);
+  /* ===== INSTITUTIONAL GOLD - Aligned with Global ===== */
+  --dash-accent: var(--color-gold);                      /* #C8A75E */
+  --dash-accent-hover: var(--color-gold-hover);          /* #D4B76D */
+  --dash-accent-muted: var(--color-gold-muted);          /* rgba(200, 167, 94, 0.1) */
 
-  /* ===== TEXT HIERARCHY ===== */
-  --dash-text-primary: #F3F4F6;
-  --dash-text-secondary: #9CA3AF;
-  --dash-text-muted: #6B7280;
+  /* ===== TEXT HIERARCHY - Aligned with Global ===== */
+  --dash-text-primary: var(--color-text-primary);       /* #F8FAFC */
+  --dash-text-secondary: var(--color-text-secondary);   /* #94A3B8 */
+  --dash-text-muted: var(--color-text-tertiary);        /* #64748B */
 
   /* ===== STATUS COLORS (Controlled) ===== */
-  --dash-status-approved: #16A34A;
-  --dash-status-approved-bg: rgba(22, 163, 74, 0.1);
+  --dash-status-approved: #2D6A4F;
+  --dash-status-approved-bg: rgba(45, 106, 79, 0.1);
 
   --dash-status-pending: #F59E0B;
   --dash-status-pending-bg: rgba(245, 158, 11, 0.1);
 
-  --dash-status-rejected: #DC2626;
-  --dash-status-rejected-bg: rgba(220, 38, 38, 0.1);
+  --dash-status-rejected: #9F2B2B;
+  --dash-status-rejected-bg: rgba(159, 43, 43, 0.1);
 
   --dash-status-draft: #475569;
   --dash-status-draft-bg: rgba(71, 85, 105, 0.1);
 
-  /* ===== BORDERS & DIVIDERS ===== */
-  --dash-border: rgba(255, 255, 255, 0.05);
-  --dash-border-strong: rgba(255, 255, 255, 0.1);
+  /* ===== BORDERS & DIVIDERS - Aligned with Global ===== */
+  --dash-border: var(--color-border);                    /* rgba(255, 255, 255, 0.05) */
+  --dash-border-strong: var(--color-border-strong);      /* rgba(255, 255, 255, 0.1) */
   --dash-divider: rgba(255, 255, 255, 0.08);
 
-  /* ===== SHADOWS ===== */
-  --dash-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --dash-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  /* ===== SHADOWS - Aligned with Global ===== */
+  --dash-shadow-sm: var(--shadow-soft);                  /* 0 2px 8px rgba(0, 0, 0, 0.15) */
+  --dash-shadow-md: var(--shadow-elevated);              /* 0 4px 16px rgba(0, 0, 0, 0.2) */
   --dash-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --dash-shadow-gold: var(--shadow-gold-glow);           /* 0 0 20px rgba(200, 167, 94, 0.15) */
 
-  /* ===== SPACING ===== */
-  --dash-space-xs: 0.5rem;
-  --dash-space-sm: 0.75rem;
-  --dash-space-md: 1rem;
-  --dash-space-lg: 1.5rem;
-  --dash-space-xl: 2rem;
+  /* ===== SPACING - Using Global Locked Scale ===== */
+  --dash-space-xs: var(--space-2);                       /* 0.5rem / 8px */
+  --dash-space-sm: calc(var(--space-2) + var(--space-1)); /* 0.75rem / 12px */
+  --dash-space-md: var(--space-4);                       /* 1rem / 16px */
+  --dash-space-lg: var(--space-6);                       /* 1.5rem / 24px */
+  --dash-space-xl: var(--space-8);                       /* 2rem / 32px */
 
-  /* ===== RADIUS ===== */
-  --dash-radius: 8px;
-  --dash-radius-sm: 6px;
+  /* ===== RADIUS - Using Global Values ===== */
+  --dash-radius: var(--radius-base);                     /* 8px */
+  --dash-radius-sm: var(--radius-sm);                    /* 4px */
 
-  /* ===== TYPOGRAPHY ===== */
-  --dash-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* ===== TYPOGRAPHY - Using Global Values ===== */
+  --dash-font-family: var(--font-body);                  /* Inter */
+  --dash-font-headline: var(--font-headline);            /* Playfair Display */
 
-  /* ===== TRANSITIONS (Minimal) ===== */
-  --dash-transition-fast: 150ms ease;
-  --dash-transition-base: 200ms ease;
+  /* ===== TRANSITIONS - Using Global Values ===== */
+  --dash-transition-fast: var(--transition-fast);        /* 150ms ease-in-out */
+  --dash-transition-base: var(--transition-base);        /* 200ms ease-in-out */
 }
 
 /* ===== DASHBOARD BASE LAYOUT ===== */
@@ -88,6 +90,33 @@
   top: 0;
   bottom: 0;
   z-index: 40;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard-sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dashboard-sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(198, 168, 90, 0.25);
+  border-radius: 999px;
+}
+
+.dashboard-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(198, 168, 90, 0.4);
 }
 
 .dashboard-sidebar-link {

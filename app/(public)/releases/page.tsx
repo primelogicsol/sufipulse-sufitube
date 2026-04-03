@@ -2,16 +2,17 @@
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Music, ListFilter as Filter, Search, Play, Calendar, Eye, Youtube } from 'lucide-react';
+import { Music, Filter, Search, Play, Calendar, Eye, Youtube } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabase-client';
+import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 
 type FilterType = 'all' | 'native' | 'legacy';
 type DurationFilter = 'all' | 'short' | 'standard' | 'long';
 type SortOrder = 'new' | 'old' | 'popular';
 
 const ITEMS_PER_PAGE = 12;
+const REGISTRY_FETCH_LIMIT = 50;
 
 interface YouTubeRelease {
     id: string;
@@ -29,6 +30,7 @@ export default function Releases() {
     const [releases, setReleases] = useState<YouTubeRelease[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [lastSync, setLastSync] = useState<string | null>(null);
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
@@ -37,131 +39,35 @@ export default function Releases() {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
+    const fetchVideos = async (showLoader: boolean = false) => {
+        if (showLoader) {
+            setLoading(true);
+        }
+
+        try {
+            const { youtubeService } = await import('../../../lib/youtube-service');
+            const videos = await youtubeService.getLatestVideos(REGISTRY_FETCH_LIMIT);
+
+            setReleases(videos);
+            setError(null);
+            setLastSync(new Date().toISOString());
+        } catch (err: any) {
+            console.error("Error fetching YouTube videos:", err);
+            setError(err.message || "Failed to load videos");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchVideos = async () => {
-            try {
-                // First, try to fetch from database
-                const { data: dbReleases, error: dbError } = await supabase
-                    .from('releases')
-                    .select('*')
-                    .eq('is_published', true)
-                    .order('release_date', { ascending: false });
+        fetchVideos(true);
 
-                if (!dbError && dbReleases && dbReleases.length > 0) {
-                    // Format database releases
-                    const formatted = dbReleases.map((release: any) => {
-                        const totalSeconds = release.duration_seconds || 0;
-                        let h = Math.floor(totalSeconds / 3600);
-                        let m = Math.floor((totalSeconds % 3600) / 60);
-                        let s = totalSeconds % 60;
+        // Keep releases automatically refreshed without manual intervention.
+        const refreshTimer = setInterval(() => {
+            fetchVideos(false);
+        }, 15 * 60 * 1000);
 
-                        let durationFormatted = '';
-                        if (h > 0) {
-                            durationFormatted = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                        } else {
-                            durationFormatted = `${m}:${s.toString().padStart(2, '0')}`;
-                        }
-
-                        return {
-                            id: release.youtube_video_id || release.id,
-                            title: release.release_title,
-                            description: release.description || '',
-                            thumbnailUrl: release.thumbnail_url || '',
-                            publishedDate: release.release_date,
-                            durationSeconds: totalSeconds,
-                            durationFormatted,
-                            views: release.views || 0,
-                            source: release.source || 'youtube_legacy'
-                        };
-                    });
-
-                    console.log(`Fetched ${formatted.length} videos from database`);
-                    setReleases(formatted);
-                    setLoading(false);
-                    return;
-                }
-
-                // Fallback to YouTube API if database is empty
-                console.log('Database empty, fetching from YouTube API...');
-                const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "AIzaSyCw34bUCxl_8S5R8I-380YyFOLDqpWL-R4";
-                const CHANNEL_ID = 'UCraDr3i5A3k0j7typ6tOOsQ';
-
-                let allVideoIds: string[] = [];
-                let nextPageToken = '';
-
-                do {
-                    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=50&order=date&type=video&key=${YOUTUBE_API_KEY}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
-                    const searchRes = await fetch(searchUrl);
-                    const searchData = await searchRes.json();
-
-                    if (searchData.items && searchData.items.length > 0) {
-                        const videoIds = searchData.items.map((item: any) => item.id.videoId);
-                        allVideoIds = [...allVideoIds, ...videoIds];
-                    }
-
-                    nextPageToken = searchData.nextPageToken || '';
-                } while (nextPageToken);
-
-                if (allVideoIds.length === 0) {
-                    setReleases([]);
-                    setLoading(false);
-                    return;
-                }
-
-                const allVideos: any[] = [];
-                for (let i = 0; i < allVideoIds.length; i += 50) {
-                    const batchIds = allVideoIds.slice(i, i + 50).join(',');
-                    const videosRes = await fetch(
-                        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${batchIds}&key=${YOUTUBE_API_KEY}`
-                    );
-                    const videosData = await videosRes.json();
-
-                    if (videosData.items) {
-                        allVideos.push(...videosData.items);
-                    }
-                }
-
-                const formatted = allVideos.map((video: any) => {
-                    const match = video.contentDetails.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-                    let h = 0, m = 0, s = 0;
-                    if (match) {
-                        h = parseInt(match[1]) || 0;
-                        m = parseInt(match[2]) || 0;
-                        s = parseInt(match[3]) || 0;
-                    }
-                    const totalSeconds = h * 3600 + m * 60 + s;
-
-                    let durationFormatted = '';
-                    if (h > 0) {
-                        durationFormatted = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                    } else {
-                        durationFormatted = `${m}:${s.toString().padStart(2, '0')}`;
-                    }
-
-                    return {
-                        id: video.id,
-                        title: video.snippet.title,
-                        description: video.snippet.description,
-                        thumbnailUrl: video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
-                        publishedDate: video.snippet.publishedAt,
-                        durationSeconds: totalSeconds,
-                        durationFormatted,
-                        views: parseInt(video.statistics.viewCount || '0'),
-                        source: 'youtube_legacy'
-                    };
-                });
-
-                console.log(`Fetched ${formatted.length} videos from YouTube`);
-                setReleases(formatted);
-            } catch (err: any) {
-                console.error("Error fetching videos:", err);
-                setError(err.message || "Failed to load videos");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchVideos();
+        return () => clearInterval(refreshTimer);
     }, []);
 
     const years = useMemo(() => {
@@ -225,6 +131,13 @@ export default function Releases() {
             <Section className="pt-24 pb-12">
                 <PageContainer>
                     <div className="max-w-5xl mx-auto text-center">
+                        {/* <div className="mb-6 flex justify-center">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-full text-sm text-red-500 uppercase tracking-wider font-medium">
+                                <Youtube className="w-4 h-4" />
+                                Official Channel
+                            </span>
+                        </div> */}
+
                         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">
                             SufiTube
                         </h1>
@@ -332,6 +245,15 @@ export default function Releases() {
                                     />
                                 </div>
                             </div>
+
+                            <div className="md:col-span-2 lg:col-span-1 flex items-end">
+                                <button
+                                    onClick={() => fetchVideos(true)}
+                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none hover:border-amber-400/50 hover:text-amber-300 transition-colors"
+                                >
+                                    Sync Latest Videos
+                                </button>
+                            </div>
                         </div>
 
                         {!loading && !error && filteredReleases.length > 0 && (
@@ -339,9 +261,12 @@ export default function Releases() {
                                 <span>
                                     Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredReleases.length)} of {filteredReleases.length} videos
                                 </span>
-                                {totalPages > 1 && (
-                                    <span>Page {currentPage} of {totalPages}</span>
-                                )}
+                                <div className="flex items-center gap-4">
+                                    {lastSync && <span>Synced: {new Date(lastSync).toLocaleString()}</span>}
+                                    {totalPages > 1 && (
+                                        <span>Page {currentPage} of {totalPages}</span>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -394,17 +319,24 @@ export default function Releases() {
                     {!loading && !error && paginatedReleases.length > 0 && (
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                                {paginatedReleases.map((video) => (
-                                    <Link
-                                        key={video.id}
-                                        href={`/release-detail/${video.id}`}
-                                        className="group block bg-gradient-to-b from-neutral-900/40 to-neutral-900/10 border border-neutral-800 rounded-xl p-4 hover:border-amber-400/40 hover:bg-neutral-900/60 transition-all hover:shadow-xl hover:shadow-amber-400/10"
-                                    >
+                                {paginatedReleases.map((video) => {
+                                    const thumbnailCandidates = buildYouTubeThumbnailCandidates(video.id, [video.thumbnailUrl]);
+
+                                    return (
+                                        <Link
+                                            key={video.id}
+                                            href={`/release-detail/${video.id}`}
+                                            className="group block bg-gradient-to-b from-neutral-900/40 to-neutral-900/10 border border-neutral-800 rounded-xl p-4 hover:border-amber-400/40 hover:bg-neutral-900/60 transition-all hover:shadow-xl hover:shadow-amber-400/10"
+                                        >
                                         <div className="relative aspect-video w-full mb-4 rounded-lg overflow-hidden border border-neutral-800 bg-neutral-950">
                                             <img
-                                                src={video.thumbnailUrl}
+                                                src={thumbnailCandidates[0]}
                                                 alt={video.title}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                data-thumb-index="0"
+                                                onError={(e) => {
+                                                    advanceThumbnailFallback(e.currentTarget, thumbnailCandidates);
+                                                }}
                                             />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                                 <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl shadow-red-900/50">
@@ -433,8 +365,9 @@ export default function Releases() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </Link>
-                                ))}
+                                        </Link>
+                                    );
+                                })}
                             </div>
 
                             {totalPages > 1 && (

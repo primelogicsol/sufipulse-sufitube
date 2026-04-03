@@ -3,9 +3,47 @@ import { useState, useEffect } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { BookOpen, Calendar, Clock, Tag, Search, ListFilter as Filter, Eye, TrendingUp, Sparkles } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Tag, Search, ListFilter as Filter, Eye, TrendingUp, Sparkles, User, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { literaryArticles, Article } from '../../data/literary-articles';
+
+// Merge localStorage approved articles with static data
+function getAllArticles(): Article[] {
+    const staticArticles = [...literaryArticles];
+    if (typeof window === 'undefined') return staticArticles;
+    try {
+        const raw = localStorage.getItem('sufipulse_articles');
+        const all: any[] = raw ? JSON.parse(raw) : [];
+        const published = all.filter((a: any) => a.status === 'approved' || a.status === 'published');
+        const dynamic: Article[] = published.map((a: any) => ({
+            id: a.id,
+            title: a.title || 'Untitled',
+            subtitle: a.abstract ? a.abstract.slice(0, 120) : null,
+            slug: a.slug || `article-${a.id}`,
+            category: a.article_type || 'reflective_essay',
+            content: a.content || '',
+            excerpt: a.excerpt || (a.content || '').replace(/<[^>]*>/g, '').slice(0, 200) + '...',
+            reading_time_minutes: Math.max(1, Math.ceil(((a.content || '').replace(/<[^>]*>/g, '').split(' ').length) / 200)),
+            featured: false,
+            published_at: a.updated_at || a.created_at || new Date().toISOString(),
+            tags: a.author_domain ? a.author_domain.split(',').map((t: string) => t.trim()) : [],
+            view_count: 0,
+            author_id: a.user_id || '',
+            author_name: a.author_name || a.author_full_name || 'Ahl-e-Tahreer',
+            author_professional_name: a.author_professional_name || '',
+            author_country: a.author_country || '',
+            author_city: a.author_city || '',
+            author_domain: a.author_domain || '',
+            author_photo: a.author_photo || '',
+        }));
+        // Avoid duplicate IDs
+        const staticIds = new Set(staticArticles.map(a => a.id));
+        const uniqueDynamic = dynamic.filter(a => !staticIds.has(a.id));
+        return [...staticArticles, ...uniqueDynamic];
+    } catch {
+        return staticArticles;
+    }
+}
 
 export default function LiteraryJournal() {
     const [articles, setArticles] = useState<Article[]>([]);
@@ -27,7 +65,8 @@ export default function LiteraryJournal() {
 
     useEffect(() => {
         setLoading(true);
-        let filtered = literaryArticles;
+        const allArticles = getAllArticles();
+        let filtered = allArticles;
 
         if (selectedCategory !== 'all') {
             filtered = filtered.filter(a => a.category === selectedCategory);
@@ -50,10 +89,11 @@ export default function LiteraryJournal() {
     }, [selectedCategory, searchQuery]);
 
     useEffect(() => {
-        const totalViews = literaryArticles.reduce((sum, article) => sum + (article.view_count || 0), 0);
-        const uniqueCategories = new Set(literaryArticles.map(a => a.category)).size;
+        const allArticles = getAllArticles();
+        const totalViews = allArticles.reduce((sum, article) => sum + (article.view_count || 0), 0);
+        const uniqueCategories = new Set(allArticles.map(a => a.category)).size;
         setStats({
-            totalArticles: literaryArticles.length,
+            totalArticles: allArticles.length,
             totalViews,
             categories: uniqueCategories
         });
@@ -224,76 +264,112 @@ function ArticleCard({ article, featured }: ArticleCardProps) {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric'
         });
     };
 
+    const authorExtras = article as any;
+    const initials = (article.author_name || 'A').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+
     return (
         <Link
             href={`/literary-journal/${article.slug}`}
-            className={`group block bg-gradient-to-b from-neutral-900/40 to-neutral-900/20 border border-neutral-800 rounded-xl p-6 hover:border-amber-400/40 hover:bg-neutral-900/60 transition-all hover:shadow-xl hover:shadow-amber-400/10 hover:-translate-y-2 ${featured ? 'ring-2 ring-amber-400/20 bg-gradient-to-br from-amber-400/5 to-transparent' : ''
-                }`}
+            className={`group flex flex-col bg-neutral-900/40 border border-neutral-800 rounded-2xl overflow-hidden hover:border-amber-400/40 hover:shadow-xl hover:shadow-amber-400/5 transition-all duration-300 hover:-translate-y-1 ${
+                featured ? 'ring-1 ring-amber-400/25 bg-gradient-to-b from-amber-400/5 to-neutral-900/40' : ''
+            }`}
         >
-            <div className="relative flex flex-col h-full">
-                {featured && (
-                    <div className="mb-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-400/20 to-amber-400/10 border border-amber-400/40 rounded-full text-amber-400 text-xs font-semibold uppercase tracking-wider">
-                            <Sparkles className="w-3.5 h-3.5" />
+            {/* Top accent bar */}
+            <div className={`h-1 w-full transition-all duration-300 ${
+                featured
+                    ? 'bg-gradient-to-r from-amber-400 to-amber-600/70'
+                    : 'bg-neutral-800 group-hover:bg-gradient-to-r group-hover:from-amber-400/50 group-hover:to-amber-600/30'
+            }`} />
+
+            <div className="flex flex-col flex-1 p-6">
+                {/* Badges row */}
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    {featured && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-400/20 border border-amber-400/40 rounded-full text-amber-400 text-[11px] font-semibold uppercase tracking-wider">
+                            <Sparkles className="w-3 h-3" />
                             Featured
                         </span>
-                    </div>
-                )}
-
-                <div className="flex items-start gap-2 mb-4">
-                    <div className="px-3 py-1 bg-amber-400/10 border border-amber-400/30 rounded-md text-amber-400 text-xs font-semibold uppercase tracking-wider">
+                    )}
+                    <span className="px-2.5 py-1 bg-neutral-800/80 border border-neutral-700/60 rounded-md text-neutral-400 text-[11px] font-medium uppercase tracking-wider">
                         {formatCategory(article.category)}
-                    </div>
+                    </span>
+                    <span className="ml-auto flex items-center gap-1 text-[11px] text-neutral-600">
+                        <Clock className="w-3 h-3" />
+                        {article.reading_time_minutes} min
+                    </span>
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-amber-400 transition-colors line-clamp-2 leading-tight">
+                {/* Title */}
+                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-amber-400 transition-colors line-clamp-2 leading-snug">
                     {article.title}
                 </h3>
 
+                {/* Subtitle */}
                 {article.subtitle && (
-                    <p className="text-sm text-amber-400/70 mb-3 line-clamp-1 font-medium">
+                    <p className="text-sm text-amber-400/60 mb-3 line-clamp-1 italic">
                         {article.subtitle}
                     </p>
                 )}
 
-                <p className="text-neutral-300 text-sm leading-relaxed mb-5 line-clamp-3 flex-grow">
+                {/* Excerpt */}
+                <p className="text-neutral-400 text-sm leading-relaxed line-clamp-3 flex-grow mb-4">
                     {article.excerpt}
                 </p>
 
-                <div className="flex items-center justify-between text-xs text-neutral-400 pt-4 border-t border-neutral-800/50">
-                    <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {formatDate(article.published_at)}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
-                            {article.reading_time_minutes} min
-                        </span>
-                    </div>
-                </div>
-
-                <div className="mt-3 text-xs text-neutral-500">
-                    By {article.author_name}
-                </div>
-
+                {/* Tags */}
                 {article.tags && article.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 mb-5">
                         {article.tags.slice(0, 3).map((tag, idx) => (
-                            <span
-                                key={idx}
-                                className="px-2 py-1 bg-neutral-800/50 border border-neutral-700/50 text-neutral-400 text-xs rounded"
-                            >
-                                {tag}
+                            <span key={idx} className="px-2.5 py-0.5 bg-neutral-800/80 border border-neutral-700/40 text-neutral-500 text-[11px] rounded-full">
+                                #{tag}
                             </span>
                         ))}
                     </div>
                 )}
+
+                {/* Author footer */}
+                <div className="border-t border-neutral-800/60 pt-4 mt-auto">
+                    <div className="flex items-center gap-3">
+                        {/* Author photo or initials */}
+                        <div className="w-9 h-9 rounded-full bg-amber-400/10 border border-amber-400/25 flex items-center justify-center overflow-hidden shrink-0">
+                            {authorExtras.author_photo ? (
+                                <img src={authorExtras.author_photo} alt={article.author_name} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-xs font-bold text-amber-400">{initials}</span>
+                            )}
+                        </div>
+
+                        {/* Author name + location */}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-neutral-200 truncate leading-tight">
+                                {article.author_name || 'Ahl-e-Tahreer'}
+                            </p>
+                            <div className="flex items-center gap-1 text-neutral-500 text-[11px] mt-0.5">
+                                {(authorExtras.author_city || authorExtras.author_country) ? (
+                                    <>
+                                        <MapPin className="w-3 h-3 shrink-0" />
+                                        <span className="truncate">{[authorExtras.author_city, authorExtras.author_country].filter(Boolean).join(', ')}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Calendar className="w-3 h-3 shrink-0" />
+                                        <span>{formatDate(article.published_at)}</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Date (if location shown) */}
+                        {(authorExtras.author_city || authorExtras.author_country) && (
+                            <p className="text-[11px] text-neutral-600 shrink-0">{formatDate(article.published_at)}</p>
+                        )}
+                    </div>
+                </div>
             </div>
         </Link>
     );

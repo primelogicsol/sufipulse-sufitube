@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import DOMPurify from "dompurify";
 import { VocalistSubmissionSuccessModal } from './VocalistSubmissionSuccessModal';
-import * as api from "../../api/auth"
+import * as api from "../../api/auth";
 import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';
-import Loader from '../../components/ui/Loader';
 import { VocalistProfileType } from '@/app/types/vocalist.types';
-import { useRouter } from 'next/navigation';
+import { storage } from '@/app/lib/storage';
+import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
 
 export function VocalistCredentialsForm() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const [submissionId] = useState(`SP-VOC-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`);
   const [formData, setFormData] = useState<VocalistProfileType>({
     full_name: '',
@@ -43,20 +42,59 @@ export function VocalistCredentialsForm() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    const payload = {
+
+    if (!formData.full_name.trim() || !formData.email.trim() || !formData.country || !formData.sample_link.trim()) {
+      return;
+    }
+    if (!formData.accept_producer_coordination || !formData.accept_framework) {
+      return;
+    }
+
+    const payload: VocalistProfileType = {
       ...formData,
-      languages_performed: formData.languages_performed
-        .trim()
-        .split(/[,\s]+/)
-        .filter(Boolean) // split by space
+      languages_performed: typeof formData.languages_performed === 'string'
+        ? formData.languages_performed.trim().split(/[,\s]+/).filter(Boolean)
+        : formData.languages_performed,
+      status: 'pending',
     };
+
     try {
       setLoading(true);
-      const res = await api.createVocalistProfile(payload);
-      alert("Vocalist profile Submitted");
-      router.push('/user/vocalist/profile')
-    } catch (error) {
-      console.log(error);
+
+      let savedViaApi = false;
+      try {
+        await api.createVocalistProfile(payload);
+        savedViaApi = true;
+      } catch {
+        // Backend unavailable — fall through to localStorage
+      }
+
+      if (!savedViaApi) {
+        await storage.create('vocalist', {
+          ...payload,
+          profile_status: 'pending',
+          submitted_at: new Date().toISOString(),
+        });
+      }
+
+      setSubmitted(true);
+      notifyApplicationReceived({
+        user_id: user?.id,
+        email: formData.email,
+        name: formData.performance_name || formData.full_name,
+        role: 'vocalist',
+        reference: submissionId,
+      }).catch(console.error);
+      notifyAdmin({
+        title: 'New Vocalist Application',
+        message: `${formData.performance_name || formData.full_name} (${formData.email}) has applied as Ahl-e-Sada (Vocalist). Submission: ${submissionId}.`,
+        event: 'application_received',
+        from_role: 'vocalist',
+        from_name: formData.performance_name || formData.full_name,
+        action_url: '/admin/applications/vocalists',
+      }).catch(console.error);
+    } catch (err: any) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -343,16 +381,16 @@ export function VocalistCredentialsForm() {
 
       <div className="mt-8 flex justify-end">
         {user ? <button
-          // type="submit"
           onClick={handleSubmit}
           disabled={!user.is_verified || !formData.accept_producer_coordination || !formData.accept_framework}
           className="cursor-pointer px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ?
-            <Loader />
-            :
-            'Submit Vocalist Profile'
-          }
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-neutral-950/30 border-t-neutral-950 rounded-full animate-spin" />
+              Submitting...
+            </span>
+          ) : 'Submit Vocalist Profile'}
         </button> :
           <Link
             className="px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950! font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

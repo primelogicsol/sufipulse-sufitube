@@ -8,6 +8,9 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ProducerProfileType } from '@/app/types/producer.types';
+import { hasRoleAccess } from '@/app/lib/role-access';
+import { ProfileCardEditor } from '@/app/components/profile/ProfileCardEditor';
+import { getUserNotifications } from '@/app/lib/notifications';
 
 
 
@@ -57,8 +60,20 @@ export default function UserProfile() {
   };
 
   useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!hasRoleAccess(user as any, 'producer')) {
+      alert('You do not have producer role access.');
+      router.push('/');
+      return;
+    }
+
     loadProducerProfile();
-  }, [])
+    setNotifications(getUserNotifications(user.id).map(n => ({ ...n, notification_type: n.event })));
+  }, [user])
 
 
 
@@ -112,6 +127,7 @@ export default function UserProfile() {
       setActiveTab={setActiveTab}
       notifications={notifications}
     >
+      <ProfileCardEditor role="producer" displayName={producer.professional_name || producer.full_name} status={status} />
       <div className="space-y-4">
                     {!producer.email && !status ? (
                       <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-12 text-center">

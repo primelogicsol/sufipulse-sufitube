@@ -1,16 +1,20 @@
 "use client";
 import { useState } from 'react';
 import DOMPurify from "dompurify";
-import * as api from "../../api/auth";
 import { useAuth } from '@/app/contexts/AuthContext';
 import Loader from '../../components/ui/Loader';
 import { StudioProfileType } from '@/app/types/studio.types';
-import Link from 'next/link';
+import { StudioSubmissionSuccessModal } from './StudioSubmissionSuccessModal';
+import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
+import { storage } from '@/app/lib/storage';
 
 export default function StudioCredentialsForm() {
   const { user } = useAuth();
-  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [submissionId] = useState(
+    `SP-STD-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`
+  );
   const [formData, setFormData] = useState<StudioProfileType>({
     studio_name: '',
     country: '',
@@ -38,48 +42,37 @@ export default function StudioCredentialsForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.is_verified) {
-      alert("Please verify your email before submitting your profile.");
-      return;
-    }
     setLoading(true);
 
     try {
-      await api.createStudioProfile(formData);
-      alert("Studio Profile Submitted Successfully")
-      setSubmitted(true);
+      await storage.create('studio', { ...formData, profile_status: 'pending', submission_id: submissionId });
+      notifyApplicationReceived({
+        user_id: user?.id,
+        email: formData.email,
+        name: formData.studio_name,
+        role: 'studio',
+        reference: submissionId,
+      });
+      notifyAdmin({
+        title: 'New Studio Application',
+        message: `${formData.studio_name} (${formData.email}) has applied as Karkhana-e-Sada (Studio Partner). Submission: ${submissionId}.`,
+        event: 'application_received',
+        from_role: 'studio',
+        from_name: formData.studio_name,
+        action_url: '/admin/applications/studio',
+      }).catch(console.error);
+      setShowModal(true);
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to submit profile. Please try again later.");
+      alert('Failed to submit application. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user) {
-    return (
-      <div className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8 text-center space-y-4">
-        <p className="text-neutral-300">You must be logged in to submit a Studio Profile.</p>
-        <Link href="/login" className="inline-block px-6 py-2 bg-amber-400 text-black font-medium rounded hover:bg-amber-500 transition-colors">
-          Log In
-        </Link>
-      </div>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <div className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8 text-center">
-        <h3 className="text-xl font-bold text-white mb-2">Profile Submitted Successfully</h3>
-        <p className="text-neutral-300 text-sm">
-          Your submission has been received for institutional review. You will be notified of the outcome shortly.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
+    <>
+      <form onSubmit={handleSubmit} className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
       <h3 className="text-lg font-semibold text-white mb-6">Submit Studio Credentials</h3>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -283,7 +276,7 @@ export default function StudioCredentialsForm() {
       <div className="mt-8 flex justify-end">
         <button
           type="submit"
-          disabled={loading || !formData.accept_terms || !formData.agree_centralized_authorization || !formData.agree_centralized_validation || !user?.is_verified}
+          disabled={loading || !formData.accept_terms || !formData.agree_centralized_authorization || !formData.agree_centralized_validation}
           className="px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {loading ? <Loader /> : null}
@@ -291,5 +284,12 @@ export default function StudioCredentialsForm() {
         </button>
       </div>
     </form>
+    {showModal && (
+      <StudioSubmissionSuccessModal
+        submissionId={submissionId}
+        onClose={() => setShowModal(false)}
+      />
+    )}
+    </>
   );
 }

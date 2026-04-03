@@ -1,12 +1,16 @@
 "use client";
 import { useState } from 'react';
-// import { supabase } from '../../lib/supabase';
 import { Check, X, Loader } from 'lucide-react';
 import DOMPurify from "dompurify";
+import { useAuth } from '@/app/contexts/AuthContext';
+import { storage } from '@/app/lib/storage';
+import Link from 'next/link';
 
 export function ArticleSubmissionForm() {
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -18,7 +22,37 @@ export function ArticleSubmissionForm() {
     tags: ''
   });
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      storage.create('article', {
+        ...formData,
+        author_name: user?.full_name ?? '',
+        author_email: user?.email ?? '',
+        status: 'pending',
+        submitted_at: new Date().toISOString(),
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to submit article. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
+  if (!user) {
+    return (
+      <div className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8 text-center space-y-4">
+        <p className="text-neutral-300">You must be logged in to submit an article for review.</p>
+        <Link href="/login" className="inline-block px-6 py-2 bg-amber-400 text-black font-medium rounded hover:bg-amber-500 transition-colors">
+          Log In
+        </Link>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -37,7 +71,12 @@ export function ArticleSubmissionForm() {
   }
 
   return (
-    <form className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 space-y-6">
+      {error && (
+        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-neutral-300 mb-2">
           Title *

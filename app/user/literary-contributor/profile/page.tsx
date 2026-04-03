@@ -7,6 +7,9 @@ import * as api from "../../../api/auth"
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { LiteraryProfileType } from '@/app/types/literary.types';
+import { hasRoleAccess } from '@/app/lib/role-access';
+import { ProfileCardEditor } from '@/app/components/profile/ProfileCardEditor';
+import { getUserNotifications } from '@/app/lib/notifications';
 
 
 
@@ -57,8 +60,20 @@ export default function UserProfile() {
   };
 
   useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!hasRoleAccess(user as any, 'literary')) {
+      alert('You do not have literary role access.');
+      router.push('/');
+      return;
+    }
+
     loadLiteraryProfile();
-  }, [])
+    setNotifications(getUserNotifications(user.id).map(n => ({ ...n, notification_type: n.event })));
+  }, [user])
 
 
 
@@ -115,6 +130,7 @@ export default function UserProfile() {
       setActiveTab={setActiveTab}
       notifications={notifications}
     >
+      <ProfileCardEditor role="literary" displayName={formData.professional_name || formData.full_name} status={status} />
       <div className="space-y-4">
                     {!formData.email && !status ? (
                       <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-12 text-center">

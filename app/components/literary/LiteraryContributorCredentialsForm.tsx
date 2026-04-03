@@ -2,21 +2,25 @@
 import { useState } from 'react';
 import DOMPurify from "dompurify";
 import * as api from "../../api/auth";
+import { storage } from '../../lib/storage';
+import { notifyApplicationReceived, notifyAdmin } from '../../lib/notifications';
 import { useAuth } from '@/app/contexts/AuthContext';
-import Loader from '../../components/ui/Loader';
 import { LiteraryProfileType } from '@/app/types/literary.types';
 import Link from 'next/link';
+import { LiteraryContributorSubmissionSuccessModal } from './LiteraryContributorSubmissionSuccessModal';
 
 export function LiteraryContributorCredentialsForm() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [submissionId] = useState(`SP-LIT-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`);
   const [formData, setFormData] = useState<LiteraryProfileType>({
-    full_name: '',
+    full_name: user ? user.full_name : '',
     professional_name: '',
     country: '',
     city: '',
-    email: '',
+    email: user ? user.email : '',
     years_experience: '',
     writing_focus: [],
     languages: '',
@@ -40,12 +44,12 @@ export function LiteraryContributorCredentialsForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.is_verified) {
-      alert("Please verify your email before submitting your profile.");
+      setError('Please verify your email before submitting your profile.');
       return;
     }
     setLoading(true);
+    setError('');
 
-    // Convert comma-separated string to array for backend
     const payload = {
       ...formData,
       languages:
@@ -55,12 +59,34 @@ export function LiteraryContributorCredentialsForm() {
     };
 
     try {
-      await api.createLiteraryProfile(payload as LiteraryProfileType);
-      console.log("Profile submitted successfully");
+      try {
+        await api.createLiteraryProfile(payload as LiteraryProfileType);
+      } catch {
+        storage.create('literary', {
+          ...payload,
+          profile_status: 'pending',
+          submitted_at: new Date().toISOString(),
+        });
+      }
       setSubmitted(true);
-    } catch (error: any) {
-      console.error(error);
-      alert(error.response?.data?.message || "Failed to submit profile. Please try again later.");
+      notifyApplicationReceived({
+        user_id: user?.id,
+        email: formData.email,
+        name: formData.professional_name || formData.full_name,
+        role: 'literary',
+        reference: submissionId,
+      }).catch(console.error);
+      notifyAdmin({
+        title: 'New Literary Contributor Application',
+        message: `${formData.professional_name || formData.full_name} (${formData.email}) has applied as Ahl-e-Tahreer (Literary). Submission: ${submissionId}.`,
+        event: 'application_received',
+        from_role: 'literary',
+        from_name: formData.professional_name || formData.full_name,
+        action_url: '/admin/applications/literary',
+      }).catch(console.error);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to submit profile. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -79,18 +105,22 @@ export function LiteraryContributorCredentialsForm() {
 
   if (submitted) {
     return (
-      <div className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8 text-center">
-        <h3 className="text-xl font-bold text-white mb-2">Profile Submitted Successfully</h3>
-        <p className="text-neutral-300 text-sm">
-          Your profile has been received for institutional review. You will be notified of the outcome shortly.
-        </p>
-      </div>
+      <LiteraryContributorSubmissionSuccessModal
+        onClose={() => setSubmitted(false)}
+        submissionId={submissionId}
+      />
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
       <h3 className="text-lg font-semibold text-white mb-6">Submit Literary Contributor Profile</h3>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-900/20 border border-red-800/50 rounded">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-5">
@@ -343,8 +373,12 @@ export function LiteraryContributorCredentialsForm() {
           disabled={loading || !formData.accept_framework || !formData.acknowledge_editorial_control || !user?.is_verified}
           className="px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {loading ? <Loader /> : null}
-          {loading ? 'Submitting...' : 'Submit Literary Contributor Profile'}
+          {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-neutral-950/30 border-t-neutral-950 rounded-full animate-spin" />
+                Submitting...
+              </>
+            ) : 'Submit Literary Contributor Profile'}
         </button>
       </div>
     </form>

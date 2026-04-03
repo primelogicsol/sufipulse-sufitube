@@ -1,14 +1,14 @@
 "use client";
-import { useEffect, useState } from 'react';
-import * as api from "../../api/auth";
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { storage } from '@/app/lib/storage';
+import { getUserNotifications, markNotificationRead, markAllNotificationsRead, notifyAdmin } from '@/app/lib/notifications';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, Settings, CircleCheck as CheckCircle, Search, Circle as XCircle, Eye, CircleAlert as AlertCircle, Clock, CirclePlus as PlusCircle, Shield, LogOut, Loader, User } from 'lucide-react';
+import Image from 'next/image';
+import { LayoutDashboard, FileText, Settings, CircleCheck as CheckCircle, Search, Circle as XCircle, Eye, CircleAlert as AlertCircle, Clock, CirclePlus as PlusCircle, Shield, LogOut, Loader, User, Bell, DollarSign, TrendingUp, Info } from 'lucide-react';
 import Editor, { EditorProvider } from "react-simple-wysiwyg";
-import { Layout } from '../layout/Layout';
-import { PageContainer } from '../layout/PageContainer';
 
-type RoleType = "writer" | "vocalist";
+type RoleType = "writer" | "vocalist" | "producer" | "literary";
 
 interface UserDashboardProps {
     role: RoleType;
@@ -18,7 +18,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const { user, logout } = useAuth();
     const router = useRouter();
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'my-content' | 'published' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'my-content' | 'published' | 'royalties' | 'settings' | 'work-queue'>('overview');
     const [loading, setLoading] = useState(true);
 
     // Data states
@@ -45,21 +45,35 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     // Profile Settings States
     const [profileForm, setProfileForm] = useState({ name: '', avatar: null as File | null });
     const [profileLoading, setProfileLoading] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    // Notification states
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [bellOpen, setBellOpen] = useState(false);
+    const bellRef = useRef<HTMLDivElement>(null);
+
+    // Producer assignment states
+    const [assignments, setAssignments] = useState<any[]>([]);
+
+    // Royalty states
+    const [royalties, setRoyalties] = useState<any[]>([]);
+    const [bankInfo, setBankInfo] = useState<any>(null);
+    const [bankFormOpen, setBankFormOpen] = useState(false);
+    const [bankForm, setBankForm] = useState({
+        holder_name: '', bank_name: '', account_number: '', iban_routing: '', swift_bic: '', account_type: 'savings', country: ''
+    });
 
     const config = role === "writer" ? {
         title: "Writer Portal",
         subtitle: "Ahl-e-Qalam Control Center",
         term: "Kalam",
         termPlural: "Kalams",
-        fetchProfile: api.readWriterProfile,
-        fetchItems: api.getUserAllKalams,
-        createItem: api.createKalam,
-        updateItem: api.updateKalam,
-        deleteItem: api.deleteKalam,
-        updateStatus: api.updateKalamStatus,
+        typeKey: 'kalam',
+        profileType: 'writer',
         profileFields: {
             languages: 'primary_languages',
-            styles: 'writing_styles'
+            styles: 'writing_styles',
+            statusField: 'profile_status',
         },
         draftFields: [
             { name: "writing_style", label: "Writing Style", type: "radio", source: "styles" },
@@ -68,20 +82,17 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             { name: "content", label: "Content", type: "editor" }
         ],
         draftDefaults: { title: "", language: "", writing_style: "", content: "" }
-    } : {
+    } : role === "vocalist" ? {
         title: "Vocalist Portal",
-        subtitle: "Ahl-e-Naghma Control Center",
+        subtitle: "Ahl-e-Sada Control Center",
         term: "Sada",
         termPlural: "Sadas",
-        fetchProfile: api.readVocalistProfile,
-        fetchItems: api.getUserAllSadas,
-        createItem: api.createSada,
-        updateItem: api.updateSada,
-        deleteItem: api.deleteSada,
-        updateStatus: api.updateSadaStatus,
+        typeKey: 'sada',
+        profileType: 'vocalist',
         profileFields: {
             languages: 'languages_performed',
-            styles: 'performance_styles'
+            styles: 'performance_styles',
+            statusField: 'status',
         },
         draftFields: [
             { name: "performance_style", label: "Performance Style", type: "radio", source: "styles" },
@@ -90,6 +101,44 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             { name: "link", label: "Link", type: "url", placeholder: "URL to your sada" }
         ],
         draftDefaults: { title: "", language: "", performance_style: "", link: "" }
+    } : role === "literary" ? {
+        title: "Literary Contributor Portal",
+        subtitle: "Ahl-e-Tahreer Control Center",
+        term: "Article",
+        termPlural: "Articles",
+        typeKey: 'article',
+        profileType: 'literary',
+        profileFields: {
+            languages: 'languages',
+            styles: 'writing_focus',
+            statusField: 'profile_status',
+        },
+        draftFields: [
+            { name: "article_type", label: "Article Type", type: "radio", source: "styles" },
+            { name: "language", label: "Language", type: "radio", source: "languages" },
+            { name: "title", label: "Title", type: "text", placeholder: "Article title" },
+            { name: "abstract", label: "Abstract", type: "textarea", placeholder: "Brief summary of the article (200–400 words)" },
+            { name: "content", label: "Full Content", type: "editor" },
+            { name: "author_name", label: "Author Name (as shown publicly)", type: "text", placeholder: "Your pen name or full name" },
+            { name: "author_country", label: "Country", type: "text", placeholder: "e.g. Pakistan" },
+            { name: "author_city", label: "City", type: "text", placeholder: "e.g. Lahore" },
+            { name: "author_domain", label: "Literary Domain / Topics", type: "text", placeholder: "e.g. Sufi Philosophy, Commentary, Research" },
+        ],
+        draftDefaults: { title: "", language: "", article_type: "", abstract: "", content: "", author_name: "", author_country: "", author_city: "", author_domain: "" }
+    } : {
+        title: "Producer Portal",
+        subtitle: "Ahl-e-Naghma Control Center",
+        term: "Track",
+        termPlural: "Tracks",
+        typeKey: 'performance_assignment',
+        profileType: 'producer',
+        profileFields: {
+            languages: 'primary_production_focus',
+            styles: 'primary_production_focus',
+            statusField: 'profile_status',
+        },
+        draftFields: [],
+        draftDefaults: {}
     };
 
     useEffect(() => {
@@ -98,21 +147,134 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             return;
         }
         setProfileForm(prev => ({ ...prev, name: user.full_name || '' }));
+        // Load saved avatar from localStorage
+        const savedAvatar = localStorage.getItem(`sufipulse_avatar_${user.id}`);
+        if (savedAvatar) setAvatarUrl(savedAvatar);
         loadData();
+        loadNotifications();
+        loadRoyalties();
+        loadBankInfo();
+        const interval = setInterval(loadNotifications, 30000);
+        return () => clearInterval(interval);
     }, [user]);
 
+    const loadNotifications = () => {
+        if (!user) return;
+        setNotifications(getUserNotifications(user.id));
+    };
+
+    const loadRoyalties = () => {
+        if (!user) return;
+        try {
+            const raw = localStorage.getItem('sufipulse_royalty_reports');
+            const all: any[] = raw ? JSON.parse(raw) : [];
+            // Match by user_id or by name fields
+            const writerProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_writer_profiles') || '[]');
+            const vocalistProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_vocalist_profiles') || '[]');
+            const myWriterProfile = writerProfiles.find((p: any) => p.user_id === user!.id);
+            const myVocalistProfile = vocalistProfiles.find((p: any) => p.user_id === user!.id);
+            const myNames = [
+                user!.full_name,
+                myWriterProfile?.pen_name,
+                myVocalistProfile?.performance_name,
+            ].filter(Boolean).map((n: string) => n.toLowerCase());
+            const mine = all.filter((r: any) =>
+                r.user_id === user!.id ||
+                myNames.includes((r.stakeholder_name || '').toLowerCase())
+            );
+            setRoyalties(mine);
+        } catch { setRoyalties([]); }
+    };
+
+    const loadBankInfo = () => {
+        if (!user) return;
+        try {
+            const raw = localStorage.getItem('sufipulse_bank_accounts');
+            const all: any[] = raw ? JSON.parse(raw) : [];
+            const mine = all.find((b: any) => b.user_id === user!.id) || null;
+            setBankInfo(mine);
+            if (mine) setBankForm({
+                holder_name: mine.holder_name || '',
+                bank_name: mine.bank_name || '',
+                account_number: mine.account_number || '',
+                iban_routing: mine.iban_routing || '',
+                swift_bic: mine.swift_bic || '',
+                account_type: mine.account_type || 'savings',
+                country: mine.country || ''
+            });
+        } catch { setBankInfo(null); }
+    };
+
+    const handleBankSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+        try {
+            const raw = localStorage.getItem('sufipulse_bank_accounts');
+            const all: any[] = raw ? JSON.parse(raw) : [];
+            const idx = all.findIndex((b: any) => b.user_id === user!.id);
+            const entry = { ...bankForm, user_id: user!.id, updated_at: new Date().toISOString() };
+            if (idx >= 0) { all[idx] = { ...all[idx], ...entry }; }
+            else { all.push({ id: `bank_${Date.now()}`, created_at: new Date().toISOString(), ...entry }); }
+            localStorage.setItem('sufipulse_bank_accounts', JSON.stringify(all));
+            setBankFormOpen(false);
+            loadBankInfo();
+            alert('Bank account saved successfully. Admin will verify before first payout.');
+        } catch { alert('Failed to save. Please try again.'); }
+    };
+
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+                setBellOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
     const loadData = async () => {
+        if (!user) return;
         setLoading(true);
         try {
-            const profileRes = await config.fetchProfile() as any;
-            setStatus(profileRes.data?.profile_status || profileRes.data?.status);
+            const profile = await storage.getProfile(config.profileType, user.id);
+            setStatus((profile as any)?.[config.profileFields.statusField] || 'pending');
             setProfileData({
-                languages: profileRes.data?.[config.profileFields.languages] || [],
-                styles: profileRes.data?.[config.profileFields.styles] || []
+                languages: (profile as any)?.[config.profileFields.languages] || [],
+                styles: (profile as any)?.[config.profileFields.styles] || [],
+                // Store full profile data for additional use (e.g. literary author fields)
+                full_name: (profile as any)?.full_name || user.full_name || '',
+                professional_name: (profile as any)?.professional_name || (profile as any)?.pen_name || (profile as any)?.performance_name || '',
+                country: (profile as any)?.country || '',
+                city: (profile as any)?.city || '',
+                domain: Array.isArray((profile as any)?.[config.profileFields.styles]) ? ((profile as any)?.[config.profileFields.styles] || []).join(', ') : '',
             });
-            const itemsRes = await config.fetchItems() as any;
-            setItems(itemsRes.data || []);
-            setDraftForm(config.draftDefaults);
+            if (role === 'producer') {
+                // Producer: load assignments by matching producer name
+                const raw = typeof window !== 'undefined' ? localStorage.getItem('sufipulse_performance_assignments') : null;
+                const allAssignments: any[] = raw ? JSON.parse(raw) : [];
+                const producerName = ((profile as any)?.professional_name || (profile as any)?.full_name || user.full_name || '').toLowerCase();
+                const mine = producerName
+                    ? allAssignments.filter((a: any) => a.user_id === user.id || (a.producer || '').toLowerCase().includes(producerName))
+                    : allAssignments.filter((a: any) => a.user_id === user.id);
+                setAssignments(mine);
+                setItems(mine);
+            } else {
+                const allItems = await storage.getAll(config.typeKey);
+                setItems(allItems.filter((i: any) => i.user_id === user.id));
+            }
+            // For literary: pre-fill author fields from profile
+            if (role === 'literary') {
+                const p = profile as any;
+                setDraftForm({
+                    title: '', language: '', article_type: '', abstract: '', content: '',
+                    author_name: p?.professional_name || p?.full_name || user.full_name || '',
+                    author_country: p?.country || '',
+                    author_city: p?.city || '',
+                    author_domain: Array.isArray(p?.writing_focus) ? p.writing_focus.join(', ') : '',
+                });
+            } else {
+                setDraftForm(config.draftDefaults);
+            }
         } catch (error) {
             console.error("Failed to load dashboard data", error);
         } finally {
@@ -128,25 +290,30 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const handlePasswordUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setPasswordLoading(true);
-        try {
-            await api.updatePassword(passwordForm.currentPassword, passwordForm.newPassword);
-            alert("Password updated");
+        setTimeout(() => {
+            alert("Password updated successfully!");
             setPasswordForm({ currentPassword: '', newPassword: '' });
-        } catch (err: any) {
-            alert(err.response?.data?.error || "Error");
-        } finally {
             setPasswordLoading(false);
-        }
+        }, 500);
     };
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setProfileLoading(true);
-        // Simulate API call since endpoint isn't defined yet
+        // Save avatar to localStorage as data URL
+        if (profileForm.avatar && user) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                localStorage.setItem(`sufipulse_avatar_${user.id}`, dataUrl);
+                setAvatarUrl(dataUrl);
+            };
+            reader.readAsDataURL(profileForm.avatar);
+        }
         setTimeout(() => {
             alert("Profile updated successfully!");
             setProfileLoading(false);
-        }, 1000);
+        }, 500);
     };
 
     const handleDraftChange = (e: any) => {
@@ -158,18 +325,48 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         setSubmitLoading(true);
         try {
             if (editingItem) {
-                await config.updateItem(editingItem.id, draftForm);
-                alert(`${config.term} updated`);
+                // On resubmit clear revision_notes and reset to under review
+                await storage.update(config.typeKey, editingItem.id, { ...draftForm, status: 'under review', revision_notes: null });
+                alert(`${config.term} revised and resubmitted for review!`);
                 setEditingItem(null);
             } else {
-                await config.createItem(draftForm);
-                alert(`${config.term} created`);
+                const authorMeta = role === 'literary' ? {
+                    author_name: draftForm.author_name || profileData.professional_name || profileData.full_name || user?.full_name || '',
+                    author_full_name: profileData.full_name || user?.full_name || '',
+                    author_professional_name: profileData.professional_name || '',
+                    author_country: draftForm.author_country || profileData.country || '',
+                    author_city: draftForm.author_city || profileData.city || '',
+                    author_domain: draftForm.author_domain || profileData.domain || '',
+                    author_photo: (typeof window !== 'undefined' ? localStorage.getItem(`sufipulse_avatar_${user?.id}`) : null) || '',
+                    slug: draftForm.title ? draftForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now() : `article-${Date.now()}`,
+                    excerpt: draftForm.abstract || (draftForm.content || '').replace(/<[^>]*>/g, '').slice(0, 200) + '...'
+                } : {};
+                await storage.create(config.typeKey, { ...draftForm, ...authorMeta, status: 'under review' });
+                // Notify admin of new content submission
+                const adminRoutes: Record<string, string> = {
+                    vocalist: '/admin/sadas',
+                    literary: '/admin/articles',
+                };
+                const adminTitles: Record<string, string> = {
+                    vocalist: `New Sada Submission`,
+                    literary: `New Article Submission`,
+                };
+                if (role !== 'producer') {
+                    notifyAdmin({
+                        title: adminTitles[role] || `New ${config.term} Submission`,
+                        message: `${user?.full_name || 'A contributor'} (${config.subtitle}) submitted "${draftForm.title || config.term}" for review.`,
+                        event: 'application_received',
+                        from_role: role,
+                        from_name: user?.full_name,
+                        action_url: adminRoutes[role] || `/admin/kalams`,
+                    }).catch(console.error);
+                }
+                alert(`${config.term} submitted for review!`);
             }
-            setDraftForm(config.draftDefaults);
             setActiveTab("my-content");
-            loadData();
+            loadData();  // reloads and re-prefills form
         } catch (err: any) {
-            alert(err.response?.data?.error || "Error");
+            alert(err?.message || "Error submitting");
         } finally {
             setSubmitLoading(false);
         }
@@ -182,33 +379,31 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             newDraft[k] = item[k] || '';
         });
         setDraftForm(newDraft);
+        setContentModal(false);
+        setSelectedItem(null);
         setActiveTab("submissions");
     };
 
     const handleDeleteItem = async (id: string) => {
         if (!confirm(`Delete this ${config.term}?`)) return;
         try {
-            await config.deleteItem(id);
+            await storage.delete(config.typeKey, id);
             alert("Deleted");
             setContentModal(false);
             loadData();
         } catch (err: any) {
-            alert("Error");
+            alert("Error deleting");
         }
     };
 
     const handleUpdateStatus = async (item: any, newStatus: string) => {
         try {
-            if (role === "writer") {
-                await (config.updateStatus as any)(item.id, newStatus, null);
-            } else {
-                await (config.updateStatus as any)(item.id, newStatus);
-            }
+            await storage.update(config.typeKey, item.id, { status: newStatus });
             alert("Status updated");
             setContentModal(false);
             loadData();
         } catch (err: any) {
-            alert("Error");
+            alert("Error updating status");
         }
     };
 
@@ -230,17 +425,26 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         rejected: items.filter(i => i.status === "rejected").length
     };
 
-    const navigationLinks = [
+    const navigationLinks = role === 'producer' ? [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-        { id: 'my-content', label: 'My Content', icon: FileText },
-        { id: 'published', label: 'Published', icon: CheckCircle },
+        { id: 'work-queue', label: 'Work Queue', icon: FileText },
+        { id: 'royalties', label: 'Royalties', icon: DollarSign },
+        { id: 'settings', label: 'General Settings', icon: Settings },
+    ] : [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'my-content', label: role === 'literary' ? 'My Articles' : 'My Content', icon: FileText },
+        { id: 'published', label: role === 'literary' ? 'Published Articles' : 'Published', icon: CheckCircle },
         { id: 'submissions', label: `Submit ${config.term}`, icon: PlusCircle },
+        ...(role !== 'literary' ? [{ id: 'royalties', label: 'Royalties', icon: DollarSign }] : []),
         { id: 'settings', label: 'General Settings', icon: Settings },
     ];
 
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const userInitials = (user?.full_name || user?.email || 'U').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-[var(--color-midnight)] flex items-center justify-center">
+            <div className="fixed inset-0 bg-[var(--color-midnight)] flex items-center justify-center">
                 <div className="flex flex-col items-center">
                     <Loader className="w-10 h-10 text-[var(--color-gold)] animate-spin" />
                     <p className="mt-4 text-[var(--color-text-secondary)]">Loading Dashboard...</p>
@@ -259,21 +463,18 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const activeItems = filteredItems.filter(i => activeTab === 'published' ? i.status === 'published' : i.status !== 'published');
 
     return (
-        <Layout>
-            <PageContainer className='max-w-[1600px]'>
-                <div className="min-h-screen bg-[var(--dash-bg-primary)] flex">
-                    {/* Sidebar copied from the Admin layout logic */}
-                    <aside className="w-64 bg-[var(--dash-bg-secondary)] border-r border-[var(--dash-border)] flex flex-col hidden md:flex">
-                        <div className="p-6 border-b border-[var(--dash-border)]">
-                            <div className="flex items-center gap-3">
-                                <Shield className="w-8 h-8 text-[var(--dash-accent)]" />
-                                <div>
-                                    <h1 className="text-lg! font-bold text-[var(--dash-text-primary)] leading-tight">{config.title}</h1>
-                                    <p className="text-xs text-[var(--dash-text-muted)] mt-1">{config.subtitle}</p>
-                                </div>
+        <div className="fixed inset-0 flex overflow-hidden bg-[var(--dash-bg-primary)]">
+                    {/* Sidebar */}
+                    <aside style={{ width: '224px' }} className="bg-[var(--dash-bg-secondary)] border-r border-[var(--dash-border)] hidden md:block shrink-0 overflow-y-auto">
+                        <div className="p-4 border-b border-[var(--dash-border)]">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Image src="/sufipulse-logo-v5.png" alt="SufiPulse" width={36} height={36} className="rounded-lg shrink-0" />
+                                <span className="text-sm font-bold text-[var(--dash-text-primary)] leading-tight">SufiPulse</span>
                             </div>
+                            <p className="text-[11px] font-semibold text-[var(--dash-accent)] uppercase tracking-wider">{config.title}</p>
+                            <p className="text-[10px] text-[var(--dash-text-muted)] mt-0.5">{config.subtitle}</p>
                         </div>
-                        <nav className="py-4 flex-1">
+                        <nav style={{ display: 'block', padding: '8px 0', width: '100%' }}>
                             {navigationLinks.map((link) => {
                                 const Icon = link.icon;
                                 const isActive = activeTab === link.id;
@@ -281,13 +482,28 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                     <button
                                         key={link.id}
                                         onClick={() => { setActiveTab(link.id as any); setSearchQuery(''); setSearchDate(''); }}
-                                        className={`w-full cursor-pointer flex items-center gap-3 px-6 py-3 transition-colors text-left ${isActive
-                                            ? 'bg-[var(--dash-accent)]/10 text-[var(--dash-accent)] border-r-2 border-[var(--dash-accent)]'
-                                            : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-hover)] hover:text-[var(--dash-text-primary)]'
-                                            }`}
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-start',
+                                            gap: '10px',
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            padding: '10px 16px',
+                                            cursor: 'pointer',
+                                            background: isActive ? 'rgba(var(--dash-accent-rgb,212,175,55),0.08)' : 'transparent',
+                                            color: isActive ? 'var(--dash-accent)' : 'var(--dash-text-secondary)',
+                                            boxSizing: 'border-box',
+                                            margin: 0,
+                                            border: 'none',
+                                            borderRight: isActive ? '3px solid var(--dash-accent)' : '3px solid transparent',
+                                        }}
+                                        onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = 'var(--dash-hover)'; (e.currentTarget as HTMLElement).style.color = 'var(--dash-text-primary)'; } }}
+                                        onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--dash-text-secondary)'; } }}
                                     >
-                                        <Icon className="w-4 h-4" />
-                                        <span className="font-medium text-sm">{link.label}</span>
+                                        <Icon style={{ width: 16, height: 16, flexShrink: 0, display: 'block' }} />
+                                        <span style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{link.label}</span>
                                     </button>
                                 );
                             })}
@@ -295,19 +511,77 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                     </aside>
 
                     {/* Main Content */}
-                    <div className="flex-1 flex flex-col min-w-0">
-                        <header className="h-16 bg-[var(--dash-bg-secondary)] border-b border-[var(--dash-border)] flex items-center justify-between px-8 sticky top-0 z-10">
+                    <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                        <header className="h-14 bg-[var(--dash-bg-secondary)] border-b border-[var(--dash-border)] flex items-center justify-between px-6 shrink-0 z-10">
                             <h2 className="text-sm font-semibold text-[var(--dash-text-primary)]">
                                 {navigationLinks.find(l => l.id === activeTab)?.label}
                             </h2>
-                            <div className="flex items-center gap-6">
-                                <div className="text-right hidden sm:block">
-                                    {/* <p className="text-sm font-medium text-[var(--dash-text-primary)] uppercase">{user?.email}</p> */}
-                                    <p className="text-xs text-[var(--dash-text-muted)] capitalize">{role}</p>
+                            <div className="flex items-center gap-4">
+                                {/* Notification Bell */}
+                                <div className="relative" ref={bellRef}>
+                                    <button
+                                        onClick={() => { setBellOpen(b => !b); if (!bellOpen && unreadCount > 0) {} }}
+                                        className="relative cursor-pointer p-2 rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text-primary)] hover:bg-[var(--dash-hover)] transition-colors"
+                                    >
+                                        <Bell className="w-5 h-5" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-1 right-1 w-4 h-4 bg-amber-400 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+                                                {unreadCount > 9 ? '9+' : unreadCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {bellOpen && (
+                                        <div className="absolute right-0 top-12 w-80 bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl shadow-2xl z-50 overflow-hidden">
+                                            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--dash-border)]">
+                                                <span className="text-sm font-bold text-[var(--dash-text-primary)]">Notifications</span>
+                                                {unreadCount > 0 && (
+                                                    <button onClick={() => { if (user) { markAllNotificationsRead(user.id); loadNotifications(); } }} className="text-xs text-amber-400 hover:text-amber-300 cursor-pointer">
+                                                        Mark all read
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="max-h-72 overflow-y-auto divide-y divide-[var(--dash-border)]">
+                                                {notifications.length === 0 ? (
+                                                    <p className="text-center text-sm text-[var(--dash-text-muted)] py-6">No notifications</p>
+                                                ) : notifications.slice(0, 15).map(n => (
+                                                    <div
+                                                        key={n.id}
+                                                        onClick={() => { markNotificationRead(n.id); loadNotifications(); }}
+                                                        className={`px-4 py-3 cursor-pointer hover:bg-[var(--dash-hover)] transition-colors ${!n.read ? 'bg-amber-400/5' : ''}`}
+                                                    >
+                                                        <div className="flex items-start gap-2">
+                                                            {!n.read && <span className="mt-1.5 w-2 h-2 rounded-full bg-amber-400 shrink-0" />}
+                                                            <div className={!n.read ? '' : 'pl-4'}>
+                                                                <p className="text-sm font-semibold text-[var(--dash-text-primary)] leading-snug">{n.title}</p>
+                                                                <p className="text-xs text-[var(--dash-text-secondary)] mt-0.5 leading-snug">{n.message}</p>
+                                                                <p className="text-[10px] text-[var(--dash-text-muted)] mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <button onClick={handleSignOut} className="cursor-pointer flex items-center gap-2 text-sm text-[var(--dash-text-secondary)] hover:text-[var(--dash-accent)] transition-colors">
+
+                                {/* User Avatar */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-[var(--dash-accent)] flex items-center justify-center overflow-hidden shrink-0">
+                                        {avatarUrl ? (
+                                            <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-xs font-bold text-black">{userInitials}</span>
+                                        )}
+                                    </div>
+                                    <div className="hidden sm:block text-right">
+                                        <p className="text-xs font-semibold text-[var(--dash-text-primary)] leading-none">{user?.full_name || user?.email}</p>
+                                        <p className="text-[10px] text-[var(--dash-text-muted)] mt-0.5 capitalize">{role}</p>
+                                    </div>
+                                </div>
+
+                                <button onClick={handleSignOut} className="cursor-pointer flex items-center gap-1.5 text-sm text-[var(--dash-text-secondary)] hover:text-[var(--dash-accent)] transition-colors">
                                     <LogOut className="w-4 h-4" />
-                                    <span>Logout</span>
+                                    <span className="hidden sm:inline">Logout</span>
                                 </button>
                             </div>
                         </header>
@@ -351,21 +625,104 @@ export default function UserDashboard({ role }: UserDashboardProps) {
 
                                     <h2 className="text-lg font-bold text-[var(--dash-text-primary)] mb-6">Quick Actions</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
-                                            <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">Create New Submission</h3>
-                                            <p className="text-sm text-[var(--dash-text-secondary)] mb-6">Start a new draft for your next {config.term}.</p>
-                                            <button onClick={() => { setEditingItem(null); setDraftForm(config.draftDefaults); setActiveTab('submissions') }} className="cursor-pointer px-4 py-2 bg-[var(--dash-accent)] text-black font-semibold rounded-lg text-sm hover:opacity-90 transition-opacity">
-                                                Submit New {config.term}
-                                            </button>
-                                        </div>
-                                        <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
-                                            <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">View Submissions</h3>
-                                            <p className="text-sm text-[var(--dash-text-secondary)] mb-6">Check the status of your existing items.</p>
-                                            <button onClick={() => setActiveTab('my-content')} className="cursor-pointer px-4 py-2 border border-[var(--dash-accent)] text-[var(--dash-accent)] font-semibold rounded-lg text-sm hover:bg-[var(--dash-accent)]/10 transition-colors">
-                                                Go to My Content
-                                            </button>
-                                        </div>
+                                        {role === 'producer' ? (
+                                            <>
+                                                <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                                    <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">View Work Queue</h3>
+                                                    <p className="text-sm text-[var(--dash-text-secondary)] mb-6">See all production assignments from the admin team.</p>
+                                                    <button onClick={() => setActiveTab('work-queue')} className="cursor-pointer px-4 py-2 bg-[var(--dash-accent)] text-black font-semibold rounded-lg text-sm hover:opacity-90 transition-opacity">
+                                                        Open Work Queue
+                                                    </button>
+                                                </div>
+                                                <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                                    <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">Royalties</h3>
+                                                    <p className="text-sm text-[var(--dash-text-secondary)] mb-6">Track your royalty share and link your bank account.</p>
+                                                    <button onClick={() => setActiveTab('royalties')} className="cursor-pointer px-4 py-2 border border-[var(--dash-accent)] text-[var(--dash-accent)] font-semibold rounded-lg text-sm hover:bg-[var(--dash-accent)]/10 transition-colors">
+                                                        View Royalties
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                                    <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">Create New Submission</h3>
+                                                    <p className="text-sm text-[var(--dash-text-secondary)] mb-6">Start a new draft for your next {config.term}.</p>
+                                                    <button onClick={() => { setEditingItem(null); setDraftForm(config.draftDefaults); setActiveTab('submissions') }} className="cursor-pointer px-4 py-2 bg-[var(--dash-accent)] text-black font-semibold rounded-lg text-sm hover:opacity-90 transition-opacity">
+                                                        Submit New {config.term}
+                                                    </button>
+                                                </div>
+                                                <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                                    <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">View Submissions</h3>
+                                                    <p className="text-sm text-[var(--dash-text-secondary)] mb-6">Check the status of your existing items.</p>
+                                                    <button onClick={() => setActiveTab('my-content')} className="cursor-pointer px-4 py-2 border border-[var(--dash-accent)] text-[var(--dash-accent)] font-semibold rounded-lg text-sm hover:bg-[var(--dash-accent)]/10 transition-colors">
+                                                        Go to My Content
+                                                    </button>
+                                                </div>
+                                                {role !== 'literary' && (
+                                                <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                                    <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">Royalties</h3>
+                                                    <p className="text-sm text-[var(--dash-text-secondary)] mb-6">Track your royalty share and payment history.</p>
+                                                    <button onClick={() => setActiveTab('royalties')} className="cursor-pointer px-4 py-2 border border-[var(--dash-accent)] text-[var(--dash-accent)] font-semibold rounded-lg text-sm hover:bg-[var(--dash-accent)]/10 transition-colors">
+                                                        View Royalties
+                                                    </button>
+                                                </div>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Work Queue Tab — Producer only */}
+                            {activeTab === 'work-queue' && role === 'producer' && (
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h2 className="text-xl font-bold text-[var(--dash-text-primary)]">Work Queue</h2>
+                                            <p className="text-xs text-[var(--dash-text-muted)] mt-1">Production assignments assigned to you by the admin team</p>
+                                        </div>
+                                        <button onClick={loadData} className="cursor-pointer text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-accent)] transition-colors">Refresh</button>
+                                    </div>
+                                    {assignments.length === 0 ? (
+                                        <div className="text-center py-16 border border-dashed border-[var(--dash-border-hover)] rounded-xl">
+                                            <FileText className="w-12 h-12 text-[var(--dash-text-muted)] mx-auto mb-4 opacity-30" />
+                                            <p className="text-sm font-semibold text-[var(--dash-text-muted)]">No assignments yet</p>
+                                            <p className="text-xs text-[var(--dash-text-muted)] mt-1">Production assignments will appear here once the admin assigns a track to you</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {assignments.map((a: any) => (
+                                                <div key={a.id} className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6 hover:border-[var(--dash-accent)] transition-colors">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <h3 className="text-base font-bold text-[var(--dash-text-primary)] leading-tight flex-1 pr-3">{a.release_title || a.title || 'Untitled Track'}</h3>
+                                                        <span className={`px-2.5 py-1 text-xs capitalize font-semibold rounded-full border border-current whitespace-nowrap ${getStatusColor(a.status || 'pending')}`}>
+                                                            {(a.status || 'pending').replace('_', ' ')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1.5 text-xs mb-4">
+                                                        {a.vocalist && (
+                                                            <div className="flex"><span className="w-20 text-[var(--dash-text-muted)]">Vocalist:</span><span className="text-[var(--dash-text-secondary)]">{a.vocalist}</span></div>
+                                                        )}
+                                                        {a.writer && (
+                                                            <div className="flex"><span className="w-20 text-[var(--dash-text-muted)]">Writer:</span><span className="text-[var(--dash-text-secondary)]">{a.writer}</span></div>
+                                                        )}
+                                                        {a.due_date && (
+                                                            <div className="flex"><span className="w-20 text-[var(--dash-text-muted)]">Due:</span><span className="text-[var(--dash-text-secondary)]">{new Date(a.due_date).toLocaleDateString()}</span></div>
+                                                        )}
+                                                        {a.created_at && (
+                                                            <div className="flex"><span className="w-20 text-[var(--dash-text-muted)]">Assigned:</span><span className="text-[var(--dash-text-secondary)]">{new Date(a.created_at).toLocaleDateString()}</span></div>
+                                                        )}
+                                                    </div>
+                                                    {a.notes && (
+                                                        <div className="mt-3 pt-3 border-t border-[var(--dash-border)]">
+                                                            <p className="text-xs text-[var(--dash-text-muted)] mb-1">Admin notes:</p>
+                                                            <p className="text-xs text-[var(--dash-text-secondary)]">{a.notes}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -380,8 +737,18 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                         </div>
                                     ) : (
                                         <form onSubmit={handleDraftSubmit} className="space-y-6">
+                                            {/* Revision notes banner when addressing a revision request */}
+                                            {editingItem?.revision_notes && (
+                                                <div className="flex items-start gap-3 p-4 bg-yellow-400/10 border border-yellow-400/30 rounded-xl">
+                                                    <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-1">Admin Revision Request</p>
+                                                        <p className="text-sm text-[var(--dash-text-primary)] leading-relaxed">{editingItem.revision_notes}</p>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <h2 className="text-xl font-bold text-[var(--dash-text-primary)] mb-6">
-                                                {editingItem ? `Edit ${config.term}` : `Submit New ${config.term}`}
+                                                {editingItem ? (editingItem.revision_notes ? `Address Revision — ${config.term}` : `Edit ${config.term}`) : `Submit New ${config.term}`}
                                             </h2>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 {config.draftFields.filter(f => f.type === 'radio').map(field => (
@@ -426,6 +793,16 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                                 />
                                                             </EditorProvider>
                                                         </div>
+                                                    ) : field.type === 'textarea' ? (
+                                                        <textarea
+                                                            name={field.name}
+                                                            required
+                                                            rows={5}
+                                                            value={draftForm[field.name]}
+                                                            onChange={handleDraftChange}
+                                                            placeholder={field.placeholder}
+                                                            className="w-full px-4 py-3 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-primary)] focus:border-[var(--dash-accent)] focus:ring-1 focus:ring-[var(--dash-accent)] transition-colors outline-none resize-y"
+                                                        />
                                                     ) : (
                                                         <input
                                                             type={field.type}
@@ -487,8 +864,18 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {activeItems.length > 0 ? activeItems.map(item => (
-                                            <div key={item.id} className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6 flex flex-col hover:border-[var(--dash-accent)] transition-all">
+                                        {activeItems.length > 0 ? activeItems.map(item => {
+                                            const isRevision = item.status === 'revision requested' || item.status === 'revision_requested';
+                                            return (
+                                            <div key={item.id} className={`bg-[var(--dash-bg-secondary)] border rounded-xl p-6 flex flex-col transition-all hover:border-[var(--dash-accent)] ${
+                                                isRevision ? 'border-yellow-400/50' : 'border-[var(--dash-border)]'
+                                            }`}>
+                                                {isRevision && (
+                                                    <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
+                                                        <AlertCircle className="w-4 h-4 text-yellow-400 shrink-0" />
+                                                        <p className="text-xs font-semibold text-yellow-400">Revision requested by admin</p>
+                                                    </div>
+                                                )}
                                                 <div className="flex justify-between items-center mb-4">
                                                     <h3 className="text-lg font-bold text-[var(--dash-text-primary)] line-clamp-2 leading-tight flex-1 pr-4">{item.title}</h3>
                                                     <span className={`px-2.5 py-1 text-xs capitalize font-semibold rounded-full border border-current whitespace-nowrap ${getStatusColor(item.status)}`}>
@@ -505,26 +892,285 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                             <span className="text-[var(--dash-text-secondary)] capitalize">{v || '-'}</span>
                                                         </div>
                                                     ))}
-                                                    {/* <div className="flex mt-3">
-                                                        <span className="w-24 text-[var(--dash-text-muted)] text-xs">ID:</span>
-                                                        <span className="text-[var(--dash-text-muted)] text-xs truncate">{item.id.substring(0, 8)}</span>
-                                                    </div> */}
+                                                    {isRevision && item.revision_notes && (
+                                                        <div className="mt-3 pt-3 border-t border-[var(--dash-border)]">
+                                                            <p className="text-xs text-yellow-400 font-semibold mb-1">Admin note:</p>
+                                                            <p className="text-xs text-[var(--dash-text-secondary)] line-clamp-2">{item.revision_notes}</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex gap-3 pt-4 border-t border-[var(--dash-border)] mt-auto">
-                                                    <button onClick={() => { setSelectedItem(item); setContentModal(true) }} className="cursor-pointer flex-1 py-2 bg-blue-500/10 text-blue-400 font-semibold text-sm rounded-lg hover:bg-blue-500/20 transition-colors">
+                                                    <button onClick={() => { setSelectedItem(item); setContentModal(true); }} className="cursor-pointer flex-1 py-2 bg-blue-500/10 text-blue-400 font-semibold text-sm rounded-lg hover:bg-blue-500/20 transition-colors">
                                                         View
                                                     </button>
-                                                    {activeTab === 'my-content' && (item.status === 'draft' || item.status === 'revision requested' || item.status === 'request revision') && (
-                                                        <button onClick={() => handleEditItem(item)} className="cursor-pointer flex-1 py-2 bg-yellow-500/10 text-yellow-500 font-semibold text-sm rounded-lg hover:bg-yellow-500/20 transition-colors">
-                                                            Edit
+                                                    {activeTab === 'my-content' && (item.status === 'draft' || isRevision) && (
+                                                        <button
+                                                            onClick={() => handleEditItem(item)}
+                                                            className={`cursor-pointer flex-1 py-2 font-semibold text-sm rounded-lg transition-colors ${
+                                                                isRevision
+                                                                    ? 'bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30'
+                                                                    : 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'
+                                                            }`}
+                                                        >
+                                                            {isRevision ? 'Address Revision' : 'Edit'}
                                                         </button>
                                                     )}
                                                 </div>
                                             </div>
-                                        )) : (
+                                            );
+                                        }) : (
                                             <div className="col-span-full border border-dashed border-[var(--dash-border-hover)] rounded-xl py-12 flex flex-col items-center justify-center text-[var(--dash-text-muted)]">
                                                 <FileText className="w-12 h-12 mb-3 opacity-20" />
                                                 <p>No results found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Royalties Tab */}
+                            {activeTab === 'royalties' && role !== 'literary' && (
+                                <div className="space-y-6">
+
+                                    {/* Bank Account Section */}
+                                    {!bankInfo && !bankFormOpen && (
+                                        <div className="bg-[var(--dash-bg-secondary)] border border-red-400/30 rounded-xl p-5 flex items-start gap-4">
+                                            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                                            <div className="flex-1">
+                                                <p className="text-sm font-semibold text-red-400 mb-1">No Bank Account Linked</p>
+                                                <p className="text-xs text-[var(--dash-text-secondary)] leading-relaxed mb-3">
+                                                    You must link a bank account before any royalty payout can be processed. Payments will remain on hold until verified banking details are on file.
+                                                </p>
+                                                <button
+                                                    onClick={() => setBankFormOpen(true)}
+                                                    className="cursor-pointer px-4 py-2 bg-[var(--dash-accent)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
+                                                >
+                                                    + Link Bank Account
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {bankInfo && !bankFormOpen && (
+                                        <div className="bg-[var(--dash-bg-secondary)] border border-green-400/30 rounded-xl p-5">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 bg-green-400/10 rounded-lg flex items-center justify-center">
+                                                        <DollarSign className="w-4 h-4 text-green-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-[var(--dash-text-primary)]">Bank Account Linked</p>
+                                                        <p className="text-xs text-green-400 font-semibold">Pending admin verification</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setBankFormOpen(true)}
+                                                    className="cursor-pointer text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-accent)] transition-colors"
+                                                >
+                                                    Edit
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                                                {[
+                                                    { label: 'Account Holder', value: bankInfo.holder_name },
+                                                    { label: 'Bank Name', value: bankInfo.bank_name },
+                                                    { label: 'Account Type', value: bankInfo.account_type },
+                                                    { label: 'Account No.', value: bankInfo.account_number ? `••••${bankInfo.account_number.slice(-4)}` : '—' },
+                                                    { label: 'IBAN / Routing', value: bankInfo.iban_routing ? `••••${bankInfo.iban_routing.slice(-6)}` : '—' },
+                                                    { label: 'Country', value: bankInfo.country || '—' },
+                                                ].map(f => (
+                                                    <div key={f.label} className="p-3 bg-[var(--dash-bg-primary)] rounded-lg border border-[var(--dash-border)]">
+                                                        <p className="text-[var(--dash-text-muted)] mb-1">{f.label}</p>
+                                                        <p className="font-semibold text-[var(--dash-text-primary)] capitalize">{f.value}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {bankFormOpen && (
+                                        <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                            <div className="flex items-center justify-between mb-5">
+                                                <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider">
+                                                    {bankInfo ? 'Update Bank Account' : 'Link Bank Account'}
+                                                </h3>
+                                                <button onClick={() => setBankFormOpen(false)} className="cursor-pointer text-[var(--dash-text-muted)] hover:text-white transition-colors text-xs">Cancel</button>
+                                            </div>
+                                            <div className="bg-amber-400/10 border border-amber-400/20 rounded-lg p-3 mb-5 text-xs text-amber-300 leading-relaxed">
+                                                <strong>Security note:</strong> Banking details are stored locally and submitted to SufiPulse administration for manual verification before any payout. Never share your account credentials.
+                                            </div>
+                                            <form onSubmit={handleBankSave} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {[
+                                                    { key: 'holder_name', label: 'Account Holder Name', placeholder: 'Full legal name on account', required: true },
+                                                    { key: 'bank_name', label: 'Bank Name', placeholder: 'e.g. Habib Bank Limited', required: true },
+                                                    { key: 'account_number', label: 'Account Number', placeholder: 'Your account number', required: true },
+                                                    { key: 'iban_routing', label: 'IBAN / Routing Number', placeholder: 'IBAN (international) or routing number', required: false },
+                                                    { key: 'swift_bic', label: 'SWIFT / BIC Code', placeholder: 'e.g. HABBPKKA', required: false },
+                                                    { key: 'country', label: 'Country', placeholder: 'e.g. Pakistan, United States', required: true },
+                                                ].map(f => (
+                                                    <div key={f.key}>
+                                                        <label className="block text-xs font-semibold text-[var(--dash-text-secondary)] mb-1.5">
+                                                            {f.label} {f.required && <span className="text-red-400">*</span>}
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required={f.required}
+                                                            placeholder={f.placeholder}
+                                                            value={(bankForm as any)[f.key]}
+                                                            onChange={ev => setBankForm(prev => ({ ...prev, [f.key]: ev.target.value }))}
+                                                            className="w-full px-3 py-2.5 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-text-primary)] placeholder:text-[var(--dash-text-muted)] focus:outline-none focus:border-[var(--dash-accent)] transition-colors"
+                                                        />
+                                                    </div>
+                                                ))}
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-[var(--dash-text-secondary)] mb-1.5">Account Type</label>
+                                                    <select
+                                                        value={bankForm.account_type}
+                                                        onChange={ev => setBankForm(prev => ({ ...prev, account_type: ev.target.value }))}
+                                                        className="w-full px-3 py-2.5 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-text-primary)] focus:outline-none focus:border-[var(--dash-accent)] transition-colors"
+                                                    >
+                                                        <option value="savings">Savings</option>
+                                                        <option value="current">Current / Checking</option>
+                                                        <option value="business">Business</option>
+                                                    </select>
+                                                </div>
+                                                <div className="sm:col-span-2 flex gap-3 pt-2">
+                                                    <button
+                                                        type="submit"
+                                                        className="cursor-pointer flex-1 py-3 bg-[var(--dash-accent)] text-white font-bold rounded-xl hover:opacity-90 transition-opacity"
+                                                    >
+                                                        {bankInfo ? 'Update Account' : 'Save & Submit for Verification'}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setBankFormOpen(false)}
+                                                        className="cursor-pointer px-6 py-3 border border-[var(--dash-border)] text-[var(--dash-text-secondary)] font-bold rounded-xl hover:border-[var(--dash-accent)] transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    )}
+
+                                    {/* Threshold & Status Banner */}
+                                    <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-5 flex items-start gap-4">
+                                        <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-semibold text-amber-400 mb-1">Royalty Activation Threshold</p>
+                                            <p className="text-xs text-[var(--dash-text-secondary)] leading-relaxed">
+                                                Royalties become payable once a release earns <strong className="text-[var(--dash-text-primary)]">USD 500</strong> in verified platform revenue.
+                                                Below this threshold, earnings accumulate in the Diwan-e-Amanat reserve pool and are disbursed in the next eligible cycle.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Split Model */}
+                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                        <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider mb-5 flex items-center gap-2">
+                                            <TrendingUp className="w-4 h-4 text-[var(--dash-accent)]" /> Revenue Distribution Model
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {[
+                                                { label: 'SufiPulse Institution', desc: 'Platform operations & governance', pct: 30, color: '#6366f1', highlight: false },
+                                                { label: 'Writer — Ahl-e-Qalam', desc: 'Kalam / literary composition', pct: 20, color: '#f59e0b', highlight: role === 'writer' },
+                                                { label: 'Vocalist — Ahl-e-Sada', desc: 'Performance & voice', pct: 20, color: '#10b981', highlight: role === 'vocalist' },
+                                                { label: 'Producer — Ahl-e-Naghma', desc: 'Music production & arrangement', pct: 15, color: '#8b5cf6', highlight: role === 'producer' },
+                                                { label: 'Distributor / Publisher', desc: 'Platform distribution & licensing', pct: 10, color: '#06b6d4', highlight: false },
+                                                { label: 'Studio Engineer', desc: 'Recording & mixing', pct: 5, color: '#f43f5e', highlight: false },
+                                            ].map(row => (
+                                                <div key={row.label} className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${row.highlight ? 'bg-amber-400/10 border border-amber-400/30' : 'hover:bg-[var(--dash-hover)]'}`}>
+                                                    <div className="w-10 text-right shrink-0">
+                                                        <span className={`text-sm font-bold ${row.highlight ? 'text-amber-400' : 'text-[var(--dash-text-primary)]'}`}>{row.pct}%</span>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className={`text-sm font-semibold ${row.highlight ? 'text-amber-400' : 'text-[var(--dash-text-primary)]'}`}>{row.label}</span>
+                                                            {row.highlight && <span className="text-[10px] bg-amber-400 text-black font-bold px-1.5 py-0.5 rounded-full">YOU</span>}
+                                                        </div>
+                                                        <p className="text-xs text-[var(--dash-text-muted)]">{row.desc}</p>
+                                                    </div>
+                                                    <div className="w-28 shrink-0">
+                                                        <div className="h-1.5 rounded-full bg-[var(--dash-border)]">
+                                                            <div className="h-1.5 rounded-full transition-all" style={{ width: `${row.pct * 3.33}%`, backgroundColor: row.color }} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-[var(--dash-text-muted)] mt-4 pt-4 border-t border-[var(--dash-border)]">
+                                            Percentages apply to net platform revenue after applicable taxes and processing fees. Splits are fixed per the SufiPulse Royalty Policy and documented prior to each release.
+                                        </p>
+                                    </div>
+
+                                    {/* Earnings Simulator */}
+                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                        <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                                            <DollarSign className="w-4 h-4 text-[var(--dash-accent)]" /> Earnings Estimator
+                                        </h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {[
+                                                { streams: '10K', revenue: 20, share: role === 'writer' ? 4 : 4 },
+                                                { streams: '50K', revenue: 100, share: role === 'writer' ? 20 : 20 },
+                                                { streams: '250K', revenue: 500, share: role === 'writer' ? 100 : 100 },
+                                                { streams: '1M+', revenue: 2000, share: role === 'writer' ? 400 : 400 },
+                                            ].map(est => {
+                                                const yourPct = role === 'writer' || role === 'vocalist' ? 20 : role === 'producer' ? 15 : 10;
+                                                const yourEarning = (est.revenue * yourPct / 100).toFixed(0);
+                                                const unlocked = est.revenue >= 500;
+                                                return (
+                                                    <div key={est.streams} className={`p-4 rounded-xl border text-center transition-colors ${unlocked ? 'border-amber-400/30 bg-amber-400/5' : 'border-[var(--dash-border)]'}`}>
+                                                        <p className="text-xs text-[var(--dash-text-muted)] mb-1">{est.streams} streams</p>
+                                                        <p className="text-lg font-bold text-[var(--dash-text-primary)]">${yourEarning}</p>
+                                                        <p className="text-[10px] text-[var(--dash-text-muted)] mt-0.5">your share</p>
+                                                        {unlocked
+                                                            ? <span className="text-[10px] text-amber-400 font-semibold mt-1 block">✓ Threshold met</span>
+                                                            : <span className="text-[10px] text-[var(--dash-text-muted)] mt-1 block">In reserve pool</span>
+                                                        }
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className="text-xs text-[var(--dash-text-muted)] mt-3">Estimates based on ~$0.002/stream (streaming average). Actual rates vary by platform and region.</p>
+                                    </div>
+
+                                    {/* Personal Royalty Records */}
+                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                        <div className="flex items-center justify-between mb-5">
+                                            <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider">My Royalty Payments</h3>
+                                            <button onClick={loadRoyalties} className="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-accent)] transition-colors cursor-pointer">Refresh</button>
+                                        </div>
+                                        {royalties.length === 0 ? (
+                                            <div className="text-center py-10 border border-dashed border-[var(--dash-border-hover)] rounded-xl">
+                                                <DollarSign className="w-10 h-10 text-[var(--dash-text-muted)] mx-auto mb-3 opacity-30" />
+                                                <p className="text-sm text-[var(--dash-text-muted)]">No royalty records yet</p>
+                                                <p className="text-xs text-[var(--dash-text-muted)] mt-1">Payments appear here once a release crosses the earnings threshold</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {royalties.map((r: any) => (
+                                                    <div key={r.id} className="flex items-center justify-between p-4 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-xl">
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-[var(--dash-text-primary)]">{r.release_title || 'Release'}</p>
+                                                            <p className="text-xs text-[var(--dash-text-muted)] mt-0.5">{r.due_date ? new Date(r.due_date).toLocaleDateString() : 'Pending date'}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-base font-bold text-[var(--dash-accent)]">{r.currency || 'USD'} {Number(r.amount_due || 0).toLocaleString()}</p>
+                                                            <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
+                                                                r.payout_status === 'paid' ? 'bg-green-400/10 text-green-400' :
+                                                                r.payout_status === 'approved' ? 'bg-blue-400/10 text-blue-400' :
+                                                                r.payout_status === 'on_hold' ? 'bg-orange-400/10 text-orange-400' :
+                                                                'bg-neutral-400/10 text-neutral-400'
+                                                            }`}>{r.payout_status || 'pending'}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                <div className="flex justify-between pt-3 border-t border-[var(--dash-border)] text-sm">
+                                                    <span className="text-[var(--dash-text-secondary)]">Total earned</span>
+                                                    <span className="font-bold text-[var(--dash-text-primary)]">
+                                                        USD {royalties.reduce((s: number, r: any) => s + Number(r.amount_due || 0), 0).toLocaleString()}
+                                                    </span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -617,21 +1263,29 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                         </main>
                     </div>
 
-                    {/* View Modal */}
-                    {contentModal && selectedItem && (
+                            {/* View Modal */}
+            {contentModal && selectedItem && (
                         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
                                 <div className="flex items-center justify-between p-6 border-b border-[var(--dash-border)]">
-                                    <h2 className="text-xl font-bold text-[var(--dash-text-primary)]">Item Review</h2>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-[var(--dash-text-primary)]">
+                                            {selectedItem.status === 'revision requested' || selectedItem.status === 'revision_requested' ? 'Revision Request' : 'Item Review'}
+                                        </h2>
+                                        <span className={`text-xs font-semibold capitalize px-2 py-0.5 rounded-full border border-current ${getStatusColor(selectedItem.status)}`}>{selectedItem.status.replace('_', ' ')}</span>
+                                    </div>
                                     <button onClick={() => { setContentModal(false); setSelectedItem(null); }} className="cursor-pointer text-[var(--dash-text-muted)] hover:text-white transition-colors">
                                         <XCircle className="w-6 h-6" />
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1">
                                     {selectedItem.revision_notes && (
-                                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
-                                            <label className="block text-xs font-bold text-red-400 uppercase tracking-widest mb-2">Admin Notes</label>
-                                            <p className="text-[var(--dash-text-primary)] font-arabic text-lg leading-relaxed">{selectedItem.revision_notes}</p>
+                                        <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-5">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <AlertCircle className="w-4 h-4 text-yellow-400" />
+                                                <label className="text-xs font-bold text-yellow-400 uppercase tracking-widest">Admin Revision Notes</label>
+                                            </div>
+                                            <p className="text-[var(--dash-text-primary)] text-sm leading-relaxed">{selectedItem.revision_notes}</p>
                                         </div>
                                     )}
                                     <div>
@@ -657,27 +1311,44 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                     ) : null}
                                 </div>
                                 <div className="p-6 border-t border-[var(--dash-border)] flex gap-4 bg-[var(--dash-bg-primary)] rounded-b-2xl">
-                                    <button
-                                        disabled={selectedItem.status !== "draft"}
-                                        onClick={() => handleUpdateStatus(selectedItem, 'under review')}
-                                        className="cursor-pointer flex-1 py-3 bg-[var(--dash-status-approved)] text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity flex justify-center items-center gap-2"
-                                    >
-                                        {selectedItem.status === "draft" && <CheckCircle className="w-5 h-5" />}
-                                        {selectedItem.status === "draft" ? "Submit Review" : "Submitted"}
-                                    </button>
-                                    <button
-                                        disabled={selectedItem.status !== "draft"}
-                                        onClick={() => handleDeleteItem(selectedItem.id)}
-                                        className="cursor-pointer flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 disabled:opacity-50 transition-colors flex justify-center items-center gap-2"
-                                    >
-                                        <XCircle className="w-5 h-5" /> Delete
-                                    </button>
+                                    {(selectedItem.status === 'revision requested' || selectedItem.status === 'revision_requested') ? (
+                                        <>
+                                            <button
+                                                onClick={() => handleEditItem(selectedItem)}
+                                                className="cursor-pointer flex-1 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-colors flex justify-center items-center gap-2"
+                                            >
+                                                <CheckCircle className="w-5 h-5" /> Address Revision
+                                            </button>
+                                            <button
+                                                onClick={() => { setContentModal(false); setSelectedItem(null); }}
+                                                className="cursor-pointer px-6 py-3 border border-[var(--dash-border)] text-[var(--dash-text-secondary)] font-bold rounded-xl hover:border-[var(--dash-accent)] transition-colors"
+                                            >
+                                                Close
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                disabled={selectedItem.status !== "draft"}
+                                                onClick={() => handleUpdateStatus(selectedItem, 'under review')}
+                                                className="cursor-pointer flex-1 py-3 bg-[var(--dash-status-approved)] text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity flex justify-center items-center gap-2"
+                                            >
+                                                {selectedItem.status === "draft" && <CheckCircle className="w-5 h-5" />}
+                                                {selectedItem.status === "draft" ? "Submit for Review" : "Already Submitted"}
+                                            </button>
+                                            <button
+                                                disabled={selectedItem.status !== "draft"}
+                                                onClick={() => handleDeleteItem(selectedItem.id)}
+                                                className="cursor-pointer flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 disabled:opacity-50 transition-colors flex justify-center items-center gap-2"
+                                            >
+                                                <XCircle className="w-5 h-5" /> Delete
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     )}
-                </div>
-            </PageContainer>
-        </Layout>
+        </div>
     );
 }

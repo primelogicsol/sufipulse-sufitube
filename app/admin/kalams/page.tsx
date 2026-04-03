@@ -5,6 +5,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, File, MessageSquareDashed, BookA } from 'lucide-react';
 import * as api from "../../api/auth"
 import { Kalam } from '@/app/user/writer/dashboard/page';
+import { notifyStatusChange, lookupUserFromStorage, mapKalamStatusToEvent } from '@/app/lib/notifications';
 // interface Kalam {
 //   id: string;
 //   writer_id: string;
@@ -92,21 +93,28 @@ export default function AdminKalams() {
   // }
 
   const handleUpdateStatus = async (id: string, status: string) => {
-    // if (!kalam) return;
-
     try {
-      await api.updateKalamStatus(
-        id,
-        status,
-        reviewNotes
-      );
-
+      await api.updateKalamStatus(id, status, reviewNotes);
       alert("Status updated");
 
-      setSelectedKalam(null);
-      // setContentModal(false);
+      // Notify the writer
+      const kalam = selectedKalam;
+      if (kalam?.user_id) {
+        const storedUser = lookupUserFromStorage(kalam.user_id);
+        if (storedUser) {
+          notifyStatusChange({
+            user_id: kalam.user_id,
+            email: storedUser.email,
+            name: storedUser.name,
+            role: 'writer',
+            status: mapKalamStatusToEvent(status),
+            reference: kalam.title,
+          }).catch(console.error);
+        }
+      }
 
-      loadKalams(); // refresh table
+      setSelectedKalam(null);
+      loadKalams();
     } catch (err: any) {
       alert(err.response?.data?.error || err.message);
     }

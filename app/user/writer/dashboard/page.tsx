@@ -16,6 +16,8 @@ import Editor, {
   EditorProvider,
 } from "react-simple-wysiwyg";
 import UserDashboard from '@/app/components/dashboard/UserDashboard';
+import { hasRoleAccess } from '@/app/lib/role-access';
+import { notifyAdmin } from '@/app/lib/notifications';
 interface Submission {
   id: string;
   submission_reference: string;
@@ -100,6 +102,18 @@ export default function UserDashboardWriter() {
   // const [writerProfile,setWriterProfile] = useState()
   const [error, setError] = useState('');
   const router = useRouter()
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!hasRoleAccess(user as any, 'writer')) {
+      alert('You do not have writer role access.');
+      router.push('/');
+    }
+  }, [user]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,6 +308,14 @@ export default function UserDashboardWriter() {
       } else {
         await api.createKalam(kalamUnderDraft);
         alert("Kalam submitted!");
+        notifyAdmin({
+          title: 'New Kalam Submitted',
+          message: `${user?.full_name || 'A writer'} has submitted a new kalam titled "${kalamUnderDraft.title}" for editorial review.`,
+          event: 'kalam_submitted',
+          from_role: 'writer',
+          from_name: user?.full_name,
+          action_url: '/admin/kalams',
+        }).catch(console.error);
       }
 
       loadWriterKalams();

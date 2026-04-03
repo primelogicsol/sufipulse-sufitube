@@ -1,7 +1,7 @@
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Video, Headphones, Globe, Shield, ExternalLink } from 'lucide-react';
+import { Video, Headphones, Globe, Shield, ExternalLink, Radio, Youtube, Music2, Music, Instagram, Twitter, Facebook } from 'lucide-react';
 
 export default function OfficialChannels() {
     const platforms = [
@@ -10,42 +10,48 @@ export default function OfficialChannels() {
             description: 'Primary video archive and global release channel.',
             purpose: 'Official release publication, legacy archival, and multilingual visual distribution.',
             url: 'https://www.youtube.com/@SufiPulse-USA',
-            buttonText: 'Visit Channel'
+            buttonText: 'Visit Channel',
+            icon: Youtube,
         },
         {
             name: 'Spotify',
             description: 'Primary streaming distribution platform for audio releases.',
             purpose: 'Structured audio access and global listener distribution.',
             url: 'https://open.spotify.com/artist/sufipulse',
-            buttonText: 'Open Spotify'
+            buttonText: 'Open Spotify',
+            icon: Music2,
         },
         {
             name: 'Apple Music',
             description: 'Official audio distribution channel for Apple ecosystem users.',
             purpose: 'Curated audio releases and streaming access for Apple Music subscribers.',
             url: 'https://music.apple.com/artist/sufipulse',
-            buttonText: 'Open Apple Music'
+            buttonText: 'Open Apple Music',
+            icon: Music,
         },
         {
             name: 'Instagram',
             description: 'Visual excerpts, release announcements, and structured updates.',
             purpose: 'Visual storytelling and community engagement through strategic content curation.',
             url: 'https://instagram.com/sufipulse',
-            buttonText: 'View Instagram'
+            buttonText: 'View Instagram',
+            icon: Instagram,
         },
         {
             name: 'X',
             description: 'Institutional communication, public statements, and thought leadership.',
             purpose: 'Real-time updates, governance communications, and interfaith dialogue.',
             url: 'https://x.com/sufipulse',
-            buttonText: 'Visit X'
+            buttonText: 'Visit X',
+            icon: Twitter,
         },
         {
             name: 'Facebook',
             description: 'Community announcements and archival public updates.',
             purpose: 'Long-form community engagement and archival content sharing.',
             url: 'https://www.facebook.com/groups/1100263345262190',
-            buttonText: 'Visit Facebook'
+            buttonText: 'Visit Facebook',
+            icon: Facebook,
         }
     ];
 
@@ -150,23 +156,67 @@ export default function OfficialChannels() {
                         </h2>
 
                         <div className="space-y-6">
-                            {platforms.map((platform) => (
+                            {/* ── SufiPulse Radio — Owned Layer ───────────────────────────────── */}
+                            <div className="relative rounded-lg p-6 border border-amber-500/30 bg-gradient-to-br from-amber-950/30 via-neutral-900/60 to-neutral-900/30 overflow-hidden">
+                                {/* subtle corner accent */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full pointer-events-none" />
+
+                                <div className="flex items-start gap-4 mb-4">
+                                    <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <Radio className="w-5 h-5 text-amber-400" strokeWidth={1.5} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className="text-xl font-semibold text-white">SufiPulse Radio</h3>
+                                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 tracking-wide">Owned Channel</span>
+                                        </div>
+                                        <p className="text-neutral-400 text-sm mb-3">
+                                            Official continuous audio broadcast environment
+                                        </p>
+                                        <div className="bg-neutral-900/60 border border-amber-500/10 rounded p-3">
+                                            <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1.5">Purpose</p>
+                                            <p className="text-neutral-300 text-sm leading-relaxed">
+                                                Owned broadcast presence across the SufiPulse ecosystem
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-end">
+                                    <a
+                                        href="/releases"
+                                        className="inline-flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 text-amber-300 hover:text-amber-200 px-4 py-2 text-sm rounded transition-all group"
+                                    >
+                                        Access Broadcast
+                                        <ExternalLink className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* ── Third-party verified platforms ────────────────────────────── */}
+                            {platforms.map((platform) => {
+                                const PlatformIcon = platform.icon;
+                                return (
                                 <div
                                     key={platform.name}
-                                    className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-neutral-700 transition-colors"
+                                    className="relative rounded-lg p-6 border border-neutral-700/50 bg-gradient-to-br from-neutral-900/60 via-neutral-900/40 to-neutral-900/30 overflow-hidden hover:border-neutral-600/70 transition-colors"
                                 >
-                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-neutral-700/5 rounded-bl-full pointer-events-none" />
+
+                                    <div className="flex items-start gap-4 mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-neutral-700/30 border border-neutral-600/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <PlatformIcon className="w-5 h-5 text-neutral-300" strokeWidth={1.5} />
+                                        </div>
                                         <div className="flex-1">
-                                            <h3 className="text-xl font-semibold text-white mb-2">
-                                                {platform.name}
-                                            </h3>
-                                            <p className="text-neutral-300 text-sm mb-3">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="text-xl font-semibold text-white">{platform.name}</h3>
+                                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-neutral-700/40 border border-neutral-600/30 text-neutral-400 tracking-wide">Verified</span>
+                                            </div>
+                                            <p className="text-neutral-400 text-sm mb-3">
                                                 {platform.description}
                                             </p>
-                                            <div className="bg-neutral-900/50 border border-neutral-800 rounded p-3">
-                                                <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1.5">
-                                                    Purpose
-                                                </p>
+                                            <div className="bg-neutral-900/60 border border-neutral-700/20 rounded p-3">
+                                                <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1.5">Purpose</p>
                                                 <p className="text-neutral-300 text-sm leading-relaxed">
                                                     {platform.purpose}
                                                 </p>
@@ -179,14 +229,15 @@ export default function OfficialChannels() {
                                             href={platform.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 bg-neutral-800/50 hover:bg-neutral-700/50 border border-neutral-700 hover:border-amber-400/50 text-white px-4 py-2 text-sm transition-all group"
+                                            className="inline-flex items-center gap-2 bg-neutral-700/20 hover:bg-neutral-700/40 border border-neutral-600/40 hover:border-neutral-500/60 text-neutral-300 hover:text-white px-4 py-2 text-sm rounded transition-all group"
                                         >
                                             {platform.buttonText}
-                                            <ExternalLink className="w-3.5 h-3.5 text-neutral-400 group-hover:text-amber-400 transition-colors" strokeWidth={1.5} />
+                                            <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
                                         </a>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </PageContainer>

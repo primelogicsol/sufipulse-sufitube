@@ -13,6 +13,11 @@ export interface Article {
   view_count: number;
   author_id: string;
   author_name?: string;
+  author_professional_name?: string;
+  author_city?: string;
+  author_country?: string;
+  author_domain?: string;
+  author_photo?: string;
 }
 
 export const literaryArticles: Article[] = [

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, X, Shield, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, RefreshCw, ChartBar as BarChart } from 'lucide-react';
+import { ArrowRight, Check, X, Shield, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, RefreshCw, ChartBar as BarChart, Heart, Users, MapPin, Building, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { storage } from '../../../lib/storage';
+import { SongAdoption, SongAdoptionSponsor, SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
 
 interface AdoptTabProps {
   release: any;
@@ -10,46 +12,208 @@ interface AdoptTabProps {
 export function AdoptTab({ release }: AdoptTabProps) {
   const { user, googleLogin } = useAuth();
   const router = useRouter();
+  const studioGoogleAdsCustomerId = process.env.NEXT_PUBLIC_STUDIO_GOOGLE_ADS_CUSTOMER_ID;
+  const googleAdsCustomerIdPattern = /^\d{3}-\d{3}-\d{4}$/;
 
   const [step, setStep] = useState(0);
-  const [path, setPath] = useState<'A' | 'B' | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<'managed_sufitube' | 'use_my_google_ads' | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<SongAdoptionPackage | null>(null);
+  const [packages, setPackages] = useState<SongAdoptionPackage[]>([]);
+  const [formData, setFormData] = useState<Partial<AdoptionFormData>>({
+    public_display_mode: 'full_name',
+    public_location_mode: 'city_country',
+    agree_to_terms: false,
+    agree_to_promotional_use: false,
+    billing_enabled: false,
+    setup_help_requested: false,
+    auto_generate_copy: true,
+    auto_generate_keywords: true,
+    asset_suggestions: true,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
+  const [adoption, setAdoption] = useState<SongAdoption | null>(null);
+  const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
-  // Form State
-  const [supportFocus, setSupportFocus] = useState('');
-  const [budget, setBudget] = useState<number | 'custom' | null>(null);
-  const [customBudget, setCustomBudget] = useState('');
-  const [audienceCountry, setAudienceCountry] = useState('Global');
-  const [audienceLanguage, setAudienceLanguage] = useState('All');
-  
-  // Fake account setup state
-  const [setupProgress, setSetupProgress] = useState(0);
-
-  const handleNext = () => setStep(s => s + 1);
-  const handleBack = () => setStep(s => s - 1);
-
-  // Auto skip sign-in step if already signed in
+  // Load packages on mount
   useEffect(() => {
-    if (step === 1 && user) {
-        handleNext();
-    }
-  }, [step, user]);
+    const loadPackages = async () => {
+      await storage.initializeAdoptionPackages();
+      const loadedPackages = await storage.getSongAdoptionPackages();
+      setPackages(loadedPackages.filter(p => p.is_active));
+    };
+    loadPackages();
+  }, []);
 
-  const startAccountSetup = () => {
-    handleNext();
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 20;
-      setSetupProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => handleNext(), 800);
-      }
-    }, 500);
+  const handleMethodSelect = (method: 'managed_sufitube' | 'use_my_google_ads') => {
+    setSelectedMethod(method);
+    setStep(1);
   };
 
-  const getBudgetDisplay = () => {
-      if (budget === 'custom') return `$${customBudget}`;
-      return `$${budget}`;
+  const handlePackageSelect = (pkg: SongAdoptionPackage) => {
+    setSelectedPackage(pkg);
+    setFormData(prev => ({ ...prev, selected_package_id: pkg.id }));
+    setStep(2);
+  };
+
+  const handleCustomBudget = () => {
+    const budget = prompt('Enter custom budget amount (USD):');
+    if (budget && !isNaN(Number(budget))) {
+      setFormData(prev => ({ ...prev, custom_budget: Number(budget) }));
+      setStep(2);
+    }
+  };
+
+  const handleFormSubmit = async () => {
+    if (!selectedMethod || !formData) return;
+
+    if (!formData.full_name || !formData.email || !formData.country || !formData.adopter_type) {
+      alert('Please complete all required sponsor fields.');
+      return;
+    }
+
+    if (!formData.agree_to_terms || !formData.agree_to_promotional_use) {
+      alert('Please accept both consent checkboxes to continue.');
+      return;
+    }
+
+    if (selectedMethod === 'use_my_google_ads') {
+      const customerId = formData.google_ads_customer_id?.trim() || '';
+      if (!googleAdsCustomerIdPattern.test(customerId)) {
+        alert('Please enter a valid Google Ads Customer ID in the format XXX-XXX-XXXX.');
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Create adoption record
+      const adoptionData = {
+        release_id: release.id,
+        user_id: user?.id,
+        method_type: selectedMethod,
+        adoption_status: 'pending_review',
+        package_id: selectedPackage?.id,
+        custom_budget: formData.custom_budget,
+        currency: 'USD',
+        amount_due: selectedPackage?.amount || formData.custom_budget || 0,
+        amount_paid: 0,
+        payment_status: 'unpaid',
+        campaign_objective: formData.campaign_objective || 'awareness',
+        target_regions: formData.target_regions || ['Global'],
+        target_languages: formData.target_languages || ['All'],
+        audience_type: formData.preferred_audience_region || 'global',
+        special_instructions: formData.special_instructions,
+        dedication_message: formData.dedication_message,
+        sponsor_note: formData.sponsor_note,
+        public_display_mode: formData.public_display_mode!,
+        public_location_mode: formData.public_location_mode!,
+        public_listing_approved: false,
+        is_anonymous: formData.adopter_type === 'anonymous',
+      };
+
+      const newAdoption = await storage.createSongAdoption(adoptionData);
+
+      // Create sponsor record and link it to the adoption
+      const sponsorData = {
+        adoption_id: newAdoption.id,
+        full_name: formData.full_name!,
+        organization_name: formData.organization_name,
+        email: formData.email!,
+        phone: formData.phone,
+        country: formData.country!,
+        city: formData.city,
+        adopter_type: formData.adopter_type!,
+        display_name_resolved: formData.public_display_mode === 'full_name' ? formData.full_name! :
+                              formData.public_display_mode === 'organization' && formData.organization_name ? formData.organization_name :
+                              formData.public_display_mode === 'initials_only' ? `${formData.full_name!.split(' ').map(n => n[0]).join('')}.` :
+                              'Anonymous',
+        initials_resolved: formData.full_name!.split(' ').map(n => n[0]).join(''),
+      };
+
+      await storage.createSongAdoptionSponsor(sponsorData);
+
+      // Create Google Ads record if applicable
+      if (selectedMethod === 'use_my_google_ads') {
+        await storage.create('song_adoption_google_ads', {
+          adoption_id: newAdoption.id,
+          customer_id: formData.google_ads_customer_id,
+          billing_enabled: formData.billing_enabled,
+          setup_help_requested: formData.setup_help_requested,
+          target_regions: formData.target_regions,
+          target_languages: formData.target_languages,
+          campaign_goal: formData.campaign_goal,
+          auto_generate_copy: formData.auto_generate_copy,
+          auto_generate_keywords: formData.auto_generate_keywords,
+          asset_suggestions: formData.asset_suggestions,
+        });
+      }
+
+      // Create event
+      await storage.createSongAdoptionEvent({
+        adoption_id: newAdoption.id,
+        event_type: 'created',
+        event_label: 'Adoption submitted',
+        actor_type: user ? 'user' : 'system',
+        actor_id: user?.id,
+        metadata: { method: selectedMethod },
+      });
+
+      setAdoption(newAdoption);
+      setStep(3);
+
+    } catch (error) {
+      console.error('Error creating adoption:', error);
+      alert('Error creating adoption. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!adoption) return;
+
+    // --- Real Stripe Checkout ---
+    if (stripeEnabled) {
+      setIsRedirectingToStripe(true);
+      try {
+        const res = await fetch(`/api/adoptions/${adoption.id}/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amountUSD: adoption.amount_due,
+            releasTitle: release?.title,
+            sponsorName: formData.full_name,
+            sponsorEmail: formData.email,
+            methodType: adoption.method_type,
+            packageName: selectedPackage?.package_name,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Checkout failed');
+        // Redirect to Stripe hosted payment page
+        window.location.href = data.url;
+        return;
+      } catch (err: any) {
+        alert(`Payment error: ${err.message}`);
+        setIsRedirectingToStripe(false);
+        return;
+      }
+    }
+
+    // --- Fallback: record as pending (no Stripe configured) ---
+    await storage.updateSongAdoption(adoption.id, {
+      payment_status: 'pending',
+      adoption_status: 'pending_review',
+    });
+    await storage.createSongAdoptionEvent({
+      adoption_id: adoption.id,
+      event_type: 'payment_initiated',
+      event_label: 'Payment initiated (Stripe not configured — pending manual collection)',
+      actor_type: 'user',
+      metadata: {},
+    });
+    setStep(4);
   };
 
   const renderIntro = () => (
@@ -63,10 +227,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
       <div className="grid md:grid-cols-2 gap-6">
         <button
-          onClick={() => { 
-            setPath('A'); 
-            user ? setStep(2) : setStep(1); 
-          }}
+          onClick={() => handleMethodSelect('managed_sufitube')}
           className="flex flex-col text-left p-8 bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
         >
           <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-6">
@@ -74,20 +235,22 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
           <h4 className="text-2xl font-medium text-neutral-100 mb-3 group-hover:text-amber-400 transition-colors">Managed by SufiTube</h4>
           <p className="text-neutral-400 flex-1 mb-6">
-            We handle everything. Choose your budget, and we'll run the ads from our managed accounts using best practices. The smoothest experience.
+            We handle everything. Choose your budget, and we'll run the promotion from our managed systems using best practices.
           </p>
           <div className="flex items-center gap-2 text-sm text-neutral-500 font-medium">
             <Check className="w-4 h-4 text-green-500" /> Easiest setup
             <span className="mx-2">•</span>
-            <Check className="w-4 h-4 text-green-500" /> Pay here
+            <Check className="w-4 h-4 text-green-500" /> We manage campaign execution
           </div>
+          {studioGoogleAdsCustomerId && (
+            <div className="mt-3 text-xs text-neutral-500">
+              Studio Google Ads ID: {studioGoogleAdsCustomerId}
+            </div>
+          )}
         </button>
 
         <button
-          onClick={() => { 
-            setPath('B'); 
-            user ? setStep(2) : setStep(1); 
-          }}
+          onClick={() => handleMethodSelect('use_my_google_ads')}
           className="flex flex-col text-left p-8 bg-neutral-900 border border-neutral-800 hover:border-blue-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
         >
           <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-6">
@@ -95,7 +258,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
           <h4 className="text-2xl font-medium text-neutral-100 mb-3 group-hover:text-blue-400 transition-colors">Use My Google Ads</h4>
           <p className="text-neutral-400 flex-1 mb-6">
-            Connect your own Google Ads account. We will prefill the campaign and targeting for you, giving you full ownership of the campaign.
+            Connect your own Google Ads account. We prefill the campaign structure and targeting inputs so you retain ownership.
           </p>
           <div className="flex items-center gap-2 text-sm text-neutral-500 font-medium">
             <Check className="w-4 h-4 text-green-500" /> Full ownership
@@ -107,348 +270,415 @@ export function AdoptTab({ release }: AdoptTabProps) {
     </div>
   );
 
-  const renderStep1SignIn = () => (
-    <div className="max-w-xl mx-auto text-center space-y-8 animate-in slide-in-from-right-8 duration-300">
-      <h3 className="text-2xl font-medium text-neutral-100">Sign in to continue</h3>
-      <p className="text-neutral-400">
-        {path === 'A' 
-          ? "We need your account to track your sponsorship." 
-          : "Connect your Google account so we can set up your Google Ads client account."}
-      </p>
-      <button 
-        onClick={async () => {
-             // Mock Google login trigger or use the actual AuthContext method.
-             // If user doesn't exist, we call it. Usually googleLogin redirects.
-             try {
-                await googleLogin();
-                // If it resolves without redirecting (e.g. pop up) and sets user:
-                // The useEffect will catch the user state change and auto-advance.
-             } catch (e) {
-                console.error(e);
-             }
-             handleNext();
-        }}
-        className="inline-flex items-center gap-3 px-6 py-3 bg-white text-black font-medium rounded-lg hover:bg-neutral-200 transition-colors"
-      >
-        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5" />
-        Continue with Google
-      </button>
-      <button onClick={handleBack} className="block w-full text-neutral-500 hover:text-neutral-300 text-sm mt-8 transition-colors">Back</button>
-    </div>
-  );
-
-  const renderStep2Focus = () => (
-    <div className="max-w-xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-300">
-      <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Choose Support Focus</h3>
-      <div className="space-y-4">
-        {[
-          { id: 'song', label: 'Promote this song', desc: `Direct focus to "${release?.release_title || 'this release'}"` },
-          { id: 'channel', label: 'Promote the channel', desc: 'Raise awareness for SufiTube broadly' },
-          { id: 'playlist', label: 'Promote a playlist', desc: 'Feature a curated collection of similar kalams' }
-        ].map(item => (
-          <button
-            key={item.id}
-            onClick={() => { setSupportFocus(item.id); handleNext(); }}
-            className={`w-full flex items-center justify-between p-5 rounded-xl border transition-all ${supportFocus === item.id ? 'bg-neutral-800 border-amber-500 text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-800'}`}
-          >
-            <div className="text-left">
-              <div className="font-medium text-lg mb-1">{item.label}</div>
-              <div className="text-sm text-neutral-500">{item.desc}</div>
+  const renderPackageSelection = () => {
+    if (selectedMethod === 'use_my_google_ads') {
+      return (
+        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+          <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Google Ads Setup</h3>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+            <p className="text-neutral-400 mb-4">
+              Recommended settings for optimal reach:
+            </p>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Daily Budget</span>
+                <span className="text-neutral-200">$10-25</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Campaign Duration</span>
+                <span className="text-neutral-200">14-30 days</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Setup Assistance</span>
+                <span className="text-neutral-200">Available</span>
+              </div>
             </div>
-            <ArrowRight className={`w-5 h-5 ${supportFocus === item.id ? 'text-amber-500' : 'text-neutral-600'}`} />
-          </button>
-        ))}
-      </div>
-      <button onClick={handleBack} className="block w-full text-center text-neutral-500 hover:text-neutral-300 text-sm mt-8">Back</button>
-    </div>
-  );
-
-  const renderStep3Budget = () => (
-    <div className="max-w-xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-300">
-      <h3 className="text-2xl font-medium text-neutral-100 mb-2 text-center">Choose Budget</h3>
-      <p className="text-neutral-400 text-center mb-8">Even small contributions make a significant quiet impact.</p>
-      
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        {[25, 50, 100].map(amt => (
+          </div>
           <button
-            key={amt}
-            onClick={() => setBudget(amt)}
-            className={`py-4 rounded-xl border text-xl font-medium transition-all ${budget === amt ? 'bg-neutral-800 border-amber-500 text-amber-500' : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700'}`}
+            onClick={() => setStep(2)}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
           >
-            ${amt}
+            Continue to Form
           </button>
-        ))}
-        <button
-            onClick={() => setBudget('custom')}
-            className={`py-4 rounded-xl border text-xl font-medium transition-all ${budget === 'custom' ? 'bg-neutral-800 border-amber-500 text-amber-500' : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700'}`}
-        >
-          Custom
-        </button>
-      </div>
+        </div>
+      );
+    }
 
-      {budget === 'custom' && (
-        <div className="mb-6 animate-in fade-in slide-in-from-top-4">
-          <label className="block text-sm text-neutral-400 mb-2">Custom Amount ($)</label>
-          <input 
-            type="number" 
-            value={customBudget} 
-            onChange={e => setCustomBudget(e.target.value)} 
+    return (
+      <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+        <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Choose Your Budget</h3>
+        <div className="grid gap-4">
+          {packages.map((pkg) => (
+            <button
+              key={pkg.id}
+              onClick={() => handlePackageSelect(pkg)}
+              className="flex items-center justify-between p-6 bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
+            >
+              <div className="text-left">
+                <h4 className="text-lg font-medium text-neutral-100 mb-2">{pkg.package_name}</h4>
+                <p className="text-neutral-400 text-sm mb-3">{pkg.description}</p>
+                <div className="flex items-center gap-4 text-sm text-neutral-500">
+                  <span>~{pkg.estimated_impressions_min.toLocaleString()}-{pkg.estimated_impressions_max.toLocaleString()} impressions</span>
+                  <span>{pkg.duration_days} days</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-amber-500">${pkg.amount}</div>
+                <ArrowRight className="w-5 h-5 text-neutral-600 group-hover:text-amber-500 transition-colors mt-2" />
+              </div>
+            </button>
+          ))}
+          <button
+            onClick={handleCustomBudget}
+            className="flex items-center justify-center p-6 bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all hover:bg-neutral-800/80"
+          >
+            <div className="text-center">
+              <h4 className="text-lg font-medium text-neutral-100 mb-2">Custom Budget</h4>
+              <p className="text-neutral-400 text-sm">Specify your own amount</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderForm = () => (
+    <div className="max-w-2xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-300">
+      <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Sponsor Information</h3>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm text-neutral-400 mb-2">Full Name *</label>
+          <input
+            type="text"
+            value={formData.full_name || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
             className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
-            placeholder="e.g. 500"
+            required
           />
         </div>
+        <div>
+          <label className="block text-sm text-neutral-400 mb-2">Email *</label>
+          <input
+            type="email"
+            value={formData.email || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm text-neutral-400 mb-2">Country *</label>
+          <input
+            type="text"
+            value={formData.country || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-neutral-400 mb-2">City</label>
+          <input
+            type="text"
+            value={formData.city || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm text-neutral-400 mb-2">Adopter Type *</label>
+        <select
+          value={formData.adopter_type || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, adopter_type: e.target.value as any }))}
+          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+          required
+        >
+          <option value="">Select type</option>
+          <option value="individual">Individual</option>
+          <option value="family">Family</option>
+          <option value="institution">Institution</option>
+          <option value="trust">Trust</option>
+          <option value="sponsor_circle">Sponsor Circle</option>
+          <option value="anonymous">Anonymous</option>
+        </select>
+      </div>
+
+      {selectedMethod === 'managed_sufitube' && (
+        <>
+          <div>
+            <label className="block text-sm text-neutral-400 mb-2">Preferred Audience Region</label>
+            <select
+              value={formData.preferred_audience_region || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, preferred_audience_region: e.target.value as any }))}
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            >
+              <option value="local">Local</option>
+              <option value="national">National</option>
+              <option value="international">International</option>
+              <option value="diaspora">Diaspora</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-neutral-400 mb-2">Campaign Objective</label>
+            <select
+              value={formData.campaign_objective || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, campaign_objective: e.target.value as AdoptionFormData['campaign_objective'] }))}
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            >
+              <option value="awareness">Awareness</option>
+              <option value="devotional_reach">Devotional Reach</option>
+              <option value="community_engagement">Community Engagement</option>
+              <option value="event_support">Event Support</option>
+              <option value="release_launch_support">Release Launch Support</option>
+            </select>
+          </div>
+        </>
       )}
 
-      <button 
-        onClick={handleNext}
-        disabled={!budget || (budget === 'custom' && !customBudget)}
+      {selectedMethod === 'use_my_google_ads' && (
+        <>
+          <div>
+            <label className="block text-sm text-neutral-400 mb-2">Google Ads Customer ID</label>
+            <input
+              type="text"
+              value={formData.google_ads_customer_id || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, google_ads_customer_id: e.target.value }))}
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+              placeholder="XXX-XXX-XXXX"
+              inputMode="numeric"
+              pattern="\d{3}-\d{3}-\d{4}"
+              title="Google Ads Customer ID must be in format XXX-XXX-XXXX"
+              required
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.billing_enabled || false}
+                onChange={(e) => setFormData(prev => ({ ...prev, billing_enabled: e.target.checked }))}
+                className="rounded border-neutral-800"
+              />
+              <span className="text-sm text-neutral-400">Billing enabled in Google Ads</span>
+            </label>
+          </div>
+        </>
+      )}
+
+      <div>
+        <label className="block text-sm text-neutral-400 mb-2">Dedication Message (Optional)</label>
+        <textarea
+          value={formData.dedication_message || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, dedication_message: e.target.value }))}
+          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 h-24"
+          placeholder="Share the intention behind your sponsorship..."
+        />
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="text-lg font-medium text-neutral-100">Privacy Settings</h4>
+        <div>
+          <label className="block text-sm text-neutral-400 mb-2">Public Display</label>
+          <select
+            value={formData.public_display_mode || 'full_name'}
+            onChange={(e) => setFormData(prev => ({ ...prev, public_display_mode: e.target.value as any }))}
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+          >
+            <option value="full_name">Full Name</option>
+            <option value="initials_only">Initials Only</option>
+            <option value="organization">Organization Name</option>
+            <option value="anonymous">Anonymous</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm text-neutral-400 mb-2">Location Display</label>
+          <select
+            value={formData.public_location_mode || 'city_country'}
+            onChange={(e) => setFormData(prev => ({ ...prev, public_location_mode: e.target.value as any }))}
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+          >
+            <option value="city_country">City, Country</option>
+            <option value="country_only">Country Only</option>
+            <option value="hide">Hide Location</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={formData.agree_to_terms || false}
+            onChange={(e) => setFormData(prev => ({ ...prev, agree_to_terms: e.target.checked }))}
+            className="rounded border-neutral-800"
+            required
+          />
+          <span className="text-sm text-neutral-400">I agree to the terms of service</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={formData.agree_to_promotional_use || false}
+            onChange={(e) => setFormData(prev => ({ ...prev, agree_to_promotional_use: e.target.checked }))}
+            className="rounded border-neutral-800"
+            required
+          />
+          <span className="text-sm text-neutral-400">I agree to respectful promotional use of my sponsorship</span>
+        </label>
+      </div>
+
+      <button
+        onClick={handleFormSubmit}
+        disabled={isSubmitting || !formData.agree_to_terms || !formData.agree_to_promotional_use}
         className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
       >
-        Continue
+        {isSubmitting ? 'Submitting...' : 'Submit Adoption'}
       </button>
-      <button onClick={handleBack} className="block w-full text-center text-neutral-500 hover:text-neutral-300 text-sm mt-6">Back</button>
     </div>
   );
 
-  const renderStep4Audience = () => (
-    <div className="max-w-xl mx-auto space-y-6 animate-in slide-in-from-right-8 duration-300">
-      <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Choose Audience</h3>
-      
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">Target Countries</label>
-          <select value={audienceCountry} onChange={e => setAudienceCountry(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 appearance-none">
-            <option>Global (Worldwide)</option>
-            <option>South Asia (India, Pakistan, Bangladesh)</option>
-            <option>Middle East (UAE, KSA, Turkey)</option>
-            <option>Western (USA, UK, Canada)</option>
-            <option>Diaspora Focus</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">Language Preference</label>
-          <select value={audienceLanguage} onChange={e => setAudienceLanguage(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 appearance-none">
-            <option>All Relevant Languages</option>
-            <option>Urdu / Hindi focus</option>
-            <option>Arabic focus</option>
-            <option>English speakers</option>
-          </select>
-        </div>
-      </div>
-
-      <button 
-        onClick={path === 'B' ? startAccountSetup : handleNext}
-        className="w-full py-4 mt-8 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl transition-colors"
-      >
-        Continue
-      </button>
-      <button onClick={handleBack} className="block w-full text-center text-neutral-500 hover:text-neutral-300 text-sm mt-6">Back</button>
-    </div>
-  );
-
-  const renderStep5AccountSetup = () => (
-    <div className="max-w-xl mx-auto text-center space-y-8 animate-in fade-in duration-300">
-      <div className="w-20 h-20 mx-auto rounded-full bg-neutral-900 border-2 border-neutral-800 flex items-center justify-center relative overflow-hidden">
-        <RefreshCw className="w-8 h-8 text-amber-500 animate-spin" />
-        <div className="absolute bottom-0 left-0 right-0 bg-amber-500/20" style={{ height: `${setupProgress}%`, transition: 'height 0.3s ease' }}></div>
-      </div>
-      
-      <div>
-        <h3 className="text-xl font-medium text-neutral-100 mb-2">Setting up your Google Ads account</h3>
-        <p className="text-neutral-400 text-sm mb-6">Orchestrating manager client hierarchy and pushing campaign drafts...</p>
-      </div>
-
-      <div className="space-y-3 max-w-sm mx-auto text-left text-sm text-neutral-500">
-        <div className="flex items-center gap-3">
-            <Check className={`w-4 h-4 ${setupProgress >= 20 ? 'text-green-500' : 'text-neutral-700'}`} />
-            <span className={setupProgress >= 20 ? 'text-neutral-300' : ''}>Locating or creating client account</span>
-        </div>
-        <div className="flex items-center gap-3">
-            <Check className={`w-4 h-4 ${setupProgress >= 40 ? 'text-green-500' : 'text-neutral-700'}`} />
-            <span className={setupProgress >= 40 ? 'text-neutral-300' : ''}>Prefilling currency and permanent timezone</span>
-        </div>
-        <div className="flex items-center gap-3">
-            <Check className={`w-4 h-4 ${setupProgress >= 60 ? 'text-green-500' : 'text-neutral-700'}`} />
-            <span className={setupProgress >= 60 ? 'text-neutral-300' : ''}>Building campaign draft and ad groups</span>
-        </div>
-        <div className="flex items-center gap-3">
-            <Check className={`w-4 h-4 ${setupProgress >= 80 ? 'text-green-500' : 'text-neutral-700'}`} />
-            <span className={setupProgress >= 80 ? 'text-neutral-300' : ''}>Uploading creative asset set</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStep6Review = () => (
+  const renderReview = () => (
     <div className="max-w-xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-300">
-      <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Review Campaign</h3>
-      
+      <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Review Your Adoption</h3>
+
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-6">
         <div>
-            <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Target Video</div>
-            <div className="text-neutral-200 font-medium flex items-center gap-2">
-                <Music className="w-4 h-4 text-amber-500" />
-                {release?.release_title || 'Current Release'}
-            </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-6">
-            <div>
-                <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Focus</div>
-                <div className="text-neutral-200 capitalize">{supportFocus}</div>
-            </div>
-            <div>
-                <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Budget</div>
-                <div className="text-neutral-200 font-medium text-lg text-amber-500">{getBudgetDisplay()}</div>
-            </div>
-            <div>
-                <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Geography</div>
-                <div className="text-neutral-200">{audienceCountry}</div>
-            </div>
-            <div>
-                <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Language</div>
-                <div className="text-neutral-200">{audienceLanguage}</div>
-            </div>
+          <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Song</div>
+          <div className="text-neutral-200 font-medium flex items-center gap-2">
+            <Music className="w-4 h-4 text-amber-500" />
+            {release?.title || 'Current Release'}
+          </div>
         </div>
 
-        {path === 'B' && (
-             <div className="pt-4 border-t border-neutral-800">
-                 <div className="text-sm text-neutral-500 uppercase tracking-wider mb-2">Google Ads Account</div>
-                 <div className="flex items-center justify-between bg-black/50 px-4 py-3 rounded-lg border border-neutral-800">
-                     <span className="text-neutral-300">SufiPulse Client #784-912</span>
-                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Created</span>
-                 </div>
-             </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Method</div>
+            <div className="text-neutral-200 capitalize">{selectedMethod?.replace('_', ' ')}</div>
+          </div>
+          <div>
+            <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Amount</div>
+            <div className="text-neutral-200 font-medium text-lg text-amber-500">
+              ${selectedPackage?.amount || formData.custom_budget || 0}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Sponsor</div>
+          <div className="text-neutral-200">{formData.full_name}</div>
+        </div>
+
+        {formData.dedication_message && (
+          <div>
+            <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Dedication</div>
+            <div className="text-neutral-200 italic">"{formData.dedication_message}"</div>
+          </div>
         )}
       </div>
 
-      <div className="bg-blue-900/10 border border-blue-900/50 rounded-lg p-4 flex items-start gap-4">
-        <Shield className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-        <p className="text-sm text-blue-200/80 leading-relaxed">
-            {path === 'A' 
-               ? "Next, you will complete the payment securely on our platform. We will manage the campaign for you."
-               : "Next, you will be handed off to Google to add your payment method to the generated account, finalizing the process."}
-        </p>
-      </div>
+      {!stripeEnabled && (
+        <div className="text-xs text-amber-600 border border-amber-700/40 bg-amber-900/20 rounded-lg px-4 py-2 text-center">
+          Stripe is not configured. Payment will be recorded as pending and collected manually.
+        </div>
+      )}
 
-      <button 
-        onClick={() => {
-            // Mocking the completion of payment
-            let btn = document.getElementById('billing-btn');
-            if (btn) btn.innerText = "Processing...";
-            setTimeout(() => {
-                handleNext();
-            }, 1500);
-        }}
-        id="billing-btn"
-        className="w-full py-4 mt-8 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+      <button
+        onClick={handlePayment}
+        disabled={isRedirectingToStripe}
+        className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
       >
-        <CreditCard className="w-5 h-5" /> Proceed to Billing
+        {isRedirectingToStripe ? (
+          <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
+        ) : (
+          <><CreditCard className="w-5 h-5" /> {stripeEnabled ? 'Pay with Card (Stripe)' : 'Submit Payment Request'}</>
+        )}
       </button>
-
-      <button onClick={() => setStep(path === 'B' ? 4 : 4)} className="block w-full text-center text-neutral-500 hover:text-neutral-300 text-sm mt-6">Edit settings</button>
     </div>
   );
 
-  const renderStep7Billing = () => (
-    <div className="max-w-xl mx-auto text-center space-y-8 animate-in fade-in duration-300">
-      <div className="w-24 h-24 mx-auto bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center">
-          <Globe className="w-10 h-10 text-neutral-400" />
-      </div>
-      <div>
-          <h3 className="text-2xl font-medium text-neutral-100 mb-4">
-              {path === 'A' ? "Secure Payment" : "Handoff to Google"}
-          </h3>
-          <p className="text-neutral-400 leading-relaxed mx-auto max-w-sm mb-8">
-              {path === 'A' 
-                ? "Please complete your payment to fund the campaign. We will activate the ads immediately upon success."
-                : "Your campaign is perfectly primed. Add your payment card in the Google billing console to enable delivery."}
-          </p>
-          <button 
-                onClick={() => {
-                    const btn = document.getElementById('final-pay-btn');
-                    if (btn) btn.innerText = "Authorizing...";
-                    setTimeout(() => {
-                        handleNext();
-                    }, 2000);
-                }}
-                id="final-pay-btn"
-                className="w-full py-4 bg-white hover:bg-neutral-200 text-black font-medium rounded-xl transition-colors shadow-xl"
-            >
-            {path === 'A' ? "Pay " + getBudgetDisplay() : "Open Google Billing"}
-            </button>
-      </div>
-      <button onClick={handleBack} className="block w-full text-center text-neutral-500 hover:text-neutral-300 text-sm mt-6">Cancel</button>
-
-    </div>
-  );
-
-  const renderStep8Launch = () => (
+  const renderSuccess = () => (
     <div className="max-w-xl mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
-      <div className="w-24 h-24 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mb-8">
-          <Check className="w-10 h-10 text-green-500" />
+      <div className="w-24 h-24 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
+        <Check className="w-10 h-10 text-green-500" />
       </div>
-      <h3 className="text-3xl font-serif font-light text-neutral-100 mb-2">Campaign Ready</h3>
+      <h3 className="text-3xl font-serif font-light text-neutral-100 mb-2">Adoption Complete</h3>
       <p className="text-neutral-400 leading-relaxed mb-8">
-          May your contribution bring ease and contemplation to whoever discovers this kalam. The campaign status is now registered.
+        May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and will be reviewed shortly.
       </p>
-      
+
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-left mb-8">
-          <div className="flex items-center gap-3 mb-4">
-              <BarChart className="w-5 h-5 text-neutral-400" />
-              <div className="font-medium text-neutral-200">Live Status Overview</div>
-          </div>
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
-              <span className="text-neutral-500 text-sm">Status</span>
-              <span className="text-green-400 text-sm font-medium bg-green-900/40 px-2 py-0.5 rounded">Active / Reviewing</span>
-          </div>
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
-              <span className="text-neutral-500 text-sm">Reach Estimate</span>
-              <span className="text-neutral-300 text-sm font-medium">~{budget === 'custom' ? parseInt(customBudget) * 45 : (budget as number) * 45} views</span>
-          </div>
-          <div className="flex items-center justify-between">
-              <span className="text-neutral-500 text-sm">Provider</span>
-              <span className="text-neutral-300 text-sm font-medium">SufiPulse Orchestration Engine</span>
-          </div>
+        <div className="flex items-center gap-3 mb-4">
+          <BarChart className="w-5 h-5 text-neutral-400" />
+          <div className="font-medium text-neutral-200">Adoption Status</div>
+        </div>
+        <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
+          <span className="text-neutral-500 text-sm">Status</span>
+          <span className="text-amber-400 text-sm font-medium bg-amber-900/40 px-2 py-0.5 rounded">Pending Review</span>
+        </div>
+        <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
+          <span className="text-neutral-500 text-sm">Amount</span>
+          <span className="text-neutral-300 text-sm font-medium">${adoption?.amount_due || 0}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-neutral-500 text-sm">Method</span>
+          <span className="text-neutral-300 text-sm font-medium capitalize">{selectedMethod?.replace('_', ' ')}</span>
+        </div>
       </div>
 
-      <button 
-        onClick={() => { setStep(0); setPath(null); }}
+      <button
+        onClick={() => { setStep(0); setSelectedMethod(null); setSelectedPackage(null); setAdoption(null); }}
         className="text-neutral-400 hover:text-white transition-colors text-sm"
       >
         Return to Overview
       </button>
+
+      {/* For "Use My Google Ads" — link to Google OAuth so admin can create the campaign */}
+      {selectedMethod === 'use_my_google_ads' && adoption && (
+        <div className="mt-4 p-4 border border-blue-800/40 bg-blue-900/20 rounded-xl text-center space-y-2">
+          <p className="text-sm text-neutral-400">
+            Next step: authorize SufiPulse to set up the campaign structure in your Google Ads account.
+          </p>
+          <a
+            href={`/api/adoptions/${adoption.id}/google-oauth`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Connect Google Ads Account
+          </a>
+        </div>
+      )}
     </div>
   );
 
   return (
     <div className="pt-8 min-h-[500px]">
       <div className="bg-neutral-900/30 border border-neutral-800 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
-        {step > 0 && step < 8 && (
-            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
-                <div className="text-sm font-medium text-neutral-500">
-                    Step {step} <span className="text-neutral-700">of 7</span>
-                </div>
-                <button onClick={() => { setStep(0); setPath(null); }} className="text-neutral-500 hover:text-white transition-colors p-2">
-                    <X className="w-5 h-5"/>
-                </button>
+        {step > 0 && (
+          <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+            <div className="text-sm font-medium text-neutral-500">
+              Step {step + 1} <span className="text-neutral-700">of 4</span>
             </div>
+            <button onClick={() => { setStep(0); setSelectedMethod(null); setSelectedPackage(null); setAdoption(null); }} className="text-neutral-500 hover:text-white transition-colors p-2">
+              <X className="w-5 h-5"/>
+            </button>
+          </div>
         )}
 
-        {step > 0 && step < 8 && <div className="h-12"></div>}
+        {step > 0 && <div className="h-12"></div>}
 
         {step === 0 && renderIntro()}
-        {step === 1 && renderStep1SignIn()}
-        {step === 2 && renderStep2Focus()}
-        {step === 3 && renderStep3Budget()}
-        {step === 4 && renderStep4Audience()}
-        {step === 5 && renderStep5AccountSetup()}
-        {step === 6 && renderStep6Review()}
-        {step === 7 && renderStep7Billing()}
-        {step === 8 && renderStep8Launch()}
-        
+        {step === 1 && renderPackageSelection()}
+        {step === 2 && renderForm()}
+        {step === 3 && renderReview()}
+        {step === 4 && renderSuccess()}
       </div>
     </div>
   );
 }
+

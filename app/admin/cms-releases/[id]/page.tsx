@@ -1,0 +1,3371 @@
+"use client";
+
+import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useRouter, useParams } from 'next/navigation';
+import { ArrowLeft, Save, Plus, Trash2, Download, Upload, CheckCircle2, Play, Pause } from 'lucide-react';
+import Link from 'next/link';
+import JSZip from 'jszip';
+import type { CMSRelease } from '@/lib/cms-storage';
+
+type SubtitleStatus = 'draft' | 'in_translation' | 'under_review' | 'verified' | 'published' | 'archived';
+
+type LyricsSectionType = 'intro' | 'verse' | 'chorus' | 'bridge' | 'hook' | 'refrain' | 'outro' | 'other';
+
+const LYRICS_SECTION_TYPES: LyricsSectionType[] = ['intro', 'verse', 'chorus', 'bridge', 'hook', 'refrain', 'outro', 'other'];
+
+const ALL_LANGUAGES: { code: string; label: string }[] = [
+  { code: 'en',     label: 'English' },
+  { code: 'ur',     label: 'Urdu' },
+  { code: 'ar',     label: 'Arabic' },
+  { code: 'fa',     label: 'Persian / Farsi' },
+  { code: 'hi',     label: 'Hindi' },
+  { code: 'pa',     label: 'Punjabi' },
+  { code: 'tr',     label: 'Turkish' },
+  { code: 'sd',     label: 'Sindhi' },
+  { code: 'skr',    label: 'Saraiki' },
+  { code: 'bal',    label: 'Balochi' },
+  { code: 'ps',     label: 'Pashto' },
+  { code: 'ks',     label: 'Kashmiri' },
+  { code: 'bn',     label: 'Bengali' },
+  { code: 'gu',     label: 'Gujarati' },
+  { code: 'mr',     label: 'Marathi' },
+  { code: 'ta',     label: 'Tamil' },
+  { code: 'en-rom', label: 'Roman Transliteration' },
+];
+
+type ASSStylePack = {
+  fontFamily?: string;
+  fontSize?: number;
+  primaryColor?: string;
+  secondaryColor?: string;
+  outlineColor?: string;
+  backColor?: string;
+  bold?: boolean;
+  italic?: boolean;
+  outline?: number;
+  shadow?: number;
+  alignment?: number;
+  marginL?: number;
+  marginR?: number;
+  marginV?: number;
+  maxWidthPercent?: number;
+};
+
+const DEFAULT_STYLE_NAME = 'Mystic_Default';
+const DEFAULT_STYLE_PACK: ASSStylePack = {
+  fontFamily: 'Arial',
+  fontSize: 42,
+  primaryColor: '#FFFFFF',
+  secondaryColor: '#FFFF00',
+  outlineColor: '#202020',
+  backColor: '#000000',
+  bold: true,
+  italic: false,
+  outline: 2,
+  shadow: 0,
+  alignment: 2,
+  marginL: 40,
+  marginR: 40,
+  marginV: 28,
+  maxWidthPercent: 82,
+};
+
+const assColorToHex = (value?: string, fallback = '#FFFFFF') => {
+  const source = String(value || '').trim();
+  if (!source) return fallback;
+  if (source.startsWith('#') && source.length === 7) return source.toUpperCase();
+
+  const match = source.match(/&?H([0-9A-Fa-f]{8})/);
+  if (!match) return fallback;
+
+  const hex = match[1].toUpperCase();
+  const bb = hex.slice(2, 4);
+  const gg = hex.slice(4, 6);
+  const rr = hex.slice(6, 8);
+  return `#${rr}${gg}${bb}`;
+};
+
+const normalizeHexColor = (value?: string, fallback = '#FFFFFF') => {
+  const candidate = String(value || '').trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(candidate)) return candidate.toUpperCase();
+  return fallback;
+};
+
+const assColorToRgba = (value?: string, fallback = 'rgba(0, 0, 0, 0.55)') => {
+  const source = String(value || '').trim();
+  if (!source) return fallback;
+
+  if (/^#[0-9A-Fa-f]{6}$/.test(source)) {
+    const hex = source.replace('#', '');
+    const rr = parseInt(hex.slice(0, 2), 16);
+    const gg = parseInt(hex.slice(2, 4), 16);
+    const bb = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${rr}, ${gg}, ${bb}, 0.7)`;
+  }
+
+  const match = source.match(/&?H([0-9A-Fa-f]{8})/);
+  if (!match) return fallback;
+
+  const hex = match[1].toUpperCase();
+  const aa = parseInt(hex.slice(0, 2), 16);
+  const bb = parseInt(hex.slice(2, 4), 16);
+  const gg = parseInt(hex.slice(4, 6), 16);
+  const rr = parseInt(hex.slice(6, 8), 16);
+  const opacity = Math.max(0, Math.min(1, 1 - aa / 255));
+  return `rgba(${rr}, ${gg}, ${bb}, ${opacity.toFixed(3)})`;
+};
+
+const resolvePreviewAnchor = (alignment?: number) => {
+  const safe = Number.isFinite(alignment as number) ? Number(alignment) : 2;
+  if ([1, 4, 7].includes(safe)) return { x: 'left', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
+  if ([3, 6, 9].includes(safe)) return { x: 'right', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
+  return { x: 'center', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
+};
+
+const getAlignmentLabel = (alignment?: number) => {
+  const labels: Record<number, string> = {
+    1: 'Bottom Left',
+    2: 'Bottom Center',
+    3: 'Bottom Right',
+    4: 'Middle Left',
+    5: 'Middle Center',
+    6: 'Middle Right',
+    7: 'Top Left',
+    8: 'Top Center',
+    9: 'Top Right',
+  };
+  return labels[alignment || 2] || 'Bottom Center';
+};
+
+const normalizeCueTime = (input: string): string => {
+  const cleaned = (input || '').trim().replace(',', '.');
+  const parts = cleaned.split(':');
+  if (parts.length < 2) return '00:00:00.000';
+
+  const padded = [...parts];
+  while (padded.length < 3) padded.unshift('00');
+  const [hh, mm, ssMs] = padded;
+  const [ss, ms = '000'] = (ssMs || '0').split('.');
+
+  const h = String(Number(hh || 0)).padStart(2, '0');
+  const m = String(Number(mm || 0)).padStart(2, '0');
+  const s = String(Number(ss || 0)).padStart(2, '0');
+  const milli = String(Number(ms || 0)).padStart(3, '0').slice(0, 3);
+  return `${h}:${m}:${s}.${milli}`;
+};
+
+const cueTimeToSeconds = (input?: string): number => {
+  const normalized = normalizeCueTime(input || '00:00:00.000');
+  const [hh, mm, ssMs] = normalized.split(':');
+  const [ss, ms = '000'] = ssMs.split('.');
+  return Number(hh) * 3600 + Number(mm) * 60 + Number(ss) + Number(ms) / 1000;
+};
+
+const secondsToCueTime = (seconds: number): string => {
+  const safe = Math.max(0, seconds || 0);
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = Math.floor(safe % 60);
+  const ms = Math.floor((safe % 1) * 1000);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+};
+
+const formatPreviewSeconds = (value: number) => {
+  const safe = Math.max(0, value || 0);
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = Math.floor(safe % 60);
+  const fractional = Math.floor((safe % 1) * 10);
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${fractional}`;
+  }
+  return `${minutes}:${String(seconds).padStart(2, '0')}.${fractional}`;
+};
+
+const triggerBlobDownload = (blob: Blob, filename: string) => {
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+const extractFilenameFromDisposition = (headerValue: string | null, fallback: string) => {
+  if (!headerValue) return fallback;
+  const match = headerValue.match(/filename="?([^";]+)"?/i);
+  if (!match) return fallback;
+  return match[1] || fallback;
+};
+
+const parseSubtitleFile = (content: string, format: 'srt' | 'vtt') => {
+  const rows = content.replace(/\r/g, '').split('\n');
+  const cues: Array<{ cueNumber: number; startTime: string; endTime: string; text: string }> = [];
+
+  if (format === 'vtt' && rows[0]?.toUpperCase().includes('WEBVTT')) {
+    rows.shift();
+  }
+
+  const blocks = rows.join('\n').split('\n\n').map((b) => b.trim()).filter(Boolean);
+
+  for (const block of blocks) {
+    const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+    if (!lines.length) continue;
+
+    let idx = 0;
+    if (/^\d+$/.test(lines[idx])) {
+      idx += 1;
+    }
+
+    const timing = lines[idx] || '';
+    if (!timing.includes('-->')) continue;
+    idx += 1;
+
+    const [startRaw, endRaw] = timing.split('-->').map((part) => part.trim());
+    const text = lines.slice(idx).join(' ').trim();
+
+    cues.push({
+      cueNumber: cues.length + 1,
+      startTime: normalizeCueTime(startRaw),
+      endTime: normalizeCueTime(endRaw),
+      text,
+    });
+  }
+
+  return cues;
+};
+
+const parseAssFile = (content: string) => {
+  const lines = content.replace(/\r/g, '').split('\n');
+  const cues: Array<{
+    cueNumber: number;
+    startTime: string;
+    endTime: string;
+    text: string;
+    styleName: string;
+    alignment?: number;
+    positionX?: number;
+    positionY?: number;
+  }> = [];
+
+  const dialogueLines = lines.filter((line) => line.trim().startsWith('Dialogue:'));
+  for (const raw of dialogueLines) {
+    const payload = raw.replace(/^Dialogue:\s*/i, '');
+    const fields = payload.split(',');
+    if (fields.length < 10) continue;
+
+    const start = normalizeCueTime(fields[1] || '00:00:00.000');
+    const end = normalizeCueTime(fields[2] || '00:00:02.000');
+    const styleName = (fields[3] || 'Mystic_Default').trim();
+    const textRaw = fields.slice(9).join(',').trim();
+
+    const alignmentMatch = textRaw.match(/\\an([1-9])/i);
+    const posMatch = textRaw.match(/\\pos\((\d+(?:\.\d+)?),(\d+(?:\.\d+)?)\)/i);
+    const positionX = posMatch ? Math.max(0, Math.min(100, (Number(posMatch[1]) / 1920) * 100)) : undefined;
+    const positionY = posMatch ? Math.max(0, Math.min(100, (Number(posMatch[2]) / 1080) * 100)) : undefined;
+
+    const text = textRaw
+      .replace(/\{[^}]*\}/g, '')
+      .replace(/\\N/gi, '\n')
+      .trim();
+
+    cues.push({
+      cueNumber: cues.length + 1,
+      startTime: start,
+      endTime: end,
+      styleName,
+      alignment: alignmentMatch ? Number(alignmentMatch[1]) : undefined,
+      positionX,
+      positionY,
+      text,
+    });
+  }
+
+  return cues;
+};
+
+const parseAssStyles = (content: string): Record<string, ASSStylePack> => {
+  const lines = content.replace(/\r/g, '').split('\n');
+  const styles: Record<string, ASSStylePack> = {};
+  let inStyleSection = false;
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      inStyleSection = line.toLowerCase() === '[v4+ styles]';
+      continue;
+    }
+
+    if (!inStyleSection || !line.toLowerCase().startsWith('style:')) continue;
+    const fields = line.replace(/^Style:\s*/i, '').split(',').map((v) => v.trim());
+    if (fields.length < 23) continue;
+
+    const name = fields[0] || DEFAULT_STYLE_NAME;
+    styles[name] = {
+      fontFamily: fields[1] || DEFAULT_STYLE_PACK.fontFamily,
+      fontSize: Number(fields[2] || DEFAULT_STYLE_PACK.fontSize),
+      primaryColor: assColorToHex(fields[3], DEFAULT_STYLE_PACK.primaryColor),
+      secondaryColor: assColorToHex(fields[4], DEFAULT_STYLE_PACK.secondaryColor),
+      outlineColor: assColorToHex(fields[5], DEFAULT_STYLE_PACK.outlineColor),
+      backColor: assColorToHex(fields[6], DEFAULT_STYLE_PACK.backColor),
+      bold: Number(fields[7]) === -1,
+      italic: Number(fields[8]) === -1,
+      outline: Number(fields[16] || DEFAULT_STYLE_PACK.outline),
+      shadow: Number(fields[17] || DEFAULT_STYLE_PACK.shadow),
+      alignment: Number(fields[18] || DEFAULT_STYLE_PACK.alignment),
+      marginL: Number(fields[19] || DEFAULT_STYLE_PACK.marginL),
+      marginR: Number(fields[20] || DEFAULT_STYLE_PACK.marginR),
+      marginV: Number(fields[21] || DEFAULT_STYLE_PACK.marginV),
+      maxWidthPercent: DEFAULT_STYLE_PACK.maxWidthPercent,
+    };
+  }
+
+  return styles;
+};
+
+export default function EditReleasePage() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const isNew = params.id === 'new';
+
+  const [form, setForm] = useState<Partial<CMSRelease>>({
+    title: '',
+    slug: '',
+    youtubeId: '',
+    description: '',
+    releaseDate: new Date().toISOString().split('T')[0],
+    durationSeconds: 0,
+    durationFormatted: '0:00',
+    viewCount: 0,
+    likeCount: 0,
+    status: 'draft',
+    enableLyrics: true,
+    enableCommentary: true,
+    enableSponsors: false,
+    enableAdoption: true,
+    enableCredits: true,
+    publicCommentary: [
+      {
+        id: 'context',
+        title: 'Historical Context',
+        content: '',
+        isPublished: true,
+      },
+      {
+        id: 'theme',
+        title: 'Thematic Interpretation',
+        content: '',
+        isPublished: true,
+      },
+    ],
+    publicSponsorsIntro: '',
+    publicSponsors: [],
+    publicCredits: {
+      artistic: {
+        leadVocalist: '',
+        lyricist: '',
+        composer: '',
+        musicProducer: '',
+        backgroundVocals: '',
+      },
+      production: {
+        recordedAt: '',
+        recordingEngineer: '',
+        mixMaster: '',
+        soundDesign: '',
+      },
+      visual: {
+        videoDirection: '',
+        editing: '',
+        thumbnailDesign: '',
+        artwork: '',
+      },
+      literary: {
+        romanTransliteration: '',
+        englishTranslation: '',
+        thematicInterpretation: '',
+        proofreading: '',
+      },
+      rights: {
+        publishedBy: '',
+        platform: '',
+        registeredReleaseId: '',
+        releaseDateText: '',
+        copyrightHolder: '',
+        licensingText: '',
+        licensingUrl: '',
+      },
+    },
+    availableLanguages: ['en', 'ur', 'ar', 'fa', 'hi', 'pa', 'tr', 'sd', 'skr', 'bal', 'ps', 'ks', 'bn', 'gu', 'mr', 'ta', 'en-rom'],
+    defaultLanguage: 'en',
+    lyrics: {},
+    lyricsStructure: {},
+    masterTimingVersion: 1,
+    subtitleCues: [],
+    subtitleTranslations: {},
+    subtitleLanguageStatuses: {},
+    subtitleLanguageAssignments: {},
+    subtitleStylePacks: {
+      [DEFAULT_STYLE_NAME]: { ...DEFAULT_STYLE_PACK },
+    },
+    subtitleReviewLogs: [],
+    youtubeSubtitleAutoSync: true,
+    youtubeCaptionTracks: {},
+  });
+  const [selectedSubtitleLanguage, setSelectedSubtitleLanguage] = useState('en');
+  const [selectedLyricsStructureLanguage, setSelectedLyricsStructureLanguage] = useState('en');
+  const [referenceLanguage, setReferenceLanguage] = useState('en');
+  const [sideBySideMode, setSideBySideMode] = useState(true);
+  const [selectedStyleName, setSelectedStyleName] = useState(DEFAULT_STYLE_NAME);
+  const [previewCueId, setPreviewCueId] = useState<string | null>(null);
+  const [previewTime, setPreviewTime] = useState(0);
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [showSafeGuides, setShowSafeGuides] = useState(true);
+  const previewCanvasRef = useRef<HTMLDivElement>(null);
+  const [chorusVocalistsText, setChorusVocalistsText] = useState('');
+  const [reviewActor, setReviewActor] = useState('Editorial Admin');
+  const [reviewComment, setReviewComment] = useState('');
+
+  const [loading, setLoading] = useState(!isNew);
+  const [notFound, setNotFound] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [exportingZip, setExportingZip] = useState(false);
+  const [youtubeSyncing, setYoutubeSyncing] = useState(false);
+  const [originalForm, setOriginalForm] = useState<Partial<CMSRelease> | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [slugAutoGenerated, setSlugAutoGenerated] = useState(true);
+
+  // Language management
+  const [customLangCode, setCustomLangCode] = useState('');
+  const [customLangLabel, setCustomLangLabel] = useState('');
+  const [editingLangCode, setEditingLangCode] = useState<string | null>(null);
+  const [editingLangNewLabel, setEditingLangNewLabel] = useState('');
+  const [autoTranslatingLang, setAutoTranslatingLang] = useState<string | null>(null);
+  
+  // Undo/Redo
+  const [history, setHistory] = useState<Partial<CMSRelease>[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  
+  // Bulk operations
+  const [selectedCueIds, setSelectedCueIds] = useState<Set<string>>(new Set());
+  const [shiftTimingOffset, setShiftTimingOffset] = useState(0);
+  
+  // Timeline scrubbing
+  const timelineRef = useRef<HTMLDivElement>(null);
+
+  // Detect unsaved changes
+  const hasUnsavedChanges = originalForm && JSON.stringify(form) !== JSON.stringify(originalForm);
+
+  // Auto-save to localStorage
+  useEffect(() => {
+    if (!isNew && form.id && Object.keys(form).length > 1) {
+      const autoSaveKey = `cms_autosave_${form.id}`;
+      const timer = setTimeout(() => {
+        localStorage.setItem(autoSaveKey, JSON.stringify(form));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [form, isNew]);
+
+  // Undo/Redo functionality
+  const addToHistory = (newForm: Partial<CMSRelease>) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(JSON.parse(JSON.stringify(newForm)));
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setForm(JSON.parse(JSON.stringify(history[newIndex])));
+      setHistoryIndex(newIndex);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setForm(JSON.parse(JSON.stringify(history[newIndex])));
+      setHistoryIndex(newIndex);
+    }
+  };
+
+  // Bulk cue operations
+  const duplicateSelectedCues = () => {
+    if (selectedCueIds.size === 0) {
+      setErrorMessage('No cues selected');
+      return;
+    }
+
+    const cueList = form.subtitleCues || [];
+    const selectedCues = cueList.filter(c => selectedCueIds.has(c.id));
+    const newCues = selectedCues.map((cue, idx) => ({
+      ...cue,
+      id: `cue_${Date.now()}_dup_${idx}`,
+      endTime: String(Number(cue.endTime) + 0.5),
+    }));
+
+    const updatedCues = [...cueList, ...newCues];
+    const updatedForm = { ...form, subtitleCues: updatedCues };
+    setForm(updatedForm);
+    addToHistory(updatedForm);
+    setSuccessMessage(`Duplicated ${selectedCueIds.size} cues`);
+  };
+
+  const deletSelectedCues = () => {
+    if (selectedCueIds.size === 0) {
+      setErrorMessage('No cues selected');
+      return;
+    }
+
+    const updatedCues = (form.subtitleCues || []).filter(c => !selectedCueIds.has(c.id));
+    const updatedForm = { ...form, subtitleCues: updatedCues };
+    setForm(updatedForm);
+    addToHistory(updatedForm);
+    setSelectedCueIds(new Set());
+    setSuccessMessage(`Deleted ${selectedCueIds.size} cues`);
+  };
+
+  const deleteAllCues = () => {
+    if (!confirm('Delete all cues? This cannot be undone.')) return;
+    const updatedForm = { ...form, subtitleCues: [], subtitleTranslations: {} };
+    setForm(updatedForm);
+    addToHistory(updatedForm);
+    setSelectedCueIds(new Set());
+    setPreviewCueId(null);
+    setSuccessMessage('Deleted all cues');
+  };
+
+  const shiftAllCueTiming = () => {
+    if (shiftTimingOffset === 0) {
+      setErrorMessage('Enter a time offset (in seconds)');
+      return;
+    }
+
+    const offsetMs = shiftTimingOffset * 1000;
+    const updated = (form.subtitleCues || []).map(cue => ({
+      ...cue,
+      startTime: cueTimeToSeconds(cue.startTime) + shiftTimingOffset,
+      endTime: cueTimeToSeconds(cue.endTime) + shiftTimingOffset,
+    })).map(cue => ({
+      ...cue,
+      startTime: secondsToCueTime(typeof cue.startTime === 'number' ? cue.startTime : cueTimeToSeconds(String(cue.startTime))),
+      endTime: secondsToCueTime(typeof cue.endTime === 'number' ? cue.endTime : cueTimeToSeconds(String(cue.endTime))),
+    }));
+
+    const updatedForm = { ...form, subtitleCues: updated };
+    setForm(updatedForm);
+    addToHistory(updatedForm);
+    setShiftTimingOffset(0);
+    setSuccessMessage(`Shifted all cues by ${shiftTimingOffset}s`);
+  };
+
+  // Timeline scrubbing
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>, duration: number) => {
+    if (!timelineRef.current) return;
+    const rect = timelineRef.current.getBoundingClientRect();
+    const percentage = (e.clientX - rect.left) / rect.width;
+    const newTime = Math.max(0, percentage * duration);
+    setPreviewTime(newTime);
+  };
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S / Cmd+S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (hasUnsavedChanges) {
+          const form = document.querySelector('form');
+          form?.dispatchEvent(new Event('submit', { bubbles: true }));
+        }
+      }
+      // Ctrl+Z / Cmd+Z: Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      // Ctrl+Shift+Z / Cmd+Shift+Z: Redo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+        e.preventDefault();
+        redo();
+      }
+      // Ctrl+Y / Cmd+Y: Redo (alternative)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+      // Ctrl+E / Cmd+E: Export
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        if (!isNew) {
+          exportAllSubtitlesZip();
+        }
+      }
+      // Ctrl+N / Cmd+N: New Release
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        router.push('/admin/cms-releases/new');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasUnsavedChanges, isNew]);
+
+  // Warn user before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (!user?.role.includes('admin')) {
+      router.push('/admin');
+      return;
+    }
+
+    if (!isNew && params.id) {
+      loadRelease();
+    }
+  }, [user, params.id, isNew]);
+
+  const loadRelease = async () => {
+    try {
+      const res = await fetch(`/api/releases/${params.id}`);
+      if (res.status === 404) {
+        setNotFound(true);
+        return;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        const formData = {
+          ...data,
+          subtitleCues: data.subtitleCues || [],
+          subtitleTranslations: data.subtitleTranslations || {},
+          subtitleLanguageStatuses: data.subtitleLanguageStatuses || {},
+          subtitleLanguageAssignments: data.subtitleLanguageAssignments || {},
+          subtitleStylePacks: Object.keys(data.subtitleStylePacks || {}).length
+            ? data.subtitleStylePacks
+            : { [DEFAULT_STYLE_NAME]: { ...DEFAULT_STYLE_PACK } },
+          subtitleReviewLogs: data.subtitleReviewLogs || [],
+          youtubeSubtitleAutoSync: data.youtubeSubtitleAutoSync !== false,
+          youtubeCaptionTracks: data.youtubeCaptionTracks || {},
+          masterTimingVersion: data.masterTimingVersion || 1,
+          publicCommentary: Array.isArray(data.publicCommentary)
+            ? data.publicCommentary
+            : [
+                { id: 'context', title: 'Historical Context', content: '', isPublished: true },
+                { id: 'theme', title: 'Thematic Interpretation', content: '', isPublished: true },
+              ],
+          publicSponsorsIntro: data.publicSponsorsIntro || '',
+          publicSponsors: Array.isArray(data.publicSponsors) ? data.publicSponsors : [],
+          publicCredits: data.publicCredits || {
+            artistic: {},
+            production: {},
+            visual: {},
+            literary: {},
+            rights: {},
+          },
+          lyricsStructure: data.lyricsStructure || {},
+        };
+        setForm(formData);
+        setOriginalForm(formData);
+        setChorusVocalistsText((data.chorusVocalists || []).join(', '));
+        setSelectedSubtitleLanguage(data.defaultLanguage || 'en');
+        setSelectedLyricsStructureLanguage(data.defaultLanguage || 'en');
+        setReferenceLanguage(data.defaultLanguage || 'en');
+        setSelectedStyleName(Object.keys(data.subtitleStylePacks || {})[0] || DEFAULT_STYLE_NAME);
+        setPreviewCueId(data.subtitleCues?.[0]?.id || null);
+      }
+    } catch (error) {
+      console.error('Failed to load release:', error);
+      setErrorMessage('Failed to load release. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const updated: Partial<CMSRelease> = {
+      ...form,
+      [name]: type === 'number' ? parseInt(value) : value,
+    };
+    // Auto-generate slug from title when slug hasn't been manually edited
+    if (name === 'title' && slugAutoGenerated) {
+      updated.slug = value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+    // Mark slug as manually edited when user types in slug field
+    if (name === 'slug') {
+      setSlugAutoGenerated(false);
+    }
+    // Clear per-field error on change
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
+    }
+    setForm(updated);
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setForm({
+      ...form,
+      [name]: checked,
+    });
+  };
+
+  const generateSlug = () => {
+    const slug = (form.title || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    setForm({ ...form, slug });
+    setSlugAutoGenerated(false);
+  };
+
+  // Extract YouTube ID from full URL or plain ID
+  const extractYouTubeId = (input: string): string => {
+    const trimmed = input.trim();
+    // Full URL patterns: watch?v=, youtu.be/, embed/, shorts/
+    const patterns = [
+      /[?&]v=([A-Za-z0-9_-]{11})/,
+      /youtu\.be\/([A-Za-z0-9_-]{11})/,
+      /embed\/([A-Za-z0-9_-]{11})/,
+      /shorts\/([A-Za-z0-9_-]{11})/,
+    ];
+    for (const re of patterns) {
+      const m = trimmed.match(re);
+      if (m) return m[1];
+    }
+    // Already an 11-char ID
+    if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) return trimmed;
+    return trimmed;
+  };
+
+  const handleYouTubePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text');
+    const extracted = extractYouTubeId(pasted);
+    if (extracted !== pasted.trim()) {
+      e.preventDefault();
+      setForm((prev) => ({ ...prev, youtubeId: extracted }));
+      setFieldErrors((prev) => { const n = { ...prev }; delete n.youtubeId; return n; });
+    }
+  };
+
+  const updatePublicCommentary = (index: number, key: 'title' | 'content' | 'isPublished', value: string | boolean) => {
+    const next = [...(form.publicCommentary || [])];
+    if (!next[index]) return;
+    next[index] = { ...next[index], [key]: value };
+    setForm({ ...form, publicCommentary: next });
+  };
+
+  const addPublicCommentary = () => {
+    const next = [
+      ...(form.publicCommentary || []),
+      {
+        id: `commentary_${Date.now()}`,
+        title: '',
+        content: '',
+        isPublished: true,
+      },
+    ];
+    setForm({ ...form, publicCommentary: next });
+  };
+
+  const removePublicCommentary = (index: number) => {
+    const next = [...(form.publicCommentary || [])];
+    next.splice(index, 1);
+    setForm({ ...form, publicCommentary: next });
+  };
+
+  const updatePublicSponsor = (index: number, key: 'name' | 'role' | 'logoUrl' | 'isPublished', value: string | boolean) => {
+    const next = [...(form.publicSponsors || [])];
+    if (!next[index]) return;
+    next[index] = { ...next[index], [key]: value };
+    setForm({ ...form, publicSponsors: next });
+  };
+
+  const addPublicSponsor = () => {
+    const next = [
+      ...(form.publicSponsors || []),
+      { id: `sponsor_${Date.now()}`, name: '', role: '', logoUrl: '', isPublished: true },
+    ];
+    setForm({ ...form, publicSponsors: next });
+  };
+
+  const removePublicSponsor = (index: number) => {
+    const next = [...(form.publicSponsors || [])];
+    next.splice(index, 1);
+    setForm({ ...form, publicSponsors: next });
+  };
+
+  const updatePublicCredits = (
+    section: 'artistic' | 'production' | 'visual' | 'literary' | 'rights',
+    field: string,
+    value: string
+  ) => {
+    const credits = { ...(form.publicCredits || {}) } as Record<string, any>;
+    const sectionData = { ...(credits[section] || {}) };
+    sectionData[field] = value;
+    credits[section] = sectionData;
+    setForm({ ...form, publicCredits: credits });
+  };
+
+  const getLyricsBlocks = (language: string) => {
+    const structure = form.lyricsStructure || {};
+    return Array.isArray(structure[language]) ? structure[language] : [];
+  };
+
+  const addLyricsBlock = () => {
+    const language = selectedLyricsStructureLanguage || form.defaultLanguage || 'en';
+    const structure = { ...(form.lyricsStructure || {}) } as Record<string, any[]>;
+    const current = Array.isArray(structure[language]) ? [...structure[language]] : [];
+    current.push({
+      id: `lyric_block_${Date.now()}`,
+      type: 'verse',
+      heading: '',
+      lines: [],
+      order: current.length + 1,
+      isPublished: true,
+    });
+    structure[language] = current;
+    setForm({ ...form, lyricsStructure: structure });
+  };
+
+  const updateLyricsBlock = (index: number, key: 'type' | 'heading' | 'lines' | 'isPublished', value: string | boolean) => {
+    const language = selectedLyricsStructureLanguage || form.defaultLanguage || 'en';
+    const structure = { ...(form.lyricsStructure || {}) } as Record<string, any[]>;
+    const current = Array.isArray(structure[language]) ? [...structure[language]] : [];
+    if (!current[index]) return;
+
+    if (key === 'lines') {
+      current[index] = {
+        ...current[index],
+        lines: String(value || '')
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean),
+      };
+    } else {
+      current[index] = { ...current[index], [key]: value };
+    }
+
+    structure[language] = current;
+    setForm({ ...form, lyricsStructure: structure });
+  };
+
+  const removeLyricsBlock = (index: number) => {
+    const language = selectedLyricsStructureLanguage || form.defaultLanguage || 'en';
+    const structure = { ...(form.lyricsStructure || {}) } as Record<string, any[]>;
+    const current = Array.isArray(structure[language]) ? [...structure[language]] : [];
+    current.splice(index, 1);
+    structure[language] = current.map((block, i) => ({ ...block, order: i + 1 }));
+    setForm({ ...form, lyricsStructure: structure });
+  };
+
+  const addCue = () => {
+    const currentCues = form.subtitleCues || [];
+    const nextCueNo = currentCues.length + 1;
+    const cue = {
+      id: `cue_${Date.now()}_${nextCueNo}`,
+      cueNumber: nextCueNo,
+      startTime: '00:00:00.000',
+      endTime: '00:00:03.000',
+      lineRef: '',
+      sourceType: 'manual' as const,
+      active: true,
+    };
+    setForm({ ...form, subtitleCues: [...currentCues, cue] });
+    setPreviewCueId(cue.id);
+  };
+
+  const updateCue = (cueId: string, field: string, value: string | number | boolean) => {
+    const updated = (form.subtitleCues || []).map((cue) =>
+      cue.id === cueId ? { ...cue, [field]: value } : cue
+    );
+    setForm({ ...form, subtitleCues: updated });
+  };
+
+  const deleteCue = (cueId: string) => {
+    const updatedCues = (form.subtitleCues || []).filter((cue) => cue.id !== cueId);
+    const translations = { ...(form.subtitleTranslations || {}) };
+    Object.keys(translations).forEach((lang) => {
+      const langMap = { ...(translations[lang] || {}) };
+      delete langMap[cueId];
+      translations[lang] = langMap;
+    });
+    setForm({ ...form, subtitleCues: updatedCues, subtitleTranslations: translations });
+    if (previewCueId === cueId) {
+      setPreviewCueId(updatedCues[0]?.id || null);
+    }
+  };
+
+  const setCueTranslation = (language: string, cueId: string, text: string) => {
+    const translations = { ...(form.subtitleTranslations || {}) };
+    const languageMap = { ...(translations[language] || {}) };
+    languageMap[cueId] = text;
+    translations[language] = languageMap;
+    // Mark as manually edited
+    const reviewStatus = { ...(form.translationReviewStatus || {}) };
+    const langStatus = { ...(reviewStatus[language] || {}) };
+    if (text.trim()) {
+      if (langStatus[cueId] === 'ai') langStatus[cueId] = 'manual';
+      else if (!langStatus[cueId]) langStatus[cueId] = 'manual';
+    }
+    reviewStatus[language] = langStatus;
+    setForm({ ...form, subtitleTranslations: translations, translationReviewStatus: reviewStatus });
+  };
+
+  const acceptCueTranslation = (language: string, cueId: string) => {
+    const reviewStatus = { ...(form.translationReviewStatus || {}) };
+    const langStatus = { ...(reviewStatus[language] || {}) };
+    langStatus[cueId] = 'accepted';
+    reviewStatus[language] = langStatus;
+    setForm({ ...form, translationReviewStatus: reviewStatus });
+  };
+
+  // Language helpers
+  const getLanguageLabel = (code: string): string => {
+    if (form.languageLabels?.[code]) return form.languageLabels[code];
+    const preset = ALL_LANGUAGES.find((l) => l.code === code);
+    if (preset) return preset.label;
+    const custom = (form.customLanguages || []).find((l) => l.code === code);
+    if (custom) return custom.label;
+    return code.toUpperCase();
+  };
+
+  const addCustomLanguage = () => {
+    const code = customLangCode.trim().toLowerCase().replace(/\s+/g, '-');
+    const label = customLangLabel.trim();
+    if (!code || !label) return;
+    const existing = [...ALL_LANGUAGES, ...(form.customLanguages || [])].find((l) => l.code === code);
+    if (existing) {
+      setErrorMessage(`Language code "${code}" already exists`);
+      return;
+    }
+    const newCustom = [...(form.customLanguages || []), { code, label }];
+    const newAvailable = [...(form.availableLanguages || []), code];
+    setForm({ ...form, customLanguages: newCustom, availableLanguages: newAvailable });
+    setCustomLangCode('');
+    setCustomLangLabel('');
+  };
+
+  const deleteCustomLanguage = (code: string) => {
+    const newCustom = (form.customLanguages || []).filter((l) => l.code !== code);
+    const newAvailable = (form.availableLanguages || []).filter((c) => c !== code);
+    const defaultLang = form.defaultLanguage === code ? (newAvailable[0] || 'en') : form.defaultLanguage;
+    setForm({ ...form, customLanguages: newCustom, availableLanguages: newAvailable, defaultLanguage: defaultLang });
+  };
+
+  const saveLanguageLabel = (code: string, newLabel: string) => {
+    const labels = { ...(form.languageLabels || {}), [code]: newLabel.trim() };
+    setForm({ ...form, languageLabels: labels });
+    setEditingLangCode(null);
+    setEditingLangNewLabel('');
+  };
+
+  const setLanguageTone = (langCode: string, tone: string) => {
+    const tones = { ...(form.translationTone || {}), [langCode]: tone };
+    setForm({ ...form, translationTone: tones });
+  };
+
+  const autoTranslateLanguage = async (targetLang: string) => {
+    const cues = form.subtitleCues || [];
+    if (cues.length === 0) {
+      setErrorMessage('No subtitle cues to translate. Add cues first.');
+      return;
+    }
+    const masterLang = form.defaultLanguage || 'en';
+    if (targetLang === masterLang) {
+      setErrorMessage('Target language is the same as the master language.');
+      return;
+    }
+
+    // Collect source texts from master language cues
+    const sourceTexts = cues.map((cue) => form.subtitleTranslations?.[masterLang]?.[cue.id] || cue.lineRef || '');
+    const hasSourceText = sourceTexts.some((t) => t.trim().length > 0);
+    if (!hasSourceText) {
+      setErrorMessage(`No text found in master language "${getLanguageLabel(masterLang)}" cues. Fill in subtitle text first.`);
+      return;
+    }
+
+    setAutoTranslatingLang(targetLang);
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          texts: sourceTexts,
+          sourceLang: masterLang,
+          targetLang,
+          tone: form.translationTone?.[targetLang] || 'literal',
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json() as { error?: string };
+        throw new Error(err.error || 'Translation request failed');
+      }
+
+      const { translations } = await res.json() as { translations: string[] };
+      const translationsMap = { ...(form.subtitleTranslations || {}) };
+      const langMap = { ...(translationsMap[targetLang] || {}) };
+      const reviewStatus = { ...(form.translationReviewStatus || {}) };
+      const langStatus = { ...(reviewStatus[targetLang] || {}) };
+
+      cues.forEach((cue, i) => {
+        if (translations[i] && translations[i].trim()) {
+          langMap[cue.id] = translations[i];
+          langStatus[cue.id] = 'ai';
+        }
+      });
+
+      translationsMap[targetLang] = langMap;
+      reviewStatus[targetLang] = langStatus;
+      setForm({ ...form, subtitleTranslations: translationsMap, translationReviewStatus: reviewStatus });
+      setSuccessMessage(`Auto-translated ${translations.filter((t) => t?.trim()).length} cues to ${getLanguageLabel(targetLang)}`);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Auto-translation failed');
+    } finally {
+      setAutoTranslatingLang(null);
+    }
+  };
+
+  const setCueMetadata = (cueId: string, patch: Record<string, any>) => {
+    const metadata = { ...(form.subtitleCueMetadata || {}) } as Record<string, any>;
+    const next = { ...(metadata[cueId] || {}), ...patch };
+    metadata[cueId] = next;
+    setForm({ ...form, subtitleCueMetadata: metadata });
+  };
+
+  const handlePreviewDrag = (event: React.PointerEvent<HTMLDivElement>, cueId: string) => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const updatePosition = (clientX: number, clientY: number) => {
+      const x = ((clientX - rect.left) / rect.width) * 100;
+      const y = ((clientY - rect.top) / rect.height) * 100;
+      setCueMetadata(cueId, {
+        positionX: Number(Math.max(0, Math.min(100, x)).toFixed(2)),
+        positionY: Number(Math.max(0, Math.min(100, y)).toFixed(2)),
+      });
+    };
+
+    event.preventDefault();
+    updatePosition(event.clientX, event.clientY);
+
+    const move = (pointerEvent: PointerEvent) => updatePosition(pointerEvent.clientX, pointerEvent.clientY);
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+    };
+
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  };
+
+  const handlePreviewResize = (event: React.PointerEvent<HTMLDivElement>, styleName: string) => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width) return;
+
+    const updateWidth = (clientX: number) => {
+      const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+      const widthPercent = Math.max(30, Math.min(100, (x / rect.width) * 100));
+      updateStylePack(styleName, { maxWidthPercent: Number(widthPercent.toFixed(2)) });
+    };
+
+    event.preventDefault();
+    event.stopPropagation();
+    updateWidth(event.clientX);
+
+    const move = (pointerEvent: PointerEvent) => updateWidth(pointerEvent.clientX);
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+    };
+
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  };
+
+  useEffect(() => {
+    if (!previewPlaying) return;
+
+    const maxEnd = Math.max(
+      0,
+      ...(form.subtitleCues || []).map((cue) => cueTimeToSeconds(cue.endTime))
+    );
+
+    const timer = window.setInterval(() => {
+      setPreviewTime((current) => {
+        const next = current + 0.25;
+        if (next >= maxEnd) {
+          setPreviewPlaying(false);
+          return maxEnd;
+        }
+        return next;
+      });
+    }, 250);
+
+    return () => window.clearInterval(timer);
+  }, [previewPlaying, form.subtitleCues]);
+
+  useEffect(() => {
+    if (!(form.subtitleCues || []).length) return;
+    const activeCue = (form.subtitleCues || []).find((cue) => {
+      const start = cueTimeToSeconds(cue.startTime);
+      const end = cueTimeToSeconds(cue.endTime);
+      return previewTime >= start && previewTime < end;
+    });
+
+    if (activeCue && activeCue.id !== previewCueId) {
+      setPreviewCueId(activeCue.id);
+    }
+  }, [previewTime, form.subtitleCues, previewCueId]);
+
+  const updateStylePack = (styleName: string, patch: Partial<ASSStylePack>) => {
+    const stylePacks = {
+      ...(form.subtitleStylePacks || {}),
+      [styleName]: {
+        ...DEFAULT_STYLE_PACK,
+        ...((form.subtitleStylePacks || {})[styleName] || {}),
+        ...patch,
+      },
+    };
+
+    setForm({ ...form, subtitleStylePacks: stylePacks });
+  };
+
+  const addStylePack = () => {
+    const nextName = `Style_${Date.now()}`;
+    const stylePacks = {
+      ...(form.subtitleStylePacks || {}),
+      [nextName]: { ...DEFAULT_STYLE_PACK },
+    };
+
+    setForm({ ...form, subtitleStylePacks: stylePacks });
+    setSelectedStyleName(nextName);
+  };
+
+  const removeStylePack = (styleName: string) => {
+    if (styleName === DEFAULT_STYLE_NAME) return;
+    const stylePacks = { ...(form.subtitleStylePacks || {}) } as Record<string, ASSStylePack>;
+    delete stylePacks[styleName];
+
+    const metadata = { ...(form.subtitleCueMetadata || {}) } as Record<string, any>;
+    Object.keys(metadata).forEach((cueId) => {
+      if (metadata[cueId]?.styleName === styleName) {
+        metadata[cueId] = { ...metadata[cueId], styleName: DEFAULT_STYLE_NAME };
+      }
+    });
+
+    setForm({
+      ...form,
+      subtitleStylePacks: Object.keys(stylePacks).length ? stylePacks : { [DEFAULT_STYLE_NAME]: { ...DEFAULT_STYLE_PACK } },
+      subtitleCueMetadata: metadata,
+    });
+    setSelectedStyleName(DEFAULT_STYLE_NAME);
+  };
+
+  const setLanguageStylePack = (language: string, stylePack: string) => {
+    const overrides = { ...(form.languageStyleOverrides || {}) } as Record<string, any>;
+    overrides[language] = {
+      ...(overrides[language] || {}),
+      stylePack,
+    };
+    setForm({ ...form, languageStyleOverrides: overrides });
+  };
+
+  const setLanguageStatus = (language: string, status: SubtitleStatus) => {
+    const statuses = { ...(form.subtitleLanguageStatuses || {}) };
+    statuses[language] = status;
+    setForm({ ...form, subtitleLanguageStatuses: statuses });
+  };
+
+  const setLanguageAssignee = (language: string, role: 'translator' | 'reviewer', value: string) => {
+    const assignments = { ...(form.subtitleLanguageAssignments || {}) };
+    const current = { ...(assignments[language] || {}) };
+    current[role] = value;
+    assignments[language] = current;
+    setForm({ ...form, subtitleLanguageAssignments: assignments });
+  };
+
+  const addReviewLog = () => {
+    const status = form.subtitleLanguageStatuses?.[selectedSubtitleLanguage] || 'draft';
+    const nextLogs = [
+      ...(form.subtitleReviewLogs || []),
+      {
+        id: `review_${Date.now()}`,
+        language: selectedSubtitleLanguage,
+        status,
+        comment: reviewComment.trim(),
+        actor: reviewActor.trim() || 'Editorial Admin',
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    setForm({ ...form, subtitleReviewLogs: nextLogs });
+    setReviewComment('');
+  };
+
+  const handleImportSubtitleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const lowerName = file.name.toLowerCase();
+    const format: 'srt' | 'vtt' | 'ass' | null = lowerName.endsWith('.srt')
+      ? 'srt'
+      : lowerName.endsWith('.vtt')
+      ? 'vtt'
+      : lowerName.endsWith('.ass')
+      ? 'ass'
+      : null;
+
+    if (!format) {
+      alert('Please upload .srt, .vtt, or .ass file');
+      event.target.value = '';
+      return;
+    }
+
+    const content = await file.text();
+    const parsed = format === 'ass' ? parseAssFile(content) : parseSubtitleFile(content, format);
+    const importedStylePacks = format === 'ass' ? parseAssStyles(content) : {};
+    if (!parsed.length) {
+      alert('No cues detected in subtitle file');
+      event.target.value = '';
+      return;
+    }
+
+    const subtitleCues = parsed.map((cue, index) => ({
+      id: `cue_${Date.now()}_${index + 1}`,
+      cueNumber: cue.cueNumber,
+      startTime: cue.startTime,
+      endTime: cue.endTime,
+      lineRef: '',
+      sourceType: format,
+      active: true,
+    }));
+
+    const cueMetadata = { ...(form.subtitleCueMetadata || {}) };
+    if (format === 'ass') {
+      subtitleCues.forEach((cue, idx) => {
+        const source = parsed[idx] as any;
+        cueMetadata[cue.id] = {
+          ...(cueMetadata[cue.id] || {}),
+          styleName: source.styleName || 'Mystic_Default',
+          alignment: Number.isFinite(source.alignment) ? source.alignment : undefined,
+          positionX: Number.isFinite(source.positionX) ? source.positionX : undefined,
+          positionY: Number.isFinite(source.positionY) ? source.positionY : undefined,
+        };
+      });
+    }
+
+    const subtitleTranslations = { ...(form.subtitleTranslations || {}) };
+    subtitleTranslations[selectedSubtitleLanguage] = {};
+
+    subtitleCues.forEach((cue, idx) => {
+      subtitleTranslations[selectedSubtitleLanguage][cue.id] = parsed[idx]?.text || '';
+    });
+
+    setForm({
+      ...form,
+      subtitleCues,
+      subtitleTranslations,
+      masterAssSource: format === 'ass' ? content : (form.masterAssSource || ''),
+      subtitleCueMetadata: cueMetadata,
+      subtitleStylePacks: format === 'ass' && Object.keys(importedStylePacks).length
+        ? importedStylePacks
+        : (form.subtitleStylePacks || { [DEFAULT_STYLE_NAME]: { ...DEFAULT_STYLE_PACK } }),
+      masterTimingVersion: (form.masterTimingVersion || 1) + 1,
+    });
+    setPreviewCueId(subtitleCues[0]?.id || null);
+
+    if (format === 'ass') {
+      const firstStyle = Object.keys(importedStylePacks)[0] || DEFAULT_STYLE_NAME;
+      setSelectedStyleName(firstStyle);
+    }
+
+    event.target.value = '';
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    // Validation
+    const newFieldErrors: Record<string, string> = {};
+    if (!form.title?.trim()) newFieldErrors.title = 'Title is required';
+    if (!form.slug?.trim()) newFieldErrors.slug = 'Slug is required';
+    if (!form.youtubeId?.trim()) newFieldErrors.youtubeId = 'YouTube ID is required';
+    if (!form.durationSeconds || form.durationSeconds <= 0) newFieldErrors.durationSeconds = 'Duration must be greater than 0';
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      setErrorMessage('Please fix the highlighted fields before saving.');
+      return;
+    }
+    setFieldErrors({});
+
+    try {
+      setSaving(true);
+      const method = isNew ? 'POST' : 'PUT';
+      const url = isNew ? '/api/releases' : `/api/releases/${params.id}`;
+
+      const normalizedChorus = chorusVocalistsText
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean);
+
+      const payload = {
+        ...form,
+        chorusVocalists: normalizedChorus,
+      };
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setOriginalForm(data);
+        setSuccessMessage(`Release "${data.title}" saved successfully${data.youtubeSubtitleAutoSync ? ' and synced to YouTube' : ''}`);
+        
+        if (data.youtubeSubtitleAutoSync !== false) {
+          await syncYouTubeSubtitles({
+            releaseId: data.id,
+            mode: 'update-changed',
+            silent: true,
+          });
+        }
+
+        setTimeout(() => {
+          router.push('/admin/cms-releases');
+        }, 1500);
+      } else {
+        const error = await res.json();
+        setErrorMessage(`Save failed: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to save:', error);
+      setErrorMessage(`Failed to save release: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const buildSubtitleExportUrl = (language: string, format: 'srt' | 'vtt' | 'ass') => {
+    const query = new URLSearchParams({
+      lang: language,
+      format,
+    });
+    return `/api/releases/${params.id}/subtitles?${query.toString()}`;
+  };
+
+  const getSubtitleExportLanguages = () => {
+    return Array.from(new Set([
+      ...(form.availableLanguages || []),
+      ...Object.keys(form.subtitleTranslations || {}),
+      selectedSubtitleLanguage,
+    ])).filter(Boolean);
+  };
+
+  const exportSubtitleByLanguage = async (language: string, format: 'srt' | 'vtt' | 'ass') => {
+    if (isNew) {
+      alert('Save this release before exporting subtitle files.');
+      return;
+    }
+
+    try {
+      const response = await fetch(buildSubtitleExportUrl(language, format));
+      if (!response.ok) {
+        throw new Error(`Export failed for ${language.toUpperCase()} ${format.toUpperCase()}`);
+      }
+
+      const blob = await response.blob();
+      const fallback = `${form.slug || params.id}-${language}.${format}`;
+      const filename = extractFilenameFromDisposition(response.headers.get('content-disposition'), fallback);
+      triggerBlobDownload(blob, filename);
+    } catch (error) {
+      console.error(error);
+      alert('Subtitle export failed. Please try again.');
+    }
+  };
+
+  const exportAllSubtitlesZip = async () => {
+    if (isNew) {
+      alert('Save this release before exporting subtitle files.');
+      return;
+    }
+
+    const languages = getSubtitleExportLanguages();
+
+    if (!languages.length) {
+      alert('No subtitle languages available to export.');
+      return;
+    }
+
+    setExportingZip(true);
+    try {
+      const zip = new JSZip();
+      const failed: string[] = [];
+
+      for (const language of languages) {
+        for (const format of ['srt', 'vtt'] as const) {
+          try {
+            const response = await fetch(buildSubtitleExportUrl(language, format));
+            if (!response.ok) {
+              failed.push(`${language.toUpperCase()} ${format.toUpperCase()}`);
+              continue;
+            }
+
+            const fallback = `${form.slug || params.id}-${language}.${format}`;
+            const filename = extractFilenameFromDisposition(response.headers.get('content-disposition'), fallback);
+            const buffer = await response.arrayBuffer();
+            zip.file(filename, buffer);
+          } catch (error) {
+            console.error(error);
+            failed.push(`${language.toUpperCase()} ${format.toUpperCase()}`);
+          }
+        }
+      }
+
+      if (!Object.keys(zip.files).length) {
+        alert('No subtitle files were generated for ZIP export.');
+        return;
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const zipName = `${form.slug || params.id}-subtitles-srt-vtt.zip`;
+      triggerBlobDownload(zipBlob, zipName);
+
+      if (failed.length) {
+        alert(`ZIP exported with partial results. Failed: ${failed.join(', ')}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Failed to export subtitle ZIP. Please try again.');
+    } finally {
+      setExportingZip(false);
+    }
+  };
+
+  const syncYouTubeSubtitles = async (options?: {
+    releaseId?: string;
+    mode?: 'update-changed' | 'force-update';
+    languages?: string[];
+    silent?: boolean;
+  }) => {
+    const targetReleaseId = options?.releaseId || String(params.id);
+    if (!targetReleaseId || targetReleaseId === 'new') {
+      if (!options?.silent) {
+        alert('Save this release before syncing subtitles to YouTube.');
+      }
+      return null;
+    }
+
+    setYoutubeSyncing(true);
+    try {
+      const response = await fetch(`/api/releases/${targetReleaseId}/youtube-subtitles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: options?.mode || 'update-changed',
+          format: 'srt',
+          isDraft: false,
+          languages: options?.languages?.length ? options.languages : getSubtitleExportLanguages(),
+          youtubeSubtitleAutoSync: form.youtubeSubtitleAutoSync !== false,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'YouTube subtitle sync failed');
+      }
+
+      setForm((previous) => ({
+        ...previous,
+        youtubeCaptionTracks: data.youtubeCaptionTracks || previous.youtubeCaptionTracks || {},
+      }));
+
+      if (!options?.silent) {
+        setSuccessMessage(
+          `✓ YouTube subtitle sync complete\n` +
+          `✓ Success: ${data.successCount} | ⏭️ Skipped: ${data.skippedCount} | ✗ Failed: ${data.failedCount}`
+        );
+      }
+
+      return data;
+    } catch (error: any) {
+      if (!options?.silent) {
+        setErrorMessage(`YouTube subtitle sync failed: ${error?.message || 'Unknown error'}`);
+      }
+      return null;
+    } finally {
+      setYoutubeSyncing(false);
+    }
+  };
+
+  if (!user?.role.includes('admin')) {
+    return <div className="p-8 text-center">Unauthorized</div>;
+  }
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: 'var(--dash-bg-secondary)' }}>
+        <p className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>Release not found</p>
+        <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No release exists with ID &ldquo;{params.id}&rdquo;.</p>
+        <Link href="/admin/cms-releases">
+          <button className="dashboard-btn-primary px-5 py-2 rounded-lg text-sm font-medium">
+            ← Back to Releases
+          </button>
+        </Link>
+      </div>
+    );
+  }
+
+  const styleNames = Object.keys(form.subtitleStylePacks || { [DEFAULT_STYLE_NAME]: DEFAULT_STYLE_PACK });
+  const activeStyleName = styleNames.includes(selectedStyleName) ? selectedStyleName : styleNames[0];
+  const activeStyle = {
+    ...DEFAULT_STYLE_PACK,
+    ...((form.subtitleStylePacks || {})[activeStyleName] || {}),
+  };
+  const previewCue = (form.subtitleCues || []).find((cue) => cue.id === previewCueId) || (form.subtitleCues || [])[0] || null;
+  const previewCueMetadata = previewCue ? ((form.subtitleCueMetadata as Record<string, any> | undefined)?.[previewCue.id] || {}) : {};
+  const previewStyleName = previewCueMetadata.styleName || form.languageStyleOverrides?.[selectedSubtitleLanguage]?.stylePack || DEFAULT_STYLE_NAME;
+  const previewStyle = {
+    ...DEFAULT_STYLE_PACK,
+    ...((form.subtitleStylePacks || {})[previewStyleName] || {}),
+  };
+  const previewText = previewCue
+    ? (form.subtitleTranslations?.[selectedSubtitleLanguage]?.[previewCue.id] || form.subtitleTranslations?.[referenceLanguage]?.[previewCue.id] || 'Preview subtitle text')
+    : 'Add a cue to preview subtitles here';
+  const previewAlignment = previewCueMetadata.alignment || previewStyle.alignment || 2;
+  const previewAnchor = resolvePreviewAnchor(previewAlignment);
+  const previewHasCustomPosition = Number.isFinite(previewCueMetadata.positionX) && Number.isFinite(previewCueMetadata.positionY);
+  const previewTextLines = String(previewText || '').split('\n').filter(Boolean);
+  const previewDuration = Math.max(0, ...(form.subtitleCues || []).map((cue) => cueTimeToSeconds(cue.endTime)));
+  const subtitleExportLanguages = getSubtitleExportLanguages();
+
+  return (
+    <div className="min-h-screen" style={{backgroundColor: 'var(--dash-bg-secondary)'}}>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/cms-releases">
+              <button className="flex items-center gap-2 transition" style={{color: 'var(--dash-text-secondary)'}}>
+                <ArrowLeft size={20} />
+              </button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold" style={{color: 'var(--dash-text-primary)'}}>
+                {isNew ? 'New Release' : 'Edit Release'}
+              </h1>
+              {hasUnsavedChanges && (
+                <p className="text-sm mt-1" style={{color: 'var(--dash-status-pending)'}}>Unsaved changes (Ctrl+S to save)</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Status Messages */}
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-lg" style={{backgroundColor: 'var(--dash-status-rejected-bg)', border: '1px solid var(--dash-status-rejected)'}}>
+            <p className="text-sm" style={{color: 'var(--dash-status-rejected)'}}><strong>Error:</strong> {errorMessage}</p>
+          </div>
+        )}
+        {successMessage && (
+          <div className="mb-6 p-4 rounded-lg" style={{backgroundColor: 'var(--dash-status-approved-bg)', border: '1px solid var(--dash-status-approved)'}}>
+            <p className="text-sm whitespace-pre-line" style={{color: 'var(--dash-status-approved)'}}><strong>Success:</strong> {successMessage}</p>
+          </div>
+        )}
+
+        {/* Keyboard Shortcuts Help */}
+        <div className="mb-6 p-4 dashboard-card">
+          <div className="text-sm space-y-1" style={{color: 'var(--dash-text-primary)'}}>
+            <p><strong>⌨️ Shortcuts:</strong></p>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs mt-2">
+              <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+S</kbd> Save</div>
+              <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+Z</kbd> Undo</div>
+              <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+Shift+Z</kbd> Redo</div>
+              <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+E</kbd> Export</div>
+              <div><kbd className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', border: '1px solid var(--dash-border)'}}>Ctrl+N</kbd> New</div>
+              <div style={{color: 'var(--dash-text-muted)'}}>Click timeline to scrub</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="dashboard-card p-8">
+          {/* Basic Info */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-6" style={{color: 'var(--dash-text-primary)'}}>Basic Information</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                  Title <span style={{color: 'var(--dash-status-rejected)'}}>*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={form.title || ''}
+                  onChange={handleInputChange}
+                  className={`form-input w-full${fieldErrors.title ? ' form-error' : ''}`}
+                  placeholder="Release title"
+                />
+                {fieldErrors.title && <p className="form-error-message">{fieldErrors.title}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                  Slug <span style={{color: 'var(--dash-status-rejected)'}}>*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    name="slug"
+                    value={form.slug || ''}
+                    onChange={handleInputChange}
+                    className={`form-input flex-1${fieldErrors.slug ? ' form-error' : ''}`}
+                    placeholder="url-friendly-slug"
+                  />
+                  <button
+                    type="button"
+                    onClick={generateSlug}
+                    className="dashboard-btn-secondary px-4"
+                  >
+                    Generate
+                  </button>
+                </div>
+                {fieldErrors.slug
+                  ? <p className="form-error-message">{fieldErrors.slug}</p>
+                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Auto-generated from title — edit to customise</p>
+                }
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                  YouTube ID <span style={{color: 'var(--dash-status-rejected)'}}>*</span>
+                </label>
+                <input
+                  type="text"
+                  name="youtubeId"
+                  value={form.youtubeId || ''}
+                  onChange={handleInputChange}
+                  onPaste={handleYouTubePaste}
+                  className={`form-input w-full${fieldErrors.youtubeId ? ' form-error' : ''}`}
+                  placeholder="Paste YouTube URL or ID — e.g., LXb3EKWsInQ"
+                />
+                {fieldErrors.youtubeId
+                  ? <p className="form-error-message">{fieldErrors.youtubeId}</p>
+                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Paste a full YouTube URL and the ID will be extracted automatically</p>
+                }
+                {form.youtubeId && /^[A-Za-z0-9_-]{11}$/.test(form.youtubeId.trim()) && (
+                  <div className="mt-2 flex items-start gap-3">
+                    <img
+                      src={`https://i.ytimg.com/vi/${form.youtubeId.trim()}/hqdefault.jpg`}
+                      alt="YouTube thumbnail preview"
+                      className="rounded"
+                      style={{width: 160, height: 90, objectFit: 'cover', border: '1px solid var(--dash-border)'}}
+                    />
+                    <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Thumbnail preview</p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium" style={{color: 'var(--dash-text-primary)'}}>
+                    Description
+                  </label>
+                  <span className="text-xs" style={{color: (form.description || '').length > 500 ? 'var(--dash-status-pending)' : 'var(--dash-text-muted)'}}>
+                    {(form.description || '').length} / 600
+                  </span>
+                </div>
+                <textarea
+                  name="description"
+                  value={form.description || ''}
+                  onChange={handleInputChange}
+                  rows={4}
+                  maxLength={600}
+                  className="form-input w-full"
+                  placeholder="Public-facing summary: theme, message, lyrical or spiritual context of the release"
+                />
+                <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Visible on the release page and used for SEO. Keep it audience-facing and concise.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                  Chorus Vocalists
+                </label>
+                <input
+                  type="text"
+                  value={chorusVocalistsText}
+                  onChange={(e) => setChorusVocalistsText(e.target.value)}
+                  className="form-input w-full"
+                  placeholder="Comma separated names (e.g., Studio Ensemble, Areeba Khan, Sami Qadri)"
+                />
+                <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>This appears as background/chorus vocal credits on the public release page.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    Release Date
+                  </label>
+                  <input
+                    type="date"
+                    name="releaseDate"
+                    value={form.releaseDate || ''}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={form.status || 'draft'}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="in_review">In Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="published">Published</option>
+                    <option value="unpublished">Unpublished</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Media Info */}
+          <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <h2 className="text-xl font-semibold mb-6" style={{color: 'var(--dash-text-primary)'}}>Media Information</h2>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    Duration (seconds)
+                  </label>
+                  <input
+                    type="number"
+                    name="durationSeconds"
+                    value={form.durationSeconds || 0}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    Duration (formatted)
+                  </label>
+                  <input
+                    type="text"
+                    name="durationFormatted"
+                    value={form.durationFormatted || ''}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                    placeholder="e.g., 5:30"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    View Count
+                  </label>
+                  <input
+                    type="number"
+                    name="viewCount"
+                    value={form.viewCount || 0}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                    Like Count
+                  </label>
+                  <input
+                    type="number"
+                    name="likeCount"
+                    value={form.likeCount || 0}
+                    onChange={handleInputChange}
+                    className="form-input w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+                  Thumbnail URL
+                </label>
+                <input
+                  type="text"
+                  name="thumbnailUrl"
+                  value={form.thumbnailUrl || ''}
+                  onChange={handleInputChange}
+                  className="form-input w-full"
+                  placeholder="https://i.ytimg.com/vi/..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-6" style={{color: 'var(--dash-text-primary)'}}>Features</h2>
+
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="enableLyrics"
+                  checked={form.enableLyrics !== false}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 rounded"
+                  style={{accentColor: 'var(--dash-accent)'}}
+                />
+                <span style={{color: 'var(--dash-text-primary)'}}>Enable Lyrics</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="enableCommentary"
+                  checked={form.enableCommentary !== false}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 rounded"
+                  style={{accentColor: 'var(--dash-accent)'}}
+                />
+                <span style={{color: 'var(--dash-text-primary)'}}>Enable Commentary</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="enableAdoption"
+                  checked={form.enableAdoption !== false}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 rounded"
+                  style={{accentColor: 'var(--dash-accent)'}}
+                />
+                <span style={{color: 'var(--dash-text-primary)'}}>Enable Adoption</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="enableCredits"
+                  checked={form.enableCredits !== false}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 rounded"
+                  style={{accentColor: 'var(--dash-accent)'}}
+                />
+                <span style={{color: 'var(--dash-text-primary)'}}>Enable Credits</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="enableSponsors"
+                  checked={form.enableSponsors || false}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 rounded"
+                  style={{accentColor: 'var(--dash-accent)'}}
+                />
+                <span style={{color: 'var(--dash-text-primary)'}}>Enable Sponsors</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Language Management */}
+          <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Language Management</h2>
+                <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Select active languages, add custom ones, set the master language, and configure translation tone per language.</p>
+              </div>
+              <span className="text-xs px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', color: 'var(--dash-text-secondary)', border: '1px solid var(--dash-border)'}}>
+                {(form.availableLanguages || []).length} active
+              </span>
+            </div>
+
+            {/* Preset languages grid */}
+            <p className="text-xs font-medium mb-2" style={{color: 'var(--dash-text-muted)'}}>PRESET LANGUAGES</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+              {ALL_LANGUAGES.map((lang) => {
+                const isActive = (form.availableLanguages || []).includes(lang.code);
+                const displayLabel = form.languageLabels?.[lang.code] || lang.label;
+                const isEditing = editingLangCode === lang.code;
+                return (
+                  <div
+                    key={lang.code}
+                    className="flex flex-col gap-1 px-3 py-2 rounded transition"
+                    style={{
+                      border: `1px solid ${isActive ? 'var(--dash-accent)' : 'var(--dash-border)'}`,
+                      backgroundColor: isActive ? 'var(--dash-accent-muted)' : 'var(--dash-bg-secondary)',
+                    }}
+                  >
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isActive}
+                        onChange={(e) => {
+                          const current = form.availableLanguages || [];
+                          const next = e.target.checked
+                            ? [...current, lang.code]
+                            : current.filter((c) => c !== lang.code);
+                          let newDefault = form.defaultLanguage;
+                          if (!e.target.checked && form.defaultLanguage === lang.code) {
+                            newDefault = next[0] || 'en';
+                          }
+                          setForm({ ...form, availableLanguages: next, defaultLanguage: newDefault });
+                        }}
+                        style={{accentColor: 'var(--dash-accent)'}}
+                      />
+                      <span className="text-sm font-medium" style={{color: isActive ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)'}}>{displayLabel}</span>
+                      <span className="text-xs ml-auto" style={{color: 'var(--dash-text-muted)'}}>{lang.code}</span>
+                    </label>
+                    {isActive && (
+                      isEditing ? (
+                        <div className="flex gap-1 mt-1">
+                          <input
+                            type="text"
+                            value={editingLangNewLabel}
+                            onChange={(e) => setEditingLangNewLabel(e.target.value)}
+                            className="form-input text-xs flex-1"
+                            placeholder="New label"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveLanguageLabel(lang.code, editingLangNewLabel);
+                              if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
+                            }}
+                          />
+                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">✓</button>
+                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">✗</button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => { setEditingLangCode(lang.code); setEditingLangNewLabel(displayLabel); }}
+                          className="text-xs text-left mt-1"
+                          style={{color: 'var(--dash-text-muted)'}}
+                        >
+                          ✎ Rename label
+                        </button>
+                      )
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Custom languages */}
+            {(form.customLanguages || []).length > 0 && (
+              <>
+                <p className="text-xs font-medium mb-2" style={{color: 'var(--dash-text-muted)'}}>CUSTOM LANGUAGES</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+                  {(form.customLanguages || []).map((lang) => {
+                    const isActive = (form.availableLanguages || []).includes(lang.code);
+                    const displayLabel = form.languageLabels?.[lang.code] || lang.label;
+                    const isEditing = editingLangCode === lang.code;
+                    return (
+                      <div
+                        key={lang.code}
+                        className="flex flex-col gap-1 px-3 py-2 rounded transition"
+                        style={{
+                          border: `1px solid ${isActive ? 'var(--dash-accent)' : 'var(--dash-border)'}`,
+                          backgroundColor: isActive ? 'var(--dash-accent-muted)' : 'var(--dash-bg-secondary)',
+                        }}
+                      >
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(e) => {
+                              const current = form.availableLanguages || [];
+                              const next = e.target.checked
+                                ? [...current, lang.code]
+                                : current.filter((c) => c !== lang.code);
+                              let newDefault = form.defaultLanguage;
+                              if (!e.target.checked && form.defaultLanguage === lang.code) {
+                                newDefault = next[0] || 'en';
+                              }
+                              setForm({ ...form, availableLanguages: next, defaultLanguage: newDefault });
+                            }}
+                            style={{accentColor: 'var(--dash-accent)'}}
+                          />
+                          <span className="text-sm font-medium" style={{color: isActive ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)'}}>{displayLabel}</span>
+                          <span className="text-xs ml-auto" style={{color: 'var(--dash-text-muted)'}}>{lang.code}</span>
+                        </label>
+                        <div className="flex gap-1 mt-1">
+                          {isEditing ? (
+                            <>
+                              <input
+                                type="text"
+                                value={editingLangNewLabel}
+                                onChange={(e) => setEditingLangNewLabel(e.target.value)}
+                                className="form-input text-xs flex-1"
+                                placeholder="New label"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') saveLanguageLabel(lang.code, editingLangNewLabel);
+                                  if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
+                                }}
+                              />
+                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">✓</button>
+                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">✗</button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => { setEditingLangCode(lang.code); setEditingLangNewLabel(displayLabel); }}
+                                className="text-xs flex-1 text-left"
+                                style={{color: 'var(--dash-text-muted)'}}
+                              >
+                                ✎ Rename
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteCustomLanguage(lang.code)}
+                                className="text-xs"
+                                style={{color: 'var(--dash-status-rejected)'}}
+                                title="Delete this custom language"
+                              >
+                                🗑
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Add custom language */}
+            <div className="p-3 rounded-lg mb-4" style={{border: '1px dashed var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+              <p className="text-xs font-medium mb-2" style={{color: 'var(--dash-text-muted)'}}>ADD CUSTOM LANGUAGE</p>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  type="text"
+                  value={customLangCode}
+                  onChange={(e) => setCustomLangCode(e.target.value)}
+                  className="form-input text-sm"
+                  style={{width: 120}}
+                  placeholder="Code (e.g. dg)"
+                />
+                <input
+                  type="text"
+                  value={customLangLabel}
+                  onChange={(e) => setCustomLangLabel(e.target.value)}
+                  className="form-input text-sm flex-1"
+                  placeholder="Language name (e.g. Dogri)"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomLanguage(); } }}
+                />
+                <button
+                  type="button"
+                  onClick={addCustomLanguage}
+                  disabled={!customLangCode.trim() || !customLangLabel.trim()}
+                  className="dashboard-btn-secondary px-3 py-1 text-sm disabled:opacity-50"
+                >
+                  + Add Language
+                </button>
+              </div>
+            </div>
+
+            {/* Master language + tone per active language */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Default / Master Language</label>
+                <p className="text-xs mb-2" style={{color: 'var(--dash-text-muted)'}}>The master language holds the authoritative subtitle timestamps. All other languages follow these timings.</p>
+                <select
+                  name="defaultLanguage"
+                  value={form.defaultLanguage || 'en'}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  style={{width: '100%'}}
+                >
+                  {(form.availableLanguages || ['en']).map((code) => (
+                    <option key={code} value={code}>{getLanguageLabel(code)} ({code})</option>
+                  ))}
+                </select>
+              </div>
+
+              {(form.availableLanguages || []).filter((c) => c !== form.defaultLanguage).length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Translation Tone per Language</label>
+                  <p className="text-xs mb-2" style={{color: 'var(--dash-text-muted)'}}>Tone guides auto-translation style. Mystic / Poetic tones suggest reverent translations; Literal gives word-for-word accuracy.</p>
+                  <div className="space-y-2">
+                    {(form.availableLanguages || []).filter((c) => c !== form.defaultLanguage).map((code) => (
+                      <div key={code} className="flex items-center gap-2">
+                        <span className="text-sm min-w-[120px]" style={{color: 'var(--dash-text-primary)'}}>{getLanguageLabel(code)}</span>
+                        <select
+                          value={form.translationTone?.[code] || 'literal'}
+                          onChange={(e) => setLanguageTone(code, e.target.value)}
+                          className="form-input text-sm flex-1"
+                        >
+                          <option value="literal">Literal — word-for-word accuracy</option>
+                          <option value="mystic">Mystic — spiritual / Sufi essence</option>
+                          <option value="poetic">Poetic — lyrical and flowing</option>
+                          <option value="scholarly">Scholarly — academic precision</option>
+                          <option value="contemporary">Contemporary — modern everyday language</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Structured Lyrics */}
+          <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+              <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Lyrics System Structure</h2>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedLyricsStructureLanguage}
+                  onChange={(e) => setSelectedLyricsStructureLanguage(e.target.value)}
+                  className="form-input"
+                >
+                  {(form.availableLanguages || ['en']).map((lang) => (
+                    <option key={lang} value={lang}>{getLanguageLabel(lang)}</option>
+                  ))}
+                </select>
+                <button type="button" onClick={addLyricsBlock} className="dashboard-btn-secondary px-3 py-1 text-sm">Add Section</button>
+              </div>
+            </div>
+
+            <p className="text-sm mb-3" style={{color: 'var(--dash-text-muted)'}}>
+              Build lyrics in sections like intro, verse, chorus, bridge, and control per-block publish visibility.
+            </p>
+
+            <div className="space-y-3">
+              {getLyricsBlocks(selectedLyricsStructureLanguage).length === 0 && (
+                <div className="p-3 rounded" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)', color: 'var(--dash-text-muted)'}}>
+                  No structured lyrics blocks for this language yet.
+                </div>
+              )}
+
+              {getLyricsBlocks(selectedLyricsStructureLanguage).map((block: any, index: number) => (
+                <div key={block.id || index} className="p-4 rounded-lg" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                    <select
+                      value={(block.type || 'verse') as LyricsSectionType}
+                      onChange={(e) => updateLyricsBlock(index, 'type', e.target.value)}
+                      className="form-input md:col-span-2"
+                    >
+                      {LYRICS_SECTION_TYPES.map((sectionType) => (
+                        <option key={sectionType} value={sectionType}>{sectionType.toUpperCase()}</option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="text"
+                      value={block.heading || ''}
+                      onChange={(e) => updateLyricsBlock(index, 'heading', e.target.value)}
+                      className="form-input md:col-span-4"
+                      placeholder="Optional heading (e.g., Verse 1)"
+                    />
+
+                    <label className="md:col-span-3 inline-flex items-center gap-2 text-sm" style={{color: 'var(--dash-text-primary)'}}>
+                      <input
+                        type="checkbox"
+                        checked={block.isPublished !== false}
+                        onChange={(e) => updateLyricsBlock(index, 'isPublished', e.target.checked)}
+                        style={{accentColor: 'var(--dash-accent)'}}
+                      />
+                      Published block
+                    </label>
+
+                    <button type="button" onClick={() => removeLyricsBlock(index)} className="dashboard-btn-danger md:col-span-3 text-sm">Delete Section</button>
+
+                    <textarea
+                      value={Array.isArray(block.lines) ? block.lines.join('\n') : ''}
+                      onChange={(e) => updateLyricsBlock(index, 'lines', e.target.value)}
+                      className="form-input md:col-span-12"
+                      rows={4}
+                      placeholder="One lyric line per row"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Public Commentary */}
+          <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Commentary Tab Content</h2>
+              <button type="button" onClick={addPublicCommentary} className="dashboard-btn-secondary px-3 py-1 text-sm">Add Block</button>
+            </div>
+            <div className="space-y-3">
+              {(form.publicCommentary || []).map((block, index) => (
+                <div key={block.id || index} className="p-4 rounded-lg" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+                    <input
+                      type="text"
+                      value={block.title || ''}
+                      onChange={(e) => updatePublicCommentary(index, 'title', e.target.value)}
+                      className="form-input md:col-span-2"
+                      placeholder="Block title"
+                    />
+                    <textarea
+                      value={block.content || ''}
+                      onChange={(e) => updatePublicCommentary(index, 'content', e.target.value)}
+                      className="form-input md:col-span-3"
+                      rows={3}
+                      placeholder="Commentary text"
+                    />
+                    <div className="md:col-span-1 flex flex-col gap-2">
+                      <label className="inline-flex items-center gap-2 text-xs" style={{color: 'var(--dash-text-primary)'}}>
+                        <input
+                          type="checkbox"
+                          checked={block.isPublished !== false}
+                          onChange={(e) => updatePublicCommentary(index, 'isPublished', e.target.checked)}
+                          style={{accentColor: 'var(--dash-accent)'}}
+                        />
+                        Published
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => removePublicCommentary(index)}
+                        className="dashboard-btn-danger text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Public Sponsors */}
+          <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Sponsors Tab Content</h2>
+              <button type="button" onClick={addPublicSponsor} className="dashboard-btn-secondary px-3 py-1 text-sm">Add Sponsor</button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Intro Text</label>
+              <textarea
+                value={form.publicSponsorsIntro || ''}
+                onChange={(e) => setForm({ ...form, publicSponsorsIntro: e.target.value })}
+                className="form-input w-full"
+                rows={2}
+                placeholder="Sponsors intro paragraph"
+              />
+            </div>
+            <div className="space-y-3">
+              {(form.publicSponsors || []).map((sponsor, index) => (
+                <div key={sponsor.id || index} className="p-4 rounded-lg space-y-3" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Sponsor name</label>
+                      <input
+                        type="text"
+                        value={sponsor.name || ''}
+                        onChange={(e) => updatePublicSponsor(index, 'name', e.target.value)}
+                        className="form-input w-full"
+                        placeholder="e.g. SufiPulse Foundation"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Sponsor role</label>
+                      <input
+                        type="text"
+                        value={sponsor.role || ''}
+                        onChange={(e) => updatePublicSponsor(index, 'role', e.target.value)}
+                        className="form-input w-full"
+                        placeholder="e.g. Principal Sponsor"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Logo URL <span style={{fontWeight: 'normal'}}>(optional)</span></label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={(sponsor as any).logoUrl || ''}
+                        onChange={(e) => updatePublicSponsor(index, 'logoUrl', e.target.value)}
+                        className="form-input flex-1"
+                        placeholder="https://example.com/logo.png"
+                      />
+                      {(sponsor as any).logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => updatePublicSponsor(index, 'logoUrl', '')}
+                          className="dashboard-btn-danger px-3 py-2 text-xs whitespace-nowrap"
+                        >
+                          Remove logo
+                        </button>
+                      )}
+                    </div>
+                    {(sponsor as any).logoUrl && (
+                      <img
+                        src={(sponsor as any).logoUrl}
+                        alt={`${sponsor.name} logo preview`}
+                        className="mt-2 h-10 rounded object-contain"
+                        style={{border: '1px solid var(--dash-border)', background: '#fff', maxWidth: 160}}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="inline-flex items-center gap-2 text-sm cursor-pointer" style={{color: 'var(--dash-text-primary)'}}>
+                      <input
+                        type="checkbox"
+                        checked={sponsor.isPublished !== false}
+                        onChange={(e) => updatePublicSponsor(index, 'isPublished', e.target.checked)}
+                        style={{accentColor: 'var(--dash-accent)'}}
+                      />
+                      Published
+                    </label>
+                    <button type="button" onClick={() => removePublicSponsor(index)} className="dashboard-btn-danger text-sm">Remove sponsor</button>
+                  </div>
+                </div>
+              ))}
+              {(form.publicSponsors || []).length === 0 && (
+                <p className="text-sm py-4 text-center" style={{color: 'var(--dash-text-muted)'}}>No sponsors added yet. Click "Add Sponsor" to begin.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Public Credits */}
+          <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <h2 className="text-xl font-semibold mb-6" style={{color: 'var(--dash-text-primary)'}}>Official Credits</h2>
+
+            {/* Artistic Credits */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
+                Artistic Credits
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[['leadVocalist','Lead Vocalist'],['lyricist','Lyricist'],['composer','Composer'],['musicProducer','Music Producer'],['backgroundVocals','Background Vocals']].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
+                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.artistic as any)?.[key] || ''} onChange={(e) => updatePublicCredits('artistic', key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Production Credits */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
+                Production Credits
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[['recordedAt','Recorded at'],['recordingEngineer','Recording Engineer'],['mixMaster','Mix & Master'],['soundDesign','Sound Design']].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
+                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.production as any)?.[key] || ''} onChange={(e) => updatePublicCredits('production', key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual Credits */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
+                Visual Credits
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[['videoDirection','Video Direction'],['editing','Editing'],['thumbnailDesign','Thumbnail Design'],['artwork','Artwork']].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
+                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.visual as any)?.[key] || ''} onChange={(e) => updatePublicCredits('visual', key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Literary & Language */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
+                Literary &amp; Language
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[['romanTransliteration','Roman Transliteration'],['englishTranslation','English Translation'],['thematicInterpretation','Thematic Interpretation'],['proofreading','Proofreading']].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
+                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.literary as any)?.[key] || ''} onChange={(e) => updatePublicCredits('literary', key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Release & Rights */}
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
+                Release &amp; Rights
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[['publishedBy','Published by'],['platform','Platform'],['registeredReleaseId','Registered Release ID'],['releaseDateText','Release Date'],['copyrightHolder','Copyright Holder'],['licensingText','Licensing / Permissions']].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
+                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.rights as any)?.[key] || ''} onChange={(e) => updatePublicCredits('rights', key, e.target.value)} />
+                  </div>
+                ))}
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Licensing URL</label>
+                  <input className="form-input w-full" placeholder="https://sufipulse.com/contact" value={form.publicCredits?.rights?.licensingUrl || ''} onChange={(e) => updatePublicCredits('rights', 'licensingUrl', e.target.value)} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Subtitle Timeline + Language Tracks */}
+          <div className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+              <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Subtitle Timeline & Language Tracks</h2>
+              <div className="flex items-center gap-2">
+                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-80 cursor-pointer text-sm transition" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+                  <Upload size={16} />
+                  Import SRT/VTT/ASS
+                  <input
+                    type="file"
+                    accept=".srt,.vtt,.ass"
+                    className="hidden"
+                    onChange={handleImportSubtitleFile}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={addCue}
+                  className="dashboard-btn-primary inline-flex items-center gap-2 px-3 py-2"
+                >
+                  <Plus size={16} /> Add Cue
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Master Timing Version</label>
+                <input
+                  type="number"
+                  name="masterTimingVersion"
+                  value={form.masterTimingVersion || 1}
+                  onChange={handleInputChange}
+                  className="form-input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Active Language</label>
+                <select
+                  value={selectedSubtitleLanguage}
+                  onChange={(e) => setSelectedSubtitleLanguage(e.target.value)}
+                  className="form-input w-full"
+                >
+                  {(form.availableLanguages || ['en']).map((lang) => (
+                    <option key={lang} value={lang}>{getLanguageLabel(lang)} ({lang})</option>
+                  ))}
+                </select>
+                {selectedSubtitleLanguage !== (form.defaultLanguage || 'en') && (
+                  <button
+                    type="button"
+                    onClick={() => autoTranslateLanguage(selectedSubtitleLanguage)}
+                    disabled={autoTranslatingLang === selectedSubtitleLanguage}
+                    className="mt-2 w-full dashboard-btn-secondary px-3 py-1 text-xs disabled:opacity-50"
+                    title={`Auto-translate all cues from master language (${getLanguageLabel(form.defaultLanguage || 'en')}) to ${getLanguageLabel(selectedSubtitleLanguage)}`}
+                  >
+                    {autoTranslatingLang === selectedSubtitleLanguage
+                      ? '⏳ Translating…'
+                      : `⟳ Auto-translate from ${getLanguageLabel(form.defaultLanguage || 'en')}`}
+                  </button>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Reference (Master) Language</label>
+                <select
+                  value={referenceLanguage}
+                  onChange={(e) => setReferenceLanguage(e.target.value)}
+                  className="form-input w-full"
+                >
+                  {(form.availableLanguages || ['en']).map((lang) => (
+                    <option key={lang} value={lang}>{getLanguageLabel(lang)} ({lang})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Language Status</label>
+                <select
+                  value={form.subtitleLanguageStatuses?.[selectedSubtitleLanguage] || 'draft'}
+                  onChange={(e) => setLanguageStatus(selectedSubtitleLanguage, e.target.value as SubtitleStatus)}
+                  className="form-input w-full"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="in_translation">In Translation</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="verified">Verified</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Translator</label>
+                <input
+                  type="text"
+                  value={form.subtitleLanguageAssignments?.[selectedSubtitleLanguage]?.translator || ''}
+                  onChange={(e) => setLanguageAssignee(selectedSubtitleLanguage, 'translator', e.target.value)}
+                  className="form-input w-full"
+                  placeholder="Assigned translator"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Reviewer</label>
+                <input
+                  type="text"
+                  value={form.subtitleLanguageAssignments?.[selectedSubtitleLanguage]?.reviewer || ''}
+                  onChange={(e) => setLanguageAssignee(selectedSubtitleLanguage, 'reviewer', e.target.value)}
+                  className="form-input w-full"
+                  placeholder="Assigned reviewer"
+                />
+              </div>
+              <div className="flex items-end">
+                <label className="inline-flex items-center gap-2 text-sm cursor-pointer" style={{color: 'var(--dash-text-primary)'}}>
+                  <input
+                    type="checkbox"
+                    checked={sideBySideMode}
+                    onChange={(e) => setSideBySideMode(e.target.checked)}
+                    style={{accentColor: 'var(--dash-accent)'}}
+                  />
+                  Side-by-side translation mode
+                </label>
+              </div>
+            </div>
+
+            <div className="mb-6 rounded-lg p-4 space-y-4" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <h3 className="text-sm font-semibold" style={{color: 'var(--dash-text-primary)'}}>ASS Style Library & Location Control</h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={addStylePack}
+                    className="dashboard-btn-primary px-2 py-1 text-xs"
+                  >
+                    Add Style
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeStylePack(activeStyleName)}
+                    disabled={activeStyleName === DEFAULT_STYLE_NAME}
+                    className="dashboard-btn-danger px-2 py-1 text-xs disabled:opacity-50"
+                  >
+                    Delete Style
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Selected Style</label>
+                  <select
+                    value={activeStyleName}
+                    onChange={(e) => setSelectedStyleName(e.target.value)}
+                    className="form-input w-full"
+                  >
+                    {styleNames.map((name) => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Style Name</label>
+                  <input
+                    type="text"
+                    value={activeStyleName}
+                    onChange={(e) => {
+                      const nextName = e.target.value.trim();
+                      if (!nextName || nextName === activeStyleName) return;
+                      const packs = { ...(form.subtitleStylePacks || {}) } as Record<string, ASSStylePack>;
+                      packs[nextName] = packs[activeStyleName] || { ...DEFAULT_STYLE_PACK };
+                      delete packs[activeStyleName];
+                      setForm({ ...form, subtitleStylePacks: packs });
+                      setSelectedStyleName(nextName);
+                    }}
+                    className="form-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Language Default Style</label>
+                  <select
+                    value={form.languageStyleOverrides?.[selectedSubtitleLanguage]?.stylePack || ''}
+                    onChange={(e) => setLanguageStylePack(selectedSubtitleLanguage, e.target.value)}
+                    className="form-input w-full"
+                  >
+                    <option value="">None</option>
+                    {styleNames.map((name) => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Alignment</label>
+                  <select
+                    value={activeStyle.alignment || 2}
+                    onChange={(e) => updateStylePack(activeStyleName, { alignment: Number(e.target.value) })}
+                    className="form-input w-full"
+                  >
+                    <option value={1}>Bottom Left (1)</option>
+                    <option value={2}>Bottom Center (2)</option>
+                    <option value={3}>Bottom Right (3)</option>
+                    <option value={4}>Middle Left (4)</option>
+                    <option value={5}>Middle Center (5)</option>
+                    <option value={6}>Middle Right (6)</option>
+                    <option value={7}>Top Left (7)</option>
+                    <option value={8}>Top Center (8)</option>
+                    <option value={9}>Top Right (9)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <input
+                  type="text"
+                  value={activeStyle.fontFamily || ''}
+                  onChange={(e) => updateStylePack(activeStyleName, { fontFamily: e.target.value })}
+                  className="form-input"
+                  placeholder="Font family"
+                />
+                <input
+                  type="number"
+                  value={activeStyle.fontSize || 42}
+                  onChange={(e) => updateStylePack(activeStyleName, { fontSize: Number(e.target.value || 42) })}
+                  className="form-input"
+                  placeholder="Font size"
+                />
+                <input
+                  type="color"
+                  value={activeStyle.primaryColor || '#FFFFFF'}
+                  onChange={(e) => updateStylePack(activeStyleName, { primaryColor: e.target.value })}
+                  className="h-10 px-1 py-1 rounded"
+                  style={{border: '1px solid var(--dash-border)'}}
+                  title="Primary color"
+                />
+                <input
+                  type="color"
+                  value={activeStyle.outlineColor || '#202020'}
+                  onChange={(e) => updateStylePack(activeStyleName, { outlineColor: e.target.value })}
+                  className="h-10 px-1 py-1 rounded"
+                  style={{border: '1px solid var(--dash-border)'}}
+                  title="Outline color"
+                />
+                <input
+                  type="color"
+                  value={activeStyle.backColor || '#000000'}
+                  onChange={(e) => updateStylePack(activeStyleName, { backColor: e.target.value })}
+                  className="h-10 px-1 py-1 rounded"
+                  style={{border: '1px solid var(--dash-border)'}}
+                  title="Background color"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                <input
+                  type="number"
+                  value={activeStyle.outline || 2}
+                  onChange={(e) => updateStylePack(activeStyleName, { outline: Number(e.target.value || 0) })}
+                  className="form-input"
+                  placeholder="Outline"
+                />
+                <input
+                  type="number"
+                  value={activeStyle.shadow || 0}
+                  onChange={(e) => updateStylePack(activeStyleName, { shadow: Number(e.target.value || 0) })}
+                  className="form-input"
+                  placeholder="Shadow"
+                />
+                <input
+                  type="number"
+                  value={activeStyle.marginL || 40}
+                  onChange={(e) => updateStylePack(activeStyleName, { marginL: Number(e.target.value || 0) })}
+                  className="form-input"
+                  placeholder="Margin L"
+                />
+                <input
+                  type="number"
+                  value={activeStyle.marginR || 40}
+                  onChange={(e) => updateStylePack(activeStyleName, { marginR: Number(e.target.value || 0) })}
+                  className="form-input"
+                  placeholder="Margin R"
+                />
+                <input
+                  type="number"
+                  value={activeStyle.marginV || 28}
+                  onChange={(e) => updateStylePack(activeStyleName, { marginV: Number(e.target.value || 0) })}
+                  className="form-input"
+                  placeholder="Margin V"
+                />
+                <input
+                  type="number"
+                  value={activeStyle.maxWidthPercent || 82}
+                  onChange={(e) => updateStylePack(activeStyleName, { maxWidthPercent: Number(e.target.value || 82) })}
+                  className="form-input"
+                  placeholder="Max width %"
+                />
+              </div>
+
+              <div className="flex items-center gap-6 text-sm">
+                <label className="inline-flex items-center gap-2" style={{color: 'var(--dash-text-primary)'}}>
+                  <input
+                    type="checkbox"
+                    checked={!!activeStyle.bold}
+                    onChange={(e) => updateStylePack(activeStyleName, { bold: e.target.checked })}
+                    style={{accentColor: 'var(--dash-accent)'}}
+                  />
+                  Bold
+                </label>
+                <label className="inline-flex items-center gap-2" style={{color: 'var(--dash-text-primary)'}}>
+                  <input
+                    type="checkbox"
+                    checked={!!activeStyle.italic}
+                    onChange={(e) => updateStylePack(activeStyleName, { italic: e.target.checked })}
+                    style={{accentColor: 'var(--dash-accent)'}}
+                  />
+                  Italic
+                </label>
+              </div>
+            </div>
+
+            <div className="mb-6 rounded-lg p-4 space-y-4" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-primary)'}}>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-semibold" style={{color: 'var(--dash-text-primary)'}}>Live ASS Preview</h3>
+                  <p className="text-xs" style={{color: 'var(--dash-text-muted)'}}>Select a cue, drag the caption box on the frame, and save. This writes cue-level XY position overrides.</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs" style={{color: 'var(--dash-text-secondary)'}}>
+                  <span className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-secondary)'}}>Style: {previewStyleName}</span>
+                  <span className="px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-secondary)'}}>Align: {getAlignmentLabel(previewAlignment)}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row md:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewPlaying((current) => !current)}
+                    disabled={!previewDuration}
+                    className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-2 disabled:opacity-50"
+                  >
+                    {previewPlaying ? <Pause size={14} /> : <Play size={14} />}
+                    {previewPlaying ? 'Pause' : 'Play'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewPlaying(false);
+                      setPreviewTime(0);
+                    }}
+                    className="dashboard-btn-secondary px-3 py-2 text-sm"
+                  >
+                    Reset
+                  </button>
+                </div>
+                <div className="flex-1">
+                  <div
+                    ref={timelineRef}
+                    onClick={(e) => handleTimelineClick(e, previewDuration)}
+                    className="relative w-full h-8 rounded cursor-pointer transition"
+                    style={{border: '1px solid var(--dash-border)', background: 'linear-gradient(to right, var(--dash-bg-primary), var(--dash-bg-secondary))'}}
+                  >
+                    <div
+                      className="absolute top-0 h-full w-1 rounded-full pointer-events-none"
+                      style={{ left: `${previewDuration > 0 ? (previewTime / previewDuration) * 100 : 0}%`, transform: 'translateX(-50%)', backgroundColor: 'var(--dash-accent)' }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center text-xs pointer-events-none" style={{color: 'var(--dash-text-muted)'}}>
+                      Click to scrub • {formatPreviewSeconds(previewTime)} / {formatPreviewSeconds(previewDuration)}
+                    </div>
+                  </div>
+                </div>
+                <label className="inline-flex items-center gap-2 text-xs" style={{color: 'var(--dash-text-primary)'}}>
+                  <input
+                    type="checkbox"
+                    checked={showSafeGuides}
+                    onChange={(e) => setShowSafeGuides(e.target.checked)}
+                    style={{accentColor: 'var(--dash-accent)'}}
+                  />
+                  Safe guides
+                </label>
+              </div>
+
+              {(form.subtitleCues || []).length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {(form.subtitleCues || []).map((cue) => (
+                    <button
+                      key={`preview-tab-${cue.id}`}
+                      type="button"
+                      onClick={() => setPreviewCueId(cue.id)}
+                      className={previewCue?.id === cue.id ? 'dashboard-btn-primary px-2 py-1 rounded text-xs' : 'dashboard-btn-secondary px-2 py-1 rounded text-xs'}
+                    >
+                      Cue {cue.cueNumber}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div
+                ref={previewCanvasRef}
+                className="relative w-full overflow-hidden rounded-xl"
+                style={{ aspectRatio: '16 / 9', border: '1px solid var(--dash-border)', backgroundColor: '#1a1a1a' }}
+              >
+                {form.thumbnailUrl ? (
+                  <img
+                    src={form.thumbnailUrl}
+                    alt="Release preview"
+                    className="absolute inset-0 h-full w-full object-cover opacity-90"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#334155,transparent_55%),linear-gradient(135deg,#111827,#020617)]" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/45" />
+                {showSafeGuides && (
+                  <>
+                    <div className="absolute inset-[8%] border border-dashed border-white/35 pointer-events-none" />
+                    <div className="absolute left-1/2 top-[8%] bottom-[8%] border-l border-dashed border-white/20 pointer-events-none" />
+                    <div className="absolute top-1/2 left-[8%] right-[8%] border-t border-dashed border-white/20 pointer-events-none" />
+                  </>
+                )}
+                <div className="absolute left-4 top-4 rounded px-3 py-2 text-[11px] text-white backdrop-blur-sm" style={{backgroundColor: 'rgba(0,0,0,0.45)'}}>
+                  <div>{form.title || 'Untitled release'}</div>
+                  <div className="text-white/70">{selectedSubtitleLanguage.toUpperCase()} subtitle preview</div>
+                </div>
+
+                {previewCue && (
+                  <div
+                    className={`absolute inset-0 ${previewHasCustomPosition ? '' : previewAnchor.y === 'top' ? 'pt-10' : previewAnchor.y === 'middle' ? 'flex items-center' : 'flex items-end pb-10'} ${previewHasCustomPosition ? '' : previewAnchor.x === 'left' ? 'justify-start pl-8' : previewAnchor.x === 'right' ? 'justify-end pr-8' : 'justify-center px-8'}`}
+                  >
+                    <div
+                      onPointerDown={(event) => handlePreviewDrag(event, previewCue.id)}
+                      className="absolute cursor-grab active:cursor-grabbing touch-none select-none"
+                      style={previewHasCustomPosition ? {
+                        left: `${previewCueMetadata.positionX}%`,
+                        top: `${previewCueMetadata.positionY}%`,
+                        transform: `translate(${previewAnchor.x === 'left' ? '0%' : previewAnchor.x === 'right' ? '-100%' : '-50%'}, ${previewAnchor.y === 'top' ? '0%' : previewAnchor.y === 'bottom' ? '-100%' : '-50%'})`,
+                      } : {
+                        left: previewAnchor.x === 'left' ? '2rem' : previewAnchor.x === 'right' ? 'calc(100% - 2rem)' : '50%',
+                        top: previewAnchor.y === 'top' ? '2.5rem' : previewAnchor.y === 'middle' ? '50%' : 'calc(100% - 2.5rem)',
+                        transform: `translate(${previewAnchor.x === 'left' ? '0%' : previewAnchor.x === 'right' ? '-100%' : '-50%'}, ${previewAnchor.y === 'top' ? '0%' : previewAnchor.y === 'bottom' ? '-100%' : '-50%'})`,
+                      }}
+                    >
+                      <div
+                        className="relative rounded-xl border px-5 py-3 text-center backdrop-blur-md shadow-2xl"
+                        style={{
+                          maxWidth: `${previewStyle.maxWidthPercent || 82}%`,
+                          backgroundColor: assColorToRgba(previewStyle.backColor, 'rgba(0,0,0,0.55)'),
+                          borderColor: assColorToRgba(previewStyle.outlineColor, 'rgba(255,255,255,0.2)'),
+                        }}
+                      >
+                        <div
+                          className="leading-snug tracking-wide"
+                          style={{
+                            color: normalizeHexColor(previewStyle.primaryColor, '#FFFFFF'),
+                            fontFamily: previewStyle.fontFamily || 'Arial',
+                            fontSize: `${Math.max(16, Math.min(72, Number(previewStyle.fontSize || 42)))}px`,
+                            fontWeight: previewStyle.bold ? 700 : 500,
+                            fontStyle: previewStyle.italic ? 'italic' : 'normal',
+                            textShadow: `0 0 ${Math.max(1, Number(previewStyle.outline || 2))}px ${normalizeHexColor(previewStyle.outlineColor, '#202020')}`,
+                          }}
+                        >
+                          {previewTextLines.map((line, index) => (
+                            <div key={`preview-line-${index}`}>{line}</div>
+                          ))}
+                        </div>
+                        <div
+                          onPointerDown={(event) => handlePreviewResize(event, previewStyleName)}
+                          className="absolute right-[-8px] top-1/2 h-12 w-4 -translate-y-1/2 rounded-full border border-white/40 bg-white/20 backdrop-blur-sm cursor-ew-resize"
+                          title="Drag to resize subtitle width"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {previewCue && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs" style={{color: 'var(--dash-text-secondary)'}}>
+                  <div className="rounded px-3 py-2" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>Cue: {previewCue.cueNumber}</div>
+                  <div className="rounded px-3 py-2" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>X: {Number.isFinite(previewCueMetadata.positionX) ? `${previewCueMetadata.positionX}%` : 'auto'}</div>
+                  <div className="rounded px-3 py-2" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>Y: {Number.isFinite(previewCueMetadata.positionY) ? `${previewCueMetadata.positionY}%` : 'auto'}</div>
+                  <div className="rounded px-3 py-2" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>Width: {previewStyle.maxWidthPercent || 82}%</div>
+                </div>
+              )}
+            </div>
+
+            {(!form.subtitleCues || form.subtitleCues.length === 0) ? (
+              <div className="text-sm p-4 rounded-lg" style={{color: 'var(--dash-text-muted)', border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+                No cues yet. Add cues to build a single master timeline shared across all languages.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Bulk Operations Toolbar */}
+                <div className="flex flex-wrap gap-2 p-4 rounded-lg" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+                  <div className="flex items-center text-sm" style={{color: 'var(--dash-text-primary)'}}>
+                    {selectedCueIds.size > 0 && <span className="font-medium">{selectedCueIds.size} selected</span>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCueIds(new Set((form.subtitleCues || []).map(c => c.id)))}
+                    className="dashboard-btn-secondary px-3 py-1 text-sm"
+                    disabled={(form.subtitleCues || []).length === 0}
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCueIds(new Set())}
+                    className="dashboard-btn-secondary px-3 py-1 text-sm"
+                    disabled={selectedCueIds.size === 0}
+                  >
+                    Deselect All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={duplicateSelectedCues}
+                    disabled={selectedCueIds.size === 0}
+                    className="dashboard-btn-secondary px-3 py-1 text-sm disabled:opacity-50"
+                  >
+                    Duplicate {selectedCueIds.size > 0 ? `(${selectedCueIds.size})` : ''}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={deletSelectedCues}
+                    disabled={selectedCueIds.size === 0}
+                    className="dashboard-btn-danger px-3 py-1 text-sm disabled:opacity-50"
+                  >
+                    Delete {selectedCueIds.size > 0 ? `(${selectedCueIds.size})` : ''}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={deleteAllCues}
+                    className="dashboard-btn-danger px-3 py-1 text-sm ml-auto"
+                  >
+                    Delete All Cues
+                  </button>
+                </div>
+
+                {/* Timing Shift Tool */}
+                <div className="flex gap-2 p-3 rounded-lg" style={{border: '1px solid var(--dash-status-pending)', backgroundColor: 'var(--dash-status-pending-bg)'}}>
+                  <input
+                    type="number"
+                    value={shiftTimingOffset}
+                    onChange={(e) => setShiftTimingOffset(Number(e.target.value || 0))}
+                    step="0.1"
+                    className="form-input flex-1 text-sm"
+                    placeholder="Seconds to shift all cues (e.g., 1.5 or -2)"
+                  />
+                  <button
+                    type="button"
+                    onClick={shiftAllCueTiming}
+                    disabled={shiftTimingOffset === 0 || (form.subtitleCues || []).length === 0}
+                    className="dashboard-btn-primary px-4 py-1 text-sm disabled:opacity-50"
+                  >
+                    Shift Timing
+                  </button>
+                </div>
+
+                {/* Cues List */}
+                <div className="space-y-3">
+                {(form.subtitleCues || []).map((cue) => {
+                  const cueMeta = (form.subtitleCueMetadata as Record<string, any> | undefined)?.[cue.id] || {};
+                  const isSelected = selectedCueIds.has(cue.id);
+                  const cueReviewStatus = form.translationReviewStatus?.[selectedSubtitleLanguage]?.[cue.id];
+                  const isMasterLang = selectedSubtitleLanguage === (form.defaultLanguage || 'en');
+                  return (
+                    <div
+                      key={cue.id}
+                      onClick={() => setPreviewCueId(cue.id)}
+                      className="rounded-lg p-3 cursor-pointer transition"
+                      style={{border: `1px solid ${isSelected ? 'var(--dash-accent)' : previewCue?.id === cue.id ? 'var(--dash-accent)' : 'var(--dash-border)'}`, backgroundColor: isSelected ? 'var(--dash-bg-hover)' : previewCue?.id === cue.id ? 'var(--dash-bg-hover)' : 'var(--dash-bg-secondary)'}}
+                    >
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedCueIds);
+                            if (e.target.checked) {
+                              newSet.add(cue.id);
+                            } else {
+                              newSet.delete(cue.id);
+                            }
+                            setSelectedCueIds(newSet);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="col-span-1"
+                          style={{accentColor: 'var(--dash-accent)'}}
+                          title="Select for bulk operations"
+                        />
+                        <input
+                          type="number"
+                          value={cue.cueNumber}
+                          onChange={(e) => updateCue(cue.id, 'cueNumber', parseInt(e.target.value || '0'))}
+                          className="form-input col-span-1"
+                          title="Cue number"
+                        />
+                        <input
+                          type="text"
+                          value={cue.startTime}
+                          onChange={(e) => updateCue(cue.id, 'startTime', e.target.value)}
+                          className="form-input col-span-2"
+                          placeholder="00:00:00.000"
+                        />
+                        <input
+                          type="text"
+                          value={cue.endTime}
+                          onChange={(e) => updateCue(cue.id, 'endTime', e.target.value)}
+                          className="form-input col-span-2"
+                          placeholder="00:00:03.000"
+                        />
+                        <input
+                          type="text"
+                          value={cue.lineRef || ''}
+                          onChange={(e) => updateCue(cue.id, 'lineRef', e.target.value)}
+                          className={`form-input ${sideBySideMode ? 'col-span-1' : 'col-span-2'}`}
+                          placeholder="Line ref"
+                        />
+                        {sideBySideMode && (
+                          <input
+                            type="text"
+                            value={form.subtitleTranslations?.[referenceLanguage]?.[cue.id] || ''}
+                            readOnly
+                            className="form-input col-span-3"
+                            style={{opacity: 0.6}}
+                            placeholder={`Reference (${referenceLanguage.toUpperCase()})`}
+                          />
+                        )}
+                        <input
+                          type="text"
+                          value={form.subtitleTranslations?.[selectedSubtitleLanguage]?.[cue.id] || ''}
+                          onChange={(e) => setCueTranslation(selectedSubtitleLanguage, cue.id, e.target.value)}
+                          className={`form-input ${sideBySideMode ? 'col-span-2' : 'col-span-4'}`}
+                          placeholder={`Subtitle text (${selectedSubtitleLanguage.toUpperCase()})`}
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); deleteCue(cue.id); }}
+                          className="col-span-1 p-2 rounded transition"
+                          style={{color: 'var(--dash-status-rejected)', backgroundColor: 'var(--dash-status-rejected-bg)'}}
+                          title="Delete cue"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      {/* Translation review status row */}
+                      {!isMasterLang && cueReviewStatus && (
+                        <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
+                          {cueReviewStatus === 'ai' && (
+                            <>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-pending-bg)', color: 'var(--dash-status-pending)', border: '1px solid var(--dash-status-pending)'}}>⟳ AI translated · review needed</span>
+                              <button
+                                type="button"
+                                onClick={() => acceptCueTranslation(selectedSubtitleLanguage, cue.id)}
+                                className="text-xs px-2 py-0.5 rounded-full transition"
+                                style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}
+                              >
+                                ✓ Accept
+                              </button>
+                            </>
+                          )}
+                          {cueReviewStatus === 'manual' && (
+                            <>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-bg-hover)', color: 'var(--dash-text-secondary)', border: '1px solid var(--dash-border)'}}>✎ Manually edited</span>
+                              <button
+                                type="button"
+                                onClick={() => acceptCueTranslation(selectedSubtitleLanguage, cue.id)}
+                                className="text-xs px-2 py-0.5 rounded-full transition"
+                                style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}
+                              >
+                                ✓ Accept
+                              </button>
+                            </>
+                          )}
+                          {cueReviewStatus === 'accepted' && (
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{backgroundColor: 'var(--dash-status-approved-bg)', color: 'var(--dash-status-approved)', border: '1px solid var(--dash-status-approved)'}}>✓ Accepted</span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-2 grid grid-cols-1 md:grid-cols-5 gap-2">
+                        <select
+                          value={cueMeta.styleName || form.languageStyleOverrides?.[selectedSubtitleLanguage]?.stylePack || DEFAULT_STYLE_NAME}
+                          onChange={(e) => setCueMetadata(cue.id, { styleName: e.target.value })}
+                          className="form-input"
+                        >
+                          {styleNames.map((name) => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={cueMeta.alignment || 2}
+                          onChange={(e) => setCueMetadata(cue.id, { alignment: Number(e.target.value) })}
+                          className="form-input"
+                        >
+                          <option value={1}>Bottom Left</option>
+                          <option value={2}>Bottom Center</option>
+                          <option value={3}>Bottom Right</option>
+                          <option value={4}>Middle Left</option>
+                          <option value={5}>Middle Center</option>
+                          <option value={6}>Middle Right</option>
+                          <option value={7}>Top Left</option>
+                          <option value={8}>Top Center</option>
+                          <option value={9}>Top Right</option>
+                        </select>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step="0.1"
+                          value={Number.isFinite(cueMeta.positionX) ? cueMeta.positionX : ''}
+                          onChange={(e) => setCueMetadata(cue.id, { positionX: e.target.value === '' ? undefined : Number(e.target.value) })}
+                          className="form-input"
+                          placeholder="X % (0-100)"
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step="0.1"
+                          value={Number.isFinite(cueMeta.positionY) ? cueMeta.positionY : ''}
+                          onChange={(e) => setCueMetadata(cue.id, { positionY: e.target.value === '' ? undefined : Number(e.target.value) })}
+                          className="form-input"
+                          placeholder="Y % (0-100)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setCueMetadata(cue.id, { positionX: undefined, positionY: undefined })}
+                          className="dashboard-btn-secondary text-xs"
+                        >
+                          Clear Position Override
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 rounded-lg p-4" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
+              <h3 className="text-sm font-semibold mb-3" style={{color: 'var(--dash-text-primary)'}}>Review Log ({selectedSubtitleLanguage.toUpperCase()})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <input
+                  type="text"
+                  value={reviewActor}
+                  onChange={(e) => setReviewActor(e.target.value)}
+                  className="form-input"
+                  placeholder="Reviewer / Editor"
+                />
+                <input
+                  type="text"
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className="form-input md:col-span-2"
+                  placeholder="Review note (optional)"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={addReviewLog}
+                className="dashboard-btn-primary inline-flex items-center gap-2 px-3 py-2 text-sm"
+              >
+                <CheckCircle2 size={16} /> Add Review Entry
+              </button>
+
+              <div className="mt-3 max-h-44 overflow-auto space-y-2">
+                {(form.subtitleReviewLogs || [])
+                  .filter((log) => log.language === selectedSubtitleLanguage)
+                  .slice()
+                  .reverse()
+                  .map((log) => (
+                    <div key={log.id} className="text-xs rounded px-3 py-2" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-primary)'}}>
+                      <div className="flex justify-between" style={{color: 'var(--dash-text-secondary)'}}>
+                        <span>{log.actor || 'Editorial Admin'}</span>
+                        <span>{new Date(log.createdAt).toLocaleString()}</span>
+                      </div>
+                      <div className="font-medium mt-1" style={{color: 'var(--dash-text-primary)'}}>Status: {log.status}</div>
+                      {log.comment && <div className="mt-1" style={{color: 'var(--dash-text-primary)'}}>{log.comment}</div>}
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {!isNew && (
+              <div className="mt-6 rounded-lg p-4" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-primary)'}}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold" style={{color: 'var(--dash-text-primary)'}}>Subtitle Export</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-2 text-xs" style={{color: 'var(--dash-text-primary)'}}>
+                      <input
+                        type="checkbox"
+                        checked={form.youtubeSubtitleAutoSync !== false}
+                        onChange={(e) => setForm({ ...form, youtubeSubtitleAutoSync: e.target.checked })}
+                        style={{accentColor: 'var(--dash-accent)'}}
+                      />
+                      Auto-sync to YouTube on Save
+                    </label>
+                    <button
+                      type="button"
+                      onClick={exportAllSubtitlesZip}
+                      disabled={exportingZip}
+                      className="dashboard-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-60"
+                    >
+                      <Download size={16} /> {exportingZip ? 'Building ZIP...' : 'Export All as ZIP (.SRT + .VTT)'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => syncYouTubeSubtitles({ mode: 'update-changed' })}
+                      disabled={youtubeSyncing}
+                      className="dashboard-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-60"
+                    >
+                      <Download size={16} /> {youtubeSyncing ? 'Syncing...' : 'Sync Changed to YouTube'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => syncYouTubeSubtitles({ mode: 'force-update' })}
+                      disabled={youtubeSyncing}
+                      className="dashboard-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-60"
+                    >
+                      <Download size={16} /> Force Push All to YouTube
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-xs mt-2" style={{color: 'var(--dash-text-muted)'}}>YouTube-ready subtitles: export SRT per language. Web-player-ready subtitles: export VTT per language.</p>
+
+                <div className="mt-4 space-y-2">
+                  {subtitleExportLanguages.map((language) => (
+                    <div key={language} className="flex flex-wrap items-center justify-between gap-3 rounded-md px-3 py-2" style={{border: '1px solid var(--dash-border)'}}>
+                      <div className="text-sm font-medium" style={{color: 'var(--dash-text-primary)'}}>{language.toUpperCase()}</div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => exportSubtitleByLanguage(language, 'srt')}
+                          className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm"
+                        >
+                          <Download size={14} /> Export SRT
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => exportSubtitleByLanguage(language, 'vtt')}
+                          className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm"
+                        >
+                          <Download size={14} /> Export VTT
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => exportSubtitleByLanguage(language, 'ass')}
+                          className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm"
+                        >
+                          <Download size={14} /> Export ASS
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => syncYouTubeSubtitles({ mode: 'force-update', languages: [language] })}
+                          disabled={youtubeSyncing}
+                          className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm disabled:opacity-60"
+                        >
+                          <Download size={14} /> Push to YouTube
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 text-xs space-y-1" style={{color: 'var(--dash-text-muted)'}}>
+                  {subtitleExportLanguages.map((language) => {
+                    const syncMeta = (form.youtubeCaptionTracks as Record<string, any> | undefined)?.[language] || {};
+                    if (!syncMeta.captionId && !syncMeta.lastStatus && !syncMeta.lastError) return null;
+                    return (
+                      <div key={`${language}_sync_meta`}>
+                        {language.toUpperCase()}: {syncMeta.lastStatus || 'unknown'}
+                        {syncMeta.captionId ? ` | captionId: ${syncMeta.captionId}` : ''}
+                        {syncMeta.lastUploadedAt ? ` | last upload: ${new Date(syncMeta.lastUploadedAt).toLocaleString()}` : ''}
+                        {syncMeta.lastError ? ` | error: ${syncMeta.lastError}` : ''}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Submit */}
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={saving || !hasUnsavedChanges && !isNew}
+              className={`flex items-center gap-2 px-6 py-2 rounded-lg transition font-medium disabled:opacity-60 ${
+                hasUnsavedChanges || isNew
+                  ? 'dashboard-btn-primary'
+                  : 'dashboard-btn-secondary'
+              }`}
+              title={hasUnsavedChanges ? 'Save changes (Ctrl+S)' : 'No changes to save'}
+            >
+              <Save size={20} />
+              {saving ? 'Saving...' : hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+            </button>
+            <Link href="/admin/cms-releases">
+              <button type="button" className="dashboard-btn-secondary px-6 py-2">
+                Cancel
+              </button>
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

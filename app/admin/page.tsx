@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from 'react';
 // import { Link } from 'react-router-dom';
-import { Users, FileText, Mic, Music, BookOpen, Handshake, Calendar, CircleAlert as AlertCircle } from 'lucide-react';
+import { Users, FileText, Mic, Music, BookOpen, Handshake, Calendar, Activity, Globe, DollarSign, CircleAlert as AlertCircle, Mail } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import * as api from '../api/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -12,10 +13,18 @@ interface DashboardStats {
   totalUsers: number;
   writerApplications: number;
   vocalistApplications: number;
+  producerApplications: number;
+  literaryApplications: number;
+  studioApplications: number;
   pendingKalams: number;
+  pendingSadas: number;
   pendingArticles: number;
   pendingPartnerships: number;
   pendingSessionRequests: number;
+  pendingAdoptions: number;
+  draftReleases: number;
+  pendingAccessCodeRequests: number;
+  pendingContactMessages: number;
 }
 
 export default function AdminDashboard() {
@@ -24,20 +33,160 @@ export default function AdminDashboard() {
     totalUsers: 0,
     writerApplications: 0,
     vocalistApplications: 0,
+    producerApplications: 0,
+    literaryApplications: 0,
+    studioApplications: 0,
     pendingKalams: 0,
+    pendingSadas: 0,
     pendingArticles: 0,
     pendingPartnerships: 0,
     pendingSessionRequests: 0,
+    pendingAdoptions: 0,
+    draftReleases: 0,
+    pendingAccessCodeRequests: 0,
+    pendingContactMessages: 0,
   });
   const router = useRouter()
   const { user } = useAuth()
   const [loading, setLoading] = useState(true);
+
+  const normalizeArrayLike = (value: any): any[] => {
+    if (Array.isArray(value)) {
+      // Supports tuple-like map storage: [[id, payload], ...]
+      if (value.length > 0 && Array.isArray(value[0]) && value[0].length === 2) {
+        return value
+          .map((entry) => (Array.isArray(entry) ? entry[1] : entry))
+          .filter((item) => item && typeof item === 'object');
+      }
+      return value;
+    }
+
+    if (value && typeof value === 'object') {
+      return Object.values(value);
+    }
+
+    return [];
+  };
+
+  const safeReadArray = (key: string): any[] => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return normalizeArrayLike(parsed);
+    } catch {
+      return [];
+    }
+  };
+
+  const pendingCount = (items: any[], field: string = 'status') => {
+    const pendingStates = new Set(['pending', 'submitted', 'under_review', 'revision_requested']);
+    return items.filter((item) => pendingStates.has(String(item?.[field] || '').toLowerCase())).length;
+  };
+
+  const firstArray = (...candidates: any[]): any[] => {
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) return candidate;
+    }
+    return [];
+  };
+
+  const loadStats = async () => {
+    try {
+      const [writersResult, vocalistsResult, producersResult, kalamsResult, draftReleasesResult] = await Promise.allSettled([
+        api.getAllWriter(),
+        api.getAllVocalists(),
+        api.getAllProducers(),
+        api.getAllKalams(),
+        fetch('/api/releases?status=draft'),
+      ]);
+
+      const writerPayload = writersResult.status === 'fulfilled' ? await writersResult.value.json() : null;
+      const vocalistPayload = vocalistsResult.status === 'fulfilled' ? await vocalistsResult.value.json() : null;
+      const producerPayload = producersResult.status === 'fulfilled' ? await producersResult.value.json() : null;
+      const kalamPayload = kalamsResult.status === 'fulfilled' ? await kalamsResult.value.json() : null;
+      const draftReleasePayload =
+        draftReleasesResult.status === 'fulfilled' && draftReleasesResult.value.ok
+          ? await draftReleasesResult.value.json()
+          : [];
+
+      const writers = firstArray(
+        writerPayload?.data?.writers,
+        writerPayload?.writers,
+        writerPayload?.data,
+        safeReadArray('sufipulse_writer_profiles')
+      );
+
+      const vocalists = firstArray(
+        vocalistPayload?.data?.vocalists,
+        vocalistPayload?.vocalists,
+        vocalistPayload?.data,
+        safeReadArray('sufipulse_vocalist_profiles')
+      );
+
+      const kalams = firstArray(
+        kalamPayload?.data?.kalams,
+        kalamPayload?.kalams,
+        kalamPayload?.data,
+        safeReadArray('sufipulse_kalams')
+      );
+
+      const producers = firstArray(
+        producerPayload?.data?.producers,
+        producerPayload?.producers,
+        producerPayload?.data,
+        safeReadArray('sufipulse_producer_profiles')
+      );
+
+      const users = safeReadArray('sufipulse_users');
+      const articles = safeReadArray('sufipulse_articles');
+      const sadas = safeReadArray('sufipulse_sadas');
+      const partnerships = safeReadArray('sufipulse_partnerships');
+      const sessionRequests = safeReadArray('sufipulse_session_requests');
+      const literaryProfiles = safeReadArray('sufipulse_literary_profiles');
+      const studioProfiles = safeReadArray('sufipulse_studio_profiles');
+      const adoptions = safeReadArray('sufipulse_song_adoptions');
+      const accessCodeRequests = safeReadArray('sufipulse_studio_access_requests');
+      const contactMessages = safeReadArray('sufipulse_contact_messages');
+
+      const pendingAdoptions = adoptions.filter((adoption) => {
+        const status = String(adoption?.adoption_status || '').toLowerCase();
+        return status === 'pending_review' || status === 'scheduled' || status === 'live';
+      }).length;
+
+      setStats({
+        totalUsers: users.length,
+        writerApplications: pendingCount(writers, 'profile_status'),
+        vocalistApplications: pendingCount(vocalists, 'status'),
+        producerApplications: pendingCount(producers, 'profile_status'),
+        literaryApplications: pendingCount(literaryProfiles, 'profile_status'),
+        studioApplications: pendingCount(studioProfiles, 'profile_status'),
+        pendingKalams: pendingCount(kalams, 'status'),
+        pendingSadas: pendingCount(sadas, 'status'),
+        pendingArticles: pendingCount(articles, 'status'),
+        pendingPartnerships: pendingCount(partnerships, 'status'),
+        pendingSessionRequests: pendingCount(sessionRequests, 'status'),
+        pendingAdoptions,
+        draftReleases: Array.isArray(draftReleasePayload) ? draftReleasePayload.length : 0,
+        pendingAccessCodeRequests: accessCodeRequests.filter(r => String(r?.status || '').toLowerCase() === 'pending').length,
+        pendingContactMessages: contactMessages.filter(m => String(m?.status || 'unread').toLowerCase() === 'unread').length,
+      });
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       router.push("/login");
     } else if (!user.role.includes("admin")) {
       alert("Only Admin can access this page")
       router.push("/");
+    } else {
+      loadStats();
     }
   }, [user]);
 
@@ -109,12 +258,52 @@ export default function AdminDashboard() {
       alert: stats.vocalistApplications > 0,
     },
     {
+      label: 'Producer Applications',
+      value: stats.producerApplications,
+      meta: 'Pending review',
+      icon: Music,
+      link: '/admin/applications/producers',
+      alert: stats.producerApplications > 0,
+    },
+    {
+      label: 'Literary Profiles',
+      value: stats.literaryApplications,
+      meta: 'Pending review',
+      icon: BookOpen,
+      link: '/admin/applications/literary',
+      alert: stats.literaryApplications > 0,
+    },
+    {
+      label: 'Studio Profiles',
+      value: stats.studioApplications,
+      meta: 'Pending review',
+      icon: Calendar,
+      link: '/admin/applications/studio',
+      alert: stats.studioApplications > 0,
+    },
+    {
+      label: 'Access Code Requests',
+      value: stats.pendingAccessCodeRequests,
+      meta: 'Pending issuance',
+      icon: Activity,
+      link: '/admin/studio-access-codes',
+      alert: stats.pendingAccessCodeRequests > 0,
+    },
+    {
       label: 'Pending Kalams',
       value: stats.pendingKalams,
       meta: 'Awaiting approval',
       icon: Music,
       link: '/admin/kalams',
       alert: stats.pendingKalams > 0,
+    },
+    {
+      label: 'Pending Sadas',
+      value: stats.pendingSadas,
+      meta: 'Awaiting approval',
+      icon: Mic,
+      link: '/admin/sadas',
+      alert: stats.pendingSadas > 0,
     },
     {
       label: 'Pending Articles',
@@ -140,6 +329,30 @@ export default function AdminDashboard() {
       link: '/admin/session-requests',
       alert: stats.pendingSessionRequests > 0,
     },
+    {
+      label: 'Song Adoptions',
+      value: stats.pendingAdoptions,
+      meta: 'Need moderation',
+      icon: Handshake,
+      link: '/admin/song-adoptions',
+      alert: stats.pendingAdoptions > 0,
+    },
+    {
+      label: 'Draft Releases',
+      value: stats.draftReleases,
+      meta: 'CMS pipeline',
+      icon: FileText,
+      link: '/admin/cms-releases',
+      alert: stats.draftReleases > 0,
+    },
+    {
+      label: 'Contact Messages',
+      value: stats.pendingContactMessages,
+      meta: 'Unread messages',
+      icon: Mail,
+      link: '/admin/contact-messages',
+      alert: stats.pendingContactMessages > 0,
+    },
   ];
 
   if (loading) {
@@ -152,9 +365,85 @@ export default function AdminDashboard() {
     );
   }
 
-  const totalPendingItems = stats.writerApplications + stats.vocalistApplications +
-    stats.pendingKalams + stats.pendingArticles +
-    stats.pendingPartnerships + stats.pendingSessionRequests;
+  const totalPendingItems = stats.writerApplications +
+    stats.vocalistApplications +
+    stats.producerApplications +
+    stats.literaryApplications +
+    stats.studioApplications +
+    stats.pendingAccessCodeRequests +
+    stats.pendingKalams +
+    stats.pendingSadas +
+    stats.pendingArticles +
+    stats.pendingPartnerships +
+    stats.pendingSessionRequests +
+    stats.pendingAdoptions +
+    stats.draftReleases +
+    stats.pendingContactMessages;
+
+  const stageCards = [
+    {
+      stage: 'Stage 1',
+      title: 'Onboarding & Verification',
+      description: 'Verify stakeholders before they enter production workflows.',
+      pending:
+        stats.writerApplications +
+        stats.vocalistApplications +
+        stats.producerApplications +
+        stats.literaryApplications +
+        stats.studioApplications +
+        stats.pendingAccessCodeRequests,
+      icon: Users,
+      links: [
+        { label: 'Writers', href: '/admin/applications/writers' },
+        { label: 'Vocalists', href: '/admin/applications/vocalists' },
+        { label: 'Producers', href: '/admin/applications/producers' },
+        { label: 'Literary', href: '/admin/applications/literary' },
+        { label: 'Studios', href: '/admin/applications/studio' },
+        { label: 'Access Codes', href: '/admin/studio-access-codes' },
+      ],
+    },
+    {
+      stage: 'Stage 2',
+      title: 'Content & Assignment',
+      description: 'Review kalams, articles, and allocate contributors to active works.',
+      pending: stats.pendingKalams + stats.pendingSadas + stats.pendingArticles,
+      icon: Activity,
+      links: [
+        { label: 'Kalams', href: '/admin/kalams' },
+        { label: 'Sadas', href: '/admin/sadas' },
+        { label: 'Articles', href: '/admin/articles' },
+        { label: 'Assignments', href: '/admin/performance-assignments' },
+      ],
+    },
+    {
+      stage: 'Stage 3',
+      title: 'Production & Release',
+      description: 'Drive release records through CMS workflow to publication.',
+      pending: stats.draftReleases + stats.pendingSessionRequests,
+      icon: Globe,
+      links: [
+        { label: 'Production', href: '/admin/production-workflow' },
+        { label: 'Session Requests', href: '/admin/session-requests' },
+        { label: 'Studio Sessions', href: '/admin/studio-sessions' },
+        { label: 'Release Workflow', href: '/admin/release-workflow' },
+        { label: 'CMS Releases', href: '/admin/cms-releases' },
+      ],
+    },
+    {
+      stage: 'Stage 4',
+      title: 'Outreach, Adoption & Finance',
+      description: 'Coordinate engagement channels and close financial obligations.',
+      pending:
+        stats.pendingPartnerships +
+        stats.pendingAdoptions,
+      icon: DollarSign,
+      links: [
+        { label: 'Adoptions', href: '/admin/song-adoptions' },
+        { label: 'Partnerships', href: '/admin/partnerships' },
+        { label: 'Royalties', href: '/admin/royalties' },
+      ],
+    },
+  ];
 
   return (
     <DashboardLayout>
@@ -213,6 +502,43 @@ export default function AdminDashboard() {
 
       <div className="mt-12">
         <h2 className="text-lg font-bold text-[var(--dash-text-primary)] mb-6">
+          Engagement Workflow Sequence
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {stageCards.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.stage} className="dashboard-card">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-[var(--dash-text-muted)]">{item.stage}</p>
+                    <h3 className="font-semibold text-[var(--dash-text-primary)] mt-1">{item.title}</h3>
+                  </div>
+                  <Icon className="w-5 h-5 text-[var(--dash-accent)]" />
+                </div>
+
+                <p className="text-sm text-[var(--dash-text-secondary)] mb-4">{item.description}</p>
+
+                <p className="text-sm mb-4">
+                  <span className="font-semibold text-[var(--dash-text-primary)]">Pending:</span>{' '}
+                  <span className="text-[var(--dash-status-pending)] font-semibold">{item.pending}</span>
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {item.links.map((link) => (
+                    <Link key={link.href} href={link.href} className="dashboard-btn-secondary text-xs">
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-lg font-bold text-[var(--dash-text-primary)] mb-6">
           Administrative Actions
         </h2>
 
@@ -231,6 +557,9 @@ export default function AdminDashboard() {
               <Link href="/admin/applications/vocalists" className="dashboard-btn-secondary text-sm">
                 Review Vocalists
               </Link>
+              <Link href="/admin/applications/producers" className="dashboard-btn-secondary text-sm">
+                Review Producers
+              </Link>
             </div>
           </div>
 
@@ -245,8 +574,8 @@ export default function AdminDashboard() {
               <Link href="/admin/kalams" className="dashboard-btn-secondary text-sm">
                 Review Kalams
               </Link>
-              <Link href="/admin/articles" className="dashboard-btn-secondary text-sm">
-                Review Articles
+              <Link href="/admin/cms-releases" className="dashboard-btn-secondary text-sm">
+                Review Releases
               </Link>
             </div>
           </div>
@@ -256,10 +585,10 @@ export default function AdminDashboard() {
               User Management
             </h3>
             <p className="text-sm text-[var(--dash-text-secondary)] mb-4">
-              Manage user accounts and access permissions
+              Handle admin setup and user access policies in standalone mode
             </p>
-            <Link href="/admin/users" className="dashboard-btn-primary text-sm inline-block">
-              Manage Users
+            <Link href="/admin/setup" className="dashboard-btn-primary text-sm inline-block">
+              Open Admin Setup
             </Link>
           </div>
 
@@ -277,8 +606,96 @@ export default function AdminDashboard() {
               <Link href="/admin/session-requests" className="dashboard-btn-secondary text-sm">
                 Sessions
               </Link>
+              <Link href="/admin/song-adoptions" className="dashboard-btn-secondary text-sm">
+                Adoptions
+              </Link>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Stakeholder Dashboard Access ─────────────────────────────────── */}
+      <div className="mt-12">
+        <h2 className="text-lg font-bold text-[var(--dash-text-primary)] mb-2">
+          Stakeholder Dashboards
+        </h2>
+        <p className="text-sm text-[var(--dash-text-secondary)] mb-6">
+          View contributor portals as admin — or use the demo credentials below to log in as each role.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              label: 'Writer Portal',
+              role: 'Ahl-e-Qalam',
+              dashboard: '/user/writer/dashboard',
+              profile: '/user/writer/profile',
+              email: 'writer@sufipulse.local',
+              password: 'writer123',
+              color: '#f59e0b',
+            },
+            {
+              label: 'Vocalist Portal',
+              role: 'Ahl-e-Sada',
+              dashboard: '/user/vocalist/dashboard',
+              profile: '/user/vocalist/profile',
+              email: 'vocalist@sufipulse.local',
+              password: 'vocalist123',
+              color: '#6366f1',
+            },
+            {
+              label: 'Producer Portal',
+              role: 'Ahl-e-Naghma',
+              dashboard: '/user/producer/dashboard',
+              profile: '/user/producer/profile',
+              email: 'producer@sufipulse.local',
+              password: 'producer123',
+              color: '#10b981',
+            },
+            {
+              label: 'Literary Portal',
+              role: 'Ahl-e-Tahreer',
+              dashboard: '/user/literary-contributor/dashboard',
+              profile: '/user/literary-contributor/profile',
+              email: 'literary@sufipulse.local',
+              password: 'literary123',
+              color: '#8b5cf6',
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="dashboard-card flex flex-col gap-4"
+              style={{ borderLeft: `3px solid ${item.color}` }}
+            >
+              <div>
+                <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: item.color }}>
+                  {item.role}
+                </p>
+                <h3 className="font-semibold text-[var(--dash-text-primary)]">{item.label}</h3>
+              </div>
+
+              <div className="flex gap-2">
+                <Link
+                  href={item.dashboard}
+                  className="flex-1 text-center dashboard-btn-primary text-xs py-1.5"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href={item.profile}
+                  className="flex-1 text-center dashboard-btn-secondary text-xs py-1.5"
+                >
+                  Profile
+                </Link>
+              </div>
+
+              <div className="bg-[#0d0d0d] rounded p-3 space-y-1 border border-[#1a1a1a]">
+                <p className="text-[10px] text-[var(--dash-text-muted)] uppercase tracking-wide">Demo Credentials</p>
+                <p className="text-xs font-mono text-[var(--dash-text-secondary)] truncate">{item.email}</p>
+                <p className="text-xs font-mono text-[var(--dash-text-muted)]">{item.password}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </DashboardLayout>

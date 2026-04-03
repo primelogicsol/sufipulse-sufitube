@@ -2,19 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Layout } from '../../components/layout/Layout';
-import { Lock, Eye, EyeOff, Loader } from 'lucide-react';
+import { Lock, Eye, EyeOff, Loader, ChevronDown, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as api from "../../api/auth";
 import { ENV } from '../../config/env';
 
 import Link from 'next/link';
+
+const DEMO_ACCOUNTS = [
+    { label: 'Admin', email: 'fk.envcal@gmail.com', password: 'fayaz123', color: '#ef4444' },
+    { label: 'Ahl-e-Qalam (Writer)', email: 'writer@sufipulse.local', password: 'demo123', color: '#10b981' },
+    { label: 'Ahl-e-Sada (Vocalist)', email: 'vocalist@sufipulse.local', password: 'demo123', color: '#60a5fa' },
+    { label: 'Ahl-e-Naghma (Producer)', email: 'producer@sufipulse.local', password: 'demo123', color: '#a78bfa' },
+    { label: 'Ahl-e-Tahreer (Literary)', email: 'literary@sufipulse.local', password: 'demo123', color: '#f59e0b' },
+];
+
 const Login = () => {
-    const [form, setForm] = useState(
-        {
-            email: "",
-            password: ""
-        }
-    )
+    const [form, setForm] = useState({ email: "", password: "" });
+    const [demoOpen, setDemoOpen] = useState(false);
     const BASE_URL = ENV.API_URL
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
@@ -25,10 +30,20 @@ const Login = () => {
     // Role - aware redirect after successful login
     useEffect(() => {
         if (user) {
-            router.push('/');
-            if (user.role === "admin") {
+            if (user.role === 'admin') {
                 router.push('/admin');
+            } else if (user.role === 'writer') {
+                router.push('/user/writer/dashboard');
+            } else if (user.role === 'vocalist') {
+                router.push('/user/vocalist/dashboard');
+            } else if (user.role === 'producer') {
+                router.push('/user/producer/dashboard');
+            } else if (user.role === 'literary') {
+                router.push('/user/literary-contributor/dashboard');
+            } else if (user.role === 'studio') {
+                router.push('/user/studio-engineer/dashboard');
             }
+            // role === 'user' or unknown: stay on login so user can re-authenticate
         }
     }, [user]);
     const handleChange = (e: any) => {
@@ -39,20 +54,14 @@ const Login = () => {
         }))
         console.log(form)
     }
-    const handleLogin = async (e: any) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
         try {
-            const res = await login(form.email, form.password);
-
+            await login(form.email, form.password);
         } catch (err: any) {
-
-            const message =
-                err?.response?.data?.error ||
-                err?.response?.data?.message ||
-                "Invalid email or password";
-            alert(message);
-
+            setError(err?.message || 'Invalid email or password. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -89,7 +98,54 @@ const Login = () => {
                             </div>
                         )}
 
-                        <form className="space-y-6">
+                        {/* Demo Accounts Quick Fill */}
+                        <div className="mb-6">
+                            <button
+                                type="button"
+                                onClick={() => setDemoOpen(o => !o)}
+                                className="cursor-pointer w-full flex items-center justify-between px-4 py-2.5 bg-amber-400/10 border border-amber-400/30 rounded-lg text-amber-400 text-sm font-medium hover:bg-amber-400/15 transition-colors"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <Zap className="w-4 h-4" />
+                                    Demo Accounts — Quick Fill
+                                </span>
+                                <ChevronDown className={`w-4 h-4 transition-transform ${demoOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {demoOpen && (
+                                <div className="mt-2 space-y-1.5 p-3 bg-[#0f1419]/80 border border-[#2a3442] rounded-lg">
+                                    {DEMO_ACCOUNTS.map(acc => (
+                                        <button
+                                            key={acc.email}
+                                            type="button"
+                                            onClick={() => { setForm({ email: acc.email, password: acc.password }); setDemoOpen(false); }}
+                                            className="cursor-pointer w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/5 transition-colors text-left"
+                                        >
+                                            <div>
+                                                <p className="text-sm font-semibold" style={{ color: acc.color }}>{acc.label}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">{acc.email}</p>
+                                            </div>
+                                            <span className="text-xs text-gray-600 font-mono">{acc.password}</span>
+                                        </button>
+                                    ))}
+                                    <div className="pt-2 border-t border-[#2a3442]">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (confirm('Clear all local app data and start fresh?')) {
+                                                    localStorage.clear();
+                                                    window.location.reload();
+                                                }
+                                            }}
+                                            className="cursor-pointer w-full text-center text-xs text-red-400/70 hover:text-red-400 py-1.5 transition-colors"
+                                        >
+                                            Reset App Data (fix stuck login)
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <form className="space-y-6" onSubmit={handleLogin}>
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                                     Email Address
@@ -142,12 +198,12 @@ const Login = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                onClick={(e) => handleLogin(e)}
                                 className="w-full cursor-pointer flex items-center justify-center bg-linear-to-r from-[#D4AF37] to-[#aa8829] text-[#1a2332] py-3 rounded-md font-semibold hover:shadow-lg hover:shadow-[#D4AF37]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                             >
-                                {loading ? <Loader /> : 'Login'}
+                                {loading ? <Loader className="w-5 h-5 animate-spin" /> : 'Login'}
                             </button>
                             <button
+                                type="button"
                                 className="cursor-pointer w-full border flex items-center justify-center bg-linear-to-r border-[#D4AF37] text-[#D4AF37]! py-3 rounded-md font-semibold hover:shadow-lg hover:shadow-[#D4AF37]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                 onClick={handleGoogleLogin}
                             >

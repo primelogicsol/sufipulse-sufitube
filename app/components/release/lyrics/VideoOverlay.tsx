@@ -8,6 +8,28 @@ interface VideoOverlayProps {
 }
 
 export function VideoOverlay({ track, currentTime, captionsEnabled }: VideoOverlayProps) {
+  const assColorToCss = (value?: string, fallback?: string) => {
+    const source = String(value || '').trim();
+    if (!source) return fallback;
+    if (source.startsWith('#')) return source;
+
+    const match = source.match(/&?H([0-9A-Fa-f]{8})/);
+    if (!match) return fallback;
+
+    const hex = match[1].toUpperCase();
+    const bb = hex.slice(2, 4);
+    const gg = hex.slice(4, 6);
+    const rr = hex.slice(6, 8);
+    return `#${rr}${gg}${bb}`;
+  };
+
+  const resolveAnchor = (alignment?: number) => {
+    const safe = Number.isFinite(alignment as number) ? Number(alignment) : 2;
+    if ([1, 4, 7].includes(safe)) return { x: 'left', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
+    if ([3, 6, 9].includes(safe)) return { x: 'right', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
+    return { x: 'center', y: safe >= 7 ? 'top' : safe >= 4 ? 'middle' : 'bottom' } as const;
+  };
+
   const activeCue = useMemo(() => {
     if (!captionsEnabled) return null;
     return track.cues.find(c => currentTime >= c.start && currentTime < c.end);
@@ -15,13 +37,46 @@ export function VideoOverlay({ track, currentTime, captionsEnabled }: VideoOverl
 
   if (!captionsEnabled || !activeCue) return null;
 
+  const anchor = resolveAnchor(activeCue.alignment);
+  const hasCustomPosition = Number.isFinite(activeCue.positionX) && Number.isFinite(activeCue.positionY);
+
+  const overlayPlacementClass = hasCustomPosition
+    ? 'absolute inset-0 pointer-events-none z-10 transition-all duration-300'
+    : `absolute ${anchor.y === 'top' ? 'top-8 sm:top-12' : anchor.y === 'middle' ? 'top-1/2 -translate-y-1/2' : 'bottom-16 sm:bottom-20'} left-0 right-0 w-full px-4 sm:px-12 flex pointer-events-none z-10 transition-all duration-300 ${anchor.x === 'left' ? 'justify-start' : anchor.x === 'right' ? 'justify-end' : 'justify-center'}`;
+
+  const containerStyle: React.CSSProperties = hasCustomPosition
+    ? {
+        position: 'absolute',
+        left: `${Math.max(0, Math.min(100, Number(activeCue.positionX)))}%`,
+        top: `${Math.max(0, Math.min(100, Number(activeCue.positionY)))}%`,
+        transform: `translate(${anchor.x === 'left' ? '0%' : anchor.x === 'right' ? '-100%' : '-50%'}, ${anchor.y === 'top' ? '0%' : anchor.y === 'bottom' ? '-100%' : '-50%'})`,
+      }
+    : {};
+
+  const captionBoxStyle: React.CSSProperties = {
+    maxWidth: `${Math.max(40, Math.min(100, Number(activeCue.maxWidthPercent || 82)))}%`,
+    backgroundColor: assColorToCss(activeCue.backColor, 'rgba(23, 23, 23, 0.5)'),
+    borderColor: assColorToCss(activeCue.outlineColor, 'rgba(64, 64, 64, 0.5)'),
+    boxShadow: `0 8px 30px rgba(0,0,0,${activeCue.shadow ? 0.42 : 0.3})`,
+  };
+
+  const textStyle: React.CSSProperties = {
+    color: assColorToCss(activeCue.primaryColor, '#FFFFFF'),
+    fontFamily: activeCue.fontFamily || undefined,
+    fontSize: activeCue.fontSize ? `${Math.max(12, Math.min(84, activeCue.fontSize))}px` : undefined,
+    fontWeight: activeCue.bold ? 700 : 500,
+    fontStyle: activeCue.italic ? 'italic' : 'normal',
+    textShadow: `0 0 ${Math.max(1, Math.min(6, Number(activeCue.outline || 2)))}px ${assColorToCss(activeCue.outlineColor, '#222222')}`,
+  };
+
   return (
-    <div className="absolute bottom-16 sm:bottom-20 left-0 right-0 w-full px-4 sm:px-12 flex justify-center pointer-events-none z-10 transition-all duration-300">
+    <div className={overlayPlacementClass} style={containerStyle}>
       <div
-        className={`bg-neutral-900/50 backdrop-blur-md rounded-xl px-6 py-3 sm:px-8 sm:py-4 border border-neutral-700/50 shadow-2xl text-center max-w-3xl drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]`}
+        className="backdrop-blur-md rounded-xl px-6 py-3 sm:px-8 sm:py-4 border text-center w-full"
+        style={captionBoxStyle}
         dir={track.direction}
       >
-        <p className={`text-white text-lg sm:text-2xl font-medium tracking-wide leading-snug drop-shadow-md ${track.direction === 'rtl' ? 'font-urdu' : ''}`}>
+        <p className={`tracking-wide leading-snug ${track.direction === 'rtl' ? 'font-urdu' : ''}`} style={textStyle}>
           {activeCue.text}
         </p>
       </div>

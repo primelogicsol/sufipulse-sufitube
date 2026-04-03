@@ -1,19 +1,27 @@
 "use client"
 import { useParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Badge } from '../../../components/primitives/Badge';
-import { Music, Lock, Calendar, Hash, Eye, ThumbsUp, MessageCircle, Clock, Share2, Copy, Facebook, CreditCard as Edit, FileText, Bubbles as Subtitles, Play, ChevronDown, X, Twitter, MessageSquare, Check, Mic, Users, CirclePlay as PlayCircle, Video, Shield, FileSliders as Sliders, Book, Award, Maximize, Minimize } from 'lucide-react';
+import { Music, Lock, Calendar, Hash, Eye, ThumbsUp, MessageCircle, Clock, Share2, Copy, Facebook, CreditCard as Edit, FileText, Bubbles as Subtitles, Play, Pause, ChevronDown, X, Twitter, MessageSquare, Check, Mic, Users, CirclePlay as PlayCircle, Video, Shield, FileSliders as Sliders, Book, Award, Maximize, Minimize, Settings2 } from 'lucide-react';
 // import { useRelease } from '../../../hooks/useRelease';
 // import { formatDuration } from '../../../services/youtubeSync';
 import Link from 'next/link';
 import YouTube from 'react-youtube';
-import { LyricsTab } from '../../../components/release/lyrics/LyricsTab';
 import { VideoOverlay } from '../../../components/release/lyrics/VideoOverlay';
-import { LanguageKey, dummyTracks } from '../../../components/release/lyrics/lyricsData';
+import { LanguageKey, LyricsTrack, dummyTracks } from '../../../components/release/lyrics/lyricsData';
+import { RecentAdopters } from '../../../components/release/adopt/RecentAdopters';
 import { AdoptTab } from '../../../components/release/adopt/AdoptTab';
-import { supabase } from '../../../lib/supabase-client';
+import { getYouTubeVideoId, buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
+
+let supabase: any = null;
+try {
+    const { supabase: sb } = require('../../../lib/supabase-client');
+    supabase = sb;
+} catch (error) {
+    console.warn('Supabase not configured');
+}
 
 const LANGUAGE_OPTIONS = [
     { key: 'roman_urdu', label: 'Roman Urdu' },
@@ -35,6 +43,155 @@ const LANGUAGE_OPTIONS = [
     { key: 'english', label: 'English' },
 ] as const;
 
+const RTL_LANG_KEYS = new Set(['urdu', 'ar', 'arabic', 'fa', 'persian']);
+
+const parseTimestampToSeconds = (timestamp?: string): number => {
+    if (!timestamp) return 0;
+
+    const normalized = timestamp.trim().replace(',', '.');
+    const parts = normalized.split(':').map((part) => Number(part));
+
+    if (parts.some((n) => Number.isNaN(n))) return 0;
+
+    if (parts.length === 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+    if (parts.length === 2) {
+        return parts[0] * 60 + parts[1];
+    }
+    return parts[0] || 0;
+};
+
+const languageCandidates = (selected: string): string[] => {
+    const aliases: Record<string, string[]> = {
+        roman_urdu: ['roman_urdu', 'roman-urdu', 'roman', 'ur_roman', 'ur'],
+        urdu: ['urdu', 'ur'],
+        english: ['english', 'en'],
+        persian: ['persian', 'fa', 'farsi'],
+        arabic: ['arabic', 'ar'],
+    };
+
+    const mapped = aliases[selected] || [selected];
+    return Array.from(new Set(mapped.map((value) => value.toLowerCase())));
+};
+
+const buildCmsCaptionTrack = (release: any, selected: string): LyricsTrack | null => {
+    const subtitleCues = Array.isArray(release?.subtitle_cues) ? release.subtitle_cues : [];
+    const subtitleTranslations = release?.subtitle_translations || {};
+    const subtitleCueMetadata = release?.subtitle_cue_metadata || release?.subtitleCueMetadata || {};
+    const subtitleStylePacks = release?.subtitle_style_packs || release?.subtitleStylePacks || {};
+    const languageStyleOverrides = release?.language_style_overrides || release?.languageStyleOverrides || {};
+
+    const candidates = languageCandidates(selected);
+    const matchedLanguageKey = Object.keys(subtitleTranslations || {}).find((lang) =>
+        candidates.includes(String(lang).toLowerCase())
+    );
+
+    const translationMap = matchedLanguageKey ? subtitleTranslations?.[matchedLanguageKey] : null;
+    const languageOverride =
+        languageStyleOverrides?.[matchedLanguageKey || selected] ||
+        languageStyleOverrides?.[selected] ||
+        {};
+    const defaultStyleName = languageOverride?.stylePack;
+
+    if (subtitleCues.length > 0 && translationMap && typeof translationMap === 'object') {
+        const ordered = subtitleCues
+            .filter((cue: any) => cue?.active !== false)
+            .slice()
+            .sort((a: any, b: any) => (a.cueNumber || 0) - (b.cueNumber || 0));
+
+        const cues = ordered
+            .map((cue: any, idx: number) => {
+                const text = String(translationMap[cue.id] || '').trim();
+                if (!text) return null;
+                const cueMeta = subtitleCueMetadata?.[cue.id] || {};
+                const styleName = cueMeta?.styleName || defaultStyleName;
+                const stylePack = (styleName && subtitleStylePacks?.[styleName]) || {};
+                return {
+                    id: cue.id || `cms-cue-${idx + 1}`,
+                    start: parseTimestampToSeconds(cue.startTime),
+                    end: parseTimestampToSeconds(cue.endTime),
+                    stanza: idx + 1,
+                    line: 1,
+                    text,
+                    styleName,
+                    alignment: cueMeta?.alignment ?? stylePack?.alignment,
+                    positionX: cueMeta?.positionX,
+                    positionY: cueMeta?.positionY,
+                    fontFamily: stylePack?.fontFamily,
+                    fontSize: stylePack?.fontSize,
+                    primaryColor: stylePack?.primaryColor,
+                    outlineColor: stylePack?.outlineColor,
+                    backColor: stylePack?.backColor,
+                    bold: stylePack?.bold,
+                    italic: stylePack?.italic,
+                    outline: stylePack?.outline,
+                    shadow: stylePack?.shadow,
+                    maxWidthPercent: stylePack?.maxWidthPercent,
+                };
+            })
+            .filter(Boolean) as Array<{ id: string; start: number; end: number; stanza: number; line: number; text: string }>;
+
+        if (cues.length > 0) {
+            return {
+                languageKey: (LANGUAGE_OPTIONS.some((option) => option.key === selected) ? selected : 'english') as LanguageKey,
+                label: selected.replace('_', ' '),
+                direction: RTL_LANG_KEYS.has((matchedLanguageKey || selected).toLowerCase()) ? 'rtl' : 'ltr',
+                versionType: 'translation',
+                verified: true,
+                fullLyrics: cues.map((cue, idx) => ({ stanza: idx + 1, lines: [cue.text] })),
+                cues,
+            };
+        }
+    }
+
+    const cmsLyrics = release?.lyrics || {};
+    const matchedLyricsKey = Object.keys(cmsLyrics).find((lang) =>
+        candidates.includes(String(lang).toLowerCase())
+    );
+
+    const lyricRows = matchedLyricsKey ? cmsLyrics[matchedLyricsKey] : null;
+    if (Array.isArray(lyricRows) && lyricRows.length > 0) {
+        const cues = lyricRows
+            .map((row: any, idx: number) => {
+                const text = String(
+                    row?.text ||
+                    row?.translation ||
+                    row?.transliteration ||
+                    row?.urdu ||
+                    ''
+                ).trim();
+                if (!text) return null;
+                const start = parseTimestampToSeconds(row?.timestamp);
+                const nextStart = parseTimestampToSeconds(lyricRows[idx + 1]?.timestamp);
+                const end = nextStart > start ? nextStart : start + 4;
+                return {
+                    id: `cms-lyric-${idx + 1}`,
+                    start,
+                    end,
+                    stanza: idx + 1,
+                    line: 1,
+                    text,
+                };
+            })
+            .filter(Boolean) as Array<{ id: string; start: number; end: number; stanza: number; line: number; text: string }>;
+
+        if (cues.length > 0) {
+            return {
+                languageKey: (LANGUAGE_OPTIONS.some((option) => option.key === selected) ? selected : 'english') as LanguageKey,
+                label: selected.replace('_', ' '),
+                direction: RTL_LANG_KEYS.has((matchedLyricsKey || selected).toLowerCase()) ? 'rtl' : 'ltr',
+                versionType: 'translation',
+                verified: true,
+                fullLyrics: cues.map((cue, idx) => ({ stanza: idx + 1, lines: [cue.text] })),
+                cues,
+            };
+        }
+    }
+
+    return null;
+};
+
 function Release() {
     const params = useParams();
     const slug = params?.slug as string;
@@ -43,9 +200,11 @@ function Release() {
     const [showCopyModal, setShowCopyModal] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
-    const [selectedSubtitleLanguage, setSelectedSubtitleLanguage] = useState<string>('');
+    const [selectedSubtitleLanguage, setSelectedSubtitleLanguage] = useState<string>('roman_urdu');
     const [selectedLyricsLanguage, setSelectedLyricsLanguage] = useState<LanguageKey>('roman_urdu');
+    const [selectedCaptionLanguage, setSelectedCaptionLanguage] = useState<string>('roman_urdu');
     const [videoLoaded, setVideoLoaded] = useState(false);
+    const [videoReady, setVideoReady] = useState(false);
     const [release, setRelease] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -54,7 +213,26 @@ function Release() {
     const [playerTarget, setPlayerTarget] = useState<any>(null);
     const [captionsEnabled, setCaptionsEnabled] = useState(true);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showPlayerSettings, setShowPlayerSettings] = useState(false);
+    const [playbackRate, setPlaybackRate] = useState<number>(1);
+    const [playbackQuality, setPlaybackQuality] = useState<string>('auto');
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [videoDuration, setVideoDuration] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const resolvedVideoId = release?.youtube_video_id || getYouTubeVideoId(release?.youtube_url) || slug;
+    const thumbnailCandidates = buildYouTubeThumbnailCandidates(resolvedVideoId, [
+        release?.thumbnail_url,
+        release?.thumbnailUrl,
+        release?.artwork_url,
+    ]);
+
+    const updateActiveLanguage = (language: string) => {
+        setSelectedSubtitleLanguage(language);
+        if (LANGUAGE_OPTIONS.some((option) => option.key === language)) {
+            setSelectedLyricsLanguage(language as LanguageKey);
+        }
+    };
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -76,6 +254,25 @@ function Release() {
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
+    useEffect(() => {
+        if (!videoLoaded) {
+            setShowPlayerSettings(false);
+        }
+    }, [videoLoaded]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (!showPlayerSettings) return;
+            if (!containerRef.current) return;
+            if (!containerRef.current.contains(event.target as Node)) {
+                setShowPlayerSettings(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showPlayerSettings]);
+
     // Sync time interval
     useEffect(() => {
         if (!playerTarget) return;
@@ -94,20 +291,111 @@ function Release() {
         }
     };
 
+    const setPlayerRate = (rate: number) => {
+        try {
+            playerTarget?.setPlaybackRate?.(rate);
+            setPlaybackRate(rate);
+        } catch (err) {
+            console.debug('Unable to set playback rate', err);
+        }
+    };
+
+    const setPlayerQuality = (quality: string) => {
+        try {
+            if (quality !== 'auto') {
+                playerTarget?.setPlaybackQuality?.(quality);
+            }
+            setPlaybackQuality(quality);
+        } catch (err) {
+            console.debug('Unable to set playback quality', err);
+        }
+    };
+
+    const togglePlayback = () => {
+        try {
+            if (!playerTarget) return;
+            if (isPlaying) {
+                playerTarget.pauseVideo?.();
+            } else {
+                playerTarget.playVideo?.();
+            }
+        } catch (err) {
+            console.debug('Unable to toggle playback', err);
+        }
+    };
+
+    const scrubTo = (value: number) => {
+        if (!playerTarget?.seekTo) return;
+        playerTarget.seekTo(value, true);
+        setCurrentTime(value);
+    };
+
     useEffect(() => {
         if (!slug) return;
 
         const fetchVideoDetails = async () => {
             try {
-                // First, try to fetch from database
-                const { data: dbRelease, error: dbError } = await supabase
-                    .from('releases')
-                    .select('*')
-                    .eq('youtube_video_id', slug)
-                    .eq('is_published', true)
-                    .single();
+                // Try to load from CMS first
+                const res = await fetch(`/api/releases?youtubeId=${slug}`);
+                if (res.ok) {
+                    const cmsRelease = await res.json();
+                    if (cmsRelease) {
+                        console.log('Loaded release from CMS');
+                        setRelease({
+                            id: cmsRelease.id,
+                            release_title: cmsRelease.title,
+                            release_date: cmsRelease.releaseDate,
+                            description: cmsRelease.description,
+                            source: "cms",
+                            duration_seconds: cmsRelease.durationSeconds,
+                            views: cmsRelease.viewCount || 0,
+                            likes: cmsRelease.likeCount || 0,
+                            youtube_video_id: cmsRelease.youtubeId,
+                            slug: cmsRelease.slug,
+                            thumbnail_url: cmsRelease.thumbnailUrl,
+                            subtitles_available: false,
+                            subtitle_languages: [],
+                            lyrics: cmsRelease.lyrics || {},
+                            subtitle_cues: cmsRelease.subtitleCues || [],
+                            subtitle_translations: cmsRelease.subtitleTranslations || {},
+                            subtitle_cue_metadata: cmsRelease.subtitleCueMetadata || {},
+                            subtitle_style_packs: cmsRelease.subtitleStylePacks || {},
+                            language_style_overrides: cmsRelease.languageStyleOverrides || {},
+                            lyrics_structure: cmsRelease.lyricsStructure || {},
+                            enable_credits: cmsRelease.enableCredits !== false,
+                            enable_commentary: cmsRelease.enableCommentary !== false,
+                            enable_sponsors: !!cmsRelease.enableSponsors,
+                            enable_adoption: cmsRelease.enableAdoption !== false,
+                            public_commentary: cmsRelease.publicCommentary || [],
+                            public_sponsors_intro: cmsRelease.publicSponsorsIntro || '',
+                            public_sponsors: cmsRelease.publicSponsors || [],
+                            public_credits: cmsRelease.publicCredits || {},
+                            credits: [],
+                            lead_vocalists: cmsRelease.vocalist ? [cmsRelease.vocalist] : [],
+                            chorus_vocalists: cmsRelease.chorusVocalists || cmsRelease.chorus_vocalists || [],
+                            production_credits: cmsRelease.producer ? { producer: cmsRelease.producer } : {},
+                            spotify_url: "",
+                            apple_music_url: ""
+                        });
+                        setLoading(false);
+                        return;
+                    }
+                }
 
-                if (!dbError && dbRelease) {
+                // Fallback to Supabase if configured
+                let dbRelease = null;
+                if (supabase) {
+                    const dbResult = await supabase
+                        .from('releases')
+                        .select('*')
+                        .eq('youtube_video_id', slug)
+                        .eq('is_published', true)
+                        .single();
+
+                    dbRelease = dbResult.data;
+                }
+
+                if (dbRelease) {
                     console.log('Loaded release from database');
                     setRelease({
                         id: dbRelease.id,
@@ -124,6 +412,20 @@ function Release() {
                         subtitles_available: false,
                         subtitle_languages: [],
                         lyrics: {},
+                            subtitle_cues: dbRelease.subtitle_cues || [],
+                            subtitle_translations: dbRelease.subtitle_translations || {},
+                            subtitle_cue_metadata: dbRelease.subtitle_cue_metadata || {},
+                            subtitle_style_packs: dbRelease.subtitle_style_packs || {},
+                            language_style_overrides: dbRelease.language_style_overrides || {},
+                            lyrics_structure: dbRelease.lyrics_structure || {},
+                            enable_credits: dbRelease.enable_credits !== false,
+                            enable_commentary: dbRelease.enable_commentary !== false,
+                            enable_sponsors: !!dbRelease.enable_sponsors,
+                            enable_adoption: dbRelease.enable_adoption !== false,
+                            public_commentary: dbRelease.public_commentary || [],
+                            public_sponsors_intro: dbRelease.public_sponsors_intro || '',
+                            public_sponsors: dbRelease.public_sponsors || [],
+                            public_credits: dbRelease.public_credits || {},
                         credits: [],
                         lead_vocalists: [],
                         chorus_vocalists: [],
@@ -136,29 +438,17 @@ function Release() {
                 }
 
                 // Fallback to YouTube API
-                console.log('Database record not found, fetching from YouTube API...');
-                const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || 'AIzaSyCw34bUCxl_8S5R8I-380YyFOLDqpWL-R4';
-                const videoRes = await fetch(
-                    `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${slug}&key=${YOUTUBE_API_KEY}`
-                );
-                const data = await videoRes.json();
+                console.log('Fetching from YouTube API...');
+                const { youtubeService } = await import('../../../../lib/youtube-service');
+                const videos = await youtubeService.getVideosByIds(slug);
 
-                if (!data.items || data.items.length === 0) {
+                if (!videos || videos.length === 0) {
                     setError("Video not found on SufiTube.");
                     setLoading(false);
                     return;
                 }
 
-                const v = data.items[0];
-
-                const match = v.contentDetails.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-                let h = 0, m = 0, s = 0;
-                if (match) {
-                    h = parseInt(match[1]) || 0;
-                    m = parseInt(match[2]) || 0;
-                    s = parseInt(match[3]) || 0;
-                }
-                const totalSeconds = h * 3600 + m * 60 + s;
+                const v = videos[0];
 
                 setRelease({
                     id: v.id,
@@ -166,14 +456,29 @@ function Release() {
                     release_date: v.snippet.publishedAt,
                     description: v.snippet.description,
                     source: "youtube_legacy",
-                    duration_seconds: totalSeconds,
+                    duration_seconds: youtubeService['parseDuration'](v.contentDetails.duration),
                     views: parseInt(v.statistics.viewCount || '0'),
                     likes: parseInt(v.statistics.likeCount || '0'),
                     youtube_video_id: v.id,
+                    thumbnail_url: v.snippet.thumbnails?.maxres?.url || v.snippet.thumbnails?.standard?.url || v.snippet.thumbnails?.high?.url || v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.default?.url,
                     slug: v.id,
                     subtitles_available: false,
                     subtitle_languages: [],
                     lyrics: {},
+                    subtitle_cues: [],
+                    subtitle_translations: {},
+                    subtitle_cue_metadata: {},
+                    subtitle_style_packs: {},
+                    language_style_overrides: {},
+                    lyrics_structure: {},
+                    enable_credits: true,
+                    enable_commentary: true,
+                    enable_sponsors: false,
+                    enable_adoption: true,
+                    public_commentary: [],
+                    public_sponsors_intro: '',
+                    public_sponsors: [],
+                    public_credits: {},
                     credits: [],
                     lead_vocalists: [],
                     chorus_vocalists: [],
@@ -191,6 +496,44 @@ function Release() {
 
         fetchVideoDetails();
     }, [slug]);
+
+    const captionLanguageOptions = useMemo(() => {
+        const map = new Map<string, string>();
+
+        for (const option of LANGUAGE_OPTIONS) {
+            map.set(option.key, option.label);
+        }
+
+        const cmsKeys = [
+            ...Object.keys(release?.subtitle_translations || {}),
+            ...Object.keys(release?.lyrics || {}),
+        ];
+
+        for (const key of cmsKeys) {
+            const normalized = String(key || '').trim();
+            if (!normalized) continue;
+            if (!map.has(normalized)) {
+                const label = normalized
+                    .replace(/[_-]/g, ' ')
+                    .replace(/\b\w/g, (char) => char.toUpperCase());
+                map.set(normalized, `${label} (CMS)`);
+            }
+        }
+
+        return Array.from(map.entries()).map(([key, label]) => ({ key, label }));
+    }, [release?.subtitle_translations, release?.lyrics]);
+
+    const cmsCaptionTrack = buildCmsCaptionTrack(release, selectedCaptionLanguage);
+    const fallbackTrack = dummyTracks[selectedLyricsLanguage];
+    const activeOverlayTrack = cmsCaptionTrack || fallbackTrack;
+
+    useEffect(() => {
+        if (!captionLanguageOptions.length) return;
+        if (!captionLanguageOptions.some((option) => option.key === selectedCaptionLanguage)) {
+            setSelectedCaptionLanguage(captionLanguageOptions[0].key);
+        }
+    }, [captionLanguageOptions, selectedCaptionLanguage]);
+
     if (loading) {
         return (
             <Layout>
@@ -283,6 +626,31 @@ function Release() {
     const vocalistCredits = release.credits?.filter((c: any) => c.credit_type === 'vocalist') || [];
     const producerCredits = release.credits?.filter((c: any) => c.credit_type === 'producer') || [];
     const engineerCredits = release.credits?.filter((c: any) => c.credit_type === 'engineer') || [];
+    const chorusVocalists = (release.chorus_vocalists || []) as Array<string | { name?: string }>;
+    const chorusVocalistsLabel = chorusVocalists
+        .map((entry) => (typeof entry === 'string' ? entry : (entry?.name || '')))
+        .filter(Boolean)
+        .join(', ');
+    const publicCredits = release.public_credits || {};
+    const commentaryBlocks = Array.isArray(release.public_commentary) && release.public_commentary.length > 0
+        ? release.public_commentary.filter((block: any) => block?.isPublished !== false)
+        : [
+            {
+                id: 'context',
+                title: 'Historical Context',
+                content: 'No commentary added yet.',
+            },
+            {
+                id: 'theme',
+                title: 'Thematic Interpretation',
+                content: 'No thematic interpretation added yet.',
+            },
+        ];
+    const sponsorsList = Array.isArray(release.public_sponsors)
+        ? release.public_sponsors.filter((sponsor: any) => sponsor?.isPublished !== false)
+        : [];
+    const sponsorsIntro = release.public_sponsors_intro || 'We are deeply grateful for the generous support of our sponsors who make these releases possible and contribute to the preservation of sacred arts.';
+    const lyricsStructureMap = release.lyrics_structure || release.lyricsStructure || {};
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(window.location.href);
@@ -309,8 +677,9 @@ function Release() {
     };
 
     const getAvailableLanguages = () => {
-        if (!release.lyrics) return [];
-        return Object.keys(release.lyrics).filter(key => release.lyrics![key as keyof typeof release.lyrics]);
+        const legacy = release.lyrics ? Object.keys(release.lyrics).filter((key) => release.lyrics[key]) : [];
+        const structured = Object.keys(lyricsStructureMap || {}).filter((key) => Array.isArray(lyricsStructureMap[key]));
+        return Array.from(new Set([...legacy, ...structured]));
     };
 
     return (
@@ -390,32 +759,30 @@ function Release() {
                         </div>
 
                         {/* Video Player - Hero Position */}
-                        {(release.youtube_video_id || (release.youtube_url && !release.youtube_url.includes('PLACEHOLDER'))) ? (
+                        {(resolvedVideoId || (release.youtube_url && !release.youtube_url.includes('PLACEHOLDER'))) ? (
                             <div className="mb-8">
-                                <div ref={containerRef} className={`bg-black overflow-hidden relative group ${isFullscreen ? 'fixed inset-0 z-[100] w-screen h-screen rounded-none' : 'aspect-video rounded-lg shadow-2xl border border-neutral-800'}`}>
+                                <div
+                                    ref={containerRef}
+                                    onContextMenu={(e) => e.preventDefault()}
+                                    className={`bg-black overflow-hidden relative group ${isFullscreen ? 'fixed inset-0 z-[100] w-screen h-screen rounded-none' : 'aspect-video rounded-lg shadow-2xl border border-neutral-800'}`}
+                                >
                                     {!videoLoaded && (
                                         <>
                                             <img
-                                                src={
-                                                    release.thumbnail_url ||
-                                                    `https://img.youtube.com/vi/${release.youtube_video_id || release.youtube_url?.split('v=')[1]?.split('&')[0]}/maxresdefault.jpg`
-                                                }
+                                                src={thumbnailCandidates[0]}
                                                 alt={release.release_title}
                                                 className="w-full h-full object-cover"
+                                                data-thumb-index="0"
                                                 onError={(e) => {
-                                                    const videoId = release.youtube_video_id || release.youtube_url?.split('v=')[1]?.split('&')[0];
-                                                    if (e.currentTarget.src.includes('maxresdefault')) {
-                                                        e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                                                    } else if (e.currentTarget.src.includes('hqdefault')) {
-                                                        e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-                                                    } else if (!e.currentTarget.src.includes('default.jpg')) {
-                                                        e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/default.jpg`;
-                                                    }
+                                                    advanceThumbnailFallback(e.currentTarget, thumbnailCandidates);
                                                 }}
                                             />
                                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                                                 <button
-                                                    onClick={() => setVideoLoaded(true)}
+                                                    onClick={() => {
+                                                        setVideoReady(false);
+                                                        setVideoLoaded(true);
+                                                    }}
                                                     className="w-20 h-20 flex items-center justify-center bg-red-600 hover:bg-red-700 rounded-full shadow-2xl transform group-hover:scale-110 transition-all"
                                                     aria-label="Play video"
                                                 >
@@ -431,42 +798,194 @@ function Release() {
                                     )}
                                     {videoLoaded && (
                                         <>
-                                            <div className="absolute inset-0 w-full h-full pointer-events-auto">
+                                            <div className="absolute inset-0 w-full h-full pointer-events-none">
                                                 <YouTube
-                                                    videoId={release.youtube_video_id || slug}
+                                                    videoId={resolvedVideoId}
                                                     opts={{
                                                         width: '100%',
                                                         height: '100%',
                                                         playerVars: {
+                                                            controls: 0,
                                                             autoplay: 1,
                                                             modestbranding: 1,
                                                             rel: 0,
                                                             playsinline: 1,
-                                                            fs: 0
+                                                            disablekb: 1,
+                                                            fs: 0,
+                                                            cc_load_policy: 0,
+                                                            iv_load_policy: 3
                                                         }
                                                     }}
-                                                    onReady={(e) => setPlayerTarget(e.target)}
+                                                    onReady={(e) => {
+                                                        setPlayerTarget(e.target);
+                                                        try {
+                                                            const currentRate = e.target?.getPlaybackRate?.();
+                                                            if (currentRate) {
+                                                                setPlaybackRate(Number(currentRate));
+                                                            }
+                                                            const duration = e.target?.getDuration?.();
+                                                            if (duration) {
+                                                                setVideoDuration(Number(duration));
+                                                            }
+                                                        } catch {
+                                                            // ignore read failures
+                                                        }
+                                                        try {
+                                                            // Force-hide YouTube native captions so only CMS-managed captions are shown.
+                                                            e.target?.setOption?.('captions', 'track', {});
+                                                        } catch (err) {
+                                                            console.debug('Unable to override YouTube caption track', err);
+                                                        }
+                                                        setVideoReady(true);
+                                                    }}
+                                                    onStateChange={(event) => {
+                                                        const state = event?.data;
+                                                        setIsPlaying(state === 1);
+                                                    }}
                                                     className="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full"
                                                 />
                                             </div>
                                             {/* Video Overlay for Captions */}
-                                            {dummyTracks[selectedLyricsLanguage] && (
+                                            {activeOverlayTrack && (
                                                 <VideoOverlay
-                                                    track={dummyTracks[selectedLyricsLanguage]}
+                                                    track={activeOverlayTrack}
                                                     currentTime={currentTime}
                                                     captionsEnabled={captionsEnabled}
                                                 />
                                             )}
-                                            <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded text-xs text-neutral-400 pointer-events-none z-[11]">
-                                                If video doesn't load, open this page in a new tab
+                                            {!videoReady && (
+                                                <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded text-xs text-neutral-400 pointer-events-none z-[11]">
+                                                    If video doesn't load, open this page in a new tab
+                                                </div>
+                                            )}
+
+                                            <div className="absolute left-0 right-0 bottom-0 z-[24] p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={togglePlayback}
+                                                        className="p-2 rounded-md bg-black/55 hover:bg-black/80 text-white border border-white/10"
+                                                        title={isPlaying ? 'Pause' : 'Play'}
+                                                    >
+                                                        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                    </button>
+
+                                                    <input
+                                                        type="range"
+                                                        min={0}
+                                                        max={videoDuration || 0}
+                                                        value={Math.min(currentTime, videoDuration || currentTime)}
+                                                        onChange={(e) => scrubTo(Number(e.target.value))}
+                                                        className="flex-1 accent-amber-500"
+                                                    />
+
+                                                    <span className="text-xs text-neutral-200 min-w-[84px] text-right">
+                                                        {formatDuration(Math.floor(currentTime || 0))} / {formatDuration(Math.floor(videoDuration || 0))}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <button
-                                                onClick={toggleFullscreen}
-                                                className="absolute top-4 right-4 z-[20] p-2 bg-black/60 hover:bg-black/90 rounded-md transition-all text-white opacity-0 group-hover:opacity-100 backdrop-blur-sm border border-white/10"
-                                                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                                            >
-                                                {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-                                            </button>
+
+                                            <div className="absolute top-4 right-4 z-[25] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => setShowPlayerSettings((prev) => !prev)}
+                                                    className="p-2 bg-black/60 hover:bg-black/90 rounded-md text-white backdrop-blur-sm border border-white/10"
+                                                    title="Player settings"
+                                                >
+                                                    <Settings2 className="w-5 h-5" />
+                                                </button>
+
+                                                {showPlayerSettings && (
+                                                    <div className="absolute right-0 mt-2 w-64 bg-neutral-900/95 border border-neutral-700 rounded-lg shadow-2xl p-3 space-y-3 backdrop-blur-md">
+                                                        <div className="flex items-center gap-2 pb-2 border-b border-neutral-800">
+                                                            <img
+                                                                src="/sufipulse-logo-v5.png"
+                                                                alt="SufiPulse"
+                                                                className="w-6 h-6 rounded object-cover"
+                                                            />
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-neutral-100">SufiPulse Player</p>
+                                                                <p className="text-[10px] text-neutral-500">Web App Controls</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between">
+                                                            <p className="text-xs uppercase tracking-wide text-neutral-400">Playback</p>
+                                                            <button
+                                                                onClick={toggleFullscreen}
+                                                                className="text-xs text-neutral-200 hover:text-white inline-flex items-center gap-1"
+                                                            >
+                                                                {isFullscreen ? <Minimize className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
+                                                                {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                                                            </button>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs text-neutral-400 mb-1">Speed</p>
+                                                            <div className="grid grid-cols-4 gap-1">
+                                                                {[0.75, 1, 1.25, 1.5].map((rate) => (
+                                                                    <button
+                                                                        key={rate}
+                                                                        onClick={() => setPlayerRate(rate)}
+                                                                        className={`text-xs rounded px-2 py-1 ${playbackRate === rate ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}
+                                                                    >
+                                                                        {rate}x
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs text-neutral-400 mb-1">Quality</p>
+                                                            <div className="grid grid-cols-3 gap-1">
+                                                                {['auto', 'hd1080', 'hd720', 'large', 'medium', 'small'].map((quality) => (
+                                                                    <button
+                                                                        key={quality}
+                                                                        onClick={() => setPlayerQuality(quality)}
+                                                                        className={`text-[11px] rounded px-2 py-1 ${playbackQuality === quality ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}
+                                                                    >
+                                                                        {quality}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs text-neutral-400 mb-1">Captions Source</p>
+                                                            <div className="text-xs text-neutral-200 bg-neutral-800 rounded px-2 py-1 mb-2">
+                                                                SufiPulse CMS (Internal)
+                                                            </div>
+                                                            <select
+                                                                value={selectedCaptionLanguage}
+                                                                onChange={(e) => {
+                                                                    const nextLang = e.target.value;
+                                                                    setSelectedCaptionLanguage(nextLang);
+                                                                    setSelectedSubtitleLanguage(nextLang);
+                                                                    if (LANGUAGE_OPTIONS.some((option) => option.key === nextLang)) {
+                                                                        setSelectedLyricsLanguage(nextLang as LanguageKey);
+                                                                    }
+                                                                }}
+                                                                className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-neutral-200"
+                                                            >
+                                                                {captionLanguageOptions.map((option) => (
+                                                                    <option key={option.key} value={option.key}>
+                                                                        {option.label}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            {!cmsCaptionTrack && (
+                                                                <p className="mt-2 text-[11px] text-amber-300">
+                                                                    CMS track missing for this language. Using internal timed fallback.
+                                                                </p>
+                                                            )}
+                                                            <button
+                                                                onClick={() => setCaptionsEnabled((prev) => !prev)}
+                                                                className={`mt-2 text-xs rounded px-2 py-1 ${captionsEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}
+                                                            >
+                                                                {captionsEnabled ? 'CC On' : 'CC Off'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </>
                                     )}
                                 </div>
@@ -484,21 +1003,23 @@ function Release() {
                         <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-4 mb-8 border-b border-neutral-800">
                             {/* Tabs Navigation */}
                             <div className="flex gap-1 overflow-x-auto pb-0">
-                                <button
-                                    onClick={() => setActiveTab('credits')}
-                                    className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'credits'
-                                        ? 'text-neutral-100'
-                                        : 'text-neutral-500 hover:text-neutral-300'
-                                        }`}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Users className="w-4 h-4" />
-                                        Credits
-                                    </span>
-                                    {activeTab === 'credits' && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
-                                    )}
-                                </button>
+                                {release.enable_credits !== false && (
+                                    <button
+                                        onClick={() => setActiveTab('credits')}
+                                        className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'credits'
+                                            ? 'text-neutral-100'
+                                            : 'text-neutral-500 hover:text-neutral-300'
+                                            }`}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <Users className="w-4 h-4" />
+                                            Credits
+                                        </span>
+                                        {activeTab === 'credits' && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
+                                        )}
+                                    </button>
+                                )}
                                 {/* <button
                                     onClick={() => setActiveTab('production')}
                                     className={`px-4 sm:px-6 py-3 font-medium transition-all relative whitespace-nowrap ${activeTab === 'production'
@@ -556,55 +1077,61 @@ function Release() {
                                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
                                     )}
                                 </button> */}
-                                <button
-                                    onClick={() => setActiveTab('adopt')}
-                                    className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'adopt'
-                                        ? 'text-neutral-100'
-                                        : 'text-neutral-500 hover:text-neutral-300'
-                                        }`}
-                                >
-                                    Adopt this Song
-                                    {activeTab === 'adopt' && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('commentary')}
-                                    className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'commentary'
-                                        ? 'text-neutral-100'
-                                        : 'text-neutral-500 hover:text-neutral-300'
-                                        }`}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <MessageCircle className="w-4 h-4" />
-                                        Commentary
-                                    </span>
-                                    {activeTab === 'commentary' && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('sponsors')}
-                                    className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'sponsors'
-                                        ? 'text-neutral-100'
-                                        : 'text-neutral-500 hover:text-neutral-300'
-                                        }`}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Award className="w-4 h-4" />
-                                        Sponsors
-                                    </span>
-                                    {activeTab === 'sponsors' && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
-                                    )}
-                                </button>
+                                {release.enable_adoption !== false && (
+                                    <button
+                                        onClick={() => setActiveTab('adopt')}
+                                        className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'adopt'
+                                            ? 'text-neutral-100'
+                                            : 'text-neutral-500 hover:text-neutral-300'
+                                            }`}
+                                    >
+                                        Adopt this Song
+                                        {activeTab === 'adopt' && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
+                                        )}
+                                    </button>
+                                )}
+                                {release.enable_commentary !== false && (
+                                    <button
+                                        onClick={() => setActiveTab('commentary')}
+                                        className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'commentary'
+                                            ? 'text-neutral-100'
+                                            : 'text-neutral-500 hover:text-neutral-300'
+                                            }`}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <MessageCircle className="w-4 h-4" />
+                                            Commentary
+                                        </span>
+                                        {activeTab === 'commentary' && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
+                                        )}
+                                    </button>
+                                )}
+                                {release.enable_sponsors && (
+                                    <button
+                                        onClick={() => setActiveTab('sponsors')}
+                                        className={`px-4 sm:px-6 py-3 font-medium text-sm transition-all relative whitespace-nowrap ${activeTab === 'sponsors'
+                                            ? 'text-neutral-100'
+                                            : 'text-neutral-500 hover:text-neutral-300'
+                                            }`}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <Award className="w-4 h-4" />
+                                            Sponsors
+                                        </span>
+                                        {activeTab === 'sponsors' && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
+                                        )}
+                                    </button>
+                                )}
                             </div>
 
                             {/* Action Buttons */}
                             <div className="flex items-center gap-3 lg:pb-2">
-                                {release.youtube_video_id && (
+                                {resolvedVideoId && (
                                     <a
-                                        href={`https://www.youtube.com/watch?v=${release.youtube_video_id}`}
+                                        href={`https://www.youtube.com/watch?v=${resolvedVideoId}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-red-900/30 whitespace-nowrap"
@@ -643,7 +1170,7 @@ function Release() {
                         )}
 
                         {/* Credits Tab */}
-                        {activeTab === 'credits' && (
+                        {activeTab === 'credits' && release.enable_credits !== false && (
                             <div className="pt-8">
                                 <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-8">
                                     <h3 className="text-3xl font-serif font-light text-neutral-100 mb-8">Official Credits</h3>
@@ -661,23 +1188,23 @@ function Release() {
                                             <div className="space-y-4 relative">
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Lead Vocalist</p>
-                                                    <p className="text-neutral-200">Ayaan Rahmani</p>
+                                                    <p className="text-neutral-200">{publicCredits?.artistic?.leadVocalist || release.lead_vocalists?.[0]?.name || 'Ayaan Rahmani'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Lyricist</p>
-                                                    <p className="text-neutral-200">Dr. Fayaz Khan</p>
+                                                    <p className="text-neutral-200">{publicCredits?.artistic?.lyricist || release.writer?.name || 'Dr. Fayaz Khan'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Composer</p>
-                                                    <p className="text-neutral-200">SufiPulse Studio</p>
+                                                    <p className="text-neutral-200">{publicCredits?.artistic?.composer || 'SufiPulse Studio'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Music Producer</p>
-                                                    <p className="text-neutral-200">Hamza Qadri</p>
+                                                    <p className="text-neutral-200">{publicCredits?.artistic?.musicProducer || release.producer?.name || 'Hamza Qadri'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Background Vocals</p>
-                                                    <p className="text-neutral-200">Studio Ensemble</p>
+                                                    <p className="text-neutral-200">{publicCredits?.artistic?.backgroundVocals || chorusVocalistsLabel || 'Studio Ensemble'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -694,19 +1221,19 @@ function Release() {
                                             <div className="space-y-4 relative">
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Recorded at</p>
-                                                    <p className="text-neutral-200">SufiPulse Studio I</p>
+                                                    <p className="text-neutral-200">{publicCredits?.production?.recordedAt || 'SufiPulse Studio I'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Recording Engineer</p>
-                                                    <p className="text-neutral-200">Bilal Ahmad</p>
+                                                    <p className="text-neutral-200">{publicCredits?.production?.recordingEngineer || 'Bilal Ahmad'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Mix & Master</p>
-                                                    <p className="text-neutral-200">Rehan Mir</p>
+                                                    <p className="text-neutral-200">{publicCredits?.production?.mixMaster || 'Rehan Mir'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Sound Design</p>
-                                                    <p className="text-neutral-200">SufiPulse Audio Unit</p>
+                                                    <p className="text-neutral-200">{publicCredits?.production?.soundDesign || 'SufiPulse Audio Unit'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -723,19 +1250,19 @@ function Release() {
                                             <div className="space-y-4 relative">
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Video Direction</p>
-                                                    <p className="text-neutral-200">SufiTube Visual Desk</p>
+                                                    <p className="text-neutral-200">{publicCredits?.visual?.videoDirection || 'SufiTube Visual Desk'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Editing</p>
-                                                    <p className="text-neutral-200">Danish Raina</p>
+                                                    <p className="text-neutral-200">{publicCredits?.visual?.editing || 'Danish Raina'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Thumbnail Design</p>
-                                                    <p className="text-neutral-200">Creative Contributors Unit</p>
+                                                    <p className="text-neutral-200">{publicCredits?.visual?.thumbnailDesign || 'Creative Contributors Unit'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Artwork</p>
-                                                    <p className="text-neutral-200">SufiPulse Studio Design Cell</p>
+                                                    <p className="text-neutral-200">{publicCredits?.visual?.artwork || 'SufiPulse Studio Design Cell'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -752,19 +1279,19 @@ function Release() {
                                             <div className="space-y-4 relative">
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Roman Transliteration</p>
-                                                    <p className="text-neutral-200">Editorial Team</p>
+                                                    <p className="text-neutral-200">{publicCredits?.literary?.romanTransliteration || 'Editorial Team'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">English Translation</p>
-                                                    <p className="text-neutral-200">Language Desk</p>
+                                                    <p className="text-neutral-200">{publicCredits?.literary?.englishTranslation || 'Language Desk'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Thematic Interpretation</p>
-                                                    <p className="text-neutral-200">Literary Journal Team</p>
+                                                    <p className="text-neutral-200">{publicCredits?.literary?.thematicInterpretation || 'Literary Journal Team'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Proofreading</p>
-                                                    <p className="text-neutral-200">Release Text Review Unit</p>
+                                                    <p className="text-neutral-200">{publicCredits?.literary?.proofreading || 'Release Text Review Unit'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -781,27 +1308,27 @@ function Release() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Published by</p>
-                                                    <p className="text-neutral-200">SufiPulse</p>
+                                                    <p className="text-neutral-200">{publicCredits?.rights?.publishedBy || 'SufiPulse'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Platform</p>
-                                                    <p className="text-neutral-200">SufiTube</p>
+                                                    <p className="text-neutral-200">{publicCredits?.rights?.platform || 'SufiTube'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Registered Release ID</p>
-                                                    <p className="text-neutral-200 font-mono text-sm">SP-RR-2026-021</p>
+                                                    <p className="text-neutral-200 font-mono text-sm">{publicCredits?.rights?.registeredReleaseId || 'SP-RR-2026-021'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Release Date</p>
-                                                    <p className="text-neutral-200">February 7, 2026</p>
+                                                    <p className="text-neutral-200">{publicCredits?.rights?.releaseDateText || formatDate(release.release_date)}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Copyright Holder</p>
-                                                    <p className="text-neutral-200 flex items-center gap-2">SufiPulse Studio <Check className="w-3 h-3 text-cyan-400" /></p>
+                                                    <p className="text-neutral-200 flex items-center gap-2">{publicCredits?.rights?.copyrightHolder || 'SufiPulse Studio'} <Check className="w-3 h-3 text-cyan-400" /></p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">Licensing / Permissions</p>
-                                                    <Link href="#" className="text-amber-400 hover:text-amber-300 underline underline-offset-4 decoration-amber-400/30 text-sm">official contact or form</Link>
+                                                    <Link href={publicCredits?.rights?.licensingUrl || '#'} className="text-amber-400 hover:text-amber-300 underline underline-offset-4 decoration-amber-400/30 text-sm">{publicCredits?.rights?.licensingText || 'official contact or form'}</Link>
                                                 </div>
                                             </div>
                                         </div>
@@ -809,18 +1336,6 @@ function Release() {
                                     </div>
                                 </div>
                             </div>
-                        )}
-
-                        {/* Lyrics Tab */}
-                        {activeTab === 'lyrics' && (
-                            <LyricsTab
-                                selectedLanguage={selectedLyricsLanguage}
-                                onLanguageChange={setSelectedLyricsLanguage}
-                                currentTime={currentTime}
-                                onSeekRequest={handleSeekRequest}
-                                captionsEnabled={captionsEnabled}
-                                onToggleCaptions={() => setCaptionsEnabled(!captionsEnabled)}
-                            />
                         )}
 
                         {/* Production Tab */}
@@ -961,7 +1476,7 @@ function Release() {
                         )} */}
 
                         {/* Adopt this Song Tab */}
-                        {activeTab === 'adopt' && (
+                        {activeTab === 'adopt' && release.enable_adoption !== false && (
                             <AdoptTab release={release} />
                         )}
 
@@ -976,7 +1491,7 @@ function Release() {
                                             return (
                                                 <button
                                                     key={lang}
-                                                    onClick={() => setSelectedSubtitleLanguage(lang)}
+                                                    onClick={() => updateActiveLanguage(lang)}
                                                     className={`px-5 py-3 rounded-lg border font-medium transition-all ${selectedSubtitleLanguage === lang
                                                         ? 'bg-neutral-700 border-neutral-600 text-white shadow-lg'
                                                         : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600'
@@ -1043,38 +1558,89 @@ function Release() {
                             </div>
                         )} */}
 
-                        {activeTab === 'lyrics' && getAvailableLanguages().length > 0 && (
+                        {activeTab === 'lyrics' && (
                             <div className="pt-8">
                                 <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-8">
                                     <h3 className="text-xl font-medium text-neutral-100 mb-6">Select Lyrics Language</h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-8">
-                                        {getAvailableLanguages().map((lang) => {
-                                            const langLabel = LANGUAGE_OPTIONS.find(opt => opt.key === lang)?.label || lang.toUpperCase();
-                                            return (
-                                                <button
-                                                    key={lang}
-                                                    onClick={() => setSelectedLyricsLanguage(lang as any)}
-                                                    className={`px-5 py-3 rounded-lg border font-medium transition-all ${selectedLyricsLanguage === lang
-                                                        ? 'bg-neutral-700 border-neutral-600 text-white shadow-lg'
-                                                        : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600'
-                                                        }`}
-                                                >
-                                                    {langLabel}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    {selectedLyricsLanguage && release.lyrics?.[selectedLyricsLanguage as keyof typeof release.lyrics] && (
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 mt-6">
-                                            <div className="flex items-center gap-3 mb-6">
-                                                <FileText className="w-5 h-5 text-neutral-400" />
-                                                <h4 className="text-lg font-medium text-neutral-100">
-                                                    {LANGUAGE_OPTIONS.find(opt => opt.key === selectedLyricsLanguage)?.label || selectedLyricsLanguage.toUpperCase()} Lyrics
-                                                </h4>
+
+                                    {getAvailableLanguages().length > 0 ? (
+                                        <>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-8">
+                                                {getAvailableLanguages().map((lang) => {
+                                                    const langLabel = LANGUAGE_OPTIONS.find(opt => opt.key === lang)?.label || lang.toUpperCase();
+                                                    return (
+                                                        <button
+                                                            key={lang}
+                                                            onClick={() => setSelectedLyricsLanguage(lang as any)}
+                                                            className={`px-5 py-3 rounded-lg border font-medium transition-all ${selectedLyricsLanguage === lang
+                                                                ? 'bg-neutral-700 border-neutral-600 text-white shadow-lg'
+                                                                : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600'
+                                                                }`}
+                                                        >
+                                                            {langLabel}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
-                                            <div className="text-neutral-300 whitespace-pre-line leading-relaxed text-base font-serif">
-                                                {release.lyrics[selectedLyricsLanguage as keyof typeof release.lyrics]}
-                                            </div>
+
+                                            {(() => {
+                                                const activeLanguage = String(selectedLyricsLanguage || '');
+                                                const structuredBlocks = Array.isArray(lyricsStructureMap?.[activeLanguage])
+                                                    ? lyricsStructureMap[activeLanguage].filter((block: any) => block?.isPublished !== false)
+                                                    : [];
+                                                const legacyRows = Array.isArray(release.lyrics?.[activeLanguage]) ? release.lyrics[activeLanguage] : [];
+
+                                                if (structuredBlocks.length > 0) {
+                                                    return (
+                                                        <div className="space-y-4 mt-4">
+                                                            {structuredBlocks
+                                                                .slice()
+                                                                .sort((a: any, b: any) => (a?.order || 0) - (b?.order || 0))
+                                                                .map((block: any, idx: number) => (
+                                                                    <div key={block.id || idx} className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
+                                                                        <div className="flex items-center justify-between mb-3">
+                                                                            <h4 className="text-lg font-medium text-neutral-100">
+                                                                                {(block.heading || `${String(block.type || 'section').toUpperCase()} ${idx + 1}`)}
+                                                                            </h4>
+                                                                            <span className="text-[11px] uppercase tracking-wider text-amber-300 bg-amber-400/10 border border-amber-400/30 px-2 py-1 rounded">
+                                                                                {String(block.type || 'section')}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            {(Array.isArray(block.lines) ? block.lines : []).map((line: string, lineIndex: number) => (
+                                                                                <p key={`${block.id || idx}_line_${lineIndex}`} className="text-neutral-300 leading-relaxed text-base font-serif">
+                                                                                    {line}
+                                                                                </p>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                if (legacyRows.length > 0) {
+                                                    return (
+                                                        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 mt-6 space-y-3">
+                                                            {legacyRows.map((row: any, idx: number) => (
+                                                                <p key={`legacy_lyrics_${idx}`} className="text-neutral-300 whitespace-pre-line leading-relaxed text-base font-serif">
+                                                                    {row?.translation || row?.transliteration || row?.urdu || ''}
+                                                                </p>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 mt-6">
+                                                        <p className="text-neutral-400">No lyrics published yet for this language.</p>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </>
+                                    ) : (
+                                        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+                                            <p className="text-neutral-400">No lyrics available yet.</p>
                                         </div>
                                     )}
                                 </div>
@@ -1176,67 +1742,43 @@ function Release() {
                         )}
 
                         {/* Commentary Tab */}
-                        {activeTab === 'commentary' && (
+                        {activeTab === 'commentary' && release.enable_commentary !== false && (
                             <div className="pt-8">
                                 <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-8">
                                     <h3 className="text-3xl font-serif font-light text-neutral-100 mb-8">Commentary & Insights</h3>
 
                                     <div className="space-y-8">
-                                        <div className="p-6 bg-gradient-to-br from-neutral-900 to-neutral-900/50 border border-neutral-800 rounded-xl relative overflow-hidden group hover:border-amber-400/30 transition-colors">
-                                            <h4 className="text-xl font-medium text-amber-400 mb-3">Historical Context</h4>
-                                            <p className="text-neutral-300 leading-relaxed text-sm">
-                                                This piece reflects a deep historical tradition of poetry that emphasizes the inward journey and the necessity of stepping away from the self. Drawing from classical metaphors, it connects the modern listener with timeless themes of devotion and surrender.
-                                            </p>
-                                        </div>
-
-                                        <div className="p-6 bg-gradient-to-br from-neutral-900 to-neutral-900/50 border border-neutral-800 rounded-xl relative overflow-hidden group hover:border-amber-400/30 transition-colors">
-                                            <h4 className="text-xl font-medium text-amber-400 mb-3">Thematic Interpretation</h4>
-                                            <p className="text-neutral-300 leading-relaxed text-sm">
-                                                The core theme orbits around the dissolution of the ego (Fana). By using restrained instrumentation and a close-mic vocal approach, the focus remains fiercely locked on the lyrics, ensuring that the listener's attention is constantly brought back to the meaning rather than being distracted by spectacle.
-                                            </p>
-                                        </div>
+                                        {commentaryBlocks.map((block: any) => (
+                                            <div key={block.id} className="p-6 bg-gradient-to-br from-neutral-900 to-neutral-900/50 border border-neutral-800 rounded-xl relative overflow-hidden group hover:border-amber-400/30 transition-colors">
+                                                <h4 className="text-xl font-medium text-amber-400 mb-3">{block.title || 'Commentary'}</h4>
+                                                <p className="text-neutral-300 leading-relaxed text-sm">{block.content || 'No content yet.'}</p>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Sponsors Tab */}
-                        {activeTab === 'sponsors' && (
+                        {activeTab === 'sponsors' && release.enable_sponsors && (
                             <div className="pt-8">
                                 <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-8">
                                     <h3 className="text-3xl font-serif font-light text-neutral-100 mb-8">Our Sponsors</h3>
 
                                     <p className="text-neutral-400 mb-8 max-w-2xl leading-relaxed">
-                                        We are deeply grateful for the generous support of our sponsors who make these releases possible and contribute to the preservation of sacred arts.
+                                        {sponsorsIntro}
                                     </p>
 
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                        {/* Sponsor 1 */}
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col items-center justify-center aspect-square group hover:border-amber-400/30 transition-colors">
-                                            <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                                <Award className="w-8 h-8 text-neutral-500 group-hover:text-amber-400 transition-colors" />
+                                        {sponsorsList.map((sponsor: any, idx: number) => (
+                                            <div key={sponsor.id || idx} className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col items-center justify-center aspect-square group hover:border-amber-400/30 transition-colors">
+                                                <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                                    <Award className="w-8 h-8 text-neutral-500 group-hover:text-amber-400 transition-colors" />
+                                                </div>
+                                                <p className="text-neutral-300 font-medium text-center">{sponsor.name || 'Sponsor'}</p>
+                                                <p className="text-neutral-500 text-xs mt-1 text-center">{sponsor.role || 'Partner'}</p>
                                             </div>
-                                            <p className="text-neutral-300 font-medium text-center">Global Trust</p>
-                                            <p className="text-neutral-500 text-xs mt-1 text-center">Foundational Partner</p>
-                                        </div>
-
-                                        {/* Sponsor 2 */}
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col items-center justify-center aspect-square group hover:border-amber-400/30 transition-colors">
-                                            <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                                <Shield className="w-8 h-8 text-neutral-500 group-hover:text-amber-400 transition-colors" />
-                                            </div>
-                                            <p className="text-neutral-300 font-medium text-center">Heritage Arts</p>
-                                            <p className="text-neutral-500 text-xs mt-1 text-center">Cultural Sponsor</p>
-                                        </div>
-
-                                        {/* Sponsor 3 */}
-                                        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col items-center justify-center aspect-square group hover:border-amber-400/30 transition-colors">
-                                            <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                                <Book className="w-8 h-8 text-neutral-500 group-hover:text-amber-400 transition-colors" />
-                                            </div>
-                                            <p className="text-neutral-300 font-medium text-center">Sufi Institute</p>
-                                            <p className="text-neutral-500 text-xs mt-1 text-center">Academic Partner</p>
-                                        </div>
+                                        ))}
 
                                         {/* Placeholder for more */}
                                         <div className="bg-neutral-900/50 border border-neutral-800 border-dashed rounded-xl p-6 flex flex-col items-center justify-center aspect-square hover:bg-neutral-900 transition-colors cursor-pointer group">
@@ -1251,6 +1793,13 @@ function Release() {
                         )}
 
                     </div>
+
+                    {/* Recent Adopters Section */}
+                    {release.enable_adoption !== false && (
+                        <section className="mb-16">
+                            <RecentAdopters releaseId={release.id} />
+                        </section>
+                    )}
 
                     {/* Streaming Links - Below Tabs */}
                     {!isLegacy && (
