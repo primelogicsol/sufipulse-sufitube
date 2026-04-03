@@ -3,17 +3,14 @@ import { cmsStorage } from '@/lib/cms-storage';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateStaticParams() {
-  return [];
-}
-
 // GET /api/releases/[id]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const release = cmsStorage.getRelease(params.id);
+    const release = cmsStorage.getRelease(id);
     if (!release) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
@@ -26,11 +23,12 @@ export async function GET(
 // PUT /api/releases/[id] (update)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
-    const existing = cmsStorage.getRelease(params.id);
+    const existing = cmsStorage.getRelease(id);
 
     if (!existing) {
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
@@ -39,7 +37,7 @@ export async function PUT(
     const updated = cmsStorage.saveRelease({
       ...existing,
       ...body,
-      id: params.id, // Don't allow ID change
+      id, // Don't allow ID change
     });
 
     return NextResponse.json(updated);

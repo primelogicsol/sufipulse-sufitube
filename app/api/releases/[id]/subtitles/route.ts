@@ -147,10 +147,11 @@ const toAss = (
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const release = cmsStorage.getRelease(params.id);
+    const release = cmsStorage.getRelease(id);
     if (!release) {
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
@@ -191,7 +192,7 @@ export async function GET(
         status: 200,
         headers: {
           'Content-Type': 'text/vtt; charset=utf-8',
-          'Content-Disposition': `attachment; filename="${release.slug || params.id}-${language}.vtt"`,
+          'Content-Disposition': `attachment; filename="${release.slug || id}-${language}.vtt"`,
         },
       });
     }
@@ -201,7 +202,7 @@ export async function GET(
         status: 200,
         headers: {
           'Content-Type': 'application/x-subrip; charset=utf-8',
-          'Content-Disposition': `attachment; filename="${release.slug || params.id}-${language}.srt"`,
+          'Content-Disposition': `attachment; filename="${release.slug || id}-${language}.srt"`,
         },
       });
     }
@@ -211,7 +212,7 @@ export async function GET(
         status: 200,
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
-          'Content-Disposition': `attachment; filename="${release.slug || params.id}-${language}.ass"`,
+          'Content-Disposition': `attachment; filename="${release.slug || id}-${language}.ass"`,
         },
       });
     }

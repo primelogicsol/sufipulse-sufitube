@@ -9,12 +9,14 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
-  const adoptionId = searchParams.get('state') || params.id;
+  const adoptionId = searchParams.get('state') || id;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
@@ -32,7 +34,7 @@ export async function GET(
     );
   }
 
-  const redirectUri = `${appUrl}/api/adoptions/${params.id}/google-oauth/callback`;
+  const redirectUri = `${appUrl}/api/adoptions/${id}/google-oauth/callback`;
 
   try {
     // Exchange authorization code for tokens

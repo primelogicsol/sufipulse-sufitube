@@ -18,8 +18,10 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -30,7 +32,7 @@ export async function GET(
     );
   }
 
-  const redirectUri = `${appUrl}/api/adoptions/${params.id}/google-oauth/callback`;
+  const redirectUri = `${appUrl}/api/adoptions/${id}/google-oauth/callback`;
 
   const oauthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   oauthUrl.searchParams.set('client_id', clientId);
@@ -39,7 +41,7 @@ export async function GET(
   oauthUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/adwords');
   oauthUrl.searchParams.set('access_type', 'offline');
   oauthUrl.searchParams.set('prompt', 'consent');
-  oauthUrl.searchParams.set('state', params.id); // carry adoption_id through OAuth
+  oauthUrl.searchParams.set('state', id); // carry adoption_id through OAuth
 
   return NextResponse.redirect(oauthUrl.toString());
 }

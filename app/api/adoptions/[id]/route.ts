@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 // Protected by x-webhook-secret header matching STRIPE_WEBHOOK_SECRET.
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   const secret = request.headers.get('x-webhook-secret');
   if (!secret || secret !== process.env.STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,11 +20,11 @@ export async function PATCH(
   // that the client polls on the success page to confirm payment.
   //
   // In a Supabase/PostgreSQL backend you would do:
-  //   await supabase.from('song_adoptions').update(body).eq('id', params.id)
+  //   await supabase.from('song_adoptions').update(body).eq('id', id)
   //
   // For now we return the update payload so the success page can apply it.
   return NextResponse.json({
-    adoption_id: params.id,
+    adoption_id: id,
     update: body,
     message: 'Payment confirmed. Client should apply update to local state.',
   });

@@ -6,16 +6,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    // Enable faster builds
-    optimizePackageImports: ['lucide-react'],
-  },
-  // Handle static export for Netlify ONLY in production
-  // Disabled during development to allow dynamic pages
-  output: undefined, // process.env.NODE_ENV === 'production' ? 'export' : undefined,
+  // optimizePackageImports is stable in Next.js 15 (no longer experimental)
+  optimizePackageImports: ['lucide-react'],
+  output: undefined,
   trailingSlash: true,
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
   },
 };
 

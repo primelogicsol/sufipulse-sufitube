@@ -152,10 +152,11 @@ const upsertYouTubeCaption = async (
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const release = cmsStorage.getRelease(params.id);
+    const release = cmsStorage.getRelease(id);
     if (!release) {
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }

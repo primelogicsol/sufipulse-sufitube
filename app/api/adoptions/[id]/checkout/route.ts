@@ -7,8 +7,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   if (!process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json(
       { error: 'Stripe is not configured. Set STRIPE_SECRET_KEY.' },
@@ -56,12 +58,12 @@ export async function POST(
         },
       ],
       metadata: {
-        adoption_id: params.id,
+        adoption_id: id,
         sponsor_name: sponsorName || '',
         method_type: methodType || '',
       },
-      success_url: `${appUrl}/adoption-success?adoption_id=${params.id}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/adoption-cancel?adoption_id=${params.id}`,
+      success_url: `${appUrl}/adoption-success?adoption_id=${id}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/adoption-cancel?adoption_id=${id}`,
     });
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
