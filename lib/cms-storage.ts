@@ -22,8 +22,16 @@ export interface CMSRelease {
   viewCount: number;
   likeCount: number;
   status: 'draft' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
+  contentReadinessState?: 'draft' | 'editorial_ready' | 'web_published' | 'youtube_delivery_in_progress' | 'fully_delivered' | 'delivery_attention_required';
   category?: string;
   releaseType?: string;
+  
+  // Streaming platforms
+  streamingPlatforms?: Array<{
+    platform: string;
+    url?: string;
+    status: string;
+  }>;
   
   // Credits
   writer?: { name: string; nameUrdu?: string };
@@ -135,6 +143,8 @@ export interface CMSRelease {
     marginL?: number;
     marginR?: number;
     marginV?: number;
+    karaokeEffect?: 'none' | 'k' | 'kf' | 'ko';
+    karaokeDurationsMs?: string;
     meaningNote?: string;
     glossaryTerms?: string[];
   }>;
@@ -192,9 +202,15 @@ export interface CMSRelease {
     captionId?: string;
     language?: string;
     lastSyncHash?: string;
+    lastSyncAttemptAt?: string;
     lastUploadedAt?: string;
+    lastExportedAt?: string;
     lastFormat?: 'srt' | 'vtt';
     lastStatus?: 'synced' | 'unchanged' | 'failed';
+    deliveryState?: 'web_only' | 'synced_to_youtube' | 'manual_upload_pending' | 'manual_upload_completed' | 'sync_failed';
+    manualUploadActor?: string;
+    manualUploadAt?: string;
+    manualUploadNotes?: string;
     lastError?: string;
   }>;
   
@@ -214,116 +230,6 @@ class CMSStorage {
 
   constructor() {
     this.loadFromStorage();
-    // On server-side, ensure we have seed data
-    if (this.isServerSide && this.releases.size === 0) {
-      this.initializeServerSideData();
-    }
-  }
-
-  private initializeServerSideData(): void {
-    // Seed with demo releases on server side
-    const demoReleases: CMSRelease[] = [
-      {
-        id: 'sufipulse-001',
-        title: "Qawwali: The Soul's Journey",
-        slug: 'qawwali-souls-journey',
-        youtubeId: 'lJIrF4E69e8',
-        description: 'A powerful Sufi qawwali performance showcasing traditional devotional music.',
-        releaseDate: '2025-02-15',
-        durationSeconds: 525,
-        durationFormatted: '8:45',
-        viewCount: 15420,
-        likeCount: 892,
-        status: 'published' as const,
-        category: 'Qawwali',
-        releaseType: 'Live Performance',
-        vocalist: { name: 'Nusrat Fateh Ali Khan', nameUrdu: 'نصرت فتح علی خان' },
-        writer: { name: 'Amir Khusrow', nameUrdu: 'امیر خسرو' },
-        producer: { name: 'SufiPulse USA' },
-        enableLyrics: true,
-        enableCommentary: true,
-        enableSponsors: false,
-        enableAdoption: true,
-        enableCredits: true,
-        availableLanguages: ['en', 'ur'],
-        defaultLanguage: 'en',
-        lyrics: {},
-        subtitleCues: [],
-        subtitleTranslations: { en: {}, ur: {} },
-        subtitleStylePacks: {},
-        createdAt: new Date('2025-02-15').toISOString(),
-        updatedAt: new Date('2025-02-15').toISOString(),
-        publishedAt: new Date('2025-02-15').toISOString(),
-      },
-      {
-        id: 'sufipulse-002',
-        title: 'The Garden of Divine Love',
-        slug: 'garden-divine-love',
-        youtubeId: 'LS8qPHGjQZU',
-        description: "Exploring the mystical dimensions of divine love through Rumi's poetry and traditional Sufi music.",
-        releaseDate: '2025-02-10',
-        durationSeconds: 750,
-        durationFormatted: '12:30',
-        viewCount: 22150,
-        likeCount: 1450,
-        status: 'published' as const,
-        category: 'Sufi Poetry',
-        releaseType: 'Studio Recording',
-        vocalist: { name: 'Abida Parveen', nameUrdu: 'عابدہ پروین' },
-        writer: { name: 'Rumi', nameUrdu: 'روم' },
-        producer: { name: 'SufiPulse USA' },
-        enableLyrics: true,
-        enableCommentary: true,
-        enableSponsors: false,
-        enableAdoption: true,
-        enableCredits: true,
-        availableLanguages: ['en', 'ur'],
-        defaultLanguage: 'en',
-        lyrics: {},
-        subtitleCues: [],
-        subtitleTranslations: { en: {}, ur: {} },
-        subtitleStylePacks: {},
-        createdAt: new Date('2025-02-10').toISOString(),
-        updatedAt: new Date('2025-02-10').toISOString(),
-        publishedAt: new Date('2025-02-10').toISOString(),
-      },
-      {
-        id: 'sufipulse-003',
-        title: 'Spiritual Journey: Voices of the Heart',
-        slug: 'spiritual-journey-voices-heart',
-        youtubeId: 'kJQP7kiOvtQ',
-        description: 'A collection of Sufi spiritual performances featuring master musicians.',
-        releaseDate: '2025-02-05',
-        durationSeconds: 900,
-        durationFormatted: '15:00',
-        viewCount: 18800,
-        likeCount: 1200,
-        status: 'published' as const,
-        category: 'Compilation',
-        releaseType: 'Live Session',
-        vocalist: { name: 'Rahat Fateh Ali Khan', nameUrdu: 'راہت فتح علی خان' },
-        writer: { name: 'Hafiz', nameUrdu: 'حافظ' },
-        producer: { name: 'SufiPulse USA' },
-        enableLyrics: true,
-        enableCommentary: true,
-        enableSponsors: false,
-        enableAdoption: true,
-        enableCredits: true,
-        availableLanguages: ['en', 'ur'],
-        defaultLanguage: 'en',
-        lyrics: {},
-        subtitleCues: [],
-        subtitleTranslations: { en: {}, ur: {} },
-        subtitleStylePacks: {},
-        createdAt: new Date('2025-02-05').toISOString(),
-        updatedAt: new Date('2025-02-05').toISOString(),
-        publishedAt: new Date('2025-02-05').toISOString(),
-      },
-    ];
-
-    for (const release of demoReleases) {
-      this.releases.set(release.id, release);
-    }
   }
 
   private loadFromStorage(): void {

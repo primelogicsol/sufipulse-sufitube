@@ -1,31 +1,27 @@
-self.__BUILD_MANIFEST = {
-  "polyfillFiles": [
-    "static/chunks/polyfills.js"
-  ],
-  "devFiles": [
-    "static/chunks/react-refresh.js"
-  ],
+globalThis.__BUILD_MANIFEST = {
+  "pages": {
+    "/_app": []
+  },
+  "devFiles": [],
   "ampDevFiles": [],
+  "polyfillFiles": [
+    "static/chunks/dfb3b_next_dist_build_polyfills_polyfill-nomodule.js"
+  ],
   "lowPriorityFiles": [],
   "rootMainFiles": [
-    "static/chunks/webpack.js",
-    "static/chunks/main-app.js"
+    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+    "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+    "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+    "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+    "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+    "static/chunks/dfb3b_next_dist_db1aa385._.js",
+    "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+    "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+    "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
   ],
-  "pages": {
-    "/_app": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/_app.js"
-    ],
-    "/_error": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/_error.js"
-    ]
-  },
   "ampFirstPages": []
 };
-self.__BUILD_MANIFEST.lowPriorityFiles = [
+globalThis.__BUILD_MANIFEST.lowPriorityFiles = [
 "/static/" + process.env.__NEXT_BUILD_ID + "/_buildManifest.js",
 ,"/static/" + process.env.__NEXT_BUILD_ID + "/_ssgManifest.js",
 

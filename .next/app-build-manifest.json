@@ -1,150 +1,177 @@
 {
   "pages": {
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
-    "/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
-    ],
-    "/(auth)/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/login/page.js"
-    ],
-    "/admin/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/page.js"
-    ],
-    "/admin/sadas/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/sadas/page.js"
-    ],
-    "/admin/performance-assignments/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/performance-assignments/page.js"
-    ],
-    "/admin/studio-sessions/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/studio-sessions/page.js"
-    ],
-    "/admin/session-requests/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/session-requests/page.js"
-    ],
-    "/user/vocalist/dashboard/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/user/vocalist/dashboard/page.js"
-    ],
-    "/user/producer/dashboard/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/user/producer/dashboard/page.js"
-    ],
-    "/user/literary-contributor/dashboard/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/user/literary-contributor/dashboard/page.js"
-    ],
-    "/admin/cms/releases/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/cms/releases/page.js"
-    ],
-    "/admin/cms/releases/[id]/edit/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/cms/releases/[id]/edit/page.js"
-    ],
-    "/admin/cms-releases/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/cms-releases/page.js"
-    ],
-    "/admin/cms/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/cms/page.js"
-    ],
-    "/admin/cms-releases/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/cms-releases/[id]/page.js"
-    ],
     "/(public)/release-detail/[slug]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/release-detail/[slug]/page.js"
+      "static/chunks/dfb3b_next_dist_0aed14ed._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_favicon_ico_mjs_11755c3c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_globals_04a62670.css",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_69e8b982._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_layout_tsx_63c1610a._.js",
+      "static/chunks/dfb3b_next_dist_a4f68453._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_not-found_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_59e51d47._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_lib_youtube-service_ts_a47be786._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_components_eb7e3b26._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_(public)_release-detail_[slug]_ad55e558._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_e545c94d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_lib_youtube-thumbnails_ts_5793a1cd._.js",
+      "static/chunks/dfb3b_next_ebb87734._.js",
+      "static/chunks/dfb3b_zod_v4_a015da82._.js",
+      "static/chunks/dfb3b_@supabase_auth-js_dist_module_2e7716ca._.js",
+      "static/chunks/dfb3b_cdecfd3e._.js",
+      "static/chunks/35941_Sufipulseupdate_app_(public)_release-detail_[slug]_page_tsx_b0dfbe4d._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+      "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+      "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+      "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+      "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+      "static/chunks/dfb3b_next_dist_db1aa385._.js",
+      "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+      "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
     ],
     "/(public)/releases/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/releases/page.js"
-    ],
-    "/admin/song-adoptions/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/song-adoptions/page.js"
-    ],
-    "/(public)/adoption-success/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/adoption-success/page.js"
-    ],
-    "/(public)/adoption-cancel/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/adoption-cancel/page.js"
-    ],
-    "/(public)/studio/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/studio/page.js"
-    ],
-    "/(public)/official-channels/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/official-channels/page.js"
-    ],
-    "/(public)/collaboration/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/collaboration/page.js"
-    ],
-    "/(public)/contact/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/contact/page.js"
-    ],
-    "/(public)/about/what-is-sufipulse/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/about/what-is-sufipulse/page.js"
-    ],
-    "/(public)/about/founder/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/about/founder/page.js"
-    ],
-    "/admin/partnerships/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/partnerships/page.js"
+      "static/chunks/dfb3b_next_dist_0aed14ed._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_favicon_ico_mjs_11755c3c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_globals_04a62670.css",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_69e8b982._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_layout_tsx_63c1610a._.js",
+      "static/chunks/dfb3b_next_dist_a4f68453._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_not-found_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_59e51d47._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_9685a440._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_f6d022ed._.js",
+      "static/chunks/dfb3b_next_bbb63660._.js",
+      "static/chunks/dfb3b_zod_v4_cf9df88d._.js",
+      "static/chunks/dfb3b_0cbf574c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_(public)_releases_page_tsx_b0dfbe4d._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+      "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+      "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+      "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+      "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+      "static/chunks/dfb3b_next_dist_db1aa385._.js",
+      "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+      "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
     ],
     "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/dfb3b_next_dist_0aed14ed._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_favicon_ico_mjs_11755c3c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_globals_04a62670.css",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_69e8b982._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_layout_tsx_63c1610a._.js",
+      "static/chunks/dfb3b_next_dist_a4f68453._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_not-found_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_59e51d47._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_b0dfbe4d._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+      "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+      "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+      "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+      "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+      "static/chunks/dfb3b_next_dist_db1aa385._.js",
+      "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+      "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
+    ],
+    "/admin/cms-releases/[id]/page": [
+      "static/chunks/dfb3b_next_dist_0aed14ed._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_favicon_ico_mjs_11755c3c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_globals_04a62670.css",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_69e8b982._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_layout_tsx_63c1610a._.js",
+      "static/chunks/dfb3b_next_dist_a4f68453._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_not-found_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_59e51d47._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_admin_cms-releases_[id]_7a31b7d6._.js",
+      "static/chunks/dfb3b_d1c7e321._.js",
+      "static/chunks/35941_Sufipulseupdate_app_admin_cms-releases_[id]_page_tsx_b0dfbe4d._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+      "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+      "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+      "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+      "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+      "static/chunks/dfb3b_next_dist_db1aa385._.js",
+      "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+      "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
+    ],
+    "/admin/cms/page": [
+      "static/chunks/dfb3b_next_dist_0aed14ed._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_favicon_ico_mjs_11755c3c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_globals_04a62670.css",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_69e8b982._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_layout_tsx_63c1610a._.js",
+      "static/chunks/dfb3b_next_dist_a4f68453._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_not-found_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_59e51d47._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_5be52462._.js",
+      "static/chunks/dfb3b_623a2bb0._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_admin_cms_page_tsx_b0dfbe4d._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+      "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+      "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+      "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+      "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+      "static/chunks/dfb3b_next_dist_db1aa385._.js",
+      "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+      "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
+    ],
+    "/admin/page": [
+      "static/chunks/dfb3b_next_dist_0aed14ed._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_favicon_ico_mjs_11755c3c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_globals_04a62670.css",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_69e8b982._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_layout_tsx_63c1610a._.js",
+      "static/chunks/dfb3b_next_dist_a4f68453._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_not-found_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_59e51d47._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_8b3d8577._.js",
+      "static/chunks/dfb3b_next_bbb63660._.js",
+      "static/chunks/dfb3b_zod_v4_cf9df88d._.js",
+      "static/chunks/dfb3b_b627eb14._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_admin_page_tsx_b0dfbe4d._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+      "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+      "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+      "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+      "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+      "static/chunks/dfb3b_next_dist_db1aa385._.js",
+      "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+      "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
+    ],
+    "/page": [
+      "static/chunks/dfb3b_next_dist_0aed14ed._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_favicon_ico_mjs_11755c3c._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_globals_04a62670.css",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_69e8b982._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_layout_tsx_63c1610a._.js",
+      "static/chunks/dfb3b_next_dist_a4f68453._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_not-found_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_59e51d47._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_global-error_tsx_b0dfbe4d._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_lib_youtube-service_ts_3ade4958._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_8a18efa4._.js",
+      "static/chunks/dfb3b_next_bbb63660._.js",
+      "static/chunks/dfb3b_zod_v4_cf9df88d._.js",
+      "static/chunks/dfb3b_8bcedba9._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_app_page_tsx_b0dfbe4d._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
+      "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
+      "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
+      "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
+      "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
+      "static/chunks/dfb3b_next_dist_db1aa385._.js",
+      "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
+      "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
+      "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
     ]
   }
 }

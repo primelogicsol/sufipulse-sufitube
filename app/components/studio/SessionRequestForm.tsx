@@ -6,6 +6,9 @@ import { notifyAdmin } from '@/app/lib/notifications';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { getAllReleases } from '@/lib/cms-api';
 import type { Release } from '@/lib/cms-types';
+import { useFormSecurity } from '../../hooks/useFormSecurity';
+import { sessionRequestSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeObject } from '../../lib/sanitize';
 
 interface SessionRequestFormProps {
   sessionType: 'in_person' | 'remote';
@@ -28,7 +31,9 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<any>({});
   const [success, setSuccess] = useState(false);
+  const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [requestId, setRequestId] = useState<string | undefined>();
 
   useEffect(() => {
@@ -39,6 +44,45 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setFieldErrors({});
+
+    if (!verifySecurity()) {
+      setSuccess(true);
+      setLoading(false);
+      return;
+    }
+
+    const { success: isValid, data, errors } = validateSchema(sessionRequestSchema, formData);
+
+    if (!isValid && errors) {
+      const formattedErrors: any = {};
+      errors.issues.forEach((issue: any) => {
+          formattedErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(formattedErrors);
+      setError('Please correct the highlighted fields.');
+      setLoading(false);
+      
+      const firstErrorField = errors.issues[0]?.path[0] as string;
+      if (firstErrorField) {
+        setTimeout(() => {
+          const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+          if (element) {
+            element.focus();
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+      return;
+    }
+
+    const cleanData = sanitizeObject(data as any, {
+      requester_name: 'text',
+      email: 'email',
+      approval_reference_code: 'text',
+      production_reference: 'text',
+      additional_notes: 'text'
+    });
 
     try {
       // ── Validate reference code against issued access codes ──────────────
@@ -67,6 +111,7 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
       const newRequest = {
         id: `SR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
         ...formData,
+        ...cleanData,
         user_id: user?.id,
         session_type: sessionType,
         status: 'pending',
@@ -124,6 +169,15 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <input
+          type="text"
+          name="_bot_check"
+          value={botCheck}
+          onChange={(e) => setBotCheck(e.target.value)}
+          style={{ display: 'none' }}
+          tabIndex={-1}
+          autoComplete="off"
+        />
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
             <p className="text-red-400 text-sm">{error}</p>
@@ -144,12 +198,14 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
             </label>
             <input
               type="text"
+              name="requester_name"
               required
               placeholder="Your registered name"
               value={formData.requester_name}
               onChange={(e) => setFormData({ ...formData, requester_name: DOMPurify.sanitize(e.target.value) })}
-              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500"
+              className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 ${fieldErrors.requester_name ? 'border border-red-500' : ''}`}
             />
+            {fieldErrors.requester_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.requester_name}</p>}
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-neutral-300 mb-2">
@@ -158,12 +214,14 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
             </label>
             <input
               type="email"
+              name="email"
               required
               placeholder="Your registered email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })}
-              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500"
+              className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 ${fieldErrors.email ? 'border border-red-500' : ''}`}
             />
+            {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
         </div>
 
@@ -174,12 +232,14 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
             </label>
             <input
               type="text"
+              name="approval_reference_code"
               required
               placeholder="Enter your issued reference code"
               value={formData.approval_reference_code}
               onChange={(e) => setFormData({ ...formData, approval_reference_code: e.target.value.toUpperCase() })}
-              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 font-mono"
+              className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 font-mono ${fieldErrors.approval_reference_code ? 'border border-red-500' : ''}`}
             />
+            {fieldErrors.approval_reference_code && <p className="text-red-500 text-xs mt-1">{fieldErrors.approval_reference_code}</p>}
             <p className="text-xs text-neutral-500 mt-1">
               Reference code provided after contributor credential approval
             </p>
@@ -191,10 +251,11 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
               Your Role
             </label>
             <select
+              name="role_type"
               required
               value={formData.role_type}
               onChange={(e) => setFormData({ ...formData, role_type: e.target.value as any })}
-              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white"
+              className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white ${fieldErrors.role_type ? 'border border-red-500' : ''}`}
             >
               <option value="writer">Writer (Ahl-e-Qalam)</option>
               <option value="vocalist">Vocalist (Ahl-e-Sada)</option>
@@ -208,6 +269,7 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
               Release ID
             </label>
             <select
+              name="release_id"
               value={formData.release_id}
               onChange={(e) => setFormData({ ...formData, release_id: e.target.value })}
               className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white"
@@ -232,11 +294,13 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
               </label>
               <input
                 type="date"
+                name="preferred_date_start"
                 required
                 value={formData.preferred_date_start}
                 onChange={(e) => setFormData({ ...formData, preferred_date_start: e.target.value })}
-                className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white"
+                className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white ${fieldErrors.preferred_date_start ? 'border border-red-500' : ''}`}
               />
+              {fieldErrors.preferred_date_start && <p className="text-red-500 text-xs mt-1">{fieldErrors.preferred_date_start}</p>}
             </div>
 
             <div>
@@ -246,11 +310,13 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
               </label>
               <input
                 type="date"
+                name="preferred_date_end"
                 required
                 value={formData.preferred_date_end}
                 onChange={(e) => setFormData({ ...formData, preferred_date_end: e.target.value })}
-                className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white"
+                className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white ${fieldErrors.preferred_date_end ? 'border border-red-500' : ''}`}
               />
+              {fieldErrors.preferred_date_end && <p className="text-red-500 text-xs mt-1">{fieldErrors.preferred_date_end}</p>}
             </div>
           </div>
 
@@ -260,11 +326,13 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
             </label>
             <input
               type="text"
+              name="production_reference"
               placeholder="Reference number or production code"
               value={formData.production_reference}
               onChange={(e) => setFormData({ ...formData, production_reference: DOMPurify.sanitize(e.target.value) })}
-              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500"
+              className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 ${fieldErrors.production_reference ? 'border border-red-500' : ''}`}
             />
+            {fieldErrors.production_reference && <p className="text-red-500 text-xs mt-1">{fieldErrors.production_reference}</p>}
           </div>
 
           <div>
@@ -272,12 +340,14 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
               Additional Notes
             </label>
             <textarea
+              name="additional_notes"
               rows={4}
               placeholder="Provide any additional context for this session request..."
               value={formData.additional_notes}
               onChange={(e) => setFormData({ ...formData, additional_notes: DOMPurify.sanitize(e.target.value) })}
-              className="form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 resize-none"
+              className={`form-input w-full px-4 py-3 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 resize-none ${fieldErrors.additional_notes ? 'border border-red-500' : ''}`}
             />
+            {fieldErrors.additional_notes && <p className="text-red-500 text-xs mt-1">{fieldErrors.additional_notes}</p>}
           </div>
 
           <div className="pt-4">

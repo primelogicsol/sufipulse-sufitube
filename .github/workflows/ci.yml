@@ -1,0 +1,85 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+        continue-on-error: true
+      
+      - name: Type check
+        run: npx tsc --noEmit
+      
+      - name: Build application
+        run: npm run build
+        env:
+          JWT_SECRET: test-secret-for-ci-minimum-32-characters
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci-minimum-32-chars
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NODE_ENV: test
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output-${{ matrix.node-version }}
+          path: .next/
+          retention-days: 7
+
+  deploy:
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.APP_URL }}
+          NODE_ENV: production
+      
+      - name: Deploy to server
+        run: |
+          echo "Deploying to production server..."
+          # Add your deployment script here
+          # Example: rsync, docker-compose, ssh commands
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        continue-on-error: true

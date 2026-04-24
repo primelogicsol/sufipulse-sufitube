@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, X, Shield, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, RefreshCw, ChartBar as BarChart, Heart, Users, MapPin, Building, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { storage } from '../../../lib/storage';
 import { SongAdoption, SongAdoptionSponsor, SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
+import { useFormSecurity } from '../../../hooks/useFormSecurity';
+import { adoptionSchema, validateSchema } from '../../../lib/validation-schemas';
+import { sanitizeObject } from '../../../lib/sanitize';
 
 interface AdoptTabProps {
   release: any;
@@ -32,6 +35,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [adoption, setAdoption] = useState<SongAdoption | null>(null);
   const [oauthConnected, setOauthConnected] = useState<boolean>(false);
   const [oauthChecked, setOauthChecked] = useState<boolean>(false);
@@ -56,7 +61,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       }
 
       try {
-        const res = await fetch(`/api/adoptions/${adoption.id}/google-oauth/status`);
+        const res = await fetch(`/api/adoptions/${adoption.id}/google-oauth/status/`);
         const payload = await res.json();
         setOauthConnected(Boolean(payload?.connected));
       } catch {
@@ -90,11 +95,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   const handleFormSubmit = async () => {
     if (!selectedMethod || !formData) return;
-
-    if (!formData.full_name || !formData.email || !formData.country || !formData.adopter_type) {
-      alert('Please complete all required sponsor fields.');
-      return;
-    }
+    setFieldErrors({});
 
     if (!formData.agree_to_terms || !formData.agree_to_promotional_use) {
       alert('Please accept both consent checkboxes to continue.');
@@ -108,6 +109,43 @@ export function AdoptTab({ release }: AdoptTabProps) {
         return;
       }
     }
+
+    if (!verifySecurity()) {
+      setIsSubmitting(false);
+      alert('Security check failed.');
+      return;
+    }
+
+    const { success, data, errors } = validateSchema(adoptionSchema, formData);
+
+    if (!success && errors) {
+      const formattedErrors: any = {};
+      errors.issues.forEach((issue: any) => {
+          formattedErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(formattedErrors);
+      
+      const firstErrorField = errors.issues[0]?.path[0] as string;
+      if (firstErrorField) {
+        setTimeout(() => {
+          const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+          if (element) {
+            element.focus();
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+      return;
+    }
+
+    const cleanData = sanitizeObject(data as any, {
+      full_name: 'text',
+      email: 'email',
+      country: 'text',
+      city: 'text',
+      google_ads_customer_id: 'text',
+      dedication_message: 'text'
+    });
 
     setIsSubmitting(true);
     try {
@@ -141,18 +179,18 @@ export function AdoptTab({ release }: AdoptTabProps) {
       // Create sponsor record and link it to the adoption
       const sponsorData = {
         adoption_id: newAdoption.id,
-        full_name: formData.full_name!,
-        organization_name: formData.organization_name,
-        email: formData.email!,
-        phone: formData.phone,
-        country: formData.country!,
-        city: formData.city,
-        adopter_type: formData.adopter_type!,
-        display_name_resolved: formData.public_display_mode === 'full_name' ? formData.full_name! :
-                              formData.public_display_mode === 'organization' && formData.organization_name ? formData.organization_name :
-                              formData.public_display_mode === 'initials_only' ? `${formData.full_name!.split(' ').map(n => n[0]).join('')}.` :
+        full_name: cleanData.full_name!,
+        organization_name: cleanData.organization_name,
+        email: cleanData.email!,
+        phone: cleanData.phone,
+        country: cleanData.country!,
+        city: cleanData.city,
+        adopter_type: cleanData.adopter_type!,
+        display_name_resolved: cleanData.public_display_mode === 'full_name' ? cleanData.full_name! :
+                              cleanData.public_display_mode === 'organization' && cleanData.organization_name ? cleanData.organization_name :
+                              cleanData.public_display_mode === 'initials_only' ? `${cleanData.full_name!.split(' ').map((n: string) => n[0]).join('')}.` :
                               'Anonymous',
-        initials_resolved: formData.full_name!.split(' ').map(n => n[0]).join(''),
+        initials_resolved: cleanData.full_name!.split(' ').map((n: string) => n[0]).join(''),
       };
 
       await storage.createSongAdoptionSponsor(sponsorData);
@@ -197,11 +235,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const handlePayment = async () => {
     if (!adoption) return;
 
+    // --- $0 Bypass ---
+    if (adoption.amount_due === 0) {
+      await storage.updateSongAdoption(adoption.id, {
+        payment_status: 'paid', // Zero dollar is automatically "paid"
+        adoption_status: 'pending_review',
+      });
+      await storage.createSongAdoptionEvent({
+        adoption_id: adoption.id,
+        event_type: 'payment_completed',
+        event_label: 'Free adoption method selected (No payment required)',
+        actor_type: 'system',
+        metadata: {},
+      });
+      setStep(4);
+      return;
+    }
+
     // --- Real Stripe Checkout ---
     if (stripeEnabled) {
       setIsRedirectingToStripe(true);
       try {
-        const res = await fetch(`/api/adoptions/${adoption.id}/checkout`, {
+        const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -368,6 +423,15 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   const renderForm = () => (
     <div className="max-w-2xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-300">
+      <input
+        type="text"
+        name="_bot_check"
+        value={botCheck}
+        onChange={(e) => setBotCheck(e.target.value)}
+        style={{ display: 'none' }}
+        tabIndex={-1}
+        autoComplete="off"
+      />
       <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Sponsor Information</h3>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -375,21 +439,25 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <label className="block text-sm text-neutral-400 mb-2">Full Name *</label>
           <input
             type="text"
+            name="full_name"
             value={formData.full_name || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            className={`w-full bg-neutral-900 border ${fieldErrors.full_name ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
             required
           />
+          {fieldErrors.full_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.full_name}</p>}
         </div>
         <div>
           <label className="block text-sm text-neutral-400 mb-2">Email *</label>
           <input
             type="email"
+            name="email"
             value={formData.email || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            className={`w-full bg-neutral-900 border ${fieldErrors.email ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
             required
           />
+          {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
         </div>
       </div>
 
@@ -398,29 +466,34 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <label className="block text-sm text-neutral-400 mb-2">Country *</label>
           <input
             type="text"
+            name="country"
             value={formData.country || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            className={`w-full bg-neutral-900 border ${fieldErrors.country ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
             required
           />
+          {fieldErrors.country && <p className="text-red-500 text-xs mt-1">{fieldErrors.country}</p>}
         </div>
         <div>
           <label className="block text-sm text-neutral-400 mb-2">City</label>
           <input
             type="text"
+            name="city"
             value={formData.city || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            className={`w-full bg-neutral-900 border ${fieldErrors.city ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
           />
+          {fieldErrors.city && <p className="text-red-500 text-xs mt-1">{fieldErrors.city}</p>}
         </div>
       </div>
 
       <div>
         <label className="block text-sm text-neutral-400 mb-2">Adopter Type *</label>
         <select
+          name="adopter_type"
           value={formData.adopter_type || ''}
           onChange={(e) => setFormData(prev => ({ ...prev, adopter_type: e.target.value as any }))}
-          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+          className={`w-full bg-neutral-900 border ${fieldErrors.adopter_type ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
           required
         >
           <option value="">Select type</option>
@@ -431,6 +504,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <option value="sponsor_circle">Sponsor Circle</option>
           <option value="anonymous">Anonymous</option>
         </select>
+        {fieldErrors.adopter_type && <p className="text-red-500 text-xs mt-1">{fieldErrors.adopter_type}</p>}
       </div>
 
       {selectedMethod === 'managed_sufitube' && (
@@ -438,9 +512,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <div>
             <label className="block text-sm text-neutral-400 mb-2">Preferred Audience Region</label>
             <select
+              name="preferred_audience_region"
               value={formData.preferred_audience_region || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, preferred_audience_region: e.target.value as any }))}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+              className={`w-full bg-neutral-900 border ${fieldErrors.preferred_audience_region ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
             >
               <option value="local">Local</option>
               <option value="national">National</option>
@@ -448,13 +523,15 @@ export function AdoptTab({ release }: AdoptTabProps) {
               <option value="diaspora">Diaspora</option>
               <option value="custom">Custom</option>
             </select>
+            {fieldErrors.preferred_audience_region && <p className="text-red-500 text-xs mt-1">{fieldErrors.preferred_audience_region}</p>}
           </div>
           <div>
             <label className="block text-sm text-neutral-400 mb-2">Campaign Objective</label>
             <select
+              name="campaign_objective"
               value={formData.campaign_objective || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, campaign_objective: e.target.value as AdoptionFormData['campaign_objective'] }))}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+              className={`w-full bg-neutral-900 border ${fieldErrors.campaign_objective ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
             >
               <option value="awareness">Awareness</option>
               <option value="devotional_reach">Devotional Reach</option>
@@ -462,6 +539,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
               <option value="event_support">Event Support</option>
               <option value="release_launch_support">Release Launch Support</option>
             </select>
+            {fieldErrors.campaign_objective && <p className="text-red-500 text-xs mt-1">{fieldErrors.campaign_objective}</p>}
           </div>
         </>
       )}
@@ -472,15 +550,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
             <label className="block text-sm text-neutral-400 mb-2">Google Ads Customer ID</label>
             <input
               type="text"
+              name="google_ads_customer_id"
               value={formData.google_ads_customer_id || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, google_ads_customer_id: e.target.value }))}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+              className={`w-full bg-neutral-900 border ${fieldErrors.google_ads_customer_id ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500`}
               placeholder="XXX-XXX-XXXX"
               inputMode="numeric"
               pattern="\d{3}-\d{3}-\d{4}"
               title="Google Ads Customer ID must be in format XXX-XXX-XXXX"
               required
             />
+            {fieldErrors.google_ads_customer_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.google_ads_customer_id}</p>}
           </div>
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2">
@@ -499,11 +579,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
       <div>
         <label className="block text-sm text-neutral-400 mb-2">Dedication Message (Optional)</label>
         <textarea
+          name="dedication_message"
           value={formData.dedication_message || ''}
           onChange={(e) => setFormData(prev => ({ ...prev, dedication_message: e.target.value }))}
-          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 h-24"
+          className={`w-full bg-neutral-900 border ${fieldErrors.dedication_message ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 h-24`}
           placeholder="Share the intention behind your sponsorship..."
         />
+        {fieldErrors.dedication_message && <p className="text-red-500 text-xs mt-1">{fieldErrors.dedication_message}</p>}
       </div>
 
       <div className="space-y-4">
@@ -511,27 +593,31 @@ export function AdoptTab({ release }: AdoptTabProps) {
         <div>
           <label className="block text-sm text-neutral-400 mb-2">Public Display</label>
           <select
+            name="public_display_mode"
             value={formData.public_display_mode || 'full_name'}
             onChange={(e) => setFormData(prev => ({ ...prev, public_display_mode: e.target.value as any }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            className={`w-full bg-neutral-900 border ${fieldErrors.public_display_mode ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
           >
             <option value="full_name">Full Name</option>
             <option value="initials_only">Initials Only</option>
             <option value="organization">Organization Name</option>
             <option value="anonymous">Anonymous</option>
           </select>
+          {fieldErrors.public_display_mode && <p className="text-red-500 text-xs mt-1">{fieldErrors.public_display_mode}</p>}
         </div>
         <div>
           <label className="block text-sm text-neutral-400 mb-2">Location Display</label>
           <select
+            name="public_location_mode"
             value={formData.public_location_mode || 'city_country'}
             onChange={(e) => setFormData(prev => ({ ...prev, public_location_mode: e.target.value as any }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
+            className={`w-full bg-neutral-900 border ${fieldErrors.public_location_mode ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
           >
             <option value="city_country">City, Country</option>
             <option value="country_only">Country Only</option>
             <option value="hide">Hide Location</option>
           </select>
+          {fieldErrors.public_location_mode && <p className="text-red-500 text-xs mt-1">{fieldErrors.public_location_mode}</p>}
         </div>
       </div>
 
@@ -584,7 +670,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         <div className="grid grid-cols-2 gap-6">
           <div>
             <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Method</div>
-            <div className="text-neutral-200 capitalize">{selectedMethod?.replace('_', ' ')}</div>
+            <div className="text-neutral-200 capitalize">{selectedMethod?.replaceAll('_', ' ')}</div>
           </div>
           <div>
             <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Amount</div>
@@ -652,7 +738,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-neutral-500 text-sm">Method</span>
-          <span className="text-neutral-300 text-sm font-medium capitalize">{selectedMethod?.replace('_', ' ')}</span>
+          <span className="text-neutral-300 text-sm font-medium capitalize">{selectedMethod?.replaceAll('_', ' ')}</span>
         </div>
       </div>
 

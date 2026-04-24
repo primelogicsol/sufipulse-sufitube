@@ -187,11 +187,11 @@ export function Header() {
             flex
             items-center
             justify-between
+            gap-4
           `.trim()}
         >
-          {/* <Logo /> */}
-
-          <nav className="hidden lg:flex items-center gap-8">
+          {/* Desktop Navigation - Always visible on lg screens and above */}
+          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center">
 
             {/* <img src="/sufitube-logo.png" alt="SufiTube Studio" className="h-44 py-2 w-auto object-contain" /> */}
             <Link href={"/"} className="mt-2">
@@ -231,10 +231,10 @@ export function Header() {
             <DualNameDropdownMenu className='text-nowrap' label="Production Infrastructure" items={productionItems} isActive={false} />
             <DualNameDropdownMenu className='text-nowrap' label="Governance" items={governanceItems} isActive={false} />
             <DropdownMenu className='text-nowrap' label="About" items={aboutItems} isActive={false} />
-
             <AvatarMenu />
           </nav>
 
+          {/* Mobile logo and hamburger - Only visible on small screens */}
           <Link href="/" className="lg:hidden mt-1" aria-label="Go to homepage">
             <Image
               src="/sufipulse-logo-v5.png"
@@ -245,6 +245,7 @@ export function Header() {
             />
           </Link>
 
+          {/* Mobile hamburger - Only visible on small screens */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
             className={`
@@ -254,8 +255,8 @@ export function Header() {
               transition-colors
               duration-[var(--transition-base)]
               p-2
-                text-nowrap
-
+              text-nowrap
+              block
             `.trim()}
             aria-label="Open menu"
           >

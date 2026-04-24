@@ -7,10 +7,16 @@ import { StudioProfileType } from '@/app/types/studio.types';
 import { StudioSubmissionSuccessModal } from './StudioSubmissionSuccessModal';
 import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
 import { storage } from '@/app/lib/storage';
+import { useFormSecurity } from '../../hooks/useFormSecurity';
+import { studioProfileSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeObject } from '../../lib/sanitize';
 
 export default function StudioCredentialsForm() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [showModal, setShowModal] = useState(false);
   const [submissionId] = useState(
     `SP-STD-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`
@@ -43,9 +49,46 @@ export default function StudioCredentialsForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+    setFieldErrors({});
+
+    if (!verifySecurity()) {
+      setShowModal(true);
+      setLoading(false);
+      return;
+    }
+
+    const { success, data, errors } = validateSchema(studioProfileSchema, formData);
+
+    if (!success && errors) {
+      const formattedErrors: any = {};
+      errors.issues.forEach((issue: any) => {
+          formattedErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(formattedErrors);
+      setError('Please correct the highlighted fields.');
+      setLoading(false);
+      return;
+    }
+
+    const cleanData = sanitizeObject(data as any, {
+      studio_name: 'text',
+      country: 'text',
+      city: 'text',
+      primary_contact_name: 'text',
+      email: 'email',
+      phone: 'text',
+      equipment_overview: 'text',
+      years_in_operation: 'text'
+    });
+
+    const payload = {
+      ...formData,
+      ...cleanData,
+    };
 
     try {
-      await storage.create('studio', { ...formData, profile_status: 'pending', submission_id: submissionId });
+      await storage.create('studio', { ...payload, profile_status: 'pending', submission_id: submissionId });
       notifyApplicationReceived({
         user_id: user?.id,
         email: formData.email,
@@ -73,7 +116,22 @@ export default function StudioCredentialsForm() {
   return (
     <>
       <form onSubmit={handleSubmit} className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
+      <input
+          type="text"
+          name="_bot_check"
+          value={botCheck}
+          onChange={(e) => setBotCheck(e.target.value)}
+          style={{ display: 'none' }}
+          tabIndex={-1}
+          autoComplete="off"
+      />
       <h3 className="text-lg font-semibold text-white mb-6">Submit Studio Credentials</h3>
+      
+      {error && (
+        <div className="mb-6 p-4 bg-red-900/20 border border-red-800/50 rounded">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-5">
@@ -87,8 +145,9 @@ export default function StudioCredentialsForm() {
                   required
                   value={formData.studio_name}
                   onChange={(e) => setFormData({ ...formData, studio_name: DOMPurify.sanitize(e.target.value) })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.studio_name ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.studio_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.studio_name}</p>}
               </div>
               <div>
                 <label className="block text-neutral-400 text-xs mb-1.5">Country</label>
@@ -135,8 +194,9 @@ export default function StudioCredentialsForm() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.email ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
               </div>
               <div>
                 <label className="block text-neutral-400 text-xs mb-1.5">Phone (optional)</label>

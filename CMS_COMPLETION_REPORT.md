@@ -104,6 +104,7 @@
    - Feature overview
    - Test data included
    - Pro tips and learning path
+4. **CMS_RELEASE_DELIVERY_SPEC.md** - Canonical CMS to Web + YouTube delivery specification (auto sync + manual fallback)
 
 ### Public Pages Updated (2)
 1. **app/(public)/releases-cms/page.tsx**

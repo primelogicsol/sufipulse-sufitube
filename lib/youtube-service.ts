@@ -27,9 +27,9 @@ class YouTubeService {
 
     constructor(config: Partial<YouTubeServiceConfig> = {}) {
         this.config = {
-            apiKey: config.apiKey || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
+            apiKey: config.apiKey || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEY || '',
             channelId: config.channelId || 'UCraDr3i5A3k0j7typ6tOOsQ',
-            cacheExpiryMs: config.cacheExpiryMs || 30 * 60 * 1000, // 30 minutes
+            cacheExpiryMs: config.cacheExpiryMs || 4 * 60 * 60 * 1000, // 4 hours
             maxRetries: config.maxRetries || 3,
             retryDelayMs: config.retryDelayMs || 1000,
             ...config
@@ -64,7 +64,13 @@ class YouTubeService {
         }
 
         try {
-            const response = await fetch(url);
+            // Next.js App Router dynamic fetch caching: revalidate only on server
+            const fetchOptions: any = {};
+            if (typeof window === 'undefined') {
+                fetchOptions.next = { revalidate: 14400 };
+            }
+
+            const response = await fetch(url, fetchOptions);
             const data = await response.json();
 
             if (response.status === 403 && data.error?.message?.includes('quota')) {
@@ -295,12 +301,11 @@ class YouTubeService {
     }
 
     async getPopularVideos(count: number = 10): Promise<YouTubeVideo[]> {
-        // Popular ranking should be based on real view counts over a larger channel sample.
+        // Use YouTube's viewCount ordering for accurate all-time popular results.
         try {
-            const sampleSize = Math.max(count * 5, 250);
-            const result = await this.searchVideos('', sampleSize, 'date');
+            const result = await this.searchVideos('', count, 'viewCount');
             if (result.length > 0) {
-                return [...result].sort((a, b) => b.views - a.views).slice(0, count);
+                return result;
             }
         } catch (error) {
             console.log('API failed, using static data');
@@ -369,25 +374,11 @@ class YouTubeService {
                 return staticVideo;
             }
 
-            // Return generic mock as last resort
-            console.log('🔄 Returning generic mock video data');
-            const mockVideo: YouTubeVideo = {
-                id: videoId,
-                title: 'SufiPulse - Sacred Recitation',
-                description: 'A soul-stirring Sufi recitation from our institutional archive.',
-                thumbnailUrl: 'https://via.placeholder.com/480x360/8B5CF6/FFFFFF?text=SufiPulse',
-                publishedDate: new Date().toISOString(),
-                durationSeconds: 300,
-                durationFormatted: '5:00',
-                views: 2500,
-                source: 'mock'
-            };
-
-            return mockVideo;
+            return null;
         }
     }
 
-    private parseDuration(duration: string): number {
+    public parseDuration(duration: string): number {
         const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
         if (!match) return 0;
 

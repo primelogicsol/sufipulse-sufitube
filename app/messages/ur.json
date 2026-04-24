@@ -1,0 +1,96 @@
+{
+  "common": {
+    "loading": "...لوڈ ہو رہا ہے",
+    "error": "ایک خرابی پیش آگئی",
+    "success": "کامیابی",
+    "cancel": "منسوخ",
+    "save": "محفوظ کریں",
+    "delete": "حذف کریں",
+    "edit": "ترمیم",
+    "submit": "جمع کرائیں",
+    "search": "تلاش",
+    "filter": "فلٹر",
+    "back": "واپس",
+    "next": "اگلا",
+    "previous": "پچھلا",
+    "close": "بند کریں",
+    "open": "کھولیں",
+    "yes": "جی ہاں",
+    "no": "جی نہیں"
+  },
+  "nav": {
+    "home": "ہوم",
+    "releases": "ریلیزز",
+    "literaryJournal": "ادبی جریدہ",
+    "contributors": "تخلیقی تعاون کنندگان",
+    "writers": "مصنفین",
+    "vocalists": "گلوکار",
+    "producers": "پروڈیوسرز",
+    "production": "پروڈکشن",
+    "governance": "انتظامیہ",
+    "about": "تعارف",
+    "contact": "رابطہ",
+    "login": "لاگ ان",
+    "register": "رجسٹر",
+    "dashboard": "ڈیش بورڈ",
+    "profile": "پروفائل",
+    "logout": "لاگ آؤٹ"
+  },
+  "home": {
+    "title": "صوفی پلس — مقدس موسیقی اور شاعری",
+    "subtitle": "صوفی موسیقی، شاعری اور ادبی کامات دریافت کریں",
+    "latestReleases": "تازہ ترین ریلیزز",
+    "featuredContributors": "نمایاں تعاون کنندگان",
+    "learnMore": "مزید جانیں",
+    "watchNow": "ابھی دیکھیں"
+  },
+  "auth": {
+    "login": "لاگ ان",
+    "register": "رجسٹر",
+    "email": "ای میل",
+    "password": "پاس ورڈ",
+    "forgotPassword": "پاس ورڈ بھول گئے؟",
+    "rememberMe": "مجھے یاد رکھیں",
+    "dontHaveAccount": "اکاؤنٹ نہیں ہے؟",
+    "alreadyHaveAccount": "پہلے سے اکاؤنٹ ہے؟",
+    "signIn": "سائن ان",
+    "signUp": "سائن اپ",
+    "verifyEmail": "ای میل تصدیق کریں",
+    "enterOTP": "6 ہندسوں کا کوڈ درج کریں",
+    "resendCode": "کوڈ دوبارہ بھیجیں"
+  },
+  "contributor": {
+    "writer": "مصنف",
+    "vocalist": "گلوکار",
+    "producer": "پروڈیوسر",
+    "literaryContributor": "ادبی تعاون کنندہ",
+    "studioEngineer": "اسٹوڈیو انجینئر"
+  },
+  "release": {
+    "title": "ریلیز",
+    "lyrics": "بول",
+    "subtitles": "سب ٹائٹلز",
+    "credits": "کریڈٹس",
+    "commentary": "تبصرہ",
+    "sponsors": "سپانسرز",
+    "adopt": "اس ریلیز کو گود لیں",
+    "views": "ویوز",
+    "likes": "لائکس"
+  },
+  "admin": {
+    "dashboard": "ایڈمن ڈیش بورڈ",
+    "users": "صارفین",
+    "releases": "ریلیزز",
+    "applications": "درخواستیں",
+    "content": "مواد",
+    "settings": "ترتیبات"
+  },
+  "errors": {
+    "notFound": "صفحہ نہیں ملا",
+    "serverError": "سرور کی خرابی",
+    "unauthorized": "آپ کو لاگ ان ہونا ضروری ہے",
+    "forbidden": "آپ کو اجازت نہیں ہے",
+    "tryAgain": "دوبارہ کوشش کریں",
+    "goHome": "ہوم پر جائیں"
+  }
+}

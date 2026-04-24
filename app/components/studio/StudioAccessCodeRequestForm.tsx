@@ -3,6 +3,9 @@ import { CircleCheck as CheckCircle, KeyRound } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { notifyAdmin } from '@/app/lib/notifications';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { useFormSecurity } from '../../hooks/useFormSecurity';
+import { studioAccessCodeRequestSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeObject } from '../../lib/sanitize';
 
 type RequestRole = 'writer' | 'vocalist' | 'producer';
 
@@ -26,11 +29,51 @@ export function StudioAccessCodeRequestForm() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setFieldErrors({});
+
+    if (!verifySecurity()) {
+      setSubmitted(true);
+      setLoading(false);
+      return;
+    }
+
+    const { success, data, errors } = validateSchema(studioAccessCodeRequestSchema, formData);
+
+    if (!success && errors) {
+      const formattedErrors: any = {};
+      errors.issues.forEach((issue: any) => {
+          formattedErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(formattedErrors);
+      setError('Please correct the highlighted fields.');
+      setLoading(false);
+
+      const firstErrorField = errors.issues[0]?.path[0] as string;
+      if (firstErrorField) {
+        setTimeout(() => {
+          const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+          if (element) {
+            element.focus();
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+      return;
+    }
+
+    const cleanData = sanitizeObject(data as any, {
+      name: 'text',
+      email: 'email',
+      profile_reference: 'text',
+      reason: 'text'
+    });
 
     try {
       const existing: any[] = typeof window !== 'undefined'
@@ -48,11 +91,8 @@ export function StudioAccessCodeRequestForm() {
 
       const entry = {
         id: `ACR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        name: formData.name,
-        email: formData.email,
-        role: formData.role,
-        profile_reference: formData.profile_reference,
-        reason: formData.reason,
+        ...formData,
+        ...cleanData,
         status: 'pending',
         issued_code: null,
         created_at: new Date().toISOString(),
@@ -109,6 +149,15 @@ export function StudioAccessCodeRequestForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <input
+          type="text"
+          name="_bot_check"
+          value={botCheck}
+          onChange={(e) => setBotCheck(e.target.value)}
+          style={{ display: 'none' }}
+          tabIndex={-1}
+          autoComplete="off"
+        />
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
             <p className="text-red-400 text-sm">{error}</p>
@@ -126,33 +175,38 @@ export function StudioAccessCodeRequestForm() {
             <label className="block text-sm font-medium text-neutral-300 mb-1.5">Full Name</label>
             <input
               type="text"
+              name="name"
               required
               placeholder="Your registered name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: DOMPurify.sanitize(e.target.value) })}
-              className="form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 text-sm"
+              className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 text-sm ${fieldErrors.name ? 'border border-red-500' : ''}`}
             />
+            {fieldErrors.name && <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-300 mb-1.5">Email Address</label>
             <input
               type="email"
+              name="email"
               required
               placeholder="Your registered email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })}
-              className="form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 text-sm"
+              className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 text-sm ${fieldErrors.email ? 'border border-red-500' : ''}`}
             />
+            {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-neutral-300 mb-1.5">Your Role</label>
           <select
+            name="role"
             required
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value as RequestRole })}
-            className="form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white text-sm"
+            className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white text-sm ${fieldErrors.role ? 'border border-red-500' : ''}`}
           >
             {ROLE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -166,12 +220,14 @@ export function StudioAccessCodeRequestForm() {
           </label>
           <input
             type="text"
+            name="profile_reference"
             required
             placeholder="Reference ID from your approved application"
             value={formData.profile_reference}
             onChange={(e) => setFormData({ ...formData, profile_reference: DOMPurify.sanitize(e.target.value) })}
-            className="form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 font-mono text-sm"
+            className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 font-mono text-sm ${fieldErrors.profile_reference ? 'border border-red-500' : ''}`}
           />
+          {fieldErrors.profile_reference && <p className="text-red-500 text-xs mt-1">{fieldErrors.profile_reference}</p>}
           <p className="text-xs text-neutral-500 mt-1">
             Found in your approval notification or contributor dashboard
           </p>
@@ -182,13 +238,15 @@ export function StudioAccessCodeRequestForm() {
             Reason for Session Access
           </label>
           <textarea
+            name="reason"
             rows={3}
             required
             placeholder="Briefly describe the production context requiring studio access…"
             value={formData.reason}
             onChange={(e) => setFormData({ ...formData, reason: DOMPurify.sanitize(e.target.value) })}
-            className="form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 resize-none text-sm"
+            className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 resize-none text-sm ${fieldErrors.reason ? 'border border-red-500' : ''}`}
           />
+          {fieldErrors.reason && <p className="text-red-500 text-xs mt-1">{fieldErrors.reason}</p>}
         </div>
 
         <button

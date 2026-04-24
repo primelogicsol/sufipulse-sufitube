@@ -7,11 +7,17 @@ import Link from 'next/link';
 import { VocalistProfileType } from '@/app/types/vocalist.types';
 import { storage } from '@/app/lib/storage';
 import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
+import { useFormSecurity } from '../../hooks/useFormSecurity';
+import { vocalistProfileSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeObject } from '../../lib/sanitize';
 
 export function VocalistCredentialsForm() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [submissionId] = useState(`SP-VOC-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`);
   const [formData, setFormData] = useState<VocalistProfileType>({
     full_name: '',
@@ -42,19 +48,47 @@ export function VocalistCredentialsForm() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    setError('');
+    setFieldErrors({});
 
-    if (!formData.full_name.trim() || !formData.email.trim() || !formData.country || !formData.sample_link.trim()) {
+    if (!verifySecurity()) {
+      setSubmitted(true);
       return;
     }
-    if (!formData.accept_producer_coordination || !formData.accept_framework) {
-      return;
-    }
 
-    const payload: VocalistProfileType = {
+    const payloadToValidate: any = {
       ...formData,
       languages_performed: typeof formData.languages_performed === 'string'
         ? formData.languages_performed.trim().split(/[,\s]+/).filter(Boolean)
         : formData.languages_performed,
+    };
+
+    const { success, data, errors } = validateSchema(vocalistProfileSchema, payloadToValidate);
+
+    if (!success && errors) {
+      const formattedErrors: any = {};
+      errors.issues.forEach((issue: any) => {
+          formattedErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(formattedErrors);
+      setError('Please correct the highlighted fields.');
+      return;
+    }
+
+    const cleanData = sanitizeObject(data as any, {
+      full_name: 'text',
+      performance_name: 'text',
+      country: 'text',
+      city: 'text',
+      email: 'email',
+      years_experience: 'text',
+      vocal_range: 'text',
+      musical_training: 'text'
+    });
+
+    const payload: VocalistProfileType = {
+      ...formData,
+      ...cleanData,
       status: 'pending',
     };
 
@@ -111,7 +145,22 @@ export function VocalistCredentialsForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
-      <h3 className="text-lg font-semibold text-white mb-6">Submit Vocalist Profile</h3>
+      <input
+          type="text"
+          name="_bot_check"
+          value={botCheck}
+          onChange={(e) => setBotCheck(e.target.value)}
+          style={{ display: 'none' }}
+          tabIndex={-1}
+          autoComplete="off"
+      />
+      <h3 className="text-lg font-semibold text-white mb-4">Submit Vocalist Profile</h3>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-900/20 border border-red-800/50 rounded">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-5">
@@ -126,8 +175,9 @@ export function VocalistCredentialsForm() {
                   required
                   value={formData.full_name}
                   onChange={e => setFormData({ ...formData, full_name: DOMPurify.sanitize(e.target.value) })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.full_name ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.full_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.full_name}</p>}
               </div>
 
               <div>
@@ -177,8 +227,9 @@ export function VocalistCredentialsForm() {
                   required
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.email ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
               </div>
 
               <div>
@@ -278,8 +329,9 @@ export function VocalistCredentialsForm() {
                   value={formData.sample_link}
                   required
                   onChange={e => setFormData({ ...formData, sample_link: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.sample_link ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.sample_link && <p className="text-red-500 text-xs mt-1">{fieldErrors.sample_link}</p>}
               </div>
             </div>
           </div>

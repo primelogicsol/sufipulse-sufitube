@@ -3,16 +3,16 @@ import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Music, Filter, Search, Play, Calendar, Eye, Youtube } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 
 type FilterType = 'all' | 'native' | 'legacy';
 type DurationFilter = 'all' | 'short' | 'standard' | 'long';
-type SortOrder = 'new' | 'old' | 'popular';
+type SortOrder = 'all' | 'new' | 'old' | 'popular';
 
 const ITEMS_PER_PAGE = 12;
-const REGISTRY_FETCH_LIMIT = 50;
+const REGISTRY_FETCH_LIMIT = 500;
 
 interface YouTubeRelease {
     id: string;
@@ -35,40 +35,136 @@ export default function Releases() {
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
     const [yearFilter, setYearFilter] = useState<string>('all');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('new');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
-    const fetchVideos = async (showLoader: boolean = false) => {
+    const fetchVideos = async (showLoader: boolean = false, mode: SortOrder = sortOrder) => {
         if (showLoader) {
             setLoading(true);
         }
 
         try {
-            const { youtubeService } = await import('../../../lib/youtube-service');
-            const videos = await youtubeService.getLatestVideos(REGISTRY_FETCH_LIMIT);
+            // 1. Fetch from CMS API (Robust Fetch with absolute URL fallback and retry)
+            let cmsVideos: YouTubeRelease[] = [];
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+            const endpoints = [
+                '/api/releases',
+                `${baseUrl}/api/releases`
+            ];
 
-            setReleases(videos);
+            let lastFetchError = null;
+            for (const url of endpoints) {
+                try {
+                    const cmsRes = await fetch(url, { cache: 'no-store' });
+                    if (cmsRes.ok) {
+                        const cmsData = await cmsRes.json();
+                        cmsVideos = cmsData.map((r: any) => ({
+                            id: r.youtubeId || r.id,
+                            title: r.title,
+                            description: r.description,
+                            thumbnailUrl: r.thumbnailUrl,
+                            publishedDate: r.releaseDate,
+                            durationSeconds: r.durationSeconds,
+                            durationFormatted: r.durationFormatted,
+                            views: r.viewCount || 0,
+                            source: 'native'
+                        }));
+                        break; // Success!
+                    }
+                } catch (e) {
+                    lastFetchError = e;
+                    console.warn(`Registry fetch failed for ${url}, trying next...`, e);
+                }
+            }
+
+            // If everything failed, try one more time after a short delay
+            if (cmsVideos.length === 0 && lastFetchError) {
+                await new Promise(r => setTimeout(r, 1000));
+                try {
+                    const retryRes = await fetch('/api/releases', { cache: 'no-store' });
+                    if (retryRes.ok) {
+                        const cmsData = await retryRes.json();
+                        cmsVideos = cmsData.map((r: any) => ({
+                            id: r.youtubeId || r.id,
+                            title: r.title,
+                            description: r.description,
+                            thumbnailUrl: r.thumbnailUrl,
+                            publishedDate: r.releaseDate,
+                            durationSeconds: r.durationSeconds,
+                            durationFormatted: r.durationFormatted,
+                            views: r.viewCount || 0,
+                            source: 'native'
+                        }));
+                    }
+                } catch (e) {
+                    console.error("Final registry retry failed", e);
+                }
+            }
+
+            // 2. Fetch from YouTube Service (Live API or Static Fallback)
+            let youtubeVideos: YouTubeRelease[] = [];
+            try {
+                const { youtubeService } = await import('../../../lib/youtube-service');
+                youtubeVideos = mode === 'popular'
+                    ? await youtubeService.getPopularVideos(REGISTRY_FETCH_LIMIT)
+                    : await youtubeService.getLatestVideos(REGISTRY_FETCH_LIMIT);
+            } catch (ytErr) {
+                console.warn("YouTube Service fetch failed, using CMS data only", ytErr);
+            }
+
+            // 3. Merge: prefer CMS data for overlapping IDs, but include unique YouTube videos
+            const cmsIds = new Set(cmsVideos.map(v => v.id));
+            const uniqueYoutubeVideos = youtubeVideos.filter(v => !cmsIds.has(v.id));
+            
+            const combined = [...cmsVideos, ...uniqueYoutubeVideos];
+            
+            if (combined.length === 0 && !lastFetchError) {
+                // If we got nothing at all and no error, maybe the CMS is empty? 
+                // But the user expects at least the 14 static ones.
+                const { STATIC_YOUTUBE_VIDEOS } = await import('../../../app/data/youtube-videos');
+                setReleases(STATIC_YOUTUBE_VIDEOS);
+            } else {
+                setReleases(combined);
+            }
+            
             setError(null);
             setLastSync(new Date().toISOString());
         } catch (err: any) {
-            console.error("Error fetching YouTube videos:", err);
+            console.error("Critical error fetching videos:", err);
             setError(err.message || "Failed to load videos");
+            
+            // Last resort: show static data if everything crashed
+            try {
+                const { STATIC_YOUTUBE_VIDEOS } = await import('../../../app/data/youtube-videos');
+                setReleases(STATIC_YOUTUBE_VIDEOS);
+            } catch (e) {}
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchVideos(true);
+        fetchVideos(true, sortOrder);
 
         // Keep releases automatically refreshed without manual intervention.
         const refreshTimer = setInterval(() => {
-            fetchVideos(false);
+            fetchVideos(false, sortOrder);
         }, 15 * 60 * 1000);
 
         return () => clearInterval(refreshTimer);
     }, []);
+
+    // Re-fetch with the right API order when switching to/from "popular"
+    const prevSortRef = useRef<SortOrder>('all');
+    const prev = prevSortRef.current;
+    useEffect(() => {
+        const changed = (sortOrder === 'popular') !== (prev === 'popular');
+        prevSortRef.current = sortOrder;
+        if (changed) {
+            fetchVideos(true, sortOrder);
+        }
+    }, [sortOrder]);
 
     const years = useMemo(() => {
         const uniqueYears = new Set(
@@ -223,6 +319,7 @@ export default function Releases() {
                                     }}
                                     className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
                                 >
+                                    <option value="all">All</option>
                                     <option value="new">Newest</option>
                                     <option value="old">Oldest</option>
                                     <option value="popular">Most Popular</option>

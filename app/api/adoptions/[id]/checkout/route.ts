@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const getStripeClient = () => {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return null;
-  }
+// Module-scoped Stripe instance — created once, reused across requests
+let stripeClient: Stripe | null = null;
 
-  return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2025-01-27.acacia',
-  });
+const getStripeClient = () => {
+  if (!stripeClient && process.env.STRIPE_SECRET_KEY) {
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-01-27.acacia',
+    });
+  }
+  return stripeClient;
 };
 
 export async function POST(
@@ -29,7 +31,7 @@ export async function POST(
     const body = await request.json();
     const {
       amountUSD,
-      releasTitle,
+      releaseTitle,
       sponsorName,
       sponsorEmail,
       methodType,
@@ -55,8 +57,8 @@ export async function POST(
               name: packageName
                 ? `Song Adoption – ${packageName}`
                 : 'Song Adoption – Custom Budget',
-              description: releasTitle
-                ? `Sponsor the spread of "${releasTitle}" via ${methodType === 'managed_sufitube' ? 'SufiTube Managed Promotion' : 'Your Google Ads Account'}`
+              description: releaseTitle
+                ? `Sponsor the spread of "${releaseTitle}" via ${methodType === 'managed_sufitube' ? 'SufiTube Managed Promotion' : 'Your Google Ads Account'}`
                 : 'Sufi kalam sponsorship',
               images: [],
             },

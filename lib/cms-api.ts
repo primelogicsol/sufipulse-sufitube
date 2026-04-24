@@ -4,123 +4,278 @@
 
 import * as cms from './cms-types';
 
-// Mock data - will be replaced with real Supabase calls when configured
-const MOCK_RELEASES: cms.Release[] = [
-  {
-    id: '1',
-    title: 'Qawwali: The Soul\'s Journey',
-    slug: 'qawwali-souls-journey',
-    status: 'published',
-    category: 'qawwali',
-    youtube_id: 'LwnPXSEJJHI',
-    duration_seconds: 480,
-    duration_formatted: '8:00',
-    view_count: 1823,
-    like_count: 163,
-    show_views: true,
-    show_likes: true,
-    enable_lyrics: true,
-    enable_commentary: true,
-    enable_sponsors: false,
-    enable_adoption: true,
-    enable_credits: true,
-    description: 'Sufi Hacker enters the hidden system beneath your thoughts — revealing the source code of the heart, the firewalls of ego, and the quiet spiritual signals your soul has been sending.',
-    published_at: '2025-12-09T08:46:21Z',
-    created_at: '2025-12-09T08:46:21Z',
-  },
-  {
-    id: '2',
-    title: 'The Garden of Divine Love',
-    slug: 'garden-divine-love',
-    status: 'published',
-    category: 'ghazal',
-    youtube_id: 'be6GFwGpobw',
-    duration_seconds: 420,
-    duration_formatted: '7:00',
-    view_count: 2137,
-    like_count: 261,
-    show_views: true,
-    show_likes: true,
-    enable_lyrics: true,
-    enable_commentary: false,
-    enable_sponsors: true,
-    enable_adoption: false,
-    enable_credits: true,
-    description: 'Exploring themes of divine love through classical Ghazal poetry and music.',
-    published_at: '2024-01-10T14:30:00Z',
-    created_at: '2024-01-10T14:30:00Z',
-  },
-  {
-    id: '3',
-    title: 'Spiritual Journey: Voices of the Heart',
-    slug: 'spiritual-journey-voices',
-    status: 'draft',
-    category: 'devotional',
-    youtube_id: 'XPaJu3lHd5Y',
-    duration_seconds: 720,
-    duration_formatted: '12:00',
-    view_count: 0,
-    like_count: 0,
-    show_views: false,
-    show_likes: false,
-    enable_lyrics: false,
-    enable_commentary: false,
-    enable_sponsors: false,
-    enable_adoption: false,
-    enable_credits: true,
-    description: 'An upcoming devotional music release capturing spiritual voices.',
-    created_at: '2024-01-20T09:15:00Z',
-  },
-];
+const LEGACY_RELEASES_KEY = 'cms_releases';
+const CANONICAL_RELEASES_KEY = 'sufipulse_cms_releases';
+const RELEASE_MIGRATION_MARKER = 'cms_releases_migrated_to_canonical_v1';
+
+type CanonicalStorageEntry = [string, Record<string, any>];
+
+const mapAnyToRelease = (value: any): cms.Release => {
+  const status = String(value?.status || 'draft') as cms.Release['status'];
+  return {
+    id: String(value?.id || `${Date.now()}`),
+    title: String(value?.title || 'Untitled'),
+    subtitle: value?.subtitle,
+    slug: String(value?.slug || `release-${Date.now()}`),
+    status,
+    content_readiness_state: value?.content_readiness_state || value?.contentReadinessState,
+    category: value?.category,
+    release_type: value?.release_type || value?.releaseType,
+    release_date: value?.release_date || value?.releaseDate,
+    description: value?.description,
+    youtube_id: value?.youtube_id || value?.youtubeId,
+    youtube_url: value?.youtube_url || value?.youtubeUrl,
+    youtube_channel_id: value?.youtube_channel_id || value?.youtubeChannelId,
+    youtube_channel_url: value?.youtube_channel_url || value?.youtubeChannelUrl,
+    thumbnail_url: value?.thumbnail_url || value?.thumbnailUrl,
+    poster_url: value?.poster_url || value?.posterUrl,
+    chorus_vocalists: value?.chorus_vocalists || value?.chorusVocalists || [],
+    duration_seconds: Number(value?.duration_seconds ?? value?.durationSeconds ?? 0),
+    duration_formatted: value?.duration_formatted || value?.durationFormatted || '0:00',
+    view_count: Number(value?.view_count ?? value?.viewCount ?? 0),
+    like_count: Number(value?.like_count ?? value?.likeCount ?? 0),
+    show_views: value?.show_views ?? true,
+    show_likes: value?.show_likes ?? true,
+    enable_lyrics: value?.enable_lyrics ?? value?.enableLyrics ?? true,
+    enable_commentary: value?.enable_commentary ?? value?.enableCommentary ?? true,
+    enable_sponsors: value?.enable_sponsors ?? value?.enableSponsors ?? false,
+    enable_adoption: value?.enable_adoption ?? value?.enableAdoption ?? true,
+    enable_credits: value?.enable_credits ?? value?.enableCredits ?? true,
+    subtitle_cues: value?.subtitle_cues || value?.subtitleCues || [],
+    subtitle_translations: value?.subtitle_translations || value?.subtitleTranslations || {},
+    subtitle_language_statuses: value?.subtitle_language_statuses || value?.subtitleLanguageStatuses || {},
+    master_timing_version: value?.master_timing_version || value?.masterTimingVersion || 1,
+    lyrics_structure: value?.lyrics_structure || value?.lyricsStructure || {},
+    published_at: value?.published_at || value?.publishedAt,
+    created_at: value?.created_at || value?.createdAt,
+    updated_at: value?.updated_at || value?.updatedAt,
+  };
+};
+
+const mapReleaseToCanonical = (release: cms.Release): Record<string, any> => {
+  const now = new Date().toISOString();
+  return {
+    id: release.id,
+    title: release.title,
+    subtitle: release.subtitle,
+    slug: release.slug,
+    youtubeId: release.youtube_id || '',
+    youtubeUrl: release.youtube_url,
+    youtubeChannelId: release.youtube_channel_id,
+    youtubeChannelUrl: release.youtube_channel_url,
+    thumbnailUrl: release.thumbnail_url,
+    posterUrl: release.poster_url,
+    description: release.description || '',
+    releaseDate: release.release_date || now.split('T')[0],
+    durationSeconds: Number(release.duration_seconds || 0),
+    durationFormatted: release.duration_formatted || '0:00',
+    viewCount: Number(release.view_count || 0),
+    likeCount: Number(release.like_count || 0),
+    status: release.status || 'draft',
+    contentReadinessState: release.content_readiness_state || 'draft',
+    category: release.category,
+    releaseType: release.release_type,
+    chorusVocalists: release.chorus_vocalists || [],
+    enableLyrics: release.enable_lyrics !== false,
+    enableCommentary: release.enable_commentary !== false,
+    enableSponsors: !!release.enable_sponsors,
+    enableAdoption: release.enable_adoption !== false,
+    enableCredits: release.enable_credits !== false,
+    availableLanguages: ['en', 'ur'],
+    defaultLanguage: 'en',
+    lyrics: {},
+    subtitleCues: Array.isArray(release.subtitle_cues)
+      ? release.subtitle_cues.map((cue) => ({
+          id: cue.id,
+          cueNumber: cue.cue_number,
+          startTime: cue.start_time,
+          endTime: cue.end_time,
+          lineRef: cue.line_ref,
+          sourceType: cue.source_type,
+          active: cue.active,
+        }))
+      : [],
+    subtitleTranslations: release.subtitle_translations || {},
+    subtitleLanguageStatuses: release.subtitle_language_statuses || {},
+    lyricsStructure: release.lyrics_structure || {},
+    youtubeSubtitleAutoSync: true,
+    youtubeCaptionTracks: {},
+    createdAt: release.created_at || now,
+    updatedAt: release.updated_at || now,
+    publishedAt: release.published_at,
+  };
+};
+
+const mapReleaseToApiPayload = (release: Partial<cms.Release>): Record<string, any> => {
+  const payload: Record<string, any> = {};
+
+  if (release.id !== undefined) payload.id = release.id;
+  if (release.title !== undefined) payload.title = release.title;
+  if (release.subtitle !== undefined) payload.subtitle = release.subtitle;
+  if (release.slug !== undefined) payload.slug = release.slug;
+  if (release.status !== undefined) payload.status = release.status;
+  if (release.content_readiness_state !== undefined) payload.contentReadinessState = release.content_readiness_state;
+  if (release.category !== undefined) payload.category = release.category;
+  if (release.release_type !== undefined) payload.releaseType = release.release_type;
+  if (release.release_date !== undefined) payload.releaseDate = release.release_date;
+  if (release.description !== undefined) payload.description = release.description;
+  if (release.youtube_id !== undefined) payload.youtubeId = release.youtube_id;
+  if (release.youtube_url !== undefined) payload.youtubeUrl = release.youtube_url;
+  if (release.youtube_channel_id !== undefined) payload.youtubeChannelId = release.youtube_channel_id;
+  if (release.youtube_channel_url !== undefined) payload.youtubeChannelUrl = release.youtube_channel_url;
+  if (release.thumbnail_url !== undefined) payload.thumbnailUrl = release.thumbnail_url;
+  if (release.poster_url !== undefined) payload.posterUrl = release.poster_url;
+  if (release.chorus_vocalists !== undefined) payload.chorusVocalists = release.chorus_vocalists;
+  if (release.duration_seconds !== undefined) payload.durationSeconds = release.duration_seconds;
+  if (release.duration_formatted !== undefined) payload.durationFormatted = release.duration_formatted;
+  if (release.view_count !== undefined) payload.viewCount = release.view_count;
+  if (release.like_count !== undefined) payload.likeCount = release.like_count;
+  if (release.enable_lyrics !== undefined) payload.enableLyrics = release.enable_lyrics;
+  if (release.enable_commentary !== undefined) payload.enableCommentary = release.enable_commentary;
+  if (release.enable_sponsors !== undefined) payload.enableSponsors = release.enable_sponsors;
+  if (release.enable_adoption !== undefined) payload.enableAdoption = release.enable_adoption;
+  if (release.enable_credits !== undefined) payload.enableCredits = release.enable_credits;
+  if (release.subtitle_cues !== undefined) {
+    payload.subtitleCues = (release.subtitle_cues || []).map((cue) => ({
+      id: cue.id,
+      cueNumber: cue.cue_number,
+      startTime: cue.start_time,
+      endTime: cue.end_time,
+      lineRef: cue.line_ref,
+      sourceType: cue.source_type,
+      active: cue.active,
+    }));
+  }
+  if (release.subtitle_translations !== undefined) payload.subtitleTranslations = release.subtitle_translations;
+  if (release.subtitle_language_statuses !== undefined) payload.subtitleLanguageStatuses = release.subtitle_language_statuses;
+  if (release.lyrics_structure !== undefined) payload.lyricsStructure = release.lyrics_structure;
+  if (release.created_at !== undefined) payload.createdAt = release.created_at;
+
+  const youtubeId = String(release.youtube_id || '').trim();
+  if (!youtubeId) {
+    payload.webOnly = true;
+  }
+
+  return payload;
+};
+
+const readCanonicalEntries = (): CanonicalStorageEntry[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(CANONICAL_RELEASES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as CanonicalStorageEntry[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeCanonicalEntries = (entries: CanonicalStorageEntry[]) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(CANONICAL_RELEASES_KEY, JSON.stringify(entries));
+};
+
+const upsertCanonicalMirror = (release: cms.Release) => {
+  if (typeof window === 'undefined') return;
+  const map = new Map<string, Record<string, any>>(readCanonicalEntries());
+  map.set(release.id, mapReleaseToCanonical(release));
+  writeCanonicalEntries(Array.from(map.entries()));
+};
+
+const removeCanonicalMirror = (id: string) => {
+  if (typeof window === 'undefined') return;
+  const map = new Map<string, Record<string, any>>(readCanonicalEntries());
+  map.delete(id);
+  writeCanonicalEntries(Array.from(map.entries()));
+};
+
+const readCanonicalFallback = (): cms.Release[] => {
+  const entries = readCanonicalEntries();
+  return entries.map(([, value]) => mapAnyToRelease(value));
+};
+
+const ensureCanonicalReleaseMigration = () => {
+  if (typeof window === 'undefined') return;
+
+  const alreadyMigrated = localStorage.getItem(RELEASE_MIGRATION_MARKER) === '1';
+  if (alreadyMigrated) return;
+
+  const map = new Map<string, Record<string, any>>(readCanonicalEntries());
+
+  try {
+    const rawLegacy = localStorage.getItem(LEGACY_RELEASES_KEY);
+    const legacy = rawLegacy ? JSON.parse(rawLegacy) : [];
+    if (Array.isArray(legacy)) {
+      for (const row of legacy) {
+        const release = mapAnyToRelease(row);
+        if (!map.has(release.id)) {
+          map.set(release.id, mapReleaseToCanonical(release));
+        }
+      }
+    }
+  } catch {
+    // ignore legacy parse failures and continue
+  }
+
+  if (map.size > 0) {
+    writeCanonicalEntries(Array.from(map.entries()));
+  }
+
+  localStorage.setItem(RELEASE_MIGRATION_MARKER, '1');
+};
+
+const applyReleaseFilters = (
+  rows: cms.Release[],
+  filters?: { status?: string; category?: string; search?: string }
+): cms.Release[] => {
+  let results = [...rows];
+
+  if (filters?.search) {
+    const q = filters.search.toLowerCase();
+    results = results.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.slug.toLowerCase().includes(q) ||
+        r.description?.toLowerCase().includes(q)
+    );
+  }
+
+  if (filters?.status && filters.status !== 'all') {
+    results = results.filter((r) => r.status === filters.status);
+  }
+
+  if (filters?.category && filters.category !== 'all') {
+    results = results.filter((r) => r.category === filters.category);
+  }
+
+  return results;
+};
 
 // Release CRUD Operations
 export async function getAllReleases(
   filters?: { status?: string; category?: string; search?: string }
 ): Promise<cms.Release[]> {
+  ensureCanonicalReleaseMigration();
+
   try {
-    // Try real Supabase call if configured
-    const hasSupabase = typeof window !== 'undefined' && 
-      localStorage.getItem('supabase_configured');
-    
-    if (hasSupabase) {
-      // Would call real API here
-      // const { data, error } = await supabase.from('releases').select('*');
-      // if (error) throw error;
-      // return data || [];
+    const statusParam = filters?.status && filters.status !== 'all' ? `?status=${encodeURIComponent(filters.status)}` : '';
+    const response = await fetch(`/api/releases${statusParam}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch releases (${response.status})`);
+    }
+    const data = await response.json();
+    const apiRows = Array.isArray(data) ? data : [];
+    const mapped = apiRows.map(mapAnyToRelease);
+
+    for (const row of mapped) {
+      upsertCanonicalMirror(row);
     }
 
-    // Prefer persisted localStorage data (standalone mode).
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('cms_releases') : null;
-    let results: cms.Release[] = stored ? JSON.parse(stored) : MOCK_RELEASES;
-
-    // If there is no user-persisted data yet, initialize from mock data so updates work in same session.
-    if (!stored && typeof window !== 'undefined') {
-      localStorage.setItem('cms_releases', JSON.stringify(MOCK_RELEASES));
-      results = MOCK_RELEASES;
-    }
-
-    if (filters?.search) {
-      const q = filters.search.toLowerCase();
-      results = results.filter(
-        (r) =>
-          r.title.toLowerCase().includes(q) ||
-          r.slug.toLowerCase().includes(q) ||
-          r.description?.toLowerCase().includes(q)
-      );
-    }
-
-    if (filters?.status && filters.status !== 'all') {
-      results = results.filter((r) => r.status === filters.status);
-    }
-
-    if (filters?.category && filters.category !== 'all') {
-      results = results.filter((r) => r.category === filters.category);
-    }
-
-    return results;
+    return applyReleaseFilters(mapped, filters);
   } catch (error) {
     console.error('Error fetching releases:', error);
-    return MOCK_RELEASES;
+    const fallback = readCanonicalFallback();
+    return applyReleaseFilters(fallback, filters);
   }
 }
 
@@ -129,47 +284,74 @@ export async function getPublishedReleases(): Promise<cms.Release[]> {
 }
 
 export async function getReleaseBySlug(slug: string): Promise<cms.Release | null> {
-  const releases = await getAllReleases();
-  return releases.find((r) => r.slug === slug) || null;
+  ensureCanonicalReleaseMigration();
+  try {
+    const response = await fetch(`/api/releases?slug=${encodeURIComponent(slug)}`);
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      throw new Error(`Failed to fetch release by slug (${response.status})`);
+    }
+    const data = await response.json();
+    const mapped = mapAnyToRelease(data);
+    upsertCanonicalMirror(mapped);
+    return mapped;
+  } catch {
+    const releases = await getAllReleases();
+    return releases.find((r) => r.slug === slug) || null;
+  }
 }
 
 export async function getReleaseById(id: string): Promise<cms.Release | null> {
-  const releases = await getAllReleases();
-  return releases.find((r) => r.id === id) || null;
+  ensureCanonicalReleaseMigration();
+  try {
+    const response = await fetch(`/api/releases/${encodeURIComponent(id)}`);
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      throw new Error(`Failed to fetch release by id (${response.status})`);
+    }
+    const data = await response.json();
+    const mapped = mapAnyToRelease(data);
+    upsertCanonicalMirror(mapped);
+    return mapped;
+  } catch {
+    const releases = await getAllReleases();
+    return releases.find((r) => r.id === id) || null;
+  }
 }
 
 export async function createRelease(release: Partial<cms.Release>): Promise<cms.Release> {
   try {
-    const newRelease: cms.Release = {
-      id: `${Date.now()}`,
+    const normalized: Partial<cms.Release> = {
+      ...release,
       title: release.title || 'Untitled',
       slug: release.slug || `release-${Date.now()}`,
       status: release.status || 'draft',
-      youtube_id: release.youtube_id,
-      duration_seconds: release.duration_seconds,
-      view_count: release.view_count || 0,
-      like_count: release.like_count || 0,
-      show_views: release.show_views ?? false,
-      show_likes: release.show_likes ?? false,
-      enable_lyrics: release.enable_lyrics ?? false,
-      enable_commentary: release.enable_commentary ?? false,
+      view_count: release.view_count ?? 0,
+      like_count: release.like_count ?? 0,
+      show_views: release.show_views ?? true,
+      show_likes: release.show_likes ?? true,
+      enable_lyrics: release.enable_lyrics ?? true,
+      enable_commentary: release.enable_commentary ?? true,
       enable_sponsors: release.enable_sponsors ?? false,
-      enable_adoption: release.enable_adoption ?? false,
-      enable_credits: release.enable_credits ?? false,
-      description: release.description,
-      category: release.category,
-      created_at: new Date().toISOString(),
-      ...release,
+      enable_adoption: release.enable_adoption ?? true,
+      enable_credits: release.enable_credits ?? true,
+      created_at: release.created_at || new Date().toISOString(),
     };
 
-    // Store in localStorage
-    const releases = await getAllReleases();
-    const stored = localStorage.getItem('cms_releases');
-    const data = stored ? JSON.parse(stored) : releases;
-    data.push(newRelease);
-    localStorage.setItem('cms_releases', JSON.stringify(data));
+    const response = await fetch('/api/releases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mapReleaseToApiPayload(normalized)),
+    });
 
-    return newRelease;
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Error creating release');
+    }
+
+    const mapped = mapAnyToRelease(data);
+    upsertCanonicalMirror(mapped);
+    return mapped;
   } catch (error) {
     console.error('Error creating release:', error);
     throw error;
@@ -178,18 +360,20 @@ export async function createRelease(release: Partial<cms.Release>): Promise<cms.
 
 export async function updateRelease(id: string, updates: Partial<cms.Release>): Promise<cms.Release> {
   try {
-    const releases = await getAllReleases();
-    const index = releases.findIndex((r) => r.id === id);
+    const response = await fetch(`/api/releases/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mapReleaseToApiPayload({ ...updates, updated_at: new Date().toISOString() })),
+    });
 
-    if (index === -1) {
-      throw new Error('Release not found');
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Error updating release');
     }
 
-    const updated = { ...releases[index], ...updates, updated_at: new Date().toISOString() };
-    releases[index] = updated;
-    localStorage.setItem('cms_releases', JSON.stringify(releases));
-
-    return updated;
+    const mapped = mapAnyToRelease(data);
+    upsertCanonicalMirror(mapped);
+    return mapped;
   } catch (error) {
     console.error('Error updating release:', error);
     throw error;
@@ -198,9 +382,16 @@ export async function updateRelease(id: string, updates: Partial<cms.Release>): 
 
 export async function deleteRelease(id: string): Promise<void> {
   try {
-    const releases = await getAllReleases();
-    const filtered = releases.filter((r) => r.id !== id);
-    localStorage.setItem('cms_releases', JSON.stringify(filtered));
+    const response = await fetch(`/api/releases/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data?.error || 'Error deleting release');
+    }
+
+    removeCanonicalMirror(id);
   } catch (error) {
     console.error('Error deleting release:', error);
     throw error;

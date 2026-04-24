@@ -5,10 +5,11 @@ import { storage } from '@/app/lib/storage';
 import { getUserNotifications, markNotificationRead, markAllNotificationsRead, notifyAdmin } from '@/app/lib/notifications';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { LayoutDashboard, FileText, Settings, CircleCheck as CheckCircle, Search, Circle as XCircle, Eye, CircleAlert as AlertCircle, Clock, CirclePlus as PlusCircle, Shield, LogOut, Loader, User, Bell, DollarSign, TrendingUp, Info } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, CircleCheck as CheckCircle, Search, Circle as XCircle, Eye, CircleAlert as AlertCircle, Clock, CirclePlus as PlusCircle, Shield, LogOut, Loader, User, Bell, DollarSign, TrendingUp, Info, CalendarClock } from 'lucide-react';
 import Editor, { EditorProvider } from "react-simple-wysiwyg";
+import Link from 'next/link';
 
-type RoleType = "writer" | "vocalist" | "producer" | "literary";
+type RoleType = "writer" | "vocalist" | "producer" | "literary" | "studio";
 
 interface UserDashboardProps {
     role: RoleType;
@@ -18,7 +19,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const { user, logout } = useAuth();
     const router = useRouter();
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'my-content' | 'published' | 'royalties' | 'settings' | 'work-queue'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'my-content' | 'published' | 'royalties' | 'settings' | 'work-queue' | 'sessions'>('overview');
     const [loading, setLoading] = useState(true);
 
     // Data states
@@ -54,6 +55,9 @@ export default function UserDashboard({ role }: UserDashboardProps) {
 
     // Producer assignment states
     const [assignments, setAssignments] = useState<any[]>([]);
+
+    // Studio session requests states
+    const [sessionRequests, setSessionRequests] = useState<any[]>([]);
 
     // Royalty states
     const [royalties, setRoyalties] = useState<any[]>([]);
@@ -125,6 +129,20 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             { name: "author_domain", label: "Literary Domain / Topics", type: "text", placeholder: "e.g. Sufi Philosophy, Commentary, Research" },
         ],
         draftDefaults: { title: "", language: "", article_type: "", abstract: "", content: "", author_name: "", author_country: "", author_city: "", author_domain: "" }
+    } : role === "studio" ? {
+        title: "Studio Partner Portal",
+        subtitle: "Karkhana-e-Sada Control Center",
+        term: "Session Request",
+        termPlural: "Sessions",
+        typeKey: 'session_request',
+        profileType: 'studio',
+        profileFields: {
+            languages: 'primary_services',
+            styles: 'studio_capabilities',
+            statusField: 'profile_status',
+        },
+        draftFields: [],
+        draftDefaults: {}
     } : {
         title: "Producer Portal",
         subtitle: "Ahl-e-Naghma Control Center",
@@ -168,15 +186,26 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         try {
             const raw = localStorage.getItem('sufipulse_royalty_reports');
             const all: any[] = raw ? JSON.parse(raw) : [];
-            // Match by user_id or by name fields
+            // Match by user_id or by any known display name across all roles
             const writerProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_writer_profiles') || '[]');
             const vocalistProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_vocalist_profiles') || '[]');
+            const producerProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_producer_profiles') || '[]');
+            const literaryProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_literary_profiles') || '[]');
+            const studioProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_studio_profiles') || '[]');
             const myWriterProfile = writerProfiles.find((p: any) => p.user_id === user!.id);
             const myVocalistProfile = vocalistProfiles.find((p: any) => p.user_id === user!.id);
+            const myProducerProfile = producerProfiles.find((p: any) => p.user_id === user!.id);
+            const myLiteraryProfile = literaryProfiles.find((p: any) => p.user_id === user!.id);
+            const myStudioProfile = studioProfiles.find((p: any) => p.user_id === user!.id);
             const myNames = [
                 user!.full_name,
                 myWriterProfile?.pen_name,
                 myVocalistProfile?.performance_name,
+                myProducerProfile?.professional_name,
+                myLiteraryProfile?.professional_name,
+                myLiteraryProfile?.full_name,
+                myStudioProfile?.studio_name,
+                myStudioProfile?.full_name,
             ].filter(Boolean).map((n: string) => n.toLowerCase());
             const mine = all.filter((r: any) =>
                 r.user_id === user!.id ||
@@ -257,6 +286,16 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                     ? allAssignments.filter((a: any) => a.user_id === user.id || (a.producer || '').toLowerCase().includes(producerName))
                     : allAssignments.filter((a: any) => a.user_id === user.id);
                 setAssignments(mine);
+                setItems(mine);
+            } else if (role === 'studio') {
+                // Studio: load session requests
+                const raw = typeof window !== 'undefined' ? localStorage.getItem('sufipulse_session_requests') : null;
+                const allRequests: any[] = raw ? JSON.parse(raw) : [];
+                const studioName = ((profile as any)?.studio_name || (profile as any)?.full_name || user.full_name || '').toLowerCase();
+                const mine = studioName
+                    ? allRequests.filter((a: any) => a.user_id === user.id || (a.studio_name || '').toLowerCase().includes(studioName))
+                    : allRequests.filter((a: any) => a.user_id === user.id);
+                setSessionRequests(mine);
                 setItems(mine);
             } else {
                 const allItems = await storage.getAll(config.typeKey);
@@ -430,12 +469,17 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         { id: 'work-queue', label: 'Work Queue', icon: FileText },
         { id: 'royalties', label: 'Royalties', icon: DollarSign },
         { id: 'settings', label: 'General Settings', icon: Settings },
+    ] : role === 'studio' ? [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'sessions', label: 'Session Requests', icon: CalendarClock },
+        { id: 'royalties', label: 'Royalties', icon: DollarSign },
+        { id: 'settings', label: 'General Settings', icon: Settings },
     ] : [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'my-content', label: role === 'literary' ? 'My Articles' : 'My Content', icon: FileText },
         { id: 'published', label: role === 'literary' ? 'Published Articles' : 'Published', icon: CheckCircle },
         { id: 'submissions', label: `Submit ${config.term}`, icon: PlusCircle },
-        ...(role !== 'literary' ? [{ id: 'royalties', label: 'Royalties', icon: DollarSign }] : []),
+        { id: 'royalties', label: 'Royalties', icon: DollarSign },
         { id: 'settings', label: 'General Settings', icon: Settings },
     ];
 
@@ -468,8 +512,10 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                     <aside style={{ width: '224px' }} className="bg-[var(--dash-bg-secondary)] border-r border-[var(--dash-border)] hidden md:block shrink-0 overflow-y-auto">
                         <div className="p-4 border-b border-[var(--dash-border)]">
                             <div className="flex items-center gap-2 mb-3">
-                                <Image src="/sufipulse-logo-v5.png" alt="SufiPulse" width={36} height={36} className="rounded-lg shrink-0" />
-                                <span className="text-sm font-bold text-[var(--dash-text-primary)] leading-tight">SufiPulse</span>
+                                <a href="/" title="Back to SufiPulse" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                                    <Image src="/sufipulse-logo-v5.png" alt="SufiPulse" width={36} height={36} className="rounded-lg shrink-0" />
+                                    <span className="text-sm font-bold text-[var(--dash-text-primary)] leading-tight">SufiPulse</span>
+                                </a>
                             </div>
                             <p className="text-[11px] font-semibold text-[var(--dash-accent)] uppercase tracking-wider">{config.title}</p>
                             <p className="text-[10px] text-[var(--dash-text-muted)] mt-0.5">{config.subtitle}</p>
@@ -658,7 +704,6 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                         Go to My Content
                                                     </button>
                                                 </div>
-                                                {role !== 'literary' && (
                                                 <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
                                                     <h3 className="font-semibold text-[var(--dash-text-primary)] mb-2">Royalties</h3>
                                                     <p className="text-sm text-[var(--dash-text-secondary)] mb-6">Track your royalty share and payment history.</p>
@@ -666,7 +711,6 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                         View Royalties
                                                     </button>
                                                 </div>
-                                                )}
                                             </>
                                         )}
                                     </div>
@@ -929,7 +973,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                             )}
 
                             {/* Royalties Tab */}
-                            {activeTab === 'royalties' && role !== 'literary' && (
+                            {activeTab === 'royalties' && (
                                 <div className="space-y-6">
 
                                     {/* Bank Account Section */}
@@ -1073,7 +1117,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                         <div className="space-y-3">
                                             {[
                                                 { label: 'SufiPulse Institution', desc: 'Platform operations & governance', pct: 30, color: '#6366f1', highlight: false },
-                                                { label: 'Writer — Ahl-e-Qalam', desc: 'Kalam / literary composition', pct: 20, color: '#f59e0b', highlight: role === 'writer' },
+                                                { label: 'Writer — Ahl-e-Qalam', desc: 'Kalam / literary composition', pct: 20, color: '#f59e0b', highlight: role === 'writer' || role === 'literary' },
                                                 { label: 'Vocalist — Ahl-e-Sada', desc: 'Performance & voice', pct: 20, color: '#10b981', highlight: role === 'vocalist' },
                                                 { label: 'Producer — Ahl-e-Naghma', desc: 'Music production & arrangement', pct: 15, color: '#8b5cf6', highlight: role === 'producer' },
                                                 { label: 'Distributor / Publisher', desc: 'Platform distribution & licensing', pct: 10, color: '#06b6d4', highlight: false },
@@ -1174,6 +1218,54 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                             </div>
                                         )}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Studio Sessions Tab */}
+                            {activeTab === 'sessions' && (
+                                <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                    <div className="flex items-center justify-between mb-5">
+                                        <h2 className="text-base font-semibold text-[var(--dash-text-primary)]">Session Requests</h2>
+                                        <Link
+                                            href="/studio-sessions"
+                                            className="px-4 py-2 text-xs bg-[var(--dash-accent)] text-white font-bold rounded-lg hover:opacity-90 transition-opacity"
+                                        >
+                                            Submit a Request
+                                        </Link>
+                                    </div>
+                                    {sessionRequests.length === 0 ? (
+                                        <div className="text-center py-10 space-y-3">
+                                            <CalendarClock size={32} className="mx-auto text-[var(--dash-text-muted)] opacity-20" />
+                                            <p className="text-sm text-[var(--dash-text-muted)]">No session requests found.</p>
+                                        </div>
+                                    ) : (
+                                        <ul className="divide-y divide-[var(--dash-border)]">
+                                            {[...sessionRequests].reverse().map((req) => (
+                                                <li key={req.id} className="py-4 space-y-1">
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div>
+                                                            <p className="text-sm font-medium text-[var(--dash-text-primary)]">
+                                                                {req.session_type || 'Session Request'}
+                                                            </p>
+                                                            <p className="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                                                                Ref: {req.approval_reference_code || '—'}
+                                                                {req.preferred_date_start ? ` · ${req.preferred_date_start}` : ''}
+                                                            </p>
+                                                        </div>
+                                                        <span className={`shrink-0 px-2.5 py-1 rounded border text-xs font-medium ${getStatusColor(req.status)}`}>
+                                                            {req.status.replace("_", " ")}
+                                                        </span>
+                                                    </div>
+                                                    {req.additional_notes && (
+                                                        <p className="text-xs text-[var(--dash-text-secondary)] italic">{req.additional_notes}</p>
+                                                    )}
+                                                    <p className="text-[11px] text-[var(--dash-text-muted)] mt-1">
+                                                        Submitted {req.created_at ? new Date(req.created_at).toLocaleDateString() : ''}
+                                                    </p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </div>
                             )}
 

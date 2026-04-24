@@ -1,6 +1,33 @@
 {
   "version": 3,
-  "middleware": {},
-  "functions": {},
-  "sortedMiddleware": []
+  "middleware": {
+    "/": {
+      "files": [
+        "server/edge/chunks/Sufipulseupdate2026_Sufipulseupdate_9ac8dc7e._.js",
+        "server/edge/chunks/[root-of-the-server]__2688fdee._.js",
+        "server/edge/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_edge-wrapper_714545fa.js"
+      ],
+      "name": "middleware",
+      "page": "/",
+      "matchers": [
+        {
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/((?!_next\\/static|_next\\/image|favicon.ico|robots.txt|sitemap.xml).*))(\\\\.json)?[\\/#\\?]?$",
+          "originalSource": "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "development",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "DlnfwB66XA7OvP5UPih7CCM8L6or8eW04Q08jFZqppM=",
+        "__NEXT_PREVIEW_MODE_ID": "c3bbbc43da1893f4f134207c3ea7261b",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "97d552228e39906ecbd7670f5a0c22faa084978b80a9b9d7461a399407638e0d",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "22d5e33aff969f9a91a6787deb10dd1296c89b57e372b09d165f5d3e990dd36d"
+      }
+    }
+  },
+  "sortedMiddleware": [
+    "/"
+  ],
+  "functions": {}
 }

@@ -2,8 +2,10 @@
 import { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
-import { Youtube, RefreshCw, CircleCheck as CheckCircle, CircleAlert as AlertCircle, Loader } from 'lucide-react';
+import { Youtube, RefreshCw, CircleCheck as CheckCircle, CircleAlert as AlertCircle, Loader, Database } from 'lucide-react';
 import { supabase } from '../../lib/supabase-client';
+
+const isStandaloneMode = !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 export default function YouTubeSync() {
     const [syncing, setSyncing] = useState(false);
@@ -81,6 +83,40 @@ export default function YouTubeSync() {
             setSyncing(false);
         }
     };
+
+    if (isStandaloneMode) {
+        return (
+            <Layout>
+                <PageContainer>
+                    <div className="max-w-4xl mx-auto">
+                        <div className="mb-8">
+                            <h1 className="text-4xl font-serif font-light text-neutral-100 mb-4">
+                                YouTube Sync
+                            </h1>
+                            <p className="text-neutral-400">
+                                Sync all videos from your YouTube channel to the CMS database.
+                            </p>
+                        </div>
+                        <div className="bg-amber-950/40 border border-amber-700/50 rounded-lg p-8 flex items-start gap-4">
+                            <Database className="w-8 h-8 text-amber-500 flex-shrink-0 mt-1" />
+                            <div>
+                                <h2 className="text-lg font-semibold text-amber-300 mb-2">Backend Required</h2>
+                                <p className="text-amber-200/80 text-sm leading-relaxed">
+                                    YouTube Sync writes directly to a Supabase database and is only available when the
+                                    full backend is configured. In standalone mode, releases are managed through the
+                                    CMS Dashboard and stored locally in your browser.
+                                </p>
+                                <p className="text-amber-200/60 text-xs mt-3">
+                                    To enable: set <code className="bg-amber-950 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+                                    <code className="bg-amber-950 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in your environment.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>

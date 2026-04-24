@@ -1,11 +1,14 @@
 {
+  "/(public)/release-detail/[slug]/page": "app/(public)/release-detail/[slug]/page.js",
+  "/(public)/releases/page": "app/(public)/releases/page.js",
   "/_not-found/page": "app/_not-found/page.js",
-  "/(public)/collaboration/page": "app/(public)/collaboration/page.js",
-  "/(public)/contact/page": "app/(public)/contact/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(public)/about/what-is-sufipulse/page": "app/(public)/about/what-is-sufipulse/page.js",
-  "/(public)/about/founder/page": "app/(public)/about/founder/page.js",
+  "/admin/cms-releases/[id]/page": "app/admin/cms-releases/[id]/page.js",
+  "/admin/cms/page": "app/admin/cms/page.js",
   "/admin/page": "app/admin/page.js",
+  "/api/integrations/youtube-status/route": "app/api/integrations/youtube-status/route.js",
+  "/api/releases/[id]/route": "app/api/releases/[id]/route.js",
   "/api/releases/route": "app/api/releases/route.js",
-  "/admin/partnerships/page": "app/admin/partnerships/page.js"
+  "/api/youtube/video-metadata/route": "app/api/youtube/video-metadata/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js"
 }

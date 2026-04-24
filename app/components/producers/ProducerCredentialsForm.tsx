@@ -8,12 +8,17 @@ import { notifyApplicationReceived, notifyAdmin } from '../../lib/notifications'
 import Link from 'next/link';
 import { ProducerProfileType } from '../../types/producer.types';
 import { ProducerSubmissionSuccessModal } from './ProducerSubmissionSuccessModal';
+import { useFormSecurity } from '../../hooks/useFormSecurity';
+import { producerProfileSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeObject } from '../../lib/sanitize';
 
 export function ProducerCredentialsForm() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [submissionId] = useState(`SP-PRD-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`);
 
   const [formData, setFormData] = useState<ProducerProfileType>({
@@ -48,12 +53,44 @@ export function ProducerCredentialsForm() {
     try {
       setLoading(true);
       setError('');
+      setFieldErrors({});
+
+      if (!verifySecurity()) {
+        setSubmitted(true);
+        setLoading(false);
+        return;
+      }
+
+      const { success, data, errors } = validateSchema(producerProfileSchema, formData);
+
+      if (!success && errors) {
+        const formattedErrors: any = {};
+        errors.issues.forEach((issue: any) => {
+            formattedErrors[issue.path[0]] = issue.message;
+        });
+        setFieldErrors(formattedErrors);
+        setError('Please correct the highlighted fields.');
+        setLoading(false);
+        return;
+      }
+
+      const cleanData = sanitizeObject(data as any, {
+        full_name: 'text',
+        professional_name: 'text',
+        country: 'text',
+        city: 'text',
+        email: 'email',
+        years_experience: 'text',
+        primary_tools: 'text',
+        musical_background: 'text'
+      });
 
       try {
-        await api.createProducerProfile(formData);
+        await api.createProducerProfile(cleanData as any);
       } catch {
         storage.create('producer', {
-          ...formData,
+          ...formData, // Fallback to raw if api rejected something sanitize didn't catch, but use cleanData
+          ...cleanData,
           profile_status: 'pending',
           submitted_at: new Date().toISOString(),
         });
@@ -94,6 +131,15 @@ export function ProducerCredentialsForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
+      <input
+          type="text"
+          name="_bot_check"
+          value={botCheck}
+          onChange={(e) => setBotCheck(e.target.value)}
+          style={{ display: 'none' }}
+          tabIndex={-1}
+          autoComplete="off"
+      />
       <h3 className="text-lg font-semibold text-white mb-6">Submit Producer Profile</h3>
 
       {error && (
@@ -115,8 +161,9 @@ export function ProducerCredentialsForm() {
                   required
                   value={formData.full_name}
                   onChange={e => setFormData({ ...formData, full_name: DOMPurify.sanitize(e.target.value) })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.full_name ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.full_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.full_name}</p>}
               </div>
 
               <div>
@@ -166,8 +213,9 @@ export function ProducerCredentialsForm() {
                   required
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.email ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
               </div>
 
               <div>
@@ -245,8 +293,9 @@ export function ProducerCredentialsForm() {
                   type="url"
                   value={formData.portfolio_link}
                   onChange={e => setFormData({ ...formData, portfolio_link: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.portfolio_link ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.portfolio_link && <p className="text-red-500 text-xs mt-1">{fieldErrors.portfolio_link}</p>}
               </div>
             </div>
           </div>

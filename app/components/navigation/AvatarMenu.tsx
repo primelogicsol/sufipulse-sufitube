@@ -64,38 +64,69 @@ export function AvatarMenu() {
   }
   const loadWriterProfile = async () => {
     try {
-      const res = await api.readWriterProfile() as any;
-      setUserProfiles(prev => ({
-        ...prev,
-        writer: true
-      }))
-    } catch (error) {
-      console.log(error)
-    }
-  }
-  const loadVocalistProfile = async () => {
-    const res = await api.readVocalistProfile() as any;
-    if (res.data?.is_verfied) {
-      setUserProfiles(prev => ({
-        ...prev,
-        vocalist: true
-      }))
-    }
-    // try {
-    // } catch (error) {
-    //   console.log(error);
-    // } finally(){
-    //   console.log(res)
-    // }
+      const res = await api.readWriterProfile();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'approved' || data.profile_status === 'approved') {
+          setUserProfiles(prev => ({ ...prev, writer: true }));
+        }
+      }
+    } catch (error) { console.error("Failed to load writer profile:", error); }
   };
+  const loadVocalistProfile = async () => {
+    try {
+      const res = await api.readVocalistProfile();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.is_verfied || data.status === 'approved' || data.profile_status === 'approved') {
+          setUserProfiles(prev => ({ ...prev, vocalist: true }));
+        }
+      }
+    } catch (error) { console.error("Failed to load vocalist profile:", error); }
+  };
+  const loadProducerProfile = async () => {
+    try {
+      const res = await api.readProducerProfile();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'approved' || data.profile_status === 'approved') {
+          setUserProfiles(prev => ({ ...prev, producer: true }));
+        }
+      }
+    } catch (error) { console.error("Failed to load producer profile:", error); }
+  };
+  const loadStudioProfile = async () => {
+    try {
+      const res = await api.readStudioProfile();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'approved' || data.profile_status === 'approved') {
+          setUserProfiles(prev => ({ ...prev, studio: true }));
+        }
+      }
+    } catch (error) { console.error("Failed to load studio profile:", error); }
+  };
+  const loadLiteraryProfile = async () => {
+    try {
+      const res = await api.readLiteraryProfile();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'approved' || data.profile_status === 'approved') {
+          setUserProfiles(prev => ({ ...prev, literaryCollaborator: true }));
+        }
+      }
+    } catch (error) { console.error("Failed to load literary profile:", error); }
+  };
+
   useEffect(() => {
     if (user) {
       loadVocalistProfile();
       loadWriterProfile();
+      loadProducerProfile();
+      loadStudioProfile();
+      loadLiteraryProfile();
     }
   }, [user]);
-
-  console.log(user)
 
   return (
     <div className="relative" ref={menuRef}>
@@ -122,15 +153,15 @@ export function AvatarMenu() {
               </div>
 
               <div className="py-2">
-                {user.role == "" ? <Link
-                  href={user.role.includes("admin") ? "/admin" : "/user/dashboard"}
+                <Link
+                  href={user.role?.includes("admin") ? "/admin" : "/user/dashboard"}
                   onClick={handleLinkClick}
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   role="menuitem"
                 >
                   <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
-                </Link> : ""}
+                  <span>{user.role?.includes("admin") ? "Admin Dashboard" : "Dashboard"}</span>
+                </Link>
 
                 {user.role.includes("admin") && (
                   <>
@@ -160,35 +191,35 @@ export function AvatarMenu() {
                   onClick={handleLinkClick}
                   href="/user/writer/dashboard">
                   <NotebookPen size={18} />
-                  <span>Writer Dashboard</span>
+                  <span>Ahl-e-Qalam Portal</span>
                 </Link>}
                 {hasRoleAccess(user as any, 'vocalist') && userProfiles.vocalist && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/vocalist/dashboard">
                   <Mic size={18} />
-                  <span>Vocalist Dashboard</span>
+                  <span>Ahl-e-Sada Portal</span>
                 </Link>}
                 {hasRoleAccess(user as any, 'producer') && userProfiles.producer && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/producer/dashboard">
                   <KeyboardMusic size={18} />
-                  <span>Producer Dashboard</span>
+                  <span>Ahl-e-Naghma Portal</span>
                 </Link>}
                 {hasRoleAccess(user as any, 'studio') && userProfiles.studio && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/studio/dashboard">
                   <FolderDot size={18} />
-                  <span>Studio Dashboard</span>
+                  <span>Karkhana-e-Sada Portal</span>
                 </Link>}
                 {hasRoleAccess(user as any, 'literary') && userProfiles.literaryCollaborator && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}
                   href="/user/literary-contributor/dashboard">
                   <PenTool size={18} />
-                  <span>Literary Contributor Dashboard</span>
+                  <span>Ahl-e-Tahreer Portal</span>
                 </Link>}
               </div>
 
@@ -218,15 +249,6 @@ export function AvatarMenu() {
                   role="menuitem"
                 >
                   Sign In
-                </Link>
-
-                <Link
-                  href="/signup"
-                  onClick={handleLinkClick}
-                  className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
-                  role="menuitem"
-                >
-                  Request Access
                 </Link>
               </div>
 

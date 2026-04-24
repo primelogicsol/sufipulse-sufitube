@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Static YouTube Videos Database
  * Used when API quota is exceeded or API is unavailable
  * These are real videos from SufiPulse YouTube channel
@@ -6,8 +6,19 @@
 
 export const STATIC_YOUTUBE_VIDEOS = [
   {
+    id: 'ffTfCn8N0hk',
+    title: 'Testing Master Timing Video (Unlisted)',
+    description: 'A mock data block to allow testing the Master Timing Sync tool without a live YouTube API Key.',
+    thumbnailUrl: 'https://i.ytimg.com/vi/ffTfCn8N0hk/hqdefault.jpg',
+    publishedDate: '2026-04-16T10:00:00Z',
+    durationSeconds: 120,
+    durationFormatted: '2:00',
+    views: 12,
+    source: 'youtube_legacy'
+  },
+  {
     id: 'aMzdiIuYgK4',
-    title: 'Take Control â€“ A Ramadan Prayer | English & Urdu | SufiPulse USA',
+    title: 'Take Control – A Ramadan Prayer | English & Urdu | SufiPulse USA',
     description: 'A bilingual spiritual reflection presented in English and Urdu, inviting the listener beyond ritual into surrender. Ramadan as a state that continues beyond the month.',
     thumbnailUrl: 'https://i.ytimg.com/vi/aMzdiIuYgK4/hqdefault.jpg',
     publishedDate: '2026-02-20T08:22:36Z',
@@ -29,7 +40,7 @@ export const STATIC_YOUTUBE_VIDEOS = [
   },
   {
     id: '_zx1N_xZzys',
-    title: 'SufiPulse Studio | Nazar e Karam Kar De â€“ A Prayer for Inner Elevation',
+    title: 'SufiPulse Studio | Nazar e Karam Kar De – A Prayer for Inner Elevation',
     description: 'What starts as a plea becomes a transformation. Rooted in devotion and Sufi thought, the song reminds us that the real rise in life is not material, but spiritual.',
     thumbnailUrl: 'https://i.ytimg.com/vi/_zx1N_xZzys/hqdefault.jpg',
     publishedDate: '2026-01-24T08:06:16Z',
@@ -107,7 +118,7 @@ export const STATIC_YOUTUBE_VIDEOS = [
   {
     id: '24SrdzzLYus',
     title: 'Gardish | Rab Ki Khamosh Daleel | The Inescapable Cycle',
-    description: 'Everything moves in cycles, and nothing runs on its own. This is Rab ki khamosh daleel â€” God\'s silent proof and evidence.',
+    description: 'Everything moves in cycles, and nothing runs on its own. This is Rab ki khamosh daleel — God\'s silent proof and evidence.',
     thumbnailUrl: 'https://i.ytimg.com/vi/24SrdzzLYus/hqdefault.jpg',
     publishedDate: '2025-12-20T00:00:00Z',
     durationSeconds: 600,
@@ -151,7 +162,7 @@ export const STATIC_YOUTUBE_VIDEOS = [
 ];
 
 export const FEATURED_VIDEOS = [
-  STATIC_YOUTUBE_VIDEOS[0],  // Take Control â€“ Ramadan Prayer
+  STATIC_YOUTUBE_VIDEOS[0],  // Take Control – Ramadan Prayer
   STATIC_YOUTUBE_VIDEOS[11], // Sufi Hacker
   STATIC_YOUTUBE_VIDEOS[12], // Needle to Noor
 ];

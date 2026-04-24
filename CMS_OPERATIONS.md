@@ -275,6 +275,84 @@ if (!user || user.role !== 'admin') {
 
 ---
 
+## World-Class Dual Delivery Standard (Web UI + YouTube)
+
+This is the recommended production operating model for SufiPulse.
+
+### Principle
+
+- CMS is the source of truth for release editorial content.
+- YouTube is the media distribution platform.
+- Every YouTube song used by SufiPulse should map to one CMS release record.
+
+### Ownership Model
+
+- YouTube-owned fields:
+   - video identity and embed source
+   - base channel/video metadata
+   - distribution endpoint
+- CMS-owned fields:
+   - public title/description overrides
+   - commentary, credits, sponsor presentation
+   - multilingual lyrics and subtitle governance
+   - review state, publish state, and release presentation rules
+
+### Identity Contract
+
+- `id`: internal release key
+- `slug`: public URL key
+- `youtubeId`: external media reference only
+
+Public pages must resolve release by `slug` first and use `youtubeId` only to render/enrich media.
+
+### Web Rendering Precedence
+
+1. Load release from CMS by slug.
+2. Render CMS fields as primary content.
+3. Use linked `youtubeId` for embed/media enrichment.
+4. Only use fallback paths for backward compatibility, and log fallback usage.
+
+### YouTube Delivery Modes
+
+#### Mode A: Automatic sync from CMS (recommended default)
+
+1. Prepare subtitles/translations in the release editor.
+2. Save release.
+3. Use `Sync Changed to YouTube` for incremental updates.
+4. Use `Force Update` when a reset is required.
+5. Verify per-language sync metadata and errors after sync.
+
+#### Mode B: Manual upload package (operational fallback)
+
+1. Export subtitles per language (`srt`, `vtt`, or `ass`) or export all as zip.
+2. Upload files manually in YouTube Studio subtitles editor.
+3. Keep same language codes and track names used in CMS.
+4. After manual upload, note the action in release ops log for auditability.
+
+Use Mode B when OAuth credentials are unavailable, API quota is constrained, or emergency hotfixes are needed.
+
+### Quality Gates Before Publish
+
+- Release exists and resolves by slug.
+- `youtubeId` is present and playable.
+- At least one subtitle language is verified.
+- Credits and commentary completeness confirmed.
+- Channel override behavior confirmed (release override or environment default).
+
+### Post-Publish Verification
+
+- Verify public page content matches CMS release record.
+- Verify YouTube captions appear for expected languages.
+- Confirm no unexpected fallback source was used.
+
+### Incident Recovery
+
+- If YouTube sync fails: export and upload manually, then retry automatic sync later.
+- If public rendering is inconsistent: re-check slug mapping and release status, then clear stale cached client state.
+- If metadata diverges: CMS values should win; re-apply synchronized publish workflow.
+
+---
+
 ## 📊 Pre-loaded Test Data
 
 Three Sufi music releases are included for testing:

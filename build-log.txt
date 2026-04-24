@@ -1,0 +1,142 @@
+
+> sufipulse@0.1.0 build
+> next build
+
+   ▲ Next.js 15.3.1
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 20.0s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/118) ...
+   Generating static pages (29/118) 
+   Generating static pages (58/118) 
+   Generating static pages (88/118) 
+ ✓ Generating static pages (118/118)
+Supabase environment variables not defined or invalid. Running in standalone mode.
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                     Size  First Load JS
+┌ ○ /                                                        8.44 kB         150 kB
+├ ○ /_not-found                                                990 B         103 kB
+├ ○ /about/founder                                           1.13 kB         123 kB
+├ ○ /about/institutional-partners                            1.13 kB         123 kB
+├ ○ /about/our-network                                       1.13 kB         123 kB
+├ ○ /about/what-is-sufipulse                                 4.66 kB         128 kB
+├ ○ /admin                                                   7.12 kB         121 kB
+├ ○ /admin/applications/literary                             5.13 kB         119 kB
+├ ○ /admin/applications/producers                            6.31 kB         120 kB
+├ ○ /admin/applications/studio                               3.41 kB         117 kB
+├ ○ /admin/applications/vocalists                            5.99 kB         120 kB
+├ ○ /admin/applications/writers                               6.4 kB         120 kB
+├ ○ /admin/articles                                          3.25 kB         117 kB
+├ ○ /admin/auto-setup                                        2.88 kB         105 kB
+├ ○ /admin/cms                                               4.02 kB         122 kB
+├ ○ /admin/cms-releases                                      5.46 kB         114 kB
+├ ƒ /admin/cms-releases/[id]                                   62 kB         178 kB
+├ ○ /admin/cms/bulk-import                                   5.65 kB         123 kB
+├ ○ /admin/cms/media                                         3.66 kB         118 kB
+├ ○ /admin/cms/releases                                       3.3 kB         121 kB
+├ ƒ /admin/cms/releases/[id]/edit                             3.8 kB         121 kB
+├ ƒ /admin/cms/releases/[id]/versions                        3.61 kB         118 kB
+├ ○ /admin/cms/roles                                         4.78 kB         119 kB
+├ ○ /admin/contact-messages                                  4.37 kB         118 kB
+├ ○ /admin/kalams                                            5.26 kB         119 kB
+├ ○ /admin/partnerships                                       4.4 kB         118 kB
+├ ○ /admin/performance-assignments                           4.39 kB         122 kB
+├ ○ /admin/production-workflow                               3.08 kB         117 kB
+├ ○ /admin/release-workflow                                  3.11 kB         117 kB
+├ ○ /admin/royalties                                          4.8 kB         119 kB
+├ ○ /admin/sadas                                             3.33 kB         117 kB
+├ ○ /admin/session-requests                                  3.27 kB         121 kB
+├ ○ /admin/setup                                             5.63 kB         120 kB
+├ ○ /admin/song-adoptions                                    7.76 kB         122 kB
+├ ○ /admin/studio-access-codes                               4.51 kB         118 kB
+├ ○ /admin/studio-sessions                                   3.71 kB         118 kB
+├ ○ /admin/users                                             5.54 kB         120 kB
+├ ○ /admin/youtube-sync                                      1.64 kB         183 kB
+├ ○ /adoption-cancel                                           772 B         106 kB
+├ ○ /adoption-success                                        1.98 kB         111 kB
+├ ƒ /api/admin/google-ads/create-campaign                      196 B         102 kB
+├ ƒ /api/admin/google-ads/insights                             196 B         102 kB
+├ ƒ /api/adoptions/[id]                                        196 B         102 kB
+├ ƒ /api/adoptions/[id]/checkout                               196 B         102 kB
+├ ƒ /api/adoptions/[id]/confirm                                196 B         102 kB
+├ ƒ /api/adoptions/[id]/google-oauth                           196 B         102 kB
+├ ƒ /api/adoptions/[id]/google-oauth/callback                  196 B         102 kB
+├ ƒ /api/adoptions/[id]/google-oauth/status                    196 B         102 kB
+├ ƒ /api/integrations/youtube-status                           196 B         102 kB
+├ ƒ /api/notify                                                196 B         102 kB
+├ ƒ /api/releases                                              196 B         102 kB
+├ ƒ /api/releases/[id]                                         196 B         102 kB
+├ ƒ /api/releases/[id]/subtitles                               196 B         102 kB
+├ ƒ /api/releases/[id]/youtube-subtitles                       196 B         102 kB
+├ ƒ /api/releases/import-youtube                               196 B         102 kB
+├ ƒ /api/translate                                             196 B         102 kB
+├ ƒ /api/webhooks/stripe                                       196 B         102 kB
+├ ƒ /api/youtube/video-metadata                                196 B         102 kB
+├ ○ /collaboration                                           5.22 kB         129 kB
+├ ○ /contact                                                 4.75 kB         128 kB
+├ ○ /contributor-policy                                      1.11 kB         123 kB
+├ ○ /cookie-policy                                           1.13 kB         123 kB
+├ ○ /email-verified                                          1.59 kB         125 kB
+├ ○ /forgot-password                                         2.55 kB         126 kB
+├ ○ /governance                                              3.73 kB         127 kB
+├ ○ /governance/content-stewardship                          1.11 kB         123 kB
+├ ○ /governance/diwan-e-amanat                               1.13 kB         123 kB
+├ ○ /governance/majlis-e-nazr                                1.13 kB         123 kB
+├ ○ /governance/mithaq                                       7.26 kB         131 kB
+├ ○ /governance/production-oversight                         1.13 kB         123 kB
+├ ○ /governance/release-protocol                             1.13 kB         123 kB
+├ ○ /governance/royalty-transparency                         1.13 kB         123 kB
+├ ○ /inside-studio                                           1.11 kB         123 kB
+├ ○ /legal/disclaimer                                        1.11 kB         123 kB
+├ ○ /literary-contributors                                   7.31 kB         144 kB
+├ ○ /literary-journal                                         4.3 kB         146 kB
+├ ● /literary-journal/[slug]                                 4.52 kB         146 kB
+├   ├ /literary-journal/the-silence-between-two-breaths
+├   ├ /literary-journal/the-weight-of-an-ordinary-morning
+├   ├ /literary-journal/returning-to-the-door-you-once-left
+├   └ [+21 more paths]
+├ ○ /login                                                   3.82 kB         127 kB
+├ ○ /official-channels                                       1.13 kB         123 kB
+├ ○ /privacy-policy                                          1.13 kB         123 kB
+├ ○ /producers                                               7.24 kB         144 kB
+├ ○ /production/music-style-selection                        6.07 kB         130 kB
+├ ○ /register                                                2.93 kB         126 kB
+├ ƒ /release-detail/[slug]                                   29.5 kB         211 kB
+├ ○ /release-policy                                          1.11 kB         123 kB
+├ ○ /releases                                                5.64 kB         129 kB
+├ ○ /releases-cms                                            3.73 kB         127 kB
+├ ƒ /releases-cms/[slug]                                        3 kB         127 kB
+├ ○ /royalty-policy                                          1.11 kB         123 kB
+├ ○ /studio                                                  7.57 kB         144 kB
+├ ○ /studio-engineers                                        1.13 kB         123 kB
+├ ○ /studio-sessions                                         8.01 kB         148 kB
+├ ○ /terms-of-service                                        1.13 kB         123 kB
+├ ○ /user/literary-contributor/dashboard                       277 B         131 kB
+├ ○ /user/literary-contributor/profile                       3.14 kB         142 kB
+├ ○ /user/producer/dashboard                                   276 B         131 kB
+├ ○ /user/producer/profile                                   3.03 kB         142 kB
+├ ○ /user/studio/dashboard                                   8.47 kB         117 kB
+├ ○ /user/studio/profile                                     3.89 kB         137 kB
+├ ○ /user/vocalist/dashboard                                   278 B         131 kB
+├ ○ /user/vocalist/profile                                   3.45 kB         142 kB
+├ ○ /user/writer/dashboard                                   2.29 kB         133 kB
+├ ○ /user/writer/profile                                     3.57 kB         143 kB
+├ ○ /verify-email                                            2.21 kB         126 kB
+├ ○ /vocalists                                               7.31 kB         144 kB
+└ ○ /writers                                                 7.59 kB         144 kB
++ First Load JS shared by all                                 102 kB
+  ├ chunks/1684-51498bc994c0402b.js                          46.4 kB
+  ├ chunks/4bd1b696-80583fd76ed6b031.js                      53.2 kB
+  └ other shared chunks (total)                              2.02 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -5,6 +5,8 @@ import { Layout } from '../../components/layout/Layout';
 import { UserPlus, Eye, EyeOff, Loader } from 'lucide-react';
 import Link from 'next/link';
 import { storage } from "@/app/lib/storage";
+import { registerSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeEmail } from '../../lib/sanitize';
 export default function SignUp() {
     const [form, setForm] = useState({
         fullName: "",
@@ -14,6 +16,7 @@ export default function SignUp() {
     const [otp, setOtp] = useState("")
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
     //   const { signUp, user, isAdmin, loading: authLoading } = useAuth();
     const router = useRouter();
@@ -51,13 +54,44 @@ export default function SignUp() {
     const handleRegister = async (e: any) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
+        setFieldErrors({});
+
+        const cleanEmail = sanitizeEmail(form.email);
+        
+        const { success, errors } = validateSchema(registerSchema, { 
+            fullName: form.fullName, 
+            email: cleanEmail, 
+            password: form.password 
+        });
+        
+        if (!success && errors) {
+            const formattedErrors: any = {};
+            errors.issues.forEach((issue: any) => {
+                formattedErrors[issue.path[0]] = issue.message;
+            });
+            setFieldErrors(formattedErrors);
+            setLoading(false);
+
+            const firstErrorField = errors.issues[0]?.path[0] as string;
+            if (firstErrorField) {
+                setTimeout(() => {
+                    const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+                    if (element) {
+                        element.focus();
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
+            return;
+        }
 
         try {
-            await storage.register(form.email, form.password, form.fullName);
+            await storage.register(cleanEmail, form.password, form.fullName);
             alert("Registration successful!");
             router.push("/");
         } catch (err: any) {
-            alert(err.message || "Registration failed");
+            setError(err.message || "Registration failed");
         } finally {
             setLoading(false);
         }
@@ -94,9 +128,10 @@ export default function SignUp() {
                                     value={form.fullName}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-[#1a2332] border-2 border-[#3a4556] rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all"
+                                    className={`w-full px-4 py-3 bg-[#1a2332] border-2 ${fieldErrors.fullName ? 'border-red-500' : 'border-[#3a4556]'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all`}
                                     placeholder="John Doe"
                                 />
+                                {fieldErrors.fullName && <p className="text-red-500 text-sm mt-1">{fieldErrors.fullName}</p>}
                             </div>
 
                             <div>
@@ -110,9 +145,10 @@ export default function SignUp() {
                                     value={form.email}
                                     onChange={(e) => handleChange(e)}
                                     required
-                                    className="w-full px-4 py-3 bg-[#1a2332] border-2 border-[#3a4556] rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all"
+                                    className={`w-full px-4 py-3 bg-[#1a2332] border-2 ${fieldErrors.email ? 'border-red-500' : 'border-[#3a4556]'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all`}
                                     placeholder="your@email.com"
                                 />
+                                {fieldErrors.email && <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>}
                             </div>
 
                             <div>
@@ -127,7 +163,7 @@ export default function SignUp() {
                                         value={form.password}
                                         onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 pr-12 bg-[#1a2332] border-2 border-[#3a4556] rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all"
+                                        className={`w-full px-4 py-3 pr-12 bg-[#1a2332] border-2 ${fieldErrors.password ? 'border-red-500' : 'border-[#3a4556]'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all`}
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -139,7 +175,7 @@ export default function SignUp() {
                                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+                                {fieldErrors.password ? <p className="text-red-500 text-sm mt-1">{fieldErrors.password}</p> : <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>}
                             </div>
 
                             {/* <div>

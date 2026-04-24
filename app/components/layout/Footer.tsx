@@ -105,6 +105,7 @@ export function Footer() {
               <FooterLink href="/collaboration">Institutional Collaboration</FooterLink>
               <FooterLink href="/governance">Governance</FooterLink>
               <FooterLink href="/literary-journal">Literary Journal</FooterLink>
+              <FooterLink href="/admin">Admin Dashboard</FooterLink>
             </ul>
           </div>
         </div>

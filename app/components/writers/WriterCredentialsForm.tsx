@@ -8,11 +8,16 @@ import { useRouter } from 'next/navigation';
 import { WriterFormData } from '@/app/types/writer.types';
 import { storage } from '@/app/lib/storage';
 import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
+import { useFormSecurity } from '../../hooks/useFormSecurity';
+import { writerProfileSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeObject } from '../../lib/sanitize';
 
 export function WriterCredentialsForm() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState('');
@@ -49,13 +54,10 @@ export function WriterCredentialsForm() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
 
-    if (!formData.full_name.trim() || !formData.email.trim() || !formData.country || !formData.sample_kalam.trim()) {
-      setError('Please fill in all required fields: Full Name, Email, Country, and Sample Kalam.');
-      return;
-    }
-    if (!formData.revision_acknowledged || !formData.institutional_acknowledged) {
-      setError('Please confirm the governance acknowledgment and revision policy.');
+    if (!verifySecurity()) {
+      setSubmitted(true);
       return;
     }
 
@@ -63,9 +65,39 @@ export function WriterCredentialsForm() {
       ? formData.primary_languages.trim().split(/[,\s]+/).filter(Boolean)
       : formData.primary_languages;
 
-    const payload: WriterFormData = {
+    const payloadToValidate = {
       ...formData,
       primary_languages: langs,
+    };
+
+    const { success, data, errors } = validateSchema(writerProfileSchema, payloadToValidate);
+
+    if (!success && errors) {
+      const formattedErrors: any = {};
+      errors.issues.forEach((issue: any) => {
+          formattedErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(formattedErrors);
+      setError('Please correct the highlighted fields.');
+      return;
+    }
+
+    const cleanData = sanitizeObject(data as any, {
+      full_name: 'text',
+      pen_name: 'text',
+      country: 'text',
+      city: 'text',
+      email: 'email',
+      years_experience: 'text',
+      literary_background: 'text',
+      thematic_focus: 'text',
+      sample_kalam: 'text',
+      previous_publications: 'text'
+    });
+
+    const payload: WriterFormData = {
+      ...formData,
+      ...cleanData,
       profile_status: 'pending',
     };
 
@@ -131,6 +163,15 @@ export function WriterCredentialsForm() {
 
   return (
     <form className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
+      <input
+          type="text"
+          name="_bot_check"
+          value={botCheck}
+          onChange={(e) => setBotCheck(e.target.value)}
+          style={{ display: 'none' }}
+          tabIndex={-1}
+          autoComplete="off"
+      />
       <h3 className="text-lg font-semibold text-white mb-6">Submit Writer Profile</h3>
 
       {error && (
@@ -153,8 +194,9 @@ export function WriterCredentialsForm() {
                   maxLength={200}
                   value={formData.full_name}
                   onChange={e => setFormData({ ...formData, full_name: DOMPurify.sanitize(e.target.value) })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.full_name ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.full_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.full_name}</p>}
               </div>
 
               <div>
@@ -206,8 +248,9 @@ export function WriterCredentialsForm() {
                   required
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.email ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
               </div>
 
               <div>
@@ -312,8 +355,9 @@ export function WriterCredentialsForm() {
                   value={formData.sample_kalam}
                   onChange={e => setFormData({ ...formData, sample_kalam: DOMPurify.sanitize(e.target.value) })}
                   placeholder="Paste original kalam (must be unpublished work)"
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm resize-none font-mono"
+                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm resize-none font-mono ${fieldErrors.sample_kalam ? 'border border-red-500' : ''}`}
                 />
+                {fieldErrors.sample_kalam && <p className="text-red-500 text-xs mt-1">{fieldErrors.sample_kalam}</p>}
               </div>
 
               <div>

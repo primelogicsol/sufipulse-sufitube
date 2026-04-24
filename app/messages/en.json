@@ -1,0 +1,96 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "open": "Open",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "home": "Home",
+    "releases": "Releases",
+    "literaryJournal": "Literary Journal",
+    "contributors": "Creative Contributors",
+    "writers": "Writers",
+    "vocalists": "Vocalists",
+    "producers": "Producers",
+    "production": "Production",
+    "governance": "Governance",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "SufiPulse — Sacred Music & Poetry",
+    "subtitle": "Discover Sufi music, poetry, and literary works from talented contributors",
+    "latestReleases": "Latest Releases",
+    "featuredContributors": "Featured Contributors",
+    "learnMore": "Learn More",
+    "watchNow": "Watch Now"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "verifyEmail": "Verify Email",
+    "enterOTP": "Enter 6-digit code",
+    "resendCode": "Resend Code"
+  },
+  "contributor": {
+    "writer": "Writer",
+    "vocalist": "Vocalist",
+    "producer": "Producer",
+    "literaryContributor": "Literary Contributor",
+    "studioEngineer": "Studio Engineer"
+  },
+  "release": {
+    "title": "Release",
+    "lyrics": "Lyrics",
+    "subtitles": "Subtitles",
+    "credits": "Credits",
+    "commentary": "Commentary",
+    "sponsors": "Sponsors",
+    "adopt": "Adopt This Release",
+    "views": "Views",
+    "likes": "Likes"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "users": "Users",
+    "releases": "Releases",
+    "applications": "Applications",
+    "content": "Content",
+    "settings": "Settings"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "serverError": "Server error",
+    "unauthorized": "You must be logged in",
+    "forbidden": "You don't have permission",
+    "tryAgain": "Try Again",
+    "goHome": "Go Home"
+  }
+}

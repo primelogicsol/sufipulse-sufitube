@@ -8,6 +8,7 @@ export interface Release {
   slug: string;
   release_id?: string;
   status: 'draft' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
+  content_readiness_state?: 'draft' | 'editorial_ready' | 'web_published' | 'youtube_delivery_in_progress' | 'fully_delivered' | 'delivery_attention_required';
   workflow_stage?: string;
   release_type?: string;
   category?: string;

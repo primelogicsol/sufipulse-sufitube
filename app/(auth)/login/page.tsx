@@ -6,25 +6,20 @@ import { Lock, Eye, EyeOff, Loader, ChevronDown, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as api from "../../api/auth";
 import { ENV } from '../../config/env';
-
 import Link from 'next/link';
+import { loginSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeEmail } from '../../lib/sanitize';
 
-const DEMO_ACCOUNTS = [
-    { label: 'Admin', email: 'fk.envcal@gmail.com', password: 'fayaz123', color: '#ef4444' },
-    { label: 'Ahl-e-Qalam (Writer)', email: 'writer@sufipulse.local', password: 'demo123', color: '#10b981' },
-    { label: 'Ahl-e-Sada (Vocalist)', email: 'vocalist@sufipulse.local', password: 'demo123', color: '#60a5fa' },
-    { label: 'Ahl-e-Naghma (Producer)', email: 'producer@sufipulse.local', password: 'demo123', color: '#a78bfa' },
-    { label: 'Ahl-e-Tahreer (Literary)', email: 'literary@sufipulse.local', password: 'demo123', color: '#f59e0b' },
-];
+
 
 const Login = () => {
     const [form, setForm] = useState({ email: "", password: "" });
-    const [demoOpen, setDemoOpen] = useState(false);
     const BASE_URL = ENV.API_URL
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
-    const { login, user } = useAuth();
+    const { login, googleLogin, user } = useAuth();
     const router = useRouter()
     // const navigate = useNavigate();
     // Role - aware redirect after successful login
@@ -58,8 +53,24 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setFieldErrors({});
+
+        const cleanEmail = sanitizeEmail(form.email);
+        
+        const { success, errors } = validateSchema(loginSchema, { email: cleanEmail, password: form.password });
+        
+        if (!success && errors) {
+            const formattedErrors: any = {};
+            errors.issues.forEach((issue: any) => {
+                formattedErrors[issue.path[0]] = issue.message;
+            });
+            setFieldErrors(formattedErrors);
+            setLoading(false);
+            return;
+        }
+
         try {
-            await login(form.email, form.password);
+            await login(cleanEmail, form.password);
         } catch (err: any) {
             setError(err?.message || 'Invalid email or password. Please try again.');
         } finally {
@@ -70,8 +81,7 @@ const Login = () => {
         e.preventDefault()
         setLoading(true)
         try {
-            await api.googleLogin();
-            alert("Login Successfull!");
+            await googleLogin();
         } catch (err: any) {
             alert(err.response?.data?.error || err.message);
         }
@@ -98,52 +108,7 @@ const Login = () => {
                             </div>
                         )}
 
-                        {/* Demo Accounts Quick Fill */}
-                        <div className="mb-6">
-                            <button
-                                type="button"
-                                onClick={() => setDemoOpen(o => !o)}
-                                className="cursor-pointer w-full flex items-center justify-between px-4 py-2.5 bg-amber-400/10 border border-amber-400/30 rounded-lg text-amber-400 text-sm font-medium hover:bg-amber-400/15 transition-colors"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <Zap className="w-4 h-4" />
-                                    Demo Accounts — Quick Fill
-                                </span>
-                                <ChevronDown className={`w-4 h-4 transition-transform ${demoOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            {demoOpen && (
-                                <div className="mt-2 space-y-1.5 p-3 bg-[#0f1419]/80 border border-[#2a3442] rounded-lg">
-                                    {DEMO_ACCOUNTS.map(acc => (
-                                        <button
-                                            key={acc.email}
-                                            type="button"
-                                            onClick={() => { setForm({ email: acc.email, password: acc.password }); setDemoOpen(false); }}
-                                            className="cursor-pointer w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/5 transition-colors text-left"
-                                        >
-                                            <div>
-                                                <p className="text-sm font-semibold" style={{ color: acc.color }}>{acc.label}</p>
-                                                <p className="text-xs text-gray-500 mt-0.5">{acc.email}</p>
-                                            </div>
-                                            <span className="text-xs text-gray-600 font-mono">{acc.password}</span>
-                                        </button>
-                                    ))}
-                                    <div className="pt-2 border-t border-[#2a3442]">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (confirm('Clear all local app data and start fresh?')) {
-                                                    localStorage.clear();
-                                                    window.location.reload();
-                                                }
-                                            }}
-                                            className="cursor-pointer w-full text-center text-xs text-red-400/70 hover:text-red-400 py-1.5 transition-colors"
-                                        >
-                                            Reset App Data (fix stuck login)
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+
 
                         <form className="space-y-6" onSubmit={handleLogin}>
                             <div>
@@ -157,9 +122,10 @@ const Login = () => {
                                     value={form.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-[#1a2332] border-2 border-[#3a4556] rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all"
+                                    className={`w-full px-4 py-3 bg-[#1a2332] border-2 ${fieldErrors.email ? 'border-red-500' : 'border-[#3a4556]'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-all`}
                                     placeholder="your@email.com"
                                 />
+                                {fieldErrors.email && <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>}
                             </div>
 
                             <div>
@@ -186,6 +152,7 @@ const Login = () => {
                                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
+                                {fieldErrors.password && <p className="text-red-500 text-sm mt-1">{fieldErrors.password}</p>}
                             </div>
                             <div className="mt-4 pt-4 border-t border-[#2a3442] text-center">
                                 <p className="text-sm text-gray-400">

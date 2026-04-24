@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cmsStorage } from '@/lib/cms-storage';
+import { cmsServerStorage } from '@/lib/cms-storage-server';
 
 const toSrtTime = (vttTime: string) => vttTime.replace('.', ',');
 
@@ -56,6 +56,54 @@ const escapeAssText = (text: string) => {
     .replace(/\n/g, '\\N')
     .replace(/\{/g, '\\{')
     .replace(/\}/g, '\\}');
+};
+
+const parseKaraokeDurationsMs = (value: unknown): number[] => {
+  if (typeof value !== 'string') return [];
+  return value
+    .split(/[;,\s]+/)
+    .map((part) => Number(part))
+    .filter((num) => Number.isFinite(num) && num > 0);
+};
+
+const buildKaraokeText = (
+  text: string,
+  start: string,
+  end: string,
+  effect: 'k' | 'kf' | 'ko',
+  durationsMsRaw?: unknown,
+): string => {
+  const words = String(text || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!words.length) {
+    return '';
+  }
+
+  const totalMs = Math.max(10, parseMs(end) - parseMs(start));
+  const totalCs = Math.max(1, Math.round(totalMs / 10));
+
+  let durationsCs: number[] = [];
+  const providedMs = parseKaraokeDurationsMs(durationsMsRaw);
+
+  if (providedMs.length === words.length) {
+    durationsCs = providedMs.map((ms) => Math.max(1, Math.round(ms / 10)));
+  } else {
+    const base = Math.floor(totalCs / words.length);
+    const remainder = totalCs - base * words.length;
+    durationsCs = words.map((_, index) => Math.max(1, base + (index < remainder ? 1 : 0)));
+  }
+
+  const assignedTotal = durationsCs.reduce((sum, value) => sum + value, 0);
+  if (assignedTotal !== totalCs) {
+    durationsCs[durationsCs.length - 1] = Math.max(1, durationsCs[durationsCs.length - 1] + (totalCs - assignedTotal));
+  }
+
+  return words
+    .map((word, index) => `{\\${effect}${durationsCs[index]}}${escapeAssText(word)}`)
+    .join(' ');
 };
 
 const toAss = (
@@ -134,8 +182,17 @@ const toAss = (
       tags.push(`\\pos(${assX},${assY})`);
     }
 
+    const karaokeEffectRaw = String(metadata.karaokeEffect || '').toLowerCase();
+    const karaokeEffect = ['k', 'kf', 'ko'].includes(karaokeEffectRaw)
+      ? (karaokeEffectRaw as 'k' | 'kf' | 'ko')
+      : null;
+
+    const baseText = karaokeEffect
+      ? buildKaraokeText(item.text || '', item.start, item.end, karaokeEffect, metadata.karaokeDurationsMs)
+      : escapeAssText(item.text || '');
+
     const prefix = tags.length ? `{${tags.join('')}}` : '';
-    const text = `${prefix}${escapeAssText(item.text || '')}`;
+    const text = `${prefix}${baseText}`;
     const marginL = Number.isFinite(metadata.marginL) ? Number(metadata.marginL) : 0;
     const marginR = Number.isFinite(metadata.marginR) ? Number(metadata.marginR) : 0;
     const marginV = Number.isFinite(metadata.marginV) ? Number(metadata.marginV) : 0;
@@ -151,7 +208,7 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const release = cmsStorage.getRelease(id);
+    const release = cmsServerStorage.getRelease(id);
     if (!release) {
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }

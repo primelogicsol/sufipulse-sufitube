@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
-    "dev:clean": "rm -rf .next && next dev --port 3000",
+    "dev": "next dev --turbopack --port 3000",
+    "dev:clean": "rm -rf .next && next dev --turbopack --port 3000",
     "dev:stable": "node scripts/start-dev.js",
     "monitor": "node scripts/monitor-dev-server.js",
     "build": "next build",
@@ -12,25 +12,34 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next node_modules/.cache",
-    "kill-port": "npx kill-port 3000"
+    "kill-port": "npx kill-port 3000",
+    "env:validate": "node scripts/validate-env.mjs",
+    "env:check": "node scripts/validate-env.mjs",
+    "predev": "node scripts/validate-env.mjs",
+    "prebuild": "node scripts/validate-env.mjs"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",
+    "@sentry/nextjs": "^10.47.0",
     "@supabase/supabase-js": "^2.101.1",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "@types/nodemailer": "^7.0.11",
+    "bcryptjs": "^3.0.3",
     "dompurify": "^3.3.1",
     "googleapis": "^171.4.0",
+    "jose": "^6.2.2",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.576.0",
-    "next": "15.3.1",
+    "next": "^15.4.1",
     "nodemailer": "^8.0.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-simple-wysiwyg": "^3.4.1",
     "react-youtube": "^10.1.0",
     "stripe": "^22.0.0",
-    "tailwind-scrollbar-hide": "^4.0.0"
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -38,7 +47,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^8.57.0",
-    "eslint-config-next": "15.3.1",
+    "eslint-config-next": "^15.4.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -29,7 +29,7 @@ export default function AdoptionSuccessPage() {
 
         // If Stripe redirected us with session_id, confirm payment on server first.
         if (sessionId) {
-          const res = await fetch(`/api/adoptions/${adoptionId}/confirm`, {
+          const res = await fetch(`/api/adoptions/${adoptionId}/confirm/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: sessionId }),

@@ -6,6 +6,7 @@ import { SongAdoption, SongAdoptionSponsor } from '../../../types/adoption.types
 interface RecentAdoptersProps {
   releaseId: string;
   limit?: number;
+  onAdoptClick?: () => void;
 }
 
 interface AdopterDisplay {
@@ -16,7 +17,7 @@ interface AdopterDisplay {
   createdAt: string;
 }
 
-export function RecentAdopters({ releaseId, limit = 6 }: RecentAdoptersProps) {
+export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdoptersProps) {
   const [adopters, setAdopters] = useState<AdopterDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
@@ -158,8 +159,16 @@ export function RecentAdopters({ releaseId, limit = 6 }: RecentAdoptersProps) {
           <h3 className="text-2xl font-serif font-light text-neutral-100">Recent Adopters</h3>
         </div>
         <div className="text-center py-12">
-          <Heart className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
-          <p className="text-neutral-400">No adopters yet. Be the first to sponsor this kalam.</p>
+          <button 
+            onClick={onAdoptClick}
+            className="block mx-auto mb-4 focus:outline-none focus:ring-2 focus:ring-red-500/50 rounded-full transition-transform hover:scale-110"
+            aria-label="Adopt this kalam"
+          >
+            <Heart className="w-12 h-12 text-red-500 fill-red-500/20 animate-pulse" />
+          </button>
+          <p className="text-neutral-400">
+            No adopters yet. Be the first to sponsor this kalam.
+          </p>
         </div>
       </div>
     );

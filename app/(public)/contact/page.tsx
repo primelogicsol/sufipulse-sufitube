@@ -5,6 +5,9 @@ import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Mail, MapPin, Globe, Send, CheckCircle } from 'lucide-react';
 import { storage } from '../../lib/storage';
+import { useFormSecurity } from '../../hooks/useFormSecurity';
+import { contactFormSchema, validateSchema } from '../../lib/validation-schemas';
+import { sanitizeObject } from '../../lib/sanitize';
 
 export default function Contact() {
     const [formData, setFormData] = useState({
@@ -18,6 +21,8 @@ export default function Contact() {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<any>({});
+    const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
 
     const subjectOptions = [
         'General Inquiry',
@@ -36,14 +41,44 @@ export default function Contact() {
         e.preventDefault();
         setSubmitting(true);
         setError(null);
+        setFieldErrors({});
+
+        if (!verifySecurity()) {
+            setSubmitted(true);
+            setSubmitting(false);
+            return;
+        }
+
+        const finalSubject = formData.subject === 'Custom' ? formData.customSubject : formData.subject;
+        const payloadToValidate = {
+            name: formData.name,
+            email: formData.email,
+            subject: finalSubject,
+            message: formData.message
+        };
+
+        const { success, data, errors } = validateSchema(contactFormSchema, payloadToValidate);
+        
+        if (!success && errors) {
+            const formattedErrors: any = {};
+            errors.issues.forEach((issue: any) => {
+                formattedErrors[issue.path[0]] = issue.message;
+            });
+            setFieldErrors(formattedErrors);
+            setSubmitting(false);
+            return;
+        }
 
         try {
-            const finalSubject = formData.subject === 'Custom' ? formData.customSubject : formData.subject;
+            const cleanData = sanitizeObject(data as any, {
+                name: 'text',
+                email: 'email',
+                subject: 'text',
+                message: 'text'
+            });
+
             await storage.create('contact_message', {
-                name: formData.name,
-                email: formData.email,
-                subject: finalSubject,
-                message: formData.message,
+                ...cleanData,
                 status: 'unread',
             });
             setSubmitted(true);
@@ -105,6 +140,15 @@ export default function Contact() {
                                 </div>
                             ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                <input
+                                    type="text"
+                                    name="_bot_check"
+                                    value={botCheck}
+                                    onChange={(e) => setBotCheck(e.target.value)}
+                                    style={{ display: 'none' }}
+                                    tabIndex={-1}
+                                    autoComplete="off"
+                                />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
@@ -117,8 +161,9 @@ export default function Contact() {
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="Enter your full name"
-                                            className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-700 rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors"
+                                            className={`w-full px-4 py-3 bg-neutral-950/50 border ${fieldErrors.name ? 'border-red-500' : 'border-neutral-700'} rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors`}
                                         />
+                                        {fieldErrors.name && <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>}
                                     </div>
 
                                     <div>
@@ -132,8 +177,9 @@ export default function Contact() {
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                             placeholder="your.email@example.com"
-                                            className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-700 rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors"
+                                            className={`w-full px-4 py-3 bg-neutral-950/50 border ${fieldErrors.email ? 'border-red-500' : 'border-neutral-700'} rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors`}
                                         />
+                                        {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
                                     </div>
                                 </div>
 
@@ -158,6 +204,7 @@ export default function Contact() {
                                             </option>
                                         ))}
                                     </select>
+                                    {fieldErrors.subject && <p className="text-red-500 text-xs mt-1">{fieldErrors.subject}</p>}
                                 </div>
 
                                 {formData.subject === 'Custom' && (
@@ -188,8 +235,9 @@ export default function Contact() {
                                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                                         placeholder="Please share your message, questions, or how we can assist you..."
                                         rows={6}
-                                        className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-700 rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors resize-y"
+                                        className={`w-full px-4 py-3 bg-neutral-950/50 border ${fieldErrors.message ? 'border-red-500' : 'border-neutral-700'} rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors resize-y`}
                                     />
+                                    {fieldErrors.message && <p className="text-red-500 text-xs mt-1">{fieldErrors.message}</p>}
                                 </div>
 
                                 <div className="flex justify-end">

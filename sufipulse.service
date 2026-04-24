@@ -1,0 +1,32 @@
+[Unit]
+Description=SufiPulse - Sacred Music & Poetry Platform
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/sufipulse
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/www/sufipulse/logs/app.log
+StandardError=append:/var/www/sufipulse/logs/error.log
+
+# Environment
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+# Security Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/sufipulse/.data
+
+# Resource Limits
+LimitNOFILE=65536
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

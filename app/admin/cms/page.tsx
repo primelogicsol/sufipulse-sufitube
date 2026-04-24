@@ -28,10 +28,16 @@ export default function CMSPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     loadReleases();
   }, [statusFilter, categoryFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, categoryFilter, searchQuery, rowsPerPage]);
 
   async function loadReleases() {
     try {
@@ -59,6 +65,22 @@ export default function CMSPage() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
+
+  const filteredReleases = releases.filter(r => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return r.title.toLowerCase().includes(q) || r.slug.toLowerCase().includes(q);
+  });
+
+  const totalReleases = filteredReleases.length;
+  const totalPages = Math.max(1, Math.ceil(totalReleases / rowsPerPage));
+  const activePage = Math.min(currentPage, totalPages);
+  const pageStart = (activePage - 1) * rowsPerPage;
+  const pageEnd = Math.min(pageStart + rowsPerPage, totalReleases);
+  const paginatedReleases = filteredReleases.slice(pageStart, pageEnd);
+
+  const pageWindowStart = Math.max(1, Math.min(activePage - 2, totalPages - 4));
+  const visiblePages = Array.from({ length: Math.min(5, totalPages) }, (_, i) => pageWindowStart + i);
 
   const statuses: Record<string, string> = {
     'draft': 'Draft',
@@ -182,6 +204,7 @@ export default function CMSPage() {
               </Link>
             </div>
           ) : (
+            <>
             <table className="w-full">
               <thead className="dashboard-table-header">
                 <tr>
@@ -194,7 +217,7 @@ export default function CMSPage() {
                 </tr>
               </thead>
               <tbody>
-                {releases.map((release) => (
+                {paginatedReleases.map((release) => (
                   <tr key={release.id} className="dashboard-table-row">
                     <td className="px-6 py-4">
                       <p className="font-semibold" style={{color: 'var(--dash-text-primary)'}}>{release.title}</p>
@@ -233,6 +256,51 @@ export default function CMSPage() {
                 ))}
               </tbody>
             </table>
+
+            {totalReleases > rowsPerPage && (
+              <div
+                className="px-6 py-3 flex flex-wrap items-center justify-between gap-3"
+                style={{ borderTop: '1px solid var(--dash-border)' }}
+              >
+                <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--dash-text-secondary)' }}>
+                  <span>Rows per page</span>
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                    className="px-2 py-1 rounded dashboard-btn-secondary"
+                  >
+                    {[10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                  <span>{totalReleases === 0 ? '0' : pageStart + 1}–{pageEnd} of {totalReleases}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={activePage <= 1}
+                    className="dashboard-btn-secondary px-3 py-1.5 text-sm disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  {visiblePages.map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1.5 rounded text-sm ${activePage === page ? 'dashboard-btn-primary' : 'dashboard-btn-secondary'}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={activePage >= totalPages}
+                    className="dashboard-btn-secondary px-3 py-1.5 text-sm disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>

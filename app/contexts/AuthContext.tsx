@@ -94,8 +94,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const googleLogin = async () => {
-        console.log("Google login not available in standalone mode");
-        throw new Error("Google login not available in standalone mode");
+        // Standalone placeholder: Owner will integrate Google API natively here.
+        console.warn("Native Google API integration pending deployment.");
+        alert("Google API integration will be handled prior to deployment.");
     };
 
     const logout = async () => {

@@ -11,10 +11,10 @@
       "static/chunks/_app-pages-browser_lib_youtube-service_ts.js"
     ]
   },
-  "app\\page.tsx -> ../lib/youtube-service": {
-    "id": "app\\page.tsx -> ../lib/youtube-service",
+  "node_modules\\next\\dist\\client\\components\\react-dev-overlay\\utils\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
+    "id": "node_modules\\next\\dist\\client\\components\\react-dev-overlay\\utils\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
     "files": [
-      "static/chunks/_app-pages-browser_lib_youtube-service_ts.js"
+      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
     ]
   }
 }

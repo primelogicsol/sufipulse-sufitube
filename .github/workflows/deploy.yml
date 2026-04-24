@@ -1,0 +1,147 @@
+name: Deploy SufiPulse to IONOS VPS
+
+on:
+  push:
+    branches: [main]          # auto-deploy on every push to main
+  workflow_dispatch:           # manual trigger from GitHub Actions UI
+    inputs:
+      reason:
+        description: "Reason for manual deploy"
+        required: false
+        default: "Manual trigger"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/sufipulse
+
+jobs:
+  # ── Job 1: Build Docker image and push to GHCR ────────
+  build:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write          # needed to push to ghcr.io
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Pass NEXT_PUBLIC_ build-time vars from GitHub Secrets
+          build-args: |
+            NEXT_PUBLIC_YOUTUBE_API_KEY=${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
+            NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=${{ secrets.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID }}
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # Layer cache — speeds up subsequent builds significantly
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to:   type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  # ── Job 2: Deploy to IONOS VPS ─────────────────────────
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production    # optional: add manual approval in GitHub settings
+
+    steps:
+      - name: Checkout (for docker-compose.yml and nginx config)
+        uses: actions/checkout@v4
+
+      - name: Copy deployment files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key:      ${{ secrets.VPS_SSH_KEY }}
+          source:   "docker-compose.yml,nginx/"
+          target:   "/var/www/sufipulse"
+
+      - name: Deploy on VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key:      ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/sufipulse
+
+            # Write GITHUB_REPO_OWNER so docker-compose image ref resolves
+            echo "GITHUB_REPO_OWNER=${{ github.repository_owner }}" > .compose.env
+
+            # Log in to GHCR on the server
+            echo "${{ secrets.GITHUB_TOKEN }}" | \
+              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull the new image and recreate containers with zero-downtime
+            export $(cat .compose.env | xargs)
+            docker compose pull app
+            docker compose up -d --remove-orphans
+
+            # Clean up old images to save disk space
+            docker image prune -f
+
+            echo "=== Deployment complete ==="
+            docker compose ps
+            echo ""
+            echo "App log (last 20 lines):"
+            docker compose logs app --tail=20
+
+  # ── Job 3: Smoke test ──────────────────────────────────
+  smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Wait for app to be ready
+        run: sleep 15
+
+      - name: HTTP health check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 30 \
+            "http://${{ secrets.VPS_HOST }}")
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: expected 200, got $STATUS"
+            exit 1
+          fi
+          echo "Smoke test passed."
+
+      - name: Notify success (optional — add Slack/Discord webhook here)
+        if: success()
+        run: echo "Deployed successfully to http://${{ secrets.VPS_HOST }}"
