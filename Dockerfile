@@ -37,8 +37,7 @@ RUN chown nextjs:nodejs /app/.data
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/.env.local ./.env.local
-COPY --from=builder /app/.data ./data
+# .data is excluded from .dockerignore and is provided via Docker volume at runtime
 
 # Switch to non-root user
 USER nextjs

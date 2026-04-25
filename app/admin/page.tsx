@@ -1,11 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
-// import { Link } from 'react-router-dom';
 import { Users, FileText, Mic, Music, BookOpen, Handshake, Calendar, Activity, Globe, DollarSign, CircleAlert as AlertCircle, Mail } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
-// import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import * as api from '../api/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -50,127 +47,68 @@ export default function AdminDashboard() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true);
 
-  const normalizeArrayLike = (value: any): any[] => {
-    if (Array.isArray(value)) {
-      // Supports tuple-like map storage: [[id, payload], ...]
-      if (value.length > 0 && Array.isArray(value[0]) && value[0].length === 2) {
-        return value
-          .map((entry) => (Array.isArray(entry) ? entry[1] : entry))
-          .filter((item) => item && typeof item === 'object');
-      }
-      return value;
-    }
-
-    if (value && typeof value === 'object') {
-      return Object.values(value);
-    }
-
-    return [];
-  };
-
-  const safeReadArray = (key: string): any[] => {
-    if (typeof window === 'undefined') return [];
+  const safeGet = async (url: string): Promise<any[]> => {
     try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return normalizeArrayLike(parsed);
+      const res = await fetch(url);
+      const data = res.ok ? await res.json() : [];
+      return Array.isArray(data) ? data : [];
     } catch {
       return [];
     }
   };
 
-  const pendingCount = (items: any[], field: string = 'status') => {
+  const pendingCount = (items: any[], field = 'status') => {
     const pendingStates = new Set(['pending', 'submitted', 'under_review', 'revision_requested']);
-    return items.filter((item) => pendingStates.has(String(item?.[field] || '').toLowerCase())).length;
-  };
-
-  const firstArray = (...candidates: any[]): any[] => {
-    for (const candidate of candidates) {
-      if (Array.isArray(candidate)) return candidate;
-    }
-    return [];
+    return items.filter(item => pendingStates.has(String(item?.[field] || '').toLowerCase())).length;
   };
 
   const loadStats = async () => {
     try {
-      const [writersResult, vocalistsResult, producersResult, kalamsResult, draftReleasesResult] = await Promise.allSettled([
-        api.getAllWriter(),
-        api.getAllVocalists(),
-        api.getAllProducers(),
-        api.getAllKalams(),
-        fetch('/api/releases?status=draft'),
+      const [
+        writers, vocalists, producers, literary, studio,
+        kalams, sadas, articles, partnerships,
+        sessionRequests, adoptions, accessCodes, contacts, releases,
+      ] = await Promise.all([
+        safeGet('/api/writers'),
+        safeGet('/api/vocalists'),
+        safeGet('/api/producers'),
+        safeGet('/api/literary'),
+        safeGet('/api/studio'),
+        safeGet('/api/kalams'),
+        safeGet('/api/sadas'),
+        safeGet('/api/articles'),
+        safeGet('/api/partnerships'),
+        safeGet('/api/session-requests'),
+        safeGet('/api/adoptions'),
+        safeGet('/api/studio-access-codes'),
+        safeGet('/api/contacts'),
+        safeGet('/api/releases'),
       ]);
 
-      const writerPayload = writersResult.status === 'fulfilled' ? await writersResult.value.json() : null;
-      const vocalistPayload = vocalistsResult.status === 'fulfilled' ? await vocalistsResult.value.json() : null;
-      const producerPayload = producersResult.status === 'fulfilled' ? await producersResult.value.json() : null;
-      const kalamPayload = kalamsResult.status === 'fulfilled' ? await kalamsResult.value.json() : null;
-      const draftReleasePayload =
-        draftReleasesResult.status === 'fulfilled' && draftReleasesResult.value.ok
-          ? await draftReleasesResult.value.json()
-          : [];
-
-      const writers = firstArray(
-        writerPayload?.data?.writers,
-        writerPayload?.writers,
-        writerPayload?.data,
-        safeReadArray('sufipulse_writer_profiles')
-      );
-
-      const vocalists = firstArray(
-        vocalistPayload?.data?.vocalists,
-        vocalistPayload?.vocalists,
-        vocalistPayload?.data,
-        safeReadArray('sufipulse_vocalist_profiles')
-      );
-
-      const kalams = firstArray(
-        kalamPayload?.data?.kalams,
-        kalamPayload?.kalams,
-        kalamPayload?.data,
-        safeReadArray('sufipulse_kalams')
-      );
-
-      const producers = firstArray(
-        producerPayload?.data?.producers,
-        producerPayload?.producers,
-        producerPayload?.data,
-        safeReadArray('sufipulse_producer_profiles')
-      );
-
-      const users = safeReadArray('sufipulse_users');
-      const articles = safeReadArray('sufipulse_articles');
-      const sadas = safeReadArray('sufipulse_sadas');
-      const partnerships = safeReadArray('sufipulse_partnerships');
-      const sessionRequests = safeReadArray('sufipulse_session_requests');
-      const literaryProfiles = safeReadArray('sufipulse_literary_profiles');
-      const studioProfiles = safeReadArray('sufipulse_studio_profiles');
-      const adoptions = safeReadArray('sufipulse_song_adoptions');
-      const accessCodeRequests = safeReadArray('sufipulse_studio_access_requests');
-      const contactMessages = safeReadArray('sufipulse_contact_messages');
-
-      const pendingAdoptions = adoptions.filter((adoption) => {
-        const status = String(adoption?.adoption_status || '').toLowerCase();
-        return status === 'pending_review' || status === 'scheduled' || status === 'live';
+      const pendingAdoptions = adoptions.filter(a => {
+        const s = String(a?.adoption_status || a?.status || '').toLowerCase();
+        return s === 'pending_review' || s === 'pending' || s === 'scheduled' || s === 'live';
       }).length;
 
+      const draftReleases = releases.filter(r => String(r?.status || '').toLowerCase() === 'draft').length;
+      const pendingContacts = contacts.filter(m => String(m?.status || 'unread').toLowerCase() === 'unread').length;
+
       setStats({
-        totalUsers: users.length,
+        totalUsers: 0,
         writerApplications: pendingCount(writers, 'profile_status'),
-        vocalistApplications: pendingCount(vocalists, 'status'),
+        vocalistApplications: pendingCount(vocalists, 'profile_status'),
         producerApplications: pendingCount(producers, 'profile_status'),
-        literaryApplications: pendingCount(literaryProfiles, 'profile_status'),
-        studioApplications: pendingCount(studioProfiles, 'profile_status'),
+        literaryApplications: pendingCount(literary, 'profile_status'),
+        studioApplications: pendingCount(studio, 'profile_status'),
         pendingKalams: pendingCount(kalams, 'status'),
         pendingSadas: pendingCount(sadas, 'status'),
         pendingArticles: pendingCount(articles, 'status'),
         pendingPartnerships: pendingCount(partnerships, 'status'),
         pendingSessionRequests: pendingCount(sessionRequests, 'status'),
         pendingAdoptions,
-        draftReleases: Array.isArray(draftReleasePayload) ? draftReleasePayload.length : 0,
-        pendingAccessCodeRequests: accessCodeRequests.filter(r => String(r?.status || '').toLowerCase() === 'pending').length,
-        pendingContactMessages: contactMessages.filter(m => String(m?.status || 'unread').toLowerCase() === 'unread').length,
+        draftReleases,
+        pendingAccessCodeRequests: accessCodes.filter(r => String(r?.status || '').toLowerCase() === 'pending').length,
+        pendingContactMessages: pendingContacts,
       });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
@@ -190,47 +128,6 @@ export default function AdminDashboard() {
     }
   }, [user]);
 
-  //   useEffect(() => {
-  //     if (!authLoading) {
-  //       loadStats();
-  //     }
-  //   }, [authLoading]);
-
-  //   const loadStats = async () => {
-  //     try {
-  //       const [
-  //         usersResult,
-  //         writerAppsResult,
-  //         vocalistAppsResult,
-  //         kalamsResult,
-  //         articlesResult,
-  //         partnershipsResult,
-  //         sessionRequestsResult,
-  //       ] = await Promise.all([
-  //         supabase.from('users').select('id', { count: 'exact', head: true }),
-  //         supabase.from('writer_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-  //         supabase.from('vocalist_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-  //         supabase.from('kalams').select('id', { count: 'exact', head: true }).eq('status', 'submitted'),
-  //         supabase.from('literary_articles').select('id', { count: 'exact', head: true }).eq('publication_status', 'submitted'),
-  //         supabase.from('institutional_partnership_proposals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-  //         supabase.from('session_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-  //       ]);
-
-  //       setStats({
-  //         totalUsers: usersResult.count || 0,
-  //         writerApplications: writerAppsResult.count || 0,
-  //         vocalistApplications: vocalistAppsResult.count || 0,
-  //         pendingKalams: kalamsResult.count || 0,
-  //         pendingArticles: articlesResult.count || 0,
-  //         pendingPartnerships: partnershipsResult.count || 0,
-  //         pendingSessionRequests: sessionRequestsResult.count || 0,
-  //       });
-  //     } catch (error) {
-  //       console.error('Error loading stats:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
 
   const statCards = [
     {
@@ -582,18 +479,6 @@ export default function AdminDashboard() {
 
           <div className="dashboard-card">
             <h3 className="font-semibold text-[var(--dash-text-primary)] mb-4">
-              User Management
-            </h3>
-            <p className="text-sm text-[var(--dash-text-secondary)] mb-4">
-              Handle admin setup and user access policies in standalone mode
-            </p>
-            <Link href="/admin/setup" className="dashboard-btn-primary text-sm inline-block">
-              Open Admin Setup
-            </Link>
-          </div>
-
-          <div className="dashboard-card">
-            <h3 className="font-semibold text-[var(--dash-text-primary)] mb-4">
               Institutional Relations
             </h3>
             <p className="text-sm text-[var(--dash-text-secondary)] mb-4">
@@ -620,7 +505,7 @@ export default function AdminDashboard() {
           Stakeholder Dashboards
         </h2>
         <p className="text-sm text-[var(--dash-text-secondary)] mb-6">
-          View contributor portals as admin — or use the demo credentials below to log in as each role.
+          View contributor portals as admin.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -630,8 +515,6 @@ export default function AdminDashboard() {
               role: 'Ahl-e-Qalam',
               dashboard: '/user/writer/dashboard',
               profile: '/user/writer/profile',
-              email: 'writer@sufipulse.local',
-              password: 'writer123',
               color: '#f59e0b',
             },
             {
@@ -639,8 +522,6 @@ export default function AdminDashboard() {
               role: 'Ahl-e-Sada',
               dashboard: '/user/vocalist/dashboard',
               profile: '/user/vocalist/profile',
-              email: 'vocalist@sufipulse.local',
-              password: 'vocalist123',
               color: '#6366f1',
             },
             {
@@ -648,8 +529,6 @@ export default function AdminDashboard() {
               role: 'Ahl-e-Naghma',
               dashboard: '/user/producer/dashboard',
               profile: '/user/producer/profile',
-              email: 'producer@sufipulse.local',
-              password: 'producer123',
               color: '#10b981',
             },
             {
@@ -657,8 +536,6 @@ export default function AdminDashboard() {
               role: 'Ahl-e-Tahreer',
               dashboard: '/user/literary-contributor/dashboard',
               profile: '/user/literary-contributor/profile',
-              email: 'literary@sufipulse.local',
-              password: 'literary123',
               color: '#8b5cf6',
             },
           ].map((item) => (
@@ -689,11 +566,6 @@ export default function AdminDashboard() {
                 </Link>
               </div>
 
-              <div className="bg-[#0d0d0d] rounded p-3 space-y-1 border border-[#1a1a1a]">
-                <p className="text-[10px] text-[var(--dash-text-muted)] uppercase tracking-wide">Demo Credentials</p>
-                <p className="text-xs font-mono text-[var(--dash-text-secondary)] truncate">{item.email}</p>
-                <p className="text-xs font-mono text-[var(--dash-text-muted)]">{item.password}</p>
-              </div>
             </div>
           ))}
         </div>

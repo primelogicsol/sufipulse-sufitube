@@ -15,14 +15,17 @@ import bcrypt from 'bcryptjs';
 import { generateId, db } from './database';
 import type { User } from './database-schema';
 
-// JWT Secrets
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'dev-secret-change-in-production-min-32-chars'
-);
+// JWT Secrets — throws at startup in production if variables are missing
+function resolveSecret(envKey: string, devFallback: string): Uint8Array {
+  const val = process.env[envKey];
+  if (!val && process.env.NODE_ENV === 'production') {
+    throw new Error(`[startup] ${envKey} must be set in production`);
+  }
+  return new TextEncoder().encode(val || devFallback);
+}
 
-const REFRESH_SECRET = new TextEncoder().encode(
-  process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production-min-32-chars'
-);
+const JWT_SECRET = resolveSecret('JWT_SECRET', 'dev-secret-change-in-production-min-32-chars');
+const REFRESH_SECRET = resolveSecret('JWT_REFRESH_SECRET', 'dev-refresh-secret-change-in-production-min-32-chars');
 
 const ACCESS_TOKEN_EXPIRY = '7d';
 const REFRESH_TOKEN_EXPIRY = '30d';

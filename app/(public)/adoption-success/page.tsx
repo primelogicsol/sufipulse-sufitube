@@ -1,12 +1,13 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
 import { storage } from '@/app/lib/storage';
 
-export default function AdoptionSuccessPage() {
+function AdoptionSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const adoptionId = searchParams.get('adoption_id');
@@ -22,12 +23,10 @@ export default function AdoptionSuccessPage() {
       return;
     }
 
-    // Apply the payment confirmation to localStorage
     async function confirm() {
       try {
         let verifiedAmountPaid: number | undefined;
 
-        // If Stripe redirected us with session_id, confirm payment on server first.
         if (sessionId) {
           const res = await fetch(`/api/adoptions/${adoptionId}/confirm/`, {
             method: 'POST',
@@ -149,5 +148,22 @@ export default function AdoptionSuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function AdoptionSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="w-10 h-10 text-amber-400 animate-spin mx-auto" />
+            <p className="text-neutral-400">Loading…</p>
+          </div>
+        </div>
+      }
+    >
+      <AdoptionSuccessContent />
+    </Suspense>
   );
 }

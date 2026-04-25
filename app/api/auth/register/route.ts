@@ -1,61 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { registerUser } from '@/lib/auth';
-import { validateRequestBody } from '@/app/lib/api-middleware';
-import { registerSchema } from '@/app/lib/validation-schemas';
-import { rateLimiters } from '@/app/lib/rate-limiter';
+import { type NextRequest, NextResponse } from 'next/server';
+import { registerUser } from '@/server/services/auth';
+import { sendVerificationEmail } from '@/server/services/email';
+import { parseBody, ok, serverError } from '@/server/middleware/validate';
+import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
+import { registerSchema } from '@/server/validators/auth';
+import { config } from '@/server/config';
 
 export async function POST(req: NextRequest) {
-  const response = NextResponse.next();
-  const isAllowed = await rateLimiters.auth(req, response);
+  const limited = await applyRateLimit(req, rateLimiters.auth);
+  if (limited) return limited;
 
-  if (!isAllowed) {
-    return NextResponse.json(
-      { success: false, error: { message: 'Too many registration attempts. Please try again later.' } },
-      { status: 429, headers: Object.fromEntries(response.headers.entries()) }
-    );
-  }
+  const body = await parseBody(req, registerSchema);
+  if (body instanceof NextResponse) return body;
+
   try {
-    const validation = await validateRequestBody(req, registerSchema);
-
-    if (!(validation as any).success) {
-      return NextResponse.json(validation, { status: 400 });
-    }
-
-    const { full_name, email, password, role } = (validation as any).data;
-    const result = await registerUser({ full_name, email, password, role });
-
-    const response = NextResponse.json({
-      success: true,
-      user: result.user,
-      message: 'Registration successful. Please verify your email.',
-      // TODO: Remove otpCode in production - send via email instead
-      otpCode: process.env.NODE_ENV === 'development' ? result.otpCode : undefined,
+    const result = await registerUser({
+      full_name: body.full_name,
+      email: body.email,
+      password: body.password,
+      role: body.role,
     });
 
-    // Set HTTP-only cookies
-    response.cookies.set('access_token', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
+    // Send OTP email (fire-and-forget — don't block registration)
+    sendVerificationEmail(result.user.email, result.user.full_name, result.otpCode).catch(
+      err => console.error('[register] Email send failed:', err)
+    );
 
-    response.cookies.set('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60,
-      path: '/',
-    });
-
-    return response;
-  } catch (error: any) {
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
-        success: false,
-        error: { message: error.message || 'Registration failed' },
+        success: true,
+        data: result.user,
+        message: 'Registration successful. Please verify your email.',
       },
+      { status: 201 }
+    );
+
+    const cookieOpts = {
+      httpOnly: true,
+      secure: config.app.isProduction,
+      sameSite: 'strict' as const,
+      path: '/',
+    };
+
+    res.cookies.set('access_token', result.accessToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 });
+    res.cookies.set('refresh_token', result.refreshToken, { ...cookieOpts, maxAge: 30 * 24 * 60 * 60 });
+
+    return res;
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: { message: err.message || 'Registration failed' } },
       { status: 400 }
     );
   }

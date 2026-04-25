@@ -1,10 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { XCircle } from 'lucide-react';
 
-export default function AdoptionCancelPage() {
+function AdoptionCancelContent() {
   const searchParams = useSearchParams();
   const adoptionId = searchParams.get('adoption_id');
 
@@ -29,5 +30,19 @@ export default function AdoptionCancelPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function AdoptionCancelPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+          <div className="text-neutral-400">Loading…</div>
+        </div>
+      }
+    >
+      <AdoptionCancelContent />
+    </Suspense>
   );
 }

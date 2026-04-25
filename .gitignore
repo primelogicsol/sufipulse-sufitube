@@ -19,7 +19,14 @@ coverage
 .env.local
 .env.production
 .env.development
+.env.test
+.env.staging
 frontend.env
+
+# File-based database — never commit user/financial data
+.data/payout-accounts.json
+.data/audit/
+.data/backups/
 
 .vscode/*
 !.vscode/extensions.json
