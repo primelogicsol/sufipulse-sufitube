@@ -6,6 +6,7 @@ import { Music, Filter, Search, Play, Calendar, Eye, Youtube } from 'lucide-reac
 import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
+import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
 
 type FilterType = 'all' | 'native' | 'legacy';
 type DurationFilter = 'all' | 'short' | 'standard' | 'long';
@@ -224,34 +225,28 @@ export default function Releases() {
 
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
+            <Section className="pt-16 pb-6">
                 <PageContainer>
                     <div className="max-w-5xl mx-auto text-center">
-                        {/* <div className="mb-6 flex justify-center">
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-full text-sm text-red-500 uppercase tracking-wider font-medium">
-                                <Youtube className="w-4 h-4" />
-                                Official Channel
-                            </span>
-                        </div> */}
-
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">
+                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 leading-tight">
                             SufiTube
                         </h1>
-                        <p className="text-2xl md:text-3xl text-amber-400/90 mb-8 font-light">
+                        <p className="text-2xl md:text-3xl text-amber-400/90 mb-3 font-light">
                             Official Visual Release Registry
                         </p>
-
-                        <div className="max-w-3xl mx-auto">
-                            <p className="text-lg text-neutral-300 leading-relaxed">
-                                Experience the soulful renditions, studio sessions, and official visual releases from SufiPulse. All productions are subject to quality assurance and creative oversight.
-                            </p>
-                        </div>
+                        <p className="text-lg text-neutral-300 leading-relaxed">
+                            Experience the soulful renditions, studio sessions, and official visual releases from SufiPulse.
+                        </p>
                     </div>
                 </PageContainer>
             </Section>
 
             <PageContainer>
                 <div className="max-w-7xl mx-auto">
+
+                    {/* ── Global Reach Analytics Strip ── */}
+                    <GlobalReachStrip />
+
                     <div className="mb-8 space-y-6">
                         <div className="flex items-center gap-2">
                             <Filter className="w-4 h-4 text-neutral-500" />
@@ -329,7 +324,7 @@ export default function Releases() {
                             <div className="md:col-span-2">
                                 <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Search</label>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600 pointer-events-none" />
                                     <input
                                         type="text"
                                         value={searchQuery}
@@ -338,7 +333,8 @@ export default function Releases() {
                                             setCurrentPage(1);
                                         }}
                                         placeholder="Search releases..."
-                                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-neutral-700 placeholder:text-neutral-600"
+                                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 pr-4 py-2 text-sm focus:outline-none focus:border-neutral-700 placeholder:text-neutral-600"
+                                        style={{ paddingLeft: '2.25rem' }}
                                     />
                                 </div>
                             </div>

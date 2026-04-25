@@ -170,7 +170,13 @@ export default function LiteraryArticleClient() {
     );
   }
 
-  const initials = (article.author_name || 'A').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+  const initials = (() => {
+    const name = article.author_name || 'A';
+    if (name === 'Ahl-e-Tahreer Archive') return '✦';
+    const parts = name.split(' ').filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  })();
 
   return (
     <Layout>
@@ -267,7 +273,7 @@ export default function LiteraryArticleClient() {
               }}>
                 {authorExtras?.author_photo
                   ? <img src={authorExtras.author_photo} alt={article.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontWeight: 700, color: 'var(--color-gold)', fontSize: '0.8rem' }}>{initials}</span>
+                  : <span style={{ fontWeight: 700, color: 'var(--color-gold)', fontSize: initials === '✦' ? '1rem' : '0.8rem' }}>{initials}</span>
                 }
               </div>
               <div style={{ minWidth: 0 }}>
@@ -312,6 +318,74 @@ export default function LiteraryArticleClient() {
         <div style={{ maxWidth: 'var(--max-width-reading)' }}>
           {renderContent(article.content)}
         </div>
+
+        {/* Listen while you read */}
+        {article.related_youtube_id ? (
+          <div style={{
+            margin: 'var(--space-12) 0',
+            border: '1px solid rgba(200,167,94,0.2)',
+            borderRadius: 'var(--radius-base)',
+            overflow: 'hidden',
+            background: 'rgba(10,10,10,0.6)',
+          }}>
+            <div style={{ padding: 'var(--space-4) var(--space-6)', borderBottom: '1px solid rgba(200,167,94,0.15)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <svg viewBox="0 0 24 24" fill="#ef4444" style={{ width: '18px', height: '18px', flexShrink: 0 }}>
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
+              <span style={{ color: 'var(--color-gold)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>Listen while you read</span>
+              <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>— related kalam from SufiPulse</span>
+            </div>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${article.related_youtube_id}?rel=0&modestbranding=1`}
+                title="Listen while you read"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+              />
+            </div>
+          </div>
+        ) : (
+          <a
+            href="https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ?sub_confirmation=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 'var(--space-4)',
+              margin: 'var(--space-12) 0',
+              padding: 'var(--space-5) var(--space-6)',
+              background: 'rgba(10,10,10,0.6)',
+              border: '1px solid rgba(200,167,94,0.18)',
+              borderRadius: 'var(--radius-base)',
+              textDecoration: 'none',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="white" style={{ width: '20px', height: '20px' }}>
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+              </div>
+              <div>
+                <p style={{ color: 'var(--color-text-primary)', fontSize: 'var(--text-sm)', fontWeight: 600, margin: 0 }}>Listen to SufiPulse on YouTube</p>
+                <p style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', margin: '2px 0 0' }}>Sacred kalam and devotional music to accompany your reading</p>
+              </div>
+            </div>
+            <span style={{
+              padding: '0.35rem 1rem',
+              border: '1px solid #b91c1c',
+              borderRadius: '999px',
+              color: '#f87171',
+              fontSize: 'var(--text-xs)',
+              fontWeight: 600,
+              flexShrink: 0,
+            }}>Subscribe</span>
+          </a>
+        )}
 
         {/* Decorative section divider */}
         <div style={{
@@ -369,7 +443,7 @@ export default function LiteraryArticleClient() {
             }}>
               {authorExtras?.author_photo
                 ? <img src={authorExtras.author_photo} alt={article.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <span style={{ fontWeight: 700, color: 'var(--color-gold)', fontSize: 'var(--text-xl)' }}>{initials}</span>
+                : <span style={{ fontWeight: 700, color: 'var(--color-gold)', fontSize: initials === '✦' ? '1.5rem' : 'var(--text-xl)' }}>{initials}</span>
               }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>

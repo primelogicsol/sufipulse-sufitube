@@ -18,15 +18,7 @@ import { getYouTubeVideoId, buildYouTubeThumbnailCandidates, advanceThumbnailFal
 import { LanguageManagerWithRelease, LanguageSelector, SideBySideComparison, SubtitlePasteEditor, getLanguageLabel, LANGUAGE_OPTIONS as PAGE_LANGUAGE_OPTIONS } from './components';
 import type { SubtitleStatus } from './components';
 import { useVideoTimeTracker, TimeDisplay } from './components/VideoTimeTracker';
-import { ENV } from '@/app/config/env';
-
-let supabase: any = null;
-try {
-    const { supabase: sb } = require('../../../lib/supabase-client');
-    supabase = sb;
-} catch (error) {
-    console.warn('Supabase not configured');
-}
+// Supabase removed — CMS file storage (.data/cms-releases.json) is the canonical data source
 
 const LANGUAGE_OPTIONS = [
     { key: 'roman_urdu', label: 'Roman Urdu' },
@@ -402,7 +394,7 @@ function Release() {
     const [videoLoaded, setVideoLoaded] = useState(false);
     const [videoReady, setVideoReady] = useState(false);
     const [release, setRelease] = useState<any>(null);
-    const [resolutionSource, setResolutionSource] = useState<'cms_slug' | 'cms_youtube_compat' | 'external_youtube_fallback' | 'supabase_compat' | null>(null);
+    const [resolutionSource, setResolutionSource] = useState<'cms_slug' | 'cms_youtube_compat' | 'external_youtube_fallback' | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -803,121 +795,48 @@ function Release() {
                 });
 
                 setError(null);
-                console.log('DEBUG: fetchVideoDetails starting', { slug, API_URL: ENV.API_URL });
-                // 1) Canonical: resolve by slug first
-                const slugUrl = `${ENV.API_URL}/releases?slug=${encodeURIComponent(slug)}`;
-                let slugRes = null;
+
+                let resolvedRelease: any = null;
+                let resolvedSource: 'cms_slug' | 'cms_youtube_compat' | 'external_youtube_fallback' | null = null;
+
+                // 1) Try by slug — isolated so a network failure doesn't skip the youtubeId fallback
                 try {
-                    console.log(`DEBUG: Attempting fetch (canonical) to: ${slugUrl}`);
-                    slugRes = await fetch(slugUrl);
-                } catch (e) {
-                    console.warn(`First fetch attempt failed for ${slugUrl}:`, e);
-                    // Final fallback: try relative URL if absolute failed
+                    const slugRes = await fetch(`/api/releases?slug=${encodeURIComponent(slug)}`);
+                    if (slugRes.ok) {
+                        const data = await slugRes.json();
+                        if (data && !data.error) {
+                            resolvedRelease = data;
+                            resolvedSource = 'cms_slug' as const;
+                        }
+                    }
+                } catch {
+                    // Slug lookup failed — continue to youtubeId fallback
+                }
+
+                // 2) Try by youtubeId (URL slug may be a YouTube video ID)
+                if (!resolvedRelease) {
                     try {
-                        console.log('DEBUG: Retrying fetch (canonical) with relative URL: /api/releases');
-                        slugRes = await fetch(`/api/releases?slug=${encodeURIComponent(slug)}`);
-                    } catch (e2) {
-                        console.error('Relative fetch also failed:', e2);
-                        await new Promise(r => setTimeout(r, 1000));
-                        slugRes = await fetch(slugUrl);
+                        const compatRes = await fetch(`/api/releases?youtubeId=${encodeURIComponent(slug)}`);
+                        if (compatRes.ok) {
+                            const data = await compatRes.json();
+                            if (data && !data.error) {
+                                resolvedRelease = data;
+                                resolvedSource = 'cms_youtube_compat' as const;
+                            }
+                        }
+                    } catch {
+                        // YoutubeId lookup also failed — will fall through to YouTube API
                     }
                 }
 
-                if (slugRes && slugRes.ok) {
-                    const cmsRelease = await slugRes.json();
-                    if (cmsRelease && !cmsRelease.error) {
-                        console.log('Loaded release from CMS by slug');
-                        setResolutionSource('cms_slug');
-                        setRelease(mapCmsRelease(cmsRelease));
-                        setLoading(false);
-                        return;
-                    }
-                }
-
-                // 2) Compatibility: resolve by youtubeId using slug value
-                const compatUrl = `${ENV.API_URL}/releases?youtubeId=${encodeURIComponent(slug)}`;
-                let compatRes = null;
-                try {
-                    console.log(`DEBUG: Attempting fetch (compatibility) to: ${compatUrl}`);
-                    compatRes = await fetch(compatUrl);
-                } catch (e) {
-                    console.warn(`Compatibility fetch attempt failed for ${compatUrl}:`, e);
-                    // Final fallback: try relative URL if absolute failed
-                    try {
-                        console.log('DEBUG: Retrying fetch (compatibility) with relative URL: /api/releases');
-                        compatRes = await fetch(`/api/releases?youtubeId=${encodeURIComponent(slug)}`);
-                    } catch (e2) {
-                        console.error('Relative compatibility fetch also failed:', e2);
-                        await new Promise(r => setTimeout(r, 1000));
-                        compatRes = await fetch(compatUrl);
-                    }
-                }
-
-                if (compatRes && compatRes.ok) {
-                    const cmsRelease = await compatRes.json();
-                    if (cmsRelease && !cmsRelease.error) {
-                        console.log('Loaded release from CMS using youtubeId compatibility lookup');
-                        setResolutionSource('cms_youtube_compat');
-                        setRelease(mapCmsRelease(cmsRelease));
-                        setLoading(false);
-                        return;
-                    }
-                } else {
-                    console.warn('CMS lookup by youtubeId failed');
-                }
-
-                // Fallback to Supabase if configured
-                let dbRelease = null;
-                if (supabase) {
-                    const dbResult = await supabase
-                        .from('releases')
-                        .select('*')
-                        .eq('youtube_video_id', slug)
-                        .eq('is_published', true)
-                        .single();
-
-                    dbRelease = dbResult.data;
-                }
-
-                if (dbRelease) {
-                    console.log('Loaded release from database');
-                    setResolutionSource('supabase_compat');
-                    setRelease({
-                        ...dbRelease,
-                        release_title: dbRelease.title || dbRelease.release_title || '',
-                        release_date: dbRelease.releaseDate || dbRelease.release_date || '',
-                        description: dbRelease.description || '',
-                        duration_seconds: dbRelease.durationSeconds || dbRelease.duration_seconds || 0,
-                        views: dbRelease.viewCount || dbRelease.views || 0,
-                        likes: dbRelease.likeCount || dbRelease.likes || 0,
-                        youtube_video_id: dbRelease.youtubeId || dbRelease.youtube_video_id || '',
-                        thumbnail_url: dbRelease.thumbnailUrl || dbRelease.thumbnail_url || '',
-                        slug: dbRelease.slug || '',
-                        subtitles_available: !!(dbRelease.subtitleCues?.length || dbRelease.subtitle_cues?.length),
-                        subtitle_languages: dbRelease.availableLanguages || dbRelease.subtitle_languages || [],
-                        lyrics: dbRelease.lyrics || {},
-                        subtitle_cues: dbRelease.subtitleCues || dbRelease.subtitle_cues || [],
-                        subtitle_translations: dbRelease.subtitleTranslations || dbRelease.subtitle_translations || {},
-                        subtitle_cue_metadata: dbRelease.subtitleCueMetadata || dbRelease.subtitle_cue_metadata || {},
-                        subtitle_style_packs: dbRelease.subtitleStylePacks || dbRelease.subtitle_style_packs || {},
-                        language_style_overrides: dbRelease.languageStyleOverrides || dbRelease.language_style_overrides || {},
-                        lyrics_structure: dbRelease.lyricsStructure || dbRelease.lyrics_structure || {},
-                        enable_credits: (dbRelease.enableCredits !== undefined ? dbRelease.enableCredits : dbRelease.enable_credits) !== false,
-                        enable_commentary: (dbRelease.enableCommentary !== undefined ? dbRelease.enableCommentary : dbRelease.enable_commentary) !== false,
-                        enable_sponsors: !!(dbRelease.enableSponsors || dbRelease.enable_sponsors),
-                        enable_adoption: (dbRelease.enableAdoption !== undefined ? dbRelease.enableAdoption : dbRelease.enable_adoption) !== false,
-                        enable_lyrics: (dbRelease.enableLyrics !== undefined ? dbRelease.enableLyrics : dbRelease.enable_lyrics) !== false,
-                        public_commentary: dbRelease.publicCommentary || dbRelease.public_commentary || [],
-                        public_sponsors_intro: dbRelease.publicSponsorsIntro || dbRelease.public_sponsors_intro || '',
-                        public_sponsors: dbRelease.publicSponsors || dbRelease.public_sponsors || [],
-                        public_credits: dbRelease.publicCredits || dbRelease.public_credits || {},
-                        streaming_platforms: dbRelease.streamingPlatforms || dbRelease.streaming_platforms || [],
-                        spotify_url: dbRelease.spotify_url || "",
-                        apple_music_url: dbRelease.apple_music_url || ""
-                    });
+                if (resolvedRelease) {
+                    setResolutionSource(resolvedSource);
+                    setRelease(mapCmsRelease(resolvedRelease));
                     setLoading(false);
                     return;
                 }
+
+                // Supabase fallback removed — CMS file storage is the only data source
 
                 // Fallback to YouTube API
                 console.log('Fetching from YouTube API...');
@@ -1411,21 +1330,44 @@ function Release() {
         }, 2000);
     };
 
+    const getYouTubeShareUrl = (withTimestamp = false) => {
+        if (!resolvedVideoId) return window.location.href;
+        const t = withTimestamp ? Math.floor(currentTime || 0) : 0;
+        return t > 0
+            ? `https://www.youtube.com/watch?v=${resolvedVideoId}&t=${t}`
+            : `https://www.youtube.com/watch?v=${resolvedVideoId}`;
+    };
+
     const handleShare = (platform: string) => {
-        const url = encodeURIComponent(window.location.href);
-        const text = encodeURIComponent(release.release_title);
+        // Social platforms: share YouTube URL so YouTube records external traffic
+        const ytUrl = encodeURIComponent(getYouTubeShareUrl());
+        const siteUrl = encodeURIComponent(window.location.href);
+        const title = release?.release_title || 'SufiPulse Release';
+        const shareText = encodeURIComponent(
+            `🎵 "${title}" — Sacred Sufi music with multilingual lyrics`
+        );
+        const hashTags = 'SufiMusic,Kalam,SufiPulse';
 
         const urls: Record<string, string> = {
-            twitter: `https://twitter.com/intent/tweet?url=${url}&text=${text}`,
-            whatsapp: `https://wa.me/?text=${text}%20${url}`,
-            facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
-            telegram: `https://t.me/share/url?url=${url}&text=${text}`
+            twitter:  `https://twitter.com/intent/tweet?url=${ytUrl}&text=${shareText}&hashtags=${hashTags}`,
+            whatsapp: `https://wa.me/?text=${shareText}%0A${ytUrl}`,
+            facebook: `https://www.facebook.com/sharer/sharer.php?u=${ytUrl}`,
+            telegram: `https://t.me/share/url?url=${ytUrl}&text=${shareText}`,
+            // LinkedIn keeps website URL — professional context
+            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${siteUrl}`,
         };
 
         if (urls[platform]) {
             window.open(urls[platform], '_blank', 'width=600,height=400');
         }
+    };
+
+    const handleShareMoment = () => {
+        const ytUrl = getYouTubeShareUrl(true);
+        navigator.clipboard.writeText(ytUrl);
+        setToastMessage('Timestamped YouTube link copied!');
+        setToastType('success');
+        setTimeout(() => setToastMessage(null), 3000);
     };
 
     const getAvailableLanguages = () => {
@@ -3721,6 +3663,38 @@ function Release() {
                         </section>
                     )}
 
+                    {/* YouTube Comment CTA */}
+                    {resolvedVideoId && (
+                        <section className="mb-16">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 bg-neutral-900/50 border border-neutral-800 rounded-xl">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-red-700/20 border border-red-700/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-red-400">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-neutral-200">Did this kalam move you?</p>
+                                        <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+                                            Leave a comment on YouTube — it helps the algorithm promote this to more listeners worldwide.
+                                        </p>
+                                    </div>
+                                </div>
+                                <a
+                                    href={`https://www.youtube.com/watch?v=${resolvedVideoId}#lc`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                        <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                                    </svg>
+                                    Comment on YouTube
+                                </a>
+                            </div>
+                        </section>
+                    )}
+
                 </div>
 
                 {/* Copy Link Modal */}
@@ -3776,7 +3750,24 @@ function Release() {
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
+                            {/* YouTube promotion note */}
+                            <p className="text-xs text-amber-400/70 text-center mb-1">Social shares use the YouTube link — helping this reach more listeners</p>
                             <div className="space-y-3">
+                                {/* Share this moment */}
+                                {resolvedVideoId && currentTime > 5 && (
+                                    <button
+                                        onClick={() => { handleShareMoment(); setShowShareModal(false); }}
+                                        className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-amber-900/30 border border-amber-700/40 hover:bg-amber-900/50 rounded-lg transition-colors text-left"
+                                    >
+                                        <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center">
+                                            <Clock className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <div className="text-amber-200 font-medium">Share this moment</div>
+                                            <div className="text-sm text-amber-400/60">YouTube link at {formatDuration(Math.floor(currentTime))}</div>
+                                        </div>
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => handleCopyLink()}
                                     className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors text-left"
@@ -3785,8 +3776,8 @@ function Release() {
                                         <Copy className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
-                                        <div className="text-neutral-100 font-medium">Copy Link Text</div>
-                                        <div className="text-sm text-neutral-500">Copy to clipboard</div>
+                                        <div className="text-neutral-100 font-medium">Copy Page Link</div>
+                                        <div className="text-sm text-neutral-500">sufipulse.com link to clipboard</div>
                                     </div>
                                 </button>
                                 <button

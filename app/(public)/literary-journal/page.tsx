@@ -184,7 +184,7 @@ export default function LiteraryJournal() {
                                 placeholder="Search articles..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400/50"
+                                className="w-full has-icon pr-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400/50"
                             />
                         </div>
                         <div className="relative">
@@ -270,7 +270,13 @@ function ArticleCard({ article, featured }: ArticleCardProps) {
     };
 
     const authorExtras = article as any;
-    const initials = (article.author_name || 'A').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+    const initials = (() => {
+      const name = article.author_name || 'A';
+      if (name === 'Ahl-e-Tahreer Archive') return '✦';
+      const parts = name.split(' ').filter(Boolean);
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    })();
 
     return (
         <Link

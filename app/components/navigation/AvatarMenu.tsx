@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { User, LogOut, LayoutDashboard, FileText, CircleUser as UserCircle, NotebookPen, Mic, KeyboardMusic, PenTool, FolderDot } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, CircleUser as UserCircle, NotebookPen, Mic, KeyboardMusic, PenTool, FolderDot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as api from "../../api/auth"
@@ -153,39 +153,30 @@ export function AvatarMenu() {
               </div>
 
               <div className="py-2">
+                {/* Admin Dashboard — admin role only */}
+                {user.role?.includes('admin') && (
+                  <Link
+                    href="/admin"
+                    onClick={handleLinkClick}
+                    className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
+                    role="menuitem"
+                  >
+                    <LayoutDashboard size={18} />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                )}
+
+                {/* My Account — all authenticated users */}
                 <Link
-                  href={user.role?.includes("admin") ? "/admin" : "/user/dashboard"}
+                  href="/user/profile"
                   onClick={handleLinkClick}
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   role="menuitem"
                 >
-                  <LayoutDashboard size={18} />
-                  <span>{user.role?.includes("admin") ? "Admin Dashboard" : "Dashboard"}</span>
+                  <UserCircle size={18} />
+                  <span>My Account</span>
                 </Link>
 
-                {user.role.includes("admin") && (
-                  <>
-                    <Link
-                      href="/user/dashboard"
-                      onClick={handleLinkClick}
-                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
-                      role="menuitem"
-                    >
-                      <FileText size={18} />
-                      <span>My Applications</span>
-                    </Link>
-
-                    <Link
-                      href="/user/profile"
-                      onClick={handleLinkClick}
-                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
-                      role="menuitem"
-                    >
-                      <UserCircle size={18} />
-                      <span>Profile</span>
-                    </Link>
-                  </>
-                )}
                 {hasRoleAccess(user as any, 'writer') && userProfiles.writer && <Link
                   className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-[#1e2a3d] hover:text-[#C8A75E] transition-colors"
                   onClick={handleLinkClick}

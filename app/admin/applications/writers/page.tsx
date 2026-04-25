@@ -5,9 +5,7 @@ import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, CircleAlert as AlertCircle, RefreshCw, FileText } from 'lucide-react';
 import { notifyStatusChange } from '@/app/lib/notifications';
 import { useAuth } from '../../../contexts/AuthContext';
-import * as api from "../../../api/auth";
 import { WriterFormData } from '@/app/types/writer.types';
-import { storage } from '@/app/lib/storage';
 // import { WriterFormData } from '@/app/components/writers/WriterCredentialsForm';
 
 interface WriterApplication {
@@ -56,35 +54,12 @@ export default function AdminWriterApplications() {
     async function loadApplications() {
         try {
             setLoading(true);
-
-            console.log('[AdminWriterApplications] Current user:', user);
-            console.log('[AdminWriterApplications] Auth loading:', authLoading);
-
-            const response = await api.getAllWriter();
-            let payload: any = null;
-
-            if (response && typeof (response as any).json === 'function') {
-                payload = await (response as any).json();
-            } else {
-                payload = response;
-            }
-
-            const apiApplications =
-                payload?.data?.writers ||
-                payload?.writers ||
-                payload?.data ||
-                [];
-
-            if (Array.isArray(apiApplications) && apiApplications.length > 0) {
-                setApplications(apiApplications);
-            } else {
-                const localApplications = await storage.getAll('writer');
-                setApplications(Array.isArray(localApplications) ? localApplications : []);
-            }
+            const res = await fetch('/api/writers');
+            const data = await res.json();
+            setApplications(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('[AdminWriterApplications] Error loading applications:', error);
-            const localApplications = await storage.getAll('writer');
-            setApplications(Array.isArray(localApplications) ? localApplications : []);
+            setApplications([]);
         } finally {
             setLoading(false);
         }
@@ -142,28 +117,30 @@ export default function AdminWriterApplications() {
         if (!id) return;
         const app = applications.find(a => (a as any).id === id);
         try {
-            try {
-                await api.updateWriterStatus(id, status);
-            } catch {
-                await storage.update('writer', id, {
-                    profile_status: status,
-                    reviewed_at: new Date().toISOString(),
-                });
-            }
-            // Fire notification + email
+            setProcessingAction(true);
+            const res = await fetch(`/api/writers/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile_status: status }),
+            });
+            if (!res.ok) throw new Error('Failed to update status');
+
+            // In-app notification
             if (app) {
-                await notifyStatusChange({
+                notifyStatusChange({
                     user_id: (app as any).user_id,
                     email: app.email,
                     name: app.pen_name || app.full_name || app.email,
                     role: 'writer',
                     status: status as any,
-                });
+                }).catch(console.error);
             }
             setSelectedApp(null);
-            loadApplications();
+            await loadApplications();
         } catch (err: any) {
             alert(err?.message || 'Failed to update status');
+        } finally {
+            setProcessingAction(false);
         }
     };
 
@@ -179,7 +156,7 @@ export default function AdminWriterApplications() {
                                 placeholder="Search by pen name, email, or applicant name..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="dashboard-input pl-10"
+                                className="dashboard-input has-icon"
                             />
                         </div>
 

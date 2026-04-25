@@ -28,6 +28,12 @@ select {
   transition: all var(--dash-transition-fast);
 }
 
+/* Left-icon clearance — specificity 0-1-1 matches input[type] above but comes
+   later in source order, so padding-left wins for any input with this class. */
+input.has-icon {
+  padding-left: 2.5rem;
+}
+
 input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="password"]:focus,

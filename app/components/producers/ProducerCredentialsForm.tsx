@@ -1,10 +1,6 @@
 import { useState } from 'react';
-// import { DOMPurify.sanitize } from '../../../lib/sanitization';
 import DOMPurify from "dompurify";
 import { useAuth } from '../../contexts/AuthContext';
-import * as api from "../../api/auth";
-import { storage } from '../../lib/storage';
-import { notifyApplicationReceived, notifyAdmin } from '../../lib/notifications';
 import Link from 'next/link';
 import { ProducerProfileType } from '../../types/producer.types';
 import { ProducerSubmissionSuccessModal } from './ProducerSubmissionSuccessModal';
@@ -85,36 +81,18 @@ export function ProducerCredentialsForm() {
         musical_background: 'text'
       });
 
-      try {
-        await api.createProducerProfile(cleanData as any);
-      } catch {
-        storage.create('producer', {
-          ...formData, // Fallback to raw if api rejected something sanitize didn't catch, but use cleanData
-          ...cleanData,
-          profile_status: 'pending',
-          submitted_at: new Date().toISOString(),
-        });
+      const res = await fetch('/api/producers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, ...cleanData, profile_status: 'pending' }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Submission failed. Please try again.');
       }
-
       setSubmitted(true);
-      notifyApplicationReceived({
-        user_id: user?.id,
-        email: formData.email,
-        name: formData.professional_name || formData.full_name,
-        role: 'producer',
-        reference: submissionId,
-      }).catch(console.error);
-      notifyAdmin({
-        title: 'New Producer Application',
-        message: `${formData.professional_name || formData.full_name} (${formData.email}) has applied as Ahl-e-Naghma (Producer). Submission: ${submissionId}.`,
-        event: 'application_received',
-        from_role: 'producer',
-        from_name: formData.professional_name || formData.full_name,
-        action_url: '/admin/applications/producers',
-      }).catch(console.error);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to submit producer profile. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit producer profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -189,7 +167,6 @@ export function ProducerCredentialsForm() {
                   <option value="Canada">Canada</option>
                   <option value="UAE">UAE</option>
                   <option value="India">India</option>
-                  <option value="Pakistan">Pakistan</option>
                   <option value="UK">UK</option>
                   <option value="Other">Other</option>
                 </select>

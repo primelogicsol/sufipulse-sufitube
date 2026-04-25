@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { storage } from '@/app/lib/storage';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, CircleAlert as AlertCircle, RefreshCw, FileText } from 'lucide-react';
 import { LiteraryProfileType } from '@/app/types/literary.types';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { notifyStatusChange } from '@/app/lib/notifications';
 
 export default function AdminLiteraryApplications() {
     const { loading: authLoading } = useAuth();
@@ -26,8 +24,9 @@ export default function AdminLiteraryApplications() {
     async function loadApplications() {
         try {
             setLoading(true);
-            const local = await storage.getAll('literary');
-            setApplications(Array.isArray(local) ? local : []);
+            const res = await fetch('/api/literary');
+            const data = await res.json();
+            setApplications(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('[AdminLiteraryApplications] Error loading:', error);
             setApplications([]);
@@ -76,22 +75,14 @@ export default function AdminLiteraryApplications() {
 
     const handleUpdateStatus = async (id: string | undefined, status: string) => {
         if (!id) return;
-        const app = applications.find(a => (a as any).id === id);
         try {
             setProcessingAction(true);
-            await storage.update('literary', id, {
-                profile_status: status,
-                reviewed_at: new Date().toISOString(),
+            const res = await fetch(`/api/literary/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile_status: status }),
             });
-            if (app) {
-                await notifyStatusChange({
-                    user_id: (app as any).user_id,
-                    email: (app as any).email,
-                    name: (app as any).professional_name || (app as any).full_name || (app as any).email,
-                    role: 'literary',
-                    status: status as any,
-                });
-            }
+            if (!res.ok) throw new Error('Failed to update status');
             setSelectedApp(null);
             loadApplications();
         } catch (err: any) {
@@ -113,7 +104,7 @@ export default function AdminLiteraryApplications() {
                                 placeholder="Search by name, email, or professional name..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="dashboard-input pl-10"
+                                className="dashboard-input has-icon"
                             />
                         </div>
 

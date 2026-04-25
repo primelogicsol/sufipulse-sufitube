@@ -475,6 +475,12 @@
   color: var(--dash-accent);
 }
 
+/* Icon inputs — left-icon variant.
+   Specificity 0-2-0 beats input[type] (0-1-1) in admin-components.css. */
+.dashboard-input.has-icon {
+  padding-left: 2.5rem;
+}
+
 /* Placeholder Styling */
 .dashboard-input::placeholder,
 .dashboard-textarea::placeholder,

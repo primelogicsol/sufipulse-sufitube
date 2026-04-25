@@ -7,6 +7,65 @@ import * as cms from './cms-types';
 const LEGACY_RELEASES_KEY = 'cms_releases';
 const CANONICAL_RELEASES_KEY = 'sufipulse_cms_releases';
 const RELEASE_MIGRATION_MARKER = 'cms_releases_migrated_to_canonical_v1';
+const DEMO_PURGE_MARKER = 'cms_demo_purge_v1';
+
+// Seed/demo release IDs that should never appear in the CMS
+const DEMO_RELEASE_IDS = new Set(['sufipulse-001', 'sufipulse-002', 'sufipulse-003']);
+const DEMO_RELEASE_SLUGS = new Set([
+  'qawwali-souls-journey',
+  'garden-divine-love',
+  'spiritual-journey-voices-heart',
+]);
+
+const purgeDemoReleases = () => {
+  if (typeof window === 'undefined') return;
+  if (localStorage.getItem(DEMO_PURGE_MARKER) === '1') return;
+
+  // Remove from canonical localStorage mirror
+  const map = new Map<string, Record<string, any>>(readCanonicalEntries());
+  let changed = false;
+  for (const [id, val] of map.entries()) {
+    if (DEMO_RELEASE_IDS.has(id) || DEMO_RELEASE_SLUGS.has(String(val?.slug || ''))) {
+      map.delete(id);
+      changed = true;
+    }
+  }
+  if (changed) writeCanonicalEntries(Array.from(map.entries()));
+
+  // Also wipe the legacy key so the old cmsStorage localStorage entry is gone
+  try {
+    const rawLegacy = localStorage.getItem(LEGACY_RELEASES_KEY);
+    if (rawLegacy) {
+      const legacy = JSON.parse(rawLegacy);
+      if (Array.isArray(legacy)) {
+        const cleaned = legacy.filter(
+          (r: any) => !DEMO_RELEASE_IDS.has(r.id) && !DEMO_RELEASE_SLUGS.has(r.slug)
+        );
+        if (cleaned.length !== legacy.length) {
+          localStorage.setItem(LEGACY_RELEASES_KEY, JSON.stringify(cleaned));
+        }
+      }
+    }
+  } catch { /* ignore */ }
+
+  // Wipe the old cmsStorage canonical key that seed-cms-data.ts writes to
+  try {
+    const rawOld = localStorage.getItem('sufipulse_cms_releases');
+    if (rawOld) {
+      const entries: [string, any][] = JSON.parse(rawOld);
+      if (Array.isArray(entries)) {
+        const cleaned = entries.filter(
+          ([id, val]) => !DEMO_RELEASE_IDS.has(id) && !DEMO_RELEASE_SLUGS.has(String(val?.slug || ''))
+        );
+        if (cleaned.length !== entries.length) {
+          localStorage.setItem('sufipulse_cms_releases', JSON.stringify(cleaned));
+        }
+      }
+    }
+  } catch { /* ignore */ }
+
+  localStorage.setItem(DEMO_PURGE_MARKER, '1');
+};
 
 type CanonicalStorageEntry = [string, Record<string, any>];
 
@@ -251,10 +310,14 @@ const applyReleaseFilters = (
   return results;
 };
 
+const stripDemo = (releases: cms.Release[]) =>
+  releases.filter(r => !DEMO_RELEASE_IDS.has(r.id) && !DEMO_RELEASE_SLUGS.has(r.slug));
+
 // Release CRUD Operations
 export async function getAllReleases(
   filters?: { status?: string; category?: string; search?: string }
 ): Promise<cms.Release[]> {
+  purgeDemoReleases();
   ensureCanonicalReleaseMigration();
 
   try {
@@ -265,7 +328,7 @@ export async function getAllReleases(
     }
     const data = await response.json();
     const apiRows = Array.isArray(data) ? data : [];
-    const mapped = apiRows.map(mapAnyToRelease);
+    const mapped = stripDemo(apiRows.map(mapAnyToRelease));
 
     for (const row of mapped) {
       upsertCanonicalMirror(row);
@@ -274,7 +337,7 @@ export async function getAllReleases(
     return applyReleaseFilters(mapped, filters);
   } catch (error) {
     console.error('Error fetching releases:', error);
-    const fallback = readCanonicalFallback();
+    const fallback = stripDemo(readCanonicalFallback());
     return applyReleaseFilters(fallback, filters);
   }
 }

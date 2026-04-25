@@ -4,7 +4,6 @@ import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Globe, BookOpen, Video, Shield } from 'lucide-react';
-import { storage } from '../../lib/storage';
 
 export default function InstitutionalCollaboration() {
     const [formData, setFormData] = useState({
@@ -38,11 +37,18 @@ export default function InstitutionalCollaboration() {
         setError(null);
 
         try {
-            await storage.create('partnership', {
-                ...formData,
-                proposal_type: formData.partnership_type,
-                status: 'pending',
+            const res = await fetch('/api/partnerships', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...formData,
+                    proposal_type: formData.partnership_type,
+                }),
             });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to submit proposal.');
+            }
 
             setSubmitted(true);
             setFormData({

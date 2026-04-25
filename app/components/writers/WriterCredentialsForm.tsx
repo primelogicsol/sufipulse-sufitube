@@ -3,43 +3,68 @@ import DOMPurify from "dompurify";
 import { WriterSubmissionSuccessModal } from './WriterSubmissionSuccessModal';
 import { useAuth } from '../../contexts/AuthContext';
 import Link from 'next/link';
-import * as api from "../../api/auth";
-import { useRouter } from 'next/navigation';
 import { WriterFormData } from '@/app/types/writer.types';
-import { storage } from '@/app/lib/storage';
 import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { writerProfileSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeObject } from '../../lib/sanitize';
 
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+function fieldClass(base: string, hasError: boolean) {
+  return `${base} ${hasError ? 'border border-red-500 focus:border-red-500 focus:ring-red-500/30' : ''}`;
+}
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-red-400 text-xs mt-1">{msg}</p>;
+}
+
+// Scroll + focus the first field that has an error
+function focusFirstError(errorKeys: string[]) {
+  if (!errorKeys.length) return;
+  for (const key of errorKeys) {
+    const el = document.getElementById(`field-${key}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (typeof (el as HTMLElement).focus === 'function') {
+        setTimeout(() => (el as HTMLElement).focus(), 350);
+      }
+      return;
+    }
+  }
+}
+
+// ─── component ────────────────────────────────────────────────────────────────
+
 export function WriterCredentialsForm() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [text, setText] = useState('');
-  const [submissionId] = useState(`SP-WRT-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`);
+  const [submissionId] = useState(
+    `SP-WRT-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`
+  );
+
   const [formData, setFormData] = useState<WriterFormData>({
-    full_name: user ? user.full_name : "",
-    pen_name: "",
-    country: "",
-    city: "",
-    email: user ? user.email : "",
-    years_experience: "",
-    primary_languages: "",
+    full_name: user ? user.full_name : '',
+    pen_name: '',
+    country: '',
+    city: '',
+    email: user ? user.email : '',
+    years_experience: '',
+    primary_languages: '',
     writing_styles: [],
-    literary_background: "",
-    thematic_focus: "",
-    sample_kalam: "",
-    previous_publications: "",
+    literary_background: '',
+    thematic_focus: '',
+    sample_kalam: '',
+    previous_publications: '',
     editorial_review_experience: false,
     willing_editorial_process: false,
     revision_acknowledged: false,
     institutional_acknowledged: false,
-
   });
 
   const handleCheckboxChange = (value: string) => {
@@ -47,9 +72,12 @@ export function WriterCredentialsForm() {
       ...prev,
       writing_styles: prev.writing_styles.includes(value)
         ? prev.writing_styles.filter(s => s !== value)
-        : [...prev.writing_styles, value]
+        : [...prev.writing_styles, value],
     }));
   };
+
+  const set = (key: keyof WriterFormData, value: any) =>
+    setFormData(prev => ({ ...prev, [key]: value }));
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -61,24 +89,34 @@ export function WriterCredentialsForm() {
       return;
     }
 
-    const langs = typeof formData.primary_languages === 'string'
-      ? formData.primary_languages.trim().split(/[,\s]+/).filter(Boolean)
-      : formData.primary_languages;
+    const langs =
+      typeof formData.primary_languages === 'string'
+        ? formData.primary_languages.trim().split(/[,\s]+/).filter(Boolean)
+        : formData.primary_languages;
 
-    const payloadToValidate = {
-      ...formData,
-      primary_languages: langs,
-    };
+    const payloadToValidate = { ...formData, primary_languages: langs };
 
     const { success, data, errors } = validateSchema(writerProfileSchema, payloadToValidate);
 
     if (!success && errors) {
-      const formattedErrors: any = {};
+      const formattedErrors: Record<string, string> = {};
       errors.issues.forEach((issue: any) => {
-          formattedErrors[issue.path[0]] = issue.message;
+        const key = issue.path[0] as string;
+        if (!formattedErrors[key]) formattedErrors[key] = issue.message;
       });
       setFieldErrors(formattedErrors);
-      setError('Please correct the highlighted fields.');
+      setError('Please correct the highlighted fields below.');
+
+      // Scroll to and focus the first invalid field
+      const orderedKeys = [
+        'full_name', 'email', 'country', 'city', 'years_experience',
+        'primary_languages', 'writing_styles', 'literary_background',
+        'thematic_focus', 'sample_kalam',
+        'revision_acknowledged', 'institutional_acknowledged',
+      ];
+      const firstErrorKey = orderedKeys.find(k => formattedErrors[k]) ||
+        Object.keys(formattedErrors)[0];
+      focusFirstError(firstErrorKey ? [firstErrorKey] : []);
       return;
     }
 
@@ -92,35 +130,22 @@ export function WriterCredentialsForm() {
       literary_background: 'text',
       thematic_focus: 'text',
       sample_kalam: 'text',
-      previous_publications: 'text'
+      previous_publications: 'text',
     });
 
-    const payload: WriterFormData = {
-      ...formData,
-      ...cleanData,
-      profile_status: 'pending',
-    };
+    const payload: WriterFormData = { ...formData, ...cleanData, profile_status: 'pending' };
 
     try {
       setLoading(true);
-
-      // Try backend API first
-      let savedViaApi = false;
-      try {
-        await api.createWriterProfile(payload);
-        savedViaApi = true;
-      } catch {
-        // Backend unavailable — fall through to localStorage
+      const res = await fetch('/api/writers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Submission failed. Please try again.');
       }
-
-      if (!savedViaApi) {
-        // Standalone mode: persist directly to localStorage so admin can review it
-        await storage.create('writer', {
-          ...payload,
-          submitted_at: new Date().toISOString(),
-        });
-      }
-
       setSubmitted(true);
       notifyApplicationReceived({
         user_id: user?.id,
@@ -144,12 +169,6 @@ export function WriterCredentialsForm() {
     }
   };
 
-  const handleLanguageChange = (e: any) => {
-    const value = e.target.value;
-    setText(value);
-    setFormData({ ...formData, primary_languages: value });
-  };
-
   if (submitted) {
     return (
       <WriterSubmissionSuccessModal
@@ -159,19 +178,21 @@ export function WriterCredentialsForm() {
     );
   }
 
-
+  const inputBase = 'form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm';
 
   return (
     <form className="bg-neutral-950/50 border border-neutral-800/50 rounded p-8">
+      {/* honeypot */}
       <input
-          type="text"
-          name="_bot_check"
-          value={botCheck}
-          onChange={(e) => setBotCheck(e.target.value)}
-          style={{ display: 'none' }}
-          tabIndex={-1}
-          autoComplete="off"
+        type="text"
+        name="_bot_check"
+        value={botCheck}
+        onChange={e => setBotCheck(e.target.value)}
+        style={{ display: 'none' }}
+        tabIndex={-1}
+        autoComplete="off"
       />
+
       <h3 className="text-lg font-semibold text-white mb-6">Submit Writer Profile</h3>
 
       {error && (
@@ -181,85 +202,104 @@ export function WriterCredentialsForm() {
       )}
 
       <div className="grid md:grid-cols-2 gap-8">
+        {/* ── LEFT COLUMN ───────────────────────────────────────────────────── */}
         <div className="space-y-5">
           <div>
             <h4 className="text-sm font-medium text-white mb-4">Identity & Background</h4>
-
             <div className="space-y-4">
+
+              {/* Full Name */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Full Name</label>
+                <label htmlFor="field-full_name" className="block text-neutral-400 text-xs mb-1.5">
+                  Full Name <span className="text-red-400">*</span>
+                </label>
                 <input
+                  id="field-full_name"
                   type="text"
-                  required
                   maxLength={200}
                   value={formData.full_name}
-                  onChange={e => setFormData({ ...formData, full_name: DOMPurify.sanitize(e.target.value) })}
-                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.full_name ? 'border border-red-500' : ''}`}
+                  onChange={e => set('full_name', DOMPurify.sanitize(e.target.value))}
+                  className={fieldClass(inputBase, !!fieldErrors.full_name)}
                 />
-                {fieldErrors.full_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.full_name}</p>}
+                <FieldError msg={fieldErrors.full_name} />
               </div>
 
+              {/* Pen Name */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Pen Name (if applicable)</label>
+                <label htmlFor="field-pen_name" className="block text-neutral-400 text-xs mb-1.5">
+                  Pen Name (if applicable)
+                </label>
                 <input
+                  id="field-pen_name"
                   type="text"
                   maxLength={200}
                   value={formData.pen_name}
-                  onChange={e => setFormData({ ...formData, pen_name: DOMPurify.sanitize(e.target.value) })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  onChange={e => set('pen_name', DOMPurify.sanitize(e.target.value))}
+                  className={fieldClass(inputBase, !!fieldErrors.pen_name)}
                 />
+                <FieldError msg={fieldErrors.pen_name} />
               </div>
 
+              {/* Country */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Country</label>
+                <label htmlFor="field-country" className="block text-neutral-400 text-xs mb-1.5">
+                  Country
+                </label>
                 <select
-                  required
+                  id="field-country"
                   value={formData.country}
-                  onChange={e => setFormData({ ...formData, country: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  onChange={e => set('country', e.target.value)}
+                  className={fieldClass(inputBase, !!fieldErrors.country)}
                 >
                   <option value="">Select country</option>
-                  <option value="USA">USA</option>
-                  <option value="Canada">Canada</option>
-                  <option value="UAE">UAE</option>
-                  <option value="India">India</option>
-                  <option value="Pakistan">Pakistan</option>
-                  <option value="UK">UK</option>
-                  <option value="Other">Other</option>
+                  {['USA', 'Canada', 'UAE', 'India', 'UK', 'Other'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
+                <FieldError msg={fieldErrors.country} />
               </div>
 
+              {/* City */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">City</label>
+                <label htmlFor="field-city" className="block text-neutral-400 text-xs mb-1.5">
+                  City
+                </label>
                 <input
+                  id="field-city"
                   type="text"
-                  required
                   maxLength={200}
                   value={formData.city}
-                  onChange={e => setFormData({ ...formData, city: DOMPurify.sanitize(e.target.value) })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  onChange={e => set('city', DOMPurify.sanitize(e.target.value))}
+                  className={fieldClass(inputBase, !!fieldErrors.city)}
                 />
+                <FieldError msg={fieldErrors.city} />
               </div>
 
+              {/* Email */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Email Address</label>
+                <label htmlFor="field-email" className="block text-neutral-400 text-xs mb-1.5">
+                  Email Address <span className="text-red-400">*</span>
+                </label>
                 <input
+                  id="field-email"
                   type="email"
-                  required
                   value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm ${fieldErrors.email ? 'border border-red-500' : ''}`}
+                  onChange={e => set('email', e.target.value)}
+                  className={fieldClass(inputBase, !!fieldErrors.email)}
                 />
-                {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
+                <FieldError msg={fieldErrors.email} />
               </div>
 
+              {/* Years of experience */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Years of Writing Experience</label>
+                <label htmlFor="field-years_experience" className="block text-neutral-400 text-xs mb-1.5">
+                  Years of Writing Experience
+                </label>
                 <select
-                  required
+                  id="field-years_experience"
                   value={formData.years_experience}
-                  onChange={e => setFormData({ ...formData, years_experience: e.target.value })}
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  onChange={e => set('years_experience', e.target.value)}
+                  className={fieldClass(inputBase, !!fieldErrors.years_experience)}
                 >
                   <option value="">Select experience</option>
                   <option value="0-2">0–2</option>
@@ -267,38 +307,38 @@ export function WriterCredentialsForm() {
                   <option value="5-10">5–10</option>
                   <option value="10+">10+</option>
                 </select>
+                <FieldError msg={fieldErrors.years_experience} />
               </div>
             </div>
           </div>
 
+          {/* Literary Competence */}
           <div>
             <h4 className="text-sm font-medium text-white mb-4">Literary Competence</h4>
-
             <div className="space-y-4">
+
+              {/* Primary Languages */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Primary Writing Languages</label>
+                <label htmlFor="field-primary_languages" className="block text-neutral-400 text-xs mb-1.5">
+                  Primary Writing Languages <span className="text-red-400">*</span>
+                </label>
                 <input
+                  id="field-primary_languages"
                   type="text"
-                  required
                   maxLength={500}
-                  value={formData.primary_languages}
-                  onChange={(e) => setFormData({ ...formData, primary_languages: e.target.value })}
+                  value={formData.primary_languages as string}
+                  onChange={e => set('primary_languages', e.target.value)}
                   placeholder="e.g., Urdu, Arabic, Persian, English"
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"
+                  className={fieldClass(inputBase, !!fieldErrors.primary_languages)}
                 />
+                <FieldError msg={fieldErrors.primary_languages} />
               </div>
 
-              <div>
+              {/* Writing styles */}
+              <div id="field-writing_styles">
                 <label className="block text-neutral-400 text-xs mb-2">Writing Style & Form</label>
                 <div className="space-y-2">
-                  {[
-                    'Classical Ghazal',
-                    'Nazm',
-                    'Qasida',
-                    'Hamd & Naat',
-                    'Contemporary devotional',
-                    'Free verse'
-                  ].map(style => (
+                  {['Classical Ghazal', 'Nazm', 'Qasida', 'Hamd & Naat', 'Contemporary devotional', 'Free verse'].map(style => (
                     <label key={style} className="flex items-center gap-2 text-neutral-300 text-sm">
                       <input
                         type="checkbox"
@@ -310,138 +350,155 @@ export function WriterCredentialsForm() {
                     </label>
                   ))}
                 </div>
+                <FieldError msg={fieldErrors.writing_styles} />
               </div>
 
+              {/* Literary Background */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Literary Background</label>
+                <label htmlFor="field-literary_background" className="block text-neutral-400 text-xs mb-1.5">
+                  Literary Background
+                </label>
                 <textarea
-                  required
+                  id="field-literary_background"
                   rows={4}
                   maxLength={2000}
                   value={formData.literary_background}
-                  onChange={e => setFormData({ ...formData, literary_background: DOMPurify.sanitize(e.target.value) })}
+                  onChange={e => set('literary_background', DOMPurify.sanitize(e.target.value))}
                   placeholder="Brief overview of literary training, influences, or formal education"
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm resize-none"
+                  className={fieldClass(`${inputBase} resize-none`, !!fieldErrors.literary_background)}
                 />
+                <FieldError msg={fieldErrors.literary_background} />
               </div>
 
+              {/* Thematic Focus */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Thematic Focus</label>
+                <label htmlFor="field-thematic_focus" className="block text-neutral-400 text-xs mb-1.5">
+                  Thematic Focus
+                </label>
                 <textarea
-                  required
+                  id="field-thematic_focus"
                   rows={3}
                   maxLength={1000}
                   value={formData.thematic_focus}
-                  onChange={e => setFormData({ ...formData, thematic_focus: DOMPurify.sanitize(e.target.value) })}
+                  onChange={e => set('thematic_focus', DOMPurify.sanitize(e.target.value))}
                   placeholder="Core themes you explore in your writing"
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm resize-none"
+                  className={fieldClass(`${inputBase} resize-none`, !!fieldErrors.thematic_focus)}
                 />
+                <FieldError msg={fieldErrors.thematic_focus} />
               </div>
             </div>
           </div>
         </div>
 
+        {/* ── RIGHT COLUMN ──────────────────────────────────────────────────── */}
         <div className="space-y-5">
           <div>
             <h4 className="text-sm font-medium text-white mb-4">Sample Work & Publications</h4>
-
             <div className="space-y-4">
+
+              {/* Sample Kalam */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Sample Kalam</label>
+                <label htmlFor="field-sample_kalam" className="block text-neutral-400 text-xs mb-1.5">
+                  Sample Kalam <span className="text-red-400">*</span>
+                </label>
                 <textarea
-                  required
+                  id="field-sample_kalam"
                   rows={8}
                   maxLength={10000}
                   value={formData.sample_kalam}
-                  onChange={e => setFormData({ ...formData, sample_kalam: DOMPurify.sanitize(e.target.value) })}
+                  onChange={e => set('sample_kalam', DOMPurify.sanitize(e.target.value))}
                   placeholder="Paste original kalam (must be unpublished work)"
-                  className={`form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm resize-none font-mono ${fieldErrors.sample_kalam ? 'border border-red-500' : ''}`}
+                  className={fieldClass(`${inputBase} resize-none font-mono`, !!fieldErrors.sample_kalam)}
                 />
-                {fieldErrors.sample_kalam && <p className="text-red-500 text-xs mt-1">{fieldErrors.sample_kalam}</p>}
+                <FieldError msg={fieldErrors.sample_kalam} />
               </div>
 
+              {/* Previous Publications */}
               <div>
-                <label className="block text-neutral-400 text-xs mb-1.5">Previous Publications (optional)</label>
+                <label htmlFor="field-previous_publications" className="block text-neutral-400 text-xs mb-1.5">
+                  Previous Publications (optional)
+                </label>
                 <textarea
+                  id="field-previous_publications"
                   rows={3}
                   maxLength={2000}
                   value={formData.previous_publications}
-                  onChange={e => setFormData({ ...formData, previous_publications: DOMPurify.sanitize(e.target.value) })}
+                  onChange={e => set('previous_publications', DOMPurify.sanitize(e.target.value))}
                   placeholder="List any published works or credentials"
-                  className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm resize-none"
+                  className={`${inputBase} resize-none`}
                 />
               </div>
             </div>
           </div>
 
+          {/* Workflow Alignment */}
           <div>
             <h4 className="text-sm font-medium text-white mb-4">Workflow Alignment</h4>
-
             <div className="space-y-4">
-              <div>
+
+              {/* Editorial review experience */}
+              <div id="field-editorial_review_experience">
                 <label className="block text-neutral-400 text-xs mb-2">
                   Have you worked with editorial review processes before?
                 </label>
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-neutral-300 text-sm">
-                    <input
-                      type="radio"
-                      name="editorialExperience"
-                      required
-                      checked={formData.willing_editorial_process === true}
-                      onChange={() => setFormData({ ...formData, willing_editorial_process: true })}
-                      className="w-4 h-4"
-                    />
-                    Yes
-                  </label>
-                  <label className="flex items-center gap-2 text-neutral-300 text-sm">
-                    <input
-                      type="radio"
-                      name="editorialExperience"
-                      required
-                      checked={formData.editorial_review_experience === false}
-                      onChange={() => setFormData({ ...formData, editorial_review_experience: false })}
-                      className="w-4 h-4"
-                    />
-                    No
-                  </label>
+                  {[{ label: 'Yes', value: true }, { label: 'No', value: false }].map(opt => (
+                    <label key={String(opt.value)} className="flex items-center gap-2 text-neutral-300 text-sm">
+                      <input
+                        type="radio"
+                        name="editorialExperience"
+                        checked={formData.editorial_review_experience === opt.value}
+                        onChange={() => set('editorial_review_experience', opt.value)}
+                        className="w-4 h-4"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
                 </div>
               </div>
 
-              <div>
+              {/* Willing editorial process */}
+              <div id="field-willing_editorial_process">
                 <label className="block text-neutral-400 text-xs mb-2">
                   Are you willing to participate in the structured editorial process?
                 </label>
                 <label className="flex items-center gap-2 text-neutral-300 text-sm">
                   <input
                     type="checkbox"
-                    required
                     checked={formData.willing_editorial_process === true}
-                    onChange={e => setFormData({ ...formData, willing_editorial_process: e.target.checked ? true : false })}
+                    onChange={e => set('willing_editorial_process', e.target.checked)}
                     className="w-4 h-4 bg-neutral-900/50 border border-neutral-800 rounded"
                   />
                   Yes
                 </label>
               </div>
 
-              <div>
+              {/* Revision acknowledged */}
+              <div
+                id="field-revision_acknowledged"
+                className={fieldErrors.revision_acknowledged
+                  ? 'p-3 rounded border border-red-500/50 bg-red-900/10'
+                  : ''}
+              >
                 <label className="block text-neutral-400 text-xs mb-2">
-                  Do you acknowledge that submitted kalam may require revision before approval?
+                  Do you acknowledge that submitted kalam may require revision before approval?{' '}
+                  <span className="text-red-400">*</span>
                 </label>
                 <label className="flex items-center gap-2 text-neutral-300 text-sm">
                   <input
                     type="checkbox"
-                    required
                     checked={formData.revision_acknowledged}
-                    onChange={e => setFormData({ ...formData, revision_acknowledged: e.target.checked })}
+                    onChange={e => set('revision_acknowledged', e.target.checked)}
                     className="w-4 h-4 bg-neutral-900/50 border border-neutral-800 rounded"
                   />
-                  Yes
+                  Yes, I acknowledge
                 </label>
+                <FieldError msg={fieldErrors.revision_acknowledged} />
               </div>
             </div>
           </div>
 
+          {/* Governance Acknowledgment */}
           <div>
             <h4 className="text-sm font-medium text-white mb-4">Governance Acknowledgment</h4>
 
@@ -453,40 +510,54 @@ export function WriterCredentialsForm() {
               </div>
             </div>
 
-            <label className="flex items-start gap-2 text-neutral-300 text-sm">
-              <input
-                type="checkbox"
-                required
-                checked={formData.institutional_acknowledged}
-                onChange={e => setFormData({ ...formData, institutional_acknowledged: e.target.checked })}
-                className="w-4 h-4 bg-neutral-900/50 border border-neutral-800 rounded mt-0.5 shrink-0"
-              />
-              <span>I acknowledge and accept the institutional editorial framework.</span>
-            </label>
+            <div
+              id="field-institutional_acknowledged"
+              className={fieldErrors.institutional_acknowledged
+                ? 'p-3 rounded border border-red-500/50 bg-red-900/10'
+                : ''}
+            >
+              <label className="flex items-start gap-2 text-neutral-300 text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.institutional_acknowledged}
+                  onChange={e => set('institutional_acknowledged', e.target.checked)}
+                  className="w-4 h-4 bg-neutral-900/50 border border-neutral-800 rounded mt-0.5 shrink-0"
+                />
+                <span>
+                  I acknowledge and accept the institutional editorial framework.{' '}
+                  <span className="text-red-400">*</span>
+                </span>
+              </label>
+              <FieldError msg={fieldErrors.institutional_acknowledged} />
+            </div>
           </div>
         </div>
       </div>
 
       <div className="mt-8 flex justify-end">
-        {user ? <button
-          // type="submit"
-          onClick={handleSubmit}
-          disabled={!user.is_verified || !formData.institutional_acknowledged || !formData.revision_acknowledged}
-          className="cursor-pointer px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <span className="inline-flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-neutral-950/30 border-t-neutral-950 rounded-full animate-spin" />
-              Submitting...
-            </span>
-          ) : 'Submit Writer Profile'}
-        </button> :
+        {user ? (
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="cursor-pointer px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-neutral-950/30 border-t-neutral-950 rounded-full animate-spin" />
+                Submitting...
+              </span>
+            ) : (
+              'Submit Writer Profile'
+            )}
+          </button>
+        ) : (
           <Link
-            className="px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950! font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            href="/login">
+            className="px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors"
+            href="/login"
+          >
             Login
           </Link>
-        }
+        )}
       </div>
     </form>
   );

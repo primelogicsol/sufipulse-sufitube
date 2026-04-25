@@ -189,7 +189,7 @@ export default function RoyaltiesPage() {
               <div>
                 <label className="block text-xs font-semibold text-[var(--dash-text-secondary)] mb-1">Currency</label>
                 <select className="dashboard-input w-full" value={newForm.currency} onChange={e => setNewForm(p => ({ ...p, currency: e.target.value }))}>
-                  {['USD', 'GBP', 'EUR', 'PKR', 'AED'].map(c => <option key={c} value={c}>{c}</option>)}
+                  {['USD', 'GBP', 'EUR', 'AED', 'CAD'].map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>

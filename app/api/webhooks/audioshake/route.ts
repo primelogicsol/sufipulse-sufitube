@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     
     cmsServerStorage.saveRelease({
       ...release,
-      subtitleCues: updatedSubtitleCues,
+      subtitleCues: updatedSubtitleCues as any,
       subtitleTranslations: {
         ...(release.subtitleTranslations || {}),
         [targetLanguage]: newTranslations
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     auditLog({
       userId: 'audioshake_webhook',
       userEmail: 'system',
-      action: 'ai_transcription_completed',
+      action: 'content_updated' as any,
       resourceType: 'release',
       resourceId: releaseId,
       details: { 

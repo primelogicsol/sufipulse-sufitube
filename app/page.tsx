@@ -10,6 +10,7 @@ import { Layout } from './components/layout/Layout';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Loader from './components/ui/Loader';
+import { CountUp } from './components/ui/CountUp';
 import { literaryArticles } from './data/literary-articles';
 import Image from 'next/image';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
@@ -48,6 +49,21 @@ export default function Home() {
   const [latestPublications, setLatestPublications] = useState<Publication[]>([]);
   const [pubsLoading, setPubsLoading] = useState(true);
   const [lastReleaseSync, setLastReleaseSync] = useState<string | null>(null);
+  const [kpiStats, setKpiStats] = useState({ releases: 81, writers: literaryArticles.length, institutions: 4 });
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null)
+      .then(data => {
+        if (!data) return;
+        setKpiStats({
+          releases: data.releases > 0 ? data.releases : 81,
+          writers: data.writers > 0 ? data.writers : literaryArticles.length,
+          institutions: data.institutions > 0 ? data.institutions : 4,
+        });
+      });
+  }, []);
 
   const featuredReleases = latestPublications.filter(p => p.type === 'music');
   const activeRelease = featuredReleases[currentSlide];
@@ -196,19 +212,27 @@ export default function Home() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 border-t border-[var(--color-text-tertiary)]/20">
               <div>
-                <div className="text-[var(--text-3xl)] font-bold text-[var(--color-gold)] mb-1">12+</div>
+                <div className="text-[var(--text-3xl)] font-bold mb-1">
+                  <CountUp target={kpiStats.releases} suffix="+" style={{ color: 'var(--color-gold)' }} />
+                </div>
                 <div className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] uppercase tracking-wide">Releases</div>
               </div>
               <div>
-                <div className="text-[var(--text-3xl)] font-bold text-[var(--color-gold)] mb-1">5</div>
+                <div className="text-[var(--text-3xl)] font-bold mb-1">
+                  <CountUp target={kpiStats.writers} suffix="+" style={{ color: 'var(--color-gold)' }} />
+                </div>
                 <div className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] uppercase tracking-wide">Active Writers</div>
               </div>
               <div>
-                <div className="text-[var(--text-3xl)] font-bold text-[var(--color-gold)] mb-1">100%</div>
+                <div className="text-[var(--text-3xl)] font-bold mb-1">
+                  <CountUp target={100} suffix="%" style={{ color: 'var(--color-gold)' }} />
+                </div>
                 <div className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] uppercase tracking-wide">Transparency</div>
               </div>
               <div>
-                <div className="text-[var(--text-3xl)] font-bold text-[var(--color-gold)] mb-1">4</div>
+                <div className="text-[var(--text-3xl)] font-bold mb-1">
+                  <CountUp target={kpiStats.institutions} style={{ color: 'var(--color-gold)' }} />
+                </div>
                 <div className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] uppercase tracking-wide">Institutions</div>
               </div>
             </div>
@@ -605,9 +629,11 @@ export default function Home() {
                     <Card hoverable>
                       <div className="relative">
                         <div className="aspect-[4/3] w-full mb-4 rounded overflow-hidden border border-[var(--color-text-tertiary)]/20 bg-gradient-to-br from-[var(--color-midnight)] to-[var(--color-slate)] flex items-center justify-center group-hover:border-[var(--color-gold)]/40 transition-colors">
-                          <span className="text-4xl md:text-5xl font-serif font-light text-[var(--color-gold)]/40 group-hover:text-[var(--color-gold)]/60 transition-colors group-hover:scale-110 duration-500">
-                            SP
-                          </span>
+                          <img
+                            src="/literary-journal-icon.png"
+                            alt="Literary Journal"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
                         </div>
 
                         <div className="mb-2">

@@ -22,17 +22,21 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   if (!clientId) {
     return NextResponse.json(
-      { error: 'Google OAuth is not configured. Set GOOGLE_OAUTH_CLIENT_ID.' },
+      { error: 'Google OAuth is not configured. Set GOOGLE_ADS_CLIENT_ID.' },
       { status: 503 }
     );
   }
 
-  const redirectUri = `${appUrl}/api/adoptions/${id}/google-oauth/callback`;
+  // Optional release slug so the callback can redirect back to the release page
+  const returnSlug = request.nextUrl.searchParams.get('returnSlug') || '';
+  const state = JSON.stringify({ adoptionId: id, returnSlug });
+
+  const redirectUri = `${appUrl}/api/google-oauth/callback`;
 
   const oauthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   oauthUrl.searchParams.set('client_id', clientId);
@@ -41,7 +45,7 @@ export async function GET(
   oauthUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/adwords');
   oauthUrl.searchParams.set('access_type', 'offline');
   oauthUrl.searchParams.set('prompt', 'consent');
-  oauthUrl.searchParams.set('state', id); // carry adoption_id through OAuth
+  oauthUrl.searchParams.set('state', state);
 
   return NextResponse.redirect(oauthUrl.toString());
 }

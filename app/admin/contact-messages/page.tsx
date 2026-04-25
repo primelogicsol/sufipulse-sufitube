@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { storage } from '@/app/lib/storage';
-import { Mail, RefreshCw, X, Reply } from 'lucide-react';
+import { Mail, RefreshCw, X, Reply, Search } from 'lucide-react';
 
 type ContactMessage = {
   id: string;
@@ -163,12 +162,9 @@ export default function ContactMessagesPage() {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const data = await storage.getAll('contact_message');
-      // Sort newest first
-      const sorted = (Array.isArray(data) ? data : []).sort(
-        (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-      );
-      setItems(sorted);
+      const res = await fetch('/api/contacts');
+      const data = await res.json();
+      setItems(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
     }
@@ -194,18 +190,22 @@ export default function ContactMessagesPage() {
   const unreadCount = items.filter((i) => String(i.status || 'unread') === 'unread').length;
 
   const updateStatus = async (id: string, status: string) => {
-    await storage.update('contact_message', id, {
-      status,
-      ...(status === 'replied' ? { replied_at: new Date().toISOString() } : {}),
+    await fetch(`/api/contacts/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
     });
     await loadItems();
   };
 
   const openMessage = async (item: ContactMessage) => {
     setSelected(item);
-    // Auto-mark unread → read when opened
     if (String(item.status || 'unread') === 'unread') {
-      await storage.update('contact_message', item.id, { status: 'read' });
+      await fetch(`/api/contacts/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'read' }),
+      });
       await loadItems();
     }
   };
@@ -227,12 +227,15 @@ export default function ContactMessagesPage() {
             </div>
 
             <div className="flex gap-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search name, email, or subject"
-                className="dashboard-input"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search name, email, or subject"
+                  className="dashboard-input has-icon w-full"
+                />
+              </div>
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}

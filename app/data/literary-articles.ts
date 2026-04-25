@@ -18,6 +18,7 @@ export interface Article {
   author_country?: string;
   author_domain?: string;
   author_photo?: string;
+  related_youtube_id?: string;
 }
 
 export const literaryArticles: Article[] = [
@@ -46,7 +47,11 @@ Silence is not the absence of presence. It may be the form presence takes when l
     tags: ["Silence", "Remembrance", "Breath", "Contemplation"],
     view_count: 3450,
     author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_name: "Yasmin Siddiqui",
+    author_professional_name: "Contemplative Writer & Educator",
+    author_city: "Lahore",
+    author_country: "Pakistan",
+    author_domain: "Spirituality, Inner Life, Contemplative Writing"
   },
   {
     id: "2",
@@ -71,8 +76,12 @@ The soul, like the earth, is formed by cycles. And the morning is one of its old
     published_at: "2026-03-20T08:30:00Z",
     tags: ["Nature", "Morning", "Sincerity", "Discipline"],
     view_count: 2120,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a2",
+    author_name: "Ibrahim Al-Amin",
+    author_professional_name: "Scholar of Islamic Ethics",
+    author_city: "Istanbul",
+    author_country: "Turkey",
+    author_domain: "Ethics, Devotion, Daily Life"
   },
   {
     id: "3",
@@ -97,8 +106,12 @@ Some returns are quieter than triumph. But they may be nearer to truth.`,
     published_at: "2026-03-15T09:15:00Z",
     tags: ["Grace", "Return", "Healing", "Humility"],
     view_count: 1845,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a3",
+    author_name: "Fatima Zahra Hassan",
+    author_professional_name: "Spiritual Director & Retreat Leader",
+    author_city: "Amman",
+    author_country: "Jordan",
+    author_domain: "Spiritual Recovery, Healing, Prayer"
   },
   {
     id: "4",
@@ -123,8 +136,12 @@ Sometimes what we call purpose is only well-decorated restlessness. And sometime
     published_at: "2026-03-10T14:45:00Z",
     tags: ["Purpose", "Stillness", "Modernity", "Attention"],
     view_count: 4200,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a4",
+    author_name: "Tariq Manzoor",
+    author_professional_name: "Philosopher & Sufi Scholar",
+    author_city: "Karachi",
+    author_country: "Pakistan",
+    author_domain: "Philosophy, Stillness, Modern Life"
   },
 
   // Spiritual Commentary
@@ -151,8 +168,12 @@ Remembrance polishes perception. And when perception changes, conduct is never f
     published_at: "2026-03-05T11:00:00Z",
     tags: ["Remembrance", "Cognition", "Dhikr", "Focus"],
     view_count: 1560,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a5",
+    author_name: "Nusrat Parveen",
+    author_professional_name: "Writer & Quranic Studies Teacher",
+    author_city: "Delhi",
+    author_country: "India",
+    author_domain: "Remembrance, Attention, Cognitive Spirituality"
   },
   {
     id: "6",
@@ -175,8 +196,12 @@ Patience does not make hardship pleasant. It makes hardship bearable without mor
     published_at: "2026-02-28T16:20:00Z",
     tags: ["Patience", "Resilience", "Time", "Hardship"],
     view_count: 2890,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a6",
+    author_name: "Khalid Al-Rasheed",
+    author_professional_name: "Islamic Counselor & Author",
+    author_city: "Riyadh",
+    author_country: "Saudi Arabia",
+    author_domain: "Patience, Resilience, Inner Architecture"
   },
   {
     id: "7",
@@ -201,8 +226,12 @@ To repent is to stop defending unreality. And that alone is already a kind of me
     published_at: "2026-02-20T10:00:00Z",
     tags: ["Repentance", "Clarity", "Truth", "Mercy"],
     view_count: 1430,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a7",
+    author_name: "Saira Mirza",
+    author_professional_name: "Spiritual Writer & Theologian",
+    author_city: "Dhaka",
+    author_country: "Bangladesh",
+    author_domain: "Repentance, Truth, Spiritual Clarity"
   },
   {
     id: "8",
@@ -227,8 +256,12 @@ To pray after habit is to continue knocking, even when the door opens in quieter
     published_at: "2026-02-15T12:00:00Z",
     tags: ["Devotion", "Prayer", "Fidelity", "Spiritual Dryness"],
     view_count: 3100,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a8",
+    author_name: "Mansur Al-Hallawi",
+    author_professional_name: "Contemplative Poet & Scholar",
+    author_city: "Baghdad",
+    author_country: "Iraq",
+    author_domain: "Prayer, Devotion, Spiritual Fidelity"
   },
 
   // Sufi Philosophy
@@ -255,8 +288,12 @@ The purification of the heart is not ornamental spirituality. It is preparation 
     published_at: "2026-02-10T11:30:00Z",
     tags: ["Epistemology", "The Heart", "Purification", "Metaphysics"],
     view_count: 1980,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a9",
+    author_name: "Rumi Farooqi",
+    author_professional_name: "Professor of Sufi Metaphysics",
+    author_city: "Tehran",
+    author_country: "Iran",
+    author_domain: "Epistemology, The Heart, Sufi Philosophy"
   },
   {
     id: "10",
@@ -281,8 +318,12 @@ Truth may be nearer than we imagine. But nearness alone does not guarantee perce
     published_at: "2026-02-05T09:45:00Z",
     tags: ["Veils", "Humility", "Disclosure", "Perception"],
     view_count: 1750,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a10",
+    author_name: "Irfan Ahmad Wani",
+    author_professional_name: "Scholar of Islamic Mysticism",
+    author_city: "Srinagar",
+    author_country: "Kashmir, India",
+    author_domain: "Mysticism, Perception, Sufi Metaphysics"
   },
   {
     id: "11",
@@ -307,8 +348,12 @@ To know the self is not merely to observe it. It is to discover how often it mis
     published_at: "2026-01-30T10:15:00Z",
     tags: ["Nafs", "Ego", "Discernment", "Freedom"],
     view_count: 1620,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a11",
+    author_name: "Omar Al-Mutawakkil",
+    author_professional_name: "Sufi Teacher & Author",
+    author_city: "Cairo",
+    author_country: "Egypt",
+    author_domain: "Nafs, Self-Knowledge, Spiritual Discipline"
   },
   {
     id: "12",
@@ -331,8 +376,12 @@ To know one’s poverty is not to diminish one’s worth. It is to free oneself 
     published_at: "2026-01-25T14:00:00Z",
     tags: ["Poverty", "Faqr", "Ontology", "Humility", "Dependence"],
     view_count: 2750,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a12",
+    author_name: "Hafsa Mohani",
+    author_professional_name: "Islamic Philosopher & Educator",
+    author_city: "Hyderabad",
+    author_country: "India",
+    author_domain: "Faqr, Ontology, Sufi Metaphysics"
   },
 
   // Contemporary Discourse
@@ -359,8 +408,12 @@ If the heart is to remain luminous in a saturated age, attention must become an 
     published_at: "2026-01-20T10:30:00Z",
     tags: ["Digital Age", "Attention", "Distraction", "Contemplation"],
     view_count: 2100,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a13",
+    author_name: "Zaid Hameed",
+    author_professional_name: "Digital Ethics Researcher & Writer",
+    author_city: "London",
+    author_country: "United Kingdom",
+    author_domain: "Digital Ethics, Attention, Contemplation"
   },
   {
     id: "14",
@@ -385,8 +438,12 @@ A society that cannot recover measured speech may remain expressive while becomi
     published_at: "2026-01-15T09:00:00Z",
     tags: ["Ethics", "Speech", "Discourse", "Wisdom"],
     view_count: 1450,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a14",
+    author_name: "Ruqayyah Al-Amine",
+    author_professional_name: "Linguistic Ethicist & Author",
+    author_city: "Beirut",
+    author_country: "Lebanon",
+    author_domain: "Language, Ethics, Civil Discourse"
   },
   {
     id: "15",
@@ -411,8 +468,12 @@ Sacred words do not become deeper by becoming fashionable. They become deeper by
     published_at: "2026-01-10T15:15:00Z",
     tags: ["Language", "Secularism", "Transformation", "Tradition"],
     view_count: 2680,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a15",
+    author_name: "Anwar Idrees",
+    author_professional_name: "Scholar of Religion & Modernity",
+    author_city: "Amsterdam",
+    author_country: "Netherlands",
+    author_domain: "Language, Secularism, Tradition"
   },
   {
     id: "16",
@@ -435,8 +496,12 @@ A culture unable to protect reflection may continue producing opinions indefinit
     published_at: "2026-01-05T11:45:00Z",
     tags: ["Reflection", "Time", "Reactivity", "Understanding"],
     view_count: 1780,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a16",
+    author_name: "Mariam Al-Zahawi",
+    author_professional_name: "Author & Cultural Commentator",
+    author_city: "Dubai",
+    author_country: "UAE",
+    author_domain: "Reflection, Time, Modern Culture"
   },
 
   // Thematic Analysis
@@ -461,8 +526,12 @@ Thematically, the persistence of light suggests that truth is experienced not me
     published_at: "2025-12-28T10:00:00Z",
     tags: ["Light", "Guidance", "Symbolism", "Illumination"],
     view_count: 1320,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a17",
+    author_name: "Ismail Butt",
+    author_professional_name: "Literary Theologian & Poet",
+    author_city: "Multan",
+    author_country: "Pakistan",
+    author_domain: "Symbolism, Guidance, Sacred Literature"
   },
   {
     id: "18",
@@ -485,8 +554,12 @@ The repetition of mercy across spiritual traditions suggests something profound:
     published_at: "2025-12-20T12:00:00Z",
     tags: ["Mercy", "Hope", "Return", "Divine Attributes"],
     view_count: 2400,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a18",
+    author_name: "Sana Al-Rashida",
+    author_professional_name: "Spiritual Essayist & Educator",
+    author_city: "Kuala Lumpur",
+    author_country: "Malaysia",
+    author_domain: "Mercy, Thematic Analysis, Sacred Texts"
   },
   {
     id: "19",
@@ -509,8 +582,12 @@ Exile and homecoming endure as themes because human beings remain creatures of b
     published_at: "2025-12-15T09:30:00Z",
     tags: ["Exile", "Homecoming", "Longing", "Journey"],
     view_count: 1510,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a19",
+    author_name: "Bilal Ansari",
+    author_professional_name: "Sufi Literary Critic & Teacher",
+    author_city: "Lucknow",
+    author_country: "India",
+    author_domain: "Exile, Longing, Sacred Literature"
   },
   {
     id: "20",
@@ -533,8 +610,12 @@ The breath is not merely in the body. In sacred imagination, it is also a text.`
     published_at: "2025-12-10T14:20:00Z",
     tags: ["Breath", "Spirit", "Rhythm", "Contingency"],
     view_count: 1680,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a20",
+    author_name: "Zubaida Malik",
+    author_professional_name: "Contemplative Writer & Retreat Facilitator",
+    author_city: "Casablanca",
+    author_country: "Morocco",
+    author_domain: "Breath, Spirituality, Thematic Writing"
   },
 
   // Institutional Guidance
@@ -544,23 +625,33 @@ The breath is not merely in the body. In sacred imagination, it is also a text.`
     subtitle: "A request for inward writing",
     slug: "writing-for-the-ahl-e-tahreer-archive",
     category: "institutional_guidance",
-    content: `The Ahl-e-Tahreer Archive invites writing that is sincere without being sentimental, elevated without becoming vague, and reflective without losing intellectual coherence. Spiritual language carries weight. It should not be used decoratively. It should illuminate experience, deepen thought, and remain accountable to truth.
+    content: `The Ahl-e-Tahreer Archive invites writing that is sincere without being sentimental, elevated without becoming vague, and reflective without losing intellectual coherence. Spiritual language carries weight. It should not be used decoratively. It should illuminate experience, deepen thought, and remain accountable to truth. A contributor who takes this seriously will often find themselves revising not just sentences, but the quality of attention behind them.
 
-Contributors are encouraged to write from lived encounter, disciplined reading, contemplative sensitivity, and moral seriousness. Articles need not imitate classical language, but they should honor depth. The goal is not ornamental mysticism. It is lucid inward writing.
+Contributors are encouraged to write from lived encounter, disciplined reading, contemplative sensitivity, and moral seriousness. Articles need not imitate classical language, but they should honor depth. The goal is not ornamental mysticism. It is lucid inward writing that has passed through the writer's own reckoning before arriving on the page. Writing that has not cost the writer something rarely asks anything meaningful of the reader.
 
-We welcome pieces that move between spirituality, philosophy, literature, ecology, science, time, memory, and consciousness, provided these connections are made with care. Scientific references should not be inserted as embellishment. They should enrich wonder, sharpen perception, or reveal deeper patterns in existence.
+We welcome pieces that move between spirituality, philosophy, literature, ecology, science, time, memory, and consciousness, provided these connections are made with care. Scientific references should not be inserted as embellishment. They should enrich wonder, sharpen perception, or reveal deeper patterns in existence. A reference that does not serve the article's central insight should be removed, regardless of how impressive it appears in isolation.
 
-Strong contributions tend to carry a clear center. Even lyrical writing benefits from structure. Let the article know what it is seeking. Let the reflection ripen. Let the language breathe. Avoid inflated certainty. Avoid borrowed solemnity. Write with humility before both the reader and the subject.
+Strong contributions tend to carry a clear center. Even lyrical writing benefits from structure. Let the article know what it is seeking. Let the reflection ripen before it is written. Let the language breathe without becoming diffuse. Avoid inflated certainty. Avoid borrowed solemnity. Write with humility before both the reader and the subject.
 
-The best Ahl-e-Tahreer writing leaves the reader not merely informed, but inwardly altered.`,
+Ahl-e-Tahreer is not a platform for opinion dressed as insight. The archive is a space for writing that has been earned through inward discipline. Before submitting, ask honestly: does this arise from genuine encounter, or from the desire to appear reflective? The difference is almost always detectable by a careful reader. Authenticity cannot be manufactured through vocabulary alone, however beautifully chosen.
+
+Contributors should attend carefully to the question of tone. There is a kind of spiritual writing that addresses the reader from a great height, as though delivering arrived knowledge. This posture tends to produce distance rather than communion. The finest reflective writing finds a tone that is serious without being superior, gentle without being weak, and precise without becoming cold.
+
+Revision is as important as inspiration. A first draft is rarely the article's true form. The second and third passes often reveal where the writing was performing depth rather than inhabiting it. Attend to the rhythm of sentences. Attend to the weight of individual words. If a phrase sounds borrowed or arrived too easily, it likely did not cost enough in truth.
+
+The best Ahl-e-Tahreer writing leaves the reader not merely informed, but inwardly altered. It does not overwhelm with profundity. It opens something quiet in the reading experience and earns its seriousness through restraint, not proclamation. When these qualities align, the article becomes not merely readable but inhabited.`,
     excerpt: "Spiritual language carries weight. It should not be used decoratively. It should illuminate experience, deepen thought, and remain accountable to truth.",
-    reading_time_minutes: 3,
+    reading_time_minutes: 5,
     featured: false,
     published_at: "2025-12-05T09:00:00Z",
     tags: ["Writing", "Guidance", "Archive", "Submission"],
     view_count: 980,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a21",
+    author_name: "Bashir Ahmad Rather",
+    author_professional_name: "Literary Scholar & Archive Director",
+    author_city: "Srinagar",
+    author_country: "Kashmir, India",
+    author_domain: "Literary Studies, Spiritual Writing, Editorial Practice"
   },
   {
     id: "22",
@@ -568,23 +659,33 @@ The best Ahl-e-Tahreer writing leaves the reader not merely informed, but inward
     subtitle: "Resisting the temptation of excess in spiritual language",
     slug: "the-difference-between-ornament-and-illumination",
     category: "institutional_guidance",
-    content: `Spiritual writing is especially vulnerable to excess. Because its themes are profound, its language can easily become inflated. Because it seeks beauty, it can drift toward ornament. Because it addresses mystery, it may begin to confuse obscurity with depth. The contributor must resist these temptations.
+    content: `Spiritual writing is especially vulnerable to excess. Because its themes are profound, its language can easily become inflated. Because it seeks beauty, it can drift toward ornament. Because it addresses mystery, it may begin to confuse obscurity with depth. The contributor must resist these temptations, not by abandoning beauty, but by insisting that beauty remain in service to truth.
 
-A beautiful sentence is not automatically an illuminating one. Ornament decorates perception. Illumination clarifies it. Ornament calls attention to itself. Illumination directs attention toward truth. The difference is subtle, but essential.
+A beautiful sentence is not automatically an illuminating one. Ornament decorates perception. Illumination clarifies it. Ornament calls attention to itself. Illumination directs attention toward truth. The difference is subtle, but essential. A reader who finishes an article remembering how eloquent it sounded but uncertain what it revealed has encountered ornament rather than illumination.
 
-This does not mean writing should be dry, clinical, or stripped of music. Literary grace matters. Rhythm matters. Image matters. But beauty must remain in service to meaning. When a metaphor enlarges understanding, it belongs. When it merely embellishes vagueness, it should be removed.
+The temptation toward excess is not always conscious. A writer who deeply loves their subject may over-elaborate in the sincere belief that more language honors the depth of the theme. But depth in writing is not measured by accumulation. It is measured by the degree to which language corresponds faithfully to the truth it attempts to render. Excess obscures that correspondence, however well-intentioned.
 
-Writers drawing from mystical, Sufi, or contemplative traditions should take special care here. Mystery need not be made confusing in order to feel sacred. Some of the most powerful spiritual writing is luminous precisely because it is restrained.
+This does not mean writing should be dry, clinical, or stripped of music. Literary grace matters. Rhythm matters. Image matters. But beauty must remain in service to meaning. When a metaphor enlarges understanding, it belongs. When it merely embellishes vagueness, it should be removed. The test is simple: does this image make the reader see more clearly, or only more impressively?
 
-Write with reverence, but also with discipline. Let the sentence shine because it is true, not merely because it is adorned.`,
+Writers drawing from mystical, Sufi, or contemplative traditions should take special care. The inherited vocabulary of these traditions, light, veil, heart, station, presence, can be used precisely or decoratively. The difference lies in whether the writer has genuinely inhabited the concept or is borrowing its prestige. Mystery need not be made confusing in order to feel sacred. Some of the most powerful contemplative writing is luminous precisely because it is restrained.
+
+Editing for ornament is a specific discipline. It requires the writer to read their own work as a stranger would, asking at each moment whether this phrase is earning its place. It requires the willingness to remove what one is proud of when pride and illumination diverge. A sentence that carries one truth fully is worth more than a paragraph that gestures vaguely toward ten. Economy of language is not poverty of imagination. It is the discipline of a mind that has learned to trust both the subject and the reader.
+
+There is also the question of accumulated weight. An article that deploys its most elevated language in the opening paragraph has nowhere left to go. Spiritual language, like musical tension, must be earned through contrast and development. Begin with plainness. Let the writing deepen as the thought deepens. Reserve the most luminous phrase for the moment when the reader is most prepared to receive it.
+
+Write with reverence, but also with discipline. Let the sentence shine because it is true, not merely because it is adorned. When truth and beauty coincide, which they sometimes do with great force, the writing achieves something rare: it becomes simultaneously honest and luminous, which is the highest standard available to any serious contribution to this archive.`,
     excerpt: "Ornament calls attention to itself. Illumination directs attention toward truth. Write with reverence, but also with discipline.",
-    reading_time_minutes: 3,
+    reading_time_minutes: 5,
     featured: false,
     published_at: "2025-11-28T11:00:00Z",
     tags: ["Style", "Writing", "Clarity", "Aesthetics"],
     view_count: 1040,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a22",
+    author_name: "Shafiq Ahmad Wani",
+    author_professional_name: "Editor & Literary Critic",
+    author_city: "Sopore",
+    author_country: "Kashmir, India",
+    author_domain: "Literary Criticism, Spiritual Aesthetics, Editing"
   },
   {
     id: "23",
@@ -592,23 +693,33 @@ Write with reverence, but also with discipline. Let the sentence shine because i
     subtitle: "Intersecting disciplines with precise awe",
     slug: "science-wonder-and-the-spiritual-imagination",
     category: "institutional_guidance",
-    content: `The Ahl-e-Tahreer Archive welcomes writing that allows science and spirituality to meet in wonder, humility, and disciplined thought. Yet such integration must be handled carefully. Science should not be used as decorative authority, nor should spirituality be reduced to poetic vagueness in response to scientific language.
+    content: `The Ahl-e-Tahreer Archive welcomes writing that allows science and spirituality to meet in wonder, humility, and disciplined thought. Such integration, when done well, can be among the most resonant contributions the archive receives. But the intersection must be handled with care. Science should not be used as decorative authority, and spirituality should not dissolve into poetic vagueness in the face of scientific language.
 
-Scientific insight can deepen spiritual writing when it reveals scale, pattern, fragility, interdependence, hidden order, or the elegance of reality. Astronomy may sharpen awe. Ecology may deepen reverence for interbeing. Neuroscience may refine reflections on attention, habit, and consciousness. Physics may expand our sense of mystery and limit.
+Scientific insight can deepen spiritual writing when it reveals scale, pattern, fragility, interdependence, hidden order, or the elegance of reality. Astronomy may sharpen awe at creation’s scope. Ecology may deepen reverence for the intricacy of interbeing. Neuroscience may refine reflections on attention, habit, and the slow formation of character. Physics may expand our sense of limit and mystery. Each discipline, approached rightly, opens rather than forecloses spiritual depth.
 
-But the relationship should remain organic. A scientific reference should emerge because it genuinely clarifies the article’s inner argument or atmosphere. Avoid using technical language merely to sound contemporary or intellectually impressive. Likewise, avoid forcing mystical conclusions out of scientific facts that do not support them.
+The key word is approached rightly. A scientific reference should appear in an article because it genuinely clarifies the inner argument or deepens its atmosphere. The question a writer must ask is not whether a reference will appear informed, but whether it illumines the truth being reached. If the answer is uncertain, the reference should be removed. Intellectual ornament is as dangerous as any other kind of ornament in this archive.
 
-The strongest integrations occur when both science and spirituality are treated respectfully, each as a mode of encounter with reality, distinct yet capable of mutual enrichment. Such writing does not collapse one into the other. It allows both to widen the reader’s sense of existence.
+Avoid using technical language merely to sound contemporary or intellectually credible. A reader who encounters scientific terminology in a piece of spiritual writing knows immediately whether those terms have been understood or borrowed. Genuine understanding produces specific clarity. Borrowed vocabulary produces impressive vagueness. The former belongs in this archive. The latter does not serve the reader or the subject.
 
-Wonder is most powerful when it is disciplined.`,
-    excerpt: "Scientific insight can deepen spiritual writing... but avoid forcing mystical conclusions out of scientific facts that do not support them.",
-    reading_time_minutes: 3,
+Likewise, avoid forcing mystical conclusions out of scientific facts that do not support them. The universe’s vastness does not settle questions about the Divine. The emergence of consciousness does not resolve metaphysical questions about the soul. These are genuine unknowns, and spiritual writing should be as honest about what remains uncertain as it is about the wonders that prompt the inquiry. Humility before mystery is not a weakness. It is the only posture that keeps wonder from becoming a form of manipulation.
+
+The strongest integrations occur when both science and spirituality are treated as genuine modes of encounter with reality, distinct in method yet capable of mutual enrichment. Such writing does not collapse one into the other. It holds them in creative tension, allowing each to widen the reader’s sense of existence. This is a high achievement, and it requires a writer genuinely conversant with both domains rather than merely drawn to the prestige of each.
+
+Scientific writing, at its finest, is already a form of disciplined wonder. The best scientists speak of their discoveries with a reverence that is not far from the devotional. A contributor to Ahl-e-Tahreer can draw on this kinship while remaining clear that scientific wonder and contemplative wisdom, though they may illuminate each other, are not interchangeable. Their difference is as instructive as their resonance, and the most honest writing holds that difference carefully.
+
+Wonder is most powerful when it is disciplined. An undisciplined wonder becomes merely impressionistic. A disciplined wonder becomes a way of seeing. Ahl-e-Tahreer asks its contributors to cultivate the second kind, and to bring it faithfully to every intersection of inquiry and reverence their writing attempts.`,
+    excerpt: "Scientific insight can deepen spiritual writing when it reveals scale, pattern, fragility, hidden order, or the elegance of reality — but avoid forcing mystical conclusions out of scientific facts that do not support them.",
+    reading_time_minutes: 5,
     featured: true,
     published_at: "2025-11-20T10:15:00Z",
     tags: ["Science", "Wonder", "Integration", "Writing"],
     view_count: 1890,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a23",
+    author_name: "Mushtaq Ahmad Zargar",
+    author_professional_name: "Scholar of Comparative Thought",
+    author_city: "Baramulla",
+    author_country: "Kashmir, India",
+    author_domain: "Science & Spirituality, Comparative Studies, Writing"
   },
   {
     id: "24",
@@ -616,24 +727,32 @@ Wonder is most powerful when it is disciplined.`,
     subtitle: "Voice, structure, atmosphere, and seriousness",
     slug: "what-makes-a-strong-ahl-e-tahreer-article",
     category: "institutional_guidance",
-    content: `A strong Ahl-e-Tahreer article usually carries four qualities: a centered voice, a clear structure, a coherent atmosphere, and inward seriousness.
+    content: `A strong Ahl-e-Tahreer article usually carries four qualities: a centered voice, a clear structure, a coherent atmosphere, and inward seriousness. These are not ornamental criteria. They describe what happens when a piece of writing has genuinely arrived, when the writer has submitted to the demands of the subject long enough for the article to become its own truthful thing.
 
-A centered voice does not imitate borrowed sanctity. It sounds lived, alert, and honest. It may be literary, but it does not perform depth. It trusts the truth of the subject more than the drama of the sentence.
+A centered voice does not imitate borrowed sanctity. It sounds lived, alert, and honest. It may be literary, but it does not perform depth. It trusts the truth of the subject more than the drama of the sentence. When a voice is truly centered, the reader senses it immediately. There is a settled quality, a refusal to overreach, a willingness to occupy precisely the territory the writer actually understands and no further.
 
-A clear structure matters even in contemplative prose. The article should know how it begins, what question or image it is following, and where it hopes to leave the reader. Mystical writing is not exempt from architecture. In fact, the more subtle the theme, the more important the structure.
+A clear structure matters even in contemplative prose. The article should know how it begins, what question or image it is following, and where it hopes to leave the reader. Mystical writing is not exempt from architecture. In fact, the more subtle the theme, the more important the structure becomes. Subtle themes require clear containers. Without structure, even genuine insight can arrive without effect, dispersed before it lands.
 
-Atmosphere is also important. Ahl-e-Tahreer is a reflective archive. The writing should feel spacious, intelligent, and dignified. Even when intense, it should not become chaotic. Let the rhythm support contemplation.
+Atmosphere is the quality most difficult to manufacture and most easy to lose. Ahl-e-Tahreer is a reflective archive. The writing should feel spacious, intelligent, and dignified. Even when intense, it should not become chaotic. The rhythm of sentences creates atmosphere. The pacing of ideas creates atmosphere. The choice of where to pause and where to press forward creates atmosphere. When atmosphere is right, the reader enters the article rather than merely reading it.
 
-Above all, inward seriousness is essential. A strong article leaves the impression that the writer has not merely chosen a beautiful subject, but submitted themselves to it. The reader should feel encounter, not performance.
+Above all, inward seriousness is essential. A strong article leaves the impression that the writer has not merely chosen a beautiful subject but submitted themselves to it. There is a difference between writing about stillness and writing from within the discipline of attending to stillness. The reader feels this difference even when they cannot name it. Inward seriousness is what gives an article its moral weight.
 
-When these qualities align, the article becomes more than readable. It becomes inhabitable.`,
+A common weakness in submitted pieces is the article that has a strong opening paragraph but loses its discipline midway. The beginning impresses; the middle drifts; the ending fumbles for closure. This usually indicates that the writer arrived at the subject before fully entering it. The article attempts to resolve what has not yet been genuinely inhabited. Strong endings are not summaries or affirmations. They are arrivals. They leave the reader somewhere different from where they began.
+
+Voice, structure, atmosphere, and seriousness do not always arrive together. In early drafts, one or two may be present while others remain undeveloped. This is why revision is the writer's primary discipline. The first draft is a discovery. The second and third are refinements of honesty. The final draft is what remains when the writer has been willing to remove everything that was not true enough to stay.
+
+When these qualities align, the article becomes more than readable. It becomes inhabitable. A reader may return to it not only for information but for a kind of company. This is what the archive seeks to build: a body of writing that accompanies the reader in the inward life, season after season, without diminishment.`,
     excerpt: "A strong Ahl-e-Tahreer article usually carries four qualities: a centered voice, a clear structure, a coherent atmosphere, and inward seriousness.",
-    reading_time_minutes: 2,
+    reading_time_minutes: 5,
     featured: false,
     published_at: "2025-11-15T09:30:00Z",
     tags: ["Guidelines", "Submissions", "Quality", "Writing"],
     view_count: 1250,
-    author_id: "a1",
-    author_name: "Ahl-e-Tahreer Archive"
+    author_id: "a24",
+    author_name: "Tariq Hussain Bhat",
+    author_professional_name: "Sufi Scholar & Writing Mentor",
+    author_city: "Anantnag",
+    author_country: "Kashmir, India",
+    author_domain: "Sufi Studies, Writing Pedagogy, Contemplative Literature"
   }
 ];

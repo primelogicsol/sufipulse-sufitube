@@ -5,8 +5,6 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import Loader from '../../components/ui/Loader';
 import { StudioProfileType } from '@/app/types/studio.types';
 import { StudioSubmissionSuccessModal } from './StudioSubmissionSuccessModal';
-import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
-import { storage } from '@/app/lib/storage';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { studioProfileSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeObject } from '../../lib/sanitize';
@@ -88,26 +86,18 @@ export default function StudioCredentialsForm() {
     };
 
     try {
-      await storage.create('studio', { ...payload, profile_status: 'pending', submission_id: submissionId });
-      notifyApplicationReceived({
-        user_id: user?.id,
-        email: formData.email,
-        name: formData.studio_name,
-        role: 'studio',
-        reference: submissionId,
+      const res = await fetch('/api/studio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, profile_status: 'pending', submission_id: submissionId }),
       });
-      notifyAdmin({
-        title: 'New Studio Application',
-        message: `${formData.studio_name} (${formData.email}) has applied as Karkhana-e-Sada (Studio Partner). Submission: ${submissionId}.`,
-        event: 'application_received',
-        from_role: 'studio',
-        from_name: formData.studio_name,
-        action_url: '/admin/applications/studio',
-      }).catch(console.error);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Submission failed. Please try again.');
+      }
       setShowModal(true);
     } catch (error: any) {
-      console.error(error);
-      alert('Failed to submit application. Please try again.');
+      setError(error.message || 'Failed to submit application. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -162,7 +152,6 @@ export default function StudioCredentialsForm() {
                   <option value="Canada">Canada</option>
                   <option value="UAE">United Arab Emirates</option>
                   <option value="India">India</option>
-                  <option value="Pakistan">Pakistan</option>
                   <option value="UK">United Kingdom</option>
                   <option value="Other">Other</option>
                 </select>

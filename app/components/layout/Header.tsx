@@ -150,6 +150,7 @@ export function Header() {
     { label: 'Institutional Partners', href: '/about/institutional-partners' },
     { label: 'Official Channels', href: '/official-channels' },
     { label: 'Institutional Collaboration', href: '/collaboration' },
+    { label: 'Product Infrastructure', href: '/product-infrastructure' },
     { label: 'Contact', href: '/contact' },
   ];
 

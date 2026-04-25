@@ -1,8 +1,20 @@
+import type { Metadata } from 'next';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 import { Layout } from '../../../components/layout/Layout';
+
+export const metadata: Metadata = {
+  title: "Our Founder",
+  description: "Meet the founder of SufiPulse — a visionary dedicated to preserving and promoting authentic Sufi music, sacred poetry, and the rich literary heritage of Kashmir and the Indian Subcontinent.",
+  openGraph: {
+    title: "Our Founder | SufiPulse",
+    description: "Meet the founder of SufiPulse — dedicated to preserving authentic Sufi music and the literary heritage of Kashmir.",
+    images: [{ url: "/dr-fayaz-photo.jpg", width: 800, height: 800, alt: "SufiPulse Founder" }],
+  },
+};
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { ExternalLink } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Founder() {
     return (
@@ -37,13 +49,29 @@ export default function Founder() {
                         </h2>
 
                         <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="mb-6">
-                                <p className="text-white font-medium text-lg mb-1">
-                                    Dr. Ghulam Mohammad Kumar
-                                </p>
-                                <p className="text-amber-400/70 text-sm">
-                                    Founder
-                                </p>
+                            <div className="flex flex-col sm:flex-row gap-8 mb-6">
+                                <div className="flex-shrink-0">
+                                    <div className="w-48 h-56 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
+                                        <Image
+                                            src="/dr-kumar-photo.png"
+                                            alt="Dr. Ghulam Mohammad Kumar"
+                                            width={192}
+                                            height={224}
+                                            className="w-full h-full object-cover object-top"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-white font-medium text-lg mb-1">
+                                        Dr. Ghulam Mohammad Kumar
+                                    </p>
+                                    <p className="text-amber-400/70 text-sm mb-4">
+                                        Founder — Bani
+                                    </p>
+                                    <p className="text-neutral-400 text-sm leading-relaxed">
+                                        Spiritual guide, physician, and Sufi master whose life bridged medicine, mysticism, and structured institutional awakening. Fourteen years of contemplative retreat in Ganderbal shaped a vision that transcends individual legacy.
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
@@ -326,13 +354,29 @@ export default function Founder() {
                         </h2>
 
                         <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="mb-6">
-                                <p className="text-white font-medium text-lg mb-1">
-                                    Dr. Fayaz Ahmad Khan
-                                </p>
-                                <p className="text-amber-400/70 text-sm">
-                                    Representative Founder
-                                </p>
+                            <div className="flex flex-col sm:flex-row gap-8 mb-6">
+                                <div className="flex-shrink-0">
+                                    <div className="w-48 h-56 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
+                                        <Image
+                                            src="/dr-fayaz-photo.jpg"
+                                            alt="Dr. Fayaz Ahmad Khan"
+                                            width={192}
+                                            height={224}
+                                            className="w-full h-full object-cover object-top"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-white font-medium text-lg mb-1">
+                                        Dr. Fayaz Ahmad Khan
+                                    </p>
+                                    <p className="text-amber-400/70 text-sm mb-4">
+                                        Representative Founder
+                                    </p>
+                                    <p className="text-neutral-400 text-sm leading-relaxed">
+                                        Representative stewardship and institutional development guided under the constitutional framework of Mithaq — translating founding vision into operational systems, governance structures, and digital infrastructure.
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">

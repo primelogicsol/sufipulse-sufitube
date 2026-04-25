@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import DOMPurify from "dompurify";
 import { VocalistSubmissionSuccessModal } from './VocalistSubmissionSuccessModal';
-import * as api from "../../api/auth";
 import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';
 import { VocalistProfileType } from '@/app/types/vocalist.types';
-import { storage } from '@/app/lib/storage';
-import { notifyApplicationReceived, notifyAdmin } from '@/app/lib/notifications';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { vocalistProfileSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeObject } from '../../lib/sanitize';
@@ -94,41 +91,18 @@ export function VocalistCredentialsForm() {
 
     try {
       setLoading(true);
-
-      let savedViaApi = false;
-      try {
-        await api.createVocalistProfile(payload);
-        savedViaApi = true;
-      } catch {
-        // Backend unavailable — fall through to localStorage
+      const res = await fetch('/api/vocalists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Submission failed. Please try again.');
       }
-
-      if (!savedViaApi) {
-        await storage.create('vocalist', {
-          ...payload,
-          profile_status: 'pending',
-          submitted_at: new Date().toISOString(),
-        });
-      }
-
       setSubmitted(true);
-      notifyApplicationReceived({
-        user_id: user?.id,
-        email: formData.email,
-        name: formData.performance_name || formData.full_name,
-        role: 'vocalist',
-        reference: submissionId,
-      }).catch(console.error);
-      notifyAdmin({
-        title: 'New Vocalist Application',
-        message: `${formData.performance_name || formData.full_name} (${formData.email}) has applied as Ahl-e-Sada (Vocalist). Submission: ${submissionId}.`,
-        event: 'application_received',
-        from_role: 'vocalist',
-        from_name: formData.performance_name || formData.full_name,
-        action_url: '/admin/applications/vocalists',
-      }).catch(console.error);
     } catch (err: any) {
-      console.error(err);
+      setError(err.message || 'Submission failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -203,7 +177,6 @@ export function VocalistCredentialsForm() {
                   <option value="Canada">Canada</option>
                   <option value="UAE">UAE</option>
                   <option value="India">India</option>
-                  <option value="Pakistan">Pakistan</option>
                   <option value="UK">UK</option>
                   <option value="Other">Other</option>
                 </select>

@@ -3,9 +3,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, File, MessageSquareDashed, BookA } from 'lucide-react';
-import * as api from "../../api/auth"
 import { Kalam } from '@/app/user/writer/dashboard/page';
-import { notifyStatusChange, lookupUserFromStorage, mapKalamStatusToEvent } from '@/app/lib/notifications';
 // interface Kalam {
 //   id: string;
 //   writer_id: string;
@@ -55,12 +53,12 @@ export default function AdminKalams() {
   async function loadKalams() {
     try {
       setLoading(true);
-      const res = await api.getAllKalams() as any
-      setKalams(res.data)
-      console.log("Kalams Fetched!", res.data)
-      // setKalams(data || []);
+      const res = await fetch('/api/kalams');
+      const data = await res.json();
+      setKalams(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading kalams:', error);
+      setKalams([]);
     } finally {
       setLoading(false);
     }
@@ -94,29 +92,17 @@ export default function AdminKalams() {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      await api.updateKalamStatus(id, status, reviewNotes);
-      alert("Status updated");
-
-      // Notify the writer
-      const kalam = selectedKalam;
-      if (kalam?.user_id) {
-        const storedUser = lookupUserFromStorage(kalam.user_id);
-        if (storedUser) {
-          notifyStatusChange({
-            user_id: kalam.user_id,
-            email: storedUser.email,
-            name: storedUser.name,
-            role: 'writer',
-            status: mapKalamStatusToEvent(status),
-            reference: kalam.title,
-          }).catch(console.error);
-        }
-      }
-
+      const res = await fetch(`/api/kalams/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, revision_notes: reviewNotes || null }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
       setSelectedKalam(null);
+      setReviewNotes('');
       loadKalams();
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message);
+      alert(err.message || 'Failed to update status');
     }
   };
 

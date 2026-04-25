@@ -3,13 +3,8 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, CircleAlert as AlertCircle, RefreshCw, FileText } from 'lucide-react';
-import { notifyStatusChange } from '@/app/lib/notifications';
 import { useAuth } from '../../../contexts/AuthContext';
-import * as api from "../../../api/auth";
-import { WriterFormData } from '@/app/types/writer.types';
 import { VocalistProfileType } from '@/app/types/vocalist.types';
-import { storage } from '@/app/lib/storage';
-// import { WriterFormData } from '@/app/components/writers/WriterCredentialsForm';
 
 interface WriterApplication {
     id: string;
@@ -57,35 +52,12 @@ export default function AdminVocalistApplications() {
     async function loadApplications() {
         try {
             setLoading(true);
-
-            console.log('[AdminWriterApplications] Current user:', user);
-            console.log('[AdminWriterApplications] Auth loading:', authLoading);
-
-            const response = await api.getAllVocalists();
-            let payload: any = null;
-
-            if (response && typeof (response as any).json === 'function') {
-                payload = await (response as any).json();
-            } else {
-                payload = response;
-            }
-
-            const apiApplications =
-                payload?.data?.vocalists ||
-                payload?.vocalists ||
-                payload?.data ||
-                [];
-
-            if (Array.isArray(apiApplications) && apiApplications.length > 0) {
-                setApplications(apiApplications);
-            } else {
-                const localApplications = await storage.getAll('vocalist');
-                setApplications(Array.isArray(localApplications) ? localApplications : []);
-            }
+            const res = await fetch('/api/vocalists');
+            const data = await res.json();
+            setApplications(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error('[AdminWriterApplications] Error loading applications:', error);
-            const localApplications = await storage.getAll('vocalist');
-            setApplications(Array.isArray(localApplications) ? localApplications : []);
+            console.error('[AdminVocalistApplications] Error loading applications:', error);
+            setApplications([]);
         } finally {
             setLoading(false);
         }
@@ -142,30 +114,20 @@ export default function AdminVocalistApplications() {
     }
     const handleUpdateStatus = async (id: string | undefined, status: string) => {
         if (!id) return;
-        const app = applications.find(a => (a as any).id === id);
         try {
-            try {
-                await api.updateVocalistStatus(id, status);
-            } catch {
-                await storage.update('vocalist', id, {
-                    status,
-                    profile_status: status,
-                    reviewed_at: new Date().toISOString(),
-                });
-            }
-            if (app) {
-                await notifyStatusChange({
-                    user_id: (app as any).user_id,
-                    email: (app as any).email,
-                    name: (app as any).performance_name || (app as any).full_name || (app as any).email,
-                    role: 'vocalist',
-                    status: status as any,
-                });
-            }
+            setProcessingAction(true);
+            const res = await fetch(`/api/vocalists/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile_status: status }),
+            });
+            if (!res.ok) throw new Error('Failed to update status');
             setSelectedApp(null);
             loadApplications();
         } catch (err: any) {
             alert(err?.message || 'Failed to update status');
+        } finally {
+            setProcessingAction(false);
         }
     };
 
@@ -181,7 +143,7 @@ export default function AdminVocalistApplications() {
                                 placeholder="Search by pen name, email, or applicant name..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="dashboard-input pl-10"
+                                className="dashboard-input has-icon"
                             />
                         </div>
 

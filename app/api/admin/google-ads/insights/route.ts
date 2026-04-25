@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 interface AdsMetricSummary {
   impressions: number;
@@ -40,6 +41,9 @@ const sumMetricsFromResponse = (responsePayload: any[]): AdsMetricSummary => {
 };
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
     const customerIds: string[] = Array.isArray(body?.customerIds) ? body.customerIds : [];

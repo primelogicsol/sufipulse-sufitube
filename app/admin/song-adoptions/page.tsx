@@ -234,7 +234,7 @@ export default function AdminSongAdoptions() {
                 youtube_video_id: youtubeId,
                 release_title: releaseTitle,
                 budget_usd: adoption.amount_due,
-                target_regions: adoption.target_regions || ['US', 'GB', 'PK'],
+                target_regions: adoption.target_regions || ['US', 'GB', 'AE'],
                 target_languages: adoption.target_languages || ['en', 'ur'],
                 campaign_objective: adoption.campaign_objective || 'awareness',
             };
@@ -450,7 +450,7 @@ export default function AdminSongAdoptions() {
                                 placeholder="Search by sponsor name or email..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="dashboard-input pl-10"
+                                className="dashboard-input has-icon"
                             />
                         </div>
                         <select

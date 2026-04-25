@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { storage } from '@/app/lib/storage';
-import { notifyStatusChange, lookupUserFromStorage, mapContentStatusToEvent } from '@/app/lib/notifications';
-import { BookOpen, RefreshCw } from 'lucide-react';
+import { BookOpen, RefreshCw, Search } from 'lucide-react';
 
 type ArticleItem = {
   id: string;
@@ -27,8 +25,11 @@ export default function ArticlesPage() {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const data = await storage.getAll('article');
+      const res = await fetch('/api/articles');
+      const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -50,27 +51,15 @@ export default function ArticlesPage() {
   }, [items, query, filter]);
 
   const updateStatus = async (id: string, status: string) => {
-    await storage.update('article', id, {
-      status,
-      reviewed_at: new Date().toISOString(),
+    const res = await fetch(`/api/articles/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
     });
-
-    // Notify the literary contributor
-    const article = items.find(i => i.id === id);
-    if (article?.user_id) {
-      const storedUser = lookupUserFromStorage(article.user_id);
-      if (storedUser) {
-        notifyStatusChange({
-          user_id: article.user_id,
-          email: storedUser.email,
-          name: article.author_name || storedUser.name,
-          role: 'literary',
-          status: mapContentStatusToEvent(status),
-          reference: article.title,
-        }).catch(console.error);
-      }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to update status');
     }
-
     await loadItems();
   };
 
@@ -81,12 +70,15 @@ export default function ArticlesPage() {
           <div className="flex flex-col gap-4 mb-6">
             <h1 className="text-xl font-semibold text-[var(--dash-text-primary)]">Article Moderation</h1>
             <div className="flex gap-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search title or author"
-                className="dashboard-input"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search title or author"
+                  className="dashboard-input has-icon w-full"
+                />
+              </div>
               <select value={filter} onChange={(e) => setFilter(e.target.value)} className="dashboard-input max-w-56">
                 <option value="all">All statuses</option>
                 {STATUSES.map((status) => (

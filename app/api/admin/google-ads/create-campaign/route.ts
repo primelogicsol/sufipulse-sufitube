@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/admin/google-ads/create-campaign
@@ -74,6 +75,9 @@ async function adsRequest(
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body: CreateCampaignBody = await request.json();
 
   const {

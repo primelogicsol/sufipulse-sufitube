@@ -124,8 +124,8 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             { name: "abstract", label: "Abstract", type: "textarea", placeholder: "Brief summary of the article (200–400 words)" },
             { name: "content", label: "Full Content", type: "editor" },
             { name: "author_name", label: "Author Name (as shown publicly)", type: "text", placeholder: "Your pen name or full name" },
-            { name: "author_country", label: "Country", type: "text", placeholder: "e.g. Pakistan" },
-            { name: "author_city", label: "City", type: "text", placeholder: "e.g. Lahore" },
+            { name: "author_country", label: "Country", type: "text", placeholder: "e.g. United States" },
+            { name: "author_city", label: "City", type: "text", placeholder: "e.g. New York" },
             { name: "author_domain", label: "Literary Domain / Topics", type: "text", placeholder: "e.g. Sufi Philosophy, Commentary, Research" },
         ],
         draftDefaults: { title: "", language: "", article_type: "", abstract: "", content: "", author_name: "", author_country: "", author_city: "", author_domain: "" }
@@ -637,6 +637,28 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                             {/* Overview Tab (Admin Grid Design) */}
                             {activeTab === 'overview' && (
                                 <div>
+                                    {/* ── Identity Card ── */}
+                                    <div className="mb-6 bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold text-[var(--dash-text-muted)] uppercase tracking-widest mb-2">Your Reference IDs</p>
+                                            <div className="flex flex-col sm:flex-row gap-4">
+                                                <div>
+                                                    <p className="text-[10px] text-[var(--dash-text-muted)] mb-0.5">Account ID</p>
+                                                    <p className="font-mono text-sm text-[var(--dash-accent)] tracking-wide select-all">{user?.id || '—'}</p>
+                                                </div>
+                                                {profileData?.id && (
+                                                    <div>
+                                                        <p className="text-[10px] text-[var(--dash-text-muted)] mb-0.5">Profile ID</p>
+                                                        <p className="font-mono text-sm text-[var(--dash-text-primary)] tracking-wide select-all">{profileData.id}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-[var(--dash-text-muted)] sm:text-right max-w-[200px]">
+                                            Use your Profile ID as the reference when requesting studio access.
+                                        </p>
+                                    </div>
+
                                     {status !== "approved" && (
                                         <div className="mb-6 p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-lg flex items-center gap-3">
                                             <AlertCircle className="w-5 h-5 text-yellow-400" />
@@ -884,7 +906,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                 placeholder={`Search ${config.termPlural}...`}
                                                 value={searchQuery}
                                                 onChange={e => setSearchQuery(e.target.value)}
-                                                className="w-full pl-10 pr-4 py-2.5 bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-primary)] text-sm focus:border-[var(--dash-accent)] outline-none transition-colors"
+                                                className="w-full has-icon pr-4 py-2.5 bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-primary)] text-sm focus:border-[var(--dash-accent)] outline-none transition-colors"
                                             />
                                         </div>
                                         <input
@@ -1046,11 +1068,11 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                             <form onSubmit={handleBankSave} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 {[
                                                     { key: 'holder_name', label: 'Account Holder Name', placeholder: 'Full legal name on account', required: true },
-                                                    { key: 'bank_name', label: 'Bank Name', placeholder: 'e.g. Habib Bank Limited', required: true },
+                                                    { key: 'bank_name', label: 'Bank Name', placeholder: 'e.g. JPMorgan Chase, Bank of America', required: true },
                                                     { key: 'account_number', label: 'Account Number', placeholder: 'Your account number', required: true },
                                                     { key: 'iban_routing', label: 'IBAN / Routing Number', placeholder: 'IBAN (international) or routing number', required: false },
-                                                    { key: 'swift_bic', label: 'SWIFT / BIC Code', placeholder: 'e.g. HABBPKKA', required: false },
-                                                    { key: 'country', label: 'Country', placeholder: 'e.g. Pakistan, United States', required: true },
+                                                    { key: 'swift_bic', label: 'SWIFT / BIC Code', placeholder: 'e.g. CHASUS33', required: false },
+                                                    { key: 'country', label: 'Country', placeholder: 'e.g. United States, United Kingdom', required: true },
                                                 ].map(f => (
                                                     <div key={f.key}>
                                                         <label className="block text-xs font-semibold text-[var(--dash-text-secondary)] mb-1.5">

@@ -1,9 +1,6 @@
 "use client";
 import { useState } from 'react';
 import DOMPurify from "dompurify";
-import * as api from "../../api/auth";
-import { storage } from '../../lib/storage';
-import { notifyApplicationReceived, notifyAdmin } from '../../lib/notifications';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { LiteraryProfileType } from '@/app/types/literary.types';
 import Link from 'next/link';
@@ -99,34 +96,18 @@ export function LiteraryContributorCredentialsForm() {
     }
 
     try {
-      try {
-        await api.createLiteraryProfile(payload as LiteraryProfileType);
-      } catch {
-        storage.create('literary', {
-          ...payload,
-          profile_status: 'pending',
-          submitted_at: new Date().toISOString(),
-        });
+      const res = await fetch('/api/literary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, profile_status: 'pending' }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Submission failed. Please try again.');
       }
       setSubmitted(true);
-      notifyApplicationReceived({
-        user_id: user?.id,
-        email: formData.email,
-        name: formData.professional_name || formData.full_name,
-        role: 'literary',
-        reference: submissionId,
-      }).catch(console.error);
-      notifyAdmin({
-        title: 'New Literary Contributor Application',
-        message: `${formData.professional_name || formData.full_name} (${formData.email}) has applied as Ahl-e-Tahreer (Literary). Submission: ${submissionId}.`,
-        event: 'application_received',
-        from_role: 'literary',
-        from_name: formData.professional_name || formData.full_name,
-        action_url: '/admin/applications/literary',
-      }).catch(console.error);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to submit profile. Please try again later.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit profile. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -212,7 +193,6 @@ export function LiteraryContributorCredentialsForm() {
                   <option value="Canada">Canada</option>
                   <option value="UAE">UAE</option>
                   <option value="India">India</option>
-                  <option value="Pakistan">Pakistan</option>
                   <option value="UK">UK</option>
                   <option value="Other">Other</option>
                 </select>

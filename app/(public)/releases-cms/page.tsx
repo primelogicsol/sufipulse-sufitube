@@ -52,7 +52,7 @@ export default function ReleasesPage() {
           {releases.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-neutral-600 text-lg mb-4">No releases published yet</p>
-              <Link href="/admin/setup" className="text-indigo-600 hover:text-indigo-700 font-semibold">
+              <Link href="/admin/cms-releases" className="text-indigo-600 hover:text-indigo-700 font-semibold">
                 Create test releases
               </Link>
             </div>

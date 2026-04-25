@@ -52,6 +52,30 @@ export function AdoptTab({ release }: AdoptTabProps) {
     loadPackages();
   }, []);
 
+  // Restore review state when returning from Google OAuth
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const oauthResult = url.searchParams.get('adoption_oauth');
+    const returnedAdoptionId = url.searchParams.get('adoption_id');
+    if (oauthResult !== 'success' || !returnedAdoptionId) return;
+
+    storage.getSongAdoptionById(returnedAdoptionId).then((saved: any) => {
+      if (saved) {
+        setAdoption(saved);
+        setSelectedMethod(saved.method_type);
+        setFormData(prev => ({ ...prev, full_name: saved.sponsor_name || prev.full_name }));
+        setOauthConnected(true);
+        setOauthChecked(true);
+        setStep(3);
+      }
+    });
+
+    // Remove OAuth params from URL without a page reload
+    url.searchParams.delete('adoption_oauth');
+    url.searchParams.delete('adoption_id');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
   useEffect(() => {
     async function checkOAuthStatus() {
       if (!adoption?.id || selectedMethod !== 'use_my_google_ads') {
@@ -235,6 +259,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const handlePayment = async () => {
     if (!adoption) return;
 
+    // --- Google Ads method: submit for admin review (no Stripe charge) ---
+    if (selectedMethod === 'use_my_google_ads') {
+      setIsSubmitting(true);
+      try {
+        await storage.updateSongAdoption(adoption.id, {
+          payment_status: 'pending',
+          adoption_status: 'pending_review',
+        });
+        await storage.createSongAdoptionEvent({
+          adoption_id: adoption.id,
+          event_type: 'payment_initiated',
+          event_label: 'Google Ads adoption submitted — pending admin review and campaign launch',
+          actor_type: 'user',
+          metadata: {},
+        });
+        setStep(4);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     // --- $0 Bypass ---
     if (adoption.amount_due === 0) {
       await storage.updateSongAdoption(adoption.id, {
@@ -261,7 +307,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amountUSD: adoption.amount_due,
-            releasTitle: release?.title,
+            releaseTitle: release?.release_title,
             sponsorName: formData.full_name,
             sponsorEmail: formData.email,
             methodType: adoption.method_type,
@@ -361,11 +407,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-neutral-500">Daily Budget</span>
-                <span className="text-neutral-200">$10-25</span>
+                <span className="text-neutral-200">$10–25</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Campaign Duration</span>
-                <span className="text-neutral-200">14-30 days</span>
+                <span className="text-neutral-200">14–30 days</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Setup Assistance</span>
@@ -373,9 +419,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
               </div>
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm text-neutral-400 mb-2">Your Total Campaign Budget (USD) *</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={formData.custom_budget || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
+                className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-8 pr-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                placeholder="e.g. 150"
+              />
+            </div>
+            <p className="text-xs text-neutral-500 mt-1">Total you plan to spend in your own Google Ads account</p>
+          </div>
+
           <button
             onClick={() => setStep(2)}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+            disabled={!formData.custom_budget || formData.custom_budget < 1}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
           >
             Continue to Form
           </button>
@@ -663,7 +728,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <div className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Song</div>
           <div className="text-neutral-200 font-medium flex items-center gap-2">
             <Music className="w-4 h-4 text-amber-500" />
-            {release?.title || 'Current Release'}
+            {release?.release_title || 'Current Release'}
           </div>
         </div>
 
@@ -693,23 +758,55 @@ export function AdoptTab({ release }: AdoptTabProps) {
         )}
       </div>
 
-      {!stripeEnabled && (
-        <div className="text-xs text-amber-600 border border-amber-700/40 bg-amber-900/20 rounded-lg px-4 py-2 text-center">
-          Stripe is not configured. Payment will be recorded as pending and collected manually.
+      {selectedMethod === 'use_my_google_ads' ? (
+        <div className="p-5 border border-blue-800/40 bg-blue-900/20 rounded-xl space-y-3 text-center">
+          <p className="text-sm text-neutral-400">
+            Authorize SufiPulse to set up the campaign structure in your Google Ads account.
+          </p>
+          {oauthChecked && (
+            <p className={`text-xs ${oauthConnected ? 'text-green-400' : 'text-amber-300'}`}>
+              {oauthConnected
+                ? 'Google Ads account connected. Click below to submit your adoption for review.'
+                : 'Google Ads account not connected yet.'}
+            </p>
+          )}
+          {oauthConnected ? (
+            <button
+              onClick={handlePayment}
+              disabled={isSubmitting}
+              className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <Check className="w-5 h-5" /> Submit Adoption
+            </button>
+          ) : (
+            <a
+              href={adoption ? `/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}` : '#'}
+              className="inline-flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+            >
+              Connect Google Ads Account
+            </a>
+          )}
         </div>
+      ) : (
+        <>
+          {!stripeEnabled && (
+            <div className="text-xs text-amber-600 border border-amber-700/40 bg-amber-900/20 rounded-lg px-4 py-2 text-center">
+              Stripe is not configured. Payment will be recorded as pending and collected manually.
+            </div>
+          )}
+          <button
+            onClick={handlePayment}
+            disabled={isRedirectingToStripe}
+            className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            {isRedirectingToStripe ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
+            ) : (
+              <><CreditCard className="w-5 h-5" /> {stripeEnabled ? 'Pay with Card (Stripe)' : 'Submit Payment Request'}</>
+            )}
+          </button>
+        </>
       )}
-
-      <button
-        onClick={handlePayment}
-        disabled={isRedirectingToStripe}
-        className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-      >
-        {isRedirectingToStripe ? (
-          <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
-        ) : (
-          <><CreditCard className="w-5 h-5" /> {stripeEnabled ? 'Pay with Card (Stripe)' : 'Submit Payment Request'}</>
-        )}
-      </button>
     </div>
   );
 
@@ -741,6 +838,47 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <span className="text-neutral-300 text-sm font-medium capitalize">{selectedMethod?.replaceAll('_', ' ')}</span>
         </div>
       </div>
+
+      {/* YouTube share prompt */}
+      {(release?.youtube_video_id || release?.youtubeId) && (() => {
+        const vid = release.youtube_video_id || release.youtubeId;
+        const ytUrl = `https://www.youtube.com/watch?v=${vid}`;
+        const shareText = encodeURIComponent(`🎵 Just adopted this sacred kalam — listen on YouTube: ${ytUrl}`);
+        return (
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 text-left space-y-3">
+            <p className="text-sm font-medium text-neutral-200">Help this reach more listeners</p>
+            <p className="text-xs text-neutral-500 leading-relaxed">
+              Share on YouTube to generate external traffic — it signals the algorithm to promote this kalam to new audiences.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(ytUrl)}&text=${encodeURIComponent('🎵 Just adopted this sacred kalam on SufiPulse')}&hashtags=SufiMusic,Kalam,SufiPulse`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs text-neutral-300 transition-colors"
+              >
+                𝕏 Share on X
+              </a>
+              <a
+                href={`https://wa.me/?text=${shareText}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs text-neutral-300 transition-colors"
+              >
+                WhatsApp
+              </a>
+              <a
+                href={ytUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800/40 rounded-lg text-xs text-red-300 transition-colors"
+              >
+                Watch on YouTube
+              </a>
+            </div>
+          </div>
+        );
+      })()}
 
       <button
         onClick={() => { setStep(0); setSelectedMethod(null); setSelectedPackage(null); setAdoption(null); }}

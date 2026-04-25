@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { createNotification } from '@/app/lib/notifications';
-import { KeyRound, RefreshCw, Copy, Check } from 'lucide-react';
+import { KeyRound, RefreshCw, Copy, Check, Plus, X, Search } from 'lucide-react';
 
 type AccessCodeRequest = {
   id: string;
@@ -16,11 +15,7 @@ type AccessCodeRequest = {
   issued_code: string | null;
   created_at: string;
   issued_at: string | null;
-  user_id?: string;
 };
-
-const STORAGE_KEY = 'sufipulse_studio_access_requests';
-const DEMO_CODE = 'REF-VOC-2026-DEMO1';
 
 const ROLE_LABELS: Record<string, string> = {
   writer:   'Writer — Ahl-e-Qalam',
@@ -28,10 +23,16 @@ const ROLE_LABELS: Record<string, string> = {
   producer: 'Producer — Ahl-e-Naghma',
 };
 
-function generateAccessCode(role: string): string {
+const STATUS_COLORS: Record<string, string> = {
+  pending:  'bg-amber-400/10 text-amber-400 border-amber-400/30',
+  issued:   'bg-green-400/10 text-green-400 border-green-400/30',
+  rejected: 'bg-red-400/10 text-red-400 border-red-400/30',
+};
+
+function generateCode(role: string): string {
   const prefix = role === 'writer' ? 'WRT' : role === 'vocalist' ? 'VOC' : 'PRD';
   const year = new Date().getFullYear();
-  const rand = Math.random().toString(36).substr(2, 5).toUpperCase();
+  const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
   return `REF-${prefix}-${year}-${rand}`;
 }
 
@@ -41,21 +42,79 @@ export default function AdminStudioAccessCodes() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<string>('pending');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [demoCopied, setDemoCopied] = useState(false);
 
-  const load = () => {
+  // Generate panel state
+  const [showGenerate, setShowGenerate] = useState(false);
+  const [genName, setGenName] = useState('');
+  const [genEmail, setGenEmail] = useState('');
+  const [genRole, setGenRole] = useState<'writer' | 'vocalist' | 'producer'>('vocalist');
+  const [genNote, setGenNote] = useState('');
+  const [genPreview, setGenPreview] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState('');
+
+  const load = async () => {
     try {
       setLoading(true);
-      const raw = typeof window !== 'undefined'
-        ? localStorage.getItem(STORAGE_KEY)
-        : null;
-      setRequests(raw ? JSON.parse(raw) : []);
+      const res = await fetch('/api/studio-access-codes');
+      const data = await res.json();
+      setRequests(Array.isArray(data) ? data : []);
+    } catch {
+      setRequests([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { load(); }, []);
+
+  // Regenerate preview code whenever role changes in the panel
+  useEffect(() => {
+    if (showGenerate) setGenPreview(generateCode(genRole));
+  }, [genRole, showGenerate]);
+
+  const openGenerate = () => {
+    setGenName('');
+    setGenEmail('');
+    setGenRole('vocalist');
+    setGenNote('');
+    setGenError('');
+    setGenPreview(generateCode('vocalist'));
+    setShowGenerate(true);
+  };
+
+  const rerollCode = () => setGenPreview(generateCode(genRole));
+
+  const createCode = async () => {
+    if (!genName.trim()) { setGenError('Name is required.'); return; }
+    if (!genEmail.trim()) { setGenError('Email is required.'); return; }
+    setGenError('');
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/studio-access-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: genName.trim(),
+          email: genEmail.trim(),
+          role: genRole,
+          reason: genNote.trim() || 'Manually issued by admin.',
+          profile_reference: '',
+          status: 'issued',
+          issued_code: genPreview,
+          issued_at: new Date().toISOString(),
+          _admin_created: true,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create code.');
+      setShowGenerate(false);
+      load();
+    } catch (e: any) {
+      setGenError(e.message || 'Something went wrong.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     return requests.filter((r) => {
@@ -69,41 +128,24 @@ export default function AdminStudioAccessCodes() {
     });
   }, [requests, query, filter]);
 
-  const issueCode = (id: string) => {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-    const all: AccessCodeRequest[] = raw ? JSON.parse(raw) : [];
-    const request = all.find((r) => r.id === id);
+  const issueCode = async (id: string) => {
+    const request = requests.find((r) => r.id === id);
     if (!request) return;
-
-    const code = generateAccessCode(request.role);
-    const updated = all.map((r) =>
-      r.id === id
-        ? { ...r, status: 'issued' as const, issued_code: code, issued_at: new Date().toISOString() }
-        : r
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-
-    // Deliver code via in-app notification if user_id is known
-    if (request.user_id) {
-      createNotification({
-        user_id: request.user_id,
-        title: 'Studio Session Access Code Issued',
-        message: `Your request has been approved. Your Studio Session reference code is: ${code}. Use this code when submitting a Session Coordination Request on the Studio Sessions page.`,
-        event: 'access_code_issued',
-        action_url: '/studio-sessions',
-      });
-    }
-
+    const code = generateCode(request.role);
+    await fetch(`/api/studio-access-codes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'issued', issued_code: code, issued_at: new Date().toISOString() }),
+    });
     load();
   };
 
-  const rejectRequest = (id: string) => {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-    const all: AccessCodeRequest[] = raw ? JSON.parse(raw) : [];
-    const updated = all.map((r) =>
-      r.id === id ? { ...r, status: 'rejected' as const } : r
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const rejectRequest = async (id: string) => {
+    await fetch(`/api/studio-access-codes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'rejected' }),
+    });
     load();
   };
 
@@ -114,63 +156,108 @@ export default function AdminStudioAccessCodes() {
     });
   };
 
-  const seedDemoCode = () => {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-    const all: AccessCodeRequest[] = raw ? JSON.parse(raw) : [];
-    const alreadyExists = all.some((r) => r.issued_code === DEMO_CODE);
-    if (alreadyExists) return;
-    const demoEntry: AccessCodeRequest = {
-      id: `ACR-DEMO-000001`,
-      name: 'Demo Contributor',
-      email: 'demo@sufipulse.org',
-      role: 'vocalist',
-      profile_reference: 'DEMO-REF-001',
-      reason: 'Temporary demo entry for testing the Session Coordination Request form.',
-      status: 'issued',
-      issued_code: DEMO_CODE,
-      created_at: new Date().toISOString(),
-      issued_at: new Date().toISOString(),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...all, demoEntry]));
-    load();
-  };
-
-  const STATUS_COLORS: Record<string, string> = {
-    pending:  'bg-amber-400/10 text-amber-400 border-amber-400/30',
-    issued:   'bg-green-400/10 text-green-400 border-green-400/30',
-    rejected: 'bg-red-400/10 text-red-400 border-red-400/30',
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
 
-        {/* ── Demo Code Banner ── */}
-        <div className="dashboard-card border-amber-400/30 bg-amber-400/5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">Temporary Test Code</p>
-              <p className="font-mono text-lg font-bold text-white tracking-widest">{DEMO_CODE}</p>
-              <p className="text-xs text-[var(--dash-text-muted)] mt-1">
-                Use this code in the Session Coordination Request form on the Studio Sessions page to test the full flow.
-              </p>
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={() => { navigator.clipboard.writeText(DEMO_CODE); setDemoCopied(true); setTimeout(() => setDemoCopied(false), 2000); }}
-                className="dashboard-btn-secondary text-sm inline-flex items-center gap-2"
-              >
-                {demoCopied ? <><Check className="w-4 h-4 text-green-400" /> Copied</> : <><Copy className="w-4 h-4" /> Copy Code</>}
+        {/* ── Generate New Code Panel ── */}
+        {showGenerate ? (
+          <div className="dashboard-card border-[var(--dash-accent)]/30">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-[var(--dash-accent)]" />
+                <h2 className="text-sm font-semibold text-[var(--dash-text-primary)]">Generate New Access Code</h2>
+              </div>
+              <button onClick={() => setShowGenerate(false)} className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-primary)]">
+                <X className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Code preview */}
+            <div className="flex items-center gap-3 bg-[var(--dash-surface)] border border-[var(--dash-border)] rounded-lg px-4 py-3 mb-5">
+              <span className="text-xs text-[var(--dash-text-muted)]">Code:</span>
+              <span className="font-mono text-lg font-bold text-[var(--dash-accent)] tracking-widest flex-1">{genPreview}</span>
               <button
-                onClick={seedDemoCode}
-                className="dashboard-btn-primary text-sm"
+                onClick={rerollCode}
+                className="dashboard-btn-secondary text-xs inline-flex items-center gap-1"
+                title="Generate a different code"
               >
-                Seed to localStorage
+                <RefreshCw className="w-3.5 h-3.5" /> Reroll
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-xs text-[var(--dash-text-muted)] mb-1.5 uppercase tracking-wide">Contributor Name *</label>
+                <input
+                  value={genName}
+                  onChange={(e) => setGenName(e.target.value)}
+                  placeholder="Full name"
+                  className="dashboard-input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[var(--dash-text-muted)] mb-1.5 uppercase tracking-wide">Email *</label>
+                <input
+                  type="email"
+                  value={genEmail}
+                  onChange={(e) => setGenEmail(e.target.value)}
+                  placeholder="contributor@email.com"
+                  className="dashboard-input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[var(--dash-text-muted)] mb-1.5 uppercase tracking-wide">Role</label>
+                <select
+                  value={genRole}
+                  onChange={(e) => setGenRole(e.target.value as typeof genRole)}
+                  className="dashboard-input w-full"
+                >
+                  <option value="vocalist">Vocalist — Ahl-e-Sada</option>
+                  <option value="writer">Writer — Ahl-e-Qalam</option>
+                  <option value="producer">Producer — Ahl-e-Naghma</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-[var(--dash-text-muted)] mb-1.5 uppercase tracking-wide">Internal Note (optional)</label>
+                <input
+                  value={genNote}
+                  onChange={(e) => setGenNote(e.target.value)}
+                  placeholder="Reason for issuing"
+                  className="dashboard-input w-full"
+                />
+              </div>
+            </div>
+
+            {genError && (
+              <p className="text-sm text-red-400 mb-3">{genError}</p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={createCode}
+                disabled={generating}
+                className="dashboard-btn-primary text-sm disabled:opacity-50"
+              >
+                {generating ? 'Saving…' : 'Issue Code'}
+              </button>
+              <button onClick={() => setShowGenerate(false)} className="dashboard-btn-secondary text-sm">
+                Cancel
               </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex justify-end">
+            <button
+              onClick={openGenerate}
+              className="dashboard-btn-primary text-sm inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Generate New Code
+            </button>
+          </div>
+        )}
+
+        {/* ── Requests List ── */}
         <div className="dashboard-card">
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex items-center gap-3">
@@ -184,12 +271,15 @@ export default function AdminStudioAccessCodes() {
             </p>
 
             <div className="flex gap-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search name, email or request ID"
-                className="dashboard-input"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search name, email or request ID"
+                  className="dashboard-input has-icon w-full"
+                />
+              </div>
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
@@ -236,10 +326,12 @@ export default function AdminStudioAccessCodes() {
                   </div>
 
                   {/* Profile reference */}
-                  <div className="text-sm">
-                    <span className="text-[var(--dash-text-muted)]">Profile reference: </span>
-                    <span className="font-mono text-[var(--dash-accent)]">{req.profile_reference || '—'}</span>
-                  </div>
+                  {req.profile_reference && (
+                    <div className="text-sm">
+                      <span className="text-[var(--dash-text-muted)]">Profile reference: </span>
+                      <span className="font-mono text-[var(--dash-accent)]">{req.profile_reference}</span>
+                    </div>
+                  )}
 
                   {/* Reason */}
                   <div className="text-sm text-[var(--dash-text-secondary)] bg-[var(--dash-surface)] rounded p-3 border border-[var(--dash-border)]">

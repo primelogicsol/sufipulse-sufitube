@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Calendar, FileText, User, Shield, Mail } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { SessionRequestSuccessModal } from './SessionRequestSuccessModal';
-import { notifyAdmin } from '@/app/lib/notifications';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { getAllReleases } from '@/lib/cms-api';
 import type { Release } from '@/lib/cms-types';
@@ -85,10 +84,9 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
     });
 
     try {
-      // ── Validate reference code against issued access codes ──────────────
-      const codeRecords: any[] = typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem('sufipulse_studio_access_requests') || '[]')
-        : [];
+      // ── Validate reference code against server-side issued access codes ──
+      const codesRes = await fetch('/api/studio-access-codes');
+      const codeRecords: any[] = codesRes.ok ? await codesRes.json() : [];
       const matchedCode = codeRecords.find(
         (r) =>
           r.issued_code &&
@@ -97,40 +95,33 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
       );
       if (!matchedCode) {
         setError(
-          'Invalid or unrecognized reference code. Please ensure you have been issued a Studio Session access code by the admin team. Use the "Don\'t have a reference code?" section above to request one.'
+          'Invalid or unrecognized reference code. Use the code shown in the "Request an Access Code" section above (format: REF-VOC-2026-XXXXX). The entity ID shown in the admin panel is not a valid code.'
         );
         setLoading(false);
         return;
       }
 
-      const STORAGE_KEY = 'sufipulse_session_requests';
-      const existing: any[] = typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-        : [];
-
-      const newRequest = {
-        id: `SR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        ...formData,
-        ...cleanData,
-        user_id: user?.id,
-        session_type: sessionType,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      };
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, newRequest]));
-
-      const sessionLabel = sessionType === 'in_person' ? 'In-Person' : 'Remote';
-      await notifyAdmin({
-        title: 'New Studio Session Request',
-        message: `${DOMPurify.sanitize(formData.requester_name)} (${DOMPurify.sanitize(formData.email)}) submitted a ${sessionLabel} session coordination request. Ref code: ${formData.approval_reference_code}.`,
-        event: 'application_received',
-        from_role: formData.role_type,
-        from_name: DOMPurify.sanitize(formData.requester_name),
-        action_url: '/admin/session-requests',
+      // ── Submit session request to server ────────────────────────────────
+      const res = await fetch('/api/session-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...cleanData,
+          user_id: user?.id,
+          session_type: sessionType,
+          role_type: formData.role_type,
+          release_id: formData.release_id,
+          preferred_date_start: formData.preferred_date_start,
+          preferred_date_end: formData.preferred_date_end,
+        }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Submission failed. Please try again.');
+      }
+      const saved = await res.json();
 
-      setRequestId(newRequest.id);
+      setRequestId(saved.id);
       setSuccess(true);
       setFormData({
         requester_name: '',
@@ -186,7 +177,7 @@ export function SessionRequestForm({ sessionType, onClose }: SessionRequestFormP
 
         <div className="bg-amber-400/5 border border-amber-400/20 rounded-lg p-4">
           <p className="text-amber-400/90 text-xs leading-relaxed">
-            Session access requires a valid approval reference code. If you don&apos;t have one yet, use the <strong>&quot;Don&apos;t have a reference code?&quot;</strong> section above to request one from the admin team.
+            Session access requires a valid approval reference code (format: <strong>REF-VOC-2026-XXXXX</strong>). If you don&apos;t have one yet, use the <strong>&quot;Request an Access Code&quot;</strong> section above. Do not enter a record/entity ID — enter only the code shown after your access code request is processed.
           </p>
         </div>
 

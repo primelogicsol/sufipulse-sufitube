@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { auditLog } from '@/app/lib/audit-log';
 import { logger } from '@/app/lib/logger';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,6 +85,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   try {
     const rawBody = await request.json();
@@ -128,11 +132,11 @@ export async function PUT(
     });
 
     // Audit log
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
     apiLogger.info(`Release updated: ${id}`, { id, slug: nextSlug });
     auditLog({
-      userId: 'system',
-      userEmail: 'api',
+      userId: authResult.id,
+      userEmail: authResult.email,
       action: 'release_updated',
       resourceType: 'release',
       resourceId: id,
@@ -151,6 +155,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   try {
     const existing = cmsServerStorage.getRelease(id);
@@ -158,14 +165,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
 
-    const deleted = cmsServerStorage.deleteRelease(id);
+    cmsServerStorage.deleteRelease(id);
 
     // Audit log
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
     apiLogger.warn(`Release deleted: ${id}`, { id, title: existing.title });
     auditLog({
-      userId: 'system',
-      userEmail: 'api',
+      userId: authResult.id,
+      userEmail: authResult.email,
       action: 'release_deleted',
       resourceType: 'release',
       resourceId: id,

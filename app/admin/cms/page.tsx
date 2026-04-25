@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { getAllReleases } from '@/lib/cms-api';
+import { getAllReleases, deleteRelease } from '@/lib/cms-api';
 import type { Release } from '@/lib/cms-types';
 import {
   Plus,
@@ -25,6 +25,7 @@ import {
 export default function CMSPage() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -89,6 +90,19 @@ export default function CMSPage() {
     'published': 'Published',
     'unpublished': 'Unpublished',
     'archived': 'Archived'
+  };
+
+  const handleDelete = async (release: Release) => {
+    if (!confirm(`Delete "${release.title}"? This cannot be undone.`)) return;
+    setDeletingId(release.id);
+    try {
+      await deleteRelease(release.id);
+      setReleases(prev => prev.filter(r => r.id !== release.id));
+    } catch (err: any) {
+      alert(`Delete failed: ${err.message}`);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const statusColors: Record<string, string> = {
@@ -163,13 +177,13 @@ export default function CMSPage() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3" size={20} style={{color: 'var(--dash-text-muted)'}} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
                 <input
                   type="text"
                   placeholder="Search releases..."
                   value={searchQuery}
                   onChange={handleSearch}
-                  className="form-input w-full pl-10"
+                  className="dashboard-input has-icon w-full"
                 />
               </div>
             </div>
@@ -244,11 +258,13 @@ export default function CMSPage() {
                           <Edit3 size={18} />
                         </Link>
                         <button
-                          className="p-2 rounded-lg transition"
+                          onClick={() => handleDelete(release)}
+                          disabled={deletingId === release.id}
+                          className="p-2 rounded-lg transition hover:text-red-400 disabled:opacity-40"
                           style={{color: 'var(--dash-text-secondary)'}}
-                          title="More options"
+                          title="Delete release"
                         >
-                          <MoreVertical size={18} />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>

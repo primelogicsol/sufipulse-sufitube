@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { Mic, RefreshCw } from 'lucide-react';
+import { Mic, RefreshCw, Search } from 'lucide-react';
 import { notifyStatusChange, lookupProfileByName, lookupUserFromStorage, mapContentStatusToEvent } from '@/app/lib/notifications';
 
 // Active (scheduled / in-progress / completed) session requests from the session queue
@@ -146,12 +146,15 @@ export default function StudioSessionsPage() {
               </p>
             </div>
             <div className="flex gap-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search requester, release or engineer"
-                className="dashboard-input"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search requester, release or engineer"
+                  className="dashboard-input has-icon w-full"
+                />
+              </div>
               <select value={filter} onChange={(e) => setFilter(e.target.value)} className="dashboard-input max-w-56">
                 <option value="all">All active statuses</option>
                 {STATUSES.map((status) => (

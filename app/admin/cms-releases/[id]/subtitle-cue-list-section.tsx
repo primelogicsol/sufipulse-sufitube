@@ -140,7 +140,7 @@ export function SubtitleCueListSection({
                   />
                 )}
                 {hasPosition && (
-                  <Target size={12} style={{ color: 'var(--dash-accent)' }} title="Has position override" />
+                  <Target size={12} style={{ color: 'var(--dash-accent)' }} aria-label="Has position override" />
                 )}
               </div>
 

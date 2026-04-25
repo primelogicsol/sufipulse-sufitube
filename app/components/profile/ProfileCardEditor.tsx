@@ -131,7 +131,7 @@ export function ProfileCardEditor({ role, displayName, status }: ProfileCardEdit
           <input
             type="text"
             maxLength={100}
-            placeholder={`e.g. ${role === 'writer' ? 'Classical Ghazal poet from Lahore' : role === 'vocalist' ? 'Devotional vocalist trained in classical ragas' : role === 'producer' ? 'Studio producer with 8 years in devotional production' : 'Literary editor and Persian poetry scholar'}`}
+            placeholder={`e.g. ${role === 'writer' ? 'Classical Ghazal poet and Sufi literature scholar' : role === 'vocalist' ? 'Devotional vocalist trained in classical ragas' : role === 'producer' ? 'Studio producer with 8 years in devotional production' : 'Literary editor and Persian poetry scholar'}`}
             value={extras.tagline}
             onChange={e => setExtras({ ...extras, tagline: e.target.value })}
             className="form-input w-full bg-neutral-900/50 rounded px-3 py-2 text-white text-sm"

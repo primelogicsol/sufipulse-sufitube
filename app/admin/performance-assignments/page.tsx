@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { Mic, RefreshCw, PlusCircle, X } from 'lucide-react';
-import { notifyStatusChange, lookupProfileByName, lookupUserFromStorage } from '@/app/lib/notifications';
+import { Mic, RefreshCw, PlusCircle, X, Search } from 'lucide-react';
 import { getAllReleases } from '@/lib/cms-api';
 
 type PerformanceAssignment = {
@@ -18,7 +17,6 @@ type PerformanceAssignment = {
   created_at?: string;
 };
 
-const STORAGE_KEY = 'sufipulse_performance_assignments';
 const STATUSES = ['pending', 'assigned', 'in_progress', 'completed', 'blocked'] as const;
 
 export default function PerformanceAssignmentsPage() {
@@ -34,40 +32,32 @@ export default function PerformanceAssignmentsPage() {
   const [newAssignment, setNewAssignment] = useState({ release_id: '', release_title: '', vocalist: '', writer: '', producer: '', due_date: '' });
   const [createLoading, setCreateLoading] = useState(false);
 
-  const loadItems = () => {
+  const loadItems = async () => {
     setLoading(true);
     try {
-      if (typeof window === 'undefined') {
-        setItems([]);
-        return;
-      }
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      setItems(Array.isArray(parsed) ? parsed : []);
+      const res = await fetch('/api/performance-assignments');
+      const data = await res.json();
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setItems([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const persistItems = (next: PerformanceAssignment[]) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    }
-    setItems(next);
-  };
-
   useEffect(() => {
     loadItems();
     // Load approved contributors for dropdowns
-    if (typeof window !== 'undefined') {
-      const vocalists: any[] = JSON.parse(localStorage.getItem('sufipulse_vocalist_profiles') || '[]');
-      const writers: any[]   = JSON.parse(localStorage.getItem('sufipulse_writer_profiles') || '[]');
-      const producers: any[] = JSON.parse(localStorage.getItem('sufipulse_producer_profiles') || '[]');
-      const approved = (p: any) => p.status === 'approved' || p.profile_status === 'approved';
-      setApprovedVocalists(vocalists.filter(approved).map(p => p.performance_name || p.full_name).filter(Boolean));
-      setApprovedWriters(writers.filter(approved).map(p => p.pen_name || p.full_name).filter(Boolean));
-      setApprovedProducers(producers.filter(approved).map(p => p.professional_name || p.full_name).filter(Boolean));
-    }
+    Promise.all([
+      fetch('/api/vocalists').then(r => r.json()).catch(() => []),
+      fetch('/api/writers').then(r => r.json()).catch(() => []),
+      fetch('/api/producers').then(r => r.json()).catch(() => []),
+    ]).then(([vocalists, writers, producers]) => {
+      const approved = (p: any) => p.profile_status === 'approved';
+      setApprovedVocalists((vocalists as any[]).filter(approved).map((p: any) => p.performance_name || p.full_name).filter(Boolean));
+      setApprovedWriters((writers as any[]).filter(approved).map((p: any) => p.pen_name || p.full_name).filter(Boolean));
+      setApprovedProducers((producers as any[]).filter(approved).map((p: any) => p.professional_name || p.full_name).filter(Boolean));
+    }).catch(() => {});
     getAllReleases({ status: 'published' }).then(r => setCmsReleases(r.map(x => ({ id: x.id, title: x.title })))).catch(() => {});
   }, []);
 
@@ -84,84 +74,34 @@ export default function PerformanceAssignmentsPage() {
     });
   }, [items, query, filter]);
 
-  const updateStatus = (id: string, status: string) => {
-    const item = items.find(i => i.id === id);
-    const next = items.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            status,
-            updated_at: new Date().toISOString(),
-          }
-        : item
-    );
-    persistItems(next);
-
-    // Notify each assigned stakeholder
-    if (item) {
-      const roles: Array<{ key: 'vocalist' | 'writer' | 'producer'; role: 'vocalist' | 'writer' | 'producer' }> = [
-        { key: 'vocalist', role: 'vocalist' },
-        { key: 'writer',   role: 'writer' },
-        { key: 'producer', role: 'producer' },
-      ];
-      roles.forEach(({ key, role }) => {
-        const name = item[key];
-        if (!name) return;
-        const profile = lookupProfileByName(role, name);
-        const storedUser = profile?.user_id ? lookupUserFromStorage(profile.user_id) : null;
-        const email = storedUser?.email || profile?.email;
-        if (!email) return;
-        notifyStatusChange({
-          user_id: profile?.user_id,
-          email,
-          name: profile?.name || name,
-          role,
-          status: 'assignment_received',
-          reference: item.release_title,
-        }).catch(console.error);
-      });
-    }
+  const updateStatus = async (id: string, status: string) => {
+    await fetch(`/api/performance-assignments/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    loadItems();
   };
 
-  const createAssignment = () => {
+  const createAssignment = async () => {
     if (!newAssignment.release_title && !newAssignment.release_id) return;
     setCreateLoading(true);
     try {
       const releaseTitle = newAssignment.release_title ||
         cmsReleases.find(r => r.id === newAssignment.release_id)?.title || '';
-      const entry: PerformanceAssignment = {
-        id: `PA-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
-        release_id: newAssignment.release_id || undefined,
-        release_title: releaseTitle,
-        vocalist: newAssignment.vocalist || undefined,
-        writer:   newAssignment.writer   || undefined,
-        producer: newAssignment.producer || undefined,
-        due_date: newAssignment.due_date || undefined,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      };
-      const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-      const all: PerformanceAssignment[] = raw ? JSON.parse(raw) : [];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...all, entry]));
-
-      // Notify each assigned stakeholder
-      (['vocalist', 'writer', 'producer'] as const).forEach((role) => {
-        const name = entry[role];
-        if (!name) return;
-        const profile = lookupProfileByName(role, name);
-        const storedUser = profile?.user_id ? lookupUserFromStorage(profile.user_id) : null;
-        const email = storedUser?.email || profile?.email;
-        if (!email) return;
-        notifyStatusChange({
-          user_id: profile?.user_id,
-          email,
-          name: profile?.name || name,
-          role,
-          status: 'assignment_received',
-          reference: releaseTitle,
-        }).catch(console.error);
+      await fetch('/api/performance-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          release_id: newAssignment.release_id || undefined,
+          release_title: releaseTitle,
+          vocalist: newAssignment.vocalist || undefined,
+          writer: newAssignment.writer || undefined,
+          producer: newAssignment.producer || undefined,
+          due_date: newAssignment.due_date || undefined,
+          status: 'pending',
+        }),
       });
-
       setNewAssignment({ release_id: '', release_title: '', vocalist: '', writer: '', producer: '', due_date: '' });
       setShowCreate(false);
       loadItems();
@@ -327,12 +267,15 @@ export default function PerformanceAssignmentsPage() {
 
         <div className="dashboard-card">
           <div className="flex gap-3 mb-5">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search release or stakeholder"
-              className="dashboard-input"
-            />
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search release or stakeholder"
+                className="dashboard-input has-icon w-full"
+              />
+            </div>
             <select value={filter} onChange={(e) => setFilter(e.target.value)} className="dashboard-input max-w-52">
               <option value="all">All statuses</option>
               {STATUSES.map((status) => (

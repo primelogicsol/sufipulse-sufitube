@@ -1,75 +1,57 @@
 import { MetadataRoute } from 'next';
+import { literaryArticles } from './data/literary-articles';
+import fs from 'fs';
+import path from 'path';
+
+function getReleases(): { slug: string; updatedAt?: string }[] {
+  try {
+    const file = path.join(process.cwd(), '.data', 'cms-releases.json');
+    if (!fs.existsSync(file)) return [];
+    const releases = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!Array.isArray(releases)) return [];
+    return releases
+      .filter((r: any) => r.slug && r.contentReadinessState !== 'draft')
+      .map((r: any) => ({ slug: r.slug, updatedAt: r.updatedAt || r.createdAt }));
+  } catch {
+    return [];
+  }
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
   const now = new Date().toISOString();
 
-  return [
-    {
-      url: baseUrl,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/releases`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/literary-journal`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/writers`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/vocalists`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/producers`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/studio`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/governance`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/about/what-is-sufipulse`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/about/founder`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.5,
-    },
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: baseUrl,                                    lastModified: now, changeFrequency: 'daily',   priority: 1.0 },
+    { url: `${baseUrl}/releases`,                      lastModified: now, changeFrequency: 'weekly',  priority: 0.9 },
+    { url: `${baseUrl}/literary-journal`,              lastModified: now, changeFrequency: 'weekly',  priority: 0.8 },
+    { url: `${baseUrl}/about/what-is-sufipulse`,       lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/writers`,                       lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${baseUrl}/vocalists`,                     lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${baseUrl}/producers`,                     lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${baseUrl}/studio`,                        lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${baseUrl}/about/founder`,                 lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/governance`,                    lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/governance/royalty-transparency`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/governance/production-oversight`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/royalty-policy`,                lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${baseUrl}/contributor-policy`,            lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${baseUrl}/contact`,                       lastModified: now, changeFrequency: 'yearly',  priority: 0.5 },
   ];
+
+  const releaseRoutes: MetadataRoute.Sitemap = getReleases().map((r) => ({
+    url: `${baseUrl}/release-detail/${r.slug}`,
+    lastModified: r.updatedAt || now,
+    changeFrequency: 'weekly',
+    priority: 0.85,
+  }));
+
+  const articleRoutes: MetadataRoute.Sitemap = literaryArticles.map((a) => ({
+    url: `${baseUrl}/literary-journal/${a.slug}`,
+    lastModified: a.published_at || now,
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }));
+
+  return [...staticRoutes, ...releaseRoutes, ...articleRoutes];
 }

@@ -2,7 +2,6 @@
 import { createContext, useState, useEffect, ReactNode, useContext } from "react"
 import { storage } from "@/app/lib/storage"
 import { useRouter } from "next/navigation";
-import { Loader } from "lucide-react";
 
 type User = { id: string, role: string, assigned_roles?: string[], email: string, full_name: string, is_verified: boolean };
 type AuthContextType = {
@@ -15,14 +14,6 @@ type AuthContextType = {
     logout: () => void,
     readWriterProfile: () => void;
 };
-
-interface DecodedToken {
-    id: string;
-    role: string;
-    email: string;
-    full_name: string;
-    is_verified: boolean;
-}
 
 export const AuthContext = createContext<AuthContextType>({
     user: null,
@@ -39,30 +30,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
-    // const [isAdmin, setIsAdmin] = useState<boolean>(false)
-    const [isHydrated, setIsHydrated] = useState(false); // Add hydration flag
-    // const [res, setRes] = useState() as any
     const [profileStatus, setProfileStatus] = useState<string>("")
     const router = useRouter();
 
-    // Hydration fix: run init only after mount
+    // Restore session from localStorage after mount (avoids SSR/CSR mismatch)
     useEffect(() => {
-        const init = async () => {
-            try {
-                const currentUser = storage.getCurrentUser();
-                if (currentUser) {
-                    setAccessToken(currentUser.token);
-                    setUser(currentUser.user);
-                }
-            } catch (err) {
-                console.log("No valid session");
-                setUser(null);
-                setAccessToken(null);
-            } finally {
-                setIsHydrated(true);
+        try {
+            const currentUser = storage.getCurrentUser();
+            if (currentUser) {
+                setAccessToken(currentUser.token);
+                setUser(currentUser.user);
             }
-        };
-        init();
+        } catch (err) {
+            console.log("No valid session");
+        }
     }, []);
 
     // const login = async (email: string, password: string) => {
@@ -118,17 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log(error);
         }
     }
-    // Prevent mismatch: show loading until hydrated
-    if (!isHydrated) {
-        return (
-            <div className="bg-black/40 h-screen backdrop-blur-sm flex items-center justify-between">
-                <Loader className="animate" />
-            </div>
-        );
-    }
-
-    // const isAdmin = user?.role === "admin";
-
     return (
         <AuthContext.Provider value={{
             user,

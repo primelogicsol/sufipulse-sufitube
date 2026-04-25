@@ -1,11 +1,23 @@
 import { useState } from 'react';
-import { CircleCheck as CheckCircle, KeyRound } from 'lucide-react';
+import { CircleCheck as CheckCircle, KeyRound, Copy, Check } from 'lucide-react';
 import DOMPurify from 'dompurify';
-import { notifyAdmin } from '@/app/lib/notifications';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { studioAccessCodeRequestSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeObject } from '../../lib/sanitize';
+
+const ROLE_PREFIX: Record<string, string> = {
+  writer: 'WRT',
+  vocalist: 'VCL',
+  producer: 'PRD',
+};
+
+function generateAccessCode(role: string): string {
+  const prefix = ROLE_PREFIX[role] ?? 'CNT';
+  const year = new Date().getFullYear();
+  const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
+  return `REF-${prefix}-${year}-${rand}`;
+}
 
 type RequestRole = 'writer' | 'vocalist' | 'producer';
 
@@ -14,8 +26,6 @@ const ROLE_OPTIONS: { value: RequestRole; label: string }[] = [
   { value: 'vocalist',  label: 'Vocalist — Ahl-e-Sada' },
   { value: 'producer',  label: 'Producer — Ahl-e-Naghma' },
 ];
-
-const STORAGE_KEY = 'sufipulse_studio_access_requests';
 
 export function StudioAccessCodeRequestForm() {
   const { user } = useAuth();
@@ -28,6 +38,9 @@ export function StudioAccessCodeRequestForm() {
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [issuedCode, setIssuedCode] = useState('');
+  const [existingCode, setExistingCode] = useState('');
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<any>({});
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
@@ -76,60 +89,103 @@ export function StudioAccessCodeRequestForm() {
     });
 
     try {
-      const existing: any[] = typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-        : [];
-
       // Prevent duplicate pending requests from same email
-      const hasPending = existing.some(
-        (r) => r.email.toLowerCase() === formData.email.toLowerCase() && r.status === 'pending'
+      const existing = await fetch('/api/studio-access-codes').then(r => r.ok ? r.json() : []).catch(() => []);
+      const activeRecord = existing.find(
+        (r: any) =>
+          (r.email?.toLowerCase() === formData.email.toLowerCase() ||
+            (user?.id && r.user_id === user.id)) &&
+          (r.status === 'pending' || r.status === 'issued')
       );
-      if (hasPending) {
-        setError('A pending request from this email address already exists. Please wait for a response before submitting again.');
+      if (activeRecord) {
+        if (activeRecord.issued_code &&
+            (activeRecord.user_id === user?.id || activeRecord.email?.toLowerCase() === formData.email.toLowerCase())) {
+          setExistingCode(activeRecord.issued_code);
+          setSubmitted(true);
+        } else {
+          setError('A request from this email is already under review. You will be notified when your code is issued. Contact admin if you need assistance.');
+        }
+        setLoading(false);
         return;
       }
 
-      const entry = {
-        id: `ACR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        ...formData,
-        ...cleanData,
-        status: 'pending',
-        issued_code: null,
-        created_at: new Date().toISOString(),
-        issued_at: null,
-        user_id: user?.id ?? null,
-      };
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, entry]));
-
-      const roleLabel = ROLE_OPTIONS.find(r => r.value === formData.role)?.label ?? formData.role;
-      await notifyAdmin({
-        title: 'New Studio Access Code Request',
-        message: `${DOMPurify.sanitize(formData.name)} (${DOMPurify.sanitize(formData.email)}) has requested a Studio Session reference code as ${roleLabel}. Profile reference: ${DOMPurify.sanitize(formData.profile_reference) || '—'}.`,
-        event: 'application_received',
-        from_role: formData.role,
-        from_name: DOMPurify.sanitize(formData.name),
-        action_url: '/admin/studio-access-codes',
+      const code = generateAccessCode(formData.role);
+      const res = await fetch('/api/studio-access-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...cleanData,
+          role: formData.role,
+          profile_reference: formData.profile_reference,
+          user_id: user?.id ?? null,
+          issued_code: code,
+          status: 'issued',
+          issued_at: new Date().toISOString(),
+        }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Submission failed. Please try again.');
+      }
 
+      setIssuedCode(code);
       setSubmitted(true);
     } catch (err) {
-      setError('Failed to submit request. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to submit request. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(issuedCode || existingCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const displayCode = issuedCode || existingCode;
+  const isRetrieved = !issuedCode && !!existingCode;
+
   if (submitted) {
     return (
-      <div className="bg-neutral-900/40 border border-amber-400/20 rounded-lg p-8 text-center space-y-4">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-400/10 border border-amber-400/30 mx-auto">
-          <CheckCircle className="w-7 h-7 text-amber-400" />
+      <div className="bg-neutral-900/40 border border-amber-400/20 rounded-lg p-8 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400/10 border border-amber-400/30 shrink-0">
+            <CheckCircle className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-white">
+              {isRetrieved ? 'Your Access Code' : 'Access Code Issued'}
+            </h3>
+            <p className="text-xs text-neutral-400 mt-0.5">
+              {isRetrieved
+                ? 'A code was already issued for this account'
+                : 'Your studio session reference code is ready'}
+            </p>
+          </div>
         </div>
-        <h3 className="text-lg font-semibold text-white">Access Code Request Submitted</h3>
-        <p className="text-sm text-neutral-400 max-w-sm mx-auto">
-          Your request has been sent to the SufiPulse admin team for review. You will receive your reference code once approved. Note the request ID from the admin page for tracking.
-        </p>
+
+        <div className="bg-neutral-950/60 border border-amber-400/30 rounded-lg p-5">
+          <p className="text-xs text-neutral-400 mb-2 uppercase tracking-widest font-medium">Your Access Code</p>
+          <div className="flex items-center gap-3">
+            <p className="font-mono text-xl font-bold text-amber-400 tracking-widest flex-1 select-all">{displayCode}</p>
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded text-xs font-medium transition-all"
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-amber-400/5 border border-amber-400/20 rounded-lg p-4 space-y-1.5">
+          {!isRetrieved && <p className="text-amber-400/90 text-xs font-semibold">Save this code — it will not be shown again.</p>}
+          <p className="text-neutral-400 text-xs">
+            Enter this code in the <strong className="text-neutral-300">Approval Reference Code</strong> field when submitting your session request below.
+          </p>
+        </div>
       </div>
     );
   }

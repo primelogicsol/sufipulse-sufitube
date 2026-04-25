@@ -153,33 +153,6 @@ export default function StudioSessions() {
                             </p>
                         </div>
 
-                        {/* ── Request Access Code ── */}
-                        <div className="mb-8">
-                          <button
-                            onClick={() => setShowCodeRequest(!showCodeRequest)}
-                            className="w-full flex items-center justify-between px-5 py-4 bg-neutral-900/40 border border-neutral-700 hover:border-amber-400/40 rounded-lg transition-colors group"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="p-1.5 bg-amber-400/10 rounded border border-amber-400/20 group-hover:border-amber-400/40 transition-colors">
-                                <KeyRound className="w-4 h-4 text-amber-400" />
-                              </div>
-                              <div className="text-left">
-                                <p className="text-sm font-medium text-white">Don&apos;t have a reference code?</p>
-                                <p className="text-xs text-neutral-400">Request one from the admin team — approved contributors only</p>
-                              </div>
-                            </div>
-                            {showCodeRequest
-                              ? <ChevronUp className="w-4 h-4 text-neutral-400" />
-                              : <ChevronDown className="w-4 h-4 text-neutral-400" />}
-                          </button>
-
-                          {showCodeRequest && (
-                            <div className="mt-4">
-                              <StudioAccessCodeRequestForm />
-                            </div>
-                          )}
-                        </div>
-
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
                                 <div className="flex items-center gap-3 mb-4">
@@ -250,6 +223,33 @@ export default function StudioSessions() {
                                     {activeForm === 'remote' ? 'Hide Form' : 'Initiate Remote Coordination'}
                                 </button>
                             </div>
+                        </div>
+
+                        {/* ── Request Access Code ── */}
+                        <div className="mt-8">
+                          <button
+                            onClick={() => setShowCodeRequest(!showCodeRequest)}
+                            className="w-full flex items-center justify-between px-5 py-4 bg-neutral-900/40 border border-neutral-700 hover:border-amber-400/40 rounded-lg transition-colors group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-1.5 bg-amber-400/10 rounded border border-amber-400/20 group-hover:border-amber-400/40 transition-colors">
+                                <KeyRound className="w-4 h-4 text-amber-400" />
+                              </div>
+                              <div className="text-left">
+                                <p className="text-sm font-medium text-white">Request an Access Code</p>
+                                <p className="text-xs text-neutral-400">For approved contributors who need a Studio Session reference code</p>
+                              </div>
+                            </div>
+                            {showCodeRequest
+                              ? <ChevronUp className="w-4 h-4 text-neutral-400" />
+                              : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                          </button>
+
+                          {showCodeRequest && (
+                            <div className="mt-4">
+                              <StudioAccessCodeRequestForm />
+                            </div>
+                          )}
                         </div>
 
                         {activeForm && (

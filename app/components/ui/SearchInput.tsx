@@ -11,7 +11,7 @@ interface SearchInputProps {
 
 /**
  * Reusable search input with left-aligned search icon.
- * Matches the `dashboard-input pl-10` styling used across all admin pages.
+ * Uses `dashboard-input has-icon` to ensure icon never overlaps input text.
  */
 export function SearchInput({ value, onChange, placeholder = 'Search…', className = '' }: SearchInputProps) {
   return (
@@ -22,7 +22,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="dashboard-input pl-10 w-full"
+        className="dashboard-input has-icon w-full"
       />
     </div>
   );

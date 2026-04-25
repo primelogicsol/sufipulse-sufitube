@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
   // Check 3: Optional integrations
   const integrations: string[] = [];
   if (process.env.STRIPE_SECRET_KEY) integrations.push('stripe');
-  if (process.env.YOUTUBE_OAUTH_CLIENT_ID) integrations.push('youtube');
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL) integrations.push('supabase');
+  if (process.env.YOUTUBE_API_KEY) integrations.push('youtube');
+  if (process.env.GOOGLE_ADS_DEVELOPER_TOKEN) integrations.push('google-ads');
 
   checks.integrations = {
     status: integrations.length > 0 ? 'ok' : 'degraded',

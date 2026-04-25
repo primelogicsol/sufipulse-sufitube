@@ -232,13 +232,14 @@ export const partnershipSchema = z.object({
 /**
  * Helper function to validate and parse
  */
-export function validateSchema<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: z.ZodError<T> } {
+export function validateSchema<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): { success: boolean; data?: T; errors?: z.ZodError<T> } {
   const result = schema.safeParse(data);
-  
   if (result.success) {
     return { success: true, data: result.data };
   }
-  
   return { success: false, errors: result.error };
 }
 

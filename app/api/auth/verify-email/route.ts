@@ -1,95 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyEmail, sendPasswordResetOTP, resetPassword } from '@/lib/auth';
-import { z } from 'zod';
-import { validateRequestBody } from '@/app/lib/api-middleware';
-import { rateLimiters } from '@/app/lib/rate-limiter';
-
-// Verify email schema
-const verifyEmailSchema = z.object({
-  email: z.string().email(),
-  otp: z.string().length(6, 'OTP must be 6 digits'),
-});
-
-// Forgot password schema
-const forgotPasswordSchema = z.object({
-  email: z.string().email(),
-});
-
-// Reset password schema
-const resetPasswordSchema = z.object({
-  email: z.string().email(),
-  otp: z.string().length(6, 'OTP must be 6 digits'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  password_confirm: z.string(),
-}).refine((data) => data.password === data.password_confirm, {
-  message: "Passwords don't match",
-  path: ['password_confirm'],
-});
+import { type NextRequest, NextResponse } from 'next/server';
+import { verifyEmail, sendPasswordResetOTP, resetPassword } from '@/server/services/auth';
+import { parseBody } from '@/server/middleware/validate';
+import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
+import { verifyEmailSchema, forgotPasswordSchema, resetPasswordSchema } from '@/server/validators/auth';
 
 export async function POST(req: NextRequest) {
-  const response = NextResponse.next();
-  const isAllowed = await rateLimiters.strict(req, response);
+  const limited = await applyRateLimit(req, rateLimiters.strict);
+  if (limited) return limited;
 
-  if (!isAllowed) {
+  let rawBody: any;
+  try {
+    rawBody = await req.json();
+  } catch {
     return NextResponse.json(
-      { success: false, error: { message: 'Too many attempts. Please try again later.' } },
-      { status: 429, headers: Object.fromEntries(response.headers.entries()) }
+      { success: false, error: { message: 'Invalid JSON' } },
+      { status: 400 }
     );
   }
 
-  try {
-    const body = await req.json();
-    const { action } = body;
+  const { action } = rawBody ?? {};
 
+  try {
     switch (action) {
       case 'verify': {
-        const validation = await validateRequestBody(req, verifyEmailSchema);
-        if (!(validation as any).success) {
-          return NextResponse.json(validation, { status: 400 });
+        const parsed = verifyEmailSchema.safeParse(rawBody);
+        if (!parsed.success) {
+          return NextResponse.json({ success: false, error: { message: 'Validation failed', details: parsed.error.flatten() } }, { status: 400 });
         }
-
-        const result = await verifyEmail((validation as any).data.email, (validation as any).data.otp);
-        return NextResponse.json(result, {
-          status: result.success ? 200 : 400,
-        });
+        const result = await verifyEmail(parsed.data.email, parsed.data.otp);
+        return NextResponse.json(result, { status: result.success ? 200 : 400 });
       }
 
       case 'forgot': {
-        const validation = await validateRequestBody(req, forgotPasswordSchema);
-        if (!(validation as any).success) {
-          return NextResponse.json(validation, { status: 400 });
+        const parsed = forgotPasswordSchema.safeParse(rawBody);
+        if (!parsed.success) {
+          return NextResponse.json({ success: false, error: { message: 'Invalid email' } }, { status: 400 });
         }
-
-        const result = await sendPasswordResetOTP((validation as any).data.email);
+        const result = await sendPasswordResetOTP(parsed.data.email);
         return NextResponse.json(result);
       }
 
       case 'reset': {
-        const validation = await validateRequestBody(req, resetPasswordSchema);
-        if (!(validation as any).success) {
-          return NextResponse.json(validation, { status: 400 });
+        const parsed = resetPasswordSchema.safeParse(rawBody);
+        if (!parsed.success) {
+          return NextResponse.json({ success: false, error: { message: 'Validation failed', details: parsed.error.flatten() } }, { status: 400 });
         }
-
-        const result = await resetPassword(
-          (validation as any).data.email,
-          (validation as any).data.otp,
-          (validation as any).data.password
-        );
-
-        return NextResponse.json(result, {
-          status: result.success ? 200 : 400,
-        });
+        const result = await resetPassword(parsed.data.email, parsed.data.otp, parsed.data.password);
+        return NextResponse.json(result, { status: result.success ? 200 : 400 });
       }
 
       default:
         return NextResponse.json(
-          { success: false, error: { message: 'Invalid action' } },
+          { success: false, error: { message: 'Invalid action. Use: verify | forgot | reset' } },
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (err: any) {
     return NextResponse.json(
-      { success: false, error: { message: error.message } },
+      { success: false, error: { message: err.message || 'Request failed' } },
       { status: 500 }
     );
   }

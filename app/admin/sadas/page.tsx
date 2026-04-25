@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { storage } from '@/app/lib/storage';
-import { notifyStatusChange, lookupUserFromStorage, mapContentStatusToEvent } from '@/app/lib/notifications';
-import { Mic, RefreshCw } from 'lucide-react';
+import { Mic, RefreshCw, Search } from 'lucide-react';
 
 type SadaItem = {
   id: string;
@@ -30,8 +28,11 @@ export default function SadasPage() {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const data = await storage.getAll('sada');
+      const res = await fetch('/api/sadas');
+      const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -55,27 +56,15 @@ export default function SadasPage() {
   }, [items, query, filter]);
 
   const updateStatus = async (id: string, status: string) => {
-    await storage.update('sada', id, {
-      status,
-      reviewed_at: new Date().toISOString(),
+    const res = await fetch(`/api/sadas/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
     });
-
-    // Notify the vocalist
-    const sada = items.find(i => i.id === id);
-    if (sada?.user_id) {
-      const storedUser = lookupUserFromStorage(sada.user_id);
-      if (storedUser) {
-        notifyStatusChange({
-          user_id: sada.user_id,
-          email: storedUser.email,
-          name: sada.vocalist_name || sada.author_name || storedUser.name,
-          role: 'vocalist',
-          status: mapContentStatusToEvent(status),
-          reference: sada.title,
-        }).catch(console.error);
-      }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to update status');
     }
-
     await loadItems();
   };
 
@@ -89,12 +78,15 @@ export default function SadasPage() {
               Stage 2 — review vocal performances submitted by approved vocalists.
             </p>
             <div className="flex gap-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search title or vocalist"
-                className="dashboard-input"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search title or vocalist"
+                  className="dashboard-input has-icon w-full"
+                />
+              </div>
               <select value={filter} onChange={(e) => setFilter(e.target.value)} className="dashboard-input max-w-56">
                 <option value="all">All statuses</option>
                 {STATUSES.map((status) => (

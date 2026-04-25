@@ -1,60 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { loginUser } from '@/lib/auth';
-import { validateRequestBody } from '@/app/lib/api-middleware';
-import { loginSchema } from '@/app/lib/validation-schemas';
-import { rateLimiters, getRateLimitKey } from '@/app/lib/rate-limiter';
+import { type NextRequest, NextResponse } from 'next/server';
+import { loginUser } from '@/server/services/auth';
+import { parseBody, ok, serverError } from '@/server/middleware/validate';
+import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
+import { loginSchema } from '@/server/validators/auth';
+import { config } from '@/server/config';
 
 export async function POST(req: NextRequest) {
-  const response = NextResponse.next();
-  const isAllowed = await rateLimiters.auth(req, response);
+  const limited = await applyRateLimit(req, rateLimiters.auth);
+  if (limited) return limited;
 
-  if (!isAllowed) {
-    return NextResponse.json(
-      { success: false, error: { message: 'Too many login attempts. Please try again later.' } },
-      { status: 429, headers: Object.fromEntries(response.headers.entries()) }
-    );
-  }
+  const body = await parseBody(req, loginSchema);
+  if (body instanceof NextResponse) return body;
 
   try {
-    const validation = await validateRequestBody(req, loginSchema);
+    const result = await loginUser(body.email, body.password);
+    const res = ok(result.user);
 
-    if (!(validation as any).success) {
-      return NextResponse.json(validation, { status: 400 });
-    }
-
-    const { email, password } = (validation as any).data;
-    const result = await loginUser(email, password);
-
-    const loginResponse = NextResponse.json({
-      success: true,
-      user: result.user,
-    }, { headers: Object.fromEntries(response.headers.entries()) });
-
-    // Set HTTP-only cookies
-    loginResponse.cookies.set('access_token', result.accessToken, {
+    const cookieOpts = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      secure: config.app.isProduction,
+      sameSite: 'strict' as const,
       path: '/',
-    });
+    };
 
-    loginResponse.cookies.set('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-      path: '/',
-    });
+    res.cookies.set('access_token', result.accessToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 });
+    res.cookies.set('refresh_token', result.refreshToken, { ...cookieOpts, maxAge: 30 * 24 * 60 * 60 });
 
-    return loginResponse;
-  } catch (error: any) {
+    return res;
+  } catch (err: any) {
     return NextResponse.json(
-      {
-        success: false,
-        error: { message: error.message || 'Login failed' },
-      },
-      { status: 401, headers: Object.fromEntries(response.headers.entries()) }
+      { success: false, error: { message: err.message || 'Login failed' } },
+      { status: 401 }
     );
   }
 }

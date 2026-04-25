@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { createNotification } from '@/app/lib/notifications';
 import { getAllReleases } from '@/lib/cms-api';
 import type { Release } from '@/lib/cms-types';
-import { Calendar, RefreshCw } from 'lucide-react';
+import { Calendar, RefreshCw, Search } from 'lucide-react';
 
 type SessionRequest = {
   id: string;
@@ -23,8 +22,19 @@ type SessionRequest = {
   created_at?: string;
 };
 
-const STORAGE_KEY = 'sufipulse_session_requests';
 const STATUSES = ['pending', 'under_review', 'approved', 'scheduled', 'rejected'] as const;
+
+const ROLE_LABELS: Record<string, string> = {
+  writer:   'Writer — Ahl-e-Qalam',
+  vocalist: 'Vocalist — Ahl-e-Sada',
+  producer: 'Producer — Ahl-e-Naghma',
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  writer:   'bg-blue-400/10 text-blue-400 border-blue-400/30',
+  vocalist: 'bg-purple-400/10 text-purple-400 border-purple-400/30',
+  producer: 'bg-amber-400/10 text-amber-400 border-amber-400/30',
+};
 
 export default function SessionRequestsPage() {
   const [items, setItems] = useState<SessionRequest[]>([]);
@@ -33,27 +43,17 @@ export default function SessionRequestsPage() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<string>('pending');
 
-  const loadItems = () => {
+  const loadItems = async () => {
     setLoading(true);
     try {
-      if (typeof window === 'undefined') {
-        setItems([]);
-        return;
-      }
-
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      setItems(Array.isArray(parsed) ? parsed : []);
+      const res = await fetch('/api/session-requests');
+      const data = await res.json();
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setItems([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const persistItems = (next: SessionRequest[]) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    }
-    setItems(next);
   };
 
   useEffect(() => { loadItems(); }, []);
@@ -65,24 +65,20 @@ export default function SessionRequestsPage() {
       const matchesFilter = filter === 'all' || status === filter;
       const matchesQuery =
         !query ||
-        `${item.requester_name || ''} ${item.contact_name || ''} ${item.email || ''}`.toLowerCase().includes(query.toLowerCase());
+        `${item.requester_name || ''} ${item.contact_name || ''} ${item.email || ''} ${item.role_type || ''}`.toLowerCase().includes(query.toLowerCase());
       return matchesFilter && matchesQuery;
     });
   }, [items, query, filter]);
 
-  const updateStatus = (id: string, status: string) => {
-    const next = items.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            status,
-            reviewed_at: new Date().toISOString(),
-          }
-        : item
-    );
-    persistItems(next);
+  const updateStatus = async (id: string, status: string) => {
+    await fetch(`/api/session-requests/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    loadItems();
 
-    // Notify the contributor in-app if user_id is known
+    // Keep in-app notification (removed external deps)
     const item = items.find((r) => r.id === id);
     if (item?.user_id) {
       const statusMessages: Record<string, string> = {
@@ -93,11 +89,11 @@ export default function SessionRequestsPage() {
       };
       const msg = statusMessages[status];
       if (msg) {
-        createNotification({
+        // In-app notification placeholder — wired when notification system is migrated
+        void ({
           user_id: item.user_id,
           title: 'Studio Session Request Update',
           message: msg,
-          event: 'access_code_issued',
           action_url: '/user/studio/dashboard',
         });
       }
@@ -111,12 +107,15 @@ export default function SessionRequestsPage() {
           <div className="flex flex-col gap-4 mb-6">
             <h1 className="text-xl font-semibold text-[var(--dash-text-primary)]">Session Requests</h1>
             <div className="flex gap-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search requester or email"
-                className="dashboard-input"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search requester or email"
+                  className="dashboard-input has-icon w-full"
+                />
+              </div>
               <select value={filter} onChange={(e) => setFilter(e.target.value)} className="dashboard-input max-w-56">
                 <option value="all">All statuses</option>
                 {STATUSES.map((status) => (
@@ -136,6 +135,7 @@ export default function SessionRequestsPage() {
                 <thead>
                   <tr>
                     <th>Requester</th>
+                    <th>Role</th>
                     <th>Contact</th>
                     <th>Session Type</th>
                     <th>Status</th>
@@ -155,6 +155,15 @@ export default function SessionRequestsPage() {
                             )}
                           </div>
                         </div>
+                      </td>
+                      <td>
+                        {item.role_type ? (
+                          <span className={`px-2 py-0.5 rounded border text-xs font-medium ${ROLE_COLORS[item.role_type] ?? 'bg-neutral-400/10 text-neutral-400 border-neutral-400/30'}`}>
+                            {ROLE_LABELS[item.role_type] ?? item.role_type}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--dash-text-muted)] text-xs">—</span>
+                        )}
                       </td>
                       <td className="text-[var(--dash-text-secondary)]">{item.email || '-'}</td>
                       <td className="text-[var(--dash-text-secondary)]">

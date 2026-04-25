@@ -19,6 +19,8 @@ import {
   Bell,
   X,
   KeyRound,
+  Mail,
+  Server,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -40,7 +42,6 @@ const navigationSections = [
     title: 'Core',
     links: [
       { path: '/admin', label: 'Overview', icon: LayoutDashboard },
-      { path: '/admin/setup', label: 'Setup', icon: Shield },
       { path: '/admin/users', label: 'Users', icon: Users },
     ],
   },
@@ -78,9 +79,11 @@ const navigationSections = [
   {
     title: 'Stage 4 — Outreach & Finance',
     links: [
-      { path: '/admin/song-adoptions', label: 'Song Adoptions',      icon: Handshake },
-      { path: '/admin/partnerships',   label: 'Partnerships',         icon: Handshake },
-      { path: '/admin/royalties',      label: 'Royalty Management',   icon: DollarSign },
+      { path: '/admin/song-adoptions',     label: 'Song Adoptions',         icon: Handshake },
+      { path: '/admin/partnerships',       label: 'Partnerships',            icon: Handshake },
+      { path: '/admin/infrastructure',     label: 'Infrastructure Proposals', icon: Server },
+      { path: '/admin/contact-messages',   label: 'Contact Messages',         icon: Mail },
+      { path: '/admin/royalties',          label: 'Royalty Management',       icon: DollarSign },
     ],
   },
 ];

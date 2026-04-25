@@ -274,7 +274,7 @@ export default function AdminUsersPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by name or email"
-                className="dashboard-input pl-10"
+                className="dashboard-input has-icon"
               />
             </div>
             <button onClick={refresh} className="dashboard-btn-secondary inline-flex items-center gap-2">

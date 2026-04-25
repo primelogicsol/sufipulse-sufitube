@@ -2,12 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { storage } from '@/app/lib/storage';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, CircleAlert as AlertCircle, RefreshCw, FileText } from 'lucide-react';
-import * as api from '@/app/api/auth';
 import { ProducerProfileType } from '@/app/types/producer.types';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { notifyStatusChange } from '@/app/lib/notifications';
 
 export default function AdminProducerApplications() {
     const { loading: authLoading } = useAuth();
@@ -27,8 +24,9 @@ export default function AdminProducerApplications() {
     async function loadApplications() {
         try {
             setLoading(true);
-            const local = await storage.getAll('producer');
-            setApplications(Array.isArray(local) ? local : []);
+            const res = await fetch('/api/producers');
+            const data = await res.json();
+            setApplications(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('[AdminProducerApplications] Error loading:', error);
             setApplications([]);
@@ -77,26 +75,14 @@ export default function AdminProducerApplications() {
 
     const handleUpdateStatus = async (id: string | undefined, status: string) => {
         if (!id) return;
-        const app = applications.find(a => (a as any).id === id);
         try {
             setProcessingAction(true);
-            try {
-                await api.updateProducerStatus(id, status);
-            } catch {
-                await storage.update('producer', id, {
-                    profile_status: status,
-                    reviewed_at: new Date().toISOString(),
-                });
-            }
-            if (app) {
-                await notifyStatusChange({
-                    user_id: (app as any).user_id,
-                    email: (app as any).email,
-                    name: (app as any).professional_name || (app as any).full_name || (app as any).email,
-                    role: 'producer',
-                    status: status as any,
-                });
-            }
+            const res = await fetch(`/api/producers/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile_status: status }),
+            });
+            if (!res.ok) throw new Error('Failed to update status');
             setSelectedApp(null);
             loadApplications();
         } catch (err: any) {
@@ -118,7 +104,7 @@ export default function AdminProducerApplications() {
                                 placeholder="Search by professional name, email, or applicant name..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="dashboard-input pl-10"
+                                className="dashboard-input has-icon"
                             />
                         </div>
 

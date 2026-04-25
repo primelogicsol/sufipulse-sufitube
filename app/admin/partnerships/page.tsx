@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { storage } from '@/app/lib/storage';
-import { Handshake, RefreshCw, X, ExternalLink } from 'lucide-react';
+import { Handshake, RefreshCw, X, ExternalLink, Search } from 'lucide-react';
 
 type Partnership = {
   id: string;
@@ -187,7 +186,8 @@ export default function PartnershipsPage() {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const data = await storage.getAll('partnership');
+      const res = await fetch('/api/partnerships');
+      const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
@@ -212,9 +212,10 @@ export default function PartnershipsPage() {
   }, [items, query, filter]);
 
   const updateStatus = async (id: string, status: string) => {
-    await storage.update('partnership', id, {
-      status,
-      reviewed_at: new Date().toISOString(),
+    await fetch(`/api/partnerships/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
     });
     await loadItems();
   };
@@ -226,12 +227,15 @@ export default function PartnershipsPage() {
           <div className="flex flex-col gap-4 mb-6">
             <h1 className="text-xl font-semibold text-[var(--dash-text-primary)]">Partnership Proposals</h1>
             <div className="flex gap-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search organization or contact"
-                className="dashboard-input"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search organization or contact"
+                  className="dashboard-input has-icon w-full"
+                />
+              </div>
               <select value={filter} onChange={(e) => setFilter(e.target.value)} className="dashboard-input max-w-56">
                 <option value="all">All statuses</option>
                 {STATUSES.map((status) => (

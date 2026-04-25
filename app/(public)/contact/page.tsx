@@ -4,7 +4,6 @@ import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Mail, MapPin, Globe, Send, CheckCircle } from 'lucide-react';
-import { storage } from '../../lib/storage';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { contactFormSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeObject } from '../../lib/sanitize';
@@ -77,10 +76,15 @@ export default function Contact() {
                 message: 'text'
             });
 
-            await storage.create('contact_message', {
-                ...cleanData,
-                status: 'unread',
+            const res = await fetch('/api/contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanData),
             });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Failed to send message.');
+            }
             setSubmitted(true);
             setFormData({ name: '', email: '', subject: '', customSubject: '', message: '' });
         } catch (err) {
