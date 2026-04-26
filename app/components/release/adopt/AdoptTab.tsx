@@ -43,11 +43,15 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [adoption, setAdoption] = useState<SongAdoption | null>(null);
 
   // Google OAuth state
+  const [googleAdsEnabled, setGoogleAdsEnabled] = useState<boolean | null>(null);
   const [oauthConnected, setOauthConnected] = useState(false);
   const [oauthChecked, setOauthChecked] = useState(false);
   const [oauthConfigured, setOauthConfigured] = useState(false);
   const [accessibleCustomerIds, setAccessibleCustomerIds] = useState<string[]>([]);
   const [selectedGoogleCustomerId, setSelectedGoogleCustomerId] = useState('');
+  const [verifiedCustomerId, setVerifiedCustomerId] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [oauthLastVerified, setOauthLastVerified] = useState<string | null>(null);
   const [campaignResourceName, setCampaignResourceName] = useState<string | null>(null);
@@ -66,6 +70,19 @@ export function AdoptTab({ release }: AdoptTabProps) {
     storage.initializeAdoptionPackages().then(() =>
       storage.getSongAdoptionPackages().then(p => setPackages(p.filter(x => x.is_active)))
     );
+  }, []);
+
+  // Check at mount whether Google Ads is configured on this server
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/google-ads/status');
+        const payload = await res.json();
+        setGoogleAdsEnabled(Boolean(payload?.configured));
+      } catch {
+        setGoogleAdsEnabled(null);
+      }
+    })();
   }, []);
 
   // Restore state after Google OAuth callback redirect
@@ -127,6 +144,41 @@ export function AdoptTab({ release }: AdoptTabProps) {
     })();
   }, [adoption?.id, selectedMethod]);
 
+  // Auto-verify customer ID whenever the selection changes
+  useEffect(() => {
+    if (!selectedGoogleCustomerId || !adoption?.id) {
+      setVerifiedCustomerId(null);
+      return;
+    }
+    setVerifiedCustomerId(null);
+    setVerifyError(null);
+    setIsVerifying(true);
+    (async () => {
+      try {
+        const res = await fetch('/api/google-ads/verify-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            adoptionId: adoption.id,
+            userId: user?.id || '',
+            customerId: selectedGoogleCustomerId,
+          }),
+        });
+        const data = await res.json();
+        if (data.verified) {
+          setVerifiedCustomerId(selectedGoogleCustomerId);
+          setVerifyError(null);
+        } else {
+          setVerifyError('Account not accessible with your Google credentials.');
+        }
+      } catch {
+        setVerifyError('Verification failed. Please try again.');
+      } finally {
+        setIsVerifying(false);
+      }
+    })();
+  }, [selectedGoogleCustomerId, adoption?.id]);
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   const successStep = selectedMethod === 'use_my_google_ads' ? 5 : 4;
@@ -144,6 +196,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setStep(0); setSelectedMethod(null); setSelectedPackage(null);
     setAdoption(null); setOauthConnected(false); setOauthChecked(false);
     setOauthConfigured(false); setAccessibleCustomerIds([]); setSelectedGoogleCustomerId('');
+    setVerifiedCustomerId(null); setIsVerifying(false); setVerifyError(null);
     setOauthLastVerified(null); setPaymentRoute(null); setSubmitError('');
     setCampaignResourceName(null); setIsConnectingOAuth(false);
   };
@@ -232,6 +285,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
       setOauthChecked(true);
       setAccessibleCustomerIds([]);
       setSelectedGoogleCustomerId('');
+      setVerifiedCustomerId(null);
+      setVerifyError(null);
       setCampaignResourceName(null);
       setIsDisconnecting(false);
     }
@@ -431,7 +486,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         let createdCampaignResource: string | null = null;
 
         if (ytId && selectedGoogleCustomerId) {
-          const campaignRes = await fetch('/api/google-ads/campaigns/create', {
+          const campaignRes = await fetch('/api/google-ads/submit-campaign', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -545,7 +600,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className={`grid gap-6 ${googleAdsEnabled !== false ? 'md:grid-cols-2' : ''}`}>
 
         {/* ── LEFT CARD: Managed by SufiTube ── */}
         <div
@@ -597,7 +652,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         </div>
 
         {/* ── RIGHT CARD: Use My Google Ads ── */}
-        <div
+        {googleAdsEnabled !== false && <div
           onClick={() => handleMethodSelect('use_my_google_ads')}
           className="flex flex-col bg-neutral-900 border border-neutral-800 hover:border-blue-500/40 rounded-2xl transition-all duration-200 cursor-pointer group select-none"
         >
@@ -658,7 +713,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
             <p className="text-xs text-center text-neutral-600">Secure connection via Google</p>
           </div>
-        </div>
+        </div>}
 
       </div>
 
@@ -784,31 +839,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
 
         ) : !oauthConfigured ? (
-          // Google Ads not yet configured on this server — show coming-soon state
-          <div className="border border-amber-800/30 bg-amber-900/10 rounded-xl p-7 text-center space-y-5">
-            <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center">
-              <Settings className="w-6 h-6 text-amber-400" />
+          // Server is missing required Google Ads env vars — show configuration error
+          <div className="border border-red-800/30 bg-red-900/10 rounded-xl p-7 text-center space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <Settings className="w-6 h-6 text-red-400" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs font-semibold text-amber-400 mb-3">
-                Coming Soon
-              </div>
-              <h4 className="text-base font-semibold text-neutral-200 mb-2">Google Ads Integration</h4>
+              <h4 className="text-base font-semibold text-neutral-200 mb-2">Google Ads Unavailable</h4>
               <p className="text-sm text-neutral-400 leading-relaxed max-w-sm mx-auto">
-                This feature is being activated. Once live, you'll be able to connect your own Google Ads account and manage campaign spend directly.
+                Google Ads integration is not configured on this server. Please contact support or choose a different method.
               </p>
             </div>
-            <div className="flex flex-col gap-2 text-xs text-neutral-600">
-              <span className="flex items-center justify-center gap-1.5"><Check className="w-3 h-3 text-green-600" /> You remain the account owner</span>
-              <span className="flex items-center justify-center gap-1.5"><Check className="w-3 h-3 text-green-600" /> Pay Google directly — no intermediary</span>
-              <span className="flex items-center justify-center gap-1.5"><Check className="w-3 h-3 text-green-600" /> Campaign prepared and approved by our team</span>
-            </div>
-            <button
-              onClick={() => { setSelectedMethod('managed_sufitube'); setStep(1); }}
-              className="w-full py-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-medium text-sm rounded-xl transition-colors"
-            >
-              Use Managed by SufiTube instead
-            </button>
           </div>
 
         ) : oauthConnected ? (
@@ -858,9 +899,26 @@ export function AdoptTab({ release }: AdoptTabProps) {
                       <option key={cid} value={cid}>{cid}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-neutral-600 mt-1">
-                    Customer ID verified via Google OAuth · This adoption will be linked to this account
-                  </p>
+                  {isVerifying && (
+                    <div className="flex items-center gap-2 text-xs text-neutral-500 mt-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Verifying account access…
+                    </div>
+                  )}
+                  {!isVerifying && verifiedCustomerId === selectedGoogleCustomerId && selectedGoogleCustomerId && (
+                    <div className="flex items-center gap-1.5 text-xs text-green-400 mt-1.5">
+                      <Check className="w-3 h-3" /> Account verified
+                    </div>
+                  )}
+                  {!isVerifying && verifyError && (
+                    <div className="flex items-center gap-1.5 text-xs text-red-400 mt-1.5">
+                      <X className="w-3 h-3" /> {verifyError}
+                    </div>
+                  )}
+                  {!isVerifying && !verifyError && !verifiedCustomerId && selectedGoogleCustomerId && (
+                    <p className="text-xs text-neutral-600 mt-1">
+                      Customer ID verified via Google OAuth · This adoption will be linked to this account
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-neutral-900/70 rounded-lg px-3 py-2">
@@ -881,7 +939,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
             <button
               onClick={() => setStep(3)}
-              disabled={accessibleCustomerIds.length > 0 && !selectedGoogleCustomerId}
+              disabled={
+                isVerifying ||
+                (accessibleCustomerIds.length > 0 && (
+                  !selectedGoogleCustomerId ||
+                  verifiedCustomerId !== selectedGoogleCustomerId
+                ))
+              }
               className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               Continue to Sponsor Details <ArrowRight className="w-4 h-4" />
@@ -943,7 +1007,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 setIsConnectingOAuth(true);
                 setSubmitError('');
                 try {
-                  const res = await fetch('/api/google-ads/connect/start', {
+                  const res = await fetch('/api/google-ads/oauth/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1555,7 +1619,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
               type="button"
               onClick={async () => {
                 try {
-                  const res = await fetch('/api/google-ads/connect/start', {
+                  const res = await fetch('/api/google-ads/oauth/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
