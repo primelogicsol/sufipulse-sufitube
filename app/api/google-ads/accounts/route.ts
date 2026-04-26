@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getGoogleAdsUserOAuth } from '@/app/lib/server/google-ads-oauth-store';
 import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
  * GET /api/google-ads/accounts?userId=...&adoptionId=...
@@ -11,6 +12,9 @@ import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-o
  * Google if the token is still valid and the caller passes refresh=1.
  */
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId') || '';
   const adoptionId = searchParams.get('adoptionId') || '';

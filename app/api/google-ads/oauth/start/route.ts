@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/oauth/start
@@ -8,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * Returns: { authUrl }
  */
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
   const body = await request.json();
   const { adoptionId = '', userId = '', returnSlug = '' } = body as {
     adoptionId?: string;
