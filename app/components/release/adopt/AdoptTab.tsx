@@ -634,7 +634,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 Use My Google Ads
               </h4>
               <p className="text-sm text-neutral-400 leading-[1.7]">
-                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership.
+                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership always securely.
               </p>
             </div>
 
