@@ -44,6 +44,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [accessibleCustomerIds, setAccessibleCustomerIds] = useState<string[]>([]);
   const [selectedGoogleCustomerId, setSelectedGoogleCustomerId] = useState<string>('');
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [oauthLastVerified, setOauthLastVerified] = useState<string | null>(null);
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   const [showCustomModal, setShowCustomModal] = useState(false);
@@ -99,11 +100,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
         setOauthConnected(Boolean(payload?.connected));
         if (Array.isArray(payload?.accessible_customer_ids) && payload.accessible_customer_ids.length > 0) {
           setAccessibleCustomerIds(payload.accessible_customer_ids);
-          // Pre-select the ID the user entered in the form if it matches; otherwise default to first
           const entered = formData.google_ads_customer_id?.trim();
           const match = payload.accessible_customer_ids.find((cid: string) => cid.replace(/-/g, '') === entered?.replace(/-/g, ''));
           setSelectedGoogleCustomerId(match || payload.accessible_customer_ids[0]);
         }
+        if (payload?.updated_at) setOauthLastVerified(payload.updated_at);
       } catch {
         setOauthConfigured(false);
         setOauthConnected(false);
@@ -176,8 +177,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     if (selectedMethod === 'use_my_google_ads') {
       const customerId = formData.google_ads_customer_id?.trim() || '';
-      if (!googleAdsCustomerIdPattern.test(customerId)) {
-        alert('Please enter a valid Google Ads Customer ID in the format XXX-XXX-XXXX.');
+      if (customerId && !googleAdsCustomerIdPattern.test(customerId)) {
+        alert('Customer ID format must be XXX-XXX-XXXX. Leave it blank to auto-detect via Google OAuth in the next step.');
         return;
       }
     }
@@ -676,7 +677,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
       {selectedMethod === 'use_my_google_ads' && (
         <>
           <div>
-            <label className="block text-sm text-neutral-400 mb-2">Google Ads Customer ID</label>
+            <label className="block text-sm text-neutral-400 mb-2">
+              Google Ads Customer ID
+              <span className="ml-2 text-xs text-neutral-600 font-normal">(optional — auto-detected via OAuth in next step)</span>
+            </label>
             <input
               type="text"
               name="google_ads_customer_id"
@@ -687,8 +691,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
               inputMode="numeric"
               pattern="\d{3}-\d{3}-\d{4}"
               title="Google Ads Customer ID must be in format XXX-XXX-XXXX"
-              required
             />
+            <p className="text-xs text-neutral-600 mt-1">
+              Leave blank — you'll connect and verify your account via Google OAuth in the next step.
+            </p>
             {fieldErrors.google_ads_customer_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.google_ads_customer_id}</p>}
           </div>
           <div className="flex items-center gap-4">
@@ -699,7 +705,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 onChange={(e) => setFormData(prev => ({ ...prev, billing_enabled: e.target.checked }))}
                 className="rounded border-neutral-800"
               />
-              <span className="text-sm text-neutral-400">Billing enabled in Google Ads</span>
+              <span className="text-sm text-neutral-400">Billing already enabled in Google Ads</span>
             </label>
           </div>
         </>
@@ -823,79 +829,142 @@ export function AdoptTab({ release }: AdoptTabProps) {
       </div>
 
       {selectedMethod === 'use_my_google_ads' ? (
-        <div className="p-5 border border-blue-800/40 bg-blue-900/20 rounded-xl space-y-3 text-center">
+        <div className="border border-blue-800/40 bg-blue-900/20 rounded-xl overflow-hidden">
           {!oauthChecked ? (
-            /* Checking status */
-            <p className="text-sm text-neutral-500">Checking Google Ads connection…</p>
-          ) : !oauthConfigured ? (
-            /* Server credentials not yet configured — manual setup path */
-            <>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Check className="w-4 h-4 text-green-400" />
-                <p className="text-sm font-medium text-green-400">Adoption submitted successfully</p>
-              </div>
-              <p className="text-sm text-neutral-400 leading-relaxed">
-                Our team will review your adoption and set up the campaign structure in your Google Ads account manually. You'll receive confirmation by email once it's live.
-              </p>
-              <button
-                onClick={handlePayment}
-                disabled={isSubmitting}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</> : <><Check className="w-5 h-5" /> Confirm Adoption</>}
-              </button>
-            </>
+            /* ── Checking status ── */
+            <div className="p-5 flex items-center justify-center gap-3 text-sm text-neutral-500">
+              <Loader2 className="w-4 h-4 animate-spin" /> Checking Google Ads connection…
+            </div>
+
           ) : oauthConnected ? (
-            /* Already connected — show account picker + submit */
-            <>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Check className="w-4 h-4 text-green-400" />
-                <span className="text-sm font-medium text-green-400">Google Ads connected</span>
+            /* ── Connected — account picker + submit ── */
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-green-500/15 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-4 h-4 text-green-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-green-400">Google Ads connected</div>
+                  {oauthLastVerified && (
+                    <div className="text-xs text-neutral-600">
+                      Verified {new Date(oauthLastVerified).toLocaleString()}
+                    </div>
+                  )}
+                </div>
               </div>
-              {accessibleCustomerIds.length > 0 && (
-                <div className="mb-4 text-left">
-                  <label className="block text-xs text-neutral-500 mb-1.5">Select account to use for this campaign</label>
+
+              {accessibleCustomerIds.length > 0 ? (
+                <div>
+                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+                    Select Google Ads account for this campaign
+                  </label>
                   <select
                     value={selectedGoogleCustomerId}
                     onChange={(e) => setSelectedGoogleCustomerId(e.target.value)}
-                    className="w-full bg-neutral-900 border border-blue-800/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-neutral-900/70 border border-blue-800/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                   >
                     {accessibleCustomerIds.map((cid) => (
                       <option key={cid} value={cid}>{cid}</option>
                     ))}
                   </select>
+                  <p className="text-xs text-neutral-600 mt-1">Customer ID verified via Google OAuth</p>
                 </div>
-              )}
+              ) : selectedGoogleCustomerId ? (
+                <div className="flex items-center gap-2 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg">
+                  <span className="text-xs text-neutral-500">Customer ID</span>
+                  <span className="text-xs text-neutral-300 font-mono ml-auto">{selectedGoogleCustomerId}</span>
+                  <span className="text-xs bg-green-900/40 text-green-400 px-1.5 py-0.5 rounded">verified</span>
+                </div>
+              ) : null}
+
               <button
                 onClick={handlePayment}
                 disabled={isSubmitting}
-                className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
-                {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</> : <><Check className="w-5 h-5" /> Submit Adoption</>}
+                {isSubmitting
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+                  : <><Check className="w-5 h-5" /> Confirm Adoption for Review</>}
               </button>
+
               <button
                 type="button"
                 onClick={handleGoogleDisconnect}
                 disabled={isDisconnecting}
-                className="mt-2 text-xs text-neutral-600 hover:text-red-400 transition-colors"
+                className="w-full text-xs text-neutral-600 hover:text-red-400 transition-colors py-1"
               >
-                {isDisconnecting ? 'Disconnecting…' : 'Disconnect account'}
+                {isDisconnecting ? 'Disconnecting…' : 'Disconnect Google Ads account'}
               </button>
-            </>
-          ) : (
-            /* Configured but not yet connected */
-            <>
-              <p className="text-sm text-neutral-400">
-                Authorize SufiPulse to set up the campaign structure in your Google Ads account.
-              </p>
-              <p className="text-xs text-amber-300">Google Ads account not connected yet.</p>
+            </div>
+
+          ) : oauthConfigured ? (
+            /* ── Configured, not yet connected ── */
+            <div className="p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Globe className="w-4 h-4 text-blue-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-neutral-200">Connect your Google Ads account</div>
+                  <div className="text-xs text-neutral-500 mt-0.5 leading-relaxed">
+                    Authorize SufiPulse to view your accessible accounts and prepare the campaign structure. No spend occurs without your approval.
+                  </div>
+                </div>
+              </div>
+
+              {formData.google_ads_customer_id && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-amber-900/20 border border-amber-800/30 rounded-lg text-xs">
+                  <span className="text-amber-500 font-medium">Manual ID (unverified):</span>
+                  <span className="text-amber-300 font-mono">{formData.google_ads_customer_id}</span>
+                  <span className="ml-auto text-amber-700">Connect to verify</span>
+                </div>
+              )}
+
               <a
                 href={adoption ? `/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}` : '#'}
-                className="inline-flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+                className="flex w-full items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
               >
                 Connect Google Ads Account
               </a>
-            </>
+            </div>
+
+          ) : (
+            /* ── OAuth not configured on server — manual path ── */
+            <div className="p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Settings className="w-4 h-4 text-neutral-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-neutral-300">Manual campaign setup</div>
+                  <div className="text-xs text-neutral-500 mt-0.5 leading-relaxed">
+                    Google OAuth is not yet configured on this server. The SufiPulse team will set up your campaign structure manually using the Customer ID you provided.
+                  </div>
+                </div>
+              </div>
+
+              {formData.google_ads_customer_id ? (
+                <div className="flex items-center gap-2 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs">
+                  <span className="text-neutral-500">Customer ID</span>
+                  <span className="text-neutral-300 font-mono ml-auto">{formData.google_ads_customer_id}</span>
+                  <span className="bg-amber-900/40 text-amber-400 px-1.5 py-0.5 rounded">unverified</span>
+                </div>
+              ) : (
+                <div className="px-3 py-2 bg-red-900/20 border border-red-800/30 rounded-lg text-xs text-red-400">
+                  No Customer ID provided — go back and enter your Google Ads Customer ID.
+                </div>
+              )}
+
+              <button
+                onClick={handlePayment}
+                disabled={isSubmitting || !formData.google_ads_customer_id}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {isSubmitting
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+                  : <><Check className="w-5 h-5" /> Confirm & Submit for Manual Setup</>}
+              </button>
+            </div>
           )}
         </div>
       ) : (
@@ -921,23 +990,52 @@ export function AdoptTab({ release }: AdoptTabProps) {
     </div>
   );
 
-  const renderSuccess = () => (
+  const renderSuccess = () => {
+    const isGoogleAds = selectedMethod === 'use_my_google_ads';
+    const displayCustomerId = selectedGoogleCustomerId || formData.google_ads_customer_id;
+    return (
     <div className="max-w-xl mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
       <div className="w-24 h-24 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
         <Check className="w-10 h-10 text-green-500" />
       </div>
-      <h3 className="text-3xl font-serif font-light text-neutral-100 mb-2">Adoption Complete</h3>
+      <h3 className="text-3xl font-serif font-light text-neutral-100 mb-2">
+        {isGoogleAds ? 'Campaign Request Submitted' : 'Adoption Complete'}
+      </h3>
       <p className="text-neutral-400 leading-relaxed mb-8">
-        May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and will be reviewed shortly.
+        {isGoogleAds
+          ? 'Your adoption has been recorded. Your connected Google Ads account and campaign request are pending SufiPulse review before launch.'
+          : 'May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and will be reviewed shortly.'}
       </p>
 
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-left mb-8">
         <div className="flex items-center gap-3 mb-4">
           <BarChart className="w-5 h-5 text-neutral-400" />
-          <div className="font-medium text-neutral-200">Adoption Status</div>
+          <div className="font-medium text-neutral-200">
+            {isGoogleAds ? 'Campaign Request Summary' : 'Adoption Status'}
+          </div>
         </div>
+
+        {isGoogleAds && (
+          <>
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
+              <span className="text-neutral-500 text-sm">Google Ads Account</span>
+              {oauthConnected ? (
+                <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium">
+                  <Check className="w-3.5 h-3.5" /> Connected
+                </span>
+              ) : (
+                <span className="text-amber-400 text-sm font-medium">Pending Verification</span>
+              )}
+            </div>
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
+              <span className="text-neutral-500 text-sm">Customer ID</span>
+              <span className="text-neutral-300 text-sm font-mono">{displayCustomerId || '—'}</span>
+            </div>
+          </>
+        )}
+
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
-          <span className="text-neutral-500 text-sm">Status</span>
+          <span className="text-neutral-500 text-sm">Campaign Status</span>
           <span className="text-amber-400 text-sm font-medium bg-amber-900/40 px-2 py-0.5 rounded">Pending Review</span>
         </div>
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
@@ -998,43 +1096,23 @@ export function AdoptTab({ release }: AdoptTabProps) {
         Return to Overview
       </button>
 
-      {/* Google Ads connection panel — shown only if server is configured */}
-      {selectedMethod === 'use_my_google_ads' && adoption && oauthConfigured && (
-        <div className="mt-4 p-4 border border-blue-800/40 bg-blue-900/20 rounded-xl text-center space-y-2">
-          {oauthConnected ? (
-            <>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Check className="w-4 h-4 text-green-400" />
-                <span className="text-sm text-green-400 font-medium">Google Ads connected</span>
-              </div>
-              {selectedGoogleCustomerId && (
-                <p className="text-xs text-neutral-500">Account: {selectedGoogleCustomerId}</p>
-              )}
-              <p className="text-xs text-neutral-400">Our team will launch the campaign after review.</p>
-              <button
-                type="button"
-                onClick={handleGoogleDisconnect}
-                disabled={isDisconnecting}
-                className="text-xs text-neutral-600 hover:text-red-400 transition-colors"
-              >
-                {isDisconnecting ? 'Disconnecting…' : 'Disconnect account'}
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-neutral-400">Connect your Google Ads account so we can set up the campaign structure.</p>
-              <a
-                href={`/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                Connect Google Ads Account
-              </a>
-            </>
-          )}
+      {/* Google Ads reconnect panel — only when configured but not yet connected */}
+      {isGoogleAds && adoption && oauthConfigured && !oauthConnected && (
+        <div className="mt-4 p-4 border border-blue-800/40 bg-blue-900/20 rounded-xl text-center space-y-3">
+          <p className="text-sm text-neutral-400">
+            Connect your Google Ads account so we can set up the campaign structure.
+          </p>
+          <a
+            href={`/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Connect Google Ads Account
+          </a>
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   const customModalImpact = getImpactPreview(Number(customModalAmount));
   const CUSTOM_PRESETS = [25, 50, 100, 250];
@@ -1162,11 +1240,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
         {step > 0 && (
           <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
             <div className="text-sm font-medium text-neutral-500">
-              Step {step + 1} <span className="text-neutral-700">of 4</span>
+              Step {step} <span className="text-neutral-700">of 4</span>
             </div>
-            <button onClick={() => { setStep(0); setSelectedMethod(null); setSelectedPackage(null); setAdoption(null); }} className="text-neutral-500 hover:text-white transition-colors p-2">
-              <X className="w-5 h-5"/>
-            </button>
+            {step < 4 && (
+              <button onClick={() => { setStep(0); setSelectedMethod(null); setSelectedPackage(null); setAdoption(null); }} className="text-neutral-500 hover:text-white transition-colors p-2">
+                <X className="w-5 h-5"/>
+              </button>
+            )}
           </div>
         )}
 
