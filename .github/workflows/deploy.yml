@@ -94,7 +94,8 @@ jobs:
             NEXT_PUBLIC_YOUTUBE_API_KEY=${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
             NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=${{ secrets.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID }}
             NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
-          no-cache: true
+          cache-from: type=registry,ref=ghcr.io/${{ env.IMAGE_NAME }}:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.IMAGE_NAME }}:cache,mode=max
 
   # ── Job 3: Deploy to IONOS VPS ─────────────────────────
   deploy:

@@ -49,6 +49,27 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(8).max(100),
 });
 
+export const verifyResetOtpSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+});
+
+export const resetViaTokenSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    tempToken: z.string().min(1, 'Reset token is required'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(100)
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Must contain uppercase, lowercase, and number'),
+    password_confirm: z.string(),
+  })
+  .refine(d => d.password === d.password_confirm, {
+    message: "Passwords don't match",
+    path: ['password_confirm'],
+  });
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;

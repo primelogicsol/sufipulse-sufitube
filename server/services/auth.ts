@@ -17,6 +17,7 @@ import { randomInt } from 'crypto';
 import { generateId } from '@/lib/database';
 import { usersRepository } from '@/server/db/repositories/users';
 import { config } from '@/server/config';
+import { sendPasswordResetEmail } from '@/app/lib/email';
 import type { User, WithoutPassword } from '@/server/types';
 
 // ─── Token secrets ────────────────────────────────────────────────────────────
@@ -176,7 +177,6 @@ export async function verifyEmail(
 export async function sendPasswordResetOTP(email: string): Promise<{
   success: boolean;
   message: string;
-  otpCode?: string;
 }> {
   const user = usersRepository.findByEmail(email);
 
@@ -186,11 +186,58 @@ export async function sendPasswordResetOTP(email: string): Promise<{
   const otpCode = generateOTP();
   usersRepository.setOtp(user.id, otpCode, otpExpiresAt());
 
-  return {
-    success: true,
-    message: 'OTP sent to email',
-    otpCode, // caller must remove this in production after sending via email
-  };
+  try {
+    await sendPasswordResetEmail(user.email, user.full_name, otpCode);
+  } catch {
+    // Email failure is non-fatal in dev (console provider), but we still succeed
+  }
+
+  return { success: true, message: 'If the email exists, an OTP has been sent' };
+}
+
+export async function verifyPasswordResetOTP(email: string, otp: string): Promise<{
+  success: boolean;
+  message: string;
+  tempToken?: string;
+}> {
+  const user = usersRepository.findByEmail(email);
+
+  if (!user || user.otp_code !== otp) return { success: false, message: 'Invalid OTP code' };
+  if (user.otp_expires_at && new Date(user.otp_expires_at) < new Date()) {
+    return { success: false, message: 'OTP code expired. Please request a new one.' };
+  }
+
+  const tempToken = await new SignJWT({ userId: user.id, email: user.email, purpose: 'password-reset' } as JWTPayload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('10m')
+    .sign(accessSecret());
+
+  return { success: true, message: 'OTP verified', tempToken };
+}
+
+export async function resetPasswordViaTempToken(
+  email: string,
+  tempToken: string,
+  newPassword: string
+): Promise<{ success: boolean; message: string }> {
+  let payload: JWTPayload;
+  try {
+    const result = await jwtVerify(tempToken, accessSecret());
+    payload = result.payload;
+  } catch {
+    return { success: false, message: 'Invalid or expired reset token' };
+  }
+
+  if ((payload as any).purpose !== 'password-reset' || (payload as any).email !== email) {
+    return { success: false, message: 'Invalid reset token' };
+  }
+
+  const user = usersRepository.findByEmail(email);
+  if (!user) return { success: false, message: 'User not found' };
+
+  usersRepository.setPasswordHash(user.id, await hashPassword(newPassword));
+  return { success: true, message: 'Password reset successfully' };
 }
 
 export async function resetPassword(

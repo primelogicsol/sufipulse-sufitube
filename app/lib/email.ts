@@ -1,12 +1,11 @@
 /**
  * Email service for sending password reset, verification, and notification emails.
  *
- * To activate:
- * 1. Set EMAIL_PROVIDER=sendgrid (or 'resend', 'smtp')
- * 2. Set the corresponding API key in .env.local
- * 3. Set NEXT_PUBLIC_APP_URL
- *
- * Until configured, emails are logged to console in development.
+ * Set EMAIL_PROVIDER in .env.local on the VPS to activate real sending:
+ *   EMAIL_PROVIDER=smtp   → uses SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS
+ *   EMAIL_PROVIDER=resend → uses RESEND_API_KEY
+ *   EMAIL_PROVIDER=sendgrid → uses SENDGRID_API_KEY
+ *   (default) console    → logs to stdout only (development)
  */
 
 import { logger } from './logger';
@@ -29,15 +28,53 @@ interface EmailProvider {
   send(options: SendEmailOptions): Promise<void>;
 }
 
+// SMTP provider (nodemailer — works with Gmail, any SMTP server)
+class SmtpProvider implements EmailProvider {
+  private config: { host: string; port: number; user: string; pass: string; from: string };
+
+  constructor() {
+    const host = process.env.SMTP_HOST;
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+    if (!host || !user || !pass) {
+      throw new Error('SMTP_HOST, SMTP_USER, and SMTP_PASS are required for EMAIL_PROVIDER=smtp');
+    }
+    this.config = {
+      host,
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      user,
+      pass,
+      from: process.env.EMAIL_FROM || `SufiPulse <${user}>`,
+    };
+  }
+
+  async send({ to, subject, html, text }: SendEmailOptions): Promise<void> {
+    // Dynamically require nodemailer so it's only loaded server-side
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nodemailer = require('nodemailer') as typeof import('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: this.config.host,
+      port: this.config.port,
+      secure: this.config.port === 465,
+      auth: { user: this.config.user, pass: this.config.pass },
+    });
+    await transporter.sendMail({
+      from: this.config.from,
+      to,
+      subject,
+      html,
+      ...(text ? { text } : {}),
+    });
+  }
+}
+
 // SendGrid provider
 class SendGridProvider implements EmailProvider {
   private apiKey: string;
 
   constructor() {
     this.apiKey = process.env.SENDGRID_API_KEY || '';
-    if (!this.apiKey) {
-      throw new Error('SENDGRID_API_KEY not configured');
-    }
+    if (!this.apiKey) throw new Error('SENDGRID_API_KEY not configured');
   }
 
   async send({ to, subject, html, text }: SendEmailOptions): Promise<void> {
@@ -60,11 +97,7 @@ class SendGridProvider implements EmailProvider {
         ],
       }),
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`SendGrid error: ${error}`);
-    }
+    if (!response.ok) throw new Error(`SendGrid error: ${await response.text()}`);
   }
 }
 
@@ -74,9 +107,7 @@ class ResendProvider implements EmailProvider {
 
   constructor() {
     this.apiKey = process.env.RESEND_API_KEY || '';
-    if (!this.apiKey) {
-      throw new Error('RESEND_API_KEY not configured');
-    }
+    if (!this.apiKey) throw new Error('RESEND_API_KEY not configured');
   }
 
   async send({ to, subject, html, text }: SendEmailOptions): Promise<void> {
@@ -94,26 +125,23 @@ class ResendProvider implements EmailProvider {
         text,
       }),
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Resend error: ${error}`);
-    }
+    if (!response.ok) throw new Error(`Resend error: ${await response.text()}`);
   }
 }
 
 // Console provider (development fallback)
 class ConsoleProvider implements EmailProvider {
-  async send({ to, subject, html }: SendEmailOptions): Promise<void> {
-    emailLogger.info(`[EMAIL MOCK] To: ${to} | Subject: ${subject}`, { html });
+  async send({ to, subject }: SendEmailOptions): Promise<void> {
+    emailLogger.info(`[EMAIL MOCK] To: ${to} | Subject: ${subject} — set EMAIL_PROVIDER=smtp to send real emails`);
   }
 }
 
 // Factory
 const createProvider = (): EmailProvider => {
   const provider = process.env.EMAIL_PROVIDER || 'console';
-
   switch (provider) {
+    case 'smtp':
+      return new SmtpProvider();
     case 'sendgrid':
       return new SendGridProvider();
     case 'resend':

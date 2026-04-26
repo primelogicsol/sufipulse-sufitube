@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
-import { Mail, Loader, CheckCircle } from 'lucide-react';
+import { Mail, Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as api from "../../api/auth";
 import Link from 'next/link';
@@ -9,7 +9,6 @@ import Link from 'next/link';
 export default function ForgotPassword() {
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -23,7 +22,7 @@ export default function ForgotPassword() {
         setError('');
         try {
             await api.resetPasswordSendOtp(email.trim().toLowerCase());
-            setSuccess(true);
+            router.push(`/reset-password?email=${encodeURIComponent(email.trim().toLowerCase())}`);
         } catch (err: any) {
             setError(err?.response?.data?.error || err?.message || 'Failed to send reset email. Please try again.');
         } finally {
@@ -44,73 +43,52 @@ export default function ForgotPassword() {
                     </div>
 
                     <div className="bg-[#1a2332]/50 backdrop-blur-sm border border-[#2a3442] rounded-lg p-8 shadow-2xl">
-                        {success ? (
-                            <div className="flex flex-col items-center gap-4 py-4 text-center">
-                                <CheckCircle className="w-12 h-12 text-green-400" />
-                                <div>
-                                    <p className="text-green-300 font-semibold text-lg mb-1">Check your inbox</p>
-                                    <p className="text-gray-400 text-sm">
-                                        A reset code has been sent to <span className="text-[#D4AF37]">{email}</span>.
-                                        Follow the instructions in the email to set a new password.
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => router.push('/login')}
-                                    className="mt-2 text-sm text-[#D4AF37] hover:text-[#e5c158] underline transition-colors"
-                                >
-                                    Back to Login
-                                </button>
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-900/20 border border-red-800/50 rounded-lg">
+                                <p className="text-red-400 text-sm">{error}</p>
                             </div>
-                        ) : (
-                            <>
-                                {error && (
-                                    <div className="mb-6 p-4 bg-red-900/20 border border-red-800/50 rounded-lg">
-                                        <p className="text-red-400 text-sm">{error}</p>
-                                    </div>
-                                )}
-
-                                <form className="space-y-6" onSubmit={handleSubmit}>
-                                    <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                                            Email Address
-                                        </label>
-                                        <input
-                                            id="email"
-                                            type="email"
-                                            name="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            required
-                                            disabled={loading}
-                                            className="w-full px-4 py-3 bg-[#0f1823] border-2 border-[#3a4556] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-colors disabled:opacity-60"
-                                            placeholder="your@email.com"
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="w-full flex items-center justify-center gap-2 cursor-pointer bg-linear-to-r from-[#D4AF37] to-[#aa8829] text-[#1a2332] py-3 rounded-md font-semibold hover:shadow-lg hover:shadow-[#D4AF37]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <Loader className="w-4 h-4 animate-spin" />
-                                                Sending…
-                                            </>
-                                        ) : 'Send Reset Code'}
-                                    </button>
-                                </form>
-
-                                <div className="mt-8 pt-6 border-t border-[#2a3442] text-center">
-                                    <p className="text-sm text-gray-400">
-                                        Remember your password?{' '}
-                                        <Link href="/login" className="text-[#D4AF37] hover:text-[#e5c158] font-medium transition-colors">
-                                            Sign in
-                                        </Link>
-                                    </p>
-                                </div>
-                            </>
                         )}
+
+                        <form className="space-y-6" onSubmit={handleSubmit}>
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                                    Email Address
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    disabled={loading}
+                                    className="w-full px-4 py-3 bg-[#0f1823] border-2 border-[#3a4556] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-colors disabled:opacity-60"
+                                    placeholder="your@email.com"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full flex items-center justify-center gap-2 cursor-pointer bg-linear-to-r from-[#D4AF37] to-[#aa8829] text-[#1a2332] py-3 rounded-md font-semibold hover:shadow-lg hover:shadow-[#D4AF37]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader className="w-4 h-4 animate-spin" />
+                                        Sending…
+                                    </>
+                                ) : 'Send Reset Code'}
+                            </button>
+                        </form>
+
+                        <div className="mt-8 pt-6 border-t border-[#2a3442] text-center">
+                            <p className="text-sm text-gray-400">
+                                Remember your password?{' '}
+                                <Link href="/login" className="text-[#D4AF37] hover:text-[#e5c158] font-medium transition-colors">
+                                    Sign in
+                                </Link>
+                            </p>
+                        </div>
                     </div>
 
                     <p className="text-center text-xs text-gray-500 mt-8">
