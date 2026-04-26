@@ -1,3 +1,6 @@
+scratch.zip
+*.zip
+
 logs
 *.log
 npm-debug.log*
