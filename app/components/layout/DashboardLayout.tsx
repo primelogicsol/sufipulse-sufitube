@@ -21,6 +21,7 @@ import {
   KeyRound,
   Mail,
   Server,
+  BarChart2,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -80,6 +81,7 @@ const navigationSections = [
     title: 'Stage 4 — Outreach & Finance',
     links: [
       { path: '/admin/song-adoptions',     label: 'Song Adoptions',         icon: Handshake },
+      { path: '/admin/google-ads',         label: 'Google Ads Campaigns',   icon: BarChart2 },
       { path: '/admin/partnerships',       label: 'Partnerships',            icon: Handshake },
       { path: '/admin/infrastructure',     label: 'Infrastructure Proposals', icon: Server },
       { path: '/admin/contact-messages',   label: 'Contact Messages',         icon: Mail },

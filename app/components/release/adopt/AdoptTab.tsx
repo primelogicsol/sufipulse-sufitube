@@ -411,6 +411,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
           auto_generate_keywords: formData.auto_generate_keywords,
           asset_suggestions: formData.asset_suggestions,
         });
+
+        // Register in the Google Ads campaign request tracker
+        await fetch('/api/google-ads/campaign-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            adoptionId: currentAdoption.id,
+            releaseId: release.id,
+            releaseTitle: release.title || release.release_title,
+            releaseSlug: release.slug,
+            youtubeVideoId: release.youtubeId || release.youtube_video_id,
+            budgetAmount: formData.custom_budget,
+            campaignObjective: formData.campaign_objective || 'awareness',
+            targetRegions: formData.target_regions || ['Global'],
+            targetLanguages: formData.target_languages || ['All'],
+            googleAdsCustomerId: selectedGoogleCustomerId || cleanData.google_ads_customer_id,
+            oauthConnected,
+            sponsorName: cleanData.full_name,
+            sponsorEmail: cleanData.email,
+          }),
+        }).catch(() => {}); // fire-and-forget — don't block the adoption flow
       }
 
       await storage.createSongAdoptionEvent({
