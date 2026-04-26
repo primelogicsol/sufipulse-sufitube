@@ -219,7 +219,7 @@ export default function ReleaseEditorPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-neutral-900 mb-2">
+                  <label className="block text-sm font-semibold text-[var(--dash-text-primary)] mb-2">
                     YouTube ID
                   </label>
                   <input
@@ -227,20 +227,20 @@ export default function ReleaseEditorPage() {
                     name="youtube_id"
                     value={form.youtube_id || ''}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg-primary)] text-[var(--dash-text-primary)] focus:outline-none focus:border-[var(--dash-accent)]"
                     placeholder="YouTube video ID"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-neutral-900 mb-2">
+                  <label className="block text-sm font-semibold text-[var(--dash-text-primary)] mb-2">
                     Status
                   </label>
                   <select
                     name="status"
                     value={form.status || 'draft'}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg-primary)] text-[var(--dash-text-primary)] focus:outline-none focus:border-[var(--dash-accent)]"
                   >
                     <option value="draft">Draft</option>
                     <option value="in_review">In Review</option>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { youtubeService } from '@/lib/youtube-service';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 const slugify = (value: string): string => {
   const base = String(value || '')
@@ -112,6 +113,9 @@ const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease
 };
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const fetchAll = searchParams.get('fetchAll') === '1';
@@ -144,6 +148,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json().catch(() => ({}));
     const requestedIds = Array.isArray(body.videoIds) ? body.videoIds.filter(Boolean) : [];

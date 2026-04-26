@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,10 @@ const ensureBackupDir = () => {
 };
 
 // GET /api/backup - List backups
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     ensureBackupDir();
     const files = fs.readdirSync(BACKUP_DIR).filter((f) => f.endsWith('.json'));
@@ -37,6 +41,9 @@ export async function GET() {
 
 // POST /api/backup - Create backup
 export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     ensureBackupDir();
 
@@ -69,6 +76,9 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/backup - Delete a backup file
 export async function DELETE(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const filename = searchParams.get('filename');

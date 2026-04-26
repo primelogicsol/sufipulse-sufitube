@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const items = entityGetAll('royalties');
     const sorted = (items as any[]).sort(
@@ -10,7 +14,7 @@ export async function GET() {
     );
     return NextResponse.json(sorted);
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

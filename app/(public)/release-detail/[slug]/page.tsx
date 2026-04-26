@@ -848,7 +848,6 @@ function Release() {
                 // Supabase fallback removed — CMS file storage is the only data source
 
                 // Fallback to YouTube API
-                console.log('Fetching from YouTube API...');
                 const { youtubeService } = await import('../../../../lib/youtube-service');
                 const videos = await youtubeService.getVideosByIds(slug);
 

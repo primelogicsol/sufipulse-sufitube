@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 const DATA_FILE = path.join(process.cwd(), '.data', 'payout-accounts.json');
 
-/**
- * GET /api/royalties/payout-accounts
- * Admin view of all submitted payout accounts.
- */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
     const records = JSON.parse(raw);
