@@ -600,7 +600,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         </p>
       </div>
 
-      <div className={`grid gap-6 ${googleAdsEnabled !== false ? 'md:grid-cols-2' : ''}`}>
+      <div className="grid gap-6 md:grid-cols-2">
 
         {/* ── LEFT CARD: Managed by SufiTube ── */}
         <div
@@ -651,23 +651,25 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
         </div>
 
-        {/* ── RIGHT CARD: Use My Google Ads ── */}
-        {googleAdsEnabled !== false && <div
-          onClick={() => handleMethodSelect('use_my_google_ads')}
-          className="flex flex-col bg-neutral-900 border border-neutral-800 hover:border-blue-500/40 rounded-2xl transition-all duration-200 cursor-pointer group select-none"
+        {/* ── RIGHT CARD: Use My Google Ads ── always visible, state-aware */}
+        <div
+          onClick={() => googleAdsEnabled ? handleMethodSelect('use_my_google_ads') : undefined}
+          className={`flex flex-col bg-neutral-900 border rounded-2xl transition-all duration-200 select-none ${
+            googleAdsEnabled
+              ? 'border-neutral-800 hover:border-blue-500/40 cursor-pointer group'
+              : 'border-neutral-800/50 opacity-70 cursor-default'
+          }`}
         >
           {/* Logo */}
           <div className="flex flex-col items-center pt-9 pb-5 px-8">
             <div className="h-14 flex items-center justify-center mb-3">
               <div className="flex items-center gap-2">
-                {/* Official Google G multicolor icon */}
                 <svg width="28" height="28" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
                   <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                 </svg>
-                {/* Google Ads wordmark */}
                 <span className="text-[17px] font-normal leading-none" style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '-0.2px' }}>
                   <span style={{ color: '#4285F4' }}>G</span>
                   <span style={{ color: '#EA4335' }}>o</span>
@@ -685,35 +687,59 @@ export function AdoptTab({ release }: AdoptTabProps) {
           {/* Body */}
           <div className="flex flex-col flex-1 px-7 pb-7 gap-5">
             <div>
-              <h4 className="text-[17px] font-semibold text-neutral-100 mb-2 group-hover:text-blue-400 transition-colors">
+              <h4 className={`text-[17px] font-semibold mb-2 transition-colors ${
+                googleAdsEnabled ? 'text-neutral-100 group-hover:text-blue-400' : 'text-neutral-400'
+              }`}>
                 Use My Google Ads
               </h4>
               <p className="text-sm text-neutral-400 leading-[1.7]">
-                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership always securely.
+                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership.
               </p>
             </div>
 
             <div className="border-t border-neutral-800/80" />
 
-            <div className="space-y-2.5">
-              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
-                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Full ownership
-              </div>
-              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
-                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Pay Google directly
-              </div>
-            </div>
-
-            <button
-              onClick={(e) => { e.stopPropagation(); handleMethodSelect('use_my_google_ads'); }}
-              className="w-full py-3.5 bg-[#4285F4] hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-colors"
-            >
-              Connect Google Ads
-            </button>
-
-            <p className="text-xs text-center text-neutral-600">Secure connection via Google</p>
+            {googleAdsEnabled ? (
+              <>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+                    <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Full ownership
+                  </div>
+                  <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+                    <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Pay Google directly
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleMethodSelect('use_my_google_ads'); }}
+                  className="w-full py-3.5 bg-[#4285F4] hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-colors"
+                >
+                  Connect Google Ads
+                </button>
+                <p className="text-xs text-center text-neutral-600">Secure connection via Google</p>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2.5 text-sm text-neutral-500">
+                    <Check className="w-3.5 h-3.5 text-neutral-600 flex-shrink-0" /> Full ownership of campaigns
+                  </div>
+                  <div className="flex items-center gap-2.5 text-sm text-neutral-500">
+                    <Check className="w-3.5 h-3.5 text-neutral-600 flex-shrink-0" /> Direct billing through Google
+                  </div>
+                </div>
+                <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-xl px-4 py-3 text-center">
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    {googleAdsEnabled === null
+                      ? 'Checking availability…'
+                      : 'Google Ads integration is being configured. Use Managed by SufiTube in the meantime.'
+                    }
+                  </p>
+                </div>
+                <p className="text-xs text-center text-neutral-600">Currently unavailable on this server</p>
+              </>
+            )}
           </div>
-        </div>}
+        </div>
 
       </div>
 
