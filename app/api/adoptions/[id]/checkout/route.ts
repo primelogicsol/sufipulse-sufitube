@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getAuthUser } from '@/server/middleware/authenticate';
 
 // Module-scoped Stripe instance — created once, reused across requests
 let stripeClient: Stripe | null = null;
@@ -18,11 +17,6 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getAuthUser(request);
-  if (!user) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
-
   const { id } = await params;
   const stripe = getStripeClient();
 
