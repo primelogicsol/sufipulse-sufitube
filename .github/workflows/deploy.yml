@@ -17,11 +17,9 @@ jobs:
       packages: write
 
     steps:
-      # ── 1. Checkout ─────────────────────────────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ── 2. GHCR login (build runner) ────────────────────────────────────────
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -29,7 +27,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── 3. Build and push image ──────────────────────────────────────────────
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -44,21 +41,6 @@ jobs:
             NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
           provenance: false
 
-      # ── 4. Sync docker-compose.yml to VPS ───────────────────────────────────
-      #   This is the critical step that was always missing. Without it, the VPS
-      #   runs whatever stale compose file was manually placed there, not the
-      #   current one from the repo.
-      - name: Sync compose file to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: root
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: 22
-          source: docker-compose.yml
-          target: /var/www/sufipulse-new/
-
-      # ── 5. Deploy on VPS ────────────────────────────────────────────────────
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -73,19 +55,45 @@ jobs:
 
             # ── PREFLIGHT ────────────────────────────────────────────────────
             _s="preflight"
-            echo "=== PREFLIGHT ==="
             echo "hostname:  $(hostname)"
             echo "server-ip: $(hostname -I | awk '{print $1}')"
+            mkdir -p /var/www/sufipulse-new
             cd /var/www/sufipulse-new
             echo "pwd:       $(pwd)"
             [ "$(pwd)" = "/var/www/sufipulse-new" ] \
-              || { echo "FATAL: wrong directory — aborting" >&2; exit 1; }
-            [ -f docker-compose.yml ] \
-              || { echo "FATAL: docker-compose.yml not found" >&2; exit 1; }
-            echo "compose project: sufipulse_new"
-            echo "container name:  sufipulse-new-app"
-            echo "port:            3001"
-            echo "=== END PREFLIGHT ==="
+              || { echo "FATAL: wrong directory" >&2; exit 1; }
+
+            # ── WRITE docker-compose.yml (always sync from repo) ─────────────
+            _s="write-compose"
+            cat > /var/www/sufipulse-new/docker-compose.yml << 'COMPOSE_EOF'
+            name: sufipulse_new
+
+            services:
+              app:
+                image: ${SUFIPULSE_IMAGE:-ghcr.io/primelogicsol/sufipulse-sufitube:latest}
+                container_name: sufipulse-new-app
+                restart: always
+                ports:
+                  - "3001:3000"
+                volumes:
+                  - app-data:/app/.data
+                  - app-backups:/app/.data/backups
+                  - app-audit:/app/.data/audit
+                env_file:
+                  - .env
+
+            volumes:
+              app-data:
+                name: sufipulse_new_data
+                driver: local
+              app-backups:
+                name: sufipulse_new_backups
+                driver: local
+              app-audit:
+                name: sufipulse_new_audit
+                driver: local
+            COMPOSE_EOF
+            echo "docker-compose.yml written"
 
             # ── DOCKER COMPOSE CHECK ─────────────────────────────────────────
             _s="compose-check"
@@ -96,13 +104,10 @@ jobs:
             _s="env-file"
             if [ ! -f .env ]; then
               echo "FATAL: /var/www/sufipulse-new/.env does not exist." >&2
-              echo "SSH into the VPS and create it before deploying:" >&2
-              echo "  cp /var/www/sufipulse-new/.env.example /var/www/sufipulse-new/.env" >&2
-              echo "  nano /var/www/sufipulse-new/.env" >&2
               exit 1
             fi
             chmod 600 .env
-            echo ".env: $(wc -l < .env) lines — permissions: $(stat -c '%a' .env)"
+            echo ".env: $(wc -l < .env) lines"
 
             # ── INJECT GOOGLE ADS SECRETS (idempotent, values never logged) ──
             _s="inject-secrets"
@@ -119,14 +124,13 @@ jobs:
             _e GOOGLE_ADS_LOGIN_CUSTOMER_ID "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
             _e GOOGLE_ADS_CREATE_MODE       "manual_review"
 
-            # ── VALIDATE REQUIRED VAR NAMES (names only — no values logged) ──
+            # ── VALIDATE REQUIRED VAR NAMES ──────────────────────────────────
             _s="env-validate"
             echo "=== ENV VALIDATION ==="
-            REQUIRED="JWT_SECRET NEXT_PUBLIC_APP_URL \
-              GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET \
-              GOOGLE_ADS_DEVELOPER_TOKEN GOOGLE_ADS_REDIRECT_URI \
-              GOOGLE_ADS_LOGIN_CUSTOMER_ID GOOGLE_ADS_CREATE_MODE"
-            for var in $REQUIRED; do
+            for var in JWT_SECRET NEXT_PUBLIC_APP_URL \
+                       GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET \
+                       GOOGLE_ADS_DEVELOPER_TOKEN GOOGLE_ADS_REDIRECT_URI \
+                       GOOGLE_ADS_LOGIN_CUSTOMER_ID GOOGLE_ADS_CREATE_MODE; do
               if grep -q "^${var}=.\+" .env 2>/dev/null; then
                 echo "  OK:      ${var}"
               else
@@ -135,7 +139,7 @@ jobs:
             done
             echo "=== END ENV VALIDATION ==="
 
-            # ── GHCR AUTH (fresh login) ───────────────────────────────────────
+            # ── GHCR AUTH ────────────────────────────────────────────────────
             _s="docker-login"
             docker logout ghcr.io 2>/dev/null || true
             echo "${{ secrets.GITHUB_TOKEN }}" \
@@ -162,13 +166,12 @@ jobs:
                 echo "health check passed on attempt ${i}"
                 break
               fi
-              echo "attempt ${i}/12 not ready yet — waiting 5s..."
+              echo "attempt ${i}/12 — waiting 5s..."
               sleep 5
             done
             if [ "$healthy" -ne 1 ]; then
-              echo "=== HEALTH CHECK FAILED — app logs ===" >&2
+              echo "=== HEALTH CHECK FAILED ===" >&2
               docker compose -p sufipulse_new logs app --tail=150 >&2
-              echo "=== CONTAINER STATUS ===" >&2
               docker compose -p sufipulse_new ps >&2
               exit 1
             fi
@@ -177,8 +180,8 @@ jobs:
             _s="cleanup"
             docker image prune -f
 
-            # ── FINAL STATUS ─────────────────────────────────────────────────
-            _s="final-status"
+            # ── POST-DEPLOY VERIFICATION ─────────────────────────────────────
+            _s="verify"
             echo ""
             echo "════════════════════════════════════════"
             echo "  POST-DEPLOY VERIFICATION"
@@ -198,13 +201,13 @@ jobs:
 
             echo ""
             echo "── 4. curl https://test.sufipulse.com ──"
-            curl -sI https://test.sufipulse.com | head -5 || echo "test.sufipulse.com not reachable from VPS (normal — check from browser)"
+            curl -sI https://test.sufipulse.com | head -5 \
+              || echo "(HTTPS not reachable from VPS — check from browser)"
 
             echo ""
             echo "── 5. Old live app safety check ──"
-            echo "Containers NOT named sufipulse-new-app (old app must appear here):"
-            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" \
-              | grep -v "sufipulse-new-app" || echo "(none — old app may be stopped or uses different host)"
+            echo "All running containers (old app must NOT be stopped):"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
             echo ""
             echo "════════════════════════════════════════"
