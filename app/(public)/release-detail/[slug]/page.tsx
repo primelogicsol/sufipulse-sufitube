@@ -847,16 +847,12 @@ function Release() {
 
                 // Supabase fallback removed — CMS file storage is the only data source
 
-                // Fallback to YouTube API — capped at 3 s so the page never hangs
+                // Fallback to YouTube API
                 console.log('Fetching from YouTube API...');
                 const { youtubeService } = await import('../../../../lib/youtube-service');
-                const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
-                const videos = await Promise.race([
-                    youtubeService.getVideosByIds(slug),
-                    timeoutPromise,
-                ]);
+                const videos = await youtubeService.getVideosByIds(slug);
 
-                if (!videos || (videos as any[]).length === 0) {
+                if (!videos || videos.length === 0) {
                     setError("Video not found on SufiTube.");
                     setLoading(false);
                     return;
