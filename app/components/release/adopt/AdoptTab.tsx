@@ -298,47 +298,36 @@ export function AdoptTab({ release }: AdoptTabProps) {
       return;
     }
 
-    // --- Real Stripe Checkout ---
-    if (stripeEnabled) {
-      setIsRedirectingToStripe(true);
-      try {
-        const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amountUSD: adoption.amount_due,
-            releaseTitle: release?.release_title,
-            sponsorName: formData.full_name,
-            sponsorEmail: formData.email,
-            methodType: adoption.method_type,
-            packageName: selectedPackage?.package_name,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Checkout failed');
-        // Redirect to Stripe hosted payment page
-        window.location.href = data.url;
-        return;
-      } catch (err: any) {
-        alert(`Payment error: ${err.message}`);
-        setIsRedirectingToStripe(false);
-        return;
-      }
+    // --- Stripe not configured: block payment explicitly ---
+    if (!stripeEnabled) {
+      alert('Payment system is currently unavailable. Please contact support to complete your sponsorship.');
+      return;
     }
 
-    // --- Fallback: record as pending (no Stripe configured) ---
-    await storage.updateSongAdoption(adoption.id, {
-      payment_status: 'pending',
-      adoption_status: 'pending_review',
-    });
-    await storage.createSongAdoptionEvent({
-      adoption_id: adoption.id,
-      event_type: 'payment_initiated',
-      event_label: 'Payment initiated (Stripe not configured — pending manual collection)',
-      actor_type: 'user',
-      metadata: {},
-    });
-    setStep(4);
+    // --- Real Stripe Checkout ---
+    setIsRedirectingToStripe(true);
+    try {
+      const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountUSD: adoption.amount_due,
+          releaseTitle: release?.release_title,
+          sponsorName: formData.full_name,
+          sponsorEmail: formData.email,
+          methodType: adoption.method_type,
+          packageName: selectedPackage?.package_name,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Checkout failed');
+      window.location.href = data.url;
+      return;
+    } catch (err: any) {
+      alert(`Payment error: ${err.message}`);
+      setIsRedirectingToStripe(false);
+      return;
+    }
   };
 
   const renderIntro = () => (
@@ -790,19 +779,19 @@ export function AdoptTab({ release }: AdoptTabProps) {
       ) : (
         <>
           {!stripeEnabled && (
-            <div className="text-xs text-amber-600 border border-amber-700/40 bg-amber-900/20 rounded-lg px-4 py-2 text-center">
-              Stripe is not configured. Payment will be recorded as pending and collected manually.
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+              Payment system unavailable. Contact support to complete your sponsorship.
             </div>
           )}
           <button
             onClick={handlePayment}
-            disabled={isRedirectingToStripe}
-            className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+            disabled={isRedirectingToStripe || !stripeEnabled}
+            className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {isRedirectingToStripe ? (
               <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
             ) : (
-              <><CreditCard className="w-5 h-5" /> {stripeEnabled ? 'Pay with Card (Stripe)' : 'Submit Payment Request'}</>
+              <><CreditCard className="w-5 h-5" /> Pay with Card</>
             )}
           </button>
         </>
