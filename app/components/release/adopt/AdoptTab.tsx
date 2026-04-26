@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, X, Shield, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2 } from 'lucide-react';
+import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2 } from 'lucide-react';
 import { storage } from '../../../lib/storage';
 import { SongAdoption, SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
 import { useFormSecurity } from '../../../hooks/useFormSecurity';
@@ -538,53 +538,133 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   const renderIntro = () => (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-      <div>
-        <h3 className="text-3xl font-serif font-light text-neutral-100 mb-4">Adopt This Song</h3>
-        <p className="text-neutral-400 text-lg leading-relaxed mb-6">
+      <div className="text-center">
+        <h3 className="text-3xl font-serif font-light text-neutral-100 mb-3">Adopt This Song</h3>
+        <p className="text-neutral-400 text-base leading-relaxed max-w-lg mx-auto">
           Help this kalam reach hearts that need it. Choose how you want to sponsor the spread of this piece.
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <button
-          onClick={() => handleMethodSelect('managed_sufitube')}
-          className="flex flex-col text-left p-8 bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
-        >
-          <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-6">
-            <Shield className="w-6 h-6 text-amber-500" />
-          </div>
-          <h4 className="text-2xl font-medium text-neutral-100 mb-3 group-hover:text-amber-400 transition-colors">Managed by SufiTube</h4>
-          <p className="text-neutral-400 flex-1 mb-6">
-            We handle everything. Choose your budget, and we'll run the promotion from our managed systems using best practices.
-          </p>
-          <div className="flex items-center gap-2 text-sm text-neutral-500 font-medium">
-            <Check className="w-4 h-4 text-green-500" /> Easiest setup
-            <span className="mx-2">·</span>
-            <Check className="w-4 h-4 text-green-500" /> We manage campaign execution
-          </div>
-          {studioGoogleAdsCustomerId && (
-            <div className="mt-3 text-xs text-neutral-600">Studio Ads ID: {studioGoogleAdsCustomerId}</div>
-          )}
-        </button>
 
-        <button
-          onClick={() => handleMethodSelect('use_my_google_ads')}
-          className="flex flex-col text-left p-8 bg-neutral-900 border border-neutral-800 hover:border-blue-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
+        {/* ── LEFT CARD: Managed by SufiTube ── */}
+        <div
+          onClick={() => handleMethodSelect('managed_sufitube')}
+          className="flex flex-col bg-neutral-900 border border-neutral-800 hover:border-amber-500/40 rounded-2xl transition-all duration-200 cursor-pointer group select-none"
         >
-          <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-6">
-            <Settings className="w-6 h-6 text-blue-500" />
+          {/* Logo */}
+          <div className="flex flex-col items-center pt-9 pb-5 px-8">
+            <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-3">
+              <svg width="27" height="27" viewBox="0 0 27 27" fill="none" aria-hidden="true">
+                <path d="M10.5 7.5L22 13.5L10.5 19.5V7.5Z" fill="#C8A75E"/>
+                <path d="M3 22Q5.5 19.5 8 22Q10.5 24.5 13 22Q15.5 19.5 18 22Q20.5 24.5 23 22" stroke="#C8A75E" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5"/>
+              </svg>
+            </div>
+            <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-amber-500/70">SufiTube</span>
           </div>
-          <h4 className="text-2xl font-medium text-neutral-100 mb-3 group-hover:text-blue-400 transition-colors">Use My Google Ads</h4>
-          <p className="text-neutral-400 flex-1 mb-6">
-            Connect your own Google Ads account. We prepare the campaign structure for this song — you remain the account owner and pay Google directly.
-          </p>
-          <div className="flex items-center gap-2 text-sm text-neutral-500 font-medium">
-            <Check className="w-4 h-4 text-green-500" /> Full ownership
-            <span className="mx-2">·</span>
-            <Check className="w-4 h-4 text-green-500" /> Pay Google directly
+
+          {/* Body */}
+          <div className="flex flex-col flex-1 px-7 pb-7 gap-5">
+            <div>
+              <h4 className="text-[17px] font-semibold text-neutral-100 mb-2 group-hover:text-amber-400 transition-colors">
+                Managed by SufiTube
+              </h4>
+              <p className="text-sm text-neutral-400 leading-[1.7]">
+                We handle everything. Choose your budget and we run the promotion using our managed systems, optimized for reach, targeting, and performance.
+              </p>
+            </div>
+
+            <div className="border-t border-neutral-800/80" />
+
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Easiest setup
+              </div>
+              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> We manage campaign execution
+              </div>
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); handleMethodSelect('managed_sufitube'); }}
+              className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-[#0F172A] text-sm font-bold rounded-xl transition-colors"
+            >
+              Choose SufiTube
+            </button>
+
+            <p className="text-xs text-center text-neutral-600">Recommended for most users</p>
           </div>
-        </button>
+        </div>
+
+        {/* ── RIGHT CARD: Use My Google Ads ── */}
+        <div
+          onClick={() => handleMethodSelect('use_my_google_ads')}
+          className="flex flex-col bg-neutral-900 border border-neutral-800 hover:border-blue-500/40 rounded-2xl transition-all duration-200 cursor-pointer group select-none"
+        >
+          {/* Logo */}
+          <div className="flex flex-col items-center pt-9 pb-5 px-8">
+            <div className="h-14 flex items-center justify-center mb-3">
+              <div className="flex items-center gap-2">
+                {/* Official Google G multicolor icon */}
+                <svg width="28" height="28" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                {/* Google Ads wordmark */}
+                <span className="text-[17px] font-normal leading-none" style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '-0.2px' }}>
+                  <span style={{ color: '#4285F4' }}>G</span>
+                  <span style={{ color: '#EA4335' }}>o</span>
+                  <span style={{ color: '#FBBC04' }}>o</span>
+                  <span style={{ color: '#4285F4' }}>g</span>
+                  <span style={{ color: '#34A853' }}>l</span>
+                  <span style={{ color: '#EA4335' }}>e</span>
+                  <span className="font-semibold ml-1" style={{ color: '#4285F4' }}>Ads</span>
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-blue-400/60">Google Ads</span>
+          </div>
+
+          {/* Body */}
+          <div className="flex flex-col flex-1 px-7 pb-7 gap-5">
+            <div>
+              <h4 className="text-[17px] font-semibold text-neutral-100 mb-2 group-hover:text-blue-400 transition-colors">
+                Use My Google Ads
+              </h4>
+              <p className="text-sm text-neutral-400 leading-[1.7]">
+                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership.
+              </p>
+            </div>
+
+            <div className="border-t border-neutral-800/80" />
+
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Full ownership
+              </div>
+              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Pay Google directly
+              </div>
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); handleMethodSelect('use_my_google_ads'); }}
+              className="w-full py-3.5 bg-[#4285F4] hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-colors"
+            >
+              Connect Google Ads
+            </button>
+
+            <p className="text-xs text-center text-neutral-600">Secure connection via Google</p>
+          </div>
+        </div>
+
       </div>
+
+      {studioGoogleAdsCustomerId && (
+        <p className="text-center text-xs text-neutral-700">Studio Ads ID: {studioGoogleAdsCustomerId}</p>
+      )}
     </div>
   );
 
