@@ -7,9 +7,12 @@ export async function GET(
 ) {
   const { id } = await params;
 
+  const configured = !!process.env.GOOGLE_ADS_CLIENT_ID;
+
   const record = await getAdoptionGoogleOAuthRecord(id);
   if (!record) {
     return NextResponse.json({
+      configured,
       connected: false,
       adoption_id: id,
       message: 'No OAuth token found for this adoption.',
@@ -17,6 +20,7 @@ export async function GET(
   }
 
   return NextResponse.json({
+    configured,
     connected: true,
     adoption_id: id,
     token_type: record.tokenType,

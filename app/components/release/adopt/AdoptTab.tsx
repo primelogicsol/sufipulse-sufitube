@@ -40,6 +40,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [adoption, setAdoption] = useState<SongAdoption | null>(null);
   const [oauthConnected, setOauthConnected] = useState<boolean>(false);
   const [oauthChecked, setOauthChecked] = useState<boolean>(false);
+  const [oauthConfigured, setOauthConfigured] = useState<boolean>(false);
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   const [showCustomModal, setShowCustomModal] = useState(false);
@@ -91,8 +92,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
       try {
         const res = await fetch(`/api/adoptions/${adoption.id}/google-oauth/status/`);
         const payload = await res.json();
+        setOauthConfigured(Boolean(payload?.configured));
         setOauthConnected(Boolean(payload?.connected));
       } catch {
+        setOauthConfigured(false);
         setOauthConnected(false);
       } finally {
         setOauthChecked(true);
@@ -794,31 +797,53 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
       {selectedMethod === 'use_my_google_ads' ? (
         <div className="p-5 border border-blue-800/40 bg-blue-900/20 rounded-xl space-y-3 text-center">
-          <p className="text-sm text-neutral-400">
-            Authorize SufiPulse to set up the campaign structure in your Google Ads account.
-          </p>
-          {oauthChecked && (
-            <p className={`text-xs ${oauthConnected ? 'text-green-400' : 'text-amber-300'}`}>
-              {oauthConnected
-                ? 'Google Ads account connected. Click below to submit your adoption for review.'
-                : 'Google Ads account not connected yet.'}
-            </p>
-          )}
-          {oauthConnected ? (
-            <button
-              onClick={handlePayment}
-              disabled={isSubmitting}
-              className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              <Check className="w-5 h-5" /> Submit Adoption
-            </button>
+          {!oauthChecked ? (
+            /* Checking status */
+            <p className="text-sm text-neutral-500">Checking Google Ads connection…</p>
+          ) : !oauthConfigured ? (
+            /* Server credentials not yet configured — manual setup path */
+            <>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Check className="w-4 h-4 text-green-400" />
+                <p className="text-sm font-medium text-green-400">Adoption submitted successfully</p>
+              </div>
+              <p className="text-sm text-neutral-400 leading-relaxed">
+                Our team will review your adoption and set up the campaign structure in your Google Ads account manually. You'll receive confirmation by email once it's live.
+              </p>
+              <button
+                onClick={handlePayment}
+                disabled={isSubmitting}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</> : <><Check className="w-5 h-5" /> Confirm Adoption</>}
+              </button>
+            </>
+          ) : oauthConnected ? (
+            /* Already connected */
+            <>
+              <p className="text-xs text-green-400">Google Ads account connected. Click below to submit your adoption for review.</p>
+              <button
+                onClick={handlePayment}
+                disabled={isSubmitting}
+                className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</> : <><Check className="w-5 h-5" /> Submit Adoption</>}
+              </button>
+            </>
           ) : (
-            <a
-              href={adoption ? `/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}` : '#'}
-              className="inline-flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
-            >
-              Connect Google Ads Account
-            </a>
+            /* Configured but not yet connected */
+            <>
+              <p className="text-sm text-neutral-400">
+                Authorize SufiPulse to set up the campaign structure in your Google Ads account.
+              </p>
+              <p className="text-xs text-amber-300">Google Ads account not connected yet.</p>
+              <a
+                href={adoption ? `/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}` : '#'}
+                className="inline-flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+              >
+                Connect Google Ads Account
+              </a>
+            </>
           )}
         </div>
       ) : (
@@ -921,18 +946,16 @@ export function AdoptTab({ release }: AdoptTabProps) {
         Return to Overview
       </button>
 
-      {/* For "Use My Google Ads" — link to Google OAuth so admin can create the campaign */}
-      {selectedMethod === 'use_my_google_ads' && adoption && (
+      {/* Google Ads connection panel — shown only if server is configured */}
+      {selectedMethod === 'use_my_google_ads' && adoption && oauthConfigured && (
         <div className="mt-4 p-4 border border-blue-800/40 bg-blue-900/20 rounded-xl text-center space-y-2">
           <p className="text-sm text-neutral-400">
-            Next step: authorize SufiPulse to set up the campaign structure in your Google Ads account.
+            {oauthConnected
+              ? 'Google Ads account connected. Our team will launch the campaign after review.'
+              : 'Connect your Google Ads account so we can set up the campaign structure.'}
           </p>
-          {oauthChecked && (
-            <p className={`text-xs ${oauthConnected ? 'text-green-400' : 'text-amber-300'}`}>
-              {oauthConnected
-                ? 'Google Ads OAuth connected for this adoption. Admin can launch campaign after approval + payment confirmation.'
-                : 'Google Ads OAuth not connected yet.'}
-            </p>
+          {oauthConnected && (
+            <p className="text-xs text-green-400">OAuth connected — admin can launch after approval.</p>
           )}
           <a
             href={`/api/adoptions/${adoption.id}/google-oauth`}
