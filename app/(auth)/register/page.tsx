@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import { Layout } from '../../components/layout/Layout';
 import { UserPlus, Eye, EyeOff, Loader, CheckCircle } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { registerSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeEmail } from '../../lib/sanitize';
 
-export default function SignUp() {
+function SignUpForm() {
     const [form, setForm] = useState({ fullName: "", email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
@@ -222,5 +222,13 @@ export default function SignUp() {
                 </div>
             </div>
         </Layout>
+    );
+}
+
+export default function SignUp() {
+    return (
+        <Suspense>
+            <SignUpForm />
+        </Suspense>
     );
 }
