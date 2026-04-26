@@ -1,6 +1,7 @@
 "use client"
 import { useParams } from 'next/navigation';
 import { useState, useEffect, useRef, useMemo, useCallback, useContext } from 'react';
+import dynamic from 'next/dynamic';
 import { Layout } from '../../../components/layout/Layout';
 import { AuthContext } from '@/app/contexts/AuthContext';
 import { PageContainer } from '../../../components/layout/PageContainer';
@@ -10,14 +11,22 @@ import { Music, Lock, Calendar, Eye, ThumbsUp, MessageCircle, Clock, Share2, Cop
 // import { formatDuration } from '../../../services/youtubeSync';
 import Link from 'next/link';
 import YouTube from 'react-youtube';
-import { VideoOverlay } from '../../../components/release/lyrics/VideoOverlay';
 import { LanguageKey, LyricsTrack } from '../../../components/release/lyrics/lyricsData';
 import { RecentAdopters } from '../../../components/release/adopt/RecentAdopters';
-import { AdoptTab } from '../../../components/release/adopt/AdoptTab';
 import { getYouTubeVideoId, buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import { LanguageManagerWithRelease, LanguageSelector, SideBySideComparison, SubtitlePasteEditor, getLanguageLabel, LANGUAGE_OPTIONS as PAGE_LANGUAGE_OPTIONS } from './components';
 import type { SubtitleStatus } from './components';
 import { useVideoTimeTracker, TimeDisplay } from './components/VideoTimeTracker';
+
+// Lazy-load heavy components — not needed for initial render
+const VideoOverlay = dynamic(
+    () => import('../../../components/release/lyrics/VideoOverlay').then(m => ({ default: m.VideoOverlay })),
+    { ssr: false }
+);
+const AdoptTab = dynamic(
+    () => import('../../../components/release/adopt/AdoptTab').then(m => ({ default: m.AdoptTab })),
+    { ssr: false, loading: () => <div className="h-32 rounded-2xl bg-neutral-900 animate-pulse" /> }
+);
 // Supabase removed — CMS file storage (.data/cms-releases.json) is the canonical data source
 
 const LANGUAGE_OPTIONS = [
@@ -838,12 +847,16 @@ function Release() {
 
                 // Supabase fallback removed — CMS file storage is the only data source
 
-                // Fallback to YouTube API
+                // Fallback to YouTube API — capped at 3 s so the page never hangs
                 console.log('Fetching from YouTube API...');
                 const { youtubeService } = await import('../../../../lib/youtube-service');
-                const videos = await youtubeService.getVideosByIds(slug);
+                const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+                const videos = await Promise.race([
+                    youtubeService.getVideosByIds(slug),
+                    timeoutPromise,
+                ]);
 
-                if (!videos || videos.length === 0) {
+                if (!videos || (videos as any[]).length === 0) {
                     setError("Video not found on SufiTube.");
                     setLoading(false);
                     return;
@@ -1255,8 +1268,42 @@ function Release() {
         return (
             <Layout>
                 <PageContainer>
-                    <div className="max-w-5xl mx-auto flex items-center justify-center min-h-96">
-                        <div className="text-neutral-500">Loading release...</div>
+                    <div className="max-w-7xl mx-auto animate-pulse">
+                        {/* Title skeleton */}
+                        <div className="mb-8">
+                            <div className="h-4 w-24 bg-neutral-800 rounded mb-5" />
+                            <div className="h-12 w-3/4 bg-neutral-800 rounded mb-4" />
+                            <div className="h-12 w-1/2 bg-neutral-800 rounded mb-6" />
+                            <div className="flex gap-4">
+                                <div className="h-4 w-28 bg-neutral-800 rounded" />
+                                <div className="h-4 w-20 bg-neutral-800 rounded" />
+                                <div className="h-4 w-24 bg-neutral-800 rounded" />
+                            </div>
+                        </div>
+                        {/* Video placeholder */}
+                        <div className="relative w-full bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden mb-8" style={{ paddingBottom: '56.25%' }}>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center">
+                                        <Play className="w-7 h-7 text-neutral-700 ml-1" />
+                                    </div>
+                                    <div className="h-3 w-32 bg-neutral-800 rounded" />
+                                </div>
+                            </div>
+                        </div>
+                        {/* Tab bar skeleton */}
+                        <div className="flex gap-2 mb-8">
+                            {[80, 64, 72, 60, 68].map((w, i) => (
+                                <div key={i} className="h-9 rounded-full bg-neutral-800" style={{ width: w }} />
+                            ))}
+                        </div>
+                        {/* Content skeleton */}
+                        <div className="space-y-4 max-w-2xl">
+                            <div className="h-4 w-full bg-neutral-800 rounded" />
+                            <div className="h-4 w-5/6 bg-neutral-800 rounded" />
+                            <div className="h-4 w-4/6 bg-neutral-800 rounded" />
+                            <div className="h-4 w-3/4 bg-neutral-800 rounded" />
+                        </div>
                     </div>
                 </PageContainer>
             </Layout>

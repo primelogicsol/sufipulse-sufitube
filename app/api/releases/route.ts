@@ -3,7 +3,7 @@ import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 
 const cacheHeaders = {
-  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
 };
 
 // GET /api/releases or /api/releases?slug=xxx
