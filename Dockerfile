@@ -57,6 +57,9 @@ RUN chown -R nextjs:nodejs /app/.data /app/.next/cache
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+# Seed data bundled in image — used by cms-storage-server.ts to populate the
+# volume on first run when .data/cms-releases.json doesn't exist yet
+COPY --from=builder /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
 # .data is excluded from .dockerignore and is provided via Docker volume at runtime
 
 # Switch to non-root user
