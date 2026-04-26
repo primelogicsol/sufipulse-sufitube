@@ -1,21 +1,26 @@
+name: sufipulse_new
+
 services:
   app:
-    image: ghcr.io/primelogicsol/sufipulse-sufitube:latest
+    image: ${SUFIPULSE_IMAGE:-ghcr.io/primelogicsol/sufipulse-sufitube:latest}
     container_name: sufipulse-new-app
     restart: always
     ports:
       - "3001:3000"
     volumes:
-      - sufipulse-data:/app/.data
-      - sufipulse-backups:/app/.data/backups
-      - sufipulse-audit:/app/.data/audit
+      - app-data:/app/.data
+      - app-backups:/app/.data/backups
+      - app-audit:/app/.data/audit
     env_file:
       - .env
 
 volumes:
-  sufipulse-data:
+  app-data:
+    name: sufipulse_new_data
     driver: local
-  sufipulse-backups:
+  app-backups:
+    name: sufipulse_new_backups
     driver: local
-  sufipulse-audit:
+  app-audit:
+    name: sufipulse_new_audit
     driver: local
