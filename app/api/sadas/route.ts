@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
-import { requireAdmin } from '@/server/middleware/authenticate';
+import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -21,11 +21,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
     if (!body.title) return NextResponse.json({ error: 'title is required' }, { status: 400 });
     const record = entityCreate('sadas', {
       ...body,
+      user_id: authResult.id,
       status: body.status || 'pending',
       submitted_at: new Date().toISOString(),
     });

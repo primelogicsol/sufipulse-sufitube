@@ -4,6 +4,7 @@ import {
   getValidUserAccessToken,
 } from '@/app/lib/server/google-ads-oauth-store';
 import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/verify-account
@@ -15,12 +16,19 @@ import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-o
  * Returns: { verified: boolean, customerId, accounts: string[] }
  */
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json();
   const { adoptionId = '', userId = '', customerId = '' } = body as {
     adoptionId?: string;
     userId?: string;
     customerId?: string;
   };
+
+  if (userId && userId !== authResult.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   if (!customerId) {
     return NextResponse.json({ error: 'customerId is required.' }, { status: 400 });

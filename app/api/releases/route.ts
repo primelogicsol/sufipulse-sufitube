@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 const cacheHeaders = {
   'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
@@ -37,6 +38,12 @@ export async function GET(request: NextRequest) {
       }, { headers: cacheHeaders });
     }
 
+    // Non-published status queries require admin access
+    if (status && status !== 'published') {
+      const authResult = await requireAdmin(request);
+      if (authResult instanceof NextResponse) return authResult;
+    }
+
     // Default to published only for public access; pass ?status=all to get everything (admin)
     if (!status || status === 'published') {
       const releases = cmsServerStorage.getPublishedReleases(limit ? parseInt(limit) : undefined);
@@ -50,8 +57,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/releases (create new release)
+// POST /api/releases (create new release — admin only)
 export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
   try {
     const body = await request.json();
     const isWebOnly = body.webOnly === true || body.isWebOnly === true;

@@ -8,6 +8,7 @@ import {
   upsertAdoptionGoogleOAuthRecord,
 } from '@/app/lib/server/adoption-google-oauth-store';
 import { upsertGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/campaigns/create
@@ -152,6 +153,9 @@ async function resolveAccessToken(
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body: CreateCampaignBody = await request.json();
   const {
     adoptionId,

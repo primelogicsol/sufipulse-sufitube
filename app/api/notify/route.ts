@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 // Optional Nodemailer — only used when SMTP env vars are configured.
 // Install with:  npm install nodemailer @types/nodemailer
@@ -135,6 +136,9 @@ function buildHtml(params: {
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof NextResponse) return authResult;
+
   let body: any;
   try {
     body = await req.json();

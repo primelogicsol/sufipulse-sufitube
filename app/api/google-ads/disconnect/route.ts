@@ -7,6 +7,7 @@ import {
   getAdoptionGoogleOAuthRecord,
   deleteAdoptionGoogleOAuthRecord,
 } from '@/app/lib/server/adoption-google-oauth-store';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/disconnect
@@ -18,11 +19,19 @@ import {
  * At least one must be provided.
  */
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json();
   const { adoptionId, userId } = body as {
     adoptionId?: string;
     userId?: string;
   };
+
+  // Prevent users from disconnecting other users' tokens
+  if (userId && userId !== authResult.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   if (!adoptionId && !userId) {
     return NextResponse.json(

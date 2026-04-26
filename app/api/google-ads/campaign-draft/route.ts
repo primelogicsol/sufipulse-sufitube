@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { upsertGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/campaign-draft
@@ -10,6 +11,9 @@ import { upsertGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-st
  * Body: { adoptionId, releaseId, userId, youtubeVideoId, budgetAmount, selectedCustomerId, campaignObjective }
  */
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json();
   const {
     adoptionId = '',

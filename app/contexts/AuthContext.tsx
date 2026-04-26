@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 type User = { id: string, role: string, assigned_roles?: string[], email: string, full_name: string, is_verified: boolean };
 type AuthContextType = {
     user: User | null,
-    accessToken: string | null,
     loading: boolean,
     profileStatus: string | null,
     login: (email: string, password: string) => Promise<void>,
@@ -16,7 +15,6 @@ type AuthContextType = {
 
 export const AuthContext = createContext<AuthContextType>({
     user: null,
-    accessToken: null,
     loading: true,
     profileStatus: null,
     login: async () => { },
@@ -83,7 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return (
         <AuthContext.Provider value={{
             user,
-            accessToken: null,
             loading,
             login,
             googleLogin,
