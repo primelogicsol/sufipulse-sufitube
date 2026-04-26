@@ -16,7 +16,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const { user, googleLogin } = useAuth();
   const router = useRouter();
   const studioGoogleAdsCustomerId = process.env.NEXT_PUBLIC_STUDIO_GOOGLE_ADS_CUSTOMER_ID;
-  const userGoogleAdsEnabled = process.env.NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS === 'true';
   const googleAdsCustomerIdPattern = /^\d{3}-\d{3}-\d{4}$/;
 
   const [step, setStep] = useState(0);
@@ -367,25 +366,23 @@ export function AdoptTab({ release }: AdoptTabProps) {
           )}
         </button>
 
-        {userGoogleAdsEnabled && (
-          <button
-            onClick={() => handleMethodSelect('use_my_google_ads')}
-            className="flex flex-col text-left p-8 bg-neutral-900 border border-neutral-800 hover:border-blue-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
-          >
-            <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-6">
-              <Settings className="w-6 h-6 text-blue-500" />
-            </div>
-            <h4 className="text-2xl font-medium text-neutral-100 mb-3 group-hover:text-blue-400 transition-colors">Use My Google Ads</h4>
-            <p className="text-neutral-400 flex-1 mb-6">
-              Connect your own Google Ads account. We prefill the campaign structure and targeting inputs so you retain ownership.
-            </p>
-            <div className="flex items-center gap-2 text-sm text-neutral-500 font-medium">
-              <Check className="w-4 h-4 text-green-500" /> Full ownership
-              <span className="mx-2">•</span>
-              <Check className="w-4 h-4 text-green-500" /> Pay Google directly
-            </div>
-          </button>
-        )}
+        <button
+          onClick={() => handleMethodSelect('use_my_google_ads')}
+          className="flex flex-col text-left p-8 bg-neutral-900 border border-neutral-800 hover:border-blue-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
+        >
+          <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-6">
+            <Settings className="w-6 h-6 text-blue-500" />
+          </div>
+          <h4 className="text-2xl font-medium text-neutral-100 mb-3 group-hover:text-blue-400 transition-colors">Use My Google Ads</h4>
+          <p className="text-neutral-400 flex-1 mb-6">
+            Connect your own Google Ads account. We prefill the campaign structure and targeting inputs so you retain ownership.
+          </p>
+          <div className="flex items-center gap-2 text-sm text-neutral-500 font-medium">
+            <Check className="w-4 h-4 text-green-500" /> Full ownership
+            <span className="mx-2">•</span>
+            <Check className="w-4 h-4 text-green-500" /> Pay Google directly
+          </div>
+        </button>
       </div>
     </div>
   );
