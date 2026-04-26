@@ -37,7 +37,9 @@ const rootDir = resolve(__dirname, "..");
 const envPath = resolve(rootDir, ".env.local");
 const envDevPath = resolve(rootDir, ".env.development");
 
-if (fs.existsSync(envPath)) {
+if (process.env.CI) {
+  console.log(`${YELLOW}  ℹ${RESET}  CI environment detected — skipping .env file check`);
+} else if (fs.existsSync(envPath)) {
   console.log(`${GREEN}  ✔${RESET}  .env.local file found`);
 } else if (fs.existsSync(envDevPath)) {
   console.log(`${YELLOW}  ℹ${RESET}  No .env.local file — falling back to .env.development`);
