@@ -12,6 +12,10 @@ on:
         required: false
         default: "Manual trigger"
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: primelogicsol/sufipulse
@@ -73,6 +77,8 @@ jobs:
           tags: |
             type=sha,prefix=sha-
             type=raw,value=latest,enable=true
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Build and push image
         id: push
@@ -109,7 +115,7 @@ jobs:
           source: "docker-compose.yml"
           target: "/var/www/sufipulse-new"
 
-      - name: Deploy via SSH
+      - name: Deploy and verify revision on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -119,17 +125,34 @@ jobs:
             set -e
             cd /var/www/sufipulse-new
 
-            # Authenticate to GHCR on the VPS
+            # Authenticate to GHCR
             echo "${{ secrets.GHCR_TOKEN }}" | \
               docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Pull the newly built image and restart
+            # Pull the latest image (built from this commit)
             export SUFIPULSE_IMAGE=ghcr.io/${{ env.IMAGE_NAME }}:latest
             docker compose pull app
-            docker compose up -d --remove-orphans
+
+            # Force-recreate ONLY the sufipulse app container — never touch other containers
+            docker compose up -d --force-recreate app
+
             docker image prune -f
 
-            echo "=== Deploy complete ==="
+            # ── Hard rule: running container MUST be on the pushed commit ──────
+            EXPECTED="${{ github.sha }}"
+            sleep 5
+            RUNNING=$(docker inspect sufipulse-app \
+              --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' \
+              2>/dev/null || echo "")
+
+            if [ "$RUNNING" != "$EXPECTED" ]; then
+              echo "DEPLOYMENT FAILED — revision mismatch"
+              echo "  expected : $EXPECTED"
+              echo "  running  : ${RUNNING:-<label not found>}"
+              exit 1
+            fi
+
+            echo "=== Revision verified: $RUNNING ==="
             docker compose ps
             echo ""
             echo "Last 20 log lines:"
@@ -142,17 +165,17 @@ jobs:
     needs: deploy
 
     steps:
-      - name: Wait for app to be ready
-        run: sleep 20
-
-      - name: HTTP health check
+      - name: Poll health endpoint (up to 90s)
         run: |
           URL="https://test.sufipulse.com/api/health"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "000")
-          echo "HTTP status: $STATUS"
-          # Accept 200 (health ok) or 404 (no health endpoint yet — app still responded)
-          if [[ "$STATUS" != "200" && "$STATUS" != "404" ]]; then
-            echo "ERROR: expected 200 or 404, got $STATUS"
-            exit 1
-          fi
-          echo "Smoke test passed."
+          for i in $(seq 1 18); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$URL" || echo "000")
+            echo "Attempt $i — HTTP $STATUS"
+            if [[ "$STATUS" == "200" ]]; then
+              echo "Smoke test passed."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "ERROR: /api/health did not return 200 within 90 seconds"
+          exit 1
