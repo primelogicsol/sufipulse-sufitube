@@ -257,6 +257,40 @@ export async function resetPassword(
   return { success: true, message: 'Password reset successfully' };
 }
 
+export async function loginOrCreateGoogleUser(googleUser: {
+  googleId: string;
+  email: string;
+  fullName: string;
+}): Promise<{ user: WithoutPassword<User>; accessToken: string; refreshToken: string }> {
+  let user = usersRepository.findByGoogleId(googleUser.googleId);
+
+  if (!user) {
+    user = usersRepository.findByEmail(googleUser.email);
+    if (user) {
+      usersRepository.update(user.id, { google_id: googleUser.googleId });
+      user = usersRepository.findById(user.id)!;
+    } else {
+      user = usersRepository.create({
+        full_name: googleUser.fullName,
+        email: googleUser.email,
+        password_hash: '',
+        role: 'user',
+        is_verified: true,
+        is_blocked: false,
+        google_id: googleUser.googleId,
+      });
+    }
+  }
+
+  if (user.is_blocked) throw new Error('Account is blocked. Please contact support.');
+
+  return {
+    user: stripPassword(user),
+    accessToken: await generateAccessToken(user),
+    refreshToken: await generateRefreshToken(user.id),
+  };
+}
+
 export async function changePassword(
   userId: string,
   oldPassword: string,

@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const googleLogin = async () => {
-        throw new Error("Google sign-in is not available yet. Please use email and password.");
+        window.location.href = '/api/auth/google';
     };
 
     const logout = async () => {

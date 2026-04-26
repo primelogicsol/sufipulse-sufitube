@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Layout } from '../../components/layout/Layout';
 import { Lock, Eye, EyeOff, Loader, ChevronDown, Zap } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import * as api from "../../api/auth";
 import { ENV } from '../../config/env';
 import Link from 'next/link';
 import { loginSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeEmail } from '../../lib/sanitize';
+import { Suspense } from 'react';
 
 
 
@@ -20,7 +21,13 @@ const Login = () => {
     const [fieldErrors, setFieldErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
     const { login, googleLogin, user } = useAuth();
-    const router = useRouter()
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const oauthError = searchParams.get('error');
+        if (oauthError) setError(oauthError);
+    }, []);
     // const navigate = useNavigate();
     // Role - aware redirect after successful login
     useEffect(() => {
@@ -199,4 +206,11 @@ const Login = () => {
         </Layout>
     );
 }
-export default Login
+
+export default function LoginPage() {
+    return (
+        <Suspense>
+            <Login />
+        </Suspense>
+    );
+}
