@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
 import { User, Shield, Search, RefreshCw, UserPlus, X, Ban, Trash2, CheckCircle } from 'lucide-react';
 import { ALL_ROLES } from '@/app/lib/role-access';
@@ -22,12 +22,6 @@ const PROTECTED_EMAILS = ['admin@sufipulse.local'];
 
 const CONTRIBUTOR_ROLES = ['writer', 'vocalist', 'producer', 'literary', 'studio'];
 
-const generateId = () =>
-  `usr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-
-const USERS_KEY = 'sufipulse_users';
-const CURRENT_USER_KEY = 'sufipulse_current_user';
-
 const defaultNewUser = () => ({
   email: '',
   full_name: '',
@@ -42,27 +36,30 @@ export default function AdminUsersPage() {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [newUser, setNewUser] = useState(defaultNewUser());
   const [addError, setAddError] = useState('');
-  const [users, setUsers] = useState<AdminUser[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const raw = localStorage.getItem(USERS_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  });
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
 
-  const refresh = () => {
-    if (typeof window === 'undefined') return;
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    setPageError('');
     try {
-      const raw = localStorage.getItem(USERS_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      setUsers(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setUsers([]);
+      const res = await fetch('/api/admin/users');
+      if (!res.ok) throw new Error('Failed to load users');
+      const data = await res.json();
+      setUsers(Array.isArray(data.data) ? data.data : []);
+    } catch (e: any) {
+      setPageError(e.message);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const refresh = () => fetchUsers();
 
   const filtered = useMemo(() => {
     return users.filter((item) => {
@@ -75,106 +72,112 @@ export default function AdminUsersPage() {
     });
   }, [users, query, statusFilter]);
 
-  const updateRole = (id: string, role: 'admin' | 'user') => {
-    const next = users.map((item) => {
-      if (item.id !== id) return item;
-      const contributorRoles = ['writer', 'vocalist', 'producer', 'literary', 'studio'];
-      const assignedRoles = role === 'admin' ? ['admin', ...contributorRoles] : (item.assigned_roles || contributorRoles);
-      return { ...item, role, assigned_roles: assignedRoles };
-    });
-    setUsers(next);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(USERS_KEY, JSON.stringify(next));
-
-      const currentRaw = localStorage.getItem(CURRENT_USER_KEY);
-      if (currentRaw) {
-        const current = JSON.parse(currentRaw);
-        if (current?.user?.id === id) {
-          const updatedUser = next.find((u) => u.id === id);
-          if (updatedUser) {
-            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify({ ...current, user: updatedUser }));
-          }
-        }
-      }
+  const updateRole = async (id: string, role: 'admin' | 'user') => {
+    const user = users.find((u) => u.id === id);
+    if (!user) return;
+    const assigned_roles =
+      role === 'admin'
+        ? ['admin', ...CONTRIBUTOR_ROLES]
+        : user.assigned_roles || [...CONTRIBUTOR_ROLES];
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, assigned_roles }),
+      });
+      if (!res.ok) throw new Error('Failed to update role');
+      const data = await res.json();
+      setUsers((prev) => prev.map((u) => (u.id === id ? data.data : u)));
+    } catch (e: any) {
+      setPageError(e.message);
     }
   };
 
-  const toggleAssignedRole = (id: string, role: string) => {
-    const next = users.map((item) => {
-      if (item.id !== id) return item;
+  const toggleAssignedRole = async (id: string, role: string) => {
+    const user = users.find((u) => u.id === id);
+    if (!user) return;
 
-      const assigned = new Set(item.assigned_roles || []);
-      if (assigned.has(role)) {
-        assigned.delete(role);
-      } else {
-        assigned.add(role);
-      }
+    const assigned = new Set(user.assigned_roles || []);
+    if (assigned.has(role)) {
+      assigned.delete(role);
+    } else {
+      assigned.add(role);
+    }
+    if (user.role === 'admin') assigned.add('admin');
 
-      if (item.role === 'admin') {
-        assigned.add('admin');
-      }
+    const nextRole = assigned.has('admin') ? 'admin' : 'user';
+    const assigned_roles = Array.from(assigned);
 
-      const nextRole = assigned.has('admin') ? 'admin' : 'user';
-
-      return {
-        ...item,
-        role: nextRole,
-        assigned_roles: Array.from(assigned),
-      };
-    });
-
-    setUsers(next);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(USERS_KEY, JSON.stringify(next));
-
-      const currentRaw = localStorage.getItem(CURRENT_USER_KEY);
-      if (currentRaw) {
-        const current = JSON.parse(currentRaw);
-        if (current?.user?.id === id) {
-          const updatedUser = next.find((u) => u.id === id);
-          if (updatedUser) {
-            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify({ ...current, user: updatedUser }));
-          }
-        }
-      }
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: nextRole, assigned_roles }),
+      });
+      if (!res.ok) throw new Error('Failed to update roles');
+      const data = await res.json();
+      setUsers((prev) => prev.map((u) => (u.id === id ? data.data : u)));
+    } catch (e: any) {
+      setPageError(e.message);
     }
   };
 
   const adminCount = users.filter((item) => item.role === 'admin').length;
   const blockedCount = users.filter((item) => item.is_blocked).length;
 
-  const persist = (next: AdminUser[]) => {
-    setUsers(next);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(USERS_KEY, JSON.stringify(next));
+  const blockUser = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_blocked: true }),
+      });
+      if (!res.ok) throw new Error('Failed to block user');
+      const data = await res.json();
+      setUsers((prev) => prev.map((u) => (u.id === id ? data.data : u)));
+    } catch (e: any) {
+      setPageError(e.message);
     }
   };
 
-  const blockUser = (id: string) => {
-    persist(users.map((item) => (item.id !== id ? item : { ...item, is_blocked: true })));
+  const unblockUser = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_blocked: false }),
+      });
+      if (!res.ok) throw new Error('Failed to unblock user');
+      const data = await res.json();
+      setUsers((prev) => prev.map((u) => (u.id === id ? data.data : u)));
+    } catch (e: any) {
+      setPageError(e.message);
+    }
   };
 
-  const unblockUser = (id: string) => {
-    persist(users.map((item) => (item.id !== id ? item : { ...item, is_blocked: false })));
+  const deleteUser = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete user');
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (e: any) {
+      setPageError(e.message);
+    }
   };
 
-  const deleteUser = (id: string) => {
-    persist(users.filter((item) => item.id !== id));
-  };
-
-  const confirmAndExecute = () => {
+  const confirmAndExecute = async () => {
     if (!confirmAction) return;
     const { type, user: target } = confirmAction;
-    if (type === 'block') blockUser(target.id);
-    else if (type === 'unblock') unblockUser(target.id);
-    else if (type === 'delete') deleteUser(target.id);
     setConfirmAction(null);
+    if (type === 'block') await blockUser(target.id);
+    else if (type === 'unblock') await unblockUser(target.id);
+    else if (type === 'delete') await deleteUser(target.id);
   };
 
   const isProtected = (email?: string) =>
     PROTECTED_EMAILS.includes((email || '').toLowerCase());
 
-  const addUser = () => {
+  const addUser = async () => {
     setAddError('');
     const email = newUser.email.trim().toLowerCase();
     const full_name = newUser.full_name.trim();
@@ -190,37 +193,30 @@ export default function AdminUsersPage() {
       return;
     }
 
-    const exists = users.some((u) => (u.email || '').toLowerCase() === email);
-    if (exists) {
-      setAddError('A user with this email already exists.');
-      return;
-    }
-
-    const assignedRoles =
+    const assigned_roles =
       newUser.role === 'admin'
         ? ['admin', ...CONTRIBUTOR_ROLES]
         : newUser.assigned_roles.length > 0
         ? newUser.assigned_roles
         : [...CONTRIBUTOR_ROLES];
 
-    const created: AdminUser = {
-      id: generateId(),
-      email,
-      full_name,
-      role: newUser.role,
-      assigned_roles: assignedRoles,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-    };
-
-    const next = [...users, created];
-    setUsers(next);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(USERS_KEY, JSON.stringify(next));
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, full_name, role: newUser.role, assigned_roles }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAddError(data.error?.message || 'Failed to create user');
+        return;
+      }
+      setUsers((prev) => [...prev, data.data]);
+      setShowAddModal(false);
+      setNewUser(defaultNewUser());
+    } catch (e: any) {
+      setAddError(e.message);
     }
-
-    setShowAddModal(false);
-    setNewUser(defaultNewUser());
   };
 
   const toggleNewUserRole = (role: string) => {
@@ -291,6 +287,10 @@ export default function AdminUsersPage() {
             </select>
           </div>
 
+          {pageError && (
+            <p className="text-sm mb-4" style={{color: 'var(--dash-status-rejected)'}}>{pageError}</p>
+          )}
+
           <div className="dashboard-table-container">
             <table className="dashboard-table">
               <thead>
@@ -304,7 +304,11 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10 text-[var(--dash-text-muted)]">Loading users…</td>
+                  </tr>
+                ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="text-center py-10 text-[var(--dash-text-muted)]">No users found</td>
                   </tr>
