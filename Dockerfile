@@ -45,9 +45,9 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Create data directory for persistent storage
-RUN mkdir -p /app/.data
-RUN chown nextjs:nodejs /app/.data
+# Create data and Next.js cache directories with correct ownership
+RUN mkdir -p /app/.data /app/.next/cache
+RUN chown -R nextjs:nodejs /app/.data /app/.next/cache
 
 # Copy necessary files
 COPY --from=builder /app/public ./public
