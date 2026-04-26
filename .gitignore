@@ -41,3 +41,5 @@ frontend.env
 *.njsproj
 *.sln
 *.sw?
+deploy_key
+deploy_key.pub
