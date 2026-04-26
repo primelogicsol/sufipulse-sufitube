@@ -70,7 +70,7 @@ export const env = createEnv({
   // ── Client (browser-exposed) variables ────────────────────────────────────
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
-    NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:3000/api"),
+    NEXT_PUBLIC_API_URL: z.string().optional(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
     NEXT_PUBLIC_YOUTUBE_API_KEY: z.string().optional(),
     NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS: z.enum(['true', 'false']).optional(),
@@ -123,6 +123,6 @@ export type Env = typeof env;
 
 // Backward-compat: client-safe values (must use process.env directly — not the t3 proxy)
 export const ENV = {
-  API_URL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api",
+  API_URL: process.env.NEXT_PUBLIC_API_URL ?? "/api",
   YOUTUBE_API_KEY: process.env.NEXT_PUBLIC_YOUTUBE_API_KEY,
 } as const;
