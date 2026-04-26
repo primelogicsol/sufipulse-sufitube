@@ -3,6 +3,7 @@ import path from 'path';
 
 type AdoptionPaymentRecord = {
   adoptionId: string;
+  userId?: string;
   paymentStatus: 'unpaid' | 'pending' | 'paid' | 'failed';
   adoptionStatus: string;
   amountPaid: number;
@@ -66,6 +67,7 @@ export async function upsertAdoptionPaymentRecord(
 
   const next: AdoptionPaymentRecord = {
     adoptionId,
+    userId: patch.userId ?? existing?.userId,
     paymentStatus: patch.paymentStatus || existing?.paymentStatus || 'unpaid',
     adoptionStatus: patch.adoptionStatus || existing?.adoptionStatus || 'pending_review',
     amountPaid: patch.amountPaid ?? existing?.amountPaid ?? 0,

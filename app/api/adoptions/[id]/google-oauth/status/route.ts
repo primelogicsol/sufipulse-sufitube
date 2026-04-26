@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
+import { requireAuth } from '@/server/middleware/authenticate';
+import { getAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
+
+  const paymentRecord = await getAdoptionPaymentRecord(id);
+  if (paymentRecord?.userId && paymentRecord.userId !== authResult.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   const configured = !!process.env.GOOGLE_ADS_CLIENT_ID;
 

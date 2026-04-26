@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { requireAuth } from '@/server/middleware/authenticate';
+import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
 
 // Module-scoped Stripe instance — created once, reused across requests
 let stripeClient: Stripe | null = null;
@@ -17,7 +19,17 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
+
+  // Enforce ownership: if a record already exists for this adoption, only its owner may checkout
+  const existing = await getAdoptionPaymentRecord(id);
+  if (existing?.userId && existing.userId !== authResult.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const stripe = getStripeClient();
 
   if (!stripe) {
@@ -74,6 +86,9 @@ export async function POST(
       success_url: `${appUrl}/adoption-success?adoption_id=${id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/adoption-cancel?adoption_id=${id}`,
     });
+
+    // Stamp ownership on first checkout so all subsequent requests can verify
+    await upsertAdoptionPaymentRecord(id, { userId: authResult.id, paymentStatus: 'pending' });
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
   } catch (error: any) {

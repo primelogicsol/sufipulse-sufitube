@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   const record = await getAdoptionPaymentRecord(id);
+
+  if (record?.userId && record.userId !== authResult.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   return NextResponse.json({
     adoption_id: id,

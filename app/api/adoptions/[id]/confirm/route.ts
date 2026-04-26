@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
+import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 const getStripeClient = () => {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -16,7 +17,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
+
+  const existing = await getAdoptionPaymentRecord(id);
+  if (existing?.userId && existing.userId !== authResult.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const stripe = getStripeClient();
 
   if (!stripe) {
@@ -48,6 +58,7 @@ export async function POST(
 
     if (!isPaid) {
       const failed = await upsertAdoptionPaymentRecord(id, {
+        userId: authResult.id,
         paymentStatus: 'failed',
         adoptionStatus: 'pending_review',
         stripeSessionId: session.id,
@@ -63,6 +74,7 @@ export async function POST(
     }
 
     const paidRecord = await upsertAdoptionPaymentRecord(id, {
+      userId: authResult.id,
       paymentStatus: 'paid',
       adoptionStatus: 'pending_review',
       stripeSessionId: session.id,
