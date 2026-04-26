@@ -16,9 +16,12 @@ import { generateId, db } from './database';
 import type { User } from './database-schema';
 
 // JWT Secrets — throws at startup in production if variables are missing
+// Skip during Next.js build phase (NEXT_PHASE=phase-production-build) since
+// secrets are only needed at runtime, not at static generation time.
 function resolveSecret(envKey: string, devFallback: string): Uint8Array {
   const val = process.env[envKey];
-  if (!val && process.env.NODE_ENV === 'production') {
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+  if (!val && process.env.NODE_ENV === 'production' && !isBuildPhase) {
     throw new Error(`[startup] ${envKey} must be set in production`);
   }
   return new TextEncoder().encode(val || devFallback);

@@ -11,9 +11,11 @@ const opt = (key: string, fallback = ''): string =>
   process.env[key]?.trim() || fallback;
 
 // Throws at module load time in production if the variable is absent.
+// Skips during Next.js build phase — secrets are only needed at runtime.
 const requireSecret = (key: string, devFallback: string): string => {
   const v = process.env[key]?.trim();
-  if (!v && process.env.NODE_ENV === 'production') {
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+  if (!v && process.env.NODE_ENV === 'production' && !isBuildPhase) {
     throw new Error(`[startup] ${key} is required in production but is not set. Set it in your environment before starting the server.`);
   }
   return v || devFallback;
