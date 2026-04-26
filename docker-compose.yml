@@ -1,40 +1,16 @@
-# SUFIPULSE_IMAGE — set this to use a pre-built image from GHCR (CI/CD deploys).
-# If unset, docker compose up --build builds locally.
-# Example: SUFIPULSE_IMAGE=ghcr.io/primelogicsol/sufipulse:latest docker compose up -d
-
 services:
   app:
-    image: ${SUFIPULSE_IMAGE:-sufipulse:local}
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/primelogicsol/sufipulse-sufitube:latest
     container_name: sufipulse-app
-    restart: unless-stopped
+    restart: always
     ports:
       - "3001:3000"
     volumes:
       - sufipulse-data:/app/.data
       - sufipulse-backups:/app/.data/backups
       - sufipulse-audit:/app/.data/audit
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
     env_file:
-      - .env.local
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
+      - .env
 
 volumes:
   sufipulse-data:
