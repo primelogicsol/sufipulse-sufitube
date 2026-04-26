@@ -54,7 +54,7 @@ jobs:
             set -e
             cd /var/www/sufipulse-new
 
-            # Ensure .env exists (docker-compose requires it; .env.local is the manual-setup copy)
+            # Ensure .env exists (docker-compose requires it)
             if [ ! -f .env ]; then
               if [ -f .env.local ]; then
                 cp .env.local .env
@@ -64,6 +64,20 @@ jobs:
                 exit 1
               fi
             fi
+
+            # Inject/update secrets from GitHub into .env (idempotent — safe to re-run)
+            inject_env() {
+              local key="$1" val="$2"
+              [ -z "$val" ] && return
+              sed -i "/^${key}=/d" .env
+              printf '%s=%s\n' "$key" "$val" >> .env
+            }
+            inject_env GOOGLE_ADS_CLIENT_ID         "${{ secrets.GOOGLE_ADS_CLIENT_ID }}"
+            inject_env GOOGLE_ADS_CLIENT_SECRET     "${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}"
+            inject_env GOOGLE_ADS_DEVELOPER_TOKEN   "${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+            inject_env GOOGLE_ADS_REDIRECT_URI      "${{ secrets.GOOGLE_ADS_REDIRECT_URI }}"
+            inject_env GOOGLE_ADS_LOGIN_CUSTOMER_ID "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
+            inject_env GOOGLE_ADS_CREATE_MODE       "manual_review"
 
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
