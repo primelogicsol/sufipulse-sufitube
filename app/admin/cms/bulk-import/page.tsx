@@ -253,7 +253,7 @@ export default function BulkImportPage() {
         for (let i = 0; i < parsed.length; i++) {
           const payload = parsed[i];
           try {
-            const response = await fetch('/api/releases', {
+            const response = await fetch('/api/releases?status=all', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),

@@ -82,7 +82,7 @@ export default function AdminDashboard() {
         safeGet('/api/adoptions'),
         safeGet('/api/studio-access-codes'),
         safeGet('/api/contacts'),
-        safeGet('/api/releases'),
+        safeGet('/api/releases?status=all'),
       ]);
 
       const pendingAdoptions = adoptions.filter(a => {

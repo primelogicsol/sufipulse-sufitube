@@ -50,8 +50,8 @@ export default function Releases() {
             let cmsVideos: YouTubeRelease[] = [];
             const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
             const endpoints = [
-                '/api/releases',
-                `${baseUrl}/api/releases`
+                '/api/releases?status=published',
+                `${baseUrl}/api/releases?status=published`
             ];
 
             let lastFetchError = null;
@@ -83,7 +83,7 @@ export default function Releases() {
             if (cmsVideos.length === 0 && lastFetchError) {
                 await new Promise(r => setTimeout(r, 1000));
                 try {
-                    const retryRes = await fetch('/api/releases', { cache: 'no-store' });
+                    const retryRes = await fetch('/api/releases?status=published', { cache: 'no-store' });
                     if (retryRes.ok) {
                         const cmsData = await retryRes.json();
                         cmsVideos = cmsData.map((r: any) => ({

@@ -22,7 +22,7 @@ export default function ProductionWorkflowPage() {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/releases');
+      const res = await fetch('/api/releases?status=all');
       const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
     } finally {

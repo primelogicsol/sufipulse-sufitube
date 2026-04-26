@@ -5,6 +5,7 @@ import { cmsStorage, type CMSRelease } from '@/lib/cms-storage';
 
 const SERVER_DATA_DIR = path.join(process.cwd(), '.data');
 const SERVER_DATA_FILE = path.join(SERVER_DATA_DIR, 'cms-releases.json');
+const SEED_FILE = path.join(process.cwd(), 'lib', 'cms-seed-releases.json');
 
 let hydrated = false;
 
@@ -13,6 +14,18 @@ const ensureHydrated = () => {
 
   try {
     if (!fs.existsSync(SERVER_DATA_FILE)) {
+      // First run: seed from bundled release data if available
+      if (fs.existsSync(SEED_FILE)) {
+        const raw = fs.readFileSync(SEED_FILE, 'utf8');
+        const seed = raw ? JSON.parse(raw) : [];
+        const releases = Array.isArray(seed) ? (seed as CMSRelease[]) : [];
+        if (releases.length > 0) {
+          cmsStorage.clearAll();
+          cmsStorage.importReleases(releases);
+          persist(); // write to volume so future restarts use the file
+          console.log(`[cms] Seeded ${releases.length} releases from bundled data`);
+        }
+      }
       hydrated = true;
       return;
     }

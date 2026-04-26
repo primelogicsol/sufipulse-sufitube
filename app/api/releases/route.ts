@@ -37,12 +37,13 @@ export async function GET(request: NextRequest) {
       }, { headers: cacheHeaders });
     }
 
-    if (status === 'published') {
+    // Default to published only for public access; pass ?status=all to get everything (admin)
+    if (!status || status === 'published') {
       const releases = cmsServerStorage.getPublishedReleases(limit ? parseInt(limit) : undefined);
       return NextResponse.json(releases, { headers: cacheHeaders });
     }
 
-    const releases = cmsServerStorage.getAllReleases(status ? { status } : undefined);
+    const releases = cmsServerStorage.getAllReleases(status !== 'all' ? { status } : undefined);
     return NextResponse.json(releases, { headers: cacheHeaders });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
