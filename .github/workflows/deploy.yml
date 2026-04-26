@@ -54,6 +54,17 @@ jobs:
             set -e
             cd /var/www/sufipulse-new
 
+            # Ensure .env exists (docker-compose requires it; .env.local is the manual-setup copy)
+            if [ ! -f .env ]; then
+              if [ -f .env.local ]; then
+                cp .env.local .env
+                echo "[deploy] created .env from .env.local"
+              else
+                echo "[deploy] FATAL: neither .env nor .env.local found in $(pwd)" >&2
+                exit 1
+              fi
+            fi
+
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             docker compose pull app
