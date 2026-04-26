@@ -50,6 +50,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [selectedGoogleCustomerId, setSelectedGoogleCustomerId] = useState('');
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [oauthLastVerified, setOauthLastVerified] = useState<string | null>(null);
+  const [campaignResourceName, setCampaignResourceName] = useState<string | null>(null);
+  const [isConnectingOAuth, setIsConnectingOAuth] = useState(false);
 
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
@@ -89,7 +91,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     window.history.replaceState({}, '', url.toString());
   }, []);
 
-  // Poll OAuth status whenever we have an adoption in use_my_google_ads mode
+  // Poll OAuth + campaign status whenever we have an adoption in use_my_google_ads mode
   useEffect(() => {
     if (!adoption?.id || selectedMethod !== 'use_my_google_ads') {
       setOauthConnected(false);
@@ -98,7 +100,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
     }
     (async () => {
       try {
-        const res = await fetch(`/api/adoptions/${adoption.id}/google-oauth/status/`);
+        const params = new URLSearchParams({ adoptionId: adoption.id });
+        if (user?.id) params.set('userId', user.id);
+        const res = await fetch(`/api/google-ads/status?${params}`);
         const payload = await res.json();
         setOauthConfigured(Boolean(payload?.configured));
         setOauthConnected(Boolean(payload?.connected));
@@ -111,6 +115,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
           setSelectedGoogleCustomerId(match || payload.accessible_customer_ids[0]);
         }
         if (payload?.updated_at) setOauthLastVerified(payload.updated_at);
+        if (payload?.campaign?.campaign_resource_name) {
+          setCampaignResourceName(payload.campaign.campaign_resource_name);
+        }
       } catch {
         setOauthConfigured(false);
         setOauthConnected(false);
@@ -138,6 +145,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setAdoption(null); setOauthConnected(false); setOauthChecked(false);
     setOauthConfigured(false); setAccessibleCustomerIds([]); setSelectedGoogleCustomerId('');
     setOauthLastVerified(null); setPaymentRoute(null); setSubmitError('');
+    setCampaignResourceName(null); setIsConnectingOAuth(false);
   };
 
   const getDuration = (amount: number) => {
@@ -211,15 +219,20 @@ export function AdoptTab({ release }: AdoptTabProps) {
   };
 
   const handleGoogleDisconnect = async () => {
-    if (!adoption?.id || isDisconnecting) return;
+    if (isDisconnecting) return;
     setIsDisconnecting(true);
     try {
-      await fetch(`/api/adoptions/${adoption.id}/google-oauth`, { method: 'DELETE' });
+      await fetch('/api/google-ads/disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adoptionId: adoption?.id, userId: user?.id }),
+      });
     } finally {
       setOauthConnected(false);
       setOauthChecked(true);
       setAccessibleCustomerIds([]);
       setSelectedGoogleCustomerId('');
+      setCampaignResourceName(null);
       setIsDisconnecting(false);
     }
   };
@@ -410,16 +423,63 @@ export function AdoptTab({ release }: AdoptTabProps) {
         return;
       }
 
-      // google_direct — no Stripe charge
+      // google_direct — create real Google Ads campaign structure
       setIsSubmitting(true);
       try {
-        await storage.updateSongAdoption(adoption.id, { payment_status: 'pending', adoption_status: 'pending_review', payment_route: 'google_direct' } as any);
+        const ytId = (release?.youtube_video_id || release?.youtubeId || '') as string;
+        const budget = selectedPackage?.amount || formData.custom_budget || adoption.amount_due || 0;
+        let createdCampaignResource: string | null = null;
+
+        if (ytId && selectedGoogleCustomerId) {
+          const campaignRes = await fetch('/api/google-ads/campaigns/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              adoptionId: adoption.id,
+              releaseId: release?.id,
+              userId: user?.id || '',
+              youtubeVideoId: ytId,
+              releaseTitle: release?.release_title || 'SufiPulse Release',
+              budgetAmount: budget,
+              selectedCustomerId: selectedGoogleCustomerId,
+              targetRegions: formData.target_regions?.length ? formData.target_regions : ['US', 'GB', 'PK', 'IN'],
+              targetLanguages: formData.target_languages?.length ? formData.target_languages : ['en', 'ur'],
+              campaignObjective: formData.campaign_objective || 'awareness',
+            }),
+          });
+          const campaignData = await campaignRes.json();
+          if (campaignData.campaign_resource_name) {
+            createdCampaignResource = campaignData.campaign_resource_name;
+            setCampaignResourceName(campaignData.campaign_resource_name);
+          } else if (!campaignRes.ok && campaignData.error) {
+            // Non-fatal: record the error but still submit the adoption for admin review
+            console.warn('[AdoptTab] Campaign creation error:', campaignData.error);
+          }
+        }
+
+        await storage.updateSongAdoption(adoption.id, {
+          payment_status: 'pending',
+          adoption_status: 'pending_review',
+          payment_route: 'google_direct',
+          ...(createdCampaignResource
+            ? { google_ads_campaign_resource: createdCampaignResource }
+            : {}),
+        } as any);
+
         await storage.createSongAdoptionEvent({
           adoption_id: adoption.id,
           event_type: 'submitted',
-          event_label: 'Google Ads campaign request submitted — billing via Google Ads account directly',
+          event_label: createdCampaignResource
+            ? `Google Ads campaign created (PAUSED) — ${createdCampaignResource}`
+            : 'Google Ads campaign request submitted — billing via Google Ads account directly',
           actor_type: 'user',
-          metadata: { google_ads_customer_id: selectedGoogleCustomerId, oauth_connected: oauthConnected, payment_route: 'google_direct' },
+          metadata: {
+            google_ads_customer_id: selectedGoogleCustomerId,
+            oauth_connected: oauthConnected,
+            payment_route: 'google_direct',
+            campaign_resource_name: createdCampaignResource,
+            release_id: release?.id,
+          },
         });
         setStep(5);
       } catch (err: any) {
@@ -672,52 +732,72 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
 
         ) : oauthConnected ? (
-          // Connected — show account selector and continue
+          // Connected — show completed 8-state flow + account selector
           <div className="space-y-4">
-            <div className="border border-green-800/40 bg-green-900/10 rounded-xl p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-green-500/15 flex items-center justify-center flex-shrink-0">
-                  <Check className="w-5 h-5 text-green-400" />
+            {/* Completed progress */}
+            <div className="border border-green-800/30 bg-green-900/10 rounded-xl p-5 space-y-2.5">
+              {[
+                'Not connected',
+                'Connecting to Google',
+                'Google OAuth passed',
+                'Checking Google Ads account',
+                `Google Ads account found (${accessibleCustomerIds.length} account${accessibleCustomerIds.length !== 1 ? 's' : ''})`,
+                'Select account for this release',
+              ].map((label, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-green-400" />
+                  </div>
+                  <span className={`text-sm ${i === 5 ? 'text-green-300 font-medium' : 'text-neutral-500'}`}>{label}</span>
                 </div>
-                <div>
-                  <div className="text-sm font-semibold text-green-400">Google Ads Connected</div>
+              ))}
+            </div>
+
+            {/* Account selector */}
+            {accessibleCustomerIds.length > 0 ? (
+              <div className="border border-green-800/30 bg-neutral-900/50 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-green-400">Google Ads Connected</span>
                   {oauthLastVerified && (
-                    <div className="text-xs text-neutral-600">
+                    <span className="text-xs text-neutral-600 ml-auto">
                       Verified {new Date(oauthLastVerified).toLocaleString()}
-                    </div>
+                    </span>
                   )}
                 </div>
-              </div>
-
-              {accessibleCustomerIds.length > 0 ? (
                 <div>
                   <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                    Select Google Ads account for this campaign
+                    Select account for <span className="text-neutral-200">{release?.release_title || 'this release'}</span>
                   </label>
                   <select
                     value={selectedGoogleCustomerId}
                     onChange={(e) => setSelectedGoogleCustomerId(e.target.value)}
-                    className="w-full bg-neutral-900/70 border border-green-800/40 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-neutral-900 border border-green-800/40 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-green-500"
                   >
                     {accessibleCustomerIds.map((cid) => (
                       <option key={cid} value={cid}>{cid}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-neutral-600 mt-1">Customer ID retrieved and verified via Google OAuth</p>
+                  <p className="text-xs text-neutral-600 mt-1">
+                    Customer ID verified via Google OAuth · This adoption will be linked to this account
+                  </p>
                 </div>
-              ) : null}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-neutral-900/50 rounded-lg px-3 py-2">
-                  <div className="text-xs text-neutral-600 mb-0.5">Account</div>
-                  <div className="text-neutral-300 font-mono text-xs truncate">{selectedGoogleCustomerId || '—'}</div>
-                </div>
-                <div className="bg-neutral-900/50 rounded-lg px-3 py-2">
-                  <div className="text-xs text-neutral-600 mb-0.5">Status</div>
-                  <div className="text-green-400 text-xs font-semibold">Verified</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-neutral-900/70 rounded-lg px-3 py-2">
+                    <div className="text-xs text-neutral-600 mb-0.5">Selected Account</div>
+                    <div className="text-neutral-300 font-mono text-xs truncate">{selectedGoogleCustomerId || '—'}</div>
+                  </div>
+                  <div className="bg-neutral-900/70 rounded-lg px-3 py-2">
+                    <div className="text-xs text-neutral-600 mb-0.5">Campaign Target</div>
+                    <div className="text-neutral-400 text-xs truncate">{release?.release_title || '—'}</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="border border-amber-800/30 bg-amber-900/10 rounded-xl p-4 text-sm text-amber-400">
+                Connected but no Google Ads accounts found. Ensure your Google account has access to at least one Google Ads customer account.
+              </div>
+            )}
 
             <button
               onClick={() => setStep(3)}
@@ -740,31 +820,75 @@ export function AdoptTab({ release }: AdoptTabProps) {
         ) : (
           // OAuth configured, not yet connected — primary CTA
           <div className="space-y-5">
-            <div className="border border-neutral-800 bg-neutral-900/50 rounded-xl p-6 space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                  <Globe className="w-5 h-5 text-blue-400" />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-neutral-300 leading-relaxed">
-                    Click below to open Google's secure login. After granting access, your accessible Google Ads accounts will be listed here for selection.
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600">
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /> No spend without your approval</span>
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /> You remain account owner</span>
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /> Revoke access anytime</span>
+            {/* 8-state progress indicator */}
+            <div className="border border-neutral-800 bg-neutral-900/50 rounded-xl p-5 space-y-3">
+              {[
+                { label: 'Not connected', done: false, active: !isConnectingOAuth },
+                { label: 'Connecting to Google', done: false, active: isConnectingOAuth },
+                { label: 'Google OAuth passed', done: false, active: false },
+                { label: 'Checking Google Ads account', done: false, active: false },
+                { label: 'Google Ads account found', done: false, active: false },
+                { label: 'Ready to create campaign', done: false, active: false },
+                { label: 'Campaign created (PAUSED)', done: false, active: false },
+                { label: 'Promotion step completed', done: false, active: false },
+              ].map(({ label, active }, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 text-xs ${
+                    active ? 'border-blue-400 bg-blue-500/20 text-blue-400' : 'border-neutral-700 text-neutral-700'
+                  }`}>
+                    {i + 1}
                   </div>
+                  <span className={`text-sm ${active ? 'text-blue-300 font-medium' : 'text-neutral-600'}`}>{label}</span>
+                  {active && isConnectingOAuth && <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400 ml-auto" />}
                 </div>
-              </div>
+              ))}
             </div>
 
-            <a
-              href={`/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}`}
-              className="flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600 px-1">
+              <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /> No spend without your approval</span>
+              <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /> You remain account owner</span>
+              <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /> Revoke access anytime</span>
+            </div>
+
+            {submitError && (
+              <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+                {submitError}
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={isConnectingOAuth}
+              onClick={async () => {
+                setIsConnectingOAuth(true);
+                setSubmitError('');
+                try {
+                  const res = await fetch('/api/google-ads/connect/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      adoptionId: adoption.id,
+                      userId: user?.id,
+                      returnSlug: release?.slug || '',
+                    }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok || !data.authUrl) {
+                    throw new Error(data.error || 'Could not start Google connection');
+                  }
+                  window.location.href = data.authUrl;
+                } catch (err: any) {
+                  setSubmitError(err.message || 'Could not start Google connection. Please try again.');
+                  setIsConnectingOAuth(false);
+                }
+              }}
+              className="flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
             >
-              <Globe className="w-5 h-5" />
-              Connect Google Ads Account
-            </a>
+              {isConnectingOAuth
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Connecting…</>
+                : <><Globe className="w-5 h-5" /> Connect Google Ads Account</>
+              }
+            </button>
 
             <p className="text-xs text-neutral-700 text-center">
               Uses Google OAuth 2.0 · Scope: Google Ads API (adwords)
@@ -1274,13 +1398,21 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   {isGoogleDirect ? 'Pay Google Directly' : 'SufiPulse via Stripe'}
                 </span>
               </div>
+              {campaignResourceName && (
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
+                  <span className="text-neutral-500 text-sm">Campaign Resource</span>
+                  <span className="text-blue-400 text-xs font-mono truncate max-w-[55%]">{campaignResourceName}</span>
+                </div>
+              )}
             </>
           )}
 
           <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
             <span className="text-neutral-500 text-sm">Campaign Status</span>
-            <span className="text-amber-400 text-sm font-medium bg-amber-900/40 px-2 py-0.5 rounded">Pending Review</span>
-          </div>
+            {campaignResourceName
+              ? <span className="text-blue-400 text-sm font-medium bg-blue-900/40 px-2 py-0.5 rounded">Created — PAUSED</span>
+              : <span className="text-amber-400 text-sm font-medium bg-amber-900/40 px-2 py-0.5 rounded">Pending Review</span>
+            }</div>
           <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
             <span className="text-neutral-500 text-sm">Amount</span>
             <span className="text-neutral-300 text-sm font-medium">
@@ -1337,14 +1469,31 @@ export function AdoptTab({ release }: AdoptTabProps) {
         {isGoogleAds && adoption && oauthConfigured && !oauthConnected && (
           <div className="mt-4 p-4 border border-blue-800/40 bg-blue-900/20 rounded-xl text-center space-y-3">
             <p className="text-sm text-neutral-400">
-              Connect your Google Ads account to finalize the campaign setup.
+              Connect your Google Ads account to finalize the campaign setup for this release.
             </p>
-            <a
-              href={`/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}`}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/google-ads/connect/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      adoptionId: adoption.id,
+                      userId: user?.id,
+                      returnSlug: release?.slug || '',
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data.authUrl) window.location.href = data.authUrl;
+                } catch {
+                  // Ignore — user can try again
+                }
+              }}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              Connect Google Ads Account
-            </a>
+              <Globe className="w-4 h-4" /> Connect Google Ads Account
+            </button>
           </div>
         )}
       </div>
