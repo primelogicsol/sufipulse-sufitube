@@ -52,38 +52,64 @@ jobs:
           port: 22
           script: |
             set -e
-            cd /var/www/sufipulse-new
+            _s="init"
+            trap 'echo "[DEPLOY FAILED] section=${_s} exit=$?" >&2' ERR
 
-            # Ensure .env exists (docker-compose requires it)
+            # ── 1. working directory ─────────────────────────────────────────
+            _s="cd"
+            cd /var/www/sufipulse-new
+            echo "[deploy] pwd=$(pwd)"
+
+            # ── 2. docker compose available? ─────────────────────────────────
+            _s="compose-check"
+            if ! docker compose version 2>/dev/null; then
+              echo "[deploy] FATAL: docker compose plugin not found" >&2
+              echo "[deploy] Docker version: $(docker --version 2>&1)" >&2
+              exit 1
+            fi
+
+            # ── 3. .env file ─────────────────────────────────────────────────
+            _s="env-file"
             if [ ! -f .env ]; then
               if [ -f .env.local ]; then
                 cp .env.local .env
-                echo "[deploy] created .env from .env.local"
+                echo "[deploy] .env created from .env.local"
               else
-                echo "[deploy] FATAL: neither .env nor .env.local found in $(pwd)" >&2
+                echo "[deploy] FATAL: neither .env nor .env.local found" >&2
                 exit 1
               fi
             fi
+            echo "[deploy] .env present: $(wc -l < .env) lines"
 
-            # Inject/update secrets from GitHub into .env (idempotent — safe to re-run)
-            inject_env() {
-              local key="$1" val="$2"
-              [ -z "$val" ] && return
-              sed -i "/^${key}=/d" .env
-              printf '%s=%s\n' "$key" "$val" >> .env
-            }
-            inject_env GOOGLE_ADS_CLIENT_ID         "${{ secrets.GOOGLE_ADS_CLIENT_ID }}"
-            inject_env GOOGLE_ADS_CLIENT_SECRET     "${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}"
-            inject_env GOOGLE_ADS_DEVELOPER_TOKEN   "${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}"
-            inject_env GOOGLE_ADS_REDIRECT_URI      "${{ secrets.GOOGLE_ADS_REDIRECT_URI }}"
-            inject_env GOOGLE_ADS_LOGIN_CUSTOMER_ID "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
-            inject_env GOOGLE_ADS_CREATE_MODE       "manual_review"
+            # ── 4. inject secrets from CI ────────────────────────────────────
+            _s="inject-secrets"
+            _e() { k="$1"; v="$2"; [ -z "$v" ] && return; sed -i "/^${k}=/d" .env; echo "${k}=${v}" >> .env; }
+            _e GOOGLE_ADS_CLIENT_ID         "${{ secrets.GOOGLE_ADS_CLIENT_ID }}"
+            _e GOOGLE_ADS_CLIENT_SECRET     "${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}"
+            _e GOOGLE_ADS_DEVELOPER_TOKEN   "${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+            _e GOOGLE_ADS_REDIRECT_URI      "${{ secrets.GOOGLE_ADS_REDIRECT_URI }}"
+            _e GOOGLE_ADS_LOGIN_CUSTOMER_ID "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
+            _e GOOGLE_ADS_CREATE_MODE       "manual_review"
+            echo "[deploy] .env after injection: $(wc -l < .env) lines"
 
+            # ── 5. GHCR auth ─────────────────────────────────────────────────
+            _s="docker-login"
+            docker logout ghcr.io 2>/dev/null || true
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
+            # ── 6. pull latest image ─────────────────────────────────────────
+            _s="docker-pull"
             docker compose pull app
+
+            # ── 7. recreate container ────────────────────────────────────────
+            _s="docker-up"
             docker compose up -d --force-recreate app
+
+            # ── 8. cleanup & verify ──────────────────────────────────────────
+            _s="cleanup"
             docker image prune -f
 
+            _s="verify"
             docker ps
             curl -I http://127.0.0.1:3001 || true
+            echo "[deploy] DONE"
