@@ -38,6 +38,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<any>({});
   const [submitError, setSubmitError] = useState('');
+  const [paymentRoute, setPaymentRoute] = useState<'google_direct' | 'stripe_sufipulse' | null>(null);
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [adoption, setAdoption] = useState<SongAdoption | null>(null);
 
@@ -136,7 +137,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setStep(0); setSelectedMethod(null); setSelectedPackage(null);
     setAdoption(null); setOauthConnected(false); setOauthChecked(false);
     setOauthConfigured(false); setAccessibleCustomerIds([]); setSelectedGoogleCustomerId('');
-    setOauthLastVerified(null);
+    setOauthLastVerified(null); setPaymentRoute(null); setSubmitError('');
+  };
+
+  const getDuration = (amount: number) => {
+    if (amount < 50)  return { days: '1–5',   daily: Math.round(amount / 3) };
+    if (amount < 100) return { days: '5–10',  daily: Math.round(amount / 7) };
+    if (amount < 300) return { days: '7–14',  daily: Math.round(amount / 10) };
+    return              { days: '14–30', daily: Math.round(amount / 20) };
   };
 
   // ── Event handlers ────────────────────────────────────────────────────────
@@ -358,31 +366,72 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   const handlePayment = async () => {
     if (!adoption) return;
-    const nextStep = selectedMethod === 'use_my_google_ads' ? 5 : 4;
 
+    // ── use_my_google_ads: branch on payment route ─────────────────────────
     if (selectedMethod === 'use_my_google_ads') {
+      if (!paymentRoute) {
+        setSubmitError('Please select a payment route to continue.');
+        return;
+      }
+
+      if (paymentRoute === 'stripe_sufipulse') {
+        if (!stripeEnabled) {
+          setSubmitError('Payment system is currently unavailable. Please contact support.');
+          return;
+        }
+        setIsRedirectingToStripe(true);
+        try {
+          await storage.updateSongAdoption(adoption.id, { adoption_status: 'pending_review', payment_status: 'unpaid', payment_route: 'stripe_sufipulse' } as any);
+          await storage.createSongAdoptionEvent({
+            adoption_id: adoption.id,
+            event_type: 'payment_route_selected',
+            event_label: 'Payment route: SufiPulse Stripe — redirecting to Stripe Checkout',
+            actor_type: 'user',
+            metadata: { payment_route: 'stripe_sufipulse', google_ads_customer_id: selectedGoogleCustomerId, oauth_connected: oauthConnected },
+          });
+          const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amountUSD: adoption.amount_due,
+              releaseTitle: release?.release_title,
+              sponsorName: formData.full_name,
+              sponsorEmail: formData.email,
+              methodType: adoption.method_type,
+            }),
+          });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Checkout failed');
+          window.location.href = body.url;
+        } catch (err: any) {
+          setSubmitError(`Payment error: ${err.message}`);
+          setIsRedirectingToStripe(false);
+        }
+        return;
+      }
+
+      // google_direct — no Stripe charge
       setIsSubmitting(true);
       try {
-        await storage.updateSongAdoption(adoption.id, {
-          payment_status: 'pending',
-          adoption_status: 'pending_review',
-        });
+        await storage.updateSongAdoption(adoption.id, { payment_status: 'pending', adoption_status: 'pending_review', payment_route: 'google_direct' } as any);
         await storage.createSongAdoptionEvent({
           adoption_id: adoption.id,
           event_type: 'submitted',
-          event_label: 'Google Ads campaign request submitted — pending admin review',
+          event_label: 'Google Ads campaign request submitted — billing via Google Ads account directly',
           actor_type: 'user',
-          metadata: {
-            google_ads_customer_id: selectedGoogleCustomerId,
-            oauth_connected: oauthConnected,
-          },
+          metadata: { google_ads_customer_id: selectedGoogleCustomerId, oauth_connected: oauthConnected, payment_route: 'google_direct' },
         });
-        setStep(nextStep);
+        setStep(5);
+      } catch (err: any) {
+        setSubmitError(`Error: ${err.message}`);
       } finally {
         setIsSubmitting(false);
       }
       return;
     }
+
+    // ── managed_sufitube ────────────────────────────────────────────────────
+    const nextStep = 4;
 
     if (adoption.amount_due === 0) {
       await storage.updateSongAdoption(adoption.id, { payment_status: 'paid', adoption_status: 'pending_review' });
@@ -960,7 +1009,145 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const renderReview = () => {
     const budget = selectedPackage?.amount || formData.custom_budget || adoption?.amount_due || 0;
     const impact = getImpactPreview(budget);
+    const dur = getDuration(budget);
+    const ytId = (release?.youtube_video_id || release?.youtubeId || '') as string;
 
+    // ── use_my_google_ads: full campaign review + payment route ──────────────
+    if (selectedMethod === 'use_my_google_ads') {
+      return (
+        <div className="max-w-xl mx-auto space-y-6 animate-in slide-in-from-right-8 duration-300">
+          <div className="text-center">
+            <h3 className="text-2xl font-medium text-neutral-100 mb-1">Campaign Review</h3>
+            <p className="text-sm text-neutral-500">Verify the setup, then choose how to pay.</p>
+          </div>
+
+          {/* Campaign details */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
+            <div className="flex items-center justify-between px-5 py-3">
+              <span className="text-neutral-500">Song</span>
+              <span className="text-neutral-200 font-medium text-right max-w-[60%] truncate">{release?.release_title || 'Current Release'}</span>
+            </div>
+            {ytId && (
+              <div className="flex items-center justify-between px-5 py-3">
+                <span className="text-neutral-500">YouTube URL</span>
+                <a href={`https://www.youtube.com/watch?v=${ytId}`} target="_blank" rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 font-mono text-xs truncate max-w-[60%]"
+                >youtube.com/watch?v={ytId}</a>
+              </div>
+            )}
+            <div className="flex items-center justify-between px-5 py-3">
+              <span className="text-neutral-500">Google Ads Account</span>
+              {oauthConnected && selectedGoogleCustomerId ? (
+                <span className="flex items-center gap-1.5 text-green-400 font-mono text-xs">
+                  <Check className="w-3.5 h-3.5 shrink-0" />{selectedGoogleCustomerId}
+                </span>
+              ) : (
+                <span className="text-red-400 text-xs">Not connected — go back to connect</span>
+              )}
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <span className="text-neutral-500">Total Budget</span>
+              <span className="text-amber-500 font-bold">${budget}</span>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <span className="text-neutral-500">Est. Duration</span>
+              <span className="text-neutral-300">{dur.days} days</span>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <span className="text-neutral-500">Est. Daily Spend</span>
+              <span className="text-neutral-300">~${dur.daily}/day</span>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <span className="text-neutral-500">Campaign Objective</span>
+              <span className="text-neutral-300 capitalize">{(formData.campaign_objective || 'awareness').replace(/_/g, ' ')}</span>
+            </div>
+            {impact && (
+              <div className="flex items-center justify-between px-5 py-3">
+                <span className="text-neutral-500">Est. Impressions</span>
+                <span className="text-neutral-300">~{impact.min}–{impact.max}</span>
+              </div>
+            )}
+            {formData.dedication_message && (
+              <div className="px-5 py-3">
+                <span className="text-neutral-500 block text-xs mb-1">Dedication</span>
+                <span className="text-neutral-300 italic">"{formData.dedication_message}"</span>
+              </div>
+            )}
+          </div>
+
+          {/* Payment route */}
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-neutral-300">How will the media budget be paid?</p>
+
+            <button
+              onClick={() => setPaymentRoute('google_direct')}
+              className={`w-full flex flex-col text-left p-5 rounded-xl border transition-all ${
+                paymentRoute === 'google_direct'
+                  ? 'border-blue-500/60 bg-blue-900/15'
+                  : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-neutral-200">Pay Google Directly</span>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentRoute === 'google_direct' ? 'border-blue-400 bg-blue-400' : 'border-neutral-600'}`}>
+                  {paymentRoute === 'google_direct' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+              </div>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Your Google Ads account is charged directly by Google for media spend. SufiPulse prepares the campaign — no Stripe charge.
+              </p>
+            </button>
+
+            <button
+              onClick={() => setPaymentRoute('stripe_sufipulse')}
+              className={`w-full flex flex-col text-left p-5 rounded-xl border transition-all ${
+                paymentRoute === 'stripe_sufipulse'
+                  ? 'border-amber-500/60 bg-amber-900/15'
+                  : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-neutral-200">Pay SufiPulse via Stripe</span>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentRoute === 'stripe_sufipulse' ? 'border-amber-400 bg-amber-400' : 'border-neutral-600'}`}>
+                  {paymentRoute === 'stripe_sufipulse' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+              </div>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Pay SufiPulse directly via Stripe. We cover the full media spend and launch the campaign from our infrastructure.
+              </p>
+            </button>
+          </div>
+
+          {submitError && (
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+              {submitError}
+            </div>
+          )}
+
+          <button
+            onClick={() => { setSubmitError(''); handlePayment(); }}
+            disabled={!paymentRoute || isSubmitting || isRedirectingToStripe}
+            className={`w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+              paymentRoute === 'stripe_sufipulse' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {isRedirectingToStripe ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
+            ) : isSubmitting ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+            ) : paymentRoute === 'stripe_sufipulse' ? (
+              <><CreditCard className="w-5 h-5" /> Pay ${budget} via Stripe</>
+            ) : paymentRoute === 'google_direct' ? (
+              <><Check className="w-5 h-5" /> Submit Campaign Request — Pay Google Directly</>
+            ) : (
+              'Select a payment option above'
+            )}
+          </button>
+        </div>
+      );
+    }
+
+    // ── managed_sufitube ─────────────────────────────────────────────────────
     return (
       <div className="max-w-xl mx-auto space-y-6 animate-in slide-in-from-right-8 duration-300">
         <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Review Your Campaign</h3>
@@ -970,20 +1157,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
             <Music className="w-4 h-4 text-amber-500" />
             <span className="text-neutral-200 font-medium">{release?.release_title || 'Current Release'}</span>
           </div>
-
-          {selectedMethod === 'use_my_google_ads' && (
-            <div className="flex items-center justify-between py-2 border-b border-neutral-800">
-              <span className="text-sm text-neutral-500">Google Ads Account</span>
-              {oauthConnected && selectedGoogleCustomerId ? (
-                <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium">
-                  <Check className="w-3.5 h-3.5" />
-                  {selectedGoogleCustomerId}
-                </span>
-              ) : (
-                <span className="text-amber-400 text-sm">Pending verification</span>
-              )}
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -1029,54 +1202,50 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
         )}
 
-        {selectedMethod === 'use_my_google_ads' ? (
-          <button
-            onClick={() => { setSubmitError(''); handlePayment(); }}
-            disabled={isSubmitting}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isSubmitting
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-              : <><Check className="w-5 h-5" /> Submit Campaign Request</>}
-          </button>
-        ) : (
-          <>
-            {!stripeEnabled && (
-              <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
-                Payment system unavailable. Contact support to complete your sponsorship.
-              </div>
-            )}
-            <button
-              onClick={() => { setSubmitError(''); handlePayment(); }}
-              disabled={isRedirectingToStripe || !stripeEnabled}
-              className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isRedirectingToStripe
-                ? <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
-                : <><CreditCard className="w-5 h-5" /> Confirm & Pay with Card</>}
-            </button>
-          </>
+        {!stripeEnabled && (
+          <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+            Payment system unavailable. Contact support to complete your sponsorship.
+          </div>
         )}
+        <button
+          onClick={() => { setSubmitError(''); handlePayment(); }}
+          disabled={isRedirectingToStripe || !stripeEnabled}
+          className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          {isRedirectingToStripe
+            ? <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
+            : <><CreditCard className="w-5 h-5" /> Confirm & Pay with Card</>}
+        </button>
       </div>
     );
   };
 
   const renderSuccess = () => {
     const isGoogleAds = selectedMethod === 'use_my_google_ads';
+    const isGoogleDirect = isGoogleAds && paymentRoute === 'google_direct';
+    const isStripeSufipulse = isGoogleAds && paymentRoute === 'stripe_sufipulse';
     const displayCustomerId = selectedGoogleCustomerId || formData.google_ads_customer_id;
+
+    const title = isGoogleDirect
+      ? 'Campaign Request Submitted'
+      : isStripeSufipulse
+        ? 'Payment Confirmed'
+        : 'Adoption Complete';
+
+    const description = isGoogleDirect
+      ? 'Google Ads account connected. Campaign request submitted. Your Google Ads account will be charged for media spend after admin review and campaign launch — typically 1–2 business days.'
+      : isStripeSufipulse
+        ? 'Payment confirmed through SufiPulse. Campaign pending review and launch within 1–2 business days.'
+        : 'May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and will be reviewed shortly.';
+
     return (
       <div className="max-w-xl mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
         <div className="w-24 h-24 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
           <Check className="w-10 h-10 text-green-500" />
         </div>
 
-        <h3 className="text-3xl font-serif font-light text-neutral-100 mb-2">
-          {isGoogleAds ? 'Campaign Request Submitted' : 'Adoption Complete'}
-        </h3>
-        <p className="text-neutral-400 leading-relaxed mb-8">
-          {isGoogleAds
-            ? 'Your adoption has been recorded. Your connected Google Ads account and campaign request are pending SufiPulse review before launch.'
-            : 'May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and will be reviewed shortly.'}
+        <h3 className="text-3xl font-serif font-light text-neutral-100 mb-2">{title}</h3>
+        <p className="text-neutral-400 leading-relaxed mb-8">{description}
         </p>
 
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-left mb-8">
@@ -1093,11 +1262,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 <span className="text-neutral-500 text-sm">Google Ads Account</span>
                 {oauthConnected
                   ? <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium"><Check className="w-3.5 h-3.5" /> Connected</span>
-                  : <span className="text-amber-400 text-sm font-medium">Pending Verification</span>}
+                  : <span className="text-red-400 text-sm font-medium">Not Connected</span>}
               </div>
               <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
                 <span className="text-neutral-500 text-sm">Customer ID</span>
                 <span className="text-neutral-300 text-sm font-mono">{displayCustomerId || '—'}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
+                <span className="text-neutral-500 text-sm">Payment Route</span>
+                <span className="text-neutral-300 text-sm">
+                  {isGoogleDirect ? 'Pay Google Directly' : 'SufiPulse via Stripe'}
+                </span>
               </div>
             </>
           )}
@@ -1108,13 +1283,19 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
           <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
             <span className="text-neutral-500 text-sm">Amount</span>
-            <span className="text-neutral-300 text-sm font-medium">${adoption?.amount_due || 0}</span>
+            <span className="text-neutral-300 text-sm font-medium">
+              {isGoogleDirect ? `$${adoption?.amount_due || 0} (billed by Google)` : `$${adoption?.amount_due || 0}`}
+            </span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
             <span className="text-neutral-500 text-sm">Method</span>
             <span className="text-neutral-300 text-sm font-medium capitalize">
               {selectedMethod?.replaceAll('_', ' ')}
             </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-500 text-sm">Reference ID</span>
+            <span className="text-neutral-500 text-xs font-mono">{adoption?.id?.slice(-12) || '—'}</span>
           </div>
         </div>
 
@@ -1293,7 +1474,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           {step > 0 && !isSuccessScreen && (
             <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
               <div className="text-sm font-medium text-neutral-500">
-                Step {step} <span className="text-neutral-700">of 4</span>
+                Step {step} <span className="text-neutral-700">of {selectedMethod === 'use_my_google_ads' ? 4 : 3}</span>
               </div>
               <button onClick={resetFlow} className="text-neutral-500 hover:text-white transition-colors p-2">
                 <X className="w-5 h-5" />

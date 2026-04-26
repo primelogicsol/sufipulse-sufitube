@@ -3,7 +3,9 @@ export interface SongAdoption {
   release_id: string;
   user_id?: string;
   method_type: 'managed_sufitube' | 'use_my_google_ads';
-  adoption_status: 'pending_review' | 'approved' | 'scheduled' | 'live' | 'completed' | 'cancelled';
+  adoption_status: 'draft' | 'pending_review' | 'approved' | 'scheduled' | 'live' | 'completed' | 'cancelled';
+  google_ads_campaign_resource?: string;
+  payment_route?: 'google_direct' | 'stripe_sufipulse';
   package_id?: string;
   custom_budget?: number;
   currency: string;
