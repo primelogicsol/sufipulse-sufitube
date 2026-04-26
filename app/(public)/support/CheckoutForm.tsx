@@ -102,7 +102,7 @@ export function CheckoutForm({ onAmountChange, currentAmount }: CheckoutFormProp
           ))}
         </div>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] text-sm">$</span>
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] text-sm select-none">$</span>
           <input
             type="number"
             min="1"
@@ -110,7 +110,7 @@ export function CheckoutForm({ onAmountChange, currentAmount }: CheckoutFormProp
             placeholder="Custom amount"
             value={customAmount}
             onChange={(e) => handleCustom(e.target.value)}
-            className="w-full pl-7 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[var(--color-text-primary)] text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-gold)] transition-colors"
+            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[var(--color-text-primary)] text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-gold)] transition-colors"
           />
         </div>
       </div>

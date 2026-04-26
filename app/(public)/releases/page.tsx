@@ -333,8 +333,7 @@ export default function Releases() {
                                             setCurrentPage(1);
                                         }}
                                         placeholder="Search releases..."
-                                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 pr-4 py-2 text-sm focus:outline-none focus:border-neutral-700 placeholder:text-neutral-600"
-                                        style={{ paddingLeft: '2.25rem' }}
+                                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-neutral-700 placeholder:text-neutral-600"
                                     />
                                 </div>
                             </div>

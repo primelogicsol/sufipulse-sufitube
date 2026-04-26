@@ -435,14 +435,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <div>
             <label className="block text-sm text-neutral-400 mb-2">Your Total Campaign Budget (USD) *</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm select-none">$</span>
               <input
                 type="number"
                 min="10"
                 step="1"
                 value={formData.custom_budget || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
-                className={`w-full bg-neutral-900 border rounded-lg pl-8 pr-4 py-3 text-white focus:outline-none focus:border-blue-500 ${formData.custom_budget && formData.custom_budget < 10 ? 'border-red-500' : 'border-neutral-800'}`}
+                className={`w-full bg-neutral-900 border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-blue-500 ${formData.custom_budget && formData.custom_budget < 10 ? 'border-red-500' : 'border-neutral-800'}`}
                 placeholder="Minimum $10"
               />
             </div>
