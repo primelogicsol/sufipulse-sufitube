@@ -37,8 +37,9 @@ const Login = () => {
                 router.push('/user/literary-contributor/dashboard');
             } else if (user.role === 'studio') {
                 router.push('/user/studio-engineer/dashboard');
+            } else {
+                router.push('/user/profile');
             }
-            // role === 'user' or unknown: stay on login so user can re-authenticate
         }
     }, [user]);
     const handleChange = (e: any) => {

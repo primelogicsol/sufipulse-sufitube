@@ -32,9 +32,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If auth route and already logged in, redirect to dashboard
+  // If auth route and already logged in, redirect to home
   if (isAuthRoute && accessToken) {
-    return NextResponse.redirect(new URL('/user/dashboard', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();

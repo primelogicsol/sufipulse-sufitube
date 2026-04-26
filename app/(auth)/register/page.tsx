@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Layout } from '../../components/layout/Layout';
 import { UserPlus, Eye, EyeOff, Loader, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
-import { storage } from "@/app/lib/storage";
 import { useAuth } from '../../contexts/AuthContext';
 import { registerSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeEmail } from '../../lib/sanitize';
@@ -59,11 +58,19 @@ export default function SignUp() {
         }
 
         try {
-            await storage.register(cleanEmail, form.password, form.fullName);
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ full_name: form.fullName, email: cleanEmail, password: form.password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error?.message || 'Registration failed');
+
             setSuccess(true);
             setForm(prev => ({ ...prev, password: '' }));
 
-            // Auto-login then redirect
+            // Auto-login to hydrate auth state
             await login(cleanEmail, form.password);
 
             const returnUrl = searchParams.get('returnUrl');
