@@ -24,8 +24,8 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_YOUTUBE_API_KEY=$NEXT_PUBLIC_YOUTUBE_API_KEY
 ENV NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=$NEXT_PUBLIC_YOUTUBE_CHANNEL_ID
 
-# Build the application
-RUN npm run build
+# Build the application (CI=true skips the .env file presence check)
+RUN CI=true npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
