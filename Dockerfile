@@ -16,8 +16,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build-time env vars
+# Build-time env vars — disable all env/secret validation during image build
 ENV CI=true
+ENV SKIP_ENV_VALIDATION=true
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SENTRY_DISABLE_AUTO_UPLOAD=true
 

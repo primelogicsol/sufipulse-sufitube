@@ -37,8 +37,8 @@ const rootDir = resolve(__dirname, "..");
 const envPath = resolve(rootDir, ".env.local");
 const envDevPath = resolve(rootDir, ".env.development");
 
-if (process.env.CI) {
-  console.log(`${YELLOW}  ℹ${RESET}  CI environment detected — skipping .env file check`);
+if (process.env.CI || process.env.SKIP_ENV_VALIDATION === 'true') {
+  console.log(`${YELLOW}  ℹ${RESET}  CI/Docker build detected — skipping .env file check`);
 } else if (fs.existsSync(envPath)) {
   console.log(`${GREEN}  ✔${RESET}  .env.local file found`);
 } else if (fs.existsSync(envDevPath)) {
