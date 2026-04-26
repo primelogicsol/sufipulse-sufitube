@@ -1,26 +1,34 @@
 {
-  "pages": {
-    "/_app": []
-  },
+  "polyfillFiles": [
+    "static/chunks/polyfills-42372ed130431b0a.js"
+  ],
   "devFiles": [],
   "ampDevFiles": [],
-  "polyfillFiles": [
-    "static/chunks/dfb3b_next_dist_build_polyfills_polyfill-nomodule.js"
-  ],
   "lowPriorityFiles": [
-    "static/development/_ssgManifest.js",
-    "static/development/_buildManifest.js"
+    "static/wWbNgvYWTDw0JaIgAbRhE/_buildManifest.js",
+    "static/wWbNgvYWTDw0JaIgAbRhE/_ssgManifest.js"
   ],
   "rootMainFiles": [
-    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_451c077f._.js",
-    "static/chunks/dfb3b_next_dist_compiled_react-dom_1e5bd02b._.js",
-    "static/chunks/dfb3b_next_dist_compiled_next-devtools_index_9ced2b8e.js",
-    "static/chunks/dfb3b_next_dist_compiled_aef8bb80._.js",
-    "static/chunks/dfb3b_next_dist_client_2e4a1893._.js",
-    "static/chunks/dfb3b_next_dist_db1aa385._.js",
-    "static/chunks/dfb3b_@swc_helpers_cjs_198261c7._.js",
-    "static/chunks/Sufipulseupdate2026_Sufipulseupdate_a0ff3932._.js",
-    "static/chunks/turbopack-Sufipulseupdate2026_Sufipulseupdate_20b5afe3._.js"
+    "static/chunks/webpack-8100429cf15f6107.js",
+    "static/chunks/52774a7f-1cc8ef5424b527b6.js",
+    "static/chunks/4bd1b696-3a540c811330fc8b.js",
+    "static/chunks/7362-3ceafad3b8fabcb6.js",
+    "static/chunks/main-app-f8c459d774c963f8.js"
   ],
+  "rootMainFilesTree": {},
+  "pages": {
+    "/_app": [
+      "static/chunks/webpack-8100429cf15f6107.js",
+      "static/chunks/framework-3b18a1f53fe4b15d.js",
+      "static/chunks/main-21e3452dad464e8c.js",
+      "static/chunks/pages/_app-ffba01103c5729bc.js"
+    ],
+    "/_error": [
+      "static/chunks/webpack-8100429cf15f6107.js",
+      "static/chunks/framework-3b18a1f53fe4b15d.js",
+      "static/chunks/main-21e3452dad464e8c.js",
+      "static/chunks/pages/_error-e82e29f635d3c245.js"
+    ]
+  },
   "ampFirstPages": []
 }

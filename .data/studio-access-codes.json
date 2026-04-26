@@ -1,0 +1,71 @@
+[
+  {
+    "id": "ACR-DEMO-000001",
+    "name": "Demo Contributor",
+    "email": "demo@sufipulse.org",
+    "role": "vocalist",
+    "profile_reference": "DEMO-REF-001",
+    "reason": "Temporary demo entry for testing the Session Coordination Request form.",
+    "status": "issued",
+    "issued_code": null,
+    "issued_at": null,
+    "created_at": "2026-04-25T05:07:32.559Z",
+    "updated_at": "2026-04-25T05:07:32.559Z"
+  },
+  {
+    "name": "fayaz",
+    "email": "fk.envcal@gmail.com",
+    "role": "producer",
+    "reason": "Manually issued by admin.",
+    "profile_reference": "",
+    "status": "issued",
+    "issued_code": "REF-PRD-2026-IATIW",
+    "issued_at": "2026-04-25T05:11:25.484Z",
+    "_admin_created": true,
+    "id": "studio-access-codes_1777093885786_dwnczh",
+    "created_at": "2026-04-25T05:11:25.786Z",
+    "updated_at": "2026-04-25T05:11:25.786Z"
+  },
+  {
+    "name": "fayaz",
+    "email": "fk.envcal@gmail.com",
+    "role": "producer",
+    "reason": "Manually issued by admin.",
+    "profile_reference": "",
+    "status": "issued",
+    "issued_code": "REF-PRD-2026-6AYPJ",
+    "issued_at": "2026-04-25T05:18:07.151Z",
+    "_admin_created": true,
+    "id": "studio-access-codes_1777094287458_p3o9wr",
+    "created_at": "2026-04-25T05:18:07.458Z",
+    "updated_at": "2026-04-25T05:18:07.458Z"
+  },
+  {
+    "name": "fayaz",
+    "email": "fk.envcal@gmail.com",
+    "role": "producer",
+    "reason": "Manually issued by admin.",
+    "profile_reference": "",
+    "status": "issued",
+    "issued_code": "REF-PRD-2026-FAC5V",
+    "issued_at": "2026-04-25T06:06:43.498Z",
+    "_admin_created": true,
+    "id": "studio-access-codes_1777097203801_7li3l7",
+    "created_at": "2026-04-25T06:06:43.801Z",
+    "updated_at": "2026-04-25T06:06:43.801Z"
+  },
+  {
+    "name": "fayaz",
+    "email": "fk.environment@gmail.com",
+    "role": "vocalist",
+    "reason": "Manually issued by admin.",
+    "profile_reference": "",
+    "status": "issued",
+    "issued_code": "REF-VOC-2026-IMIIG",
+    "issued_at": "2026-04-25T06:10:03.413Z",
+    "_admin_created": true,
+    "id": "studio-access-codes_1777097403820_cbpecv",
+    "created_at": "2026-04-25T06:10:03.820Z",
+    "updated_at": "2026-04-25T06:10:03.820Z"
+  }
+]

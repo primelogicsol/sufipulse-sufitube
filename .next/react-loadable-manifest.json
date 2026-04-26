@@ -1,20 +1,50 @@
 {
   "app\\(public)\\release-detail\\[slug]\\page.tsx -> ../../../../lib/youtube-service": {
-    "id": "app\\(public)\\release-detail\\[slug]\\page.tsx -> ../../../../lib/youtube-service",
+    "id": 23102,
     "files": [
-      "static/chunks/_app-pages-browser_lib_youtube-service_ts.js"
+      "static/chunks/3102.7098026bc84e03ed.js"
+    ]
+  },
+  "app\\(public)\\release-detail\\[slug]\\page.tsx -> ../../../components/release/adopt/AdoptTab": {
+    "id": 1845,
+    "files": [
+      "static/chunks/1845.59fe43b5f84be067.js"
+    ]
+  },
+  "app\\(public)\\release-detail\\[slug]\\page.tsx -> ../../../components/release/lyrics/VideoOverlay": {
+    "id": 38488,
+    "files": [
+      "static/chunks/8488.a92cbc2fc22ea570.js"
+    ]
+  },
+  "app\\(public)\\releases\\page.tsx -> ../../../app/data/youtube-videos": {
+    "id": 1184,
+    "files": [
+      "static/chunks/1184.2b13b9ccb7e795dd.js"
     ]
   },
   "app\\(public)\\releases\\page.tsx -> ../../../lib/youtube-service": {
-    "id": "app\\(public)\\releases\\page.tsx -> ../../../lib/youtube-service",
+    "id": 23102,
     "files": [
-      "static/chunks/_app-pages-browser_lib_youtube-service_ts.js"
+      "static/chunks/3102.7098026bc84e03ed.js"
     ]
   },
-  "node_modules\\next\\dist\\client\\components\\react-dev-overlay\\utils\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
-    "id": "node_modules\\next\\dist\\client\\components\\react-dev-overlay\\utils\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
+  "app\\page.tsx -> ../lib/youtube-service": {
+    "id": 23102,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
+      "static/chunks/3102.7098026bc84e03ed.js"
+    ]
+  },
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
+    "id": 45139,
+    "files": [
+      "static/chunks/5139.7e9105b2e564c237.js"
+    ]
+  },
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
+    "id": 31646,
+    "files": [
+      "static/chunks/1646.235e5fa2a248b1d6.js"
     ]
   }
 }
