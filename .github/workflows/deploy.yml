@@ -86,6 +86,7 @@ jobs:
             NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
             NEXT_PUBLIC_YOUTUBE_API_KEY=${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
             NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=${{ secrets.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID }}
+            NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
           no-cache: true
 
   # ── Job 3: Deploy to IONOS VPS ─────────────────────────
