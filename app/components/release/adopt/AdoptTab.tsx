@@ -461,7 +461,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 value={formData.custom_budget || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
                 className={`w-full bg-neutral-900 border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-blue-500 ${formData.custom_budget && formData.custom_budget < 10 ? 'border-red-500' : 'border-neutral-800'}`}
-                placeholder="Minimum $10"
+                placeholder="Minimum 10"
               />
             </div>
             {formData.custom_budget && formData.custom_budget < 10
@@ -1028,7 +1028,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   onChange={(e) => { setCustomModalAmount(e.target.value); setCustomModalError(''); }}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleCustomModalConfirm(); }}
                   className={[
-                    'w-full pl-8 pr-4 py-3 rounded-xl bg-white/5 border text-white text-lg font-medium placeholder:text-neutral-600 focus:outline-none transition-colors',
+                    'w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border text-white text-lg font-medium placeholder:text-neutral-600 focus:outline-none transition-colors',
                     customModalError ? 'border-red-500' : 'border-white/10 focus:border-[#C8A75E]',
                   ].join(' ')}
                 />

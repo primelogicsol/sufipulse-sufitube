@@ -7,65 +7,70 @@
 
 /* ═══════════════════════════════════════════════════════════
    FORM ELEMENTS - Global Standards
+   Placed in @layer base so Tailwind utility classes (pl-*, pr-*,
+   bg-*, border-*, etc.) can override these defaults where needed.
    ═══════════════════════════════════════════════════════════ */
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="date"],
-input[type="time"],
-input[type="search"],
-textarea,
-select {
-  background: var(--dash-bg-secondary);
-  border: 1px solid var(--dash-border-strong);
-  color: var(--dash-text-primary);
-  padding: var(--dash-space-sm) var(--dash-space-md);
-  border-radius: var(--dash-radius-sm);
-  font-family: var(--dash-font-family);
-  font-size: var(--text-sm);
-  transition: all var(--dash-transition-fast);
+@layer base {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="search"],
+  textarea,
+  select {
+    background: var(--dash-bg-secondary);
+    border: 1px solid var(--dash-border-strong);
+    color: var(--dash-text-primary);
+    padding: var(--dash-space-sm) var(--dash-space-md);
+    border-radius: var(--dash-radius-sm);
+    font-family: var(--dash-font-family);
+    font-size: var(--text-sm);
+    transition: all var(--dash-transition-fast);
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="number"]:focus,
+  input[type="date"]:focus,
+  input[type="time"]:focus,
+  input[type="search"]:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--dash-accent);
+    box-shadow: 0 0 0 3px var(--dash-accent-muted);
+  }
+
+  input[type="text"]:disabled,
+  input[type="email"]:disabled,
+  input[type="password"]:disabled,
+  input[type="number"]:disabled,
+  input[type="date"]:disabled,
+  input[type="time"]:disabled,
+  input[type="search"]:disabled,
+  textarea:disabled,
+  select:disabled {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--dash-text-muted);
+    cursor: not-allowed;
+  }
+
+  textarea {
+    resize: vertical;
+    font-family: var(--dash-font-family);
+    line-height: var(--leading-normal);
+  }
 }
 
-/* Left-icon clearance — specificity 0-1-1 matches input[type] above but comes
-   later in source order, so padding-left wins for any input with this class. */
-input.has-icon {
+/* Left-icon clearance — kept outside @layer so it always wins over
+   both base styles and Tailwind utilities, ensuring no overlap. */
+input.has-icon,
+select.has-icon {
   padding-left: 2.5rem;
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-input[type="date"]:focus,
-input[type="time"]:focus,
-input[type="search"]:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: var(--dash-accent);
-  box-shadow: 0 0 0 3px var(--dash-accent-muted);
-}
-
-input[type="text"]:disabled,
-input[type="email"]:disabled,
-input[type="password"]:disabled,
-input[type="number"]:disabled,
-input[type="date"]:disabled,
-input[type="time"]:disabled,
-input[type="search"]:disabled,
-textarea:disabled,
-select:disabled {
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--dash-text-muted);
-  cursor: not-allowed;
-}
-
-textarea {
-  resize: vertical;
-  font-family: var(--dash-font-family);
-  line-height: var(--leading-normal);
 }
 
 /* ═══════════════════════════════════════════════════════════

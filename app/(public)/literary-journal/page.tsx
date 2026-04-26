@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { BookOpen, Calendar, Clock, Tag, Search, ListFilter as Filter, Eye, TrendingUp, Sparkles, User, MapPin } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Tag, Search, ListFilter as Filter, Eye, TrendingUp, Sparkles, User, MapPin, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { literaryArticles, Article } from '../../data/literary-articles';
 
@@ -178,21 +178,22 @@ export default function LiteraryJournal() {
                 <PageContainer>
                     <div className="flex flex-col md:flex-row gap-4 mb-8">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
                             <input
                                 type="text"
                                 placeholder="Search articles..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full has-icon pr-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400/50"
+                                className="w-full pl-10 pr-4 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400/50"
                             />
                         </div>
                         <div className="relative">
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                             <select
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="pl-10 pr-8 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white focus:outline-none focus:border-amber-400/50 appearance-none cursor-pointer"
+                                className="pl-10 pr-10 py-2.5 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white focus:outline-none focus:border-amber-400/50 appearance-none cursor-pointer"
                             >
                                 {categories.map(cat => (
                                     <option key={cat.value} value={cat.value}>
