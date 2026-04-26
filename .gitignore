@@ -24,6 +24,7 @@ coverage
 .env.development
 .env.test
 .env.staging
+.env.vps
 frontend.env
 
 # File-based database — never commit user/financial data
