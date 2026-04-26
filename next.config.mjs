@@ -83,8 +83,7 @@ const sentryWebpackPluginOptions = {
 
   // Upload source maps — essential for production debugging
   sourcemaps: {
-    disable: false,
-    // Delete source maps after upload (they are not needed at runtime with standalone output)
+    disable: process.env.SENTRY_DISABLE_AUTO_UPLOAD === 'true',
     deleteAfterUpload: true,
   },
 
