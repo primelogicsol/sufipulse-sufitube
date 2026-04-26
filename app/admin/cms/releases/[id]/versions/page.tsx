@@ -22,38 +22,11 @@ export default function VersionControlPage() {
   async function loadVersions() {
     try {
       setLoading(true);
-      const mockVersions: ReleaseVersion[] = [
-        {
-          id: '3',
-          release_id: releaseId,
-          version_number: 3,
-          snapshot: { title: 'Current Version' } as any,
-          change_summary: 'Updated credits and lyrics',
-          changed_by: 'admin@sufipulse.local',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          release_id: releaseId,
-          version_number: 2,
-          snapshot: { title: 'Previous Version' } as any,
-          change_summary: 'Added commentary',
-          changed_by: 'editor@sufipulse.local',
-          created_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '1',
-          release_id: releaseId,
-          version_number: 1,
-          snapshot: { title: 'Initial Version' } as any,
-          change_summary: 'Release created',
-          changed_by: 'author@sufipulse.local',
-          created_at: new Date(Date.now() - 172800000).toISOString()
-        }
-      ];
-      setVersions(mockVersions);
+      const data = await getReleaseVersions(releaseId);
+      setVersions(data);
     } catch (error) {
       console.error('Error loading versions:', error);
+      setVersions([]);
     } finally {
       setLoading(false);
     }

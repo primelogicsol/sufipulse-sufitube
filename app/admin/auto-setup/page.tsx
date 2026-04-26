@@ -1,82 +1,86 @@
 // app/admin/auto-setup/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SUFI_PULSE_TEST_RELEASES, seedCMSWithTestData } from '@/lib/seed-cms-data';
+import { AlertTriangle } from 'lucide-react';
 
 export default function AutoSetupPage() {
   const router = useRouter();
-  const [status, setStatus] = useState('Initializing...');
+  const [status, setStatus] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
 
-  useEffect(() => {
-    const setup = async () => {
-      try {
-        setStatus('Creating admin credentials...');
-        
-        // Create admin user
-        const STORAGE_KEYS = {
-          USERS: 'sufipulse_users',
-          CURRENT_USER: 'sufipulse_current_user',
-        };
+  const runSetup = async () => {
+    setRunning(true);
+    try {
+      setStatus('Creating localStorage admin entry...');
 
-        const adminUser = {
-          id: 'admin-1',
-          email: 'admin@sufipulse.local',
-          full_name: 'Admin User',
-          role: 'admin',
-          is_verified: true,
-          created_at: new Date().toISOString(),
-        };
+      const USERS_KEY = 'sufipulse_users';
+      const adminUser = {
+        id: 'admin-1',
+        email: 'admin@sufipulse.local',
+        full_name: 'Admin User',
+        role: 'admin',
+        is_verified: true,
+        created_at: new Date().toISOString(),
+      };
 
-        const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-        const adminExists = users.some((u: any) => u.email === adminUser.email);
-
-        if (!adminExists) {
-          users.push(adminUser);
-          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-        }
-
-        setStatus('Seeding CMS with test releases...');
-        seedCMSWithTestData();
-
-        setStatus('✅ Setup complete! Redirecting to CMS dashboard...');
-        
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          router.push('/admin/cms-releases');
-        }, 2000);
-      } catch (error: any) {
-        setStatus(`❌ Error: ${error.message}`);
+      const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+      if (!users.some((u: any) => u.email === adminUser.email)) {
+        users.push(adminUser);
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
       }
-    };
 
-    setup();
-  }, [router]);
+      setStatus('✅ Done. Redirecting to CMS...');
+      setTimeout(() => router.push('/admin/cms-releases'), 1500);
+    } catch (err: any) {
+      setStatus(`❌ Error: ${err.message}`);
+      setRunning(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-        <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+    <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
+      <div className="bg-neutral-900 border border-neutral-700 rounded-xl p-8 max-w-md w-full space-y-6">
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="text-amber-400 w-6 h-6 shrink-0" />
+          <h1 className="text-xl font-bold text-neutral-100">Dev-Only Setup Tool</h1>
         </div>
-        <h1 className="text-2xl font-bold text-center text-neutral-900 mb-4">SufiPulse Setup</h1>
-        <p className="text-center text-neutral-600">{status}</p>
-        
-        {status.includes('✅') && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-700 font-semibold">Admin credentials created:</p>
-            <p className="text-green-600 text-sm mt-1">Email: admin@sufipulse.local</p>
-            <p className="text-green-600 text-sm">Password: any password</p>
-            <p className="text-green-600 text-sm mt-2">{SUFI_PULSE_TEST_RELEASES.length} test releases loaded</p>
+
+        <p className="text-neutral-400 text-sm leading-relaxed">
+          This tool writes a local-only admin entry to browser localStorage.
+          It does <strong className="text-neutral-200">not</strong> affect the real server user store.
+          Use it only for local browser testing — not on the production VPS.
+        </p>
+
+        {!status && (
+          <button
+            onClick={runSetup}
+            disabled={running}
+            className="w-full py-3 px-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-semibold rounded-lg transition-colors disabled:opacity-50"
+          >
+            Run Local Setup
+          </button>
+        )}
+
+        {status && (
+          <div className={`p-4 rounded-lg border text-sm font-medium ${
+            status.startsWith('✅')
+              ? 'bg-green-950 border-green-700 text-green-300'
+              : status.startsWith('❌')
+              ? 'bg-red-950 border-red-700 text-red-300'
+              : 'bg-neutral-800 border-neutral-700 text-neutral-300'
+          }`}>
+            {status}
           </div>
         )}
 
-        {status.includes('❌') && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700 text-sm">{status}</p>
-          </div>
-        )}
+        <button
+          onClick={() => router.push('/admin')}
+          className="w-full py-2 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-400 text-sm rounded-lg transition-colors"
+        >
+          Back to Admin
+        </button>
       </div>
     </div>
   );

@@ -115,31 +115,7 @@ export default function Home() {
         setLastReleaseSync(new Date().toISOString());
       } catch (err) {
         console.error('Error fetching latest music releases:', err);
-        // Fallback to mock data when API fails (e.g., quota exceeded)
-        const mockReleases: Publication[] = [
-          {
-            id: 'demo-1',
-            type: 'music',
-            title: 'SufiPulse - Sacred Recitations',
-            slug: 'demo-1',
-            published_at: new Date().toISOString(),
-            description: 'A collection of soul-stirring Sufi recitations from our institutional archive.',
-            artwork_url: 'https://via.placeholder.com/480x360/8B5CF6/FFFFFF?text=SufiPulse',
-            youtube_video_id: 'demo-1'
-          },
-          {
-            id: 'demo-2',
-            type: 'music',
-            title: 'Mystic Melodies - Live Session',
-            slug: 'demo-2',
-            published_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-            description: 'Experience the live recording session of our latest mystical compositions.',
-            artwork_url: 'https://via.placeholder.com/480x360/10B981/FFFFFF?text=Live+Session',
-            youtube_video_id: 'demo-2'
-          }
-        ];
-        setLatestPublications(mockReleases);
-        setLastReleaseSync(new Date().toISOString());
+        setLatestPublications([]);
       } finally {
         setPubsLoading(false);
       }

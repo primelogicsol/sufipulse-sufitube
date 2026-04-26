@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ChevronDown, Share2, Copy, Bubbles as Subtitles, CircleAlert as AlertCircle, FileText } from 'lucide-react';
-import { LYRIC_LANGUAGES, dummyTracks, LanguageKey } from './lyricsData';
+import { LYRIC_LANGUAGES, LanguageKey, LyricsTrack } from './lyricsData';
 
 interface LyricsTabProps {
   selectedLanguage: LanguageKey;
@@ -9,6 +9,7 @@ interface LyricsTabProps {
   onSeekRequest: (time: number) => void;
   captionsEnabled: boolean;
   onToggleCaptions: () => void;
+  tracks?: Partial<Record<LanguageKey, LyricsTrack>>;
 }
 
 export function LyricsTab({
@@ -17,23 +18,19 @@ export function LyricsTab({
   currentTime,
   onSeekRequest,
   captionsEnabled,
-  onToggleCaptions
+  onToggleCaptions,
+  tracks = {},
 }: LyricsTabProps) {
-  const track = dummyTracks[selectedLanguage] || dummyTracks['roman_urdu'];
-  const direction = track.direction;
+  const track = tracks[selectedLanguage] ?? tracks[Object.keys(tracks)[0] as LanguageKey] ?? null;
+  const direction = track?.direction ?? 'ltr';
 
-  // Find active cue for highlighting
   const activeCue = useMemo(() => {
-    return track.cues.find(c => currentTime >= c.start && currentTime < c.end);
-  }, [currentTime, track.cues]);
+    return track?.cues.find(c => currentTime >= c.start && currentTime < c.end);
+  }, [currentTime, track]);
 
-  // Handle line click
   const handleLineClick = (stanzaIndex: number, lineIndex: number) => {
-    // Find the cue that corresponds to this line
-    const cue = track.cues.find(c => c.stanza === stanzaIndex + 1 && c.line === lineIndex + 1);
-    if (cue) {
-      onSeekRequest(cue.start);
-    }
+    const cue = track?.cues.find(c => c.stanza === stanzaIndex + 1 && c.line === lineIndex + 1);
+    if (cue) onSeekRequest(cue.start);
   };
 
   const visibleKeys = [
@@ -43,6 +40,18 @@ export function LyricsTab({
 
   const visibleLangs = LYRIC_LANGUAGES.filter(lang => visibleKeys.includes(lang.key));
   const overflowLangs = LYRIC_LANGUAGES.filter(lang => !visibleKeys.includes(lang.key));
+
+  if (!track) {
+    return (
+      <div className="pt-8">
+        <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-12 text-center">
+          <FileText className="w-10 h-10 text-neutral-600 mx-auto mb-4" />
+          <p className="text-neutral-400 text-lg font-light">Lyrics not yet available for this release.</p>
+          <p className="text-neutral-600 text-sm mt-2">Check back later or contact the editorial team.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-8">
