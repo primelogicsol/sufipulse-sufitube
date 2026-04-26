@@ -111,10 +111,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
   };
 
   const handleCustomBudget = () => {
-    const budget = prompt('Enter custom budget amount (USD):');
-    if (budget && !isNaN(Number(budget))) {
-      setFormData(prev => ({ ...prev, custom_budget: Number(budget) }));
+    const budget = prompt('Enter custom budget amount (USD, minimum $10):');
+    const amount = Number(budget);
+    if (budget && !isNaN(amount) && amount >= 10) {
+      setFormData(prev => ({ ...prev, custom_budget: amount }));
       setStep(2);
+    } else if (budget) {
+      alert('Minimum budget is $10.');
     }
   };
 
@@ -398,12 +401,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </p>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-neutral-500">Daily Budget</span>
-                <span className="text-neutral-200">$10–25</span>
+                <span className="text-neutral-500">Minimum Budget</span>
+                <span className="text-neutral-200">$10</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-neutral-500">Campaign Duration</span>
-                <span className="text-neutral-200">14–30 days</span>
+                <span className="text-neutral-500">Recommended</span>
+                <span className="text-neutral-200">$100–$300</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Setup Assistance</span>
@@ -418,20 +421,31 @@ export function AdoptTab({ release }: AdoptTabProps) {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
               <input
                 type="number"
-                min="1"
+                min="10"
                 step="1"
                 value={formData.custom_budget || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
                 className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-8 pr-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                placeholder="e.g. 150"
+                placeholder="e.g. 199"
               />
             </div>
-            <p className="text-xs text-neutral-500 mt-1">Total you plan to spend in your own Google Ads account</p>
+            {(() => {
+              const b = formData.custom_budget || 0;
+              if (b >= 300) return <p className="text-xs text-blue-400 mt-1">Optimal Reach · $300–$750+ · 14–30 days · $15–35/day · Wider discovery</p>;
+              if (b >= 100) return <p className="text-xs text-amber-400 mt-1">Balanced Campaign · $100–$299 · 7–14 days · $10–25/day · Stronger reach</p>;
+              if (b >= 50)  return <p className="text-xs text-neutral-400 mt-1">Starter Reach · $50–$99 · 5–10 days · $5–15/day · Focused push</p>;
+              if (b >= 10)  return <p className="text-xs text-neutral-500 mt-1">Quick Boost · $10–$49 · 1–5 days · $2–10/day · Early testing</p>;
+              return <p className="text-xs text-neutral-600 mt-1">Minimum $10 · Recommended $100–$300</p>;
+            })()}
           </div>
+
+          <p className="text-xs text-neutral-600 border border-neutral-800 rounded-lg px-4 py-3 leading-relaxed">
+            Your campaign budget is used for promotion. SufiPulse may review the campaign structure before launch to ensure the budget, duration, audience, and placement are suitable for the selected kalam.
+          </p>
 
           <button
             onClick={() => setStep(2)}
-            disabled={!formData.custom_budget || formData.custom_budget < 1}
+            disabled={!formData.custom_budget || formData.custom_budget < 10}
             className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
           >
             Continue to Form
