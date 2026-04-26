@@ -42,6 +42,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [oauthChecked, setOauthChecked] = useState<boolean>(false);
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customModalAmount, setCustomModalAmount] = useState('');
+  const [customModalError, setCustomModalError] = useState('');
+
   // Load packages on mount
   useEffect(() => {
     const loadPackages = async () => {
@@ -110,14 +114,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
   };
 
   const handleCustomBudget = () => {
-    const budget = prompt('Enter custom budget amount (USD, minimum $10):');
-    const amount = Number(budget);
-    if (budget && !isNaN(amount) && amount >= 10) {
-      setFormData(prev => ({ ...prev, custom_budget: amount }));
-      setStep(2);
-    } else if (budget) {
-      alert('Minimum budget is $10.');
+    setCustomModalAmount('');
+    setCustomModalError('');
+    setShowCustomModal(true);
+  };
+
+  const handleCustomModalConfirm = () => {
+    const amount = Number(customModalAmount);
+    if (!customModalAmount || isNaN(amount) || amount < 10) {
+      setCustomModalError('Minimum contribution is $10');
+      return;
     }
+    setFormData(prev => ({ ...prev, custom_budget: amount }));
+    setShowCustomModal(false);
+    setStep(2);
+  };
+
+  const getImpactPreview = (amount: number) => {
+    if (isNaN(amount) || amount < 10) return null;
+    if (amount < 50)  return { min: '2,000',  max: '8,000',   days: '1–5',   tier: 'Quick Boost' };
+    if (amount < 100) return { min: '8,000',  max: '18,000',  days: '5–10',  tier: 'Starter Reach' };
+    if (amount < 300) return { min: '18,000', max: '55,000',  days: '7–14',  tier: 'Community+' };
+    return             { min: '55,000', max: '150,000', days: '14–30', tier: 'Optimal Reach' };
   };
 
   const handleFormSubmit = async () => {
@@ -927,7 +945,127 @@ export function AdoptTab({ release }: AdoptTabProps) {
     </div>
   );
 
+  const customModalImpact = getImpactPreview(Number(customModalAmount));
+  const CUSTOM_PRESETS = [25, 50, 100, 250];
+
   return (
+    <>
+      {/* ── Custom Budget Modal ── */}
+      {showCustomModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCustomModal(false); }}
+        >
+          <div className="w-full max-w-md bg-[#0F172A] border border-white/10 rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 fade-in duration-200">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-1">
+              <h3 className="text-xl font-serif font-semibold text-neutral-100">Set Your Custom Contribution</h3>
+              <button
+                onClick={() => setShowCustomModal(false)}
+                className="text-neutral-500 hover:text-neutral-300 transition-colors ml-4 mt-0.5"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-neutral-500 mb-6">
+              Support this release with a budget that reflects your intent. Minimum contribution: $10.
+            </p>
+
+            {/* Quick preset chips */}
+            <div className="flex gap-2 mb-5">
+              {CUSTOM_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => { setCustomModalAmount(String(p)); setCustomModalError(''); }}
+                  className={[
+                    'flex-1 py-2 rounded-lg border text-sm font-semibold transition-all duration-150',
+                    customModalAmount === String(p)
+                      ? 'border-[#C8A75E] bg-[#C8A75E]/10 text-[#C8A75E]'
+                      : 'border-white/10 text-neutral-400 hover:border-[#C8A75E]/50 hover:text-[#C8A75E]',
+                  ].join(' ')}
+                >
+                  ${p}
+                </button>
+              ))}
+            </div>
+
+            {/* Amount input */}
+            <div className="mb-2">
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 font-medium select-none">$</span>
+                <input
+                  type="number"
+                  min="10"
+                  step="1"
+                  autoFocus
+                  placeholder="Enter amount"
+                  value={customModalAmount}
+                  onChange={(e) => { setCustomModalAmount(e.target.value); setCustomModalError(''); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCustomModalConfirm(); }}
+                  className={[
+                    'w-full pl-8 pr-4 py-3 rounded-xl bg-white/5 border text-white text-lg font-medium placeholder:text-neutral-600 focus:outline-none transition-colors',
+                    customModalError ? 'border-red-500' : 'border-white/10 focus:border-[#C8A75E]',
+                  ].join(' ')}
+                />
+              </div>
+              {customModalError && (
+                <p className="text-xs text-red-400 mt-1.5 pl-1">{customModalError}</p>
+              )}
+            </div>
+
+            {/* Live impact preview */}
+            {customModalImpact ? (
+              <div className="mt-4 mb-6 rounded-xl border border-[#C8A75E]/20 bg-[#C8A75E]/5 px-5 py-4 space-y-2">
+                <div className="text-xs text-[#C8A75E] uppercase tracking-wider font-semibold mb-3">Estimated Reach</div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-400">Impressions</span>
+                  <span className="text-neutral-200 font-medium">~{customModalImpact.min} – {customModalImpact.max}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-400">Duration</span>
+                  <span className="text-neutral-200 font-medium">{customModalImpact.days} days</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-400">Visibility Tier</span>
+                  <span className="text-[#C8A75E] font-semibold">{customModalImpact.tier}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 mb-6 h-[108px] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
+                <span className="text-xs text-neutral-600">Enter an amount to see estimated reach</span>
+              </div>
+            )}
+
+            {/* Trust line */}
+            <p className="text-xs text-neutral-600 text-center mb-5 flex items-center justify-center gap-1.5">
+              <CreditCard className="w-3.5 h-3.5" />
+              Secure payment powered by Stripe
+            </p>
+
+            {/* CTAs */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCustomModal(false)}
+                className="flex-1 py-3 rounded-xl border border-white/10 text-neutral-400 hover:text-neutral-200 hover:border-white/20 text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCustomModalConfirm}
+                disabled={!customModalAmount}
+                className="flex-[2] py-3 rounded-xl bg-[#C8A75E] hover:bg-[#D4B76D] disabled:opacity-40 disabled:cursor-not-allowed text-[#0F172A] font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+              >
+                Continue to Secure Payment <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     <div className="pt-8 min-h-[500px]">
       <div className="bg-neutral-900/30 border border-neutral-800 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
         {step > 0 && (
@@ -950,6 +1088,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         {step === 4 && renderSuccess()}
       </div>
     </div>
+    </>
   );
 }
 
