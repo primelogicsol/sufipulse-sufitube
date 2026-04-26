@@ -43,11 +43,7 @@ const Login = () => {
     }, [user]);
     const handleChange = (e: any) => {
         const { name, value } = e.target
-        setForm(prev => ({
-            ...prev,
-            [name]: value
-        }))
-        console.log(form)
+        setForm(prev => ({ ...prev, [name]: value }));
     }
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -78,15 +74,14 @@ const Login = () => {
         }
     };
     const handleGoogleLogin = async (e: any) => {
-        e.preventDefault()
-        setLoading(true)
+        e.preventDefault();
+        setLoading(true);
         try {
             await googleLogin();
         } catch (err: any) {
-            alert(err.response?.data?.error || err.message);
-        }
-        finally {
-            setLoading(false)
+            setError(err?.message || 'Google sign-in is not available yet.');
+        } finally {
+            setLoading(false);
         }
     };
     return (
@@ -174,7 +169,7 @@ const Login = () => {
                                 className="cursor-pointer w-full border flex items-center justify-center bg-linear-to-r border-[#D4AF37] text-[#D4AF37]! py-3 rounded-md font-semibold hover:shadow-lg hover:shadow-[#D4AF37]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                 onClick={handleGoogleLogin}
                             >
-                                Continue with google
+                                Continue with Google
                             </button>
                         </form>
                         <div className="mt-4 pt-4 border-t border-[#2a3442] text-center">

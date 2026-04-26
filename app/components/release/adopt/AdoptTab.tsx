@@ -37,6 +37,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<any>({});
+  const [submitError, setSubmitError] = useState('');
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [adoption, setAdoption] = useState<SongAdoption | null>(null);
 
@@ -195,7 +196,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       setAdoption(draft);
       setStep(2); // go to Connect Google Ads step
     } catch {
-      alert('Could not initialise adoption. Please try again.');
+      setSubmitError('Could not initialise adoption. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -220,12 +221,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setFieldErrors({});
 
     if (!formData.agree_to_terms || !formData.agree_to_promotional_use) {
-      alert('Please accept both consent checkboxes to continue.');
+      setSubmitError('Please accept both consent checkboxes to continue.');
       return;
     }
 
     if (!verifySecurity()) {
-      alert('Security check failed.');
+      setSubmitError('Security check failed. Please refresh and try again.');
       return;
     }
 
@@ -349,7 +350,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       setStep(selectedMethod === 'use_my_google_ads' ? 4 : 3);
     } catch (error) {
       console.error('Error submitting adoption:', error);
-      alert('Error submitting. Please try again.');
+      setSubmitError('Error submitting. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -397,7 +398,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     }
 
     if (!stripeEnabled) {
-      alert('Payment system is currently unavailable. Please contact support.');
+      setSubmitError('Payment system is currently unavailable. Please contact support.');
       return;
     }
 
@@ -419,7 +420,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       if (!res.ok) throw new Error(body.error || 'Checkout failed');
       window.location.href = body.url;
     } catch (err: any) {
-      alert(`Payment error: ${err.message}`);
+      setSubmitError(`Payment error: ${err.message}`);
       setIsRedirectingToStripe(false);
     }
   };
@@ -594,23 +595,31 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
 
         ) : !oauthConfigured ? (
-          // Admin config error — shown to user, not a fake manual path
-          <div className="border border-red-800/40 bg-red-900/10 rounded-xl p-6 text-center space-y-4">
-            <div className="w-10 h-10 mx-auto rounded-full bg-red-900/30 flex items-center justify-center">
-              <X className="w-5 h-5 text-red-400" />
+          // Google Ads not yet configured on this server — show coming-soon state
+          <div className="border border-amber-800/30 bg-amber-900/10 rounded-xl p-7 text-center space-y-5">
+            <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center">
+              <Settings className="w-6 h-6 text-amber-400" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-red-300 mb-1">Google Ads integration not configured</div>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                This feature is not available yet. Please contact the site administrator to complete the Google Ads API setup before proceeding.
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs font-semibold text-amber-400 mb-3">
+                Coming Soon
+              </div>
+              <h4 className="text-base font-semibold text-neutral-200 mb-2">Google Ads Integration</h4>
+              <p className="text-sm text-neutral-400 leading-relaxed max-w-sm mx-auto">
+                This feature is being activated. Once live, you'll be able to connect your own Google Ads account and manage campaign spend directly.
               </p>
             </div>
-            <p className="text-xs text-neutral-700 font-mono border border-neutral-800 rounded px-3 py-2 text-left">
-              Required server variables:<br />
-              GOOGLE_ADS_CLIENT_ID<br />
-              GOOGLE_ADS_CLIENT_SECRET<br />
-              GOOGLE_ADS_DEVELOPER_TOKEN
-            </p>
+            <div className="flex flex-col gap-2 text-xs text-neutral-600">
+              <span className="flex items-center justify-center gap-1.5"><Check className="w-3 h-3 text-green-600" /> You remain the account owner</span>
+              <span className="flex items-center justify-center gap-1.5"><Check className="w-3 h-3 text-green-600" /> Pay Google directly — no intermediary</span>
+              <span className="flex items-center justify-center gap-1.5"><Check className="w-3 h-3 text-green-600" /> Campaign prepared and approved by our team</span>
+            </div>
+            <button
+              onClick={() => { setSelectedMethod('managed_sufitube'); setStep(1); }}
+              className="w-full py-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-medium text-sm rounded-xl transition-colors"
+            >
+              Use Managed by SufiTube instead
+            </button>
           </div>
 
         ) : oauthConnected ? (
@@ -932,8 +941,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
         </label>
       </div>
 
+      {submitError && (
+        <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+          {submitError}
+        </div>
+      )}
+
       <button
-        onClick={handleFormSubmit}
+        onClick={() => { setSubmitError(''); handleFormSubmit(); }}
         disabled={isSubmitting || !formData.agree_to_terms || !formData.agree_to_promotional_use}
         className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
       >
@@ -1008,9 +1023,15 @@ export function AdoptTab({ release }: AdoptTabProps) {
           )}
         </div>
 
+        {submitError && (
+          <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+            {submitError}
+          </div>
+        )}
+
         {selectedMethod === 'use_my_google_ads' ? (
           <button
-            onClick={handlePayment}
+            onClick={() => { setSubmitError(''); handlePayment(); }}
             disabled={isSubmitting}
             className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
           >
@@ -1026,7 +1047,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
               </div>
             )}
             <button
-              onClick={handlePayment}
+              onClick={() => { setSubmitError(''); handlePayment(); }}
               disabled={isRedirectingToStripe || !stripeEnabled}
               className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
             >

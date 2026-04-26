@@ -75,9 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const googleLogin = async () => {
-        // Standalone placeholder: Owner will integrate Google API natively here.
-        console.warn("Native Google API integration pending deployment.");
-        alert("Google API integration will be handled prior to deployment.");
+        throw new Error("Google sign-in is not available yet. Please use email and password.");
     };
 
     const logout = async () => {
