@@ -14,6 +14,8 @@ import * as z from "zod";
  */
 
 export const env = createEnv({
+  // Skip validation during Docker build and CI — secrets are only available at runtime.
+  skipValidation: process.env.CI === 'true' || process.env.SKIP_ENV_VALIDATION === 'true',
   emptyStringAsUndefined: true,
 
   // ── Server-only variables ───────────────────────────────────────────────────
