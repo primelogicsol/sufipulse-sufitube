@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const redirectUri = `${appUrl}/api/google-ads/oauth/callback`;
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || `${appUrl}/api/google-ads/oauth/callback`;
   const state = JSON.stringify({ adoptionId, userId, returnSlug });
 
   const oauthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -44,5 +44,5 @@ export async function POST(request: NextRequest) {
   oauthUrl.searchParams.set('prompt', 'consent');
   oauthUrl.searchParams.set('state', state);
 
-  return NextResponse.json({ authUrl: oauthUrl.toString() });
+  return NextResponse.json({ authUrl: oauthUrl.toString(), redirect_uri: redirectUri });
 }

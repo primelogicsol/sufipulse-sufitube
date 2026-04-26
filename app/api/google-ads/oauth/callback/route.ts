@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     adoptionId = rawState;
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
   const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
 
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
   if (error || !code) return fallbackRedirect('denied');
   if (!clientId || !clientSecret) return fallbackRedirect('error', 'missing_credentials');
 
-  const redirectUri = `${appUrl}/api/google-ads/oauth/callback`;
+  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || `${appUrl}/api/google-ads/oauth/callback`;
 
   try {
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
