@@ -394,24 +394,41 @@ export function AdoptTab({ release }: AdoptTabProps) {
     if (selectedMethod === 'use_my_google_ads') {
       return (
         <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-          <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Google Ads Setup</h3>
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-            <p className="text-neutral-400 mb-4">
-              Recommended settings for optimal reach:
-            </p>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Minimum Budget</span>
-                <span className="text-neutral-200">$10</span>
+          <h3 className="text-2xl font-medium text-neutral-100 mb-2 text-center">Campaign Budget Setup</h3>
+          <p className="text-sm text-neutral-500 text-center mb-6">Recommended settings based on your total budget</p>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-0 text-sm divide-y divide-neutral-800">
+            <div className="flex justify-between items-start py-3">
+              <div>
+                <div className="text-neutral-300 font-medium">Quick Boost</div>
+                <div className="text-neutral-600 text-xs mt-0.5">1–5 days · $2–10/day</div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Recommended</span>
-                <span className="text-neutral-200">$100–$300</span>
+              <span className="text-neutral-400 text-xs pt-0.5">$10–$49</span>
+            </div>
+            <div className="flex justify-between items-start py-3">
+              <div>
+                <div className="text-neutral-300 font-medium">Starter Reach</div>
+                <div className="text-neutral-600 text-xs mt-0.5">5–10 days · $5–15/day</div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Setup Assistance</span>
-                <span className="text-neutral-200">Available</span>
+              <span className="text-neutral-400 text-xs pt-0.5">$50–$99</span>
+            </div>
+            <div className="flex justify-between items-start py-3">
+              <div>
+                <div className="text-amber-400 font-medium">Balanced Campaign</div>
+                <div className="text-neutral-600 text-xs mt-0.5">7–14 days · $10–25/day · Recommended</div>
               </div>
+              <span className="text-amber-500/70 text-xs pt-0.5">$100–$299</span>
+            </div>
+            <div className="flex justify-between items-start py-3">
+              <div>
+                <div className="text-neutral-300 font-medium">Optimal Reach</div>
+                <div className="text-neutral-600 text-xs mt-0.5">14–30 days · $15–35+/day</div>
+              </div>
+              <span className="text-neutral-400 text-xs pt-0.5">$300+</span>
+            </div>
+            <div className="flex justify-between py-3">
+              <span className="text-neutral-500">Setup Assistance</span>
+              <span className="text-neutral-300">Available</span>
             </div>
           </div>
 
@@ -425,18 +442,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 step="1"
                 value={formData.custom_budget || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-8 pr-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                placeholder="e.g. 199"
+                className={`w-full bg-neutral-900 border rounded-lg pl-8 pr-4 py-3 text-white focus:outline-none focus:border-blue-500 ${formData.custom_budget && formData.custom_budget < 10 ? 'border-red-500' : 'border-neutral-800'}`}
+                placeholder="Minimum $10"
               />
             </div>
-            {(() => {
-              const b = formData.custom_budget || 0;
-              if (b >= 300) return <p className="text-xs text-blue-400 mt-1">Optimal Reach · $300–$750+ · 14–30 days · $15–35/day · Wider discovery</p>;
-              if (b >= 100) return <p className="text-xs text-amber-400 mt-1">Balanced Campaign · $100–$299 · 7–14 days · $10–25/day · Stronger reach</p>;
-              if (b >= 50)  return <p className="text-xs text-neutral-400 mt-1">Starter Reach · $50–$99 · 5–10 days · $5–15/day · Focused push</p>;
-              if (b >= 10)  return <p className="text-xs text-neutral-500 mt-1">Quick Boost · $10–$49 · 1–5 days · $2–10/day · Early testing</p>;
-              return <p className="text-xs text-neutral-600 mt-1">Minimum $10 · Recommended $100–$300</p>;
-            })()}
+            {formData.custom_budget && formData.custom_budget < 10
+              ? <p className="text-xs text-red-400 mt-1">Minimum campaign budget is $10.</p>
+              : <p className="text-xs text-neutral-600 mt-1">Enter the total amount you want to spend on promotion.</p>
+            }
           </div>
 
           <p className="text-xs text-neutral-600 border border-neutral-800 rounded-lg px-4 py-3 leading-relaxed">
