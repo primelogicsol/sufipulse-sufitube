@@ -1,5 +1,3 @@
-version: '3.8'
-
 # SUFIPULSE_IMAGE — set this to use a pre-built image from GHCR (CI/CD deploys).
 # If unset, docker compose up --build builds locally.
 # Example: SUFIPULSE_IMAGE=ghcr.io/primelogicsol/sufipulse:latest docker compose up -d
