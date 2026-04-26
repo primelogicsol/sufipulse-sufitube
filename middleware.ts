@@ -7,13 +7,21 @@ const middlewareLogger = logger.middleware;
 const PROTECTED_PREFIXES = ['/admin', '/user', '/dashboard'];
 const AUTH_ONLY_PATHS = ['/login', '/register', '/forgot-password'];
 
+interface TokenPayload {
+  userId?: string;
+  email?: string;
+  role?: string;
+  exp?: number;
+}
+
 // Verifies a HS256 JWT using the Web Crypto API (fully Edge-compatible, no jose import).
-async function verifyToken(token: string): Promise<boolean> {
+// Returns the decoded payload on success, or null on failure.
+async function verifyToken(token: string): Promise<TokenPayload | null> {
   const secret = process.env.JWT_SECRET;
-  if (!secret) return false;
+  if (!secret) return null;
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) return false;
+    if (parts.length !== 3) return null;
     const [headerB64, payloadB64, sigB64] = parts;
 
     const key = await crypto.subtle.importKey(
@@ -35,16 +43,16 @@ async function verifyToken(token: string): Promise<boolean> {
       sig,
       new TextEncoder().encode(`${headerB64}.${payloadB64}`)
     );
-    if (!valid) return false;
+    if (!valid) return null;
 
-    const payload = JSON.parse(
+    const payload: TokenPayload = JSON.parse(
       atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
     );
-    if (payload.exp && payload.exp * 1000 < Date.now()) return false;
+    if (payload.exp && payload.exp * 1000 < Date.now()) return null;
 
-    return true;
+    return payload;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -75,22 +83,28 @@ export async function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
+  const isAdminPath = pathname.startsWith('/admin');
   const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
   const isAuthRoute = AUTH_ONLY_PATHS.includes(pathname);
 
   if (isProtected || isAuthRoute) {
     const token = request.cookies.get('access_token')?.value;
-    const valid = token ? await verifyToken(token) : false;
+    const payload = token ? await verifyToken(token) : null;
 
     // Unauthenticated → redirect to login
-    if (isProtected && !valid) {
+    if (isProtected && !payload) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
+    // Authenticated but not admin → 403 for /admin routes
+    if (isAdminPath && payload && payload.role !== 'admin') {
+      return new NextResponse('Forbidden', { status: 403 });
+    }
+
     // Already authenticated → redirect away from login/register
-    if (isAuthRoute && valid) {
+    if (isAuthRoute && payload) {
       return NextResponse.redirect(new URL('/user/dashboard', request.url));
     }
   }

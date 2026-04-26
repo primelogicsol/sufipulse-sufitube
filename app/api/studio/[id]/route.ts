@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityGetById, entityUpdate } from '@/lib/entity-storage-server';
 import { notifySubmitterStatusChange } from '@/lib/send-notification';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   const item = entityGetById('studio', id);
   if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -10,6 +14,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -30,6 +37,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
     return NextResponse.json(updated);
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

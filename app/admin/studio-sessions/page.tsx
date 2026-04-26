@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
 import { Mic, RefreshCw, Search } from 'lucide-react';
-import { notifyStatusChange, lookupProfileByName, lookupUserFromStorage, mapContentStatusToEvent } from '@/app/lib/notifications';
 
-// Active (scheduled / in-progress / completed) session requests from the session queue
 type StudioSession = {
   id: string;
-  // Submitted by contributor
   requester_name?: string;
   requester_email?: string;
+  email?: string;
   user_id?: string;
-  // Session detail
   session_type?: string;
   role_type?: string;
   approval_reference_code?: string;
@@ -21,7 +18,6 @@ type StudioSession = {
   preferred_date?: string;
   preferred_time?: string;
   notes?: string;
-  // Studio engineering assignment (set by admin)
   engineer_name?: string;
   scheduled_date?: string;
   status?: string;
@@ -29,52 +25,38 @@ type StudioSession = {
   updated_at?: string;
 };
 
-// Reads from the same store as session-requests — filters to non-pending statuses
-const STORAGE_KEY = 'sufipulse_session_requests';
 const ACTIVE_STATUSES = ['scheduled', 'in_progress', 'completed', 'cancelled'] as const;
 const STATUSES = ['scheduled', 'in_progress', 'completed', 'cancelled'] as const;
 
 export default function StudioSessionsPage() {
   const [items, setItems] = useState<StudioSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<string>('scheduled');
+  const [updating, setUpdating] = useState<string | null>(null);
 
-  const loadItems = () => {
+  const loadItems = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      if (typeof window === 'undefined') {
-        setItems([]);
-        return;
-      }
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed: StudioSession[] = raw ? JSON.parse(raw) : [];
-      // This page shows only "active" sessions (already past the pending-queue stage)
-      const active = Array.isArray(parsed)
-        ? parsed.filter(s => ACTIVE_STATUSES.includes(s.status as typeof ACTIVE_STATUSES[number]))
+      const res = await fetch('/api/session-requests');
+      if (!res.ok) throw new Error('Failed to load sessions');
+      const data: StudioSession[] = await res.json();
+      const active = Array.isArray(data)
+        ? data.filter(s => ACTIVE_STATUSES.includes(s.status as typeof ACTIVE_STATUSES[number]))
         : [];
       setItems(active);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load sessions');
     } finally {
       setLoading(false);
     }
-  };
-
-  const persistAll = (next: StudioSession[]) => {
-    if (typeof window === 'undefined') return;
-    // Merge back into the full store (don't lose pending items)
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const all: StudioSession[] = raw ? JSON.parse(raw) : [];
-    const merged = all.map(item => {
-      const updated = next.find(n => n.id === item.id);
-      return updated ?? item;
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-    setItems(next);
-  };
+  }, []);
 
   useEffect(() => {
     loadItems();
-  }, []);
+  }, [loadItems]);
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -87,49 +69,21 @@ export default function StudioSessionsPage() {
     });
   }, [items, query, filter]);
 
-  const updateStatus = (id: string, status: string) => {
-    const item = items.find(i => i.id === id);
-    const next = items.map(s =>
-      s.id === id ? { ...s, status, updated_at: new Date().toISOString() } : s
-    );
-    persistAll(next);
-
-    // Notify the requester on significant transitions
-    if (item) {
-      const notifyStatuses = ['scheduled', 'in_progress', 'completed', 'cancelled'];
-      if (notifyStatuses.includes(status)) {
-        // Try by user_id first, fall back to name lookup
-        const storedUser = item.user_id ? lookupUserFromStorage(item.user_id) : null;
-        const email = storedUser?.email || item.requester_email;
-        if (email) {
-          const role = (item.role_type || 'studio') as 'studio' | 'vocalist' | 'writer' | 'producer' | 'literary';
-          notifyStatusChange({
-            user_id: item.user_id,
-            email,
-            name: item.requester_name || storedUser?.name || 'Contributor',
-            role,
-            status: mapContentStatusToEvent(status),
-            reference: item.release_title || item.session_type || 'Session',
-          }).catch(console.error);
-        }
-
-        // Also notify assigned engineer if present
-        if (item.engineer_name) {
-          const engProfile = lookupProfileByName('studio', item.engineer_name);
-          const engUser = engProfile?.user_id ? lookupUserFromStorage(engProfile.user_id) : null;
-          const engEmail = engUser?.email || engProfile?.email;
-          if (engEmail) {
-            notifyStatusChange({
-              user_id: engProfile?.user_id,
-              email: engEmail,
-              name: engProfile?.name || item.engineer_name,
-              role: 'studio',
-              status: mapContentStatusToEvent(status),
-              reference: item.release_title || item.session_type || 'Session',
-            }).catch(console.error);
-          }
-        }
-      }
+  const updateStatus = async (id: string, status: string) => {
+    setUpdating(id);
+    try {
+      const res = await fetch(`/api/session-requests/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      const updated: StudioSession = await res.json();
+      setItems(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
+    } catch {
+      // Keep existing data on failure
+    } finally {
+      setUpdating(null);
     }
   };
 
@@ -166,6 +120,8 @@ export default function StudioSessionsPage() {
 
           {loading ? (
             <div className="dashboard-loading"><p>Loading active sessions...</p></div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-400">{error}</div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-[var(--dash-text-muted)]">
               No active sessions found. Approve requests in <strong>Session Requests</strong> to schedule them here.
@@ -194,8 +150,8 @@ export default function StudioSessionsPage() {
                             <div className="font-medium text-[var(--dash-text-primary)]">
                               {item.requester_name || 'Unknown'}
                             </div>
-                            {item.requester_email && (
-                              <div className="text-xs text-[var(--dash-text-muted)]">{item.requester_email}</div>
+                            {(item.requester_email || item.email) && (
+                              <div className="text-xs text-[var(--dash-text-muted)]">{item.requester_email || item.email}</div>
                             )}
                           </div>
                         </div>
@@ -222,9 +178,21 @@ export default function StudioSessionsPage() {
                       </td>
                       <td>
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => updateStatus(item.id, 'in_progress')} className="dashboard-btn-secondary text-xs">Start</button>
-                          <button onClick={() => updateStatus(item.id, 'completed')} className="dashboard-btn-primary text-xs">Complete</button>
-                          <button onClick={() => updateStatus(item.id, 'cancelled')} className="dashboard-btn-secondary text-xs">Cancel</button>
+                          <button
+                            onClick={() => updateStatus(item.id, 'in_progress')}
+                            disabled={updating === item.id}
+                            className="dashboard-btn-secondary text-xs"
+                          >Start</button>
+                          <button
+                            onClick={() => updateStatus(item.id, 'completed')}
+                            disabled={updating === item.id}
+                            className="dashboard-btn-primary text-xs"
+                          >Complete</button>
+                          <button
+                            onClick={() => updateStatus(item.id, 'cancelled')}
+                            disabled={updating === item.id}
+                            className="dashboard-btn-secondary text-xs"
+                          >Cancel</button>
                         </div>
                       </td>
                     </tr>
