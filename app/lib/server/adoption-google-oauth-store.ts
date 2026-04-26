@@ -80,3 +80,9 @@ export async function getAdoptionGoogleOAuthRecord(adoptionId: string): Promise<
   const store = await readStore();
   return store.adoptions[adoptionId] || null;
 }
+
+export async function deleteAdoptionGoogleOAuthRecord(adoptionId: string): Promise<void> {
+  const store = await readStore();
+  delete store.adoptions[adoptionId];
+  await writeStore(store);
+}

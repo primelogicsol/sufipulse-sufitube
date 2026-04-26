@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
+import { getAdoptionGoogleOAuthRecord, upsertAdoptionGoogleOAuthRecord, AdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
 /**
@@ -23,6 +23,55 @@ import { requireAdmin } from '@/server/middleware/authenticate';
  */
 
 const ADS_API_VERSION = 'v17';
+
+// Safety flag: 'draft' | 'manual_review' (default) | 'live'
+// draft         → log intent, no Google Ads API call
+// manual_review → create campaign in PAUSED state (admin activates manually)
+// live          → create campaign in ENABLED state immediately
+const CREATE_MODE = (process.env.GOOGLE_ADS_CREATE_MODE || 'manual_review') as 'draft' | 'manual_review' | 'live';
+
+function isTokenExpiringSoon(record: AdoptionGoogleOAuthRecord): boolean {
+  if (!record.expiresAt) return false;
+  const bufferMs = 5 * 60 * 1000; // refresh if within 5 minutes of expiry
+  return Date.now() + bufferMs >= new Date(record.expiresAt).getTime();
+}
+
+async function getValidAccessToken(adoptionId: string, record: AdoptionGoogleOAuthRecord): Promise<string> {
+  if (!isTokenExpiringSoon(record)) return record.accessToken;
+  if (!record.refreshToken) return record.accessToken; // can't refresh, try existing
+
+  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return record.accessToken; // no creds to refresh with
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: record.refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  });
+
+  const tokens = await res.json();
+  if (!res.ok || !tokens.access_token) {
+    console.error('Google Ads token refresh failed:', tokens);
+    return record.accessToken; // fall back to existing token
+  }
+
+  await upsertAdoptionGoogleOAuthRecord({
+    adoptionId,
+    accessToken: tokens.access_token,
+    refreshToken: record.refreshToken,
+    tokenType: tokens.token_type || record.tokenType,
+    expiresInSeconds: Number(tokens.expires_in || 3600),
+    accessibleCustomerIds: record.accessibleCustomerIds,
+  });
+
+  return tokens.access_token;
+}
 
 interface CreateCampaignBody {
   adoption_id: string;
@@ -98,6 +147,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'adoption_id and youtube_video_id are required' }, { status: 400 });
   }
 
+  // Draft mode: record intent without calling Google Ads API
+  if (CREATE_MODE === 'draft') {
+    return NextResponse.json({
+      success: true,
+      status: 'draft_saved',
+      note: 'GOOGLE_ADS_CREATE_MODE=draft — campaign intent saved but not submitted to Google Ads. Change to manual_review or live to create real campaigns.',
+      adoption_id,
+      youtube_video_id,
+    });
+  }
+
   // Resolve credentials
   let accessToken: string;
   let developerToken: string;
@@ -143,14 +203,9 @@ export async function POST(request: NextRequest) {
 
     // Prefer server-stored OAuth token bound to adoption_id; do not trust browser token payload.
     const oauthRecord = await getAdoptionGoogleOAuthRecord(adoption_id);
-    const resolvedAccessToken = oauthRecord?.accessToken || sponsor_access_token;
-
-    if (!resolvedAccessToken) {
+    if (!oauthRecord?.accessToken && !sponsor_access_token) {
       return NextResponse.json(
-        {
-          error:
-            "Sponsor Google OAuth token not found. Complete the Google OAuth connection step first.",
-        },
+        { error: 'Sponsor Google OAuth token not found. Complete the Google OAuth connection step first.' },
         { status: 400 }
       );
     }
@@ -162,21 +217,27 @@ export async function POST(request: NextRequest) {
       if (!allowed) {
         return NextResponse.json(
           {
-            error:
-              `The provided customer ID (${sponsor_customer_id}) is not in the authorized Google Ads accounts for this adoption OAuth connection.`,
+            error: `The provided customer ID (${sponsor_customer_id}) is not in the authorized Google Ads accounts for this adoption OAuth connection.`,
           },
           { status: 400 }
         );
       }
     }
 
-    accessToken = resolvedAccessToken;
+    // Refresh token if it is expiring soon
+    const freshToken = oauthRecord
+      ? await getValidAccessToken(adoption_id, oauthRecord)
+      : sponsor_access_token!;
+
+    accessToken = freshToken;
     developerToken = studioDevToken;
     customerId = sponsor_customer_id;
     // No login-customer-id needed when acting as the account owner
   }
 
   const headers = buildHeaders(accessToken, developerToken, loginCustomerId);
+  // Campaign activation state — PAUSED for manual_review, ENABLED for live
+  const campaignStatus = CREATE_MODE === 'live' ? 'ENABLED' : 'PAUSED';
 
   try {
     // ── Step 1: Create Campaign Budget ────────────────────────────────────────
@@ -207,7 +268,7 @@ export async function POST(request: NextRequest) {
             advertisingChannelType: 'VIDEO',
             biddingStrategyType: 'TARGET_CPM',
             campaignBudget: budgetResourceName,
-            status: 'PAUSED', // Admin activates after review
+            status: campaignStatus,
             startDate: fmt(startDate),
             endDate: fmt(endDate),
             networkSettings: {
@@ -297,9 +358,10 @@ export async function POST(request: NextRequest) {
       success: true,
       campaign_resource_name: campaignResourceName,
       ad_group_resource_name: adGroupResourceName,
-      status: 'PAUSED',
-      note:
-        'Campaign created in PAUSED state. Activate it in Google Ads Manager after final review.',
+      status: campaignStatus,
+      note: campaignStatus === 'PAUSED'
+        ? 'Campaign created in PAUSED state. Activate it in Google Ads Manager after final review.'
+        : 'Campaign created in ENABLED state and is now live.',
       customer_id: customerId,
       adoption_id,
     });

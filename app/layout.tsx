@@ -59,6 +59,16 @@ export const metadata: Metadata = {
     canonical: BASE_URL,
   },
   category: "music",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    other: [
+      { rel: 'manifest', url: '/site.webmanifest' },
+    ],
+  },
+  manifest: '/site.webmanifest',
 };
 
 const organizationSchema = {
@@ -107,6 +117,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="theme-color" content="#0F172A" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAdoptionGoogleOAuthRecord, deleteAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 
 /**
  * GET /api/adoptions/[id]/google-oauth
@@ -48,4 +49,33 @@ export async function GET(
   oauthUrl.searchParams.set('state', state);
 
   return NextResponse.redirect(oauthUrl.toString());
+}
+
+/**
+ * DELETE /api/adoptions/[id]/google-oauth
+ *
+ * Revokes the stored OAuth token with Google and removes the local record.
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  const record = await getAdoptionGoogleOAuthRecord(id);
+
+  if (record?.accessToken) {
+    try {
+      await fetch(
+        `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(record.accessToken)}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+    } catch {
+      // Non-fatal — still delete the local record
+    }
+  }
+
+  await deleteAdoptionGoogleOAuthRecord(id);
+
+  return NextResponse.json({ disconnected: true });
 }

@@ -41,6 +41,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [oauthConnected, setOauthConnected] = useState<boolean>(false);
   const [oauthChecked, setOauthChecked] = useState<boolean>(false);
   const [oauthConfigured, setOauthConfigured] = useState<boolean>(false);
+  const [accessibleCustomerIds, setAccessibleCustomerIds] = useState<string[]>([]);
+  const [selectedGoogleCustomerId, setSelectedGoogleCustomerId] = useState<string>('');
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   const [showCustomModal, setShowCustomModal] = useState(false);
@@ -94,6 +97,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
         const payload = await res.json();
         setOauthConfigured(Boolean(payload?.configured));
         setOauthConnected(Boolean(payload?.connected));
+        if (Array.isArray(payload?.accessible_customer_ids) && payload.accessible_customer_ids.length > 0) {
+          setAccessibleCustomerIds(payload.accessible_customer_ids);
+          // Pre-select the ID the user entered in the form if it matches; otherwise default to first
+          const entered = formData.google_ads_customer_id?.trim();
+          const match = payload.accessible_customer_ids.find((cid: string) => cid.replace(/-/g, '') === entered?.replace(/-/g, ''));
+          setSelectedGoogleCustomerId(match || payload.accessible_customer_ids[0]);
+        }
       } catch {
         setOauthConfigured(false);
         setOauthConnected(false);
@@ -131,6 +141,20 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setFormData(prev => ({ ...prev, custom_budget: amount }));
     setShowCustomModal(false);
     setStep(2);
+  };
+
+  const handleGoogleDisconnect = async () => {
+    if (!adoption?.id || isDisconnecting) return;
+    setIsDisconnecting(true);
+    try {
+      await fetch(`/api/adoptions/${adoption.id}/google-oauth`, { method: 'DELETE' });
+    } finally {
+      setOauthConnected(false);
+      setOauthChecked(true);
+      setAccessibleCustomerIds([]);
+      setSelectedGoogleCustomerId('');
+      setIsDisconnecting(false);
+    }
   };
 
   const getImpactPreview = (amount: number) => {
@@ -296,7 +320,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
           event_type: 'payment_initiated',
           event_label: 'Google Ads adoption submitted — pending admin review and campaign launch',
           actor_type: 'user',
-          metadata: {},
+          metadata: {
+            google_ads_customer_id: selectedGoogleCustomerId || formData.google_ads_customer_id,
+            oauth_connected: oauthConnected,
+          },
         });
         setStep(4);
       } finally {
@@ -819,15 +846,40 @@ export function AdoptTab({ release }: AdoptTabProps) {
               </button>
             </>
           ) : oauthConnected ? (
-            /* Already connected */
+            /* Already connected — show account picker + submit */
             <>
-              <p className="text-xs text-green-400">Google Ads account connected. Click below to submit your adoption for review.</p>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Check className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-medium text-green-400">Google Ads connected</span>
+              </div>
+              {accessibleCustomerIds.length > 0 && (
+                <div className="mb-4 text-left">
+                  <label className="block text-xs text-neutral-500 mb-1.5">Select account to use for this campaign</label>
+                  <select
+                    value={selectedGoogleCustomerId}
+                    onChange={(e) => setSelectedGoogleCustomerId(e.target.value)}
+                    className="w-full bg-neutral-900 border border-blue-800/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  >
+                    {accessibleCustomerIds.map((cid) => (
+                      <option key={cid} value={cid}>{cid}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <button
                 onClick={handlePayment}
                 disabled={isSubmitting}
                 className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</> : <><Check className="w-5 h-5" /> Submit Adoption</>}
+              </button>
+              <button
+                type="button"
+                onClick={handleGoogleDisconnect}
+                disabled={isDisconnecting}
+                className="mt-2 text-xs text-neutral-600 hover:text-red-400 transition-colors"
+              >
+                {isDisconnecting ? 'Disconnecting…' : 'Disconnect account'}
               </button>
             </>
           ) : (
@@ -949,20 +1001,36 @@ export function AdoptTab({ release }: AdoptTabProps) {
       {/* Google Ads connection panel — shown only if server is configured */}
       {selectedMethod === 'use_my_google_ads' && adoption && oauthConfigured && (
         <div className="mt-4 p-4 border border-blue-800/40 bg-blue-900/20 rounded-xl text-center space-y-2">
-          <p className="text-sm text-neutral-400">
-            {oauthConnected
-              ? 'Google Ads account connected. Our team will launch the campaign after review.'
-              : 'Connect your Google Ads account so we can set up the campaign structure.'}
-          </p>
-          {oauthConnected && (
-            <p className="text-xs text-green-400">OAuth connected — admin can launch after approval.</p>
+          {oauthConnected ? (
+            <>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Check className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-green-400 font-medium">Google Ads connected</span>
+              </div>
+              {selectedGoogleCustomerId && (
+                <p className="text-xs text-neutral-500">Account: {selectedGoogleCustomerId}</p>
+              )}
+              <p className="text-xs text-neutral-400">Our team will launch the campaign after review.</p>
+              <button
+                type="button"
+                onClick={handleGoogleDisconnect}
+                disabled={isDisconnecting}
+                className="text-xs text-neutral-600 hover:text-red-400 transition-colors"
+              >
+                {isDisconnecting ? 'Disconnecting…' : 'Disconnect account'}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-neutral-400">Connect your Google Ads account so we can set up the campaign structure.</p>
+              <a
+                href={`/api/adoptions/${adoption.id}/google-oauth?returnSlug=${encodeURIComponent(release?.slug || '')}`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Connect Google Ads Account
+              </a>
+            </>
           )}
-          <a
-            href={`/api/adoptions/${adoption.id}/google-oauth`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            {oauthConnected ? 'Reconnect Google Ads Account' : 'Connect Google Ads Account'}
-          </a>
         </div>
       )}
     </div>
