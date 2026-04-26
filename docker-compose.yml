@@ -1,7 +1,7 @@
 services:
   app:
     image: ghcr.io/primelogicsol/sufipulse-sufitube:latest
-    container_name: sufipulse-app
+    container_name: sufipulse-new-app
     restart: always
     ports:
       - "3001:3000"
