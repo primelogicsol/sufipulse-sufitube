@@ -179,8 +179,36 @@ jobs:
 
             # ── FINAL STATUS ─────────────────────────────────────────────────
             _s="final-status"
-            echo "=== CONTAINER STATUS ==="
+            echo ""
+            echo "════════════════════════════════════════"
+            echo "  POST-DEPLOY VERIFICATION"
+            echo "════════════════════════════════════════"
+
+            echo ""
+            echo "── 1. docker compose -p sufipulse_new ps ──"
             docker compose -p sufipulse_new ps
-            echo "=== DEPLOY COMPLETE ==="
-            echo "image:  ${SUFIPULSE_IMAGE}"
-            echo "commit: ${{ github.sha }}"
+
+            echo ""
+            echo "── 2. docker ps (all containers + ports) ──"
+            docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+
+            echo ""
+            echo "── 3. curl http://127.0.0.1:3001 ──"
+            curl -sI http://127.0.0.1:3001 | head -5
+
+            echo ""
+            echo "── 4. curl https://test.sufipulse.com ──"
+            curl -sI https://test.sufipulse.com | head -5 || echo "test.sufipulse.com not reachable from VPS (normal — check from browser)"
+
+            echo ""
+            echo "── 5. Old live app safety check ──"
+            echo "Containers NOT named sufipulse-new-app (old app must appear here):"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" \
+              | grep -v "sufipulse-new-app" || echo "(none — old app may be stopped or uses different host)"
+
+            echo ""
+            echo "════════════════════════════════════════"
+            echo "  DEPLOY COMPLETE"
+            echo "  image:  ${SUFIPULSE_IMAGE}"
+            echo "  commit: ${{ github.sha }}"
+            echo "════════════════════════════════════════"
