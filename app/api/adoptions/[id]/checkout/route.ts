@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { requireAuth } from '@/server/middleware/authenticate';
+import { getAuthUser } from '@/server/middleware/authenticate';
 import { getAdoptionRecord, updateAdoptionRecord } from '@/app/lib/server/adoption-store';
 import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
 
@@ -18,8 +18,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
+  const authResult = await getAuthUser(request);
+  if (!authResult) {
+    return NextResponse.json(
+      { error: 'Please sign in to continue payment.' },
+      { status: 401 }
+    );
+  }
 
   const { id } = await params;
 
@@ -38,7 +43,7 @@ export async function POST(
 
   // Enforce ownership
   const existing = await getAdoptionPaymentRecord(id);
-  if (existing?.userId && existing.userId !== authResult.id) {
+  if (existing?.userId && existing.userId !== authResult!.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -94,7 +99,7 @@ export async function POST(
       adoptionStatus: 'pending_review',
     });
 
-    await upsertAdoptionPaymentRecord(id, { userId: authResult.id, paymentStatus: 'pending' });
+    await upsertAdoptionPaymentRecord(id, { userId: authResult!.id, paymentStatus: 'pending' });
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
   } catch (error: any) {

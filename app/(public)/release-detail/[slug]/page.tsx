@@ -623,6 +623,14 @@ function Release() {
         }
     }, [videoLoaded]);
 
+    // Auto-switch to Adopt tab when returning from login with ?adopt=1
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('adopt') === '1') {
+            setActiveTab('adopt');
+        }
+    }, []);
+
     useEffect(() => {
         const existingScript = document.querySelector('script[data-ytsubscribe-script="1"]') as HTMLScriptElement | null;
 

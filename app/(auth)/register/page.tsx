@@ -73,9 +73,9 @@ function SignUpForm() {
             // Auto-login to hydrate auth state
             await login(cleanEmail, form.password);
 
-            const returnUrl = searchParams.get('returnUrl');
+            const returnTo = searchParams.get('returnTo') || searchParams.get('returnUrl');
             setTimeout(() => {
-                router.push(returnUrl || '/');
+                router.push((returnTo && returnTo.startsWith('/')) ? returnTo : '/');
             }, 1200);
         } catch (err: any) {
             setError(err.message || "Registration failed. Please try again.");

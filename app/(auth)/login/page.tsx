@@ -28,10 +28,14 @@ const Login = () => {
         const oauthError = searchParams.get('error');
         if (oauthError) setError(oauthError);
     }, []);
-    // const navigate = useNavigate();
-    // Role - aware redirect after successful login
+    // Role-aware redirect after successful login; returnTo takes precedence
     useEffect(() => {
         if (user) {
+            const returnTo = searchParams.get('returnTo');
+            if (returnTo && returnTo.startsWith('/')) {
+                router.push(returnTo);
+                return;
+            }
             if (user.role === 'admin') {
                 router.push('/admin');
             } else if (user.role === 'writer') {

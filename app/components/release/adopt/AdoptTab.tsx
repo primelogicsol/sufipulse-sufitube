@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2 } from 'lucide-react';
+import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2, Lock } from 'lucide-react';
 import { SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
 
 const ADOPTION_PACKAGES: SongAdoptionPackage[] = [
@@ -44,6 +44,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<any>({});
   const [submitError, setSubmitError] = useState('');
+  const [showAuthWall, setShowAuthWall] = useState(false);
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [adoption, setAdoption] = useState<any | null>(null);
 
@@ -108,6 +109,42 @@ export function AdoptTab({ release }: AdoptTabProps) {
     url.searchParams.delete('adoption_oauth');
     url.searchParams.delete('adoption_id');
     window.history.replaceState({}, '', url.toString());
+  }, []);
+
+  // Restore adoption state when returning from login with ?adoptionId=
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const adoptionId = url.searchParams.get('adoptionId');
+    if (!adoptionId) return;
+
+    fetch(`/api/adoptions/${adoptionId}`)
+      .then(r => r.json())
+      .then((saved: any) => {
+        if (!saved?.id) return;
+        setAdoption(saved);
+        setSelectedMethod(saved.methodType);
+        setFormData(prev => ({
+          ...prev,
+          campaign_objective: saved.campaignIntention || prev.campaign_objective,
+          dedication_message: saved.dedicationMessage || prev.dedication_message,
+          full_name: saved.sponsorName || prev.full_name,
+          email: saved.sponsorEmail || prev.email,
+          country: saved.sponsorCountry || prev.country,
+          city: saved.sponsorCity || prev.city,
+        }));
+        const matchingPkg = ADOPTION_PACKAGES.find(p => p.amount === saved.amountDue);
+        if (matchingPkg) {
+          setSelectedPackage(matchingPkg);
+        } else if (saved.amountDue > 0) {
+          setFormData(prev => ({ ...prev, custom_budget: saved.amountDue }));
+        }
+        // Jump directly to the review/payment step
+        setStep(saved.methodType === 'use_my_google_ads' ? 5 : 4);
+        url.searchParams.delete('adoptionId');
+        url.searchParams.delete('adopt');
+        window.history.replaceState({}, '', url.toString());
+      })
+      .catch(() => {});
   }, []);
 
   // Poll OAuth + campaign status whenever we have an adoption in use_my_google_ads mode
@@ -199,7 +236,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setAdoption(null); setOauthConnected(false); setOauthChecked(false);
     setOauthConfigured(false); setAccessibleCustomerIds([]); setSelectedGoogleCustomerId('');
     setVerifiedCustomerId(null); setIsVerifying(false); setVerifyError(null);
-    setOauthLastVerified(null); setSubmitError('');
+    setOauthLastVerified(null); setSubmitError(''); setShowAuthWall(false);
     setCampaignResourceName(null); setIsConnectingOAuth(false);
   };
 
@@ -474,6 +511,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
       return;
     }
 
+    // Require login before opening Stripe
+    if (!user) {
+      setShowAuthWall(true);
+      return;
+    }
+
     if (!stripeEnabled) {
       setSubmitError('Payment system is currently unavailable. Please contact support.');
       return;
@@ -494,6 +537,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
         }),
       });
       const body = await res.json();
+      if (res.status === 401) {
+        setShowAuthWall(true);
+        setIsRedirectingToStripe(false);
+        return;
+      }
       if (!res.ok) {
         const msg = typeof body.error === 'string'
           ? body.error
@@ -1408,26 +1456,71 @@ export function AdoptTab({ release }: AdoptTabProps) {
           )}
         </div>
 
-        {submitError && (
+        {submitError && !showAuthWall && (
           <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
             {submitError}
           </div>
         )}
 
-        {!stripeEnabled && (
-          <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
-            Payment system unavailable. Contact support to complete your sponsorship.
-          </div>
+        {showAuthWall ? (() => {
+          const returnUrl = new URL(window.location.href);
+          returnUrl.searchParams.set('adopt', '1');
+          if (adoption?.id) returnUrl.searchParams.set('adoptionId', adoption.id);
+          const returnTo = encodeURIComponent(returnUrl.pathname + returnUrl.search);
+          return (
+            <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl p-6 space-y-4">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mb-3">
+                  <Lock className="w-5 h-5 text-amber-400" />
+                </div>
+                <h4 className="text-neutral-100 font-medium mb-1">Sign in to complete your sponsorship</h4>
+                <p className="text-neutral-400 text-sm">Please sign in to complete your sponsorship payment. Your campaign details have been saved.</p>
+              </div>
+              <div className="space-y-3 pt-2">
+                <a
+                  href={`/login?returnTo=${returnTo}`}
+                  className="block w-full py-3 bg-amber-600 hover:bg-amber-700 text-white text-center font-medium rounded-xl transition-colors"
+                >
+                  Sign In to Continue
+                </a>
+                <a
+                  href={`/register?returnTo=${returnTo}`}
+                  className="block w-full py-3 bg-neutral-700 hover:bg-neutral-600 text-white text-center font-medium rounded-xl transition-colors"
+                >
+                  Create Account
+                </a>
+                {adoption?.id && (
+                  <a
+                    href={`/adopt-song/request/${adoption.id}`}
+                    className="block w-full py-3 bg-transparent border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-200 text-center text-sm font-medium rounded-xl transition-colors"
+                  >
+                    Save and Continue Later
+                  </a>
+                )}
+              </div>
+              <p className="text-xs text-neutral-600 text-center">
+                Your sponsorship details have been saved and can be completed after signing in.
+              </p>
+            </div>
+          );
+        })() : (
+          <>
+            {!stripeEnabled && (
+              <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+                Payment system unavailable. Contact support to complete your sponsorship.
+              </div>
+            )}
+            <button
+              onClick={() => { setSubmitError(''); handlePayment(); }}
+              disabled={isRedirectingToStripe || !stripeEnabled}
+              className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isRedirectingToStripe
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
+                : <><CreditCard className="w-5 h-5" /> Confirm & Pay with Card</>}
+            </button>
+          </>
         )}
-        <button
-          onClick={() => { setSubmitError(''); handlePayment(); }}
-          disabled={isRedirectingToStripe || !stripeEnabled}
-          className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          {isRedirectingToStripe
-            ? <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
-            : <><CreditCard className="w-5 h-5" /> Confirm & Pay with Card</>}
-        </button>
       </div>
     );
   };
