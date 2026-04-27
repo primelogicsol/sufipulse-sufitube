@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { entityGetById, entityUpdate } from '@/lib/entity-storage-server';
 import { notifySubmitterStatusChange } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { usersRepository } from '@/server/db/repositories/users';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await requireAdmin(request);
@@ -28,6 +29,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (body.profile_status === 'approved' || body.profile_status === 'rejected') {
       const item = updated as any;
+      if (body.profile_status === 'approved' && item.user_id) {
+        const u = usersRepository.findById(item.user_id);
+        if (u) {
+          const existing = u.assigned_roles ?? [];
+          usersRepository.setRoles(item.user_id, 'writer', [...new Set([...existing, 'writer'])]);
+        }
+      }
       if (item.email) {
         notifySubmitterStatusChange({
           to: item.email,
