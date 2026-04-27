@@ -14,6 +14,7 @@ interface PayoutAccount {
   // Last 4 digits only — never store full account number
   account_last4: string;
   routing_number: string;
+  swift_bic?: string;
   currency: string;
   country: string;
   notes?: string;
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
     account_type,
     account_number,
     routing_number,
+    swift_bic,
     currency = 'USD',
     country = 'US',
     notes,
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
     account_type: account_type || 'checking',
     account_last4: accountLast4,
     routing_number: routing_number.trim(),
+    swift_bic: swift_bic?.trim() || undefined,
     currency,
     country,
     notes: notes?.trim() || undefined,

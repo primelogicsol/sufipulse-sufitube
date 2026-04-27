@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
-import { requireAdmin } from '@/server/middleware/authenticate';
+import { requireAuth } from '@/server/middleware/authenticate';
 
 export async function GET(request: NextRequest) {
-  const authResult = await requireAdmin(request);
+  const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
     const items = entityGetAll('producers');
-    return NextResponse.json(
-      items.sort((a: any, b: any) =>
-        new Date(b.submitted_at || b.created_at || 0).getTime() -
-        new Date(a.submitted_at || a.created_at || 0).getTime()
-      )
+    const sorted = items.sort((a: any, b: any) =>
+      new Date(b.submitted_at || b.created_at || 0).getTime() -
+      new Date(a.submitted_at || a.created_at || 0).getTime()
     );
+    const result = authResult.role === 'admin'
+      ? sorted
+      : sorted.filter((i: any) => i.user_id === authResult.id);
+    return NextResponse.json(result);
   } catch (e: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

@@ -181,72 +181,57 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         setNotifications(getUserNotifications(user.id));
     };
 
-    const loadRoyalties = () => {
+    const loadRoyalties = async () => {
         if (!user) return;
         try {
-            const raw = localStorage.getItem('sufipulse_royalty_reports');
-            const all: any[] = raw ? JSON.parse(raw) : [];
-            // Match by user_id or by any known display name across all roles
-            const writerProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_writer_profiles') || '[]');
-            const vocalistProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_vocalist_profiles') || '[]');
-            const producerProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_producer_profiles') || '[]');
-            const literaryProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_literary_profiles') || '[]');
-            const studioProfiles: any[] = JSON.parse(localStorage.getItem('sufipulse_studio_profiles') || '[]');
-            const myWriterProfile = writerProfiles.find((p: any) => p.user_id === user!.id);
-            const myVocalistProfile = vocalistProfiles.find((p: any) => p.user_id === user!.id);
-            const myProducerProfile = producerProfiles.find((p: any) => p.user_id === user!.id);
-            const myLiteraryProfile = literaryProfiles.find((p: any) => p.user_id === user!.id);
-            const myStudioProfile = studioProfiles.find((p: any) => p.user_id === user!.id);
-            const myNames = [
-                user!.full_name,
-                myWriterProfile?.pen_name,
-                myVocalistProfile?.performance_name,
-                myProducerProfile?.professional_name,
-                myLiteraryProfile?.professional_name,
-                myLiteraryProfile?.full_name,
-                myStudioProfile?.studio_name,
-                myStudioProfile?.full_name,
-            ].filter(Boolean).map((n: string) => n.toLowerCase());
-            const mine = all.filter((r: any) =>
-                r.user_id === user!.id ||
-                myNames.includes((r.stakeholder_name || '').toLowerCase())
-            );
-            setRoyalties(mine);
+            const res = await fetch('/api/royalties');
+            if (!res.ok) { setRoyalties([]); return; }
+            const data = await res.json();
+            setRoyalties(Array.isArray(data) ? data : []);
         } catch { setRoyalties([]); }
     };
 
-    const loadBankInfo = () => {
+    const loadBankInfo = async () => {
         if (!user) return;
         try {
-            const raw = localStorage.getItem('sufipulse_bank_accounts');
-            const all: any[] = raw ? JSON.parse(raw) : [];
-            const mine = all.find((b: any) => b.user_id === user!.id) || null;
-            setBankInfo(mine);
-            if (mine) setBankForm({
-                holder_name: mine.holder_name || '',
-                bank_name: mine.bank_name || '',
-                account_number: mine.account_number || '',
-                iban_routing: mine.iban_routing || '',
-                swift_bic: mine.swift_bic || '',
-                account_type: mine.account_type || 'savings',
-                country: mine.country || ''
+            const res = await fetch('/api/user/payout-account');
+            if (!res.ok) { setBankInfo(null); return; }
+            const data = await res.json();
+            const account = data.account || null;
+            setBankInfo(account);
+            if (account) setBankForm({
+                holder_name: account.account_holder_name || '',
+                bank_name: account.bank_name || '',
+                account_number: account.account_last4 ? `****${account.account_last4}` : '',
+                iban_routing: account.routing_number || '',
+                swift_bic: account.swift_bic || '',
+                account_type: account.account_type || 'savings',
+                country: account.country || ''
             });
         } catch { setBankInfo(null); }
     };
 
-    const handleBankSave = (e: React.FormEvent) => {
+    const handleBankSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
         try {
-            const raw = localStorage.getItem('sufipulse_bank_accounts');
-            const all: any[] = raw ? JSON.parse(raw) : [];
-            const idx = all.findIndex((b: any) => b.user_id === user!.id);
-            const entry = { ...bankForm, user_id: user!.id, updated_at: new Date().toISOString() };
-            if (idx >= 0) { all[idx] = { ...all[idx], ...entry }; }
-            else { all.push({ id: `bank_${Date.now()}`, created_at: new Date().toISOString(), ...entry }); }
-            localStorage.setItem('sufipulse_bank_accounts', JSON.stringify(all));
+            const res = await fetch('/api/user/payout-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    account_holder_name: bankForm.holder_name,
+                    bank_name: bankForm.bank_name,
+                    account_number: bankForm.account_number,
+                    routing_number: bankForm.iban_routing,
+                    swift_bic: bankForm.swift_bic,
+                    account_type: bankForm.account_type,
+                    country: bankForm.country,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) { alert(data.error || 'Failed to save. Please try again.'); return; }
             setBankFormOpen(false);
-            loadBankInfo();
+            await loadBankInfo();
             alert('Bank account saved successfully. Admin will verify before first payout.');
         } catch { alert('Failed to save. Please try again.'); }
     };
@@ -261,47 +246,49 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
+    const profileApiMap: Record<string, string> = {
+        writer: '/api/writers',
+        vocalist: '/api/vocalists',
+        producer: '/api/producers',
+        literary: '/api/literary',
+        studio: '/api/studio',
+    };
+
     const loadData = async () => {
         if (!user) return;
         setLoading(true);
         try {
-            const profile = await storage.getProfile(config.profileType, user.id);
+            const profileApi = profileApiMap[config.profileType];
+            const profileRes = await fetch(profileApi);
+            const profileList = profileRes.ok ? await profileRes.json() : [];
+            const profile = Array.isArray(profileList) ? (profileList[0] ?? null) : null;
+
             setStatus((profile as any)?.[config.profileFields.statusField] || 'pending');
             setProfileData({
                 languages: (profile as any)?.[config.profileFields.languages] || [],
                 styles: (profile as any)?.[config.profileFields.styles] || [],
-                // Store full profile data for additional use (e.g. literary author fields)
                 full_name: (profile as any)?.full_name || user.full_name || '',
                 professional_name: (profile as any)?.professional_name || (profile as any)?.pen_name || (profile as any)?.performance_name || '',
                 country: (profile as any)?.country || '',
                 city: (profile as any)?.city || '',
                 domain: Array.isArray((profile as any)?.[config.profileFields.styles]) ? ((profile as any)?.[config.profileFields.styles] || []).join(', ') : '',
             });
+
             if (role === 'producer') {
-                // Producer: load assignments by matching producer name
-                const raw = typeof window !== 'undefined' ? localStorage.getItem('sufipulse_performance_assignments') : null;
-                const allAssignments: any[] = raw ? JSON.parse(raw) : [];
-                const producerName = ((profile as any)?.professional_name || (profile as any)?.full_name || user.full_name || '').toLowerCase();
-                const mine = producerName
-                    ? allAssignments.filter((a: any) => a.user_id === user.id || (a.producer || '').toLowerCase().includes(producerName))
-                    : allAssignments.filter((a: any) => a.user_id === user.id);
-                setAssignments(mine);
-                setItems(mine);
+                const assignRes = await fetch('/api/performance-assignments');
+                const allAssignments: any[] = assignRes.ok ? await assignRes.json() : [];
+                setAssignments(allAssignments);
+                setItems(allAssignments);
             } else if (role === 'studio') {
-                // Studio: load session requests
-                const raw = typeof window !== 'undefined' ? localStorage.getItem('sufipulse_session_requests') : null;
-                const allRequests: any[] = raw ? JSON.parse(raw) : [];
-                const studioName = ((profile as any)?.studio_name || (profile as any)?.full_name || user.full_name || '').toLowerCase();
-                const mine = studioName
-                    ? allRequests.filter((a: any) => a.user_id === user.id || (a.studio_name || '').toLowerCase().includes(studioName))
-                    : allRequests.filter((a: any) => a.user_id === user.id);
-                setSessionRequests(mine);
-                setItems(mine);
+                const sessionRes = await fetch('/api/session-requests');
+                const allRequests: any[] = sessionRes.ok ? await sessionRes.json() : [];
+                setSessionRequests(allRequests);
+                setItems(allRequests);
             } else {
                 const allItems = await storage.getAll(config.typeKey);
                 setItems(allItems.filter((i: any) => i.user_id === user.id));
             }
-            // For literary: pre-fill author fields from profile
+
             if (role === 'literary') {
                 const p = profile as any;
                 setDraftForm({
