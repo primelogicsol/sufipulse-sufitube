@@ -665,7 +665,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 Use My Google Ads
               </h4>
               <p className="text-sm text-neutral-400 leading-[1.7]">
-                Best for sponsors who want full control of billing and campaign execution using their own Google Ads account, while SufiPulse prepares the campaign structure.
+                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership directly in your account.
               </p>
             </div>
 
