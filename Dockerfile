@@ -62,6 +62,16 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
 # .data is excluded from .dockerignore and is provided via Docker volume at runtime
 
+# Explicitly copy the FULL compiled server directory from the builder.
+# Next.js standalone tracing can omit route.js files that lack file-traced
+# imports (e.g. /api/adoptions, /api/admin/users). Copying the builder's
+# .next/server/app on top of the standalone output ensures every compiled
+# route and manifest is present in the production image.
+COPY --from=builder /app/.next/server/app ./.next/server/app
+COPY --from=builder /app/.next/server/app-paths-manifest.json ./.next/server/app-paths-manifest.json
+COPY --from=builder /app/.next/server/server-reference-manifest.json ./.next/server/server-reference-manifest.json
+COPY --from=builder /app/.next/server/server-reference-manifest.js ./.next/server/server-reference-manifest.js
+
 # Operational scripts — not part of the Next.js bundle but needed inside the container.
 # package.json is copied explicitly because standalone ships a stripped-down version
 # that omits custom npm scripts like seed:admin.
