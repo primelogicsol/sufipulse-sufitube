@@ -87,7 +87,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
     }
 
-    const filepath = path.join(BACKUP_DIR, filename);
+    const filepath = path.resolve(BACKUP_DIR, filename);
+    if (!filepath.startsWith(BACKUP_DIR + path.sep)) {
+      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
+    }
 
     if (!fs.existsSync(filepath)) {
       return NextResponse.json({ error: 'Backup not found' }, { status: 404 });

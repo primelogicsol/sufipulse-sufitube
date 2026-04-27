@@ -28,9 +28,7 @@ coverage
 frontend.env
 
 # File-based database — never commit user/financial data
-.data/payout-accounts.json
-.data/audit/
-.data/backups/
+.data/
 
 .vscode/*
 !.vscode/extensions.json
