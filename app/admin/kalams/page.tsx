@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, File, MessageSquareDashed, BookA } from 'lucide-react';
@@ -40,11 +41,14 @@ import { Kalam } from '@/app/user/writer/dashboard/page';
 // }
 
 export default function AdminKalams() {
+  const searchParams = useSearchParams();
   const [kalams, setKalams] = useState<Kalam[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedKalam, setSelectedKalam] = useState<Kalam | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
-  const [filter, setFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('submitted');
+  const [filter, setFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected' | 'revision_requested'>(
+    (searchParams?.get('status') as any) || 'submitted'
+  );
 
   useEffect(() => {
     loadKalams();
@@ -117,6 +121,7 @@ export default function AdminKalams() {
     submitted: kalams.filter((k) => k.status === 'submitted').length,
     approved: kalams.filter((k) => k.status === 'approved').length,
     rejected: kalams.filter((k) => k.status === 'rejected').length,
+    revision_requested: kalams.filter((k) => k.status === 'revision_requested').length,
   };
 
   return (
@@ -147,6 +152,12 @@ export default function AdminKalams() {
               className={`dashboard-tab ${filter === 'rejected' ? 'active' : ''}`}
             >
               Rejected ({statusCounts.rejected})
+            </button>
+            <button
+              onClick={() => setFilter('revision_requested')}
+              className={`dashboard-tab ${filter === 'revision_requested' ? 'active' : ''}`}
+            >
+              Revision Requested ({statusCounts.revision_requested})
             </button>
           </div>
 

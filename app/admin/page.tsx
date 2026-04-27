@@ -294,7 +294,7 @@ export default function AdminDashboard() {
       value: stats.revisionRequested,
       meta: 'Awaiting contributor',
       icon: RotateCcw,
-      link: '/admin/kalams',
+      link: '/admin/kalams?status=revision_requested',
       alert: stats.revisionRequested > 0,
     },
     {
