@@ -8,10 +8,12 @@ type ArticleItem = {
   id: string;
   title?: string;
   author_name?: string;
+  email?: string;
   user_id?: string;
   status?: string;
   created_at?: string;
   updated_at?: string;
+  revision_log?: Array<{ note: string; requestedAt: string; requestedBy: string }>;
 };
 
 const STATUSES = ['pending', 'under_review', 'revision_requested', 'approved', 'published', 'rejected'] as const;
@@ -141,8 +143,16 @@ export default function ArticlesPage() {
                           <span className="font-medium text-[var(--dash-text-primary)]">{item.title || 'Untitled'}</span>
                         </div>
                       </td>
-                      <td className="text-[var(--dash-text-secondary)]">{item.author_name || item.user_id || 'Unknown'}</td>
-                      <td className="text-[var(--dash-text-secondary)] capitalize">{String(item.status || 'pending').replace('_', ' ')}</td>
+                      <td>
+                        <div className="text-[var(--dash-text-secondary)]">{item.author_name || item.user_id || 'Unknown'}</div>
+                        {item.email && <div className="text-xs text-[var(--dash-text-muted)]">{item.email}</div>}
+                      </td>
+                      <td>
+                        <span className="text-[var(--dash-text-secondary)] capitalize">{String(item.status || 'pending').replace('_', ' ')}</span>
+                        {(item.revision_log?.length ?? 0) > 0 && (
+                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-[var(--dash-status-pending)]/20 text-[var(--dash-status-pending)]">{item.revision_log!.length}×</span>
+                        )}
+                      </td>
                       <td className="text-[var(--dash-text-secondary)]">{item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</td>
                       <td>
                         <div className="flex justify-end gap-2">

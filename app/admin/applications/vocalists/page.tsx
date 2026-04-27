@@ -119,7 +119,7 @@ export default function AdminVocalistApplications() {
             const res = await fetch(`/api/vocalists/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profile_status: status }),
+                body: JSON.stringify({ profile_status: status, status }),
             });
             if (!res.ok) throw new Error('Failed to update status');
             setSelectedApp(null);

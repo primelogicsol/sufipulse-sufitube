@@ -343,7 +343,7 @@ export default function AdminKalams() {
                   Approve
                 </button>
                 <button
-                  onClick={() => handleUpdateStatus(selectedKalam.id, 'under review')}
+                  onClick={() => handleUpdateStatus(selectedKalam.id, 'under_review')}
                   className="flex-1 dashboard-btn-secondary flex items-center justify-center gap-2"
                 >
                   <Clock className="w-5 h-5" />
@@ -351,7 +351,7 @@ export default function AdminKalams() {
                 </button>
                 <button
                   disabled={reviewNotes.length === 0}
-                  onClick={() => handleUpdateStatus(selectedKalam.id, 'revision requested')}
+                  onClick={() => handleUpdateStatus(selectedKalam.id, 'revision_requested')}
                   className="flex-1 bg-[var(--dash-status-pending)] hover:opacity-90 text-[var(--dash-bg-primary)] rounded-lg px-4 py-3 transition-opacity flex items-center justify-center gap-2 font-medium"
                 >
                   Request Revision

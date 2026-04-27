@@ -99,7 +99,7 @@ export default function AdminDashboard() {
 
       const pendingAdoptions = adoptions.filter(a => {
         const s = String(a?.adoption_status || a?.status || '').toLowerCase();
-        return s === 'pending_review' || s === 'pending' || s === 'scheduled' || s === 'live';
+        return s === 'pending_review' || s === 'pending' || s === 'under_review';
       }).length;
 
       const draftReleases = releases.filter(r => String(r?.status || '').toLowerCase() === 'draft').length;
