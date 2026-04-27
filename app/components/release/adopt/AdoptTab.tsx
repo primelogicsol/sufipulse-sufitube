@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2, Lock } from 'lucide-react';
+import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2, Lock, ExternalLink } from 'lucide-react';
 import { SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
 
 const ADOPTION_PACKAGES: SongAdoptionPackage[] = [
@@ -435,30 +435,37 @@ export function AdoptTab({ release }: AdoptTabProps) {
         if (!res.ok) throw new Error(currentAdoption.error || 'Failed to create adoption');
       }
 
-      // Register in the Google Ads campaign request tracker for both methods
-      await fetch('/api/google-ads/campaign-requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          adoptionId: currentAdoption.id,
-          releaseId: release.id,
-          releaseTitle: release.title || release.release_title,
-          releaseSlug: release.slug,
-          youtubeVideoId: release.youtubeId || release.youtube_video_id,
-          budgetAmount: formData.custom_budget,
-          campaignObjective: formData.campaign_objective || 'awareness',
-          targetRegions: formData.target_regions || ['Global'],
-          targetLanguages: formData.target_languages || ['All'],
-          googleAdsCustomerId: selectedMethod === 'use_my_google_ads'
-            ? (selectedGoogleCustomerId || cleanData.google_ads_customer_id)
-            : undefined,
-          oauthConnected: selectedMethod === 'use_my_google_ads' ? oauthConnected : false,
-          methodType: selectedMethod,
-          sponsorName: cleanData.full_name,
-          sponsorEmail: cleanData.email,
-        }),
-      }).catch(() => {}); // fire-and-forget — don't block the adoption flow
+      // Register in the Google Ads campaign request tracker.
+      // For use_my_google_ads, only submit if a verified customer ID is present.
+      const resolvedCustomerId = selectedMethod === 'use_my_google_ads'
+        ? (selectedGoogleCustomerId || cleanData.google_ads_customer_id)
+        : undefined;
+      const skipCampaignRequest = selectedMethod === 'use_my_google_ads' && !resolvedCustomerId;
+
+      if (!skipCampaignRequest) {
+        await fetch('/api/google-ads/campaign-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            adoptionId: currentAdoption.id,
+            releaseId: release.id,
+            releaseTitle: release.title || release.release_title,
+            releaseSlug: release.slug,
+            youtubeVideoId: release.youtubeId || release.youtube_video_id,
+            budgetAmount: formData.custom_budget,
+            campaignObjective: formData.campaign_objective || 'awareness',
+            targetRegions: formData.target_regions || ['Global'],
+            targetLanguages: formData.target_languages || ['All'],
+            googleAdsCustomerId: resolvedCustomerId,
+            oauthConnected: selectedMethod === 'use_my_google_ads' ? oauthConnected : false,
+            methodType: selectedMethod,
+            paymentRoute: selectedMethod === 'use_my_google_ads' ? 'google_direct' : undefined,
+            sponsorName: cleanData.full_name,
+            sponsorEmail: cleanData.email,
+          }),
+        }).catch(() => {}); // fire-and-forget — don't block the adoption flow
+      }
 
       setAdoption(currentAdoption);
       setStep(selectedMethod === 'use_my_google_ads' ? 5 : 4);
@@ -475,6 +482,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     // ── use_my_google_ads: no SufiPulse payment — submit campaign request only ──
     if (selectedMethod === 'use_my_google_ads') {
+      if (!selectedGoogleCustomerId || !verifiedCustomerId) {
+        setSubmitError('A verified Google Ads customer ID is required. Go back to the Connect step to select and verify your account.');
+        return;
+      }
       setIsSubmitting(true);
       try {
         // Update adoption record: payment not required for this path
@@ -484,7 +495,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           credentials: 'include',
           body: JSON.stringify({
             paymentStatus: 'not_required',
-            paymentRoute: 'google_ads_billing',
+            paymentRoute: 'google_direct',
             googleAdsCustomerId: selectedGoogleCustomerId,
             oauthStatus: oauthConnected ? 'connected' : 'not_connected',
             adoptionStatus: 'pending_review',
@@ -991,8 +1002,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 </div>
               </div>
             ) : (
-              <div className="border border-amber-800/30 bg-amber-900/10 rounded-xl p-4 text-sm text-amber-400">
-                Connected but no Google Ads accounts found. Ensure your Google account has access to at least one Google Ads customer account.
+              <div className="border border-red-800/40 bg-red-900/10 rounded-xl p-4 space-y-3">
+                <p className="text-sm text-red-400 font-medium">Connected to Google, but no Google Ads account found.</p>
+                <p className="text-xs text-neutral-500">Your Google account must have access to at least one Google Ads customer account before you can continue.</p>
+                <a
+                  href="https://ads.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 underline"
+                >
+                  Open Google Ads to create or select an account <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             )}
 
@@ -1000,10 +1020,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
               onClick={() => setStep(4)}
               disabled={
                 isVerifying ||
-                (accessibleCustomerIds.length > 0 && (
-                  !selectedGoogleCustomerId ||
-                  verifiedCustomerId !== selectedGoogleCustomerId
-                ))
+                accessibleCustomerIds.length === 0 ||
+                !selectedGoogleCustomerId ||
+                verifiedCustomerId !== selectedGoogleCustomerId
               }
               className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
             >
@@ -1395,6 +1414,16 @@ export function AdoptTab({ release }: AdoptTabProps) {
             )}
           </div>
 
+          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-500 leading-relaxed">
+            You will not pay inside SufiPulse. Your campaign can only run after your Google Ads account has billing enabled inside Google Ads.
+          </div>
+
+          {(!selectedGoogleCustomerId || !verifiedCustomerId) && (
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+              No verified Google Ads account. Go back to Step 3 to connect and verify your account.
+            </div>
+          )}
+
           {submitError && (
             <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
               {submitError}
@@ -1403,7 +1432,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
           <button
             onClick={() => { setSubmitError(''); handlePayment(); }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !selectedGoogleCustomerId || !verifiedCustomerId}
             className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {isSubmitting
@@ -1545,7 +1574,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         : 'Adoption Complete';
 
     const description = isGoogleDirect
-      ? 'Google Ads account connected. Campaign request submitted. Your Google Ads account will be charged for media spend after admin review and campaign launch — typically 1–2 business days.'
+      ? 'Your campaign request has been submitted for review. You will not pay inside SufiPulse. Your campaign can only run after your Google Ads account has billing enabled inside Google Ads — typically reviewed within 1–2 business days.'
       : isStripeSufipulse
         ? 'Payment confirmed through SufiPulse. Campaign pending review and launch within 1–2 business days.'
         : 'May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and will be reviewed shortly.';
