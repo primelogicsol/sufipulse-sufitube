@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthUser } from '@/server/middleware/authenticate';
+import { requireAuth } from '@/server/middleware/authenticate';
 import { getGoogleAdsUserOAuth } from '@/app/lib/server/google-ads-oauth-store';
 import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 import { getGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
@@ -8,15 +8,17 @@ import { getGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store
  * GET /api/google-ads/status?adoptionId=...
  *
  * Returns the Google Ads connection status for the authenticated user.
- *
- * Unauthenticated: returns only { configured } — safe for server-config checks.
- * Authenticated: returns full OAuth state scoped to auth.id (ignores userId query param).
+ * Requires authentication — unauthenticated requests receive 401.
+ * OAuth data is scoped to auth.id (ignores userId query param).
  *
  * Token lookup priority:
  *   1. User-level record (google-ads-oauth.json, keyed by userId) — global per sponsor
  *   2. Adoption-level record (adoption-google-oauth.json, keyed by adoptionId) — legacy fallback
  */
 export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request);
+  if (auth instanceof NextResponse) return auth;
+
   const { searchParams } = new URL(request.url);
   const adoptionId = searchParams.get('adoptionId') || '';
 
@@ -25,18 +27,7 @@ export async function GET(request: NextRequest) {
     process.env.GOOGLE_ADS_DEVELOPER_TOKEN
   );
 
-  const authUser = await getAuthUser(request);
-
-  if (!authUser) {
-    return NextResponse.json({
-      configured,
-      connected: false,
-      accessible_customer_ids: [],
-      campaign: null,
-    });
-  }
-
-  const userId = authUser.id;
+  const userId = auth.id;
 
   const userRecord = await getGoogleAdsUserOAuth(userId);
   const adoptionRecord = adoptionId ? await getAdoptionGoogleOAuthRecord(adoptionId) : null;
