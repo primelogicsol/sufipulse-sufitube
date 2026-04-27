@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
       notifyAdminNewSubmission(
         'studio access code request',
         body.name || body.email,
-        body.role || '—'
-      ).catch(() => {});
+        body.role || 'â€”'
+      ).catch((err) => console.error('[notify]', err?.message || err));
     }
     return NextResponse.json(record, { status: 201 });
   } catch (e: any) {

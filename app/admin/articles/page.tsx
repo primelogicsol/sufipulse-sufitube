@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
 import { BookOpen, RefreshCw, Search } from 'lucide-react';
 
@@ -19,10 +20,11 @@ type ArticleItem = {
 const STATUSES = ['pending', 'under_review', 'revision_requested', 'approved', 'published', 'rejected'] as const;
 
 export default function ArticlesPage() {
+  const searchParams = useSearchParams();
   const [items, setItems] = useState<ArticleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<string>('pending');
+  const [filter, setFilter] = useState<string>(searchParams?.get('status') || 'pending');
   const [revisionTarget, setRevisionTarget] = useState<string | null>(null);
   const [revisionNote, setRevisionNote] = useState('');
 

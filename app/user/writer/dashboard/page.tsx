@@ -17,6 +17,7 @@ export interface Kalam {
   user_id: string;
   id: string;
   writer_id: string;
+  email?: string;
   status: string;
   language: string;
   writing_style: string;

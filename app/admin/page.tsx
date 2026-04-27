@@ -17,6 +17,9 @@ interface DashboardStats {
   pendingSadas: number;
   pendingArticles: number;
   revisionRequested: number;
+  revisionKalams: number;
+  revisionSadas: number;
+  revisionArticles: number;
   pendingPartnerships: number;
   pendingSessionRequests: number;
   pendingAdoptions: number;
@@ -46,6 +49,9 @@ export default function AdminDashboard() {
     pendingSadas: 0,
     pendingArticles: 0,
     revisionRequested: 0,
+    revisionKalams: 0,
+    revisionSadas: 0,
+    revisionArticles: 0,
     pendingPartnerships: 0,
     pendingSessionRequests: 0,
     pendingAdoptions: 0,
@@ -129,6 +135,9 @@ export default function AdminDashboard() {
           return s === 'pending' || s === 'submitted' || s === 'under_review';
         }).length,
         revisionRequested: revisionKalams + revisionSadas + revisionArticles,
+        revisionKalams,
+        revisionSadas,
+        revisionArticles,
         pendingPartnerships: pendingCount(partnerships, 'status'),
         pendingSessionRequests: pendingCount(sessionRequests, 'status'),
         pendingAdoptions,
@@ -290,12 +299,28 @@ export default function AdminDashboard() {
       alert: stats.pendingAdoptions > 0,
     },
     {
-      label: 'Revision Requested',
-      value: stats.revisionRequested,
-      meta: 'Awaiting contributor',
+      label: 'Kalams — Revision',
+      value: stats.revisionKalams,
+      meta: 'Awaiting writer',
       icon: RotateCcw,
       link: '/admin/kalams?status=revision_requested',
-      alert: stats.revisionRequested > 0,
+      alert: stats.revisionKalams > 0,
+    },
+    {
+      label: 'Sadas — Revision',
+      value: stats.revisionSadas,
+      meta: 'Awaiting vocalist',
+      icon: RotateCcw,
+      link: '/admin/sadas?status=revision_requested',
+      alert: stats.revisionSadas > 0,
+    },
+    {
+      label: 'Articles — Revision',
+      value: stats.revisionArticles,
+      meta: 'Awaiting contributor',
+      icon: RotateCcw,
+      link: '/admin/articles?status=revision_requested',
+      alert: stats.revisionArticles > 0,
     },
     {
       label: 'Draft Releases',

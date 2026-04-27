@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       status: 'unread',
     });
 
-    notifyAdminNewSubmission('contact message', body.name, body.subject || 'General Inquiry').catch(() => {});
+    notifyAdminNewSubmission('contact message', body.name, body.subject || 'General Inquiry').catch((err) => console.error('[notify]', err?.message || err));
 
     return NextResponse.json(record, { status: 201 });
   } catch (e: any) {

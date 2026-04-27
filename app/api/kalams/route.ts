@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     const record = entityCreate('kalams', {
       ...body,
       user_id: authResult.id,
+      email: authResult.email,
       status: 'submitted',
       submitted_at: new Date().toISOString(),
     });
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       'kalam submission',
       authResult.full_name || authResult.email,
       body.title
-    ).catch(() => {});
+    ).catch((err) => console.error('[notify]', err?.message || err));
     return NextResponse.json(record, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

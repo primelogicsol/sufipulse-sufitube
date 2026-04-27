@@ -267,10 +267,17 @@ export default function AdminKalams() {
                     <p className="text-[var(--dash-text-primary)]">{selectedKalam.title}</p>
                   </div>
 
-                  {/* <div>
-                    <label className="dashboard-label">Writer</label>
-                    <p className="text-[var(--dash-text-primary)]">{selectedKalam.users?.email}</p>
-                  </div> */}
+                  {selectedKalam.email && (
+                    <div>
+                      <label className="dashboard-label">Submitter</label>
+                      <a
+                        href={`mailto:${selectedKalam.email}`}
+                        className="text-[var(--dash-accent)] text-sm hover:underline"
+                      >
+                        {selectedKalam.email}
+                      </a>
+                    </div>
+                  )}
 
                   {/* {selectedKalam.theme && (
                     <div>

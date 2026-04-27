@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { entityGetById, entityUpdate } from '@/lib/entity-storage-server';
 import { notifySubmitterStatusChange } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           type: 'studio partner application',
           status,
           adminNote: body.admin_note,
-        }).catch(() => {});
+        }).catch((err) => console.error('[notify]', err?.message || err));
       }
     }
     return NextResponse.json(updated);
