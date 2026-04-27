@@ -685,11 +685,27 @@ export function AdoptTab({ release }: AdoptTabProps) {
         >
           {/* Logo */}
           <div className="flex flex-col items-center pt-9 pb-5 px-8">
-            <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-3">
-              <svg width="27" height="27" viewBox="0 0 27 27" fill="none" aria-hidden="true">
-                <path d="M10.5 7.5L22 13.5L10.5 19.5V7.5Z" fill="#C8A75E"/>
-                <path d="M3 22Q5.5 19.5 8 22Q10.5 24.5 13 22Q15.5 19.5 18 22Q20.5 24.5 23 22" stroke="#C8A75E" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5"/>
-              </svg>
+            <div className="h-14 flex items-center justify-center mb-3">
+              <img
+                src="/sufitube-logo-v5.png"
+                alt="SufiTube"
+                className="h-10 w-auto object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fb = e.currentTarget.parentElement?.querySelector('[data-fallback]') as HTMLElement | null;
+                  if (fb) fb.style.display = 'flex';
+                }}
+              />
+              <div
+                data-fallback=""
+                style={{ display: 'none' }}
+                className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 items-center justify-center"
+              >
+                <svg width="22" height="22" viewBox="0 0 27 27" fill="none" aria-hidden="true">
+                  <path d="M10.5 7.5L22 13.5L10.5 19.5V7.5Z" fill="#C8A75E"/>
+                  <path d="M3 22Q5.5 19.5 8 22Q10.5 24.5 13 22Q15.5 19.5 18 22Q20.5 24.5 23 22" stroke="#C8A75E" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5"/>
+                </svg>
+              </div>
             </div>
             <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-amber-500/70">SufiTube</span>
           </div>
