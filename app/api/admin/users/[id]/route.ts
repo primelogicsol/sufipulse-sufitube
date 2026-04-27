@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { usersRepository } from '@/server/db/repositories/users';
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  const { id } = await params;
+  const user = usersRepository.findById(id);
+  if (!user) return NextResponse.json({ success: false, error: { message: 'User not found' } }, { status: 404 });
+
+  const { password_hash, ...safeUser } = user;
+  return NextResponse.json({ success: true, data: safeUser });
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

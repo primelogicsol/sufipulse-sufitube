@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { storage } from '@/app/lib/storage';
-import { getUserNotifications, markNotificationRead, markAllNotificationsRead, notifyAdmin } from '@/app/lib/notifications';
+import { getUserNotifications, markNotificationRead, markAllNotificationsRead } from '@/app/lib/notifications';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { LayoutDashboard, FileText, Settings, CircleCheck as CheckCircle, Search, Circle as XCircle, Eye, CircleAlert as AlertCircle, Clock, CirclePlus as PlusCircle, Shield, LogOut, Loader, User, Bell, DollarSign, TrendingUp, Info, CalendarClock } from 'lucide-react';
@@ -255,6 +254,12 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         studio: '/api/studio',
     };
 
+    const itemApiMap: Record<string, string> = {
+        kalam: '/api/kalams',
+        sada: '/api/sadas',
+        article: '/api/articles',
+    };
+
     const loadData = async () => {
         if (!user) return;
         setLoading(true);
@@ -286,8 +291,12 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                 setSessionRequests(allRequests);
                 setItems(allRequests);
             } else {
-                const allItems = await storage.getAll(config.typeKey);
-                setItems(allItems.filter((i: any) => i.user_id === user.id));
+                const itemApi = itemApiMap[config.typeKey];
+                if (itemApi) {
+                    const res = await fetch(itemApi);
+                    const data = res.ok ? await res.json() : [];
+                    setItems(Array.isArray(data) ? data : []);
+                }
             }
 
             if (role === 'literary') {
@@ -352,8 +361,16 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         setSubmitLoading(true);
         try {
             if (editingItem) {
-                // On resubmit clear revision_notes and reset to under review
-                await storage.update(config.typeKey, editingItem.id, { ...draftForm, status: 'under review', revision_notes: null });
+                const itemApi = itemApiMap[config.typeKey];
+                const res = await fetch(`${itemApi}/${editingItem.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...draftForm }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error((err as any).error || 'Failed to resubmit');
+                }
                 setSubmitSuccess({ type: 'revision', term: config.term });
                 setTimeout(() => setSubmitSuccess(null), 6000);
                 setEditingItem(null);
@@ -369,25 +386,15 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                     slug: draftForm.title ? draftForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now() : `article-${Date.now()}`,
                     excerpt: draftForm.abstract || (draftForm.content || '').replace(/<[^>]*>/g, '').slice(0, 200) + '...'
                 } : {};
-                await storage.create(config.typeKey, { ...draftForm, ...authorMeta, status: 'under review' });
-                // Notify admin of new content submission
-                const adminRoutes: Record<string, string> = {
-                    vocalist: '/admin/sadas',
-                    literary: '/admin/articles',
-                };
-                const adminTitles: Record<string, string> = {
-                    vocalist: `New Sada Submission`,
-                    literary: `New Article Submission`,
-                };
-                if (role !== 'producer') {
-                    notifyAdmin({
-                        title: adminTitles[role] || `New ${config.term} Submission`,
-                        message: `${user?.full_name || 'A contributor'} (${config.subtitle}) submitted "${draftForm.title || config.term}" for review.`,
-                        event: 'application_received',
-                        from_role: role,
-                        from_name: user?.full_name,
-                        action_url: adminRoutes[role] || `/admin/kalams`,
-                    }).catch(console.error);
+                const itemApi = itemApiMap[config.typeKey];
+                const res = await fetch(itemApi, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...draftForm, ...authorMeta, email: user?.email }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error((err as any).error || 'Failed to submit');
                 }
                 setSubmitSuccess({ type: 'new', term: config.term });
                 setTimeout(() => setSubmitSuccess(null), 6000);
@@ -416,8 +423,9 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const handleDeleteItem = async (id: string) => {
         if (!confirm(`Delete this ${config.term}?`)) return;
         try {
-            await storage.delete(config.typeKey, id);
-            alert("Deleted");
+            const itemApi = itemApiMap[config.typeKey];
+            const res = await fetch(`${itemApi}/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete');
             setContentModal(false);
             loadData();
         } catch (err: any) {
@@ -427,8 +435,13 @@ export default function UserDashboard({ role }: UserDashboardProps) {
 
     const handleUpdateStatus = async (item: any, newStatus: string) => {
         try {
-            await storage.update(config.typeKey, item.id, { status: newStatus });
-            alert("Status updated");
+            const itemApi = itemApiMap[config.typeKey];
+            const res = await fetch(`${itemApi}/${item.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            if (!res.ok) throw new Error('Failed to update status');
             setContentModal(false);
             loadData();
         } catch (err: any) {
@@ -448,10 +461,10 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const stats = {
         total: items.length,
         published: items.filter(i => i.status === 'published' || i.status === 'approved').length,
-        pending: items.filter(i => i.status === 'under review').length,
+        pending: items.filter(i => i.status === 'submitted' || i.status === 'under_review' || i.status === 'under review').length,
         draft: items.filter(i => i.status === 'draft').length,
-        revision_requested: items.filter(i => i.status === "revision requested").length,
-        rejected: items.filter(i => i.status === "rejected").length
+        revision_requested: items.filter(i => i.status === 'revision_requested' || i.status === 'revision requested').length,
+        rejected: items.filter(i => i.status === 'rejected').length,
     };
 
     const navigationLinks = role === 'producer' ? [
@@ -947,10 +960,11 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                             className="px-4 py-2.5 bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-primary)] text-sm focus:border-[var(--dash-accent)] outline-none transition-colors cursor-pointer"
                                         >
                                             <option value="all">All Statuses</option>
-                                            <option value="draft">Drafts</option>
-                                            <option value="under review">Under Review</option>
-                                            <option value="revision requested">Revision Requested</option>
+                                            <option value="submitted">Pending Review</option>
+                                            <option value="under_review">Under Review</option>
+                                            <option value="revision_requested">Revision Requested</option>
                                             <option value="approved">Approved</option>
+                                            <option value="published">Published</option>
                                             <option value="rejected">Rejected</option>
                                         </select>
                                     </div>

@@ -4,17 +4,19 @@ import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
 
 export async function GET(request: NextRequest) {
-  const authResult = await requireAdmin(request);
+  const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
     const items = entityGetAll('kalams');
-    return NextResponse.json(
-      items.sort((a: any, b: any) =>
-        new Date(b.updated_at || b.created_at || 0).getTime() -
-        new Date(a.updated_at || a.created_at || 0).getTime()
-      )
+    const sorted = items.sort((a: any, b: any) =>
+      new Date(b.updated_at || b.created_at || 0).getTime() -
+      new Date(a.updated_at || a.created_at || 0).getTime()
     );
+    const result = authResult.role === 'admin'
+      ? sorted
+      : sorted.filter((i: any) => i.user_id === authResult.id);
+    return NextResponse.json(result);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
