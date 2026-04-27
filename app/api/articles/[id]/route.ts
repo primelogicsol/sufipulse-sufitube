@@ -10,7 +10,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const item = entityGetById('articles', id) as any;
   if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (authResult.role !== 'admin' && item.user_id !== authResult.id) {
+  const ownerId = item.user_id ?? item.userId ?? item.submitter_id ?? item.created_by;
+  if (authResult.role !== 'admin' && ownerId !== authResult.id && item.email !== authResult.email) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   return NextResponse.json(item);
@@ -29,7 +30,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const isAdmin = authResult.role === 'admin';
 
     if (!isAdmin) {
-      if (existing.user_id !== authResult.id) {
+      const ownerId = existing.user_id ?? existing.userId ?? existing.submitter_id ?? existing.created_by;
+      const ownerMatches = ownerId === authResult.id || (!ownerId && existing.email === authResult.email);
+      if (!ownerMatches) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
       if (existing.status !== 'revision_requested') {
@@ -80,7 +83,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   const item = entityGetById('articles', id) as any;
   if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (authResult.role !== 'admin' && item.user_id !== authResult.id) {
+  const delOwnerId = item.user_id ?? item.userId ?? item.submitter_id ?? item.created_by;
+  if (authResult.role !== 'admin' && delOwnerId !== authResult.id && item.email !== authResult.email) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

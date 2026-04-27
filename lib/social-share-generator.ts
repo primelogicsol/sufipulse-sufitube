@@ -8,6 +8,7 @@ interface SocialShareKit {
   twitter: string;
   linkedin: string;
   telegram: string;
+  youtube: string;
 }
 
 export function generateSocialShareKit(release: CMSRelease): SocialShareKit {
@@ -105,6 +106,15 @@ export function generateSocialShareKit(release: CMSRelease): SocialShareKit {
     `${coreHashtags}`,
   ].filter(l => l !== null).join('\n');
 
+  const youtube = [
+    `New Release: "${title}"`,
+    byLine ? byLine : null,
+    ``,
+    `A sacred Sufi kalam — now available with multilingual subtitles.`,
+    ``,
+    `${coreHashtags} #SufiPoetry #KashmiriMusic`,
+  ].filter(l => l !== null).join('\n');
+
   return {
     generatedAt: new Date().toISOString(),
     whatsapp,
@@ -113,5 +123,6 @@ export function generateSocialShareKit(release: CMSRelease): SocialShareKit {
     twitter,
     linkedin,
     telegram,
+    youtube,
   };
 }

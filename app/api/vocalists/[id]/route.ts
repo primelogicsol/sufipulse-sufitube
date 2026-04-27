@@ -27,12 +27,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const status = body.profile_status || body.status;
     if (status === 'approved' || status === 'rejected') {
       const item = updated as any;
-      if (status === 'approved' && item.user_id) {
-        const u = usersRepository.findById(item.user_id);
+      if (status === 'approved') {
+        const applicantId = item.user_id ?? item.userId ?? item.submitter_id ?? item.created_by;
+        let u = applicantId ? usersRepository.findById(applicantId) : null;
+        if (!u && item.email) u = usersRepository.findByEmail(item.email);
         if (u) {
-          const existing = u.assigned_roles ?? [];
-          usersRepository.setRoles(item.user_id, 'vocalist', [...new Set([...existing, 'vocalist'])]);
-          auditLog({ userId: authResult.id, userEmail: authResult.email, action: 'role_assigned', resourceType: 'user', resourceId: item.user_id, details: { role: 'vocalist', profileId: id, adminNote: body.admin_note } });
+          const existingRoles = u.assigned_roles ?? [];
+          usersRepository.setRoles(u.id, 'vocalist', [...new Set([...existingRoles, 'vocalist'])]);
+          auditLog({ userId: authResult.id, userEmail: authResult.email, action: 'role_assigned', resourceType: 'user', resourceId: u.id, details: { role: 'vocalist', profileId: id, adminNote: body.admin_note } });
         }
       }
       auditLog({ userId: authResult.id, userEmail: authResult.email, action: status === 'approved' ? 'profile_approved' : 'profile_rejected', resourceType: 'vocalist', resourceId: id, details: { adminNote: body.admin_note } });
