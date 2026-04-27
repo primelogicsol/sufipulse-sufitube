@@ -147,6 +147,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'adoption_id and youtube_video_id are required' }, { status: 400 });
   }
 
+  if (method_type === 'managed_sufitube') {
+    return NextResponse.json(
+      { error: 'managed_sufitube mode is currently disabled. Use use_my_google_ads instead.' },
+      { status: 503 }
+    );
+  }
+
   // Draft mode: record intent without calling Google Ads API
   if (CREATE_MODE === 'draft') {
     return NextResponse.json({
@@ -169,7 +176,7 @@ export async function POST(request: NextRequest) {
   const studioLoginCid = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
   const studioCustomerId = process.env.NEXT_PUBLIC_STUDIO_GOOGLE_ADS_CUSTOMER_ID;
 
-  if (method_type === 'managed_sufitube') {
+  if ((method_type as string) === 'managed_sufitube') {
     if (!studioDevToken || !studioAccessToken || !studioCustomerId) {
       return NextResponse.json(
         {

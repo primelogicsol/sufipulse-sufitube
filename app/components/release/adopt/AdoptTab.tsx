@@ -398,20 +398,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
       });
 
       if (selectedMethod === 'use_my_google_ads') {
-        await storage.create('song_adoption_google_ads', {
-          adoption_id: currentAdoption.id,
-          customer_id: selectedGoogleCustomerId || cleanData.google_ads_customer_id,
-          oauth_connected: oauthConnected,
-          billing_enabled: formData.billing_enabled,
-          setup_help_requested: formData.setup_help_requested,
-          target_regions: formData.target_regions,
-          target_languages: formData.target_languages,
-          campaign_goal: formData.campaign_goal,
-          auto_generate_copy: formData.auto_generate_copy,
-          auto_generate_keywords: formData.auto_generate_keywords,
-          asset_suggestions: formData.asset_suggestions,
-        });
-
         // Register in the Google Ads campaign request tracker
         await fetch('/api/google-ads/campaign-requests', {
           method: 'POST',
@@ -624,10 +610,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
       <div className="grid gap-6 md:grid-cols-2">
 
-        {/* ── LEFT CARD: Managed by SufiTube ── */}
+        {/* ── LEFT CARD: Managed by SufiTube ── disabled until managed mode is ready */}
         <div
-          onClick={() => handleMethodSelect('managed_sufitube')}
-          className="flex flex-col bg-neutral-900 border border-neutral-800 hover:border-amber-500/40 rounded-2xl transition-all duration-200 cursor-pointer group select-none"
+          className="flex flex-col bg-neutral-900 border border-neutral-800 rounded-2xl transition-all duration-200 select-none opacity-60 cursor-not-allowed"
         >
           {/* Logo */}
           <div className="flex flex-col items-center pt-9 pb-5 px-8">
@@ -663,13 +648,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </div>
 
             <button
-              onClick={(e) => { e.stopPropagation(); handleMethodSelect('managed_sufitube'); }}
-              className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-[#0F172A] text-sm font-bold rounded-xl transition-colors"
+              disabled
+              className="w-full py-3.5 bg-amber-500/30 text-neutral-600 text-sm font-bold rounded-xl cursor-not-allowed"
             >
-              Choose SufiTube
+              Coming Soon
             </button>
 
-            <p className="text-xs text-center text-neutral-600">Recommended for most users</p>
+            <p className="text-xs text-center text-neutral-600">Currently unavailable</p>
           </div>
         </div>
 

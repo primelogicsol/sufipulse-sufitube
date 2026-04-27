@@ -1,30 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser } from '@/server/middleware/authenticate';
 import { getGoogleAdsUserOAuth } from '@/app/lib/server/google-ads-oauth-store';
 import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 import { getGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
 
 /**
- * GET /api/google-ads/status?adoptionId=...&userId=...
+ * GET /api/google-ads/status?adoptionId=...
  *
- * Returns the Google Ads connection status for a given adoption/user context.
+ * Returns the Google Ads connection status for the authenticated user.
+ *
+ * Unauthenticated: returns only { configured } — safe for server-config checks.
+ * Authenticated: returns full OAuth state scoped to auth.id (ignores userId query param).
  *
  * Token lookup priority:
  *   1. User-level record (google-ads-oauth.json, keyed by userId) — global per sponsor
  *   2. Adoption-level record (adoption-google-oauth.json, keyed by adoptionId) — legacy fallback
- *
- * Also returns the campaign record for this specific adoption/song if one exists.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const adoptionId = searchParams.get('adoptionId') || '';
-  const userId = searchParams.get('userId') || '';
 
   const configured = !!(
     process.env.GOOGLE_ADS_CLIENT_ID &&
     process.env.GOOGLE_ADS_DEVELOPER_TOKEN
   );
 
-  const userRecord = userId ? await getGoogleAdsUserOAuth(userId) : null;
+  const authUser = await getAuthUser(request);
+
+  if (!authUser) {
+    return NextResponse.json({
+      configured,
+      connected: false,
+      accessible_customer_ids: [],
+      campaign: null,
+    });
+  }
+
+  const userId = authUser.id;
+
+  const userRecord = await getGoogleAdsUserOAuth(userId);
   const adoptionRecord = adoptionId ? await getAdoptionGoogleOAuthRecord(adoptionId) : null;
   const activeRecord = userRecord || adoptionRecord;
 
@@ -35,7 +49,7 @@ export async function GET(request: NextRequest) {
       configured,
       connected: false,
       adoption_id: adoptionId || null,
-      user_id: userId || null,
+      user_id: userId,
       accessible_customer_ids: [],
       campaign: null,
       message: 'No OAuth token found. Connect a Google Ads account to continue.',
@@ -46,7 +60,7 @@ export async function GET(request: NextRequest) {
     configured,
     connected: true,
     adoption_id: adoptionId || null,
-    user_id: userId || null,
+    user_id: userId,
     token_type: activeRecord.tokenType,
     expires_at: activeRecord.expiresAt,
     accessible_customer_ids: activeRecord.accessibleCustomerIds,
