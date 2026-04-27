@@ -62,6 +62,12 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
 # .data is excluded from .dockerignore and is provided via Docker volume at runtime
 
+# Operational scripts — not part of the Next.js bundle but needed inside the container.
+# package.json is copied explicitly because standalone ships a stripped-down version
+# that omits custom npm scripts like seed:admin.
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/scripts/seed-admin.js ./scripts/seed-admin.js
+
 # Switch to non-root user
 USER nextjs
 
