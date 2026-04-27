@@ -38,8 +38,11 @@ import { DeliveryPanelSection } from './delivery-panel-section';
 import { ReviewLogSection } from './review-log-section';
 import { SubtitleCueListSection } from './subtitle-cue-list-section';
 import { LiveAssPreviewSection } from './live-ass-preview-section';
+import { ASSStyleLibrarySection } from './ass-style-library-section';
+import { ReleaseCreditsSection } from './release-credits-section';
 import { SubtitleBulkControlsSection } from './subtitle-bulk-controls-section';
 import { WorkflowAssistantSection } from './workflow-assistant-section';
+import { SocialShareKitSection } from './social-share-kit-section';
 
 type DeliveryState = 'web_only' | 'synced_to_youtube' | 'manual_upload_pending' | 'manual_upload_completed' | 'sync_failed';
 
@@ -2013,7 +2016,7 @@ export default function EditReleasePage() {
 
         setOriginalForm(data);
         setSuccessMessage(`Release "${data.title}" saved successfully${data.youtubeSubtitleAutoSync ? ' and synced to YouTube' : ''}`);
-        
+
         if (data.youtubeSubtitleAutoSync !== false) {
           await syncYouTubeSubtitles({
             releaseId: data.id,
@@ -2022,9 +2025,13 @@ export default function EditReleasePage() {
           });
         }
 
-        setTimeout(() => {
-          router.push('/admin/cms-releases');
-        }, 1500);
+        // For new releases, navigate to the permanent editor URL once an ID is assigned.
+        // For existing releases, stay on the current page so the editor can continue working.
+        if (isNew && data.id) {
+          setTimeout(() => {
+            router.push(`/admin/cms-releases/${data.id}`);
+          }, 1500);
+        }
       } else {
         const error = await res.json();
         setErrorMessage(`Save failed: ${error.error || 'Unknown error'}`);
@@ -3174,88 +3181,10 @@ export default function EditReleasePage() {
           </div>
 
           {/* Public Credits */}
-          <div id="credits-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
-            <h2 className="text-xl font-semibold mb-6" style={{color: 'var(--dash-text-primary)'}}>Official Credits</h2>
-
-            {/* Artistic Credits */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
-                Artistic Credits
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[['leadVocalist','Lead Vocalist'],['lyricist','Lyricist'],['composer','Composer'],['musicProducer','Music Producer'],['backgroundVocals','Background Vocals']].map(([key, label]) => (
-                  <div key={key}>
-                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
-                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.artistic as any)?.[key] || ''} onChange={(e) => updatePublicCredits('artistic', key, e.target.value)} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Production Credits */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
-                Production Credits
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[['recordedAt','Recorded at'],['recordingEngineer','Recording Engineer'],['mixMaster','Mix & Master'],['soundDesign','Sound Design']].map(([key, label]) => (
-                  <div key={key}>
-                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
-                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.production as any)?.[key] || ''} onChange={(e) => updatePublicCredits('production', key, e.target.value)} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Visual Credits */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
-                Visual Credits
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[['videoDirection','Video Direction'],['editing','Editing'],['thumbnailDesign','Thumbnail Design'],['artwork','Artwork']].map(([key, label]) => (
-                  <div key={key}>
-                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
-                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.visual as any)?.[key] || ''} onChange={(e) => updatePublicCredits('visual', key, e.target.value)} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Literary & Language */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
-                Literary &amp; Language
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[['romanTransliteration','Roman Transliteration'],['englishTranslation','English Translation'],['thematicInterpretation','Thematic Interpretation'],['proofreading','Proofreading']].map(([key, label]) => (
-                  <div key={key}>
-                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
-                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.literary as any)?.[key] || ''} onChange={(e) => updatePublicCredits('literary', key, e.target.value)} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Release & Rights */}
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 pb-1" style={{color: 'var(--dash-accent)', borderBottom: '1px solid var(--dash-border)'}}>
-                Release &amp; Rights
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[['publishedBy','Published by'],['platform','Platform'],['registeredReleaseId','Registered Release ID'],['releaseDateText','Release Date'],['copyrightHolder','Copyright Holder'],['licensingText','Licensing / Permissions']].map(([key, label]) => (
-                  <div key={key}>
-                    <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
-                    <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.rights as any)?.[key] || ''} onChange={(e) => updatePublicCredits('rights', key, e.target.value)} />
-                  </div>
-                ))}
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Licensing URL</label>
-                  <input className="form-input w-full" placeholder="https://sufipulse.com/contact" value={form.publicCredits?.rights?.licensingUrl || ''} onChange={(e) => updatePublicCredits('rights', 'licensingUrl', e.target.value)} />
-                </div>
-              </div>
-            </div>
-          </div>
+          <ReleaseCreditsSection
+            form={form}
+            updatePublicCredits={updatePublicCredits}
+          />
 
           {/* Structured Lyrics */}
           <div id="lyrics-structure-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
@@ -3826,299 +3755,26 @@ export default function EditReleasePage() {
               </div>
             </div>
 
-            <div className="mb-6 rounded-lg p-4 space-y-4" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <h3 className="text-sm font-semibold" style={{color: 'var(--dash-text-primary)'}}>ASS Style Library & Location Control</h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => applyCueMetadataToAllCues(
-                      {
-                        styleName: activeStyleName,
-                        alignment: Number(activeStyle.alignment || 2),
-                      },
-                      {
-                        successMessage: `Applied ${activeStyleName} style to all cues.`,
-                        defaultStyleName: activeStyleName,
-                        defaultAlignment: Number(activeStyle.alignment || 2),
-                        language: selectedSubtitleLanguage,
-                      }
-                    )}
-                    className="dashboard-btn-secondary px-2 py-1 text-xs"
-                  >
-                    Apply To All Cues
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyCueMetadataToAllCues({}, {
-                      clearPosition: true,
-                      successMessage: 'Cleared position overrides for all cues.',
-                    })}
-                    className="dashboard-btn-secondary px-2 py-1 text-xs"
-                  >
-                    Clear All Positions
-                  </button>
-                  <button
-                    type="button"
-                    onClick={addStylePack}
-                    className="dashboard-btn-primary px-2 py-1 text-xs"
-                  >
-                    Add Style
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeStylePack(activeStyleName)}
-                    disabled={activeStyleName === DEFAULT_STYLE_NAME}
-                    className="dashboard-btn-danger px-2 py-1 text-xs disabled:opacity-50"
-                  >
-                    Delete Style
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Selected Style</label>
-                  <select
-                    value={activeStyleName}
-                    onChange={(e) => setSelectedStyleName(e.target.value)}
-                    className="form-input w-full"
-                  >
-                    {styleNames.map((name) => (
-                      <option key={name} value={name}>{name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Style Name</label>
-                  <input
-                    type="text"
-                    value={activeStyleName}
-                    onChange={(e) => {
-                      const nextName = e.target.value.trim();
-                      if (!nextName || nextName === activeStyleName) return;
-                      const packs = { ...(form.subtitleStylePacks || {}) } as Record<string, ASSStylePack>;
-                      packs[nextName] = packs[activeStyleName] || { ...DEFAULT_STYLE_PACK };
-                      delete packs[activeStyleName];
-                      setForm({ ...form, subtitleStylePacks: packs });
-                      setSelectedStyleName(nextName);
-                    }}
-                    className="form-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Language Default Style</label>
-                  <select
-                    value={form.languageStyleOverrides?.[selectedSubtitleLanguage]?.stylePack || ''}
-                    onChange={(e) => setLanguageStylePack(selectedSubtitleLanguage, e.target.value)}
-                    className="form-input w-full"
-                  >
-                    <option value="">None</option>
-                    {styleNames.map((name) => (
-                      <option key={name} value={name}>{name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>Alignment</label>
-                  <select
-                    value={activeStyle.alignment || 2}
-                    onChange={(e) => updateStylePack(activeStyleName, { alignment: Number(e.target.value) })}
-                    className="form-input w-full"
-                  >
-                    <option value={1}>Bottom Left (1)</option>
-                    <option value={2}>Bottom Center (2)</option>
-                    <option value={3}>Bottom Right (3)</option>
-                    <option value={4}>Middle Left (4)</option>
-                    <option value={5}>Middle Center (5)</option>
-                    <option value={6}>Middle Right (6)</option>
-                    <option value={7}>Top Left (7)</option>
-                    <option value={8}>Top Center (8)</option>
-                    <option value={9}>Top Right (9)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Font</label>
-                  <input
-                    type="text"
-                    value={activeStyle.fontFamily || ''}
-                    onChange={(e) => updateStylePack(activeStyleName, { fontFamily: e.target.value })}
-                    className="form-input"
-                    placeholder="Font family"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Size</label>
-                  <input
-                    type="number"
-                    value={activeStyle.fontSize || 42}
-                    onChange={(e) => updateStylePack(activeStyleName, { fontSize: Number(e.target.value || 42) })}
-                    className="form-input"
-                    placeholder="Font size"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Text Color</label>
-                  <input
-                    type="color"
-                    value={activeStyle.primaryColor || '#FFFFFF'}
-                    onChange={(e) => updateStylePack(activeStyleName, { primaryColor: e.target.value })}
-                    className="h-10 w-full px-1 py-1 rounded"
-                    style={{border: '1px solid var(--dash-border)'}}
-                    title="Primary color"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Outline Color</label>
-                  <input
-                    type="color"
-                    value={activeStyle.outlineColor || '#202020'}
-                    onChange={(e) => updateStylePack(activeStyleName, { outlineColor: e.target.value })}
-                    className="h-10 w-full px-1 py-1 rounded"
-                    style={{border: '1px solid var(--dash-border)'}}
-                    title="Outline color"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Background</label>
-                  <input
-                    type="color"
-                    value={activeStyle.backColor || '#000000'}
-                    onChange={(e) => updateStylePack(activeStyleName, { backColor: e.target.value })}
-                    className="h-10 w-full px-1 py-1 rounded"
-                    style={{border: '1px solid var(--dash-border)'}}
-                    title="Background color"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Outline</label>
-                  <input
-                    type="number"
-                    value={activeStyle.outline || 2}
-                    onChange={(e) => updateStylePack(activeStyleName, { outline: Number(e.target.value || 0) })}
-                    className="form-input"
-                    placeholder="Outline"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Shadow</label>
-                  <input
-                    type="number"
-                    value={activeStyle.shadow || 0}
-                    onChange={(e) => updateStylePack(activeStyleName, { shadow: Number(e.target.value || 0) })}
-                    className="form-input"
-                    placeholder="Shadow"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Margin L</label>
-                  <input
-                    type="number"
-                    value={activeStyle.marginL || 40}
-                    onChange={(e) => updateStylePack(activeStyleName, { marginL: Number(e.target.value || 0) })}
-                    className="form-input"
-                    placeholder="Margin L"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Margin R</label>
-                  <input
-                    type="number"
-                    value={activeStyle.marginR || 40}
-                    onChange={(e) => updateStylePack(activeStyleName, { marginR: Number(e.target.value || 0) })}
-                    className="form-input"
-                    placeholder="Margin R"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Margin V</label>
-                  <input
-                    type="number"
-                    value={activeStyle.marginV || 28}
-                    onChange={(e) => updateStylePack(activeStyleName, { marginV: Number(e.target.value || 0) })}
-                    className="form-input"
-                    placeholder="Margin V"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Panel Width % (30-200)</label>
-                  <input
-                    type="number"
-                    min={30}
-                    max={200}
-                    value={activeStyle.maxWidthPercent || 82}
-                    onChange={(e) => updateStylePack(activeStyleName, { maxWidthPercent: Number(e.target.value || 82) })}
-                    className="form-input"
-                    placeholder="Panel width %"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Panel Width Slider</label>
-                  <input
-                    type="range"
-                    min={30}
-                    max={200}
-                    step={1}
-                    value={Math.max(30, Math.min(200, Number(activeStyle.maxWidthPercent || 82)))}
-                    onChange={(e) => updateStylePack(activeStyleName, { maxWidthPercent: Number(e.target.value) })}
-                    className="w-full"
-                  />
-                </div>
-                <div className="flex flex-wrap items-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => applyCueMetadataToAllCues({ alignment: 2 }, { successMessage: 'Set all cues to Bottom Center.' })}
-                    className="dashboard-btn-secondary px-2 py-1 text-xs"
-                  >
-                    Bottom Center Preset
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyCueMetadataToAllCues({ alignment: 8 }, { successMessage: 'Set all cues to Top Center.' })}
-                    className="dashboard-btn-secondary px-2 py-1 text-xs"
-                  >
-                    Top Center Preset
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyCueMetadataToAllCues({ alignment: 5 }, { successMessage: 'Set all cues to Middle Center.' })}
-                    className="dashboard-btn-secondary px-2 py-1 text-xs"
-                  >
-                    Middle Center Preset
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-6 text-sm">
-                <label className="inline-flex items-center gap-2" style={{color: 'var(--dash-text-primary)'}}>
-                  <input
-                    type="checkbox"
-                    checked={!!activeStyle.bold}
-                    onChange={(e) => updateStylePack(activeStyleName, { bold: e.target.checked })}
-                    style={{accentColor: 'var(--dash-accent)'}}
-                  />
-                  Bold
-                </label>
-                <label className="inline-flex items-center gap-2" style={{color: 'var(--dash-text-primary)'}}>
-                  <input
-                    type="checkbox"
-                    checked={!!activeStyle.italic}
-                    onChange={(e) => updateStylePack(activeStyleName, { italic: e.target.checked })}
-                    style={{accentColor: 'var(--dash-accent)'}}
-                  />
-                  Italic
-                </label>
-              </div>
-            </div>
+            <ASSStyleLibrarySection
+              form={form}
+              activeStyleName={activeStyleName}
+              activeStyle={activeStyle}
+              styleNames={styleNames}
+              selectedSubtitleLanguage={selectedSubtitleLanguage}
+              setSelectedStyleName={setSelectedStyleName}
+              updateStylePack={updateStylePack}
+              addStylePack={addStylePack}
+              removeStylePack={removeStylePack}
+              onRenameStyle={(oldName, newName) => {
+                const packs = { ...(form.subtitleStylePacks || {}) } as Record<string, ASSStylePack>;
+                packs[newName] = packs[oldName] || { ...DEFAULT_STYLE_PACK };
+                delete packs[oldName];
+                setForm({ ...form, subtitleStylePacks: packs });
+                setSelectedStyleName(newName);
+              }}
+              applyCueMetadataToAllCues={applyCueMetadataToAllCues}
+              setLanguageStylePack={setLanguageStylePack}
+            />
 
             <LiveAssPreviewSection
               form={form}
@@ -4240,6 +3896,14 @@ export default function EditReleasePage() {
                 exportSubtitleByLanguage={exportSubtitleByLanguage}
                 markManualDeliveryState={markManualDeliveryState}
                 updateTrackMeta={updateTrackMeta}
+              />
+            )}
+
+            {!isNew && (
+              <SocialShareKitSection
+                releaseId={params.id as string}
+                kit={form.socialShareKit}
+                onKitGenerated={(kit) => setForm(f => ({ ...f, socialShareKit: kit }))}
               />
             )}
           </div>
