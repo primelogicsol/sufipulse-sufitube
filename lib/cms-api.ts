@@ -484,8 +484,14 @@ export async function archiveRelease(id: string): Promise<cms.Release> {
 
 // Related Data Operations
 export async function getReleaseCreds(releaseId: string): Promise<cms.ReleaseCredit[]> {
-  const stored = localStorage.getItem(`cms_credits_${releaseId}`);
-  return stored ? JSON.parse(stored) : [];
+  try {
+    const res = await fetch(`/api/releases/${encodeURIComponent(releaseId)}/credits`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function saveReleaseCreds(
@@ -494,15 +500,24 @@ export async function saveReleaseCreds(
   options?: { append?: boolean }
 ): Promise<cms.ReleaseCredit[]> {
   const append = options?.append !== false;
-  const existing = append ? await getReleaseCreds(releaseId) : [];
-  const merged = [...existing, ...credits];
-  localStorage.setItem(`cms_credits_${releaseId}`, JSON.stringify(merged));
-  return merged;
+  const res = await fetch(`/api/releases/${encodeURIComponent(releaseId)}/credits`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credits, append }),
+  });
+  if (!res.ok) throw new Error(`Failed to save credits (${res.status})`);
+  return res.json();
 }
 
 export async function getReleaseLyrics(releaseId: string): Promise<cms.ReleaseLyrics[]> {
-  const stored = localStorage.getItem(`cms_lyrics_${releaseId}`);
-  return stored ? JSON.parse(stored) : [];
+  try {
+    const res = await fetch(`/api/releases/${encodeURIComponent(releaseId)}/lyrics`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function saveReleaseLyrics(
@@ -511,10 +526,13 @@ export async function saveReleaseLyrics(
   options?: { append?: boolean }
 ): Promise<cms.ReleaseLyrics[]> {
   const append = options?.append !== false;
-  const existing = append ? await getReleaseLyrics(releaseId) : [];
-  const merged = [...existing, ...lyrics];
-  localStorage.setItem(`cms_lyrics_${releaseId}`, JSON.stringify(merged));
-  return merged;
+  const res = await fetch(`/api/releases/${encodeURIComponent(releaseId)}/lyrics`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lyrics, append }),
+  });
+  if (!res.ok) throw new Error(`Failed to save lyrics (${res.status})`);
+  return res.json();
 }
 
 // Bulk Import
