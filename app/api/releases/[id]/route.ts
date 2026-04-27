@@ -3,6 +3,7 @@ import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { auditLog } from '@/app/lib/audit-log';
 import { logger } from '@/app/lib/logger';
 import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
+import { generateSocialShareKit } from '@/lib/social-share-generator';
 
 export const dynamic = 'force-dynamic';
 
@@ -136,13 +137,15 @@ export async function PUT(
       }
     }
 
-    const updated = cmsServerStorage.saveRelease({
-      ...existing,
-      ...body,
-      slug: nextSlug,
-      youtubeId: nextYoutubeId,
-      id, // Don't allow ID change
-    });
+    const merged = { ...existing, ...body, slug: nextSlug, youtubeId: nextYoutubeId, id };
+
+    // Generate social share kit whenever status becomes published (first publish or re-publish)
+    const isBeingPublished = existing.status !== 'published' && merged.status === 'published';
+    if (isBeingPublished && merged.youtubeId) {
+      merged.socialShareKit = generateSocialShareKit(merged as any);
+    }
+
+    const updated = cmsServerStorage.saveRelease(merged as any);
 
     // Audit log
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';

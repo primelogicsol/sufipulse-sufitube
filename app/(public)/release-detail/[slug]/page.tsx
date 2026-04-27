@@ -1546,6 +1546,11 @@ function Release() {
                         <ContributorShareKit release={release} videoId={resolvedVideoId} />
                     )}
 
+                    {/* Social Share Kit — admin only */}
+                    {isAdmin && !isEditing && release?.socialShareKit && (
+                        <SocialShareKitPanel kit={release.socialShareKit} />
+                    )}
+
                     {/* Inline Editing Info Panel */}
                     {isAdmin && isEditing && (
                         <div className="mb-6 p-4 bg-amber-900/10 border border-amber-800/30 rounded-lg">
@@ -4012,6 +4017,67 @@ function Release() {
                 </div>
             )}
         </Layout>
+    );
+}
+
+function SocialShareKitPanel({ kit }: { kit: NonNullable<any['socialShareKit']> }) {
+    const [open, setOpen] = useState(false);
+    const [copied, setCopied] = useState<string | null>(null);
+
+    type KitKey = 'whatsapp' | 'instagram' | 'facebook' | 'twitter' | 'linkedin' | 'telegram';
+    const platforms: { key: KitKey; label: string; icon: string }[] = [
+        { key: 'whatsapp',  label: 'WhatsApp',  icon: '💬' },
+        { key: 'instagram', label: 'Instagram', icon: '📸' },
+        { key: 'facebook',  label: 'Facebook',  icon: '📘' },
+        { key: 'twitter',   label: 'X / Twitter', icon: '𝕏' },
+        { key: 'linkedin',  label: 'LinkedIn',  icon: '💼' },
+        { key: 'telegram',  label: 'Telegram',  icon: '✈️' },
+    ];
+
+    const copy = (text: string, key: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(key);
+        setTimeout(() => setCopied(null), 2000);
+    };
+
+    const generated = kit.generatedAt
+        ? new Date(kit.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '';
+
+    return (
+        <div className="mb-4 rounded-xl border border-amber-900/30 bg-neutral-900/50 overflow-hidden">
+            <button
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left"
+            >
+                <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase tracking-[0.18em] text-amber-500/70 font-medium">Social Share Kit</span>
+                    {generated && (
+                        <span className="text-[10px] text-neutral-600">Generated {generated}</span>
+                    )}
+                </div>
+                <ChevronDown className={`w-4 h-4 text-neutral-600 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open && (
+                <div className="px-4 pb-4 space-y-3 border-t border-neutral-800 pt-3">
+                    {platforms.map(({ key, label, icon }) => (
+                        <div key={key} className="bg-neutral-950 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-neutral-400">{icon} {label}</span>
+                                <button
+                                    onClick={() => copy(String(kit[key]), key)}
+                                    className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                                >
+                                    {copied === key ? 'Copied!' : 'Copy'}
+                                </button>
+                            </div>
+                            <p className="text-xs text-neutral-500 whitespace-pre-line leading-relaxed">{String(kit[key])}</p>
+                        </div>
+                    ))}
+                    <p className="text-xs text-neutral-600 pt-1">Auto-generated on publish. Copy and paste to your social channels.</p>
+                </div>
+            )}
+        </div>
     );
 }
 

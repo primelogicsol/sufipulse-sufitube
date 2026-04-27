@@ -215,6 +215,16 @@ export interface CMSRelease {
     lastError?: string;
   }>;
   
+  socialShareKit?: {
+    generatedAt: string;
+    whatsapp: string;
+    facebook: string;
+    instagram: string;
+    twitter: string;
+    linkedin: string;
+    telegram: string;
+  };
+
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
