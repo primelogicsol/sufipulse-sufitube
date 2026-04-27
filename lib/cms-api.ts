@@ -537,8 +537,14 @@ export async function saveReleaseLyrics(
 
 // Bulk Import
 export async function getBulkImports(): Promise<cms.BulkImport[]> {
-  const stored = localStorage.getItem('cms_bulk_imports');
-  return stored ? JSON.parse(stored) : [];
+  try {
+    const res = await fetch('/api/cms/bulk-imports');
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function createBulkImport(
@@ -556,23 +562,22 @@ export async function createBulkImport(
   const failedItems = options?.failedItems ?? 0;
   const totalItems = successfulItems + failedItems;
 
-  const bulkImport: cms.BulkImport = {
-    id: `${Date.now()}`,
-    import_type: importType as any,
-    status: options?.status || (failedItems > 0 ? 'failed' : 'completed'),
-    file_name: fileName,
-    total_items: totalItems,
-    successful_items: successfulItems,
-    failed_items: failedItems,
-    error_log: options?.errorLog,
-    created_at: new Date().toISOString(),
-  };
+  const res = await fetch('/api/cms/bulk-imports', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      import_type: importType,
+      status: options?.status || (failedItems > 0 ? 'failed' : 'completed'),
+      file_name: fileName,
+      total_items: totalItems,
+      successful_items: successfulItems,
+      failed_items: failedItems,
+      error_log: options?.errorLog,
+    }),
+  });
 
-  const imports = await getBulkImports();
-  imports.push(bulkImport);
-  localStorage.setItem('cms_bulk_imports', JSON.stringify(imports));
-
-  return bulkImport;
+  if (!res.ok) throw new Error(`Failed to log bulk import (${res.status})`);
+  return res.json();
 }
 
 // Media Library
@@ -608,28 +613,3 @@ export async function deleteMedia(id: string): Promise<void> {
   localStorage.setItem('cms_media_library', JSON.stringify(filtered));
 }
 
-// Version Control
-export async function getReleaseVersions(releaseId: string): Promise<cms.ReleaseVersion[]> {
-  const stored = localStorage.getItem(`cms_versions_${releaseId}`);
-  return stored ? JSON.parse(stored) : [];
-}
-
-export async function logReleaseAction(
-  releaseId: string,
-  action: string,
-  oldValue?: any,
-  newValue?: any
-): Promise<void> {
-  const log: cms.ReleaseActionLog = {
-    id: `${Date.now()}`,
-    release_id: releaseId,
-    action,
-    old_value: oldValue,
-    new_value: newValue,
-    created_at: new Date().toISOString(),
-  };
-
-  const logs = JSON.parse(localStorage.getItem(`cms_logs_${releaseId}`) || '[]');
-  logs.push(log);
-  localStorage.setItem(`cms_logs_${releaseId}`, JSON.stringify(logs));
-}

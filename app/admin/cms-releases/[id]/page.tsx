@@ -241,17 +241,6 @@ export default function EditReleasePage() {
   // Keep liveRef in sync every render
   liveRef.current = { form, lockAllCuePositions };
 
-  // Auto-save to localStorage
-  useEffect(() => {
-    if (!isNew && form.id && Object.keys(form).length > 1) {
-      const autoSaveKey = `cms_autosave_${form.id}`;
-      const timer = setTimeout(() => {
-        localStorage.setItem(autoSaveKey, JSON.stringify(form));
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [form, isNew]);
-
   // Undo/Redo functionality
   const addToHistory = (newForm: Partial<CMSRelease>) => {
     const newHistory = history.slice(0, historyIndex + 1);

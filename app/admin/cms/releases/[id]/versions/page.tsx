@@ -1,36 +1,15 @@
 // app/admin/cms/releases/[id]/versions/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import DashboardLayout from '../../../../../components/layout/DashboardLayout';
-import { getReleaseVersions } from '@/lib/cms-api';
 import type { ReleaseVersion } from '@/lib/cms-types';
 import { Clock, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function VersionControlPage() {
-  const params = useParams();
-  const releaseId = params?.id as string;
-  const [versions, setVersions] = useState<ReleaseVersion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [versions] = useState<ReleaseVersion[]>([]);
+  const [loading] = useState(false);
   const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadVersions();
-  }, [releaseId]);
-
-  async function loadVersions() {
-    try {
-      setLoading(true);
-      const data = await getReleaseVersions(releaseId);
-      setVersions(data);
-    } catch (error) {
-      console.error('Error loading versions:', error);
-      setVersions([]);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function restoreVersion(versionId: string) {
     if (!confirm('Restore this version? Current changes will be saved as a new version.')) return;
