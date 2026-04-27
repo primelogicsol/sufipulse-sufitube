@@ -16,6 +16,7 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next node_modules/.cache",
     "kill-port": "npx kill-port 3000",
+    "seed:admin": "node scripts/seed-admin.js",
     "env:validate": "node scripts/validate-env.mjs",
     "env:check": "node scripts/validate-env.mjs",
     "predev": "node scripts/validate-env.mjs",
