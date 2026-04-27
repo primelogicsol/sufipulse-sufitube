@@ -79,6 +79,7 @@ export async function PATCH(request: NextRequest) {
         targetRegions: existing.targetRegions,
         targetLanguages: existing.targetLanguages,
         campaignObjective: existing.campaignObjective,
+        durationDays: existing.durationDays,
       };
 
       const createRes = await fetch(

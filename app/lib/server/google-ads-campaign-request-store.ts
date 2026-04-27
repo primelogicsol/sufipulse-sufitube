@@ -35,6 +35,7 @@ export type GoogleAdsCampaignRequest = {
   targetRegions: string[];
   targetLanguages: string[];
   googleAdsCustomerId?: string;
+  durationDays?: number;
   oauthConnected: boolean;
   methodType?: 'managed_sufitube' | 'use_my_google_ads';
   status: CampaignRequestStatus;

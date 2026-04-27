@@ -50,11 +50,63 @@ interface CreateCampaignBody {
   durationDays?: number;
 }
 
+// Full region name → Google Ads geo target constant IDs (from UI chip values)
+const REGION_GEO_MAP: Record<string, number[]> = {
+  'global':         [],                                              // no restriction
+  'south asia':     [2586, 2356, 2050, 2144, 2524, 2004],           // PK IN BD LK NP AF
+  'india':          [2356],
+  'pakistan':       [2586],
+  'united kingdom': [2826],
+  'united states':  [2840],
+  'canada':         [2124],
+  'australia':      [2036],
+  'mena':           [2784, 2682, 2818, 2368, 2400, 2414, 2422, 2434, 2504, 2512, 2634, 2788, 2887],
+  'europe':         [2276, 2250, 2528, 2752, 2380, 2724, 2616, 2056, 2040, 2756],
+  'east africa':    [2404, 2834, 2800, 2231, 2646],
+  'southeast asia': [2458, 2360, 2702, 2608, 2764, 2704],
+};
+// 2-letter country code fallback (legacy / managed_sufitube)
 const GEO_IDS: Record<string, number> = {
   US: 2840, GB: 2826, CA: 2124, AU: 2036, PK: 2586, IN: 2356,
   AE: 2784, SA: 2682, DE: 2276, FR: 2250, NL: 2528, SE: 2752,
   BD: 2050, NG: 2566, ZA: 2710, MY: 2458, ID: 2360, TR: 2792,
 };
+function resolveGeoIds(regions: string[]): number[] {
+  const ids = new Set<number>();
+  for (const region of regions) {
+    const key = region.toLowerCase().trim();
+    if (key === 'global' || key === 'all') continue;
+    const mapped = REGION_GEO_MAP[key];
+    if (mapped) { mapped.forEach(id => ids.add(id)); continue; }
+    const fallback = GEO_IDS[region.toUpperCase()];
+    if (fallback) ids.add(fallback);
+  }
+  return Array.from(ids);
+}
+
+// Google Ads language criterion IDs
+const LANGUAGE_IDS: Record<string, number> = {
+  'english': 1000, 'urdu': 1031, 'hindi': 1023, 'arabic': 1019,
+  'punjabi': 1102, 'kashmiri': 1038, 'persian': 1065, 'bengali': 1056,
+  'turkish': 1037,
+};
+function resolveLanguageIds(languages: string[]): number[] {
+  const ids: number[] = [];
+  for (const lang of languages) {
+    const key = lang.toLowerCase().trim();
+    if (key === 'all') continue;
+    const id = LANGUAGE_IDS[key];
+    if (id) ids.push(id);
+  }
+  return ids;
+}
+
+function budgetToDurationDays(amount: number): number {
+  if (amount < 50)  return 5;
+  if (amount < 100) return 10;
+  if (amount < 300) return 14;
+  return 21;
+}
 
 const CTA_MAP: Record<string, string> = {
   awareness: 'Discover',
@@ -170,8 +222,12 @@ export async function POST(request: NextRequest) {
     targetRegions = ['US', 'GB', 'CA', 'AU', 'PK', 'IN'],
     targetLanguages = ['en', 'ur'],
     campaignObjective = 'awareness',
-    durationDays = 14,
+    durationDays,
   } = body;
+
+  const resolvedDuration = durationDays && durationDays > 0
+    ? durationDays
+    : budgetToDurationDays(budgetAmount);
 
   if (!adoptionId || !youtubeVideoId) {
     return NextResponse.json(
@@ -280,7 +336,7 @@ export async function POST(request: NextRequest) {
 
     // ── Step 2: Campaign ──────────────────────────────────────────────────────
     const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + durationDays * 86_400_000);
+    const endDate = new Date(startDate.getTime() + resolvedDuration * 86_400_000);
     const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '');
 
     const campaignResult = await adsRequest(customerId, 'campaigns:mutate', {
@@ -337,16 +393,26 @@ export async function POST(request: NextRequest) {
     }, headers);
 
     // ── Step 5: Geo Targeting ─────────────────────────────────────────────────
-    const geoIds = targetRegions
-      .map((c) => GEO_IDS[c.toUpperCase()])
-      .filter((id): id is number => Boolean(id));
-
+    const geoIds = resolveGeoIds(targetRegions);
     if (geoIds.length > 0) {
       await adsRequest(customerId, 'campaignCriteria:mutate', {
         operations: geoIds.map((geoId) => ({
           create: {
             campaign: campaignResourceName,
             location: { geoTargetConstant: `geoTargetConstants/${geoId}` },
+          },
+        })),
+      }, headers);
+    }
+
+    // ── Step 6: Language Targeting ────────────────────────────────────────────
+    const langIds = resolveLanguageIds(targetLanguages);
+    if (langIds.length > 0) {
+      await adsRequest(customerId, 'campaignCriteria:mutate', {
+        operations: langIds.map((langId) => ({
+          create: {
+            campaign: campaignResourceName,
+            language: { languageConstant: `languageConstants/${langId}` },
           },
         })),
       }, headers);
