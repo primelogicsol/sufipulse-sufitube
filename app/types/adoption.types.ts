@@ -115,7 +115,22 @@ export interface AdoptionFormData {
   selected_package_id?: string;
   custom_budget?: number;
   preferred_audience_region: 'local' | 'national' | 'international' | 'diaspora' | 'custom';
-  campaign_objective: 'awareness' | 'devotional_reach' | 'community_engagement' | 'event_support' | 'release_launch_support';
+  campaign_objective:
+    | 'awareness'
+    | 'devotional_reach'
+    | 'community_engagement'
+    | 'event_support'
+    | 'release_launch_support'
+    | 'spiritual_reflection'
+    | 'ramadan_sacred_season'
+    | 'kashmiri_sufi_audience'
+    | 'urdu_hindi_listeners'
+    | 'global_sufi_seekers'
+    | 'youth_new_listeners'
+    | 'diaspora_outreach'
+    | 'general_awareness'
+    | 'memorial_dedication'
+    | 'institutional_support';
   preferred_start_timing: 'immediate' | 'scheduled';
   special_instructions?: string;
 

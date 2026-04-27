@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
-import { storage } from '@/app/lib/storage';
 
 function AdoptionSuccessContent() {
   const searchParams = useSearchParams();
@@ -41,23 +40,6 @@ function AdoptionSuccessContent() {
 
           verifiedAmountPaid = payload?.payment_record?.amountPaid;
         }
-
-        await storage.updateSongAdoption(adoptionId!, {
-          payment_status: 'paid',
-          adoption_status: 'pending_review',
-          stripe_session_id: sessionId || undefined,
-          amount_paid: verifiedAmountPaid,
-        });
-
-        await storage.createSongAdoptionEvent({
-          adoption_id: adoptionId,
-          event_type: 'payment_completed',
-          event_label: sessionId
-            ? 'Stripe payment completed (server-verified)'
-            : 'Payment marked completed',
-          actor_type: 'system',
-          metadata: { stripe_session_id: sessionId },
-        });
 
         setStatus('success');
       } catch (err: any) {
@@ -141,11 +123,20 @@ function AdoptionSuccessContent() {
           launched. Typically within 1–2 business days.
         </p>
 
-        <Link href="/">
-          <button className="px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl transition-colors">
-            Return Home
-          </button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {adoptionId && (
+            <Link href={`/adopt-song/request/${adoptionId}`}>
+              <button className="px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl transition-colors w-full sm:w-auto">
+                Track My Sponsorship
+              </button>
+            </Link>
+          )}
+          <Link href="/">
+            <button className="px-8 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium rounded-xl transition-colors w-full sm:w-auto">
+              Return Home
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

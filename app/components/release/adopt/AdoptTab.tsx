@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2 } from 'lucide-react';
-import { storage } from '../../../lib/storage';
-import { SongAdoption, SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
+import { SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
+
+const ADOPTION_PACKAGES: SongAdoptionPackage[] = [
+  { id: 'pkg_1', method_type: 'managed_sufitube', package_name: 'Quick Boost', description: 'Short visibility push and early testing — ideal for first-time sponsors', currency: 'USD', amount: 39, estimated_impressions_min: 500, estimated_impressions_max: 3000, duration_days: 4, regions_targeted: ['Local'], reporting_level: 'Basic', is_active: true, sort_order: 1 },
+  { id: 'pkg_2', method_type: 'managed_sufitube', package_name: 'Starter Reach', description: 'Focused promotional push for one kalam with community engagement', currency: 'USD', amount: 75, estimated_impressions_min: 3000, estimated_impressions_max: 10000, duration_days: 7, regions_targeted: ['Regional'], reporting_level: 'Basic', is_active: true, sort_order: 2 },
+  { id: 'pkg_3', method_type: 'managed_sufitube', package_name: 'Balanced Campaign', description: 'Stronger reach, better audience learning and diaspora discovery', currency: 'USD', amount: 199, estimated_impressions_min: 10000, estimated_impressions_max: 40000, duration_days: 14, regions_targeted: ['Regional', 'Diaspora'], reporting_level: 'Standard', is_active: true, sort_order: 3 },
+  { id: 'pkg_4', method_type: 'managed_sufitube', package_name: 'Optimal Reach', description: 'Sustained promotion, wider discovery and stronger performance data', currency: 'USD', amount: 500, estimated_impressions_min: 50000, estimated_impressions_max: 150000, duration_days: 21, regions_targeted: ['Global'], reporting_level: 'Premium', is_active: true, sort_order: 4 },
+];
 import { useFormSecurity } from '../../../hooks/useFormSecurity';
 import { adoptionSchema, validateSchema } from '../../../lib/validation-schemas';
 import { sanitizeObject } from '../../../lib/sanitize';
@@ -16,12 +22,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const { user } = useAuth();
 
   // ── Steps ────────────────────────────────────────────────────────────────
-  // managed_sufitube:   0=intro  1=budget  2=form  3=review  4=success
-  // use_my_google_ads:  0=intro  1=budget  2=connect  3=form  4=review  5=success
+  // Both paths:         0=intro  1=intention  2=budget
+  // managed_sufitube:   … 3=form  4=review  5=success
+  // use_my_google_ads:  … 3=connect  4=form  5=review  6=success
   const [step, setStep] = useState(0);
   const [selectedMethod, setSelectedMethod] = useState<'managed_sufitube' | 'use_my_google_ads' | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<SongAdoptionPackage | null>(null);
-  const [packages, setPackages] = useState<SongAdoptionPackage[]>([]);
+  const packages = ADOPTION_PACKAGES;
   const [formData, setFormData] = useState<Partial<AdoptionFormData>>({
     public_display_mode: 'full_name',
     public_location_mode: 'city_country',
@@ -37,9 +44,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<any>({});
   const [submitError, setSubmitError] = useState('');
-  const [paymentRoute, setPaymentRoute] = useState<'google_direct' | 'stripe_sufipulse' | null>(null);
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
-  const [adoption, setAdoption] = useState<SongAdoption | null>(null);
+  const [adoption, setAdoption] = useState<any | null>(null);
 
   // Google OAuth state
   const [googleAdsEnabled, setGoogleAdsEnabled] = useState<boolean | null>(null);
@@ -65,11 +71,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   // ── Effects ───────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    storage.initializeAdoptionPackages().then(() =>
-      storage.getSongAdoptionPackages().then(p => setPackages(p.filter(x => x.is_active)))
-    );
-  }, []);
 
   // Check at mount whether Google Ads is configured on this server
   useEffect(() => {
@@ -91,16 +92,18 @@ export function AdoptTab({ release }: AdoptTabProps) {
     const returnedAdoptionId = url.searchParams.get('adoption_id');
     if (oauthResult !== 'success' || !returnedAdoptionId) return;
 
-    storage.getSongAdoptionById(returnedAdoptionId).then((saved: any) => {
-      if (saved) {
-        setAdoption(saved);
-        setSelectedMethod(saved.method_type);
-        setOauthConnected(true);
-        setOauthChecked(true);
-        // Return to step 2 (connect step) so user sees connected account and can continue
-        setStep(saved.method_type === 'use_my_google_ads' ? 2 : 3);
-      }
-    });
+    fetch(`/api/adoptions/${returnedAdoptionId}`)
+      .then((r) => r.json())
+      .then((saved: any) => {
+        if (saved?.id) {
+          setAdoption(saved);
+          setSelectedMethod(saved.methodType);
+          setOauthConnected(true);
+          setOauthChecked(true);
+          setStep(saved.methodType === 'use_my_google_ads' ? 3 : 4);
+        }
+      })
+      .catch(() => {});
 
     url.searchParams.delete('adoption_oauth');
     url.searchParams.delete('adoption_id');
@@ -180,7 +183,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  const successStep = selectedMethod === 'use_my_google_ads' ? 5 : 4;
+  const successStep = selectedMethod === 'use_my_google_ads' ? 6 : 5;
   const isSuccessScreen = step === successStep;
 
   const getImpactPreview = (amount: number) => {
@@ -196,7 +199,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setAdoption(null); setOauthConnected(false); setOauthChecked(false);
     setOauthConfigured(false); setAccessibleCustomerIds([]); setSelectedGoogleCustomerId('');
     setVerifiedCustomerId(null); setIsVerifying(false); setVerifyError(null);
-    setOauthLastVerified(null); setPaymentRoute(null); setSubmitError('');
+    setOauthLastVerified(null); setSubmitError('');
     setCampaignResourceName(null); setIsConnectingOAuth(false);
   };
 
@@ -217,7 +220,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const handlePackageSelect = (pkg: SongAdoptionPackage) => {
     setSelectedPackage(pkg);
     setFormData(prev => ({ ...prev, selected_package_id: pkg.id }));
-    setStep(2);
+    setStep(3);
   };
 
   const handleCustomBudget = () => {
@@ -234,7 +237,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     }
     setFormData(prev => ({ ...prev, custom_budget: amount }));
     setShowCustomModal(false);
-    setStep(2);
+    setStep(3);
   };
 
   // Creates a minimal draft adoption so we have an adoptionId for the OAuth state param.
@@ -243,28 +246,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
     if (!formData.custom_budget || formData.custom_budget < 10) return;
     setIsSubmitting(true);
     try {
-      const draft = await storage.createSongAdoption({
-        release_id: release.id,
-        user_id: user?.id,
-        method_type: 'use_my_google_ads',
-        adoption_status: 'draft',
-        custom_budget: formData.custom_budget,
-        currency: 'USD',
-        amount_due: formData.custom_budget,
-        amount_paid: 0,
-        payment_status: 'unpaid',
-        campaign_objective: 'awareness',
-        target_regions: ['Global'],
-        target_languages: ['All'],
-        public_display_mode: 'full_name',
-        public_location_mode: 'city_country',
-        public_listing_approved: false,
-        is_anonymous: false,
+      const res = await fetch('/api/adoptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          releaseId: release.id,
+          releaseTitle: release.title || release.release_title,
+          releaseSlug: release.slug,
+          methodType: 'use_my_google_ads',
+          campaignIntention: formData.campaign_objective || 'general_awareness',
+          dedicationMessage: formData.dedication_message,
+          amountDue: formData.custom_budget,
+          currency: 'USD',
+          adoptionStatus: 'draft',
+        }),
       });
+      const draft = await res.json();
+      if (!res.ok) throw new Error(draft.error || 'Could not initialise adoption');
       setAdoption(draft);
-      setStep(2); // go to Connect Google Ads step
-    } catch {
-      setSubmitError('Could not initialise adoption. Please try again.');
+      setStep(3);
+    } catch (err: any) {
+      setSubmitError(err.message || 'Could not initialise adoption. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -333,68 +336,64 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     setIsSubmitting(true);
     try {
-      let currentAdoption: SongAdoption;
+      let currentAdoption: any;
 
-      if (adoption) {
+      if (adoption?.id) {
         // Draft already exists (use_my_google_ads) — update it with full form data
-        await storage.updateSongAdoption(adoption.id, {
-          adoption_status: 'pending_review',
-          campaign_objective: formData.campaign_objective || 'awareness',
-          target_regions: formData.target_regions || ['Global'],
-          target_languages: formData.target_languages || ['All'],
-          audience_type: formData.preferred_audience_region || 'global',
-          special_instructions: formData.special_instructions,
-          dedication_message: formData.dedication_message,
-          sponsor_note: formData.sponsor_note,
-          public_display_mode: formData.public_display_mode!,
-          public_location_mode: formData.public_location_mode!,
-          is_anonymous: formData.adopter_type === 'anonymous',
+        const res = await fetch(`/api/adoptions/${adoption.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            adoptionStatus: 'pending_review',
+            sponsorName: cleanData.full_name,
+            sponsorEmail: cleanData.email,
+            sponsorCountry: cleanData.country,
+            sponsorCity: cleanData.city,
+            adopterType: cleanData.adopter_type,
+            campaignObjective: formData.campaign_objective || 'awareness',
+            targetRegions: formData.target_regions || ['Global'],
+            targetLanguages: formData.target_languages || ['All'],
+            dedicationMessage: formData.dedication_message,
+            publicDisplayMode: formData.public_display_mode,
+            publicLocationMode: formData.public_location_mode,
+            isAnonymous: formData.adopter_type === 'anonymous',
+          }),
         });
-        currentAdoption = adoption;
+        currentAdoption = await res.json();
+        if (!res.ok) throw new Error(currentAdoption.error || 'Failed to update adoption');
       } else {
-        // managed_sufitube — create fresh adoption
-        currentAdoption = await storage.createSongAdoption({
-          release_id: release.id,
-          user_id: user?.id,
-          method_type: selectedMethod,
-          adoption_status: 'pending_review',
-          package_id: selectedPackage?.id,
-          custom_budget: formData.custom_budget,
-          currency: 'USD',
-          amount_due: selectedPackage?.amount || formData.custom_budget || 0,
-          amount_paid: 0,
-          payment_status: 'unpaid',
-          campaign_objective: formData.campaign_objective || 'awareness',
-          target_regions: formData.target_regions || ['Global'],
-          target_languages: formData.target_languages || ['All'],
-          audience_type: formData.preferred_audience_region || 'global',
-          special_instructions: formData.special_instructions,
-          dedication_message: formData.dedication_message,
-          sponsor_note: formData.sponsor_note,
-          public_display_mode: formData.public_display_mode!,
-          public_location_mode: formData.public_location_mode!,
-          public_listing_approved: false,
-          is_anonymous: formData.adopter_type === 'anonymous',
+        // managed_sufitube — create fresh adoption server-side
+        const res = await fetch('/api/adoptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            releaseId: release.id,
+            releaseTitle: release.title || release.release_title,
+            releaseSlug: release.slug,
+            methodType: selectedMethod,
+            campaignIntention: formData.campaign_objective || 'general_awareness',
+            dedicationMessage: formData.dedication_message,
+            campaignObjective: formData.campaign_objective || 'awareness',
+            targetRegions: formData.target_regions || ['Global'],
+            targetLanguages: formData.target_languages || ['All'],
+            amountDue: selectedPackage?.amount || formData.custom_budget || 0,
+            currency: 'USD',
+            adoptionStatus: 'pending_review',
+            sponsorName: cleanData.full_name,
+            sponsorEmail: cleanData.email,
+            sponsorCountry: cleanData.country,
+            sponsorCity: cleanData.city,
+            adopterType: cleanData.adopter_type,
+            publicDisplayMode: formData.public_display_mode,
+            publicLocationMode: formData.public_location_mode,
+            isAnonymous: formData.adopter_type === 'anonymous',
+          }),
         });
+        currentAdoption = await res.json();
+        if (!res.ok) throw new Error(currentAdoption.error || 'Failed to create adoption');
       }
-
-      await storage.createSongAdoptionSponsor({
-        adoption_id: currentAdoption.id,
-        full_name: cleanData.full_name!,
-        organization_name: cleanData.organization_name,
-        email: cleanData.email!,
-        phone: cleanData.phone,
-        country: cleanData.country!,
-        city: cleanData.city,
-        adopter_type: cleanData.adopter_type!,
-        display_name_resolved:
-          cleanData.public_display_mode === 'full_name' ? cleanData.full_name! :
-          cleanData.public_display_mode === 'organization' && cleanData.organization_name ? cleanData.organization_name :
-          cleanData.public_display_mode === 'initials_only'
-            ? `${cleanData.full_name!.split(' ').map((n: string) => n[0]).join('')}.`
-            : 'Anonymous',
-        initials_resolved: cleanData.full_name!.split(' ').map((n: string) => n[0]).join(''),
-      });
 
       // Register in the Google Ads campaign request tracker for both methods
       await fetch('/api/google-ads/campaign-requests', {
@@ -421,17 +420,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
         }),
       }).catch(() => {}); // fire-and-forget — don't block the adoption flow
 
-      await storage.createSongAdoptionEvent({
-        adoption_id: currentAdoption.id,
-        event_type: 'form_submitted',
-        event_label: 'Sponsor information submitted',
-        actor_type: user ? 'user' : 'system',
-        actor_id: user?.id,
-        metadata: { method: selectedMethod, oauth_connected: oauthConnected },
-      });
-
       setAdoption(currentAdoption);
-      setStep(selectedMethod === 'use_my_google_ads' ? 4 : 3);
+      setStep(selectedMethod === 'use_my_google_ads' ? 5 : 4);
     } catch (error) {
       console.error('Error submitting adoption:', error);
       setSubmitError('Error submitting. Please try again.');
@@ -443,108 +433,24 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const handlePayment = async () => {
     if (!adoption) return;
 
-    // ── use_my_google_ads: branch on payment route ─────────────────────────
+    // ── use_my_google_ads: no SufiPulse payment — submit campaign request only ──
     if (selectedMethod === 'use_my_google_ads') {
-      if (!paymentRoute) {
-        setSubmitError('Please select a payment route to continue.');
-        return;
-      }
-
-      if (paymentRoute === 'stripe_sufipulse') {
-        if (!stripeEnabled) {
-          setSubmitError('Payment system is currently unavailable. Please contact support.');
-          return;
-        }
-        setIsRedirectingToStripe(true);
-        try {
-          await storage.updateSongAdoption(adoption.id, { adoption_status: 'pending_review', payment_status: 'unpaid', payment_route: 'stripe_sufipulse' } as any);
-          await storage.createSongAdoptionEvent({
-            adoption_id: adoption.id,
-            event_type: 'payment_route_selected',
-            event_label: 'Payment route: SufiPulse Stripe — redirecting to Stripe Checkout',
-            actor_type: 'user',
-            metadata: { payment_route: 'stripe_sufipulse', google_ads_customer_id: selectedGoogleCustomerId, oauth_connected: oauthConnected },
-          });
-          const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              amountUSD: adoption.amount_due,
-              releaseTitle: release?.release_title,
-              sponsorName: formData.full_name,
-              sponsorEmail: formData.email,
-              methodType: adoption.method_type,
-            }),
-          });
-          const body = await res.json();
-          if (!res.ok) throw new Error(body.error || 'Checkout failed');
-          window.location.href = body.url;
-        } catch (err: any) {
-          setSubmitError(`Payment error: ${err.message}`);
-          setIsRedirectingToStripe(false);
-        }
-        return;
-      }
-
-      // google_direct — create real Google Ads campaign structure
       setIsSubmitting(true);
       try {
-        const ytId = (release?.youtube_video_id || release?.youtubeId || '') as string;
-        const budget = selectedPackage?.amount || formData.custom_budget || adoption.amount_due || 0;
-        let createdCampaignResource: string | null = null;
-
-        if (ytId && selectedGoogleCustomerId) {
-          const campaignRes = await fetch('/api/google-ads/submit-campaign', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              adoptionId: adoption.id,
-              releaseId: release?.id,
-              userId: user?.id || '',
-              youtubeVideoId: ytId,
-              releaseTitle: release?.release_title || 'SufiPulse Release',
-              budgetAmount: budget,
-              selectedCustomerId: selectedGoogleCustomerId,
-              targetRegions: formData.target_regions?.length ? formData.target_regions : ['US', 'GB', 'PK', 'IN'],
-              targetLanguages: formData.target_languages?.length ? formData.target_languages : ['en', 'ur'],
-              campaignObjective: formData.campaign_objective || 'awareness',
-            }),
-          });
-          const campaignData = await campaignRes.json();
-          if (campaignData.campaign_resource_name) {
-            createdCampaignResource = campaignData.campaign_resource_name;
-            setCampaignResourceName(campaignData.campaign_resource_name);
-          } else if (!campaignRes.ok && campaignData.error) {
-            // Non-fatal: record the error but still submit the adoption for admin review
-            console.warn('[AdoptTab] Campaign creation error:', campaignData.error);
-          }
-        }
-
-        await storage.updateSongAdoption(adoption.id, {
-          payment_status: 'pending',
-          adoption_status: 'pending_review',
-          payment_route: 'google_direct',
-          ...(createdCampaignResource
-            ? { google_ads_campaign_resource: createdCampaignResource }
-            : {}),
-        } as any);
-
-        await storage.createSongAdoptionEvent({
-          adoption_id: adoption.id,
-          event_type: 'submitted',
-          event_label: createdCampaignResource
-            ? `Google Ads campaign created (PAUSED) — ${createdCampaignResource}`
-            : 'Google Ads campaign request submitted — billing via Google Ads account directly',
-          actor_type: 'user',
-          metadata: {
-            google_ads_customer_id: selectedGoogleCustomerId,
-            oauth_connected: oauthConnected,
-            payment_route: 'google_direct',
-            campaign_resource_name: createdCampaignResource,
-            release_id: release?.id,
-          },
+        // Update adoption record: payment not required for this path
+        await fetch(`/api/adoptions/${adoption.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            paymentStatus: 'not_required',
+            paymentRoute: 'google_ads_billing',
+            googleAdsCustomerId: selectedGoogleCustomerId,
+            oauthStatus: oauthConnected ? 'connected' : 'not_connected',
+            adoptionStatus: 'pending_review',
+          }),
         });
-        setStep(5);
+        setStep(6);
       } catch (err: any) {
         setSubmitError(`Error: ${err.message}`);
       } finally {
@@ -553,19 +459,18 @@ export function AdoptTab({ release }: AdoptTabProps) {
       return;
     }
 
-    // ── managed_sufitube ────────────────────────────────────────────────────
-    const nextStep = 4;
+    // ── managed_sufitube: SufiPulse Stripe checkout ───────────────────────
+    const budget = selectedPackage?.amount || formData.custom_budget || adoption.amountDue || 0;
 
-    if (adoption.amount_due === 0) {
-      await storage.updateSongAdoption(adoption.id, { payment_status: 'paid', adoption_status: 'pending_review' });
-      await storage.createSongAdoptionEvent({
-        adoption_id: adoption.id,
-        event_type: 'payment_completed',
-        event_label: 'Free adoption method (no payment required)',
-        actor_type: 'system',
-        metadata: {},
+    if (budget === 0) {
+      // Zero-amount (e.g. internal/override) — mark paid and advance
+      await fetch(`/api/adoptions/${adoption.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ paymentStatus: 'paid', adoptionStatus: 'admin_review' }),
       });
-      setStep(nextStep);
+      setStep(5);
       return;
     }
 
@@ -579,12 +484,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
       const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          amountUSD: adoption.amount_due,
+          amountUSD: budget,
           releaseTitle: release?.release_title,
           sponsorName: formData.full_name,
           sponsorEmail: formData.email,
-          methodType: adoption.method_type,
           packageName: selectedPackage?.package_name,
         }),
       });
@@ -605,6 +510,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
         <h3 className="text-3xl font-serif font-light text-neutral-100 mb-3">Adopt This Song</h3>
         <p className="text-neutral-400 text-base leading-relaxed max-w-lg mx-auto">
           Help this kalam reach hearts that need it. Choose how you want to sponsor the spread of this piece.
+        </p>
+        <p className="text-neutral-600 text-sm leading-relaxed max-w-md mx-auto mt-2">
+          Every campaign is reviewed before launch to ensure the message, audience, and budget remain aligned with the purpose of the release.
         </p>
       </div>
 
@@ -633,7 +541,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 Managed by SufiTube
               </h4>
               <p className="text-sm text-neutral-400 leading-[1.7]">
-                We handle everything. Choose your budget and we run the promotion using our managed systems, optimized for reach, targeting, and performance.
+                Best for supporters who want SufiPulse to handle the campaign, or prefer a fully managed promotion experience without using their own Google Ads account.
               </p>
             </div>
 
@@ -652,7 +560,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
               onClick={(e) => { e.stopPropagation(); handleMethodSelect('managed_sufitube'); }}
               className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-[#0F172A] text-sm font-bold rounded-xl transition-colors"
             >
-              Choose SufiTube
+              Sponsor Through SufiPulse
             </button>
 
             <p className="text-xs text-center text-neutral-600">Recommended for most users</p>
@@ -701,7 +609,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 Use My Google Ads
               </h4>
               <p className="text-sm text-neutral-400 leading-[1.7]">
-                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership.
+                Best for sponsors who want full control of billing and campaign execution using their own Google Ads account, while SufiPulse prepares the campaign structure.
               </p>
             </div>
 
@@ -721,7 +629,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   onClick={(e) => { e.stopPropagation(); handleMethodSelect('use_my_google_ads'); }}
                   className="w-full py-3.5 bg-[#4285F4] hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-colors"
                 >
-                  Connect Google Ads
+                  Connect My Google Ads Account
                 </button>
                 <p className="text-xs text-center text-neutral-600">Secure connection via Google</p>
               </>
@@ -751,6 +659,66 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
       </div>
 
+    </div>
+  );
+
+  const INTENTIONS = [
+    { value: 'spiritual_reflection',  label: 'Spiritual Reflection' },
+    { value: 'ramadan_sacred_season', label: 'Ramadan / Sacred Season' },
+    { value: 'kashmiri_sufi_audience',label: 'Kashmiri Sufi Audience' },
+    { value: 'urdu_hindi_listeners',  label: 'Urdu / Hindi Listeners' },
+    { value: 'global_sufi_seekers',   label: 'Global Sufi Seekers' },
+    { value: 'youth_new_listeners',   label: 'Youth & New Listeners' },
+    { value: 'diaspora_outreach',     label: 'Diaspora Outreach' },
+    { value: 'general_awareness',     label: 'General Awareness' },
+    { value: 'memorial_dedication',   label: 'Memorial / Dedication' },
+    { value: 'institutional_support', label: 'Institutional Support' },
+  ];
+
+  const renderIntention = () => (
+    <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+      <div className="text-center">
+        <h3 className="text-2xl font-medium text-neutral-100 mb-2">Campaign Intention</h3>
+        <p className="text-neutral-500 text-sm max-w-md mx-auto">What is your intention for sponsoring this kalam?</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {INTENTIONS.map(({ value, label }) => {
+          const selected = formData.campaign_objective === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, campaign_objective: value as AdoptionFormData['campaign_objective'] }))}
+              className={`text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all duration-150 ${
+                selected
+                  ? 'border-amber-500/60 bg-amber-500/10 text-amber-300'
+                  : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+              }`}
+            >
+              {selected && <span className="mr-1.5 text-amber-400">✓</span>}{label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div>
+        <label className="block text-sm text-neutral-500 mb-2">Add a dedication or intention note <span className="text-neutral-700">(optional)</span></label>
+        <textarea
+          value={formData.dedication_message || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, dedication_message: e.target.value }))}
+          className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-500/50 h-20 placeholder-neutral-700 resize-none"
+          placeholder="e.g. In loving memory of… · For the seekers of the East · This Ramadan…"
+        />
+      </div>
+
+      <button
+        onClick={() => setStep(2)}
+        disabled={!formData.campaign_objective}
+        className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+      >
+        Continue <ArrowRight className="w-4 h-4" />
+      </button>
     </div>
   );
 
@@ -969,7 +937,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
             )}
 
             <button
-              onClick={() => setStep(3)}
+              onClick={() => setStep(4)}
               disabled={
                 isVerifying ||
                 (accessibleCustomerIds.length > 0 && (
@@ -1224,17 +1192,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
         </div>
       )}
 
-      <div>
-        <label className="block text-sm text-neutral-400 mb-2">Dedication Message (Optional)</label>
-        <textarea
-          name="dedication_message"
-          value={formData.dedication_message || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, dedication_message: e.target.value }))}
-          className={`w-full bg-neutral-900 border ${fieldErrors.dedication_message ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 h-24`}
-          placeholder="Share the intention behind your sponsorship…"
-        />
-      </div>
-
       <div className="space-y-4">
         <h4 className="text-lg font-medium text-neutral-100">Privacy Settings</h4>
         <div>
@@ -1306,7 +1263,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   );
 
   const renderReview = () => {
-    const budget = selectedPackage?.amount || formData.custom_budget || adoption?.amount_due || 0;
+    const budget = selectedPackage?.amount || formData.custom_budget || adoption?.amountDue || 0;
     const impact = getImpactPreview(budget);
     const dur = getDuration(budget);
     const ytId = (release?.youtube_video_id || release?.youtubeId || '') as string;
@@ -1317,7 +1274,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
         <div className="max-w-xl mx-auto space-y-6 animate-in slide-in-from-right-8 duration-300">
           <div className="text-center">
             <h3 className="text-2xl font-medium text-neutral-100 mb-1">Campaign Review</h3>
-            <p className="text-sm text-neutral-500">Verify the setup, then choose how to pay.</p>
+            <p className="text-sm text-neutral-500">Verify your campaign details before submitting.</p>
+          </div>
+
+          <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl px-4 py-3 text-sm text-blue-300">
+            You pay Google directly through your own Google Ads billing. SufiPulse does not collect your ad spend.
           </div>
 
           {/* Campaign details */}
@@ -1374,49 +1335,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
             )}
           </div>
 
-          {/* Payment route */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-neutral-300">How will the media budget be paid?</p>
-
-            <button
-              onClick={() => setPaymentRoute('google_direct')}
-              className={`w-full flex flex-col text-left p-5 rounded-xl border transition-all ${
-                paymentRoute === 'google_direct'
-                  ? 'border-blue-500/60 bg-blue-900/15'
-                  : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-neutral-200">Pay Google Directly</span>
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentRoute === 'google_direct' ? 'border-blue-400 bg-blue-400' : 'border-neutral-600'}`}>
-                  {paymentRoute === 'google_direct' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </div>
-              </div>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                Your Google Ads account is charged directly by Google for media spend. SufiPulse prepares the campaign — no Stripe charge.
-              </p>
-            </button>
-
-            <button
-              onClick={() => setPaymentRoute('stripe_sufipulse')}
-              className={`w-full flex flex-col text-left p-5 rounded-xl border transition-all ${
-                paymentRoute === 'stripe_sufipulse'
-                  ? 'border-amber-500/60 bg-amber-900/15'
-                  : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-neutral-200">Pay SufiPulse via Stripe</span>
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentRoute === 'stripe_sufipulse' ? 'border-amber-400 bg-amber-400' : 'border-neutral-600'}`}>
-                  {paymentRoute === 'stripe_sufipulse' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </div>
-              </div>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                Pay SufiPulse directly via Stripe. We cover the full media spend and launch the campaign from our infrastructure.
-              </p>
-            </button>
-          </div>
-
           {submitError && (
             <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
               {submitError}
@@ -1425,22 +1343,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
           <button
             onClick={() => { setSubmitError(''); handlePayment(); }}
-            disabled={!paymentRoute || isSubmitting || isRedirectingToStripe}
-            className={`w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
-              paymentRoute === 'stripe_sufipulse' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            disabled={isSubmitting}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
-            {isRedirectingToStripe ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
-            ) : isSubmitting ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-            ) : paymentRoute === 'stripe_sufipulse' ? (
-              <><CreditCard className="w-5 h-5" /> Pay ${budget} via Stripe</>
-            ) : paymentRoute === 'google_direct' ? (
-              <><Check className="w-5 h-5" /> Submit Campaign Request — Pay Google Directly</>
-            ) : (
-              'Select a payment option above'
-            )}
+            {isSubmitting
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+              : <><Check className="w-5 h-5" /> Submit Campaign Request</>}
           </button>
         </div>
       );
@@ -1521,8 +1429,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   const renderSuccess = () => {
     const isGoogleAds = selectedMethod === 'use_my_google_ads';
-    const isGoogleDirect = isGoogleAds && paymentRoute === 'google_direct';
-    const isStripeSufipulse = isGoogleAds && paymentRoute === 'stripe_sufipulse';
+    const isGoogleDirect = isGoogleAds;
+    const isStripeSufipulse = false;
     const displayCustomerId = selectedGoogleCustomerId || formData.google_ads_customer_id;
 
     const title = isGoogleDirect
@@ -1591,7 +1499,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
             <span className="text-neutral-500 text-sm">Amount</span>
             <span className="text-neutral-300 text-sm font-medium">
-              {isGoogleDirect ? `$${adoption?.amount_due || 0} (billed by Google)` : `$${adoption?.amount_due || 0}`}
+              {isGoogleDirect ? `$${adoption?.amountDue || 0} (billed by Google)` : `$${adoption?.amountDue || 0}`}
             </span>
           </div>
           <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
@@ -1682,16 +1590,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
   // ── Step routing (method-aware) ───────────────────────────────────────────
   const getStepContent = () => {
     if (step === 0) return renderIntro();
-    if (step === 1) return renderPackageSelection();
+    if (step === 1) return renderIntention();
+    if (step === 2) return renderPackageSelection();
     if (selectedMethod === 'use_my_google_ads') {
-      if (step === 2) return renderGoogleConnect();
+      if (step === 3) return renderGoogleConnect();
+      if (step === 4) return renderForm();
+      if (step === 5) return renderReview();
+      if (step === 6) return renderSuccess();
+    } else {
       if (step === 3) return renderForm();
       if (step === 4) return renderReview();
       if (step === 5) return renderSuccess();
-    } else {
-      if (step === 2) return renderForm();
-      if (step === 3) return renderReview();
-      if (step === 4) return renderSuccess();
     }
     return null;
   };
@@ -1798,7 +1707,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           {step > 0 && !isSuccessScreen && (
             <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
               <div className="text-sm font-medium text-neutral-500">
-                Step {step} <span className="text-neutral-700">of {selectedMethod === 'use_my_google_ads' ? 4 : 3}</span>
+                Step {step} <span className="text-neutral-700">of {selectedMethod === 'use_my_google_ads' ? 5 : 4}</span>
               </div>
               <button onClick={resetFlow} className="text-neutral-500 hover:text-white transition-colors p-2">
                 <X className="w-5 h-5" />

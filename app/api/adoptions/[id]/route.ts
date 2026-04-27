@@ -1,62 +1,122 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  getAdoptionRecord,
+  updateAdoptionRecord,
+} from '@/app/lib/server/adoption-store';
 import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
-import { requireAuth } from '@/server/middleware/authenticate';
+import { getCampaignRequest } from '@/app/lib/server/google-ads-campaign-request-store';
+import { getAuthUser, requireAdmin } from '@/server/middleware/authenticate';
 
+/**
+ * GET /api/adoptions/[id]
+ * Public by ID — merges adoption record + payment + campaign request status.
+ * No auth required (ID is a UUID and serves as access token for tracking).
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   const { id } = await params;
-  const record = await getAdoptionPaymentRecord(id);
 
-  if (record?.userId && record.userId !== authResult.id) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const adoption = getAdoptionRecord(id);
+  if (!adoption) {
+    return NextResponse.json({ error: 'Adoption not found' }, { status: 404 });
   }
 
+  const payment = await getAdoptionPaymentRecord(id);
+  const campaignReq = await getCampaignRequest(id);
+
   return NextResponse.json({
-    adoption_id: id,
-    payment_record: record,
+    ...adoption,
+    // Merge payment record — server payment status is authoritative
+    paymentStatus: payment?.paymentStatus ?? adoption.paymentStatus,
+    amountPaid: payment?.amountPaid ?? adoption.amountPaid,
+    stripeSessionId: payment?.stripeSessionId ?? null,
+    // Merge campaign status
+    campaignRequestStatus: campaignReq?.status ?? null,
+    campaignResourceName: campaignReq?.campaignResourceName ?? adoption.campaignResourceName ?? null,
   });
 }
 
-// Internal-only route — called by the Stripe webhook to update adoption payment status.
-// Protected by x-webhook-secret header matching STRIPE_WEBHOOK_SECRET.
+/**
+ * PATCH /api/adoptions/[id]
+ * Update adoption record.
+ *   - Stripe webhook: protected by x-webhook-secret header
+ *   - Owner: requires auth + ownership match
+ *   - Admin: requires admin role
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
 
-  const secret = request.headers.get('x-webhook-secret');
-  if (!secret || secret !== process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const adoption = getAdoptionRecord(id);
+  if (!adoption) {
+    return NextResponse.json({ error: 'Adoption not found' }, { status: 404 });
+  }
+
+  // ── Stripe webhook path (internal) ─────────────────────────────────────────
+  const webhookSecret = request.headers.get('x-webhook-secret');
+  if (webhookSecret) {
+    if (webhookSecret !== process.env.STRIPE_WEBHOOK_SECRET) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const body = await request.json();
+    const updated = updateAdoptionRecord(id, {
+      paymentStatus: body?.payment_status,
+      adoptionStatus: body?.adoption_status,
+      amountPaid: body?.amount_paid,
+      paymentReference: body?.stripe_session_id,
+    });
+    if (body?.payment_status) {
+      await upsertAdoptionPaymentRecord(id, {
+        paymentStatus: body.payment_status,
+        adoptionStatus: body.adoption_status,
+        amountPaid: body.amount_paid,
+        stripeSessionId: body.stripe_session_id,
+        lastEventType: body.event_type,
+      });
+    }
+    return NextResponse.json({ adoption_id: id, updated });
+  }
+
+  // ── Authenticated user or admin ────────────────────────────────────────────
+  const user = await getAuthUser(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  const isAdmin = user.role === 'admin';
+  const isOwner = adoption.userId === user.id;
+
+  if (!isAdmin && !isOwner) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const body = await request.json();
 
-  const record = await upsertAdoptionPaymentRecord(id, {
-    paymentStatus: body?.payment_status,
-    adoptionStatus: body?.adoption_status,
-    amountPaid: body?.amount_paid,
-    stripeSessionId: body?.stripe_session_id,
-    lastEventType: body?.event_type,
-  });
+  // Non-admin fields (owner-safe updates)
+  const ownerFields: (keyof typeof body)[] = [
+    'sponsorName', 'sponsorEmail', 'sponsorCountry', 'sponsorCity',
+    'adopterType', 'campaignIntention', 'dedicationMessage', 'targetRegions',
+    'targetLanguages', 'googleAdsCustomerId', 'oauthStatus',
+    'publicDisplayMode', 'publicLocationMode', 'isAnonymous',
+    'adoptionStatus', 'amountDue', 'currency', 'paymentRoute',
+  ];
 
-  // In the standalone localStorage app the webhook runs server-side and cannot
-  // write to the browser's localStorage. We store a server-side pending update
-  // that the client polls on the success page to confirm payment.
-  //
-  // In a Supabase/PostgreSQL backend you would do:
-  //   await supabase.from('song_adoptions').update(body).eq('id', id)
-  //
-  // For now we return the update payload so the success page can apply it.
-  return NextResponse.json({
-    adoption_id: id,
-    update: body,
-    payment_record: record,
-    message: 'Payment update recorded on server store. Client should sync local state.',
-  });
+  // Admin-only fields
+  const adminFields: (keyof typeof body)[] = [
+    'adminNote', 'reportUrl', 'publicListingApproved',
+    'campaignStatus', 'campaignResourceName', 'campaignObjective',
+  ];
+
+  const allowed = isAdmin ? [...ownerFields, ...adminFields] : ownerFields;
+  const patch: Record<string, any> = {};
+  for (const key of allowed) {
+    if (key in body) patch[String(key)] = body[key as string];
+  }
+
+  const updated = updateAdoptionRecord(id, patch);
+  return NextResponse.json(updated);
 }

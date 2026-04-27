@@ -4,32 +4,10 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Badge } from '../../components/primitives/Badge';
 import {
-    Search, Eye, Check, X, Calendar, User, Music, DollarSign,
+    Search, Eye, Check, X, User, Music, DollarSign,
     AlertCircle, BarChart3, Users, Target, TrendingUp, Rocket,
-    Loader2, Globe, CreditCard, ExternalLink, RefreshCw,
+    Loader2, Globe, ExternalLink, RefreshCw,
 } from 'lucide-react';
-import { storage } from '../../lib/storage';
-import { SongAdoption, SongAdoptionSponsor } from '../../types/adoption.types';
-
-interface AdoptionWithSponsor extends SongAdoption {
-    sponsor?: SongAdoptionSponsor;
-    googleAdsCustomerId?: string;
-    oauthConnected?: boolean;
-    billingEnabled?: boolean;
-    paymentRoute?: string;
-    estimatedImpressionsMin?: number;
-    estimatedImpressionsMax?: number;
-}
-
-interface ServerPaymentRecord {
-    adoptionId: string;
-    paymentStatus: 'unpaid' | 'pending' | 'paid' | 'failed';
-    adoptionStatus: string;
-    amountPaid: number;
-    stripeSessionId?: string;
-    lastEventType?: string;
-    updatedAt: string;
-}
 
 interface LaunchState {
     step: 'idle' | 'input' | 'launching' | 'done';
@@ -43,14 +21,31 @@ const defaultLaunch = (): LaunchState => ({
     step: 'idle', youtubeId: '', error: '', campaignResource: '', customerId: '',
 });
 
+const INTENTION_LABELS: Record<string, string> = {
+    spiritual_reflection:   'Spiritual Reflection',
+    ramadan_sacred_season:  'Ramadan / Sacred Season',
+    kashmiri_sufi_audience: 'Kashmiri Sufi Audience',
+    urdu_hindi_listeners:   'Urdu / Hindi Listeners',
+    global_sufi_seekers:    'Global Sufi Seekers',
+    youth_new_listeners:    'Youth & New Listeners',
+    diaspora_outreach:      'Diaspora Outreach',
+    general_awareness:      'General Awareness',
+    memorial_dedication:    'Memorial / Dedication',
+    institutional_support:  'Institutional Support',
+    awareness:              'General Awareness',
+    devotional_reach:       'Devotional Reach',
+    community_engagement:   'Community Engagement',
+    event_support:          'Event Support',
+    release_launch_support: 'Release Launch Support',
+};
+
 export default function AdminSongAdoptions() {
-    const [adoptions, setAdoptions] = useState<AdoptionWithSponsor[]>([]);
+    const [adoptions, setAdoptions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [serverPaymentRecords, setServerPaymentRecords] = useState<Record<string, ServerPaymentRecord | null>>({});
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [methodFilter, setMethodFilter] = useState<string>('all');
-    const [selectedAdoption, setSelectedAdoption] = useState<AdoptionWithSponsor | null>(null);
+    const [selectedAdoption, setSelectedAdoption] = useState<any | null>(null);
     const [launchState, setLaunchState] = useState<LaunchState>(defaultLaunch());
     const [googleAdsSummary, setGoogleAdsSummary] = useState<any | null>(null);
     const [googleAdsError, setGoogleAdsError] = useState<string | null>(null);
@@ -59,56 +54,16 @@ export default function AdminSongAdoptions() {
     useEffect(() => { loadAdoptions(); }, []);
 
     const loadAdoptions = async () => {
+        setLoading(true);
         try {
-            const allAdoptions = await storage.getSongAdoptions();
-            const sponsors = await storage.getAll('song_adoption_sponsor');
-            const googleAdsRecords = await storage.getAll('song_adoption_google_ads');
-            const packages = await storage.getSongAdoptionPackages();
-            const events = await storage.getAll('song_adoption_event');
+            const res = await fetch('/api/adoptions?all=1', { credentials: 'include' });
+            if (!res.ok) throw new Error('Failed to load adoptions');
+            const data = await res.json();
+            setAdoptions(data);
 
-            const sponsorMap = new Map<string, SongAdoptionSponsor>(sponsors.map((s: any) => [s.adoption_id, s]));
-            const gadsMap = new Map<string, any>(googleAdsRecords.map((r: any) => [r.adoption_id, r]));
-            const pkgMap = new Map<string, any>(packages.map((p: any) => [p.id, p]));
-            const eventMap = new Map<string, any[]>();
-            for (const ev of events) {
-                const arr = eventMap.get(ev.adoption_id) || [];
-                arr.push(ev);
-                eventMap.set(ev.adoption_id, arr);
-            }
-
-            const result: AdoptionWithSponsor[] = allAdoptions.map((a: SongAdoption) => {
-                const gads = gadsMap.get(a.id);
-                const pkg = a.package_id ? pkgMap.get(a.package_id) : null;
-                const evs = eventMap.get(a.id) || [];
-                const submitEv = evs.find((e: any) => e.event_type === 'submitted' || e.event_type === 'payment_route_selected');
-                const paymentRoute = (a as any).payment_route || submitEv?.metadata?.payment_route || gads?.payment_route || null;
-                return {
-                    ...a,
-                    sponsor: sponsorMap.get(a.id),
-                    googleAdsCustomerId: gads?.customer_id,
-                    oauthConnected: !!gads?.oauth_connected,
-                    billingEnabled: !!gads?.billing_enabled,
-                    paymentRoute,
-                    estimatedImpressionsMin: pkg?.estimated_impressions_min || 0,
-                    estimatedImpressionsMax: pkg?.estimated_impressions_max || 0,
-                };
-            });
-
-            setAdoptions(result);
-
-            const paymentEntries = await Promise.all(
-                result.map(async (item) => {
-                    try {
-                        const res = await fetch(`/api/adoptions/${item.id}`);
-                        if (!res.ok) return [item.id, null] as const;
-                        const payload = await res.json();
-                        return [item.id, (payload?.payment_record || null) as ServerPaymentRecord | null] as const;
-                    } catch { return [item.id, null] as const; }
-                })
-            );
-            setServerPaymentRecords(Object.fromEntries(paymentEntries));
-
-            const customerIds = result.map((i) => i.googleAdsCustomerId).filter((id): id is string => Boolean(id));
+            const customerIds = data
+                .map((a: any) => a.googleAdsCustomerId)
+                .filter((id: string | null | undefined): id is string => Boolean(id));
             if (customerIds.length > 0) loadGoogleAdsInsights(customerIds);
             else { setGoogleAdsSummary(null); setGoogleAdsError('No Google Ads customer IDs linked yet.'); }
         } catch (error) {
@@ -138,31 +93,31 @@ export default function AdminSongAdoptions() {
         }
     };
 
-    const updateAdoptionStatus = async (adoptionId: string, status: string) => {
-        await storage.updateSongAdoption(adoptionId, { adoption_status: status });
-        await storage.createSongAdoptionEvent({
-            adoption_id: adoptionId,
-            event_type: 'status_changed',
-            event_label: `Status changed to ${status}`,
-            actor_type: 'admin',
-            metadata: { new_status: status },
+    const patchAdoption = async (id: string, patch: Record<string, any>) => {
+        await fetch(`/api/adoptions/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(patch),
         });
+    };
+
+    const updateAdoptionStatus = async (adoptionId: string, status: string) => {
+        await patchAdoption(adoptionId, { adoptionStatus: status });
         await loadAdoptions();
     };
 
     const approvePublicListing = async (adoptionId: string, approved: boolean) => {
-        await storage.updateSongAdoption(adoptionId, { public_listing_approved: approved });
+        await patchAdoption(adoptionId, { publicListingApproved: approved });
         await loadAdoptions();
     };
 
-    const canLaunch = (adoption: AdoptionWithSponsor) => {
-        const serverRecord = serverPaymentRecords[adoption.id];
-        const effectivePayment = serverRecord?.paymentStatus || adoption.payment_status;
-        const paymentOk = effectivePayment === 'paid' || adoption.paymentRoute === 'google_direct';
-        return adoption.adoption_status === 'approved' && paymentOk && !hasPaymentMismatch(adoption);
+    const canLaunch = (adoption: any) => {
+        const paymentOk = adoption.paymentStatus === 'paid' || adoption.methodType === 'use_my_google_ads';
+        return adoption.adoptionStatus === 'approved' && paymentOk;
     };
 
-    const openLaunchPanel = (adoption: AdoptionWithSponsor) => {
+    const openLaunchPanel = (adoption: any) => {
         setLaunchState({ ...defaultLaunch(), step: 'input' });
         setSelectedAdoption(adoption);
     };
@@ -175,7 +130,7 @@ export default function AdminSongAdoptions() {
             setLaunchState(prev => ({ ...prev, error: 'YouTube Video ID is required.' }));
             return;
         }
-        if (!adoption.release_id) {
+        if (!adoption.releaseId) {
             setLaunchState(prev => ({ ...prev, error: 'Release ID missing from adoption record.' }));
             return;
         }
@@ -183,23 +138,23 @@ export default function AdminSongAdoptions() {
         setLaunchState(prev => ({ ...prev, step: 'launching', error: '' }));
 
         try {
-            let releaseTitle = `Release ${adoption.release_id}`;
+            let releaseTitle = `Release ${adoption.releaseId}`;
             try {
-                const relRes = await fetch(`/api/releases/${adoption.release_id}`);
+                const relRes = await fetch(`/api/releases/${adoption.releaseId}`);
                 if (relRes.ok) { const rel = await relRes.json(); releaseTitle = rel.title || releaseTitle; }
             } catch {}
 
             const body: Record<string, any> = {
                 adoption_id: adoption.id,
-                method_type: adoption.method_type,
+                method_type: adoption.methodType,
                 youtube_video_id: launchState.youtubeId.trim(),
                 release_title: releaseTitle,
-                budget_usd: adoption.amount_due,
-                target_regions: adoption.target_regions || ['US', 'GB', 'AE'],
-                target_languages: adoption.target_languages || ['en', 'ur'],
-                campaign_objective: adoption.campaign_objective || 'awareness',
+                budget_usd: adoption.amountDue,
+                target_regions: adoption.targetRegions || ['US', 'GB', 'AE'],
+                target_languages: adoption.targetLanguages || ['en', 'ur'],
+                campaign_objective: adoption.campaignObjective || 'awareness',
             };
-            if (adoption.method_type === 'use_my_google_ads') {
+            if (adoption.methodType === 'use_my_google_ads') {
                 body.sponsor_customer_id = adoption.googleAdsCustomerId;
             }
 
@@ -211,16 +166,9 @@ export default function AdminSongAdoptions() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Campaign creation failed');
 
-            await storage.updateSongAdoption(adoption.id, {
-                adoption_status: 'scheduled',
-                google_ads_campaign_resource: data.campaign_resource_name,
-            });
-            await storage.createSongAdoptionEvent({
-                adoption_id: adoption.id,
-                event_type: 'campaign_created',
-                event_label: `Google Ads campaign created — status: ${data.status}`,
-                actor_type: 'admin',
-                metadata: { campaign_resource_name: data.campaign_resource_name, customer_id: data.customer_id },
+            await patchAdoption(adoption.id, {
+                adoptionStatus: 'scheduled',
+                campaignResourceName: data.campaign_resource_name,
             });
 
             setLaunchState(prev => ({
@@ -236,45 +184,41 @@ export default function AdminSongAdoptions() {
 
     const filteredAdoptions = adoptions.filter((a) => {
         const matchesSearch = !searchTerm ||
-            a.sponsor?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            a.sponsor?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || a.adoption_status === statusFilter;
-        const matchesMethod = methodFilter === 'all' || a.method_type === methodFilter;
+            a.sponsorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.sponsorEmail?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || a.adoptionStatus === statusFilter;
+        const matchesMethod = methodFilter === 'all' || a.methodType === methodFilter;
         return matchesSearch && matchesStatus && matchesMethod;
     });
 
-    const hasPaymentMismatch = (a: AdoptionWithSponsor) => {
-        const server = serverPaymentRecords[a.id];
-        return !!server && server.paymentStatus !== a.payment_status && a.paymentRoute !== 'google_direct';
-    };
-
-    const getEffectivePaymentStatus = (a: AdoptionWithSponsor) => {
-        if (a.paymentRoute === 'google_direct') return 'google_direct';
-        return serverPaymentRecords[a.id]?.paymentStatus || a.payment_status;
+    const getEffectivePaymentStatus = (a: any) => {
+        if (a.methodType === 'use_my_google_ads') return 'not_required';
+        return a.paymentStatus || 'unpaid';
     };
 
     const getStatusBadge = (status: string) => {
         const cfg: Record<string, { variant: any; label: string }> = {
-            draft: { variant: 'neutral', label: 'Draft' },
-            pending_review: { variant: 'neutral', label: 'Pending Review' },
-            approved: { variant: 'success', label: 'Approved' },
-            scheduled: { variant: 'gold', label: 'Scheduled' },
-            live: { variant: 'success', label: 'Live' },
-            completed: { variant: 'success', label: 'Completed' },
-            cancelled: { variant: 'error', label: 'Cancelled' },
+            draft:            { variant: 'neutral', label: 'Draft' },
+            pending_review:   { variant: 'neutral', label: 'Pending Review' },
+            admin_review:     { variant: 'gold',    label: 'Admin Review' },
+            approved:         { variant: 'success', label: 'Approved' },
+            scheduled:        { variant: 'gold',    label: 'Scheduled' },
+            live:             { variant: 'success', label: 'Live' },
+            completed:        { variant: 'success', label: 'Completed' },
+            cancelled:        { variant: 'error',   label: 'Cancelled' },
         };
         const c = cfg[status] || cfg.pending_review;
         return <Badge variant={c.variant}>{c.label}</Badge>;
     };
 
-    const getPaymentBadge = (a: AdoptionWithSponsor) => {
+    const getPaymentBadge = (a: any) => {
         const status = getEffectivePaymentStatus(a);
-        if (status === 'google_direct') return <Badge variant="success">Google Direct</Badge>;
+        if (status === 'not_required') return <Badge variant="neutral">Not Required</Badge>;
         const cfg: Record<string, { variant: any; label: string }> = {
-            unpaid: { variant: 'error', label: 'Unpaid' },
-            pending: { variant: 'gold', label: 'Pending' },
-            paid: { variant: 'success', label: 'Paid' },
-            failed: { variant: 'error', label: 'Failed' },
+            unpaid:   { variant: 'error',   label: 'Unpaid' },
+            pending:  { variant: 'gold',    label: 'Pending' },
+            paid:     { variant: 'success', label: 'Paid' },
+            failed:   { variant: 'error',   label: 'Failed' },
             refunded: { variant: 'neutral', label: 'Refunded' },
         };
         const c = cfg[status] || cfg.unpaid;
@@ -282,11 +226,11 @@ export default function AdminSongAdoptions() {
     };
 
     const totalCampaigns = adoptions.length;
-    const paidCampaigns = adoptions.filter((a) => a.payment_status === 'paid' || a.paymentRoute === 'google_direct').length;
-    const totalBudget = adoptions.reduce((s, a) => s + Number(a.amount_due || 0), 0);
-    const totalAdopters = new Set(adoptions.map((a) => a.sponsor?.email || a.sponsor?.id).filter(Boolean)).size;
-    const objectiveCounts = adoptions.reduce<Record<string, number>>((acc, a) => {
-        const o = a.campaign_objective || 'awareness';
+    const paidCampaigns = adoptions.filter((a) => a.paymentStatus === 'paid' || a.methodType === 'use_my_google_ads').length;
+    const totalBudget = adoptions.reduce((s, a) => s + Number(a.amountDue || 0), 0);
+    const totalAdopters = new Set(adoptions.map((a) => a.sponsorEmail || a.userId).filter(Boolean)).size;
+    const intentionCounts = adoptions.reduce<Record<string, number>>((acc, a) => {
+        const o = a.campaignIntention || 'general_awareness';
         acc[o] = (acc[o] || 0) + 1;
         return acc;
     }, {});
@@ -300,7 +244,6 @@ export default function AdminSongAdoptions() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-[var(--dash-text-primary)]">Song Adoptions</h1>
@@ -311,13 +254,12 @@ export default function AdminSongAdoptions() {
                     </button>
                 </div>
 
-                {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                     {[
                         { label: 'Total Campaigns', value: totalCampaigns, sub: `Confirmed: ${paidCampaigns}`, icon: BarChart3 },
                         { label: 'Unique Sponsors', value: totalAdopters, sub: 'People / organizations', icon: Users },
-                        { label: 'Campaign Budget', value: `$${totalBudget.toLocaleString()}`, sub: `${adoptions.filter(a => a.adoption_status === 'live').length} live`, icon: DollarSign },
-                        { label: 'Google Ads Linked', value: adoptions.filter(a => a.googleAdsCustomerId).length, sub: `OAuth connected: ${adoptions.filter(a => a.oauthConnected).length}`, icon: Target },
+                        { label: 'Campaign Budget', value: `$${totalBudget.toLocaleString()}`, sub: `${adoptions.filter(a => a.adoptionStatus === 'live').length} live`, icon: DollarSign },
+                        { label: 'Google Ads Linked', value: adoptions.filter(a => a.googleAdsCustomerId).length, sub: `OAuth connected: ${adoptions.filter(a => a.oauthStatus === 'connected').length}`, icon: Target },
                     ].map(({ label, value, sub, icon: Icon }) => (
                         <div key={label} className="dashboard-card">
                             <div className="flex items-center justify-between mb-2">
@@ -330,7 +272,6 @@ export default function AdminSongAdoptions() {
                     ))}
                 </div>
 
-                {/* Insights */}
                 <div className="dashboard-card">
                     <div className="flex items-center gap-2 mb-3">
                         <TrendingUp className="w-4 h-4 text-[var(--dash-accent)]" />
@@ -338,13 +279,13 @@ export default function AdminSongAdoptions() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <p className="text-sm text-[var(--dash-text-secondary)] mb-2">Objective Distribution</p>
+                            <p className="text-sm text-[var(--dash-text-secondary)] mb-2">Intention Distribution</p>
                             <div className="space-y-1 text-sm">
-                                {Object.keys(objectiveCounts).length === 0
+                                {Object.keys(intentionCounts).length === 0
                                     ? <p className="text-[var(--dash-text-muted)]">No campaign data yet.</p>
-                                    : Object.entries(objectiveCounts).map(([obj, cnt]) => (
-                                        <div key={obj} className="flex justify-between text-[var(--dash-text-secondary)]">
-                                            <span className="capitalize">{obj.replace(/_/g, ' ')}</span>
+                                    : Object.entries(intentionCounts).map(([intention, cnt]) => (
+                                        <div key={intention} className="flex justify-between text-[var(--dash-text-secondary)]">
+                                            <span>{INTENTION_LABELS[intention] || intention.replace(/_/g, ' ')}</span>
                                             <span className="font-medium">{cnt}</span>
                                         </div>
                                     ))}
@@ -368,7 +309,6 @@ export default function AdminSongAdoptions() {
                     </div>
                 </div>
 
-                {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
@@ -379,6 +319,7 @@ export default function AdminSongAdoptions() {
                         <option value="all">All Statuses</option>
                         <option value="draft">Draft</option>
                         <option value="pending_review">Pending Review</option>
+                        <option value="admin_review">Admin Review</option>
                         <option value="approved">Approved</option>
                         <option value="scheduled">Scheduled</option>
                         <option value="live">Live</option>
@@ -387,25 +328,24 @@ export default function AdminSongAdoptions() {
                     </select>
                     <select value={methodFilter} onChange={(e) => setMethodFilter(e.target.value)} className="dashboard-input max-w-56">
                         <option value="all">All Methods</option>
-                        <option value="managed_sufitube">Managed by SufiTube</option>
+                        <option value="managed_sufitube">Managed by SufiPulse</option>
                         <option value="use_my_google_ads">Use My Google Ads</option>
                     </select>
                 </div>
 
-                {/* Table */}
                 <div className="dashboard-table-container">
                     <div className="overflow-x-auto">
                         <table className="dashboard-table w-full">
                             <thead>
                                 <tr>
                                     <th>Sponsor</th>
+                                    <th>Song</th>
                                     <th>Method</th>
                                     <th>Amount</th>
                                     <th>Status</th>
                                     <th>Payment</th>
                                     <th>OAuth</th>
-                                    <th>Payment Route</th>
-                                    <th>Campaign ID</th>
+                                    <th>Campaign</th>
                                     <th>Date</th>
                                     <th>Actions</th>
                                 </tr>
@@ -419,50 +359,43 @@ export default function AdminSongAdoptions() {
                                                     <User className="w-4 h-4 text-neutral-400" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-[var(--dash-text-primary)]">{adoption.sponsor?.full_name || 'Unknown'}</div>
-                                                    <div className="text-xs text-[var(--dash-text-muted)]">{adoption.sponsor?.email}</div>
+                                                    <div className="text-sm font-medium text-[var(--dash-text-primary)]">{adoption.sponsorName || 'Unknown'}</div>
+                                                    <div className="text-xs text-[var(--dash-text-muted)]">{adoption.sponsorEmail || '—'}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <span className="text-sm text-[var(--dash-text-secondary)] capitalize">
-                                                {adoption.method_type === 'managed_sufitube' ? 'SufiTube' : 'My Google Ads'}
+                                            <span className="text-sm text-[var(--dash-text-secondary)] truncate max-w-[120px] block" title={adoption.releaseTitle}>
+                                                {adoption.releaseTitle || '—'}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className="text-sm text-[var(--dash-text-secondary)]">${adoption.amount_due}</span>
-                                        </td>
-                                        <td>{getStatusBadge(adoption.adoption_status)}</td>
-                                        <td>
-                                            <div className="flex items-center gap-1">
-                                                {getPaymentBadge(adoption)}
-                                                {hasPaymentMismatch(adoption) && (
-                                                    <span title="Payment status mismatch"><AlertCircle className="w-3.5 h-3.5 text-amber-400" /></span>
-                                                )}
-                                            </div>
+                                            <span className="text-sm text-[var(--dash-text-secondary)]">
+                                                {adoption.methodType === 'managed_sufitube' ? 'Managed' : 'My Google Ads'}
+                                            </span>
                                         </td>
                                         <td>
-                                            {adoption.method_type === 'use_my_google_ads' ? (
-                                                adoption.oauthConnected
+                                            <span className="text-sm text-[var(--dash-text-secondary)]">${adoption.amountDue || 0}</span>
+                                        </td>
+                                        <td>{getStatusBadge(adoption.adoptionStatus)}</td>
+                                        <td>{getPaymentBadge(adoption)}</td>
+                                        <td>
+                                            {adoption.methodType === 'use_my_google_ads' ? (
+                                                adoption.oauthStatus === 'connected'
                                                     ? <span className="text-xs text-green-400 flex items-center gap-1"><Check className="w-3 h-3" /> Yes</span>
                                                     : <span className="text-xs text-red-400 flex items-center gap-1"><X className="w-3 h-3" /> No</span>
                                             ) : <span className="text-xs text-neutral-600">—</span>}
                                         </td>
                                         <td>
-                                            {adoption.paymentRoute
-                                                ? <span className="text-xs text-neutral-400">{adoption.paymentRoute === 'google_direct' ? 'Google' : 'Stripe'}</span>
-                                                : <span className="text-xs text-neutral-600">—</span>}
-                                        </td>
-                                        <td>
-                                            {(adoption as any).google_ads_campaign_resource ? (
-                                                <span className="text-xs font-mono text-blue-400 truncate max-w-[120px] block" title={(adoption as any).google_ads_campaign_resource}>
-                                                    {(adoption as any).google_ads_campaign_resource?.split('/').pop()}
+                                            {adoption.campaignResourceName ? (
+                                                <span className="text-xs font-mono text-blue-400 truncate max-w-[120px] block" title={adoption.campaignResourceName}>
+                                                    {adoption.campaignResourceName.split('/').pop()}
                                                 </span>
                                             ) : <span className="text-xs text-neutral-600">—</span>}
                                         </td>
                                         <td>
                                             <span className="text-sm text-[var(--dash-text-secondary)]">
-                                                {new Date(adoption.created_at).toLocaleDateString()}
+                                                {new Date(adoption.createdAt).toLocaleDateString()}
                                             </span>
                                         </td>
                                         <td>
@@ -470,18 +403,18 @@ export default function AdminSongAdoptions() {
                                                 <button onClick={() => { setSelectedAdoption(adoption); setLaunchState(defaultLaunch()); }} className="p-1 text-neutral-400 hover:text-neutral-200" title="View Details">
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                {adoption.adoption_status === 'pending_review' && (
+                                                {(adoption.adoptionStatus === 'pending_review' || adoption.adoptionStatus === 'admin_review') && (
                                                     <>
                                                         <button onClick={() => updateAdoptionStatus(adoption.id, 'approved')} className="p-1 text-green-400 hover:text-green-300" title="Approve"><Check className="w-4 h-4" /></button>
                                                         <button onClick={() => updateAdoptionStatus(adoption.id, 'cancelled')} className="p-1 text-red-400 hover:text-red-300" title="Reject"><X className="w-4 h-4" /></button>
                                                     </>
                                                 )}
                                                 <button
-                                                    onClick={() => approvePublicListing(adoption.id, !adoption.public_listing_approved)}
-                                                    className={`p-1 ${adoption.public_listing_approved ? 'text-blue-400' : 'text-neutral-500'} hover:text-blue-300`}
-                                                    title={adoption.public_listing_approved ? 'Hide from public' : 'Show publicly'}
+                                                    onClick={() => approvePublicListing(adoption.id, !adoption.publicListingApproved)}
+                                                    className={`p-1 ${adoption.publicListingApproved ? 'text-blue-400' : 'text-neutral-500'} hover:text-blue-300`}
+                                                    title={adoption.publicListingApproved ? 'Hide from public' : 'Show publicly'}
                                                 >
-                                                    <Eye className="w-4 h-4" />
+                                                    <Globe className="w-4 h-4" />
                                                 </button>
                                                 {canLaunch(adoption) && (
                                                     <button onClick={() => openLaunchPanel(adoption)} className="p-1 text-amber-400 hover:text-amber-300" title="Launch Campaign">
@@ -504,7 +437,6 @@ export default function AdminSongAdoptions() {
                     </div>
                 )}
 
-                {/* Detail + Launch Modal */}
                 {selectedAdoption && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
                         onClick={() => { setSelectedAdoption(null); setLaunchState(defaultLaunch()); }}>
@@ -518,88 +450,99 @@ export default function AdminSongAdoptions() {
                             </div>
 
                             <div className="space-y-5">
-                                {/* Status row */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs text-neutral-500 mb-1.5">Status</label>
-                                        {getStatusBadge(selectedAdoption.adoption_status)}
+                                        {getStatusBadge(selectedAdoption.adoptionStatus)}
                                     </div>
                                     <div>
                                         <label className="block text-xs text-neutral-500 mb-1.5">Payment</label>
-                                        <div className="flex items-center gap-2">
-                                            {getPaymentBadge(selectedAdoption)}
-                                            {hasPaymentMismatch(selectedAdoption) && (
-                                                <span className="text-xs text-amber-400">Mismatch</span>
-                                            )}
-                                        </div>
+                                        {getPaymentBadge(selectedAdoption)}
                                     </div>
                                 </div>
 
-                                {hasPaymentMismatch(selectedAdoption) && (
-                                    <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
-                                        Local status: <strong>{selectedAdoption.payment_status}</strong> · Server: <strong>{serverPaymentRecords[selectedAdoption.id]?.paymentStatus}</strong>. Resolve before launching.
-                                    </div>
-                                )}
-
-                                {/* Sponsor */}
                                 <div>
                                     <h4 className="text-sm font-semibold text-neutral-300 mb-2 flex items-center gap-2"><User className="w-4 h-4" /> Sponsor</h4>
                                     <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-2 text-sm">
-                                        <div><span className="text-neutral-500">Name</span><div className="text-neutral-200">{selectedAdoption.sponsor?.full_name || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Email</span><div className="text-neutral-200">{selectedAdoption.sponsor?.email || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Type</span><div className="text-neutral-200 capitalize">{selectedAdoption.sponsor?.adopter_type || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Location</span><div className="text-neutral-200">{selectedAdoption.sponsor?.city ? `${selectedAdoption.sponsor.city}, ` : ''}{selectedAdoption.sponsor?.country || '—'}</div></div>
+                                        <div><span className="text-neutral-500">Name</span><div className="text-neutral-200">{selectedAdoption.sponsorName || '—'}</div></div>
+                                        <div><span className="text-neutral-500">Email</span><div className="text-neutral-200">{selectedAdoption.sponsorEmail || '—'}</div></div>
+                                        <div><span className="text-neutral-500">Type</span><div className="text-neutral-200 capitalize">{selectedAdoption.adopterType || '—'}</div></div>
+                                        <div><span className="text-neutral-500">Location</span><div className="text-neutral-200">{selectedAdoption.sponsorCity ? `${selectedAdoption.sponsorCity}, ` : ''}{selectedAdoption.sponsorCountry || '—'}</div></div>
                                     </div>
                                 </div>
 
-                                {/* Adoption details */}
                                 <div>
                                     <h4 className="text-sm font-semibold text-neutral-300 mb-2 flex items-center gap-2"><Music className="w-4 h-4" /> Campaign Details</h4>
                                     <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-2 text-sm">
-                                        <div><span className="text-neutral-500">Method</span><div className="text-neutral-200 capitalize">{selectedAdoption.method_type.replace(/_/g, ' ')}</div></div>
-                                        <div><span className="text-neutral-500">Amount</span><div className="text-neutral-200">${selectedAdoption.amount_due}</div></div>
-                                        <div><span className="text-neutral-500">Objective</span><div className="text-neutral-200 capitalize">{selectedAdoption.campaign_objective?.replace(/_/g, ' ') || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Regions</span><div className="text-neutral-200">{selectedAdoption.target_regions?.join(', ') || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Payment Route</span>
-                                            <div className="text-neutral-200">{selectedAdoption.paymentRoute === 'google_direct' ? 'Pay Google Directly' : selectedAdoption.paymentRoute === 'stripe_sufipulse' ? 'SufiPulse Stripe' : '—'}</div>
-                                        </div>
+                                        <div><span className="text-neutral-500">Song</span><div className="text-neutral-200">{selectedAdoption.releaseTitle || '—'}</div></div>
+                                        <div><span className="text-neutral-500">Method</span><div className="text-neutral-200">{selectedAdoption.methodType === 'managed_sufitube' ? 'Managed by SufiPulse' : 'My Google Ads'}</div></div>
+                                        <div><span className="text-neutral-500">Amount</span><div className="text-neutral-200">${selectedAdoption.amountDue || 0}</div></div>
+                                        <div><span className="text-neutral-500">Intention</span><div className="text-neutral-200">{INTENTION_LABELS[selectedAdoption.campaignIntention] || selectedAdoption.campaignIntention || '—'}</div></div>
+                                        <div><span className="text-neutral-500">Regions</span><div className="text-neutral-200">{selectedAdoption.targetRegions?.join(', ') || '—'}</div></div>
                                         <div><span className="text-neutral-500">Reference</span><div className="text-neutral-400 font-mono text-xs">{selectedAdoption.id}</div></div>
                                     </div>
                                 </div>
 
-                                {/* Google Ads block */}
-                                {selectedAdoption.method_type === 'use_my_google_ads' && (
+                                {selectedAdoption.methodType === 'use_my_google_ads' && (
                                     <div>
                                         <h4 className="text-sm font-semibold text-neutral-300 mb-2 flex items-center gap-2"><Globe className="w-4 h-4" /> Google Ads</h4>
                                         <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-2 text-sm">
                                             <div><span className="text-neutral-500">Customer ID</span><div className="text-neutral-200 font-mono">{selectedAdoption.googleAdsCustomerId || '—'}</div></div>
-                                            <div><span className="text-neutral-500">OAuth Connected</span>
-                                                <div className={selectedAdoption.oauthConnected ? 'text-green-400' : 'text-red-400'}>
-                                                    {selectedAdoption.oauthConnected ? 'Yes' : 'No'}
+                                            <div><span className="text-neutral-500">OAuth Status</span>
+                                                <div className={selectedAdoption.oauthStatus === 'connected' ? 'text-green-400' : 'text-red-400'}>
+                                                    {selectedAdoption.oauthStatus || 'not_connected'}
                                                 </div>
                                             </div>
-                                            <div><span className="text-neutral-500">Billing Enabled</span><div className="text-neutral-200">{selectedAdoption.billingEnabled ? 'Yes' : 'No'}</div></div>
                                             <div><span className="text-neutral-500">Campaign Resource</span>
-                                                <div className="text-neutral-400 font-mono text-xs truncate" title={(selectedAdoption as any).google_ads_campaign_resource || ''}>
-                                                    {(selectedAdoption as any).google_ads_campaign_resource || '—'}
+                                                <div className="text-neutral-400 font-mono text-xs truncate" title={selectedAdoption.campaignResourceName || ''}>
+                                                    {selectedAdoption.campaignResourceName || '—'}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
-                                {selectedAdoption.dedication_message && (
+                                {selectedAdoption.dedicationMessage && (
                                     <div className="bg-neutral-800 rounded-lg p-4">
                                         <p className="text-xs text-neutral-500 mb-1">Dedication</p>
-                                        <p className="text-neutral-300 italic text-sm">"{selectedAdoption.dedication_message}"</p>
+                                        <p className="text-neutral-300 italic text-sm">"{selectedAdoption.dedicationMessage}"</p>
                                     </div>
                                 )}
 
-                                {/* Status actions */}
-                                {selectedAdoption.adoption_status === 'pending_review' && launchState.step === 'idle' && (
+                                {/* Admin note field */}
+                                <div>
+                                    <label className="block text-xs text-neutral-500 mb-1.5">Admin Note</label>
+                                    <textarea
+                                        defaultValue={selectedAdoption.adminNote || ''}
+                                        onBlur={async (e) => {
+                                            await patchAdoption(selectedAdoption.id, { adminNote: e.target.value });
+                                        }}
+                                        placeholder="Add an internal note…"
+                                        rows={2}
+                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-500 resize-none"
+                                    />
+                                </div>
+
+                                {/* Report URL field */}
+                                <div>
+                                    <label className="block text-xs text-neutral-500 mb-1.5">Report URL</label>
+                                    <input
+                                        type="url"
+                                        defaultValue={selectedAdoption.reportUrl || ''}
+                                        onBlur={async (e) => {
+                                            if (e.target.value !== (selectedAdoption.reportUrl || '')) {
+                                                await patchAdoption(selectedAdoption.id, { reportUrl: e.target.value || null });
+                                            }
+                                        }}
+                                        placeholder="https://…"
+                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+
+                                {(selectedAdoption.adoptionStatus === 'pending_review' || selectedAdoption.adoptionStatus === 'admin_review') && launchState.step === 'idle' && (
                                     <div className="flex gap-3">
                                         <button
-                                            onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'approved'); setSelectedAdoption(prev => prev ? { ...prev, adoption_status: 'approved' } : prev); }}
+                                            onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'approved'); setSelectedAdoption((prev: any) => prev ? { ...prev, adoptionStatus: 'approved' } : prev); }}
                                             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
                                         >Approve</button>
                                         <button
@@ -609,7 +552,6 @@ export default function AdminSongAdoptions() {
                                     </div>
                                 )}
 
-                                {/* Launch Campaign Panel */}
                                 {canLaunch(selectedAdoption) && launchState.step !== 'done' && (
                                     <div className="border border-amber-600/30 bg-amber-900/10 rounded-xl p-5 space-y-4">
                                         <div className="flex items-center gap-2">
@@ -617,7 +559,7 @@ export default function AdminSongAdoptions() {
                                             <h4 className="text-sm font-semibold text-amber-300">Launch Google Ads Campaign</h4>
                                         </div>
                                         <p className="text-xs text-neutral-400 leading-relaxed">
-                                            Campaign will be created in <strong className="text-amber-300">PAUSED</strong> state in Google Ads. Activate it manually in Google Ads Manager after final review.
+                                            Campaign will be created in <strong className="text-amber-300">PAUSED</strong> state. Activate manually in Google Ads Manager after review.
                                         </p>
 
                                         <div>
@@ -655,7 +597,6 @@ export default function AdminSongAdoptions() {
                                     </div>
                                 )}
 
-                                {/* Launch success */}
                                 {launchState.step === 'done' && (
                                     <div className="border border-green-600/30 bg-green-900/10 rounded-xl p-5 space-y-3">
                                         <div className="flex items-center gap-2">
@@ -667,12 +608,8 @@ export default function AdminSongAdoptions() {
                                             <div><span className="text-neutral-500">Customer:</span> <span className="font-mono text-xs text-neutral-300">{launchState.customerId}</span></div>
                                         </div>
                                         <p className="text-xs text-neutral-400">Activate the campaign in Google Ads Manager when ready to go live.</p>
-                                        <a
-                                            href="https://ads.google.com"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300"
-                                        >
+                                        <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300">
                                             <ExternalLink className="w-3 h-3" /> Open Google Ads Manager
                                         </a>
                                     </div>

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { requireAuth } from '@/server/middleware/authenticate';
+import { getAdoptionRecord, updateAdoptionRecord } from '@/app/lib/server/adoption-store';
 import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
 
-// Module-scoped Stripe instance — created once, reused across requests
 let stripeClient: Stripe | null = null;
-
 const getStripeClient = () => {
   if (!stripeClient && process.env.STRIPE_SECRET_KEY) {
     stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -24,55 +23,54 @@ export async function POST(
 
   const { id } = await params;
 
-  // Enforce ownership: if a record already exists for this adoption, only its owner may checkout
+  const adoption = getAdoptionRecord(id);
+  if (!adoption) {
+    return NextResponse.json({ error: 'Adoption not found' }, { status: 404 });
+  }
+
+  // Only managed_sufitube uses SufiPulse Stripe checkout
+  if (adoption.methodType === 'use_my_google_ads') {
+    return NextResponse.json(
+      { error: 'use_my_google_ads does not collect payment through SufiPulse. User pays Google directly.' },
+      { status: 400 }
+    );
+  }
+
+  // Enforce ownership
   const existing = await getAdoptionPaymentRecord(id);
   if (existing?.userId && existing.userId !== authResult.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const stripe = getStripeClient();
-
   if (!stripe) {
-    return NextResponse.json(
-      { error: 'Stripe is not configured. Set STRIPE_SECRET_KEY.' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Stripe is not configured. Set STRIPE_SECRET_KEY.' }, { status: 503 });
   }
 
   try {
     const body = await request.json();
-    const {
-      amountUSD,
-      releaseTitle,
-      sponsorName,
-      sponsorEmail,
-      methodType,
-      packageName,
-    } = body;
+    const { amountUSD, releaseTitle, sponsorName, sponsorEmail, packageName } = body;
 
     if (!amountUSD || amountUSD <= 0) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      customer_email: sponsorEmail || undefined,
+      customer_email: sponsorEmail || adoption.sponsorEmail || undefined,
       line_items: [
         {
           price_data: {
             currency: 'usd',
-            unit_amount: Math.round(amountUSD * 100), // cents
+            unit_amount: Math.round(amountUSD * 100),
             product_data: {
-              name: packageName
-                ? `Song Adoption – ${packageName}`
-                : 'Song Adoption – Custom Budget',
+              name: packageName ? `Song Adoption – ${packageName}` : 'Song Adoption – Custom Budget',
               description: releaseTitle
-                ? `Sponsor the spread of "${releaseTitle}" via ${methodType === 'managed_sufitube' ? 'SufiTube Managed Promotion' : 'Your Google Ads Account'}`
-                : 'Sufi kalam sponsorship',
-              images: [],
+                ? `Sponsor the spread of "${releaseTitle}" — managed by SufiPulse`
+                : 'Sufi kalam sponsorship — managed by SufiPulse',
             },
           },
           quantity: 1,
@@ -80,22 +78,26 @@ export async function POST(
       ],
       metadata: {
         adoption_id: id,
-        sponsor_name: sponsorName || '',
-        method_type: methodType || '',
+        method_type: 'managed_sufitube',
+        sponsor_name: sponsorName || adoption.sponsorName || '',
       },
       success_url: `${appUrl}/adoption-success?adoption_id=${id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/adoption-cancel?adoption_id=${id}`,
     });
 
-    // Stamp ownership on first checkout so all subsequent requests can verify
+    // Update adoption record with pending payment
+    updateAdoptionRecord(id, {
+      paymentStatus: 'pending',
+      paymentProvider: 'stripe',
+      paymentRoute: 'stripe_sufipulse',
+      amountDue: amountUSD,
+      adoptionStatus: 'pending_review',
+    });
+
     await upsertAdoptionPaymentRecord(id, { userId: authResult.id, paymentStatus: 'pending' });
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
   } catch (error: any) {
-    console.error('Stripe checkout error:', error);
-    return NextResponse.json(
-      { error: error?.message || 'Failed to create checkout session' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error?.message || 'Failed to create checkout session' }, { status: 500 });
   }
 }
