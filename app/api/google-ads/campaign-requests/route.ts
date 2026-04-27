@@ -7,7 +7,7 @@ import {
   addCampaignRequestEvent,
   type CampaignRequestStatus,
 } from '@/app/lib/server/google-ads-campaign-request-store';
-import { requireAuth, requireAdmin } from '@/server/middleware/authenticate';
+import { getAuthUser, requireAuth, requireAdmin } from '@/server/middleware/authenticate';
 
 /**
  * GET /api/google-ads/campaign-requests
@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
  * Called by AdoptTab after the sponsor completes the Google Ads form.
  */
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
+  // Auth optional — unauthenticated sponsors (Google OAuth only) are allowed
+  const authResult = await getAuthUser(request);
 
   try {
     const body = await request.json();
@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
       releaseTitle,
       releaseSlug,
       youtubeVideoId,
-      userId: authResult.id,
-      sponsorEmail: sponsorEmail ?? authResult.email,
+      userId: authResult?.id ?? '',
+      sponsorEmail: sponsorEmail ?? authResult?.email ?? '',
       sponsorName,
       budgetAmount: Number(budgetAmount) || 0,
       currency,
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     await addCampaignRequestEvent(adoptionId, {
       eventType: 'submitted',
       actorType: 'user',
-      actorId: authResult.id,
+      actorId: authResult?.id,
       message: `Campaign request submitted. Budget: $${budgetAmount}. Method: ${methodType ?? 'use_my_google_ads'}.`,
     });
 

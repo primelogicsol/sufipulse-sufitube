@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MapPin, Building, User, Users, Eye, EyeOff } from 'lucide-react';
-import { storage } from '../../../lib/storage';
-import { SongAdoption, SongAdoptionSponsor } from '../../../types/adoption.types';
 
 interface RecentAdoptersProps {
   releaseId: string;
@@ -25,67 +23,40 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
   useEffect(() => {
     const loadAdopters = async () => {
       try {
-        // Get approved adoptions for this release
-        const adoptions = await storage.getSongAdoptions({
-          release_id: releaseId,
-          public_listing_approved: true,
-          adoption_status: 'approved'
+        const res = await fetch(`/api/adoptions?releaseId=${encodeURIComponent(releaseId)}`);
+        if (!res.ok) throw new Error('Failed to load adopters');
+        const adoptions: any[] = await res.json();
+
+        const adopterDisplays: AdopterDisplay[] = adoptions.map((a) => {
+          let displayName = '';
+          let location = '';
+
+          switch (a.publicDisplayMode) {
+            case 'full_name': displayName = a.sponsorName || 'Sponsor'; break;
+            case 'initials_only':
+              displayName = (a.sponsorName || '').split(' ').map((n: string) => n[0]).filter(Boolean).join('') + '.';
+              break;
+            case 'organization': displayName = a.sponsorName || 'Organization'; break;
+            case 'anonymous': displayName = 'Anonymous'; break;
+            default: displayName = a.sponsorName || 'Sponsor';
+          }
+
+          switch (a.publicLocationMode) {
+            case 'city_country': location = [a.sponsorCity, a.sponsorCountry].filter(Boolean).join(', '); break;
+            case 'country_only': location = a.sponsorCountry || ''; break;
+            case 'hide': location = ''; break;
+            default: location = a.sponsorCountry || '';
+          }
+
+          return {
+            id: a.id,
+            displayName,
+            location,
+            adopterType: a.adopterType || 'individual',
+            createdAt: a.createdAt,
+          };
         });
 
-        // Get sponsors for these adoptions
-        const adopterDisplays: AdopterDisplay[] = [];
-
-        for (const adoption of adoptions) {
-          const sponsors = await storage.getAll('song_adoption_sponsor', { adoption_id: adoption.id });
-          if (sponsors.length > 0) {
-            const sponsor = sponsors[0];
-            let displayName = '';
-            let location = '';
-
-            // Determine display name based on privacy settings
-            switch (adoption.public_display_mode) {
-              case 'full_name':
-                displayName = sponsor.full_name;
-                break;
-              case 'initials_only':
-                displayName = sponsor.initials_resolved + '.';
-                break;
-              case 'organization':
-                displayName = sponsor.organization_name || sponsor.full_name;
-                break;
-              case 'anonymous':
-                displayName = 'Anonymous';
-                break;
-              default:
-                displayName = sponsor.full_name;
-            }
-
-            // Determine location display
-            switch (adoption.public_location_mode) {
-              case 'city_country':
-                location = [sponsor.city, sponsor.country].filter(Boolean).join(', ');
-                break;
-              case 'country_only':
-                location = sponsor.country;
-                break;
-              case 'hide':
-                location = '';
-                break;
-              default:
-                location = sponsor.country;
-            }
-
-            adopterDisplays.push({
-              id: adoption.id,
-              displayName,
-              location,
-              adopterType: sponsor.adopter_type,
-              createdAt: adoption.created_at,
-            });
-          }
-        }
-
-        // Sort by creation date (newest first) and limit
         adopterDisplays.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setAdopters(adopterDisplays.slice(0, limit));
       } catch (error) {

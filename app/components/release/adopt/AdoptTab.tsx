@@ -548,23 +548,31 @@ export function AdoptTab({ release }: AdoptTabProps) {
         const ytId = release?.youtube_video_id || release?.youtubeId || '';
 
         // Finalise the adoption record
-        await fetch(`/api/adoptions/${adoption.id}`, {
+        const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            paymentStatus: 'not_required',
             paymentRoute: 'google_direct',
             googleAdsCustomerId: selectedGoogleCustomerId,
             oauthStatus: 'connected',
             adoptionStatus: 'pending_review',
             targetRegions: formData.target_regions?.length ? formData.target_regions : ['Global'],
             targetLanguages: formData.target_languages?.length ? formData.target_languages : ['All'],
+            sponsorName: formData.full_name,
+            sponsorEmail: formData.email,
+            sponsorCountry: formData.country,
+            sponsorCity: formData.city,
+            adopterType: formData.adopter_type,
           }),
         });
+        if (!patchRes.ok) {
+          const errData = await patchRes.json().catch(() => ({}));
+          throw new Error((errData as any).error || `Failed to save adoption (${patchRes.status})`);
+        }
 
         // Post the full campaign request for admin review
-        await fetch('/api/google-ads/campaign-requests', {
+        const crRes = await fetch('/api/google-ads/campaign-requests', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -591,7 +599,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
             accountVerifiedAt: verifiedAt,
             status: 'pending_review',
           }),
-        }).catch(() => {});
+        });
+        if (!crRes.ok) {
+          const errData = await crRes.json().catch(() => ({}));
+          throw new Error((errData as any).error || `Failed to submit campaign request (${crRes.status})`);
+        }
 
         setStep(6);
       } catch (err: any) {

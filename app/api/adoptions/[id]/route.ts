@@ -83,12 +83,15 @@ export async function PATCH(
 
   // ── Authenticated user or admin ────────────────────────────────────────────
   const user = await getAuthUser(request);
-  if (!user) {
+
+  // Unauthenticated drafts (userId=null): the adoption UUID is the access token
+  if (!user && adoption.userId != null) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const isAdmin = user.role === 'admin';
-  const isOwner = adoption.userId === user.id;
+  const isAdmin = user?.role === 'admin';
+  // userId=null means an anonymous draft — anyone with the UUID can update it
+  const isOwner = adoption.userId == null || (user != null && adoption.userId === user.id);
 
   if (!isAdmin && !isOwner) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -115,6 +118,16 @@ export async function PATCH(
   const patch: Record<string, any> = {};
   for (const key of allowed) {
     if (key in body) patch[String(key)] = body[key as string];
+  }
+
+  // Gate: cannot promote use_my_google_ads to pending_review without a customer ID
+  if (patch.adoptionStatus === 'pending_review' && (patch.methodType ?? adoption.methodType) === 'use_my_google_ads') {
+    if (!patch.googleAdsCustomerId && !adoption.googleAdsCustomerId) {
+      return NextResponse.json(
+        { error: 'A Google Ads customer ID is required to submit for review.' },
+        { status: 422 }
+      );
+    }
   }
 
   const updated = updateAdoptionRecord(id, patch);

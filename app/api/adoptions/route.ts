@@ -4,6 +4,7 @@ import {
   createAdoptionRecord,
   getAllAdoptionRecords,
   getAdoptionsByUser,
+  getAdoptionsByRelease,
   type MethodType,
 } from '@/app/lib/server/adoption-store';
 import { getAuthUser, requireAdmin } from '@/server/middleware/authenticate';
@@ -23,6 +24,11 @@ export async function POST(request: NextRequest) {
       releaseTitle,
       releaseSlug,
       methodType,
+      sponsorName,
+      sponsorEmail: bodyEmail,
+      sponsorCountry,
+      sponsorCity,
+      adopterType,
       campaignIntention = 'general_awareness',
       dedicationMessage,
       campaignObjective,
@@ -40,7 +46,13 @@ export async function POST(request: NextRequest) {
       releaseTitle?: string;
       releaseSlug?: string;
       methodType: MethodType;
+      sponsorName?: string;
+      sponsorEmail?: string;
+      sponsorCountry?: string;
+      sponsorCity?: string;
+      adopterType?: string;
       campaignIntention?: string;
+      dedicatedMessage?: string;
       dedicationMessage?: string;
       campaignObjective?: string;
       targetRegions?: string[];
@@ -66,7 +78,11 @@ export async function POST(request: NextRequest) {
       releaseTitle,
       releaseSlug,
       userId: user?.id,
-      sponsorEmail: user?.email,
+      sponsorName: sponsorName ?? undefined,
+      sponsorEmail: bodyEmail ?? user?.email ?? undefined,
+      sponsorCountry: sponsorCountry ?? undefined,
+      sponsorCity: sponsorCity ?? undefined,
+      adopterType: adopterType ?? undefined,
       methodType,
       campaignIntention,
       dedicationMessage,
@@ -107,6 +123,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const me = searchParams.get('me') === '1';
   const all = searchParams.get('all') === '1';
+  const releaseId = searchParams.get('releaseId');
 
   if (all) {
     const adminCheck = await requireAdmin(request);
@@ -122,5 +139,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(getAdoptionsByUser(user.id));
   }
 
-  return NextResponse.json({ error: 'Specify ?me=1 or ?all=1' }, { status: 400 });
+  // Public: approved adopters for a release (publicListingApproved=true)
+  if (releaseId) {
+    return NextResponse.json(getAdoptionsByRelease(releaseId));
+  }
+
+  return NextResponse.json({ error: 'Specify ?me=1, ?all=1, or ?releaseId=' }, { status: 400 });
 }
