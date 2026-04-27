@@ -1,6 +1,7 @@
 "use client"
 import { useParams } from 'next/navigation';
 import { useState, useEffect, useRef, useMemo, useCallback, useContext } from 'react';
+import { trackEvent } from '@/app/lib/analytics';
 import dynamic from 'next/dynamic';
 import { Layout } from '../../../components/layout/Layout';
 import { AuthContext } from '@/app/contexts/AuthContext';
@@ -469,6 +470,8 @@ function Release() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isVideoEnded, setIsVideoEnded] = useState(false);
     const [videoDuration, setVideoDuration] = useState(0);
+    const [hasReached70, setHasReached70] = useState(false);
+    const trackedMilestones = useRef<Set<number>>(new Set());
     const [officialSubscribeReady, setOfficialSubscribeReady] = useState(false);
     
     // Master Timing Generator State
@@ -682,6 +685,20 @@ function Release() {
         }, 100);
         return () => clearInterval(interval);
     }, [playerTarget]);
+
+    // Playback milestone tracking (analytics + 70% CTA trigger)
+    useEffect(() => {
+        if (!videoDuration || videoDuration <= 0) return;
+        const pct = (currentTime / videoDuration) * 100;
+        const milestones = [25, 50, 70];
+        for (const m of milestones) {
+            if (pct >= m && !trackedMilestones.current.has(m)) {
+                trackedMilestones.current.add(m);
+                trackEvent(`Video_${m}`, { videoId: resolvedVideoId || '', slug: String(slug) });
+                if (m === 70) setHasReached70(true);
+            }
+        }
+    }, [currentTime, videoDuration, resolvedVideoId, slug]);
 
     const handleSeekRequest = (time: number) => {
         if (playerTarget && playerTarget.seekTo) {
@@ -1391,23 +1408,25 @@ function Release() {
     const handleShare = (platform: string) => {
         // Social platforms: share YouTube URL so YouTube records external traffic
         const ytUrl = encodeURIComponent(getYouTubeShareUrl());
-        const siteUrl = encodeURIComponent(window.location.href);
         const title = release?.release_title || 'SufiPulse Release';
         const shareText = encodeURIComponent(
             `🎵 "${title}" — Sacred Sufi music with multilingual lyrics`
+        );
+        const whatsappText = encodeURIComponent(
+            `🎵 "${title}" — Sacred Sufi kalam on SufiPulse\n\nWatch on YouTube: ${getYouTubeShareUrl()}\n\nShare the light 🌙`
         );
         const hashTags = 'SufiMusic,Kalam,SufiPulse';
 
         const urls: Record<string, string> = {
             twitter:  `https://twitter.com/intent/tweet?url=${ytUrl}&text=${shareText}&hashtags=${hashTags}`,
-            whatsapp: `https://wa.me/?text=${shareText}%0A${ytUrl}`,
+            whatsapp: `https://wa.me/?text=${whatsappText}`,
             facebook: `https://www.facebook.com/sharer/sharer.php?u=${ytUrl}`,
             telegram: `https://t.me/share/url?url=${ytUrl}&text=${shareText}`,
-            // LinkedIn keeps website URL — professional context
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${siteUrl}`,
+            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${ytUrl}`,
         };
 
         if (urls[platform]) {
+            trackEvent('Share_Platform', { platform, videoId: resolvedVideoId || '' });
             window.open(urls[platform], '_blank', 'width=600,height=400');
         }
     };
@@ -1418,6 +1437,7 @@ function Release() {
         setToastMessage('Timestamped YouTube link copied!');
         setToastType('success');
         setTimeout(() => setToastMessage(null), 3000);
+        trackEvent('Share_Timestamp', { videoId: resolvedVideoId || '' });
     };
 
     const getAvailableLanguages = () => {
@@ -1731,6 +1751,10 @@ function Release() {
                                                         }
                                                         if (state === 0) {
                                                             setIsVideoEnded(true);
+                                                            if (!trackedMilestones.current.has(100)) {
+                                                                trackedMilestones.current.add(100);
+                                                                trackEvent('Video_Complete', { videoId: resolvedVideoId || '', slug: String(slug) });
+                                                            }
                                                         }
                                                     }}
                                                     className="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full"
@@ -1945,6 +1969,7 @@ function Release() {
                                             href="https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ?sub_confirmation=1"
                                             target="_blank"
                                             rel="noopener noreferrer"
+                                            onClick={() => trackEvent('CTA_Subscribe', { context: 'post-play', videoId: resolvedVideoId || '' })}
                                             className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                                         >
                                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -1962,6 +1987,9 @@ function Release() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Release Alert Subscribe */}
+                        <ReleaseAlertSubscribe releaseId={release?.id} />
 
                         {/* Tabs & Action Buttons */}
                         <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-4 mb-8 border-b border-neutral-800">
@@ -2082,7 +2110,8 @@ function Release() {
                                     href="https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ?sub_confirmation=1"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-red-900/30 whitespace-nowrap"
+                                    onClick={() => trackEvent('CTA_Subscribe', { context: 'player', videoId: resolvedVideoId || '' })}
+                                    className={`inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-red-900/30 whitespace-nowrap${hasReached70 ? ' ring-1 ring-amber-400/40' : ''}`}
                                     aria-label="Subscribe to SufiPulse on YouTube"
                                 >
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -2092,10 +2121,12 @@ function Release() {
                                 </a>
                                 {resolvedVideoId && (
                                     <a
-                                        href={`https://www.youtube.com/watch?v=${resolvedVideoId}`}
+                                        href={`https://www.youtube.com/watch?v=${resolvedVideoId}${release?.youtubePlaylistId ? `&list=${release.youtubePlaylistId}` : ''}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-red-900/30 whitespace-nowrap"
+                                        onClick={() => trackEvent('CTA_WatchOnYouTube', { context: 'player', videoId: resolvedVideoId || '' })}
+                                        title={captionsEnabled && hasReached70 ? 'Full-quality captions available on YouTube' : undefined}
+                                        className={`inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-red-900/30 whitespace-nowrap${hasReached70 ? ' ring-1 ring-amber-400/40' : ''}`}
                                     >
                                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
@@ -3962,6 +3993,71 @@ function Release() {
                 </div>
             )}
         </Layout>
+    );
+}
+
+function ReleaseAlertSubscribe({ releaseId }: { releaseId?: string }) {
+    const [email, setEmail] = useState('');
+    const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+    const [msg, setMsg] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email.trim()) return;
+        setStatus('loading');
+        try {
+            const res = await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.trim(), releaseId }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setStatus('done');
+                setMsg(data.alreadySubscribed ? "You're already on the list" : "You're on the list");
+                trackEvent('Email_Subscribed', { releaseId: releaseId || '' });
+            } else {
+                setStatus('error');
+                setMsg(data.error || 'Something went wrong');
+            }
+        } catch {
+            setStatus('error');
+            setMsg('Something went wrong');
+        }
+    };
+
+    return (
+        <div className="mb-6 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <span className="text-xs uppercase tracking-[0.2em] text-neutral-500 whitespace-nowrap">
+                    New release alerts
+                </span>
+                {status === 'done' ? (
+                    <span className="text-xs text-amber-300 tracking-wide">{msg}</span>
+                ) : (
+                    <>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="your@email.com"
+                            required
+                            className="flex-1 bg-neutral-950 border border-neutral-800 hover:border-amber-400/40 focus:border-amber-400/40 focus:outline-none focus:ring-1 focus:ring-amber-400/20 text-sm text-neutral-100 placeholder:text-neutral-600 rounded-lg px-3 py-2 transition-colors"
+                        />
+                        <button
+                            type="submit"
+                            disabled={status === 'loading'}
+                            className="inline-flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 transition-colors hover:bg-amber-500/20 whitespace-nowrap disabled:opacity-50"
+                        >
+                            {status === 'loading' ? 'Saving…' : 'Notify Me'}
+                        </button>
+                        {status === 'error' && (
+                            <span className="text-xs text-red-400 sm:ml-1">{msg}</span>
+                        )}
+                    </>
+                )}
+            </form>
+        </div>
     );
 }
 

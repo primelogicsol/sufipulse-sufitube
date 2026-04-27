@@ -62,15 +62,19 @@ const writeAuditLog = (entries: AuditEntry[]) => {
   fs.writeFileSync(AUDIT_FILE, JSON.stringify(trimmed, null, 2), 'utf8');
 };
 
-// Log an audit entry
+// Log an audit entry — never throws; audit failure must not break the caller
 export const auditLog = (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => {
-  const entries = readAuditLog();
-  entries.push({
-    ...entry,
-    id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-    timestamp: new Date().toISOString(),
-  });
-  writeAuditLog(entries);
+  try {
+    const entries = readAuditLog();
+    entries.push({
+      ...entry,
+      id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+      timestamp: new Date().toISOString(),
+    });
+    writeAuditLog(entries);
+  } catch (err) {
+    console.warn('[audit-log] Failed to write audit entry:', (err as Error).message);
+  }
 };
 
 // Get recent audit entries

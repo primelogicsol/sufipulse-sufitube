@@ -82,6 +82,22 @@ export const cmsServerStorage = {
     return cmsStorage.getPublishedReleases(limit);
   },
 
+  getRankedReleases(limit?: number) {
+    ensureHydrated();
+    const releases = cmsStorage.getPublishedReleases();
+    const now = Date.now();
+    const thirtyDaysMs = 30 * 24 * 3_600_000;
+    const scored = releases.map((r) => {
+      const ageMs = now - new Date(r.releaseDate || r.createdAt || now).getTime();
+      const recency = Math.max(0, 1 - ageMs / thirtyDaysMs);
+      const score = (r.viewCount || 0) * 0.5 + (r.likeCount || 0) * 0.3 + recency * 100 * 0.2;
+      return { release: r, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    const ranked = scored.map((s) => s.release);
+    return limit ? ranked.slice(0, limit) : ranked;
+  },
+
   saveRelease(release: CMSRelease) {
     ensureHydrated();
     const saved = cmsStorage.saveRelease(release);

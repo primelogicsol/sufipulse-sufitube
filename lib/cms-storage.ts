@@ -13,6 +13,7 @@ export interface CMSRelease {
   youtubeUrl?: string;
   youtubeChannelId?: string;
   youtubeChannelUrl?: string;
+  youtubePlaylistId?: string;
   thumbnailUrl?: string;
   posterUrl?: string;
   description: string;

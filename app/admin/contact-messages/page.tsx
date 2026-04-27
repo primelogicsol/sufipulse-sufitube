@@ -104,7 +104,9 @@ function DetailModal({ item, onClose, onStatusChange }: {
           {/* Reply shortcut */}
           {item.email && (
             <a
-              href={`mailto:${item.email}?subject=Re: ${encodeURIComponent(item.subject || '')}`}
+              href={`https://webmail.ionos.com/?_task=mail&_action=compose&to=${encodeURIComponent(item.email)}&subject=${encodeURIComponent(`Re: ${item.subject || ''}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 text-amber-300 hover:text-amber-200 px-4 py-2 text-sm rounded transition-all"
             >
               <Reply className="w-4 h-4" />

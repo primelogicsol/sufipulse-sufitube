@@ -50,7 +50,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Create data and Next.js cache directories with correct ownership
-RUN mkdir -p /app/.data /app/.next/cache
+RUN mkdir -p /app/.data/audit /app/.next/cache
 RUN chown -R nextjs:nodejs /app/.data /app/.next/cache
 
 # Copy necessary files
