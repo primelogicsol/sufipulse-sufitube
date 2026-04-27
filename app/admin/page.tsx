@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Users, FileText, Mic, Music, BookOpen, Handshake, Calendar, Activity, Globe, DollarSign, CircleAlert as AlertCircle, Mail } from 'lucide-react';
+import { Users, FileText, Mic, Music, BookOpen, Handshake, Calendar, Activity, Globe, DollarSign, CircleAlert as AlertCircle, Mail, RotateCcw, CheckCircle, XCircle, Clock } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
@@ -16,12 +16,21 @@ interface DashboardStats {
   pendingKalams: number;
   pendingSadas: number;
   pendingArticles: number;
+  revisionRequested: number;
   pendingPartnerships: number;
   pendingSessionRequests: number;
   pendingAdoptions: number;
   draftReleases: number;
   pendingAccessCodeRequests: number;
   pendingContactMessages: number;
+}
+
+interface RecentActivity {
+  id: string;
+  label: string;
+  type: string;
+  status: 'approved' | 'rejected' | 'revision_requested';
+  reviewedAt: string;
 }
 
 export default function AdminDashboard() {
@@ -36,6 +45,7 @@ export default function AdminDashboard() {
     pendingKalams: 0,
     pendingSadas: 0,
     pendingArticles: 0,
+    revisionRequested: 0,
     pendingPartnerships: 0,
     pendingSessionRequests: 0,
     pendingAdoptions: 0,
@@ -43,6 +53,7 @@ export default function AdminDashboard() {
     pendingAccessCodeRequests: 0,
     pendingContactMessages: 0,
   });
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const router = useRouter()
   const { user } = useAuth()
   const [loading, setLoading] = useState(true);
@@ -67,7 +78,7 @@ export default function AdminDashboard() {
       const [
         writers, vocalists, producers, literary, studio,
         kalams, sadas, articles, partnerships,
-        sessionRequests, adoptions, accessCodes, contacts, releases,
+        sessionRequests, adoptions, accessCodes, contacts, releases, users,
       ] = await Promise.all([
         safeGet('/api/writers'),
         safeGet('/api/vocalists'),
@@ -83,6 +94,7 @@ export default function AdminDashboard() {
         safeGet('/api/studio-access-codes'),
         safeGet('/api/contacts'),
         safeGet('/api/releases?status=all'),
+        safeGet('/api/admin/users'),
       ]);
 
       const pendingAdoptions = adoptions.filter(a => {
@@ -93,16 +105,30 @@ export default function AdminDashboard() {
       const draftReleases = releases.filter(r => String(r?.status || '').toLowerCase() === 'draft').length;
       const pendingContacts = contacts.filter(m => String(m?.status || 'unread').toLowerCase() === 'unread').length;
 
+      const revisionKalams = kalams.filter(k => String(k?.status || '').toLowerCase() === 'revision_requested').length;
+      const revisionSadas = sadas.filter(k => String(k?.status || '').toLowerCase() === 'revision_requested').length;
+      const revisionArticles = articles.filter(k => String(k?.status || '').toLowerCase() === 'revision_requested').length;
+
       setStats({
-        totalUsers: 0,
+        totalUsers: users.length,
         writerApplications: pendingCount(writers, 'profile_status'),
         vocalistApplications: pendingCount(vocalists, 'profile_status'),
         producerApplications: pendingCount(producers, 'profile_status'),
         literaryApplications: pendingCount(literary, 'profile_status'),
         studioApplications: pendingCount(studio, 'profile_status'),
-        pendingKalams: pendingCount(kalams, 'status'),
-        pendingSadas: pendingCount(sadas, 'status'),
-        pendingArticles: pendingCount(articles, 'status'),
+        pendingKalams: kalams.filter(k => {
+          const s = String(k?.status || '').toLowerCase();
+          return s === 'pending' || s === 'submitted' || s === 'under_review';
+        }).length,
+        pendingSadas: sadas.filter(k => {
+          const s = String(k?.status || '').toLowerCase();
+          return s === 'pending' || s === 'submitted' || s === 'under_review';
+        }).length,
+        pendingArticles: articles.filter(k => {
+          const s = String(k?.status || '').toLowerCase();
+          return s === 'pending' || s === 'submitted' || s === 'under_review';
+        }).length,
+        revisionRequested: revisionKalams + revisionSadas + revisionArticles,
         pendingPartnerships: pendingCount(partnerships, 'status'),
         pendingSessionRequests: pendingCount(sessionRequests, 'status'),
         pendingAdoptions,
@@ -110,6 +136,35 @@ export default function AdminDashboard() {
         pendingAccessCodeRequests: accessCodes.filter(r => String(r?.status || '').toLowerCase() === 'pending').length,
         pendingContactMessages: pendingContacts,
       });
+
+      // Build recent activity feed — last 12 acted items across all content types
+      const acted: RecentActivity[] = [];
+      const addActed = (items: any[], type: string, labelFn: (i: any) => string) => {
+        items.forEach(i => {
+          const s = String(i?.status || i?.profile_status || '').toLowerCase();
+          if (s === 'approved' || s === 'rejected' || s === 'revision_requested') {
+            acted.push({
+              id: i.id,
+              label: labelFn(i),
+              type,
+              status: s as RecentActivity['status'],
+              reviewedAt: i.reviewed_at || i.updated_at || i.created_at || '',
+            });
+          }
+        });
+      };
+      addActed(kalams,    'Kalam',    i => i.title || 'Untitled');
+      addActed(sadas,     'Sada',     i => i.title || 'Untitled');
+      addActed(articles,  'Article',  i => i.title || 'Untitled');
+      addActed(writers,   'Writer',   i => i.pen_name || i.full_name || i.email || 'Unknown');
+      addActed(vocalists, 'Vocalist', i => i.performance_name || i.full_name || i.email || 'Unknown');
+      addActed(producers, 'Producer', i => i.professional_name || i.full_name || i.email || 'Unknown');
+      addActed(literary,  'Literary', i => i.professional_name || i.full_name || i.email || 'Unknown');
+      addActed(studio,    'Studio',   i => i.studio_name || i.primary_contact_name || i.email || 'Unknown');
+
+      acted.sort((a, b) => new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime());
+      setRecentActivity(acted.slice(0, 12));
+
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     } finally {
@@ -235,6 +290,14 @@ export default function AdminDashboard() {
       alert: stats.pendingAdoptions > 0,
     },
     {
+      label: 'Revision Requested',
+      value: stats.revisionRequested,
+      meta: 'Awaiting contributor',
+      icon: RotateCcw,
+      link: '/admin/kalams',
+      alert: stats.revisionRequested > 0,
+    },
+    {
       label: 'Draft Releases',
       value: stats.draftReleases,
       meta: 'CMS pipeline',
@@ -271,6 +334,7 @@ export default function AdminDashboard() {
     stats.pendingKalams +
     stats.pendingSadas +
     stats.pendingArticles +
+    stats.revisionRequested +
     stats.pendingPartnerships +
     stats.pendingSessionRequests +
     stats.pendingAdoptions +
@@ -303,7 +367,7 @@ export default function AdminDashboard() {
       stage: 'Stage 2',
       title: 'Content & Assignment',
       description: 'Review kalams, articles, and allocate contributors to active works.',
-      pending: stats.pendingKalams + stats.pendingSadas + stats.pendingArticles,
+      pending: stats.pendingKalams + stats.pendingSadas + stats.pendingArticles + stats.revisionRequested,
       icon: Activity,
       links: [
         { label: 'Kalams', href: '/admin/kalams' },
@@ -498,6 +562,36 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── Recently Processed ───────────────────────────────────────────── */}
+      {recentActivity.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-lg font-bold text-[var(--dash-text-primary)] mb-6">Recently Processed</h2>
+          <div className="dashboard-card">
+            <div className="divide-y divide-[var(--dash-border)]">
+              {recentActivity.map((item) => {
+                const icon = item.status === 'approved'
+                  ? <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
+                  : item.status === 'revision_requested'
+                  ? <RotateCcw className="w-4 h-4 text-amber-400 shrink-0" />
+                  : <XCircle className="w-4 h-4 text-red-400 shrink-0" />;
+                const statusLabel = item.status === 'revision_requested' ? 'revision sent' : item.status;
+                return (
+                  <div key={`${item.type}-${item.id}`} className="flex items-center gap-3 py-2.5 px-1">
+                    {icon}
+                    <span className="text-xs text-[var(--dash-text-muted)] shrink-0 w-16">{item.type}</span>
+                    <span className="text-sm text-[var(--dash-text-primary)] flex-1 truncate">{item.label}</span>
+                    <span className={`text-xs capitalize shrink-0 ${item.status === 'approved' ? 'text-green-400' : item.status === 'revision_requested' ? 'text-amber-400' : 'text-red-400'}`}>{statusLabel}</span>
+                    <span className="text-xs text-[var(--dash-text-muted)] shrink-0 hidden sm:block">
+                      {item.reviewedAt ? new Date(item.reviewedAt).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Stakeholder Dashboard Access ─────────────────────────────────── */}
       <div className="mt-12">
