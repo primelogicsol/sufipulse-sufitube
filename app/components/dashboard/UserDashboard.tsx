@@ -21,6 +21,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
 
     const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'my-content' | 'published' | 'royalties' | 'settings' | 'work-queue' | 'sessions'>('overview');
     const [loading, setLoading] = useState(true);
+    const [submitSuccess, setSubmitSuccess] = useState<{ type: 'new' | 'revision'; term: string } | null>(null);
 
     // Data states
     const [items, setItems] = useState<any[]>([]);
@@ -353,7 +354,8 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             if (editingItem) {
                 // On resubmit clear revision_notes and reset to under review
                 await storage.update(config.typeKey, editingItem.id, { ...draftForm, status: 'under review', revision_notes: null });
-                alert(`${config.term} revised and resubmitted for review!`);
+                setSubmitSuccess({ type: 'revision', term: config.term });
+                setTimeout(() => setSubmitSuccess(null), 6000);
                 setEditingItem(null);
             } else {
                 const authorMeta = role === 'literary' ? {
@@ -387,7 +389,8 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                         action_url: adminRoutes[role] || `/admin/kalams`,
                     }).catch(console.error);
                 }
-                alert(`${config.term} submitted for review!`);
+                setSubmitSuccess({ type: 'new', term: config.term });
+                setTimeout(() => setSubmitSuccess(null), 6000);
             }
             setActiveTab("my-content");
             loadData();  // reloads and re-prefills form
@@ -620,6 +623,25 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                         </header>
 
                         <main className="flex-1 p-8 overflow-y-auto bg-[var(--dash-bg-primary)]">
+
+                            {submitSuccess && (
+                                <div className="mb-6 p-4 bg-green-500/10 border border-green-500/25 rounded-lg flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-semibold text-green-400">
+                                                {submitSuccess.type === 'revision' ? `${submitSuccess.term} revision received` : `${submitSuccess.term} submitted`}
+                                            </p>
+                                            <p className="text-xs text-green-400/70">
+                                                {submitSuccess.type === 'revision'
+                                                    ? 'Your revision has been received and is under review. You will be notified when a decision is made.'
+                                                    : 'Your submission is under review. You will be notified by email when a decision is made.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setSubmitSuccess(null)} className="text-green-400/50 hover:text-green-400 transition shrink-0 text-lg leading-none">×</button>
+                                </div>
+                            )}
 
                             {/* Overview Tab (Admin Grid Design) */}
                             {activeTab === 'overview' && (

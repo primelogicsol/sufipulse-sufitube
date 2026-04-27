@@ -292,18 +292,21 @@ export default function AdminKalams() {
                     </div>
                   )} */}
 
-                  {/* {selectedKalam.revision_notes && (
+                  {(selectedKalam as any).revision_log?.length > 0 && (
                     <div>
-                      <label className="dashboard-label">
-                        Revision Notes
-                      </label>
-                      <div className="bg-[var(--dash-bg-primary)] rounded p-4 border border-[var(--dash-border)]">
-                        <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap">
-                          {selectedKalam.revision_notes}
-                        </p>
+                      <label className="dashboard-label">Previous Revision Requests</label>
+                      <div className="space-y-2">
+                        {((selectedKalam as any).revision_log as Array<{note: string; requestedAt: string; requestedBy: string}>).map((entry, i) => (
+                          <div key={i} className="bg-[var(--dash-bg-primary)] rounded p-3 border border-[var(--dash-border)]">
+                            <p className="text-[10px] text-[var(--dash-text-muted)] mb-1">
+                              Revision {i + 1} — {new Date(entry.requestedAt).toLocaleDateString()} by {entry.requestedBy}
+                            </p>
+                            <p className="text-sm text-[var(--dash-text-secondary)] whitespace-pre-wrap">{entry.note}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )} */}
+                  )}
 
                   <div>
                     <label className="dashboard-label">

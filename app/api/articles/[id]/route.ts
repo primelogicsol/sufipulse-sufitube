@@ -20,7 +20,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const { id } = await params;
     const body = await request.json();
-    const updated = entityUpdate('articles', id, { ...body, reviewed_at: new Date().toISOString() });
+    const existing = entityGetById('articles', id) as any;
+    if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    const note = body.admin_note;
+    const revisionLog = body.status === 'revision_requested' && note
+      ? [...(existing.revision_log || []), { note, requestedAt: new Date().toISOString(), requestedBy: authResult.email }]
+      : (existing.revision_log || []);
+
+    const updated = entityUpdate('articles', id, { ...body, reviewed_at: new Date().toISOString(), revision_log: revisionLog });
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const status = body.status;
     if (status === 'approved' || status === 'published' || status === 'rejected' || status === 'revision_requested') {
@@ -31,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           name: item.author_name || item.email,
           type: 'article submission',
           status,
-          adminNote: body.admin_note,
+          adminNote: note,
         }).catch(() => {});
       }
     }
