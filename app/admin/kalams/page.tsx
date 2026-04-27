@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
@@ -40,7 +40,7 @@ import { Kalam } from '@/app/user/writer/dashboard/page';
 //   content: string;
 // }
 
-export default function AdminKalams() {
+function AdminKalamsInner() {
   const searchParams = useSearchParams();
   const [kalams, setKalams] = useState<Kalam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -380,5 +380,13 @@ export default function AdminKalams() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function AdminKalams() {
+  return (
+    <Suspense fallback={null}>
+      <AdminKalamsInner />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
 import { BookOpen, RefreshCw, Search } from 'lucide-react';
@@ -19,7 +19,7 @@ type ArticleItem = {
 
 const STATUSES = ['pending', 'under_review', 'revision_requested', 'approved', 'published', 'rejected'] as const;
 
-export default function ArticlesPage() {
+function ArticlesPageInner() {
   const searchParams = useSearchParams();
   const [items, setItems] = useState<ArticleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -179,5 +179,13 @@ export default function ArticlesPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function ArticlesPage() {
+  return (
+    <Suspense fallback={null}>
+      <ArticlesPageInner />
+    </Suspense>
   );
 }

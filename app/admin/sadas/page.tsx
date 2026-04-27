@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
 import { Mic, RefreshCw, Search } from 'lucide-react';
@@ -22,7 +22,7 @@ type SadaItem = {
 
 const STATUSES = ['pending', 'under_review', 'revision_requested', 'approved', 'published', 'rejected'] as const;
 
-export default function SadasPage() {
+function SadasPageInner() {
   const searchParams = useSearchParams();
   const [items, setItems] = useState<SadaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -209,5 +209,13 @@ export default function SadasPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function SadasPage() {
+  return (
+    <Suspense fallback={null}>
+      <SadasPageInner />
+    </Suspense>
   );
 }
