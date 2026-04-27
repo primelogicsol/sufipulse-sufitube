@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       targetLanguages = ['All'],
       googleAdsCustomerId,
       oauthConnected = false,
+      methodType,
       sponsorName,
       sponsorEmail,
     } = body;
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
       targetLanguages,
       googleAdsCustomerId,
       oauthConnected,
+      methodType: methodType ?? 'use_my_google_ads',
       status: 'pending_review',
     });
 
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
       eventType: 'submitted',
       actorType: 'user',
       actorId: authResult.id,
-      message: `Campaign request submitted. Budget: $${budgetAmount}. Method: Google Ads.`,
+      message: `Campaign request submitted. Budget: $${budgetAmount}. Method: ${methodType ?? 'use_my_google_ads'}.`,
     });
 
     return NextResponse.json(record, { status: 201 });

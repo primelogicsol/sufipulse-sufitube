@@ -14,7 +14,6 @@ interface AdoptTabProps {
 
 export function AdoptTab({ release }: AdoptTabProps) {
   const { user } = useAuth();
-  const studioGoogleAdsCustomerId = process.env.NEXT_PUBLIC_STUDIO_GOOGLE_ADS_CUSTOMER_ID;
 
   // ── Steps ────────────────────────────────────────────────────────────────
   // managed_sufitube:   0=intro  1=budget  2=form  3=review  4=success
@@ -397,29 +396,30 @@ export function AdoptTab({ release }: AdoptTabProps) {
         initials_resolved: cleanData.full_name!.split(' ').map((n: string) => n[0]).join(''),
       });
 
-      if (selectedMethod === 'use_my_google_ads') {
-        // Register in the Google Ads campaign request tracker
-        await fetch('/api/google-ads/campaign-requests', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            adoptionId: currentAdoption.id,
-            releaseId: release.id,
-            releaseTitle: release.title || release.release_title,
-            releaseSlug: release.slug,
-            youtubeVideoId: release.youtubeId || release.youtube_video_id,
-            budgetAmount: formData.custom_budget,
-            campaignObjective: formData.campaign_objective || 'awareness',
-            targetRegions: formData.target_regions || ['Global'],
-            targetLanguages: formData.target_languages || ['All'],
-            googleAdsCustomerId: selectedGoogleCustomerId || cleanData.google_ads_customer_id,
-            oauthConnected,
-            sponsorName: cleanData.full_name,
-            sponsorEmail: cleanData.email,
-          }),
-        }).catch(() => {}); // fire-and-forget — don't block the adoption flow
-      }
+      // Register in the Google Ads campaign request tracker for both methods
+      await fetch('/api/google-ads/campaign-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          adoptionId: currentAdoption.id,
+          releaseId: release.id,
+          releaseTitle: release.title || release.release_title,
+          releaseSlug: release.slug,
+          youtubeVideoId: release.youtubeId || release.youtube_video_id,
+          budgetAmount: formData.custom_budget,
+          campaignObjective: formData.campaign_objective || 'awareness',
+          targetRegions: formData.target_regions || ['Global'],
+          targetLanguages: formData.target_languages || ['All'],
+          googleAdsCustomerId: selectedMethod === 'use_my_google_ads'
+            ? (selectedGoogleCustomerId || cleanData.google_ads_customer_id)
+            : undefined,
+          oauthConnected: selectedMethod === 'use_my_google_ads' ? oauthConnected : false,
+          methodType: selectedMethod,
+          sponsorName: cleanData.full_name,
+          sponsorEmail: cleanData.email,
+        }),
+      }).catch(() => {}); // fire-and-forget — don't block the adoption flow
 
       await storage.createSongAdoptionEvent({
         adoption_id: currentAdoption.id,
@@ -610,9 +610,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
       <div className="grid gap-6 md:grid-cols-2">
 
-        {/* ── LEFT CARD: Managed by SufiTube ── disabled until managed mode is ready */}
+        {/* ── LEFT CARD: Managed by SufiTube ── */}
         <div
-          className="flex flex-col bg-neutral-900 border border-neutral-800 rounded-2xl transition-all duration-200 select-none opacity-60 cursor-not-allowed"
+          onClick={() => handleMethodSelect('managed_sufitube')}
+          className="flex flex-col bg-neutral-900 border border-neutral-800 hover:border-amber-500/40 rounded-2xl transition-all duration-200 cursor-pointer group select-none"
         >
           {/* Logo */}
           <div className="flex flex-col items-center pt-9 pb-5 px-8">
@@ -648,13 +649,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </div>
 
             <button
-              disabled
-              className="w-full py-3.5 bg-amber-500/30 text-neutral-600 text-sm font-bold rounded-xl cursor-not-allowed"
+              onClick={(e) => { e.stopPropagation(); handleMethodSelect('managed_sufitube'); }}
+              className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-[#0F172A] text-sm font-bold rounded-xl transition-colors"
             >
-              Coming Soon
+              Choose SufiTube
             </button>
 
-            <p className="text-xs text-center text-neutral-600">Currently unavailable</p>
+            <p className="text-xs text-center text-neutral-600">Recommended for most users</p>
           </div>
         </div>
 
@@ -750,9 +751,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
       </div>
 
-      {studioGoogleAdsCustomerId && (
-        <p className="text-center text-xs text-neutral-700">Studio Ads ID: {studioGoogleAdsCustomerId}</p>
-      )}
     </div>
   );
 

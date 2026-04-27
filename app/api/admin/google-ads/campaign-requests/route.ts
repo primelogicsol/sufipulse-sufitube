@@ -74,6 +74,7 @@ export async function PATCH(request: NextRequest) {
         youtubeVideoId: youtubeVideoId || existing.youtubeVideoId || '',
         releaseTitle: existing.releaseTitle || '',
         budgetAmount: budgetAmount || existing.budgetAmount,
+        methodType: existing.methodType ?? 'use_my_google_ads',
         selectedCustomerId: selectedCustomerId || existing.googleAdsCustomerId || '',
         targetRegions: existing.targetRegions,
         targetLanguages: existing.targetLanguages,

@@ -4,11 +4,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Badge } from '../../components/primitives/Badge';
 import {
-  Search, Check, X, Eye, RefreshCw, Loader2, AlertCircle,
-  Globe, DollarSign, Target, ExternalLink, Clock, CheckCircle2,
-  XCircle, MessageSquare, Rocket, ChevronDown, ChevronUp, User,
+  Search, Check, X, RefreshCw, Loader2, AlertCircle,
+  DollarSign, Target, ExternalLink, Clock, CheckCircle2,
+  MessageSquare, Rocket, ChevronDown, ChevronUp, User, Link2, Unlink,
 } from 'lucide-react';
 import type { GoogleAdsCampaignRequest, CampaignRequestStatus } from '../../lib/server/google-ads-campaign-request-store';
+
+type StudioStatus = {
+  connected: boolean;
+  customerId: string | null;
+  expiresAt: string | null;
+  updatedAt: string | null;
+};
 
 type ActionLoading = { adoptionId: string; action: string } | null;
 
@@ -40,6 +47,8 @@ export default function AdminGoogleAdsPage() {
   const [adminNote, setAdminNote] = useState<Record<string, string>>({});
   const [createForm, setCreateForm] = useState<Record<string, { youtubeId: string; customerId: string; budget: string }>>({});
   const [actionResult, setActionResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
+  const [studioStatus, setStudioStatus] = useState<StudioStatus | null>(null);
+  const [connectingStudio, setConnectingStudio] = useState(false);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -55,7 +64,33 @@ export default function AdminGoogleAdsPage() {
     }
   }, []);
 
-  useEffect(() => { loadRequests(); }, [loadRequests]);
+  const loadStudioStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/google-ads/studio-status', { credentials: 'include' });
+      if (!res.ok) return;
+      setStudioStatus(await res.json());
+    } catch {
+      // non-fatal
+    }
+  }, []);
+
+  useEffect(() => { loadRequests(); loadStudioStatus(); }, [loadRequests, loadStudioStatus]);
+
+  const handleConnectStudio = async () => {
+    setConnectingStudio(true);
+    try {
+      const res = await fetch('/api/admin/google-ads/studio-oauth/start', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to start OAuth');
+      window.location.href = data.authUrl;
+    } catch (err: any) {
+      alert(`Could not start OAuth: ${err.message}`);
+      setConnectingStudio(false);
+    }
+  };
 
   const doAction = async (
     adoptionId: string,
@@ -121,6 +156,46 @@ export default function AdminGoogleAdsPage() {
             className="flex items-center gap-2 px-4 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors"
           >
             <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+        </div>
+
+        {/* Studio Account Status */}
+        <div className={`flex items-center justify-between px-5 py-4 rounded-xl border ${
+          studioStatus?.connected
+            ? 'bg-green-500/5 border-green-500/20'
+            : 'bg-amber-500/5 border-amber-500/20'
+        }`}>
+          <div className="flex items-center gap-3">
+            {studioStatus?.connected
+              ? <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+              : <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+            }
+            <div>
+              <p className="text-sm font-medium text-neutral-200">
+                SufiTube Managed Account
+                {studioStatus?.customerId && (
+                  <span className="ml-2 text-xs text-neutral-500 font-normal">ID: {studioStatus.customerId}</span>
+                )}
+              </p>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                {studioStatus?.connected
+                  ? `Connected · token expires ${studioStatus.expiresAt ? new Date(studioStatus.expiresAt).toLocaleString() : 'unknown'}`
+                  : 'Not connected — managed_sufitube campaigns cannot be created until this account is linked'
+                }
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleConnectStudio}
+            disabled={connectingStudio}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-amber-500 hover:bg-amber-400 text-neutral-900 font-semibold rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+          >
+            {connectingStudio
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting…</>
+              : studioStatus?.connected
+                ? <><Link2 className="w-4 h-4" /> Reconnect</>
+                : <><Link2 className="w-4 h-4" /> Connect Account</>
+            }
           </button>
         </div>
 
@@ -261,9 +336,17 @@ export default function AdminGoogleAdsPage() {
                           <code className="text-neutral-300 text-xs break-all">{req.adoptionId}</code>
                         </div>
                         <div>
-                          <p className="text-neutral-500 mb-0.5">Google Ads Customer ID</p>
-                          <span className="text-neutral-300">{req.googleAdsCustomerId || '—'}</span>
+                          <p className="text-neutral-500 mb-0.5">Method</p>
+                          <span className={`text-sm font-medium ${req.methodType === 'managed_sufitube' ? 'text-amber-400' : 'text-blue-400'}`}>
+                            {req.methodType === 'managed_sufitube' ? 'Managed by SufiTube' : 'Use My Google Ads'}
+                          </span>
                         </div>
+                        {req.methodType !== 'managed_sufitube' && (
+                          <div>
+                            <p className="text-neutral-500 mb-0.5">Google Ads Customer ID</p>
+                            <span className="text-neutral-300">{req.googleAdsCustomerId || '—'}</span>
+                          </div>
+                        )}
                         <div>
                           <p className="text-neutral-500 mb-0.5">Target Regions</p>
                           <span className="text-neutral-300">{req.targetRegions.join(', ')}</span>
@@ -386,15 +469,17 @@ export default function AdminGoogleAdsPage() {
                                 className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none"
                               />
                             </div>
-                            <div>
-                              <label className="block text-xs text-neutral-500 mb-1">Google Ads Customer ID</label>
-                              <input
-                                value={form.customerId}
-                                onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, customerId: e.target.value } }))}
-                                placeholder="e.g. 123-456-7890"
-                                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none"
-                              />
-                            </div>
+                            {req.methodType !== 'managed_sufitube' && (
+                              <div>
+                                <label className="block text-xs text-neutral-500 mb-1">Google Ads Customer ID</label>
+                                <input
+                                  value={form.customerId}
+                                  onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, customerId: e.target.value } }))}
+                                  placeholder="e.g. 123-456-7890"
+                                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none"
+                                />
+                              </div>
+                            )}
                             <div>
                               <label className="block text-xs text-neutral-500 mb-1">Budget (USD)</label>
                               <input
@@ -408,11 +493,11 @@ export default function AdminGoogleAdsPage() {
                           </div>
 
                           <button
-                            disabled={isActing || !form.youtubeId || !form.customerId}
+                            disabled={isActing || !form.youtubeId || (req.methodType !== 'managed_sufitube' && !form.customerId)}
                             onClick={() =>
                               doAction(req.adoptionId, 'create_campaign', {
                                 youtubeVideoId: form.youtubeId,
-                                selectedCustomerId: form.customerId,
+                                selectedCustomerId: req.methodType === 'managed_sufitube' ? undefined : form.customerId,
                                 budgetAmount: Number(form.budget),
                                 releaseId: req.releaseId,
                               })
@@ -427,7 +512,10 @@ export default function AdminGoogleAdsPage() {
                           </button>
 
                           <p className="text-xs text-neutral-600">
-                            Campaign will be created in PAUSED state. Activate it in Google Ads Manager after review.
+                            {req.methodType === 'managed_sufitube'
+                              ? 'Campaign will be created using the SufiTube managed account in PAUSED state.'
+                              : 'Campaign will be created in PAUSED state. Activate it in Google Ads Manager after review.'
+                            }
                           </p>
                         </div>
                       )}

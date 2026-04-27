@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdoptionGoogleOAuthRecord, upsertAdoptionGoogleOAuthRecord, AdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
+import { getValidStudioAccessToken } from '@/app/lib/server/google-ads-studio-oauth-store';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
 /**
@@ -147,13 +148,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'adoption_id and youtube_video_id are required' }, { status: 400 });
   }
 
-  if (method_type === 'managed_sufitube') {
-    return NextResponse.json(
-      { error: 'managed_sufitube mode is currently disabled. Use use_my_google_ads instead.' },
-      { status: 503 }
-    );
-  }
-
   // Draft mode: record intent without calling Google Ads API
   if (CREATE_MODE === 'draft') {
     return NextResponse.json({
@@ -172,21 +166,27 @@ export async function POST(request: NextRequest) {
   let customerId: string;
 
   const studioDevToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
-  const studioAccessToken = process.env.GOOGLE_ADS_ACCESS_TOKEN;
   const studioLoginCid = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
-  const studioCustomerId = process.env.NEXT_PUBLIC_STUDIO_GOOGLE_ADS_CUSTOMER_ID;
+  const studioCustomerId = process.env.STUDIO_GOOGLE_ADS_CUSTOMER_ID;
 
   if ((method_type as string) === 'managed_sufitube') {
-    if (!studioDevToken || !studioAccessToken || !studioCustomerId) {
+    if (!studioDevToken || !studioCustomerId) {
       return NextResponse.json(
         {
           error:
-            'SufiTube Google Ads credentials not configured. Set GOOGLE_ADS_ACCESS_TOKEN, GOOGLE_ADS_DEVELOPER_TOKEN, NEXT_PUBLIC_STUDIO_GOOGLE_ADS_CUSTOMER_ID.',
+            'SufiTube Google Ads credentials not configured. Set GOOGLE_ADS_DEVELOPER_TOKEN and STUDIO_GOOGLE_ADS_CUSTOMER_ID.',
         },
         { status: 503 }
       );
     }
-    accessToken = studioAccessToken;
+    const studioToken = await getValidStudioAccessToken();
+    if (!studioToken) {
+      return NextResponse.json(
+        { error: 'SufiTube managed account is not connected. Complete OAuth setup at /admin/google-ads.' },
+        { status: 503 }
+      );
+    }
+    accessToken = studioToken;
     developerToken = studioDevToken;
     loginCustomerId = studioLoginCid;
     customerId = studioCustomerId;
