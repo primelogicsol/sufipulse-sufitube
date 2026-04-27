@@ -15,6 +15,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Keep bcryptjs as a real node_modules entry in the standalone output instead of
+  // bundling it into webpack chunks. This makes it available to scripts that run
+  // outside of webpack (e.g. npm run seed:admin inside the container).
+  serverExternalPackages: ['bcryptjs'],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
