@@ -42,6 +42,7 @@ export default function LiteraryProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [profile, setProfile] = useState<LiteraryProfile | null>(null);
   const [formData, setFormData] = useState<Omit<LiteraryProfile, 'id'>>(EMPTY);
   const [activeTab, setActiveTab] = useState<'submissions' | 'notifications'>('submissions');
@@ -82,6 +83,7 @@ export default function LiteraryProfilePage() {
     e.preventDefault();
     if (!profile) return;
     setSaving(true);
+    setSaveStatus('saving');
     setSaveMsg(null);
     const payload = {
       ...formData,
@@ -99,8 +101,12 @@ export default function LiteraryProfilePage() {
       const updated = await res.json();
       setProfile(updated);
       setSaveMsg({ type: 'success', text: 'Profile saved.' });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 1500);
     } catch {
       setSaveMsg({ type: 'error', text: 'Failed to save. Please try again.' });
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 2000);
     } finally {
       setSaving(false);
     }
@@ -345,10 +351,10 @@ export default function LiteraryProfilePage() {
               className="px-8 py-2.5 text-amber-400 hover:bg-amber-500 hover:text-black border-amber-400 border font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {saving ? <Loader className="w-4 h-4 animate-spin" /> : 'Delete Profile'}
             </button>
-            <button onClick={handleSave} disabled={saving || !formData.accept_framework || !formData.acknowledge_editorial_control}
+            <button onClick={handleSave} disabled={saving || saveStatus === 'saved' || !formData.accept_framework || !formData.acknowledge_editorial_control}
               className="px-8 py-2.5 bg-amber-400 hover:bg-amber-500 text-neutral-950 font-medium text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-              {saving && <Loader className="w-4 h-4 animate-spin" />}
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saveStatus === 'saving' && <Loader className="w-4 h-4 animate-spin" />}
+              {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : saveStatus === 'error' ? 'Save Failed' : 'Save Changes'}
             </button>
           </div>
         </form>

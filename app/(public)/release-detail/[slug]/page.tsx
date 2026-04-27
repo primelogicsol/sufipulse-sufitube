@@ -4002,15 +4002,12 @@ function Release() {
                             </button>
                             <button
                                 onClick={handleSave}
-                                disabled={isSaving}
+                                disabled={isSaving || saveSuccess}
                                 className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-amber-900/30"
                             >
-                                {isSaving ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <Save className="w-4 h-4" />
-                                )}
-                                {isSaving ? 'Saving...' : 'Save Changes'}
+                                {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                                {!isSaving && !saveSuccess && !saveError && <Save className="w-4 h-4" />}
+                                {isSaving ? 'Saving…' : saveSuccess ? 'Saved' : saveError ? 'Save Failed' : 'Save Changes'}
                             </button>
                         </div>
                     </div>

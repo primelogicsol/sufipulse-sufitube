@@ -46,6 +46,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     // Profile Settings States
     const [profileForm, setProfileForm] = useState({ name: '', avatar: null as File | null });
     const [profileLoading, setProfileLoading] = useState(false);
+    const [profileSaveStatus, setProfileSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     // Notification states
@@ -336,6 +337,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setProfileLoading(true);
+        setProfileSaveStatus('saving');
         // Save avatar to localStorage as data URL
         if (profileForm.avatar && user) {
             const reader = new FileReader();
@@ -349,6 +351,8 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         setTimeout(() => {
             alert("Profile updated successfully!");
             setProfileLoading(false);
+            setProfileSaveStatus('saved');
+            setTimeout(() => setProfileSaveStatus('idle'), 1500);
         }, 500);
     };
 
@@ -1382,10 +1386,11 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                     <div className="flex justify-end pt-2">
                                                         <button
                                                             type="submit"
-                                                            disabled={profileLoading}
-                                                            className="cursor-pointer flex items-center justify-center bg-linear-to-r from-[#D4AF37] to-[#aa8829] text-[#1a2332] px-8 py-3 rounded-md font-bold hover:shadow-lg hover:shadow-[#D4AF37]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                                            disabled={profileLoading || profileSaveStatus === 'saved'}
+                                                            className="cursor-pointer flex items-center justify-center gap-2 bg-linear-to-r from-[#D4AF37] to-[#aa8829] text-[#1a2332] px-8 py-3 rounded-md font-bold hover:shadow-lg hover:shadow-[#D4AF37]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                                         >
-                                                            {profileLoading ? <Loader className='w-4 h-4 animate-spin' /> : "Save Changes"}
+                                                            {profileSaveStatus === 'saving' && <Loader className='w-4 h-4 animate-spin' />}
+                                                            {profileSaveStatus === 'saving' ? 'Saving…' : profileSaveStatus === 'saved' ? 'Saved' : profileSaveStatus === 'error' ? 'Save Failed' : 'Save Changes'}
                                                         </button>
                                                     </div>
                                                 </div>
