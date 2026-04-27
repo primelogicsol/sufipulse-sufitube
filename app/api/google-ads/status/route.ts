@@ -22,10 +22,10 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const adoptionId = searchParams.get('adoptionId') || '';
 
-  const configured = !!(
-    process.env.GOOGLE_ADS_CLIENT_ID &&
-    process.env.GOOGLE_ADS_DEVELOPER_TOKEN
-  );
+  // Report exactly which env vars are missing so the UI can be specific.
+  const REQUIRED_VARS = ['GOOGLE_ADS_CLIENT_ID', 'GOOGLE_ADS_DEVELOPER_TOKEN'] as const;
+  const missingVars = REQUIRED_VARS.filter((v) => !process.env[v]);
+  const configured = missingVars.length === 0;
 
   const userId = auth.id;
 
@@ -38,17 +38,21 @@ export async function GET(request: NextRequest) {
   if (!activeRecord) {
     return NextResponse.json({
       configured,
+      missing_vars: missingVars,
       connected: false,
       adoption_id: adoptionId || null,
       user_id: userId,
       accessible_customer_ids: [],
       campaign: null,
-      message: 'No OAuth token found. Connect a Google Ads account to continue.',
+      message: configured
+        ? 'No OAuth token found. Connect a Google Ads account to continue.'
+        : `Google Ads not configured. Missing: ${missingVars.join(', ')}.`,
     });
   }
 
   return NextResponse.json({
     configured,
+    missing_vars: missingVars,
     connected: true,
     adoption_id: adoptionId || null,
     user_id: userId,

@@ -50,6 +50,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   // Google OAuth state
   const [googleAdsEnabled, setGoogleAdsEnabled] = useState<boolean | null>(null);
+  const [googleAdsMissingVars, setGoogleAdsMissingVars] = useState<string[]>([]);
   const [oauthConnected, setOauthConnected] = useState(false);
   const [oauthChecked, setOauthChecked] = useState(false);
   const [oauthConfigured, setOauthConfigured] = useState(false);
@@ -80,8 +81,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
         const res = await fetch('/api/google-ads/status');
         const payload = await res.json();
         setGoogleAdsEnabled(Boolean(payload?.configured));
+        setGoogleAdsMissingVars(Array.isArray(payload?.missing_vars) ? payload.missing_vars : []);
       } catch {
         setGoogleAdsEnabled(null);
+        setGoogleAdsMissingVars([]);
       }
     })();
   }, []);
@@ -700,11 +703,15 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   <p className="text-xs text-neutral-400 leading-relaxed">
                     {googleAdsEnabled === null
                       ? 'Checking availability…'
-                      : 'Google Ads integration is being configured. Use Managed by SufiTube in the meantime.'
+                      : googleAdsMissingVars.length > 0
+                        ? `Missing server config: ${googleAdsMissingVars.join(', ')}`
+                        : 'Google Ads integration is being configured. Use Managed by SufiTube in the meantime.'
                     }
                   </p>
                 </div>
-                <p className="text-xs text-center text-neutral-600">Currently unavailable on this server</p>
+                <p className="text-xs text-center text-neutral-600">
+                  {googleAdsEnabled === null ? 'Checking…' : 'Not available on this server'}
+                </p>
               </>
             )}
           </div>

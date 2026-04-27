@@ -6,8 +6,18 @@ import { Badge } from '../../components/primitives/Badge';
 import {
     Search, Eye, Check, X, User, Music, DollarSign,
     AlertCircle, BarChart3, Users, Target, TrendingUp, Rocket,
-    Loader2, Globe, ExternalLink, RefreshCw,
+    Loader2, Globe, ExternalLink, RefreshCw, Play, Activity,
+    Flag, FileText,
 } from 'lucide-react';
+
+// Lifecycle transitions available per current status.
+// Only forward moves are allowed; never backward.
+const LIFECYCLE_NEXT: Record<string, { status: string; label: string; icon: any; color: string }> = {
+    scheduled:  { status: 'live',        label: 'Mark Live',      icon: Play,     color: 'text-green-400 hover:text-green-300' },
+    live:       { status: 'monitoring',  label: 'Mark Monitoring', icon: Activity, color: 'text-blue-400 hover:text-blue-300' },
+    monitoring: { status: 'completed',   label: 'Mark Completed',  icon: Flag,     color: 'text-purple-400 hover:text-purple-300' },
+    completed:  { status: 'report_ready',label: 'Report Ready',    icon: FileText, color: 'text-amber-400 hover:text-amber-300' },
+};
 
 interface LaunchState {
     step: 'idle' | 'input' | 'launching' | 'done';
@@ -409,6 +419,19 @@ export default function AdminSongAdoptions() {
                                                         <button onClick={() => updateAdoptionStatus(adoption.id, 'cancelled')} className="p-1 text-red-400 hover:text-red-300" title="Reject"><X className="w-4 h-4" /></button>
                                                     </>
                                                 )}
+                                                {LIFECYCLE_NEXT[adoption.adoptionStatus] && (() => {
+                                                    const next = LIFECYCLE_NEXT[adoption.adoptionStatus];
+                                                    const Icon = next.icon;
+                                                    return (
+                                                        <button
+                                                            onClick={() => updateAdoptionStatus(adoption.id, next.status)}
+                                                            className={`p-1 ${next.color}`}
+                                                            title={next.label}
+                                                        >
+                                                            <Icon className="w-4 h-4" />
+                                                        </button>
+                                                    );
+                                                })()}
                                                 <button
                                                     onClick={() => approvePublicListing(adoption.id, !adoption.publicListingApproved)}
                                                     className={`p-1 ${adoption.publicListingApproved ? 'text-blue-400' : 'text-neutral-500'} hover:text-blue-300`}
@@ -551,6 +574,22 @@ export default function AdminSongAdoptions() {
                                         >Reject</button>
                                     </div>
                                 )}
+
+                                {LIFECYCLE_NEXT[selectedAdoption.adoptionStatus] && launchState.step === 'idle' && (() => {
+                                    const next = LIFECYCLE_NEXT[selectedAdoption.adoptionStatus];
+                                    const Icon = next.icon;
+                                    return (
+                                        <button
+                                            onClick={() => {
+                                                updateAdoptionStatus(selectedAdoption.id, next.status);
+                                                setSelectedAdoption((prev: any) => prev ? { ...prev, adoptionStatus: next.status } : prev);
+                                            }}
+                                            className="w-full px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 rounded-lg transition-colors text-sm flex items-center justify-center gap-2"
+                                        >
+                                            <Icon className="w-4 h-4" /> {next.label}
+                                        </button>
+                                    );
+                                })()}
 
                                 {canLaunch(selectedAdoption) && launchState.step !== 'done' && (
                                     <div className="border border-amber-600/30 bg-amber-900/10 rounded-xl p-5 space-y-4">

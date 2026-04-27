@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { applyWebhookEventIfNew } from '@/app/lib/server/adoption-payment-store';
+import { getAdoptionRecord, updateAdoptionRecord } from '@/app/lib/server/adoption-store';
 
 const getStripeClient = () => {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -14,6 +15,19 @@ const getStripeClient = () => {
 
 // Stripe requires the raw body to verify signatures — disable Next.js body parsing
 export const config = { api: { bodyParser: false } };
+
+// Status ranks — a webhook must never move an adoption backward.
+const STATUS_RANK: Record<string, number> = {
+  draft: 0, pending_review: 1, admin_review: 2, approved: 3,
+  campaign_prepared: 4, awaiting_user_approval: 4, scheduled: 5,
+  live: 6, monitoring: 7, completed: 8, report_ready: 9,
+};
+
+function canAdvanceTo(currentStatus: string, targetStatus: string): boolean {
+  const current = STATUS_RANK[currentStatus] ?? -1;
+  const target = STATUS_RANK[targetStatus] ?? -1;
+  return target > current;
+}
 
 export async function POST(request: NextRequest) {
   const stripe = getStripeClient();
@@ -46,7 +60,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
-  // Handle the events we care about
   if (
     event.type === 'checkout.session.completed' ||
     event.type === 'payment_intent.succeeded'
@@ -63,23 +76,40 @@ export async function POST(request: NextRequest) {
     }
 
     if (!adoptionId) {
-      // Not an adoption payment — ignore
       return NextResponse.json({ received: true });
     }
+
+    // Determine safe target status — never downgrade beyond what already happened.
+    const targetAdoptionStatus = 'admin_review';
+    const current = getAdoptionRecord(adoptionId);
+    const safeAdoptionStatus = current && !canAdvanceTo(current.adoptionStatus, targetAdoptionStatus)
+      ? current.adoptionStatus   // already at admin_review or higher — preserve it
+      : targetAdoptionStatus;
 
     try {
       await applyWebhookEventIfNew({
         eventId: event.id,
         adoptionId,
         paymentStatus: 'paid',
-        adoptionStatus: 'pending_review',
+        adoptionStatus: safeAdoptionStatus,
         amountPaid,
         stripeSessionId: stripeSessionId || undefined,
         eventType: event.type,
       });
+
+      // Sync main adoption store, preserving any status higher than admin_review.
+      if (current) {
+        updateAdoptionRecord(adoptionId, {
+          paymentStatus: 'paid',
+          amountPaid,
+          ...(paymentReference(stripeSessionId)),
+          ...(canAdvanceTo(current.adoptionStatus, targetAdoptionStatus)
+            ? { adoptionStatus: targetAdoptionStatus }
+            : {}),
+        });
+      }
     } catch (err) {
       console.error('Failed to persist adoption payment after Stripe payment:', err);
-      // Still return 200 — Stripe will not retry if we return 200
     }
   }
 
@@ -107,4 +137,9 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+function paymentReference(sessionId: string | null): Record<string, any> {
+  if (!sessionId) return {};
+  return { paymentReference: sessionId, paymentProvider: 'stripe' };
 }

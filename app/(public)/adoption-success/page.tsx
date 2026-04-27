@@ -2,18 +2,49 @@
 
 import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
 
+const PAYMENT_LABELS: Record<string, string> = {
+  paid:         'Confirmed ✓',
+  pending:      'Processing…',
+  failed:       'Failed',
+  not_required: 'Not Required',
+  unpaid:       'Pending',
+  refunded:     'Refunded',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  draft:            'Draft',
+  pending_review:   'Pending Review',
+  admin_review:     'Pending Admin Review',
+  approved:         'Approved',
+  scheduled:        'Scheduled',
+  live:             'Live',
+  monitoring:       'Monitoring',
+  completed:        'Completed',
+  report_ready:     'Report Ready',
+  cancelled:        'Cancelled',
+};
+
+const PAYMENT_COLOR: Record<string, string> = {
+  paid:         'text-green-400',
+  not_required: 'text-blue-400',
+  pending:      'text-amber-400',
+  failed:       'text-red-400',
+  unpaid:       'text-neutral-400',
+  refunded:     'text-neutral-400',
+};
+
 function AdoptionSuccessContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const adoptionId = searchParams.get('adoption_id');
   const sessionId = searchParams.get('session_id');
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
+  const [adoption, setAdoption] = useState<any>(null);
 
   useEffect(() => {
     if (!adoptionId) {
@@ -24,8 +55,6 @@ function AdoptionSuccessContent() {
 
     async function confirm() {
       try {
-        let verifiedAmountPaid: number | undefined;
-
         if (sessionId) {
           const res = await fetch(`/api/adoptions/${adoptionId}/confirm/`, {
             method: 'POST',
@@ -37,8 +66,12 @@ function AdoptionSuccessContent() {
           if (!res.ok || !payload?.verified) {
             throw new Error(payload?.reason || 'Payment could not be verified.');
           }
+        }
 
-          verifiedAmountPaid = payload?.payment_record?.amountPaid;
+        // Fetch real adoption record regardless of session_id path.
+        const adoptionRes = await fetch(`/api/adoptions/${adoptionId}`);
+        if (adoptionRes.ok) {
+          setAdoption(await adoptionRes.json());
         }
 
         setStatus('success');
@@ -86,6 +119,15 @@ function AdoptionSuccessContent() {
     );
   }
 
+  const paymentStatus = adoption?.paymentStatus ?? 'paid';
+  const adoptionStatus = adoption?.adoptionStatus ?? 'admin_review';
+  const isGoogleAds = adoption?.methodType === 'use_my_google_ads';
+
+  const title = isGoogleAds ? 'Campaign Request Submitted' : 'Adoption Complete';
+  const description = isGoogleAds
+    ? 'Your Google Ads account is connected. Campaign structure will be prepared by SufiPulse and launched after admin review — typically 1–2 business days.'
+    : 'May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and payment confirmed.';
+
   return (
     <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
       <div className="max-w-lg w-full mx-4 text-center space-y-6">
@@ -94,24 +136,37 @@ function AdoptionSuccessContent() {
         </div>
 
         <div>
-          <h1 className="text-3xl font-serif font-light text-neutral-100 mb-3">
-            Adoption Complete
-          </h1>
-          <p className="text-neutral-400 leading-relaxed">
-            May your contribution bring ease and contemplation to whoever discovers this kalam.
-            Your sponsorship has been recorded and payment confirmed.
-          </p>
+          <h1 className="text-3xl font-serif font-light text-neutral-100 mb-3">{title}</h1>
+          <p className="text-neutral-400 leading-relaxed">{description}</p>
         </div>
 
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-left space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-neutral-500">Payment</span>
-            <span className="text-green-400 font-medium">Confirmed ✓</span>
-          </div>
+          {!isGoogleAds && (
+            <div className="flex justify-between text-sm">
+              <span className="text-neutral-500">Payment</span>
+              <span className={`font-medium ${PAYMENT_COLOR[paymentStatus] ?? 'text-neutral-300'}`}>
+                {PAYMENT_LABELS[paymentStatus] ?? paymentStatus}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-neutral-500">Adoption Status</span>
-            <span className="text-amber-400 font-medium">Pending Admin Review</span>
+            <span className="text-amber-400 font-medium">
+              {STATUS_LABELS[adoptionStatus] ?? adoptionStatus}
+            </span>
           </div>
+          {adoption?.amountPaid > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-neutral-500">Amount Paid</span>
+              <span className="text-neutral-300 font-medium">${adoption.amountPaid}</span>
+            </div>
+          )}
+          {adoption?.releaseTitle && (
+            <div className="flex justify-between text-sm">
+              <span className="text-neutral-500">Song</span>
+              <span className="text-neutral-300 truncate max-w-[60%]">{adoption.releaseTitle}</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-neutral-500">Reference ID</span>
             <span className="text-neutral-300 font-mono text-xs">{adoptionId}</span>
