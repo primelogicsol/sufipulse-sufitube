@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 const toSrtTime = (vttTime: string) => vttTime.replace('.', ',');
 
@@ -206,6 +207,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   try {
     const release = cmsServerStorage.getRelease(id);

@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { logger } from '@/app/lib/logger';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 export const dynamic = 'force-dynamic';
 
@@ -258,6 +259,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   try {
     const rawRelease = cmsServerStorage.getRelease(id);
