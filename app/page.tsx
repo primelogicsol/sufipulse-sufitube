@@ -89,29 +89,49 @@ export default function Home() {
     setFeaturedArticles(featured as any);
     setArticlesLoading(false);
 
-    // Latest publications
+    // Latest publications — prefer CMS ranked data, fall back to YouTube API
     const fetchLatestPublications = async () => {
       try {
+        // Try CMS ranked releases first (performance-weighted order)
+        const cmsRes = await fetch('/api/releases?status=published&sort=ranked&limit=8');
+        if (cmsRes.ok) {
+          const cmsReleases: any[] = await cmsRes.json();
+          if (Array.isArray(cmsReleases) && cmsReleases.length > 0) {
+            const music: Publication[] = cmsReleases
+              .filter((r: any) => r.youtubeId)
+              .map((r: any) => ({
+                id: r.id,
+                type: 'music' as const,
+                title: r.title,
+                slug: r.youtubeId,
+                published_at: r.releaseDate,
+                description: r.description,
+                artwork_url: r.thumbnailUrl,
+                youtube_video_id: r.youtubeId,
+              }));
+            if (music.length > 0) {
+              setLatestPublications(music);
+              setLastReleaseSync(new Date().toISOString());
+              setPubsLoading(false);
+              return;
+            }
+          }
+        }
+
+        // Fallback: YouTube API (recency order)
         const { youtubeService } = await import('../lib/youtube-service');
         const videos = await youtubeService.getLatestVideos(8);
-
         const music: Publication[] = videos.map((video: any) => ({
           id: video.id,
-          type: 'music',
+          type: 'music' as const,
           title: video.title,
           slug: video.id,
           published_at: video.publishedDate,
           description: video.description,
           artwork_url: video.thumbnailUrl,
-          youtube_video_id: video.id
+          youtube_video_id: video.id,
         }));
-
-        // We only want music videos for latest releases
-        const combined = music.sort((a, b) => {
-          return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-        }).slice(0, 8);
-
-        setLatestPublications(combined);
+        setLatestPublications(music.slice(0, 8));
         setLastReleaseSync(new Date().toISOString());
       } catch (err) {
         console.error('Error fetching latest music releases:', err);

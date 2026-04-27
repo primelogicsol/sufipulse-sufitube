@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { auditLog } from '@/app/lib/audit-log';
 import { logger } from '@/app/lib/logger';
-import { requireAdmin } from '@/server/middleware/authenticate';
+import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +64,10 @@ function normalizeFieldNames(body: Record<string, any>): Record<string, any> {
 }
 
 // GET /api/releases/[id]
+// Published releases are publicly readable (needed by the public release-detail page).
+// All other statuses (draft, in_review, approved, unpublished, archived) require admin auth.
+// Unauthenticated requests for non-published releases receive 404, not 401, to avoid
+// leaking the existence of draft content.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -74,6 +78,15 @@ export async function GET(
     if (!release) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
+
+    if (release.status !== 'published') {
+      const user = await getAuthUser(request);
+      if (!user || !String(user.role || '').includes('admin')) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      return NextResponse.json(release);
+    }
+
     return NextResponse.json(release, { headers: cacheHeaders });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -143,6 +156,21 @@ export async function PUT(
       details: { title: body.title, slug: nextSlug },
       ipAddress: ip,
     });
+
+    // Auto-notify subscribers when a release is first published
+    if (existing.status !== 'published' && updated.status === 'published' && updated.youtubeId) {
+      const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      fetch(`${base}/api/admin/notify-subscribers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', cookie: request.headers.get('cookie') || '' },
+        body: JSON.stringify({
+          title: updated.title,
+          youtubeId: updated.youtubeId,
+          youtubePlaylistId: updated.youtubePlaylistId,
+          slug: updated.slug,
+        }),
+      }).catch((err) => apiLogger.warn('Subscriber notification failed', { err: String(err) }));
+    }
 
     return NextResponse.json(updated);
   } catch (error: any) {

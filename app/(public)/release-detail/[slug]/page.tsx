@@ -1541,6 +1541,11 @@ function Release() {
                         </div>
                     )}
 
+                    {/* Contributor Share Kit — admin only */}
+                    {isAdmin && !isEditing && resolvedVideoId && (
+                        <ContributorShareKit release={release} videoId={resolvedVideoId} />
+                    )}
+
                     {/* Inline Editing Info Panel */}
                     {isAdmin && isEditing && (
                         <div className="mb-6 p-4 bg-amber-900/10 border border-amber-800/30 rounded-lg">
@@ -1958,19 +1963,33 @@ function Release() {
                                         <p className="mt-1 text-sm text-neutral-400">Listen to another release, subscribe on YouTube, or join SufiPulse.</p>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
+                                        <a
+                                            href={release?.youtubePlaylistId
+                                                ? `https://www.youtube.com/playlist?list=${release.youtubePlaylistId}`
+                                                : `https://www.youtube.com/@sufipulse/videos`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={() => trackEvent('CTA_WatchNextYouTube', { videoId: resolvedVideoId || '', hasPlaylist: release?.youtubePlaylistId ? 'true' : 'false' })}
+                                            className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                                        >
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                            </svg>
+                                            Watch Next on YouTube
+                                        </a>
                                         <Link
                                             href="/releases"
                                             className="inline-flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
                                         >
                                             <Music className="h-4 w-4" />
-                                            Next Song
+                                            More Releases
                                         </Link>
                                         <a
                                             href="https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ?sub_confirmation=1"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             onClick={() => trackEvent('CTA_Subscribe', { context: 'post-play', videoId: resolvedVideoId || '' })}
-                                            className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                                            className="inline-flex items-center gap-2 rounded-lg bg-neutral-800 border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700"
                                         >
                                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
@@ -3993,6 +4012,74 @@ function Release() {
                 </div>
             )}
         </Layout>
+    );
+}
+
+function ContributorShareKit({ release, videoId }: { release: any; videoId: string }) {
+    const [open, setOpen] = useState(false);
+    const [copied, setCopied] = useState<string | null>(null);
+
+    const ytUrl = release?.youtubePlaylistId
+        ? `https://www.youtube.com/watch?v=${videoId}&list=${release.youtubePlaylistId}`
+        : `https://www.youtube.com/watch?v=${videoId}`;
+
+    const title = release?.release_title || release?.title || '';
+    const vocalistName = release?.lead_vocalists?.[0]?.name || release?.vocalist?.name || '';
+    const writerName = release?.public_credits?.literary?.[0]?.name || release?.writer?.name || '';
+
+    const kits = [
+        {
+            role: 'Vocalist',
+            name: vocalistName,
+            caption: `🎵 Honoured to present "${title}" — a sacred kalam now on YouTube.\n\nListen & subscribe: ${ytUrl}\n\n#SufiMusic #Kalam #SufiPulse`,
+        },
+        {
+            role: 'Writer / Poet',
+            name: writerName,
+            caption: `✍️ My kalam "${title}" is now live on SufiPulse & YouTube.\n\nListen here: ${ytUrl}\n\n#SufiPoetry #Kalam #SufiPulse`,
+        },
+        {
+            role: 'General Share',
+            name: '',
+            caption: `🌙 "${title}" — Sacred Sufi kalam now on YouTube.\n\nListen & subscribe: ${ytUrl}\n\n#SufiMusic #Kalam #SufiPulse`,
+        },
+    ].filter(k => k.caption);
+
+    const copy = (text: string, key: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(key);
+        setTimeout(() => setCopied(null), 2000);
+    };
+
+    return (
+        <div className="mb-4 rounded-xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
+            <button
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left"
+            >
+                <span className="text-xs uppercase tracking-[0.18em] text-neutral-500 font-medium">Contributor Share Kit</span>
+                <ChevronDown className={`w-4 h-4 text-neutral-600 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open && (
+                <div className="px-4 pb-4 space-y-3 border-t border-neutral-800 pt-3">
+                    {kits.map((kit) => (
+                        <div key={kit.role} className="bg-neutral-950 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-neutral-400">{kit.role}{kit.name ? ` — ${kit.name}` : ''}</span>
+                                <button
+                                    onClick={() => copy(kit.caption, kit.role)}
+                                    className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                                >
+                                    {copied === kit.role ? 'Copied!' : 'Copy'}
+                                </button>
+                            </div>
+                            <p className="text-xs text-neutral-500 whitespace-pre-line leading-relaxed">{kit.caption}</p>
+                        </div>
+                    ))}
+                    <p className="text-xs text-neutral-600 pt-1">Send these to your contributors to share on their social channels.</p>
+                </div>
+            )}
+        </div>
     );
 }
 

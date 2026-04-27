@@ -44,9 +44,13 @@ export async function GET(request: NextRequest) {
       if (authResult instanceof NextResponse) return authResult;
     }
 
+    const sort = searchParams.get('sort');
+
     // Default to published only for public access; pass ?status=all to get everything (admin)
     if (!status || status === 'published') {
-      const releases = cmsServerStorage.getPublishedReleases(limit ? parseInt(limit) : undefined);
+      const releases = sort === 'ranked'
+        ? cmsServerStorage.getRankedReleases(limit ? parseInt(limit) : undefined)
+        : cmsServerStorage.getPublishedReleases(limit ? parseInt(limit) : undefined);
       return NextResponse.json(releases, { headers: cacheHeaders });
     }
 
