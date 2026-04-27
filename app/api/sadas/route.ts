@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const record = entityCreate('sadas', {
       ...body,
       user_id: authResult.id,
-      status: body.status || 'pending',
+      status: 'submitted',
       submitted_at: new Date().toISOString(),
     });
     notifyAdminNewSubmission(

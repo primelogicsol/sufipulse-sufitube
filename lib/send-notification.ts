@@ -112,22 +112,36 @@ export async function notifySubmitterStatusChange(opts: {
   adminNote?: string;
 }): Promise<void> {
   const { to, name, type, status, adminNote } = opts;
-  const isApproved = status === 'approved';
+  const isApproved = status === 'approved' || status === 'published';
   const isRejected = status === 'rejected';
+  const isRevision = status === 'revision_requested';
 
-  if (!isApproved && !isRejected) return;
+  if (!isApproved && !isRejected && !isRevision) return;
 
-  const statusLabel = isApproved ? 'Approved' : 'Not Approved';
-  const message = isApproved
-    ? `We are pleased to inform you that your ${type} has been reviewed and approved by the SufiPulse team.${adminNote ? `\n\nNote from the team: ${adminNote}` : ''}\n\nWe will be in touch with next steps.`
-    : `Thank you for submitting your ${type} to SufiPulse. After careful review, we are unable to move forward with this proposal at this time.${adminNote ? `\n\nNote from the team: ${adminNote}` : ''}\n\nWe appreciate your interest and encourage you to reach out in the future.`;
+  let subject: string;
+  let message: string;
+  let event: string;
+
+  if (isApproved) {
+    subject = `[SufiPulse] Your ${type} has been Approved`;
+    event = 'approved';
+    message = `We are pleased to inform you that your ${type} has been reviewed and approved by the SufiPulse team.${adminNote ? `\n\nNote from the team: ${adminNote}` : ''}\n\nWe will be in touch with next steps.`;
+  } else if (isRevision) {
+    subject = `[SufiPulse] Revision requested on your ${type}`;
+    event = 'revision_requested';
+    message = `Thank you for submitting your ${type} to SufiPulse. Our team has reviewed your submission and is requesting a revision before we can proceed.${adminNote ? `\n\nWhat to revise:\n${adminNote}` : ''}\n\nPlease log in to your dashboard to update your submission.`;
+  } else {
+    subject = `[SufiPulse] Update on your ${type}`;
+    event = 'rejected';
+    message = `Thank you for submitting your ${type} to SufiPulse. After careful review, we are unable to move forward with this proposal at this time.${adminNote ? `\n\nNote from the team: ${adminNote}` : ''}\n\nWe appreciate your interest and encourage you to reach out in the future.`;
+  }
 
   await sendNotification({
     to,
-    subject: `[SufiPulse] Your ${type} has been ${statusLabel}`,
+    subject,
     name,
-    event: isApproved ? 'approved' : 'rejected',
+    event,
     message,
-    action_url: isApproved ? `${APP_URL}/` : undefined,
+    action_url: isApproved || isRevision ? `${APP_URL}/` : undefined,
   });
 }

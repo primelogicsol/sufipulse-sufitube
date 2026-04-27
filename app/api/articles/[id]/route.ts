@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const updated = entityUpdate('articles', id, { ...body, reviewed_at: new Date().toISOString() });
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const status = body.status;
-    if (status === 'approved' || status === 'published' || status === 'rejected') {
+    if (status === 'approved' || status === 'published' || status === 'rejected' || status === 'revision_requested') {
       const item = updated as any;
       if (item.email) {
         notifySubmitterStatusChange({

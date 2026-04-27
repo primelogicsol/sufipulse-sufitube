@@ -24,6 +24,8 @@ export default function SadasPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<string>('pending');
+  const [revisionTarget, setRevisionTarget] = useState<string | null>(null);
+  const [revisionNote, setRevisionNote] = useState('');
 
   const loadItems = async () => {
     try {
@@ -55,11 +57,11 @@ export default function SadasPage() {
     });
   }, [items, query, filter]);
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, admin_note?: string) => {
     const res = await fetch(`/api/sadas/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...(admin_note ? { admin_note } : {}) }),
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -68,8 +70,34 @@ export default function SadasPage() {
     await loadItems();
   };
 
+  const submitRevision = async () => {
+    if (!revisionTarget || !revisionNote.trim()) return;
+    await updateStatus(revisionTarget, 'revision_requested', revisionNote.trim());
+    setRevisionTarget(null);
+    setRevisionNote('');
+  };
+
   return (
     <DashboardLayout>
+      {revisionTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-[var(--dash-surface)] border border-[var(--dash-border)] rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="font-semibold text-[var(--dash-text-primary)] mb-3">Request Revision</h3>
+            <p className="text-xs text-[var(--dash-text-muted)] mb-3">Describe what needs to be changed. This message will be emailed to the vocalist.</p>
+            <textarea
+              value={revisionNote}
+              onChange={(e) => setRevisionNote(e.target.value)}
+              placeholder="e.g. Please re-record the third verse with clearer pronunciation..."
+              className="dashboard-input w-full h-28 resize-none mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => { setRevisionTarget(null); setRevisionNote(''); }} className="dashboard-btn-secondary text-sm px-4">Cancel</button>
+              <button onClick={submitRevision} disabled={!revisionNote.trim()} className="dashboard-btn-primary text-sm px-4 disabled:opacity-50">Send Revision Request</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-y-6">
         <div className="dashboard-card">
           <div className="flex flex-col gap-4 mb-6">
@@ -145,7 +173,7 @@ export default function SadasPage() {
                             Approve
                           </button>
                           <button
-                            onClick={() => updateStatus(item.id, 'revision_requested')}
+                            onClick={() => { setRevisionTarget(item.id); setRevisionNote(''); }}
                             className="dashboard-btn-secondary text-xs"
                           >
                             Revision

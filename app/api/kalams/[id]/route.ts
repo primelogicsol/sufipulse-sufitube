@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const updated = entityUpdate('kalams', id, { ...body, reviewed_at: new Date().toISOString() });
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const status = body.status;
-    if (status === 'approved' || status === 'rejected') {
+    if (status === 'approved' || status === 'rejected' || status === 'revision_requested') {
       const item = updated as any;
       if (item.email) {
         notifySubmitterStatusChange({
@@ -31,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           name: item.full_name || item.writer_id || item.email,
           type: 'kalam submission',
           status,
-          adminNote: body.revision_notes,
+          adminNote: body.revision_notes || body.admin_note,
         }).catch(() => {});
       }
     }
