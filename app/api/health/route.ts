@@ -10,45 +10,45 @@ export async function GET(request: NextRequest) {
   const checks: Record<string, { status: 'ok' | 'degraded' | 'error'; details?: string }> = {};
   let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
 
-  // Check 1: File system access
+  // Check 1: File system — existence + writability
   try {
-    if (fs.existsSync(DATA_FILE)) {
-      const stats = fs.statSync(DATA_FILE);
-      const fileSizeKB = (stats.size / 1024).toFixed(1);
-      checks.dataStorage = {
-        status: 'ok',
-        details: `Data file exists, size: ${fileSizeKB}KB, modified: ${stats.mtime.toISOString()}`,
-      };
-    } else {
-      checks.dataStorage = {
-        status: 'degraded',
-        details: 'Data file does not exist yet (first run)',
-      };
-    }
+    const dataDir = path.join(process.cwd(), '.data');
+    fs.mkdirSync(dataDir, { recursive: true });
+    const testFile = path.join(dataDir, '.health-write-test');
+    fs.writeFileSync(testFile, 'ok', 'utf8');
+    fs.unlinkSync(testFile);
+    const details = fs.existsSync(DATA_FILE)
+      ? `writable, data file ${(fs.statSync(DATA_FILE).size / 1024).toFixed(1)}KB`
+      : 'writable, data file not yet created';
+    checks.dataStorage = { status: 'ok', details };
   } catch (error: any) {
     checks.dataStorage = { status: 'error', details: error.message };
-    overallStatus = 'degraded';
+    overallStatus = 'unhealthy';
   }
 
-  // Check 2: Environment variables
-  const requiredEnvVars = ['NEXT_PUBLIC_APP_URL'];
+  // Check 2: Required environment variables
+  const requiredEnvVars = ['NEXT_PUBLIC_APP_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
+  const shortSecrets = ['JWT_SECRET', 'JWT_REFRESH_SECRET'].filter(
+    (v) => process.env[v] && (process.env[v]?.length ?? 0) < 32
+  );
   const missingEnvVars = requiredEnvVars.filter((v) => !process.env[v]);
 
-  if (missingEnvVars.length === 0) {
+  if (missingEnvVars.length === 0 && shortSecrets.length === 0) {
     checks.environment = { status: 'ok', details: 'All required environment variables present' };
   } else {
-    checks.environment = {
-      status: 'degraded',
-      details: `Missing: ${missingEnvVars.join(', ')}`,
-    };
-    overallStatus = overallStatus === 'healthy' ? 'degraded' : overallStatus;
+    const issues: string[] = [];
+    if (missingEnvVars.length > 0) issues.push(`Missing: ${missingEnvVars.join(', ')}`);
+    if (shortSecrets.length > 0) issues.push(`Too short (<32 chars): ${shortSecrets.join(', ')}`);
+    checks.environment = { status: 'error', details: issues.join('; ') };
+    overallStatus = 'unhealthy';
   }
 
   // Check 3: Optional integrations
   const integrations: string[] = [];
   if (process.env.STRIPE_SECRET_KEY) integrations.push('stripe');
-  if (process.env.YOUTUBE_API_KEY) integrations.push('youtube');
+  if (process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY) integrations.push('youtube');
   if (process.env.GOOGLE_ADS_DEVELOPER_TOKEN) integrations.push('google-ads');
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) integrations.push('smtp');
 
   checks.integrations = {
     status: integrations.length > 0 ? 'ok' : 'degraded',

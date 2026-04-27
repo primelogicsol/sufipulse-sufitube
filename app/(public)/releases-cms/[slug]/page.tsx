@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Layout } from '../../../components/layout/Layout';
 import { Section } from '../../../components/layout/Section';
 import { PageContainer } from '../../../components/layout/PageContainer';
-import { cmsStorage, CMSRelease } from '@/lib/cms-storage';
+import { type CMSRelease } from '@/lib/cms-storage';
 import { ExternalLink } from 'lucide-react';
 
 export default function ReleasePage() {
@@ -18,15 +18,14 @@ export default function ReleasePage() {
 
   useEffect(() => {
     if (!slug) return;
-    try {
-      const found = cmsStorage.getReleaseBySlug(slug);
-      if (!found) setError('Release not found');
-      else setRelease(found);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load release');
-    } finally {
-      setLoading(false);
-    }
+    fetch(`/api/releases?slug=${encodeURIComponent(slug)}`)
+      .then(async (res) => {
+        if (res.status === 404) { setError('Release not found'); return; }
+        if (!res.ok) { setError('Failed to load release'); return; }
+        setRelease(await res.json());
+      })
+      .catch(() => setError('Failed to load release'))
+      .finally(() => setLoading(false));
   }, [slug]);
 
   if (loading) {
