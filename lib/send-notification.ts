@@ -7,6 +7,15 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@sufipulse.com';
 const APP_NAME = 'SufiPulse';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+function escapeHtml(str: string): string {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export interface NotificationPayload {
   to: string;
   subject: string;
@@ -19,7 +28,10 @@ export interface NotificationPayload {
 }
 
 export async function sendNotification(payload: NotificationPayload): Promise<void> {
-  const { to, subject, name, role = 'guest', event, message, action_url, reference } = payload;
+  const { to, subject, role = 'guest', event, action_url } = payload;
+  const name = escapeHtml(payload.name);
+  const message = escapeHtml(payload.message);
+  const reference = payload.reference ? escapeHtml(payload.reference) : undefined;
 
   const smtpHost = process.env.SMTP_HOST;
   const smtpUser = process.env.SMTP_USER;

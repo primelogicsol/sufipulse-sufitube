@@ -13,6 +13,12 @@ services:
       - app-audit:/app/.data/audit
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   app-data:

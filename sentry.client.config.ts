@@ -18,9 +18,8 @@ Sentry.init({
   // Integrations
   integrations: [
     Sentry.replayIntegration({
-      // Additional SDK configuration goes here
-      maskAllText: false,
-      blockAllMedia: false,
+      maskAllText: true,
+      blockAllMedia: true,
     }),
   ],
 });
