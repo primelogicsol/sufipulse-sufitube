@@ -494,7 +494,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
         }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Checkout failed');
+      if (!res.ok) {
+        const msg = typeof body.error === 'string'
+          ? body.error
+          : body.error?.message || 'Checkout failed';
+        throw new Error(msg);
+      }
       window.location.href = body.url;
     } catch (err: any) {
       setSubmitError(`Payment error: ${err.message}`);

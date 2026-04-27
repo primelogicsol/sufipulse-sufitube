@@ -47,7 +47,7 @@ export async function requireAuth(
   const user = await getAuthUser(req);
   if (!user) {
     return NextResponse.json(
-      { success: false, error: { message: 'Not authenticated', code: 'UNAUTHENTICATED' } },
+      { error: 'Not authenticated' },
       { status: 401 }
     );
   }
@@ -64,7 +64,7 @@ export async function requireRole(
 
   if (!roles.includes(result.role as User['role'])) {
     return NextResponse.json(
-      { success: false, error: { message: 'Forbidden', code: 'FORBIDDEN' } },
+      { error: 'Forbidden' },
       { status: 403 }
     );
   }
