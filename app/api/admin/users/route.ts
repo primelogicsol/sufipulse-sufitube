@@ -1,3 +1,4 @@
+// cache-bust: 2026-04-27
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { usersRepository } from '@/server/db/repositories/users';
