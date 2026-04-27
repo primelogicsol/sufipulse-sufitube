@@ -278,7 +278,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setIsRecheckingAccounts(true);
     setOauthChecked(false);
     try {
-      const params = new URLSearchParams({ adoptionId: adoption.id });
+      const params = new URLSearchParams({ adoptionId: adoption.id, recheck: '1' });
       if (user?.id) params.set('userId', user.id);
       const res = await fetch(`/api/google-ads/status?${params}`);
       const payload = await res.json();
