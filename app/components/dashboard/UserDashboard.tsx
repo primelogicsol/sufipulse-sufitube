@@ -656,6 +656,23 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                         </div>
                                     )}
 
+                                    {status === "approved" && items.length === 0 && (
+                                        <div className="mb-6 p-5 bg-[var(--dash-accent)]/5 border border-[var(--dash-accent)]/20 rounded-xl flex flex-col sm:flex-row sm:items-center gap-4">
+                                            <div className="flex-1">
+                                                <p className="text-sm font-semibold text-[var(--dash-accent)] mb-1">Welcome — your profile is approved</p>
+                                                <p className="text-xs text-[var(--dash-text-muted)]">You have no submissions yet. Start by submitting your first {config.term.toLowerCase()} — the team will review it and get back to you.</p>
+                                            </div>
+                                            {role !== 'producer' && role !== 'studio' && (
+                                                <button
+                                                    onClick={() => { setEditingItem(null); setDraftForm(config.draftDefaults); setActiveTab('submissions'); }}
+                                                    className="cursor-pointer shrink-0 px-4 py-2 bg-[var(--dash-accent)] text-black font-semibold rounded-lg text-sm hover:opacity-90 transition-opacity"
+                                                >
+                                                    Submit your first {config.term}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-12">
                                         {[
                                             { label: `Total ${config.termPlural}`, value: stats.total, meta: "All time records", icon: FileText, color: "text-orange-400" },

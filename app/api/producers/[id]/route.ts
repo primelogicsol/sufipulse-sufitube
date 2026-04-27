@@ -3,6 +3,7 @@ import { entityGetById, entityUpdate } from '@/lib/entity-storage-server';
 import { notifySubmitterStatusChange } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { usersRepository } from '@/server/db/repositories/users';
+import { auditLog } from '@/app/lib/audit-log';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await requireAdmin(request);
@@ -31,8 +32,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         if (u) {
           const existing = u.assigned_roles ?? [];
           usersRepository.setRoles(item.user_id, 'producer', [...new Set([...existing, 'producer'])]);
+          auditLog({ userId: authResult.id, userEmail: authResult.email, action: 'role_assigned', resourceType: 'user', resourceId: item.user_id, details: { role: 'producer', profileId: id, adminNote: body.admin_note } });
         }
       }
+      auditLog({ userId: authResult.id, userEmail: authResult.email, action: status === 'approved' ? 'profile_approved' : 'profile_rejected', resourceType: 'producer', resourceId: id, details: { adminNote: body.admin_note } });
       if (item.email) {
         notifySubmitterStatusChange({
           to: item.email,

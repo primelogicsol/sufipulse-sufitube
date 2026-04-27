@@ -15,7 +15,11 @@ export type AuditAction =
   | 'user_login'
   | 'user_logout'
   | 'user_created'
-  | 'settings_updated';
+  | 'settings_updated'
+  | 'role_assigned'
+  | 'role_revoked'
+  | 'profile_approved'
+  | 'profile_rejected';
 
 export type AuditEntry = {
   id: string;
