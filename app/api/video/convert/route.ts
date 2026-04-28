@@ -14,6 +14,7 @@ const MAX_FILE_SIZE = 500 * 1024 * 1024;  // 500 MB total
 const MAX_CHUNK_SIZE = 10 * 1024 * 1024;  // 10 MB per chunk (client sends 5 MB)
 
 const UPLOAD_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const ALLOWED_VIDEO_EXTS = new Set(['mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v', 'wmv', 'flv', 'ts', 'mts', 'm2ts', '3gp', 'hevc']);
 
 async function ensureTempDir() {
   if (!existsSync(TEMP_DIR)) await mkdir(TEMP_DIR, { recursive: true });
@@ -107,6 +108,10 @@ export async function POST(request: NextRequest) {
     const filename = decodeURIComponent(rawFilename);
     const ext = (filename.split('.').pop()?.toLowerCase() ?? 'mp4').replace(/[^a-z0-9]/g, '') || 'mp4';
 
+    if (!ALLOWED_VIDEO_EXTS.has(ext)) {
+      return NextResponse.json({ error: `File type .${ext} is not supported. Upload a video file (mp4, mov, mkv, etc.).` }, { status: 415 });
+    }
+
     // Read this chunk into memory — 5 MB from client, well within Node limits
     let chunkBuf: Buffer;
     try {
@@ -141,9 +146,15 @@ export async function POST(request: NextRequest) {
 
       // Assemble: read each 5 MB chunk buffer sequentially and stream into input file
       const assembleStream = createWriteStream(inputPath);
+      let totalAssembled = 0;
       for (let i = 0; i < totalChunks; i++) {
         const cp = join(TEMP_DIR, `${uploadId}_chunk_${i}.bin`);
         const buf = await readFile(cp);
+        totalAssembled += buf.byteLength;
+        if (totalAssembled > MAX_FILE_SIZE) {
+          assembleStream.destroy();
+          throw new Error(`File too large — max ${MAX_FILE_SIZE / 1024 / 1024} MB`);
+        }
         await new Promise<void>((resolve, reject) => {
           assembleStream.once('error', reject);
           if (!assembleStream.write(buf)) {
@@ -196,6 +207,10 @@ export async function POST(request: NextRequest) {
     const rawFilename = request.headers.get('x-filename') || 'video.mp4';
     const filename = decodeURIComponent(rawFilename);
     const ext = (filename.split('.').pop()?.toLowerCase() ?? 'mp4').replace(/[^a-z0-9]/g, '') || 'mp4';
+
+    if (!ALLOWED_VIDEO_EXTS.has(ext)) {
+      return NextResponse.json({ error: `File type .${ext} is not supported. Upload a video file (mp4, mov, mkv, etc.).` }, { status: 415 });
+    }
 
     const id = randomUUID();
     const inputPath = join(TEMP_DIR, `${id}_input.${ext}`);
