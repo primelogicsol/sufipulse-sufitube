@@ -41,7 +41,13 @@ export async function GET(request: NextRequest) {
   const fallbackRedirect = (status: string, reason?: string) => {
     const base = returnSlug ? `${appUrl}/release-detail/${returnSlug}` : `${appUrl}/`;
     const url = new URL(base);
-    url.searchParams.set('adoption_oauth', status);
+    if (status === 'success') {
+      // New canonical success URL — opens Adopt tab and triggers state restoration
+      url.searchParams.set('adopt', '1');
+      url.searchParams.set('step', 'google_ads_connected');
+    } else {
+      url.searchParams.set('adoption_oauth', status);
+    }
     if (adoptionId) url.searchParams.set('adoption_id', adoptionId);
     if (reason) url.searchParams.set('reason', encodeURIComponent(reason));
     return NextResponse.redirect(url.toString());
@@ -68,6 +74,20 @@ export async function GET(request: NextRequest) {
     const tokens = await tokenRes.json();
     if (!tokenRes.ok || !tokens.access_token) {
       throw new Error(tokens.error_description || 'Token exchange failed');
+    }
+
+    // Fetch Google account email for display in SufiPulse UI
+    let googleEmail: string | null = null;
+    try {
+      const userinfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (userinfoRes.ok) {
+        const userinfo = await userinfoRes.json();
+        googleEmail = userinfo?.email || null;
+      }
+    } catch {
+      // Non-fatal
     }
 
     // Discover accessible Google Ads customer accounts
@@ -106,6 +126,7 @@ export async function GET(request: NextRequest) {
         tokenType: tokens.token_type,
         expiresInSeconds: Number(tokens.expires_in || 0),
         accessibleCustomerIds,
+        googleEmail,
       });
     }
 

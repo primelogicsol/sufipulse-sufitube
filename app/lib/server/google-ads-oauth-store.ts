@@ -8,6 +8,7 @@ export type GoogleAdsUserOAuthRecord = {
   tokenType?: string;
   expiresAt?: string;
   accessibleCustomerIds: string[];
+  googleEmail?: string | null;
   updatedAt: string;
 };
 
@@ -56,6 +57,7 @@ export async function upsertGoogleAdsUserOAuth(params: {
   tokenType?: string;
   expiresInSeconds?: number;
   accessibleCustomerIds?: string[];
+  googleEmail?: string | null;
 }): Promise<GoogleAdsUserOAuthRecord> {
   const store = await readStore();
   const now = new Date();
@@ -71,6 +73,7 @@ export async function upsertGoogleAdsUserOAuth(params: {
     tokenType: params.tokenType ?? existing?.tokenType,
     expiresAt: expiresAt ?? existing?.expiresAt,
     accessibleCustomerIds: params.accessibleCustomerIds ?? existing?.accessibleCustomerIds ?? [],
+    googleEmail: params.googleEmail !== undefined ? params.googleEmail : (existing?.googleEmail ?? null),
     updatedAt: now.toISOString(),
   };
 
@@ -127,6 +130,7 @@ export async function getValidUserAccessToken(
     tokenType: tokens.token_type || record.tokenType,
     expiresInSeconds: Number(tokens.expires_in || 3600),
     accessibleCustomerIds: record.accessibleCustomerIds,
+    googleEmail: record.googleEmail,
   });
 
   return tokens.access_token;

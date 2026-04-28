@@ -67,6 +67,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isConnectingOAuth, setIsConnectingOAuth] = useState(false);
   const [isRecheckingAccounts, setIsRecheckingAccounts] = useState(false);
   const [verifiedAt, setVerifiedAt] = useState<string | null>(null);
+  const [googleEmail, setGoogleEmail] = useState<string | null>(null);
 
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
@@ -94,11 +95,15 @@ export function AdoptTab({ release }: AdoptTabProps) {
   }, []);
 
   // Restore state after Google OAuth callback redirect
+  // Handles both legacy (?adoption_oauth=success) and new (?step=google_ads_connected) URLs
   useEffect(() => {
     const url = new URL(window.location.href);
     const oauthResult = url.searchParams.get('adoption_oauth');
+    const returnedStep = url.searchParams.get('step');
     const returnedAdoptionId = url.searchParams.get('adoption_id');
-    if (oauthResult !== 'success' || !returnedAdoptionId) return;
+    const isOAuthReturn =
+      (oauthResult === 'success' || returnedStep === 'google_ads_connected') && !!returnedAdoptionId;
+    if (!isOAuthReturn) return;
 
     fetch(`/api/adoptions/${returnedAdoptionId}`)
       .then((r) => r.json())
@@ -133,6 +138,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     url.searchParams.delete('adoption_oauth');
     url.searchParams.delete('adoption_id');
+    url.searchParams.delete('step');
     window.history.replaceState({}, '', url.toString());
   }, []);
 
@@ -187,6 +193,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         const payload = await res.json();
         setOauthConfigured(Boolean(payload?.configured));
         setOauthConnected(Boolean(payload?.connected));
+        if (payload?.google_email) setGoogleEmail(payload.google_email);
         if (Array.isArray(payload?.accessible_customer_ids) && payload.accessible_customer_ids.length > 0) {
           setAccessibleCustomerIds(payload.accessible_customer_ids);
           const entered = formData.google_ads_customer_id?.trim();
@@ -264,7 +271,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setVerifiedCustomerId(null); setIsVerifying(false); setVerifyError(null);
     setOauthLastVerified(null); setSubmitError(''); setShowAuthWall(false);
     setCampaignResourceName(null); setIsConnectingOAuth(false);
-    setIsRecheckingAccounts(false); setVerifiedAt(null);
+    setIsRecheckingAccounts(false); setVerifiedAt(null); setGoogleEmail(null);
     setFormData({
       public_display_mode: 'full_name', public_location_mode: 'city_country',
       agree_to_terms: false, agree_to_promotional_use: false, billing_enabled: false,
@@ -284,6 +291,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       const payload = await res.json();
       setOauthConfigured(Boolean(payload?.configured));
       setOauthConnected(Boolean(payload?.connected));
+      if (payload?.google_email) setGoogleEmail(payload.google_email);
       if (Array.isArray(payload?.accessible_customer_ids) && payload.accessible_customer_ids.length > 0) {
         setAccessibleCustomerIds(payload.accessible_customer_ids);
         setSelectedGoogleCustomerId(payload.accessible_customer_ids[0]);
@@ -298,6 +306,22 @@ export function AdoptTab({ release }: AdoptTabProps) {
       setIsRecheckingAccounts(false);
     }
   };
+
+  // Window focus auto-recheck: user created a Google Ads account in another tab → auto-detect on return
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (
+      step !== 4 ||
+      selectedMethod !== 'use_my_google_ads' ||
+      !oauthConnected ||
+      !oauthChecked ||
+      accessibleCustomerIds.length > 0 ||
+      isRecheckingAccounts
+    ) return;
+    const onFocus = () => recheckGoogleAdsAccounts();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [step, selectedMethod, oauthConnected, oauthChecked, accessibleCustomerIds.length, isRecheckingAccounts]);
 
   const getDuration = (amount: number) => {
     if (amount < 50)  return { days: '1–5',   daily: Math.round(amount / 3) };
@@ -1107,7 +1131,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
                   <span className="text-sm font-semibold text-green-400">Google Connected</span>
-                  {oauthLastVerified && (
+                  {googleEmail && (
+                    <span className="text-xs text-neutral-500 ml-1">({googleEmail})</span>
+                  )}
+                  {oauthLastVerified && !googleEmail && (
                     <span className="text-xs text-neutral-600 ml-auto">
                       {new Date(oauthLastVerified).toLocaleString()}
                     </span>
@@ -1157,9 +1184,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
               /* Zero accounts — hard block with account creation CTA + check-again */
               <div className="border border-amber-800/40 bg-amber-900/10 rounded-xl p-5 space-y-4">
                 <div className="space-y-1.5">
-                  <p className="text-sm text-amber-400 font-medium">Google connected, but no Google Ads account was found.</p>
+                  <p className="text-sm text-amber-400 font-medium">
+                    Google connected{googleEmail ? ` as ${googleEmail}` : ''}, but no Google Ads account was found.
+                  </p>
                   <p className="text-sm text-neutral-500 leading-relaxed">
-                    You need a Google Ads account before SufiPulse can prepare this campaign. Create one, then return here and click "Check again."
+                    You need a Google Ads account before SufiPulse can prepare this campaign. Create one, then return here — this page will automatically detect it when you come back.
                   </p>
                 </div>
                 <a

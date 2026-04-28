@@ -116,6 +116,7 @@ export async function GET(request: NextRequest) {
     token_type: activeRecord.tokenType,
     expires_at: activeRecord.expiresAt,
     accessible_customer_ids: accessibleCustomerIds,
+    google_email: (activeRecord as any).googleEmail || null,
     updated_at: activeRecord.updatedAt,
     campaign: campaign
       ? {
