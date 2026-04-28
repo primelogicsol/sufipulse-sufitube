@@ -40,6 +40,12 @@ export async function convertVideoForOcr(
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    if (res.status === 413) {
+      throw new Error(
+        `File too large for the server upload limit (${(file.size / 1024 / 1024).toFixed(0)} MB). ` +
+        `Update nginx: set client_max_body_size 500M; in the server block and reload nginx.`
+      );
+    }
     throw new Error(data.error || `Conversion failed (HTTP ${res.status})`);
   }
 
