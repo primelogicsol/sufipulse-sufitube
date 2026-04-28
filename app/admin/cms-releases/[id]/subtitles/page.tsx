@@ -201,6 +201,11 @@ export default function SubtitleEditorPage() {
       if (data.tracks?.length) setSelectedTrackId(data.tracks[0].id);
     } catch (err: any) {
       setCaptionTracksError(err.message);
+      // If credentials simply aren't configured, skip the error state and go straight to video OCR
+      if (/OAuth credentials|YOUTUBE_OAUTH/i.test(err.message)) {
+        setCaptionSource('video');
+        setCaptionTracksError(null);
+      }
     } finally {
       setCaptionTracksLoading(false);
     }
@@ -773,8 +778,24 @@ export default function SubtitleEditorPage() {
           {captionSource === 'youtube' && (
             <>
               {captionTracksError && (
-                <div className="rounded-lg p-3 text-sm" style={{ backgroundColor: 'var(--dash-status-rejected-bg)', color: 'var(--dash-status-rejected)', border: '1px solid var(--dash-status-rejected)' }}>
-                  {captionTracksError}
+                <div className="rounded-lg p-3 text-sm space-y-2" style={{ backgroundColor: 'var(--dash-status-rejected-bg)', color: 'var(--dash-status-rejected)', border: '1px solid var(--dash-status-rejected)' }}>
+                  {/OAuth credentials|YOUTUBE_OAUTH/i.test(captionTracksError) ? (
+                    <>
+                      <p className="font-medium">YouTube OAuth not configured</p>
+                      <p className="text-xs opacity-80">
+                        Set <code>YOUTUBE_OAUTH_CLIENT_ID</code>, <code>YOUTUBE_OAUTH_CLIENT_SECRET</code>, and <code>YOUTUBE_OAUTH_REFRESH_TOKEN</code> in your environment to use this feature.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setCaptionSource('video')}
+                        className="mt-1 text-xs underline underline-offset-2 opacity-90 hover:opacity-100"
+                      >
+                        Switch to From Video File instead →
+                      </button>
+                    </>
+                  ) : (
+                    captionTracksError
+                  )}
                 </div>
               )}
 
