@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/server/middleware/authenticate';
+import { getAuthUser } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/oauth/start
  *
  * Builds the Google OAuth2 authorization URL and returns it.
+ * Auth optional — unauthenticated sponsors can connect via adoptionId.
  * Body: { adoptionId, userId, returnSlug }
  * Returns: { authUrl }
  */
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
   const body = await request.json();
+  const user = await getAuthUser(request);
   const { adoptionId = '', userId = '', returnSlug = '' } = body as {
     adoptionId?: string;
     userId?: string;
     returnSlug?: string;
   };
+
+  // Require either a logged-in user or an adoptionId (UUID as access token)
+  if (!user && !adoptionId) {
+    return NextResponse.json({ error: 'Authentication or adoptionId required.' }, { status: 401 });
+  }
 
   const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
   if (!clientId) {
