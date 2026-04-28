@@ -208,16 +208,27 @@ export default function AdminSongAdoptions() {
 
     const getStatusBadge = (status: string) => {
         const cfg: Record<string, { variant: any; label: string }> = {
-            draft:            { variant: 'neutral', label: 'Draft' },
-            pending_review:   { variant: 'neutral', label: 'Pending Review' },
-            admin_review:     { variant: 'gold',    label: 'Admin Review' },
-            approved:         { variant: 'success', label: 'Approved' },
-            scheduled:        { variant: 'gold',    label: 'Scheduled' },
-            live:             { variant: 'success', label: 'Live' },
-            completed:        { variant: 'success', label: 'Completed' },
-            cancelled:        { variant: 'error',   label: 'Cancelled' },
+            draft:                               { variant: 'neutral', label: 'Draft' },
+            submitted:                           { variant: 'neutral', label: 'Submitted' },
+            pending_review:                      { variant: 'neutral', label: 'Pending Review' },
+            pending_google_ads_manual_review:    { variant: 'gold',   label: 'Ads Manual Review' },
+            google_ads_verification_pending:     { variant: 'gold',   label: 'Ads Verification…' },
+            google_ads_verified:                 { variant: 'success', label: 'Ads Verified' },
+            google_ads_verification_failed:      { variant: 'error',  label: 'Ads Verify Failed' },
+            campaign_preparation_requested:      { variant: 'gold',   label: 'Campaign Prep Req.' },
+            admin_review:                        { variant: 'gold',    label: 'Admin Review' },
+            under_review:                        { variant: 'gold',    label: 'Under Review' },
+            approved:                            { variant: 'success', label: 'Approved' },
+            prepared:                            { variant: 'success', label: 'Prepared' },
+            scheduled:                           { variant: 'gold',    label: 'Scheduled' },
+            live:                                { variant: 'success', label: 'Live' },
+            monitoring:                          { variant: 'success', label: 'Monitoring' },
+            completed:                           { variant: 'success', label: 'Completed' },
+            report_ready:                        { variant: 'success', label: 'Report Ready' },
+            cancelled:                           { variant: 'error',   label: 'Cancelled' },
+            failed:                              { variant: 'error',   label: 'Failed' },
         };
-        const c = cfg[status] || cfg.pending_review;
+        const c = cfg[status] || { variant: 'neutral', label: status.replace(/_/g, ' ') };
         return <Badge variant={c.variant}>{c.label}</Badge>;
     };
 
@@ -329,6 +340,9 @@ export default function AdminSongAdoptions() {
                         <option value="all">All Statuses</option>
                         <option value="draft">Draft</option>
                         <option value="pending_review">Pending Review</option>
+                        <option value="pending_google_ads_manual_review">Ads Manual Review</option>
+                        <option value="google_ads_verification_failed">Ads Verify Failed</option>
+                        <option value="google_ads_verified">Ads Verified</option>
                         <option value="admin_review">Admin Review</option>
                         <option value="approved">Approved</option>
                         <option value="scheduled">Scheduled</option>
@@ -512,8 +526,18 @@ export default function AdminSongAdoptions() {
                                         <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-2 text-sm">
                                             <div><span className="text-neutral-500">Customer ID</span><div className="text-neutral-200 font-mono">{selectedAdoption.googleAdsCustomerId || '—'}</div></div>
                                             <div><span className="text-neutral-500">OAuth Status</span>
-                                                <div className={selectedAdoption.oauthStatus === 'connected' ? 'text-green-400' : 'text-red-400'}>
+                                                <div className={selectedAdoption.oauthStatus === 'connected' ? 'text-green-400' : 'text-neutral-500'}>
                                                     {selectedAdoption.oauthStatus || 'not_connected'}
+                                                </div>
+                                            </div>
+                                            <div><span className="text-neutral-500">Verification</span>
+                                                <div className={
+                                                    selectedAdoption.googleAdsVerificationStatus === 'verified' ? 'text-green-400' :
+                                                    selectedAdoption.googleAdsVerificationStatus === 'failed' ? 'text-red-400' :
+                                                    selectedAdoption.googleAdsVerificationStatus === 'manual_review_required' ? 'text-amber-400' :
+                                                    'text-neutral-500'
+                                                }>
+                                                    {selectedAdoption.googleAdsVerificationStatus || 'not_verified'}
                                                 </div>
                                             </div>
                                             <div><span className="text-neutral-500">Campaign Resource</span>
@@ -522,6 +546,14 @@ export default function AdminSongAdoptions() {
                                                 </div>
                                             </div>
                                         </div>
+                                        {/* Manual review alert */}
+                                        {(selectedAdoption.adoptionStatus === 'pending_google_ads_manual_review' ||
+                                          selectedAdoption.googleAdsVerificationStatus === 'manual_review_required' ||
+                                          selectedAdoption.googleAdsVerificationStatus === 'failed') && (
+                                            <div className="mt-2 border border-amber-700/40 bg-amber-900/10 rounded-lg px-3 py-2 text-xs text-amber-400">
+                                                Sponsor submitted for manual review — API verification was skipped or failed. Verify the Customer ID manually before launching a campaign.
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -562,16 +594,23 @@ export default function AdminSongAdoptions() {
                                     />
                                 </div>
 
-                                {(selectedAdoption.adoptionStatus === 'pending_review' || selectedAdoption.adoptionStatus === 'admin_review') && launchState.step === 'idle' && (
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'approved'); setSelectedAdoption((prev: any) => prev ? { ...prev, adoptionStatus: 'approved' } : prev); }}
-                                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
-                                        >Approve</button>
-                                        <button
-                                            onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'cancelled'); setSelectedAdoption(null); }}
-                                            className="px-4 py-2 border border-red-600 text-red-400 hover:bg-red-600/10 rounded-lg transition-colors text-sm"
-                                        >Reject</button>
+                                {(['pending_review', 'admin_review', 'pending_google_ads_manual_review', 'google_ads_verification_failed', 'google_ads_verified'].includes(selectedAdoption.adoptionStatus)) && launchState.step === 'idle' && (
+                                    <div className="space-y-2">
+                                        {(selectedAdoption.adoptionStatus === 'pending_google_ads_manual_review' || selectedAdoption.adoptionStatus === 'google_ads_verification_failed') && (
+                                            <p className="text-xs text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2">
+                                                Google Ads manual review — verify the Customer ID in the panel above before approving.
+                                            </p>
+                                        )}
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'approved'); setSelectedAdoption((prev: any) => prev ? { ...prev, adoptionStatus: 'approved' } : prev); }}
+                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
+                                            >Approve</button>
+                                            <button
+                                                onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'cancelled'); setSelectedAdoption(null); }}
+                                                className="px-4 py-2 border border-red-600 text-red-400 hover:bg-red-600/10 rounded-lg transition-colors text-sm"
+                                            >Reject</button>
+                                        </div>
                                     </div>
                                 )}
 

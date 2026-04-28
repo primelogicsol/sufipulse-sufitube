@@ -8,7 +8,7 @@ import {
   getAdoptionGoogleOAuthRecord,
   upsertAdoptionGoogleOAuthRecord,
 } from '@/app/lib/server/adoption-google-oauth-store';
-import { requireAuth } from '@/server/middleware/authenticate';
+import { getAuthUser } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/verify-account
@@ -20,9 +20,6 @@ import { requireAuth } from '@/server/middleware/authenticate';
  * Returns: { verified: boolean, customerId, accounts: string[] }
  */
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   const body = await request.json();
   const { adoptionId = '', userId = '', customerId = '' } = body as {
     adoptionId?: string;
@@ -30,7 +27,13 @@ export async function POST(request: NextRequest) {
     customerId?: string;
   };
 
-  if (userId && userId !== authResult.id) {
+  // Allow either an authenticated user OR an adoption-level request (adoptionId as access token).
+  // Unauthenticated users without an adoptionId are rejected.
+  const user = await getAuthUser(request);
+  if (!user && !adoptionId) {
+    return NextResponse.json({ error: 'Authentication or adoptionId required.' }, { status: 401 });
+  }
+  if (user && userId && userId !== user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -49,11 +52,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Resolve the effective userId for token lookup
+  const effectiveUserId = userId || user?.id || '';
+
   let accessToken: string | null = null;
-  let userRecord = userId ? await getGoogleAdsUserOAuth(userId) : null;
+  let userRecord = effectiveUserId ? await getGoogleAdsUserOAuth(effectiveUserId) : null;
 
   if (userRecord?.accessToken) {
-    accessToken = await getValidUserAccessToken(userId, userRecord);
+    accessToken = await getValidUserAccessToken(effectiveUserId, userRecord);
   }
 
   let adoptionRecord = null;
@@ -103,7 +109,7 @@ export async function POST(request: NextRequest) {
     if (verified) {
       if (userRecord) {
         await upsertGoogleAdsUserOAuth({
-          userId: authResult.id,
+          userId: effectiveUserId,
           accessToken: userRecord.accessToken,
           refreshToken: userRecord.refreshToken,
           tokenType: userRecord.tokenType,

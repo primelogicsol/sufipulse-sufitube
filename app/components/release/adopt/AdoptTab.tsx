@@ -184,8 +184,34 @@ export function AdoptTab({ release }: AdoptTabProps) {
         } else if (saved.amountDue > 0) {
           setFormData(prev => ({ ...prev, custom_budget: saved.amountDue }));
         }
-        // Jump directly to the review/payment step
-        setStep(saved.methodType === 'use_my_google_ads' ? 5 : 4);
+
+        if (saved.methodType === 'use_my_google_ads') {
+          // Restore Google Ads state based on what was saved in the adoption record
+          if (saved.googleAdsVerificationStatus === 'verified' && saved.googleAdsCustomerId) {
+            // Previously verified — jump straight to review
+            setVerifiedCustomerId(saved.googleAdsCustomerId);
+            setSelectedGoogleCustomerId(saved.googleAdsCustomerId);
+            setStep(5);
+          } else if (
+            saved.adoptionStatus === 'pending_google_ads_manual_review' ||
+            saved.googleAdsVerificationStatus === 'manual_review_required'
+          ) {
+            // Already submitted for manual review — show confirmation
+            setIsManualReview(true);
+            if (saved.googleAdsCustomerId) {
+              setSelectedGoogleCustomerId(saved.googleAdsCustomerId);
+              setEnteredCustomerId(saved.googleAdsCustomerId);
+            }
+            setStep(6);
+          } else {
+            // Needs verification — go to connect step; pre-fill customer ID if available
+            if (saved.googleAdsCustomerId) setEnteredCustomerId(saved.googleAdsCustomerId);
+            setStep(4);
+          }
+        } else {
+          setStep(4); // managed_sufitube: jump to review
+        }
+
         url.searchParams.delete('adoptionId');
         url.searchParams.delete('adopt');
         window.history.replaceState({}, '', url.toString());
@@ -242,6 +268,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       const res = await fetch('/api/google-ads/verify-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           adoptionId: adoption.id,
           userId: user?.id || '',
@@ -254,8 +281,30 @@ export function AdoptTab({ release }: AdoptTabProps) {
         setSelectedGoogleCustomerId(formatted);
         setVerifiedAt(new Date().toISOString());
         setVerifyError(null);
+        // Persist verified status on the adoption record
+        fetch(`/api/adoptions/${adoption.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            googleAdsCustomerId: formatted,
+            googleAdsVerificationStatus: 'verified',
+            adoptionStatus: 'google_ads_verified',
+          }),
+        }).catch(() => {});
       } else {
         setVerifyError('not_verified');
+        // Persist failed status on the adoption record so admin can see it
+        fetch(`/api/adoptions/${adoption.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            googleAdsCustomerId: formatted,
+            googleAdsVerificationStatus: 'failed',
+            adoptionStatus: 'google_ads_verification_failed',
+          }),
+        }).catch(() => {});
       }
     } catch {
       setVerifyError('error');
@@ -360,6 +409,29 @@ export function AdoptTab({ release }: AdoptTabProps) {
       setup_help_requested: false, auto_generate_copy: true, auto_generate_keywords: true,
       asset_suggestions: true, target_regions: [], target_languages: [],
     });
+  };
+
+  // Switch from use_my_google_ads to managed_sufitube while preserving sponsor info and budget.
+  // Does NOT reset the form — takes user to step 3 (form already pre-populated).
+  const switchToManaged = () => {
+    setSelectedMethod('managed_sufitube');
+    setAdoption(null); // Decouple from the use_my_google_ads draft (it stays in DB as abandoned draft)
+    setOauthConnected(false);
+    setOauthChecked(false);
+    setOauthConfigured(false);
+    setAccessibleCustomerIds([]);
+    setSelectedGoogleCustomerId('');
+    setVerifiedCustomerId(null);
+    setIsVerifying(false);
+    setVerifyError(null);
+    setIsManualReview(false);
+    setIsSubmittingManualReview(false);
+    setSubmitError('');
+    setEnteredEmail('');
+    setEnteredCustomerId('');
+    // Keep formData (full_name, email, country, city, budget etc.) intact
+    // Take user to the sponsor info form — already filled, they just need to continue
+    setStep(3);
   };
 
   const recheckGoogleAdsAccounts = async () => {
@@ -1208,9 +1280,55 @@ export function AdoptTab({ release }: AdoptTabProps) {
     // ── Server not configured ─────────────────────────────────────────────────
     if (!oauthConfigured) {
       return (
-        <div className="border border-red-800/30 bg-red-900/10 rounded-xl p-7 text-center space-y-3">
-          <Settings className="w-8 h-8 text-red-400 mx-auto" />
-          <p className="text-sm text-neutral-400">Google Ads integration is not available. Please contact support or choose a different method.</p>
+        <div className="space-y-5 animate-in fade-in duration-300">
+          <div className="border border-amber-800/30 bg-amber-900/10 rounded-xl p-5 text-center space-y-2">
+            <Settings className="w-8 h-8 text-amber-400 mx-auto" />
+            <p className="text-sm font-semibold text-neutral-200">Google Ads API connection is not available right now.</p>
+            <p className="text-sm text-neutral-500 leading-relaxed">
+              You can still submit your campaign request. SufiPulse will manually verify your Google Ads account and prepare the campaign structure.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+              Google Ads Customer ID <span className="text-neutral-600">(optional — provide if you have it)</span>
+            </label>
+            <input
+              type="text"
+              value={enteredCustomerId}
+              onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
+              placeholder="xxx-xxx-xxxx"
+              className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
+            />
+            <p className="text-xs text-neutral-600 mt-1.5">
+              Found in the top-right corner of your Google Ads account. Leave blank if you don&apos;t have it yet.
+            </p>
+          </div>
+
+          {submitError && (
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
+              {submitError}
+            </div>
+          )}
+
+          <button
+            type="button"
+            disabled={isSubmittingManualReview || !adoption?.id}
+            onClick={handleManualReview}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            {isSubmittingManualReview
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+              : <><Check className="w-5 h-5" /> Submit for Manual Review</>}
+          </button>
+
+          <button
+            type="button"
+            onClick={switchToManaged}
+            className="w-full py-3 border border-neutral-700 hover:border-amber-500/40 text-neutral-400 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
+          >
+            Switch to Managed by SufiTube Instead
+          </button>
         </div>
       );
     }
@@ -1298,7 +1416,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </div>
           )}
 
-          {/* Primary: manual review */}
+          {/* Primary: manual review — creates adoption record and notifies admin */}
           <button
             type="button"
             disabled={isSubmittingManualReview}
@@ -1306,22 +1424,38 @@ export function AdoptTab({ release }: AdoptTabProps) {
             className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {isSubmittingManualReview
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting for review…</>
-              : <><Check className="w-5 h-5" /> Continue with Manual Review</>}
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting request…</>
+              : <><Check className="w-5 h-5" /> Submit Adoption Request for Manual Review</>}
           </button>
 
+          <div className="relative flex items-center gap-3 py-1">
+            <div className="flex-1 border-t border-neutral-800" />
+            <span className="text-xs text-neutral-700 flex-shrink-0">or</span>
+            <div className="flex-1 border-t border-neutral-800" />
+          </div>
+
           <div className="space-y-2">
+            {/* Option 1: Try a different customer ID */}
             <button
               type="button"
-              onClick={() => { setVerifyError(null); setSubmitError(''); setOauthConnected(false); setOauthChecked(true); }}
+              onClick={() => { setVerifyError(null); setEnteredCustomerId(''); setSubmitError(''); }}
               className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
             >
-              Connect a Different Google Account
+              Try a Different Customer ID
             </button>
+            {/* Option 2: Reconnect Google account */}
             <button
               type="button"
-              onClick={() => resetFlow()}
-              className="w-full py-3 border border-neutral-800 hover:border-neutral-600 text-neutral-500 hover:text-neutral-300 text-sm font-medium rounded-xl transition-colors"
+              onClick={() => { setVerifyError(null); setSubmitError(''); setOauthConnected(false); setOauthChecked(true); setEnteredCustomerId(''); }}
+              className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
+            >
+              Reconnect a Different Google Account
+            </button>
+            {/* Option 3: Switch to managed */}
+            <button
+              type="button"
+              onClick={switchToManaged}
+              className="w-full py-3 border border-neutral-800 hover:border-amber-500/40 text-neutral-500 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
             >
               Switch to Managed by SufiTube
             </button>
@@ -1765,27 +1899,48 @@ export function AdoptTab({ release }: AdoptTabProps) {
             You will not pay inside SufiPulse. Your ad spend will be billed by Google through your selected Google Ads account after the campaign is approved and launched.
           </div>
 
-          {(!selectedGoogleCustomerId || !verifiedCustomerId) && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
-              No verified Google Ads account — go back to Step 4 to connect and verify.
-            </div>
-          )}
-
           {submitError && (
             <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
               {submitError}
             </div>
           )}
 
-          <button
-            onClick={() => { setSubmitError(''); handlePayment(); }}
-            disabled={!canSubmit}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isSubmitting
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-              : <><Check className="w-5 h-5" /> Submit Campaign Request</>}
-          </button>
+          {/* Verified path: normal submit */}
+          {(selectedGoogleCustomerId && verifiedCustomerId) ? (
+            <button
+              onClick={() => { setSubmitError(''); handlePayment(); }}
+              disabled={!canSubmit}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isSubmitting
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+                : <><Check className="w-5 h-5" /> Submit Campaign Request</>}
+            </button>
+          ) : (
+            /* No verified customer ID — offer manual review or go back */
+            <div className="space-y-3">
+              <div className="text-sm text-amber-400 border border-amber-700/40 bg-amber-900/20 rounded-lg px-4 py-3 text-center">
+                Google Ads account not yet verified. Submit for manual review or go back to verify.
+              </div>
+              <button
+                type="button"
+                disabled={isSubmittingManualReview}
+                onClick={handleManualReview}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {isSubmittingManualReview
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+                  : <><Check className="w-5 h-5" /> Submit for Manual Review</>}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+                className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
+              >
+                Go Back to Verify Google Ads Account
+              </button>
+            </div>
+          )}
         </div>
       );
     }
