@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
-import { createWriteStream } from 'fs';
-import { unlink, readdir, stat, mkdir } from 'fs/promises';
+import { createWriteStream, createReadStream } from 'fs';
+import { unlink, readdir, stat, mkdir, writeFile, readFile } from 'fs/promises';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -10,7 +10,10 @@ import { requireAuth } from '@/server/middleware/authenticate';
 
 const TEMP_DIR = join(tmpdir(), 'sufipulse-video-temp');
 const TEMP_TTL_MS = 30 * 60 * 1000;
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+const MAX_FILE_SIZE = 500 * 1024 * 1024;  // 500 MB total
+const MAX_CHUNK_SIZE = 10 * 1024 * 1024;  // 10 MB per chunk (client sends 5 MB)
+
+const UPLOAD_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 async function ensureTempDir() {
   if (!existsSync(TEMP_DIR)) await mkdir(TEMP_DIR, { recursive: true });
@@ -53,15 +56,130 @@ function runFfmpeg(inputPath: string, outputPath: string): Promise<void> {
   });
 }
 
-/**
- * Accepts the raw video file as the request body (Content-Type: application/octet-stream).
- * Filename is passed via X-Filename header.
- * Avoids all multipart parsing — no busboy, no boundary, no FormData.
- */
+async function readBodyToBuffer(request: NextRequest, maxBytes: number): Promise<Buffer> {
+  if (!request.body) throw new Error('No request body');
+  const reader = (request.body as ReadableStream<Uint8Array>).getReader();
+  const parts: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) throw new Error(`Chunk exceeds ${maxBytes / 1024 / 1024} MB limit`);
+      parts.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(parts);
+}
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  await ensureTempDir();
+  void cleanStaleFiles();
+
+  const uploadId = request.headers.get('x-upload-id');
+  const chunkIndexHeader = request.headers.get('x-chunk-index');
+  const totalChunksHeader = request.headers.get('x-total-chunks');
+
+  // ── Chunked upload ────────────────────────────────────────────────────────────
+  if (uploadId !== null && chunkIndexHeader !== null && totalChunksHeader !== null) {
+    if (!UPLOAD_ID_RE.test(uploadId)) {
+      return NextResponse.json({ error: 'Invalid upload ID' }, { status: 400 });
+    }
+
+    const chunkIndex = parseInt(chunkIndexHeader, 10);
+    const totalChunks = parseInt(totalChunksHeader, 10);
+
+    if (
+      isNaN(chunkIndex) || isNaN(totalChunks) ||
+      chunkIndex < 0 || chunkIndex >= totalChunks ||
+      totalChunks < 1 || totalChunks > 200
+    ) {
+      return NextResponse.json({ error: 'Invalid chunk parameters' }, { status: 400 });
+    }
+
+    const rawFilename = request.headers.get('x-filename') || 'video.mp4';
+    const filename = decodeURIComponent(rawFilename);
+    const ext = (filename.split('.').pop()?.toLowerCase() ?? 'mp4').replace(/[^a-z0-9]/g, '') || 'mp4';
+
+    // Read this chunk into memory — 5 MB from client, well within Node limits
+    let chunkBuf: Buffer;
+    try {
+      chunkBuf = await readBodyToBuffer(request, MAX_CHUNK_SIZE);
+    } catch (err: any) {
+      return NextResponse.json({ error: `Failed to read chunk ${chunkIndex}: ${err.message}` }, { status: 500 });
+    }
+
+    const chunkPath = join(TEMP_DIR, `${uploadId}_chunk_${chunkIndex}.bin`);
+    try {
+      await writeFile(chunkPath, chunkBuf);
+    } catch (err: any) {
+      return NextResponse.json({ error: `Failed to save chunk ${chunkIndex}: ${err.message}` }, { status: 500 });
+    }
+
+    // Intermediate chunk — acknowledge and wait for more
+    if (chunkIndex < totalChunks - 1) {
+      return NextResponse.json({ received: chunkIndex });
+    }
+
+    // ── Last chunk: assemble all chunks, run FFmpeg ───────────────────────────
+    const inputPath = join(TEMP_DIR, `${uploadId}_input.${ext}`);
+    const outputPath = join(TEMP_DIR, `${uploadId}_output.mp4`);
+
+    try {
+      // Verify all chunks are present before starting assembly
+      for (let i = 0; i < totalChunks; i++) {
+        if (!existsSync(join(TEMP_DIR, `${uploadId}_chunk_${i}.bin`))) {
+          return NextResponse.json({ error: `Chunk ${i} is missing — please restart the upload` }, { status: 400 });
+        }
+      }
+
+      // Assemble: read each 5 MB chunk buffer sequentially and stream into input file
+      const assembleStream = createWriteStream(inputPath);
+      for (let i = 0; i < totalChunks; i++) {
+        const cp = join(TEMP_DIR, `${uploadId}_chunk_${i}.bin`);
+        const buf = await readFile(cp);
+        await new Promise<void>((resolve, reject) => {
+          assembleStream.once('error', reject);
+          if (!assembleStream.write(buf)) {
+            assembleStream.once('drain', resolve);
+          } else {
+            resolve();
+          }
+        });
+        try { unlinkSync(cp); } catch {}
+      }
+      await new Promise<void>((resolve, reject) =>
+        assembleStream.end((err?: Error | null) => err ? reject(err) : resolve())
+      );
+
+      // Run FFmpeg on the assembled file
+      try {
+        await runFfmpeg(inputPath, outputPath);
+      } finally {
+        try { unlinkSync(inputPath); } catch {}
+      }
+
+      return NextResponse.json({
+        url: `/api/video/temp/${uploadId}_output.mp4`,
+        originalName: filename,
+      }, { status: 201 });
+
+    } catch (e: any) {
+      try { unlinkSync(inputPath); } catch {}
+      for (let i = 0; i < totalChunks; i++) {
+        try { unlinkSync(join(TEMP_DIR, `${uploadId}_chunk_${i}.bin`)); } catch {}
+      }
+      return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+  }
+
+  // ── Legacy single-upload (kept for compatibility; will fail > ~10 MB on this server) ──
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > MAX_FILE_SIZE) {
     return NextResponse.json(
@@ -75,9 +193,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await ensureTempDir();
-    void cleanStaleFiles();
-
     const rawFilename = request.headers.get('x-filename') || 'video.mp4';
     const filename = decodeURIComponent(rawFilename);
     const ext = (filename.split('.').pop()?.toLowerCase() ?? 'mp4').replace(/[^a-z0-9]/g, '') || 'mp4';
@@ -86,8 +201,6 @@ export async function POST(request: NextRequest) {
     const inputPath = join(TEMP_DIR, `${id}_input.${ext}`);
     const outputPath = join(TEMP_DIR, `${id}_output.mp4`);
 
-    // Read Web ReadableStream chunk-by-chunk directly — avoids Readable.fromWeb
-    // conversion which drops chunks for large bodies in Next.js App Router.
     const reader = (request.body as ReadableStream<Uint8Array>).getReader();
     const writeStream = createWriteStream(inputPath);
     let bytesWritten = 0;
@@ -105,7 +218,6 @@ export async function POST(request: NextRequest) {
             { status: 413 }
           );
         }
-        // Respect backpressure
         if (!writeStream.write(value)) {
           await new Promise<void>(resolve => writeStream.once('drain', resolve));
         }
@@ -122,12 +234,10 @@ export async function POST(request: NextRequest) {
       reader.releaseLock();
     }
 
-    // Verify completeness against Content-Length if provided
-    const contentLength = Number(request.headers.get('content-length') || 0);
     if (contentLength > 0 && Math.abs(bytesWritten - contentLength) > 1024) {
       try { unlinkSync(inputPath); } catch {}
       return NextResponse.json(
-        { error: `Upload incomplete: received ${bytesWritten} of ${contentLength} bytes. Try again.` },
+        { error: `Upload incomplete: received ${bytesWritten} of ${contentLength} bytes. Use chunked upload.` },
         { status: 400 }
       );
     }
