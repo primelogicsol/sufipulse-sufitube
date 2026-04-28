@@ -47,6 +47,7 @@ export default function Home() {
   const [featuredArticles, setFeaturedArticles] = useState<FeaturedArticle[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(true);
   const [latestPublications, setLatestPublications] = useState<Publication[]>([]);
+  const [recentReleases, setRecentReleases] = useState<Publication[]>([]);
   const [pubsLoading, setPubsLoading] = useState(true);
   const [lastReleaseSync, setLastReleaseSync] = useState<string | null>(null);
   const [kpiStats, setKpiStats] = useState({ releases: 81, writers: literaryArticles.length, institutions: 4 });
@@ -89,39 +90,49 @@ export default function Home() {
     setFeaturedArticles(featured as any);
     setArticlesLoading(false);
 
-    // Latest publications — prefer CMS ranked data, fall back to YouTube API
+    // Latest publications — fetch ranked (carousel) and date-sorted (grid) in parallel
     const fetchLatestPublications = async () => {
       try {
-        // Try CMS ranked releases first (performance-weighted order)
-        const cmsRes = await fetch('/api/releases?status=published&sort=ranked&limit=8');
-        if (cmsRes.ok) {
-          const cmsReleases: any[] = await cmsRes.json();
-          if (Array.isArray(cmsReleases) && cmsReleases.length > 0) {
-            const music: Publication[] = cmsReleases
-              .filter((r: any) => r.youtubeId)
-              .map((r: any) => ({
-                id: r.id,
-                type: 'music' as const,
-                title: r.title,
-                slug: r.youtubeId,
-                published_at: r.releaseDate,
-                description: r.description,
-                artwork_url: r.thumbnailUrl,
-                youtube_video_id: r.youtubeId,
-              }));
-            if (music.length > 0) {
-              setLatestPublications(music);
-              setLastReleaseSync(new Date().toISOString());
-              setPubsLoading(false);
-              return;
-            }
-          }
+        const toPublication = (r: any): Publication => ({
+          id: r.id,
+          type: 'music' as const,
+          title: r.title,
+          slug: r.youtubeId,
+          published_at: r.releaseDate,
+          description: r.description,
+          artwork_url: r.thumbnailUrl,
+          youtube_video_id: r.youtubeId,
+        });
+
+        const [rankedRes, recentRes] = await Promise.all([
+          fetch('/api/releases?status=published&sort=ranked&limit=8'),
+          fetch('/api/releases?status=published&limit=8'),
+        ]);
+
+        let rankedMusic: Publication[] = [];
+        if (rankedRes.ok) {
+          const data: any[] = await rankedRes.json();
+          if (Array.isArray(data)) rankedMusic = data.filter((r: any) => r.youtubeId).map(toPublication);
+        }
+
+        let recentMusic: Publication[] = [];
+        if (recentRes.ok) {
+          const data: any[] = await recentRes.json();
+          if (Array.isArray(data)) recentMusic = data.filter((r: any) => r.youtubeId).map(toPublication);
+        }
+
+        if (rankedMusic.length > 0 || recentMusic.length > 0) {
+          setLatestPublications(rankedMusic.length > 0 ? rankedMusic : recentMusic);
+          setRecentReleases(recentMusic.length > 0 ? recentMusic : rankedMusic);
+          setLastReleaseSync(new Date().toISOString());
+          setPubsLoading(false);
+          return;
         }
 
         // Fallback: YouTube API (recency order)
         const { youtubeService } = await import('../lib/youtube-service');
         const videos = await youtubeService.getLatestVideos(8);
-        const music: Publication[] = videos.map((video: any) => ({
+        const ytMusic: Publication[] = videos.map((video: any) => ({
           id: video.id,
           type: 'music' as const,
           title: video.title,
@@ -131,11 +142,13 @@ export default function Home() {
           artwork_url: video.thumbnailUrl,
           youtube_video_id: video.id,
         }));
-        setLatestPublications(music.slice(0, 8));
+        setLatestPublications(ytMusic.slice(0, 8));
+        setRecentReleases(ytMusic.slice(0, 8));
         setLastReleaseSync(new Date().toISOString());
       } catch (err) {
         console.error('Error fetching latest music releases:', err);
         setLatestPublications([]);
+        setRecentReleases([]);
       } finally {
         setPubsLoading(false);
       }
@@ -487,7 +500,7 @@ export default function Home() {
               Registry Highlights
             </div>
             <h2 className="text-[var(--text-3xl)] md:text-[48px] font-bold text-[var(--color-text-primary)] mb-4 leading-[1.2]">
-              Recent Releases
+              Registry Highlights
             </h2>
             <p className="inline text-[var(--text-lg)] text-[var(--color-text-secondary)] max-w-2xl leading-[var(--leading-relaxed)]">
               Curated selections from the institutional registry of approved and distributed works.
@@ -785,18 +798,15 @@ export default function Home() {
         </PageContainer>
       </Section>
 
-      {!pubsLoading && latestPublications.length > 0 && (
+      {!pubsLoading && recentReleases.length > 0 && (
         <Section background="slate" spacing="normal">
           <PageContainer>
             <div className="text-center mb-12">
               <Badge variant="gold">Latest Releases</Badge>
-              {/* <h2 className="text-[var(--text-3xl)] md:text-[var(--text-4xl)] font-semibold text-[var(--color-text-primary)] mt-4 mb-4 leading-[var(--leading-tight)]">
-                Recent Releases
-              </h2> */}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {latestPublications.map((pub) => {
+              {recentReleases.map((pub) => {
                 const cardContent = (
                   <Card hoverable>
                     {pub.type === 'music' && (pub.artwork_url || pub.youtube_video_id) ? (
