@@ -28,12 +28,14 @@ export async function convertVideoForOcr(
 ): Promise<string> {
   onProgress?.(`Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(0)} MB) for server conversion…`);
 
-  const formData = new FormData();
-  formData.append('file', file);
-
+  // Send raw binary body — avoids multipart parsing issues with large files in Next.js App Router
   const res = await fetch('/api/video/convert', {
     method: 'POST',
-    body: formData,
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'X-Filename': encodeURIComponent(file.name),
+    },
+    body: file,
     credentials: 'include',
   });
 
