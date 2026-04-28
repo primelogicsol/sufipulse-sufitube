@@ -39,6 +39,9 @@ jobs:
             NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
             NEXT_PUBLIC_YOUTUBE_API_KEY=${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
             NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_APP_COMMIT=${{ github.sha }}
+            APP_COMMIT=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp }}
           provenance: false
 
       - name: Deploy on VPS
@@ -208,6 +211,19 @@ jobs:
             echo "── 5. Old live app safety check ──"
             echo "All running containers (old app must NOT be stopped):"
             docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+            echo ""
+            echo "── 6. /api/version commit verification ──"
+            VERSION_JSON=$(curl -sf http://127.0.0.1:3001/api/version 2>/dev/null || echo '{}')
+            DEPLOYED_COMMIT=$(echo "$VERSION_JSON" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4 || echo 'unknown')
+            EXPECTED_COMMIT="${{ github.sha }}"
+            echo "  expected: ${EXPECTED_COMMIT}"
+            echo "  deployed: ${DEPLOYED_COMMIT}"
+            if [ "$DEPLOYED_COMMIT" = "$EXPECTED_COMMIT" ]; then
+              echo "  VERSION CHECK: PASS — correct SHA is live"
+            else
+              echo "  VERSION CHECK: FAIL — deployed commit does not match (may still be cached; check logs)" >&2
+            fi
 
             echo ""
             echo "════════════════════════════════════════"

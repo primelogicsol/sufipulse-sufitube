@@ -36,6 +36,26 @@ interface RecentActivity {
   reviewedAt: string;
 }
 
+function DeployBadge() {
+  const [info, setInfo] = useState<{ commit: string; builtAt: string } | null>(null);
+  useEffect(() => {
+    fetch('/api/version')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setInfo({ commit: d.commit || 'unknown', builtAt: d.builtAt || 'unknown' }))
+      .catch(() => {});
+  }, []);
+  if (!info) return null;
+  const shortSha = info.commit !== 'unknown' ? info.commit.slice(0, 7) : 'unknown';
+  const builtAt = info.builtAt !== 'unknown'
+    ? new Date(info.builtAt).toUTCString().replace(' GMT', ' UTC')
+    : 'unknown';
+  return (
+    <p className="mt-1 text-xs text-[var(--dash-text-muted)] font-mono">
+      Deployed commit: {shortSha} &nbsp;·&nbsp; Built: {builtAt}
+    </p>
+  );
+}
+
 export default function AdminDashboard() {
   //   const { user, loading } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
@@ -456,6 +476,7 @@ export default function AdminDashboard() {
         <p className="text-[var(--dash-text-secondary)]">
           Operational control center for institutional management
         </p>
+        <DeployBadge />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
