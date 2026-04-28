@@ -3,6 +3,7 @@ import path from 'path';
 
 export type CampaignRequestStatus =
   | 'pending_review'
+  | 'pending_manual_review'
   | 'approved'
   | 'rejected'
   | 'changes_requested'
@@ -35,10 +36,12 @@ export type GoogleAdsCampaignRequest = {
   targetRegions: string[];
   targetLanguages: string[];
   googleAdsCustomerId?: string;
+  googleEmail?: string;
   durationDays?: number;
   oauthConnected: boolean;
   methodType?: 'managed_sufitube' | 'use_my_google_ads';
   status: CampaignRequestStatus;
+  reviewReason?: string;
   adminNote?: string;
   campaignResourceName?: string;
   events: CampaignRequestEvent[];

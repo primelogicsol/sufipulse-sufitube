@@ -11,6 +11,7 @@ export type PaymentOwner = 'sufipulse_gateway' | 'google_ads_billing' | 'not_req
 export type AdoptionStatus =
   | 'draft'
   | 'pending_review'
+  | 'pending_google_ads_manual_review'
   | 'admin_review'
   | 'approved'
   | 'campaign_prepared'
@@ -69,6 +70,7 @@ export interface AdoptionRecord {
   // Google Ads
   oauthStatus: OAuthStatus;
   googleAdsCustomerId?: string | null;
+  googleAdsVerificationStatus?: string | null;
   campaignStatus: CampaignStatus;
   campaignResourceName?: string | null;
 

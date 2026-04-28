@@ -103,7 +103,7 @@ export async function PATCH(
   const ownerFields: (keyof typeof body)[] = [
     'sponsorName', 'sponsorEmail', 'sponsorCountry', 'sponsorCity',
     'adopterType', 'campaignIntention', 'dedicationMessage', 'targetRegions',
-    'targetLanguages', 'googleAdsCustomerId', 'oauthStatus',
+    'targetLanguages', 'googleAdsCustomerId', 'googleAdsVerificationStatus', 'oauthStatus',
     'publicDisplayMode', 'publicLocationMode', 'isAnonymous',
     'adoptionStatus', 'amountDue', 'currency', 'paymentRoute',
   ];

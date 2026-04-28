@@ -79,11 +79,14 @@ export async function POST(request: NextRequest) {
       targetRegions = ['Global'],
       targetLanguages = ['All'],
       googleAdsCustomerId,
+      googleEmail,
       durationDays,
       oauthConnected = false,
       methodType,
       sponsorName,
       sponsorEmail,
+      status: bodyStatus,
+      reviewReason,
     } = body;
 
     if (!adoptionId || !releaseId) {
@@ -108,10 +111,12 @@ export async function POST(request: NextRequest) {
       targetRegions,
       targetLanguages,
       googleAdsCustomerId,
+      googleEmail,
       durationDays: durationDays ? Number(durationDays) : undefined,
       oauthConnected,
       methodType: methodType ?? 'use_my_google_ads',
-      status: 'pending_review',
+      status: (bodyStatus as CampaignRequestStatus) ?? 'pending_review',
+      reviewReason,
     });
 
     await addCampaignRequestEvent(adoptionId, {
