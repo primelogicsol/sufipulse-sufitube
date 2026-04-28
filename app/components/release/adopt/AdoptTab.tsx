@@ -1154,32 +1154,33 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 </div>
               </div>
             ) : (
-              /* Zero accounts — hard block with Google Ads setup CTA + check-again */
-              <div className="border border-red-800/40 bg-red-900/10 rounded-xl p-5 space-y-4">
+              /* Zero accounts — hard block with account creation CTA + check-again */
+              <div className="border border-amber-800/40 bg-amber-900/10 rounded-xl p-5 space-y-4">
                 <div className="space-y-1.5">
-                  <p className="text-sm text-red-400 font-medium">Google connected, but no Google Ads account was found.</p>
+                  <p className="text-sm text-amber-400 font-medium">Google connected, but no Google Ads account was found.</p>
                   <p className="text-sm text-neutral-500 leading-relaxed">
-                    You need to create or finish setting up a Google Ads account before SufiPulse can prepare this campaign.
+                    You need a Google Ads account before SufiPulse can prepare this campaign. Create one, then return here and click "Check again."
                   </p>
                 </div>
                 <a
-                  href="https://ads.google.com/home/how-it-works/"
+                  href="https://ads.google.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 text-sm font-medium rounded-xl transition-colors"
                 >
-                  <ExternalLink className="w-4 h-4" /> Open Google Ads Setup
+                  <ExternalLink className="w-4 h-4" /> Create Google Ads Account
                 </a>
                 <button
                   type="button"
                   onClick={recheckGoogleAdsAccounts}
                   disabled={isRecheckingAccounts}
-                  className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-200 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   {isRecheckingAccounts
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking…</>
-                    : 'I finished Google Ads setup, check again'}
+                    : 'I finished setup — check again'}
                 </button>
+                <p className="text-xs text-neutral-600 text-center">After your account is created, click "Check again" to continue inside SufiPulse.</p>
               </div>
             )}
 
@@ -1756,6 +1757,29 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </p>
           </div>
 
+          {/* Campaign status progression */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-2">
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Campaign Status</p>
+            {[
+              { label: 'Google Ads account connected', done: true },
+              { label: `Customer ID selected (${selectedGoogleCustomerId || '—'})`, done: !!selectedGoogleCustomerId },
+              { label: 'Campaign request submitted to SufiPulse', done: true },
+              { label: 'Awaiting campaign preparation', done: false, active: true },
+              { label: 'Awaiting Google billing / approval', done: false },
+            ].map(({ label, done, active }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500/20 border border-green-500/40' : active ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-neutral-800 border border-neutral-700'}`}>
+                  {done
+                    ? <Check className="w-3 h-3 text-green-400" />
+                    : active
+                      ? <Loader2 className="w-3 h-3 text-amber-400" />
+                      : <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />}
+                </div>
+                <span className={`text-sm ${done ? 'text-neutral-300' : active ? 'text-amber-400' : 'text-neutral-600'}`}>{label}</span>
+              </div>
+            ))}
+          </div>
+
           {/* Full campaign confirmation table */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
             <div className="flex items-start justify-between px-5 py-3">
@@ -1796,13 +1820,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
               <span className="text-neutral-300">Pay Google Directly</span>
             </div>
             <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Status</span>
-              <span className="text-amber-400 text-sm font-medium bg-amber-900/40 px-2 py-0.5 rounded">Pending SufiPulse Review</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
               <span className="text-neutral-500">Reference ID</span>
               <span className="text-neutral-500 text-xs font-mono">{adoption?.id?.slice(-12) || '—'}</span>
             </div>
+          </div>
+
+          <div className="border border-neutral-800 bg-neutral-900/50 rounded-xl px-5 py-4 text-sm text-neutral-500 leading-relaxed">
+            Google Ads account connected. SufiPulse will prepare the campaign structure in your account. You remain the owner and pay Google directly.
           </div>
 
           <button onClick={resetFlow} className="w-full text-neutral-400 hover:text-white transition-colors text-sm py-2">
