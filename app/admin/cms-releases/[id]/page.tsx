@@ -280,21 +280,42 @@ export default function EditReleasePage() {
       const { videoFileToParsedCues, cmsLangToTesseract } = await import('@/lib/subtitle-ingest/video-file-to-cues');
       const { browserCanPlayFile, convertVideoForOcr } = await import('@/lib/subtitle-ingest/convert-video');
 
+      const ocrOptions = {
+        fps: 2,
+        subtitleZone: 0.25,
+        ocrLang: cmsLangToTesseract(videoOcrLang),
+        onProgress: (stage: string, pct: number, detail?: string) =>
+          setVideoOcrProgress({ stage, pct, detail: detail || '' }),
+      };
+
       let ocrInput: File | string = videoOcrFile;
 
+      // canPlayType('video/mp4') returns 'maybe' for any MP4 — can't pre-detect H.265.
+      // Strategy: if browser definitively refuses the type, convert upfront.
+      // Otherwise try OCR first and catch the decode error to auto-convert on failure.
       if (!browserCanPlayFile(videoOcrFile)) {
-        setVideoOcrProgress({ stage: 'frames', pct: 0, detail: `Converting "${videoOcrFile.name}" to H.264 on server…` });
+        setVideoOcrProgress({ stage: 'frames', pct: 0, detail: `Converting "${videoOcrFile.name}" to H.264…` });
         ocrInput = await convertVideoForOcr(videoOcrFile, (msg) =>
           setVideoOcrProgress({ stage: 'frames', pct: 0, detail: msg })
         );
       }
 
-      const cues = await videoFileToParsedCues(ocrInput, {
-        fps: 2,
-        subtitleZone: 0.25,
-        ocrLang: cmsLangToTesseract(videoOcrLang),
-        onProgress: (stage, pct, detail) => setVideoOcrProgress({ stage, pct, detail: detail || '' }),
-      });
+      let cues: Awaited<ReturnType<typeof videoFileToParsedCues>>;
+      try {
+        cues = await videoFileToParsedCues(ocrInput, ocrOptions);
+      } catch (decodeErr: any) {
+        // Browser said 'maybe' but can't actually decode (H.265/HEVC case) — auto-convert
+        if (ocrInput instanceof File && /codec|unsupported|H\.265|HEVC|decode/i.test(decodeErr.message)) {
+          setVideoOcrProgress({ stage: 'frames', pct: 0, detail: `Converting to H.264 — browser cannot decode this codec…` });
+          ocrInput = await convertVideoForOcr(videoOcrFile, (msg) =>
+            setVideoOcrProgress({ stage: 'frames', pct: 0, detail: msg })
+          );
+          cues = await videoFileToParsedCues(ocrInput, ocrOptions);
+        } else {
+          throw decodeErr;
+        }
+      }
+
       setVideoOcrProgress({ stage: 'grouping', pct: 100, detail: `${cues.length} cues found — saving…` });
       const res = await fetch(`/api/releases/${rid}/import-captions/from-video`, {
         method: 'POST',
