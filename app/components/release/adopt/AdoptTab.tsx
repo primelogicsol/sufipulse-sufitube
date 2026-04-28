@@ -68,6 +68,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isRecheckingAccounts, setIsRecheckingAccounts] = useState(false);
   const [verifiedAt, setVerifiedAt] = useState<string | null>(null);
   const [googleEmail, setGoogleEmail] = useState<string | null>(null);
+  const [justDetected, setJustDetected] = useState(false);
 
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
@@ -271,7 +272,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setVerifiedCustomerId(null); setIsVerifying(false); setVerifyError(null);
     setOauthLastVerified(null); setSubmitError(''); setShowAuthWall(false);
     setCampaignResourceName(null); setIsConnectingOAuth(false);
-    setIsRecheckingAccounts(false); setVerifiedAt(null); setGoogleEmail(null);
+    setIsRecheckingAccounts(false); setVerifiedAt(null); setGoogleEmail(null); setJustDetected(false);
     setFormData({
       public_display_mode: 'full_name', public_location_mode: 'city_country',
       agree_to_terms: false, agree_to_promotional_use: false, billing_enabled: false,
@@ -295,6 +296,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
       if (Array.isArray(payload?.accessible_customer_ids) && payload.accessible_customer_ids.length > 0) {
         setAccessibleCustomerIds(payload.accessible_customer_ids);
         setSelectedGoogleCustomerId(payload.accessible_customer_ids[0]);
+        setJustDetected(true);
+        setTimeout(() => setJustDetected(false), 5000);
       } else {
         setAccessibleCustomerIds([]);
       }
@@ -1127,17 +1130,25 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <div className="space-y-4">
             {/* Account selector — shown when accounts found */}
             {accessibleCustomerIds.length > 0 ? (
+              <div className="space-y-3">
+
+                {/* Detection confirmation — shown briefly after auto-detect or manual recheck */}
+                {justDetected && (
+                  <div className="flex items-center gap-2.5 px-4 py-3 bg-green-900/20 border border-green-800/40 rounded-xl text-sm text-green-400 animate-in fade-in duration-300">
+                    <Check className="w-4 h-4 flex-shrink-0" />
+                    <div>
+                      <span className="font-semibold">Google Ads account detected.</span>
+                      <span className="text-green-500/70 ml-2">You remain the owner and pay Google directly.</span>
+                    </div>
+                  </div>
+                )}
+
               <div className="border border-green-800/30 bg-neutral-900/50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
                   <span className="text-sm font-semibold text-green-400">Google Connected</span>
                   {googleEmail && (
                     <span className="text-xs text-neutral-500 ml-1">({googleEmail})</span>
-                  )}
-                  {oauthLastVerified && !googleEmail && (
-                    <span className="text-xs text-neutral-600 ml-auto">
-                      {new Date(oauthLastVerified).toLocaleString()}
-                    </span>
                   )}
                 </div>
                 <div>
@@ -1180,36 +1191,45 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   </div>
                 </div>
               </div>
+              </div>
             ) : (
-              /* Zero accounts — hard block with account creation CTA + check-again */
-              <div className="border border-amber-800/40 bg-amber-900/10 rounded-xl p-5 space-y-4">
-                <div className="space-y-1.5">
-                  <p className="text-sm text-amber-400 font-medium">
-                    Google connected{googleEmail ? ` as ${googleEmail}` : ''}, but no Google Ads account was found.
-                  </p>
-                  <p className="text-sm text-neutral-500 leading-relaxed">
-                    You need a Google Ads account before SufiPulse can prepare this campaign. Create one, then return here — this page will automatically detect it when you come back.
-                  </p>
-                </div>
-                <a
-                  href="https://ads.google.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 text-sm font-medium rounded-xl transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" /> Create Google Ads Account
-                </a>
-                <button
-                  type="button"
-                  onClick={recheckGoogleAdsAccounts}
-                  disabled={isRecheckingAccounts}
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  {isRecheckingAccounts
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking…</>
-                    : 'I finished setup — check again'}
-                </button>
-                <p className="text-xs text-neutral-600 text-center">After your account is created, click "Check again" to continue inside SufiPulse.</p>
+              /* Zero accounts — guided continuation */
+              <div className="border border-neutral-800 bg-neutral-900/60 rounded-xl p-5 space-y-4">
+                {isRecheckingAccounts ? (
+                  <div className="flex items-center gap-3 py-3">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-400 flex-shrink-0" />
+                    <span className="text-sm text-neutral-300">Checking for your Google Ads account…</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-neutral-200">
+                        No Google Ads account found{googleEmail ? ` for ${googleEmail}` : ''}.
+                      </p>
+                      <p className="text-sm text-neutral-500 leading-relaxed">
+                        Create one using the same Google account. When you return, SufiPulse will detect it automatically and continue your setup.
+                      </p>
+                    </div>
+                    <a
+                      href="https://ads.google.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" /> Create Google Ads Account
+                    </a>
+                    <button
+                      type="button"
+                      onClick={recheckGoogleAdsAccounts}
+                      className="w-full text-xs text-neutral-600 hover:text-neutral-400 transition-colors py-1"
+                    >
+                      Already created one? Check now
+                    </button>
+                    <p className="text-xs text-neutral-700 text-center">
+                      SufiPulse will automatically detect your account when you return to this page.
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
