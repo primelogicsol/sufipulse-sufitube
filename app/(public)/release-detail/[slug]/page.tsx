@@ -626,10 +626,10 @@ function Release() {
         }
     }, [videoLoaded]);
 
-    // Auto-switch to Adopt tab when returning from login with ?adopt=1
+    // Auto-switch to Adopt tab when returning from login (?adopt=1) or Google OAuth (?adoption_oauth=success)
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('adopt') === '1') {
+        if (params.get('adopt') === '1' || params.get('adoption_oauth') === 'success') {
             setActiveTab('adopt');
         }
     }, []);
