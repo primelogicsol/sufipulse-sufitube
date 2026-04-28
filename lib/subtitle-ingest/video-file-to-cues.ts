@@ -61,6 +61,7 @@ export function isTesseractLangSupported(cmsLang: string): boolean {
 // ── Frame extraction ──────────────────────────────────────────────────────────
 
 const SEEK_TIMEOUT_MS = 8000;
+const METADATA_TIMEOUT_MS = 30_000;
 
 async function extractFrames(
   file: File,
@@ -73,15 +74,43 @@ async function extractFrames(
     video.muted = true;
     video.preload = 'metadata';
 
+    // Pre-check: if browser reports zero support for this MIME type, fail fast
+    if (file.type && video.canPlayType(file.type) === '') {
+      reject(new Error(
+        `Your browser cannot play ${file.type}. Try Chrome, or re-export the video as MP4 (H.264 codec).`
+      ));
+      return;
+    }
+
     const objectUrl = URL.createObjectURL(file);
+    const fileMeta = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB · ${file.type || 'unknown type'}`;
+
+    const metadataTimer = setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error(
+        `Timed out waiting for video metadata. The file may be too large or corrupted. (${fileMeta})`
+      ));
+    }, METADATA_TIMEOUT_MS);
+
     video.src = objectUrl;
 
     video.addEventListener('error', () => {
+      clearTimeout(metadataTimer);
       URL.revokeObjectURL(objectUrl);
-      reject(new Error('Could not load video file. Make sure it is a valid MP4/WebM/MOV file.'));
+      const code = video.error?.code;
+      let msg: string;
+      if (code === MediaError.MEDIA_ERR_DECODE || code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+        msg = `Codec not supported — re-export as MP4 with H.264 codec (not H.265/HEVC). File: ${fileMeta}`;
+      } else if (code === MediaError.MEDIA_ERR_NETWORK) {
+        msg = `Failed to read the video file from disk. Try again. File: ${fileMeta}`;
+      } else {
+        msg = `Could not load video file. Make sure it is a valid MP4/WebM/MOV file. File: ${fileMeta}`;
+      }
+      reject(new Error(msg));
     });
 
     video.addEventListener('loadedmetadata', async () => {
+      clearTimeout(metadataTimer);
       // Wrap entire async body — errors inside async event handlers are otherwise silently swallowed
       try {
         const duration = video.duration;

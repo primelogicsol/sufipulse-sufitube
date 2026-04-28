@@ -800,6 +800,11 @@ export default function SubtitleEditorPage() {
                   className="form-input w-full text-sm"
                   onChange={(e) => { setVideoOcrFile(e.target.files?.[0] || null); setVideoOcrError(null); }}
                 />
+                {videoOcrFile && (
+                  <p className="mt-1 text-xs font-mono" style={{ color: 'var(--dash-text-muted)' }}>
+                    {videoOcrFile.name} · {(videoOcrFile.size / 1024 / 1024).toFixed(1)} MB · {videoOcrFile.type || 'unknown type'}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -834,8 +839,13 @@ export default function SubtitleEditorPage() {
               )}
 
               {videoOcrError && (
-                <div className="rounded-lg p-3 text-sm" style={{ backgroundColor: 'var(--dash-status-rejected-bg)', color: 'var(--dash-status-rejected)', border: '1px solid var(--dash-status-rejected)' }}>
-                  {videoOcrError}
+                <div className="rounded-lg p-3 text-sm space-y-2" style={{ backgroundColor: 'var(--dash-status-rejected-bg)', color: 'var(--dash-status-rejected)', border: '1px solid var(--dash-status-rejected)' }}>
+                  <p>{videoOcrError}</p>
+                  {/codec|unsupported|H\.265|HEVC|decode/i.test(videoOcrError) && (
+                    <p className="text-xs opacity-80">
+                      Fix: In your video editor choose <strong>File → Export → H.264</strong> (or "Web" / "YouTube" preset). Avoid H.265/HEVC — it is not universally supported in browsers.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
