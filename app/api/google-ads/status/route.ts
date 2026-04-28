@@ -107,6 +107,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const verifiedCustomerId = (activeRecord as any).verifiedCustomerId || null;
+  const selectedCustomerId = campaign?.selectedCustomerId || verifiedCustomerId;
+
   return NextResponse.json({
     configured,
     missing_vars: missingVars,
@@ -117,6 +120,8 @@ export async function GET(request: NextRequest) {
     expires_at: activeRecord.expiresAt,
     accessible_customer_ids: accessibleCustomerIds,
     google_email: (activeRecord as any).googleEmail || null,
+    verified_customer_id: verifiedCustomerId,
+    selected_customer_id: selectedCustomerId,
     updated_at: activeRecord.updatedAt,
     campaign: campaign
       ? {

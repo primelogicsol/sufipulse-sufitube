@@ -8,6 +8,7 @@ export type AdoptionGoogleOAuthRecord = {
   tokenType?: string;
   expiresAt?: string;
   accessibleCustomerIds: string[];
+  verifiedCustomerId?: string | null;
   updatedAt: string;
 };
 
@@ -54,6 +55,7 @@ export async function upsertAdoptionGoogleOAuthRecord(params: {
   tokenType?: string;
   expiresInSeconds?: number;
   accessibleCustomerIds?: string[];
+  verifiedCustomerId?: string | null;
 }) {
   const store = await readStore();
   const now = new Date();
@@ -61,6 +63,7 @@ export async function upsertAdoptionGoogleOAuthRecord(params: {
     ? new Date(now.getTime() + params.expiresInSeconds * 1000).toISOString()
     : undefined;
 
+  const existing = store.adoptions[params.adoptionId];
   const next: AdoptionGoogleOAuthRecord = {
     adoptionId: params.adoptionId,
     accessToken: params.accessToken,
@@ -68,6 +71,9 @@ export async function upsertAdoptionGoogleOAuthRecord(params: {
     tokenType: params.tokenType,
     expiresAt,
     accessibleCustomerIds: params.accessibleCustomerIds || [],
+    verifiedCustomerId: params.verifiedCustomerId !== undefined
+      ? params.verifiedCustomerId
+      : (existing?.verifiedCustomerId ?? null),
     updatedAt: now.toISOString(),
   };
 

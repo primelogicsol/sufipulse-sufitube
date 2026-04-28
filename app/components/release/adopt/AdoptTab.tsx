@@ -861,15 +861,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   <p className="text-xs text-neutral-400 leading-relaxed">
                     {googleAdsEnabled === null
                       ? 'Checking availability…'
-                      : googleAdsMissingVars.length > 0
-                        ? `Missing server config: ${googleAdsMissingVars.join(', ')}`
-                        : 'Google Ads integration is being configured. Use Managed by SufiTube in the meantime.'
-                    }
+                      : 'Google Ads account connection is temporarily unavailable.'}
                   </p>
                 </div>
-                <p className="text-xs text-center text-neutral-600">
-                  {googleAdsEnabled === null ? 'Checking…' : 'Not available on this server'}
-                </p>
               </>
             )}
           </div>
@@ -1204,10 +1198,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   <>
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-neutral-200">
-                        No Google Ads account found{googleEmail ? ` for ${googleEmail}` : ''}.
+                        {googleEmail
+                          ? `Google connected as ${googleEmail}, but no Google Ads account was found.`
+                          : 'Connected to Google, but no Google Ads account was found.'}
                       </p>
                       <p className="text-sm text-neutral-500 leading-relaxed">
-                        Create one using the same Google account. When you return, SufiPulse will detect it automatically and continue your setup.
+                        Create a Google Ads account using the same Google profile. When you return, SufiPulse will detect it automatically and continue your setup.
                       </p>
                     </div>
                     <a
@@ -1799,10 +1795,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
               <Check className="w-9 h-9 text-green-500" />
             </div>
             <h3 className="text-2xl font-serif font-light text-neutral-100 leading-snug">
-              Thank you. Your Google Ads campaign request has been submitted.
+              Campaign request submitted.
             </h3>
             <p className="text-sm text-neutral-500 leading-relaxed max-w-md mx-auto">
-              SufiPulse will review the campaign structure before launch. Your ad spend will be billed by Google through your selected Google Ads account after the campaign is approved and launched.
+              SufiPulse will prepare the campaign structure in your Google Ads account. You remain the account owner and pay Google directly.
             </p>
           </div>
 

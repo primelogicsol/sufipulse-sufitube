@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getGoogleAdsUserOAuth,
   getValidUserAccessToken,
+  upsertGoogleAdsUserOAuth,
 } from '@/app/lib/server/google-ads-oauth-store';
-import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
+import {
+  getAdoptionGoogleOAuthRecord,
+  upsertAdoptionGoogleOAuthRecord,
+} from '@/app/lib/server/adoption-google-oauth-store';
 import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
@@ -46,16 +50,15 @@ export async function POST(request: NextRequest) {
   }
 
   let accessToken: string | null = null;
+  let userRecord = userId ? await getGoogleAdsUserOAuth(userId) : null;
 
-  if (userId) {
-    const userRecord = await getGoogleAdsUserOAuth(userId);
-    if (userRecord?.accessToken) {
-      accessToken = await getValidUserAccessToken(userId, userRecord);
-    }
+  if (userRecord?.accessToken) {
+    accessToken = await getValidUserAccessToken(userId, userRecord);
   }
 
+  let adoptionRecord = null;
   if (!accessToken && adoptionId) {
-    const adoptionRecord = await getAdoptionGoogleOAuthRecord(adoptionId);
+    adoptionRecord = await getAdoptionGoogleOAuthRecord(adoptionId);
     if (adoptionRecord?.accessToken) {
       accessToken = adoptionRecord.accessToken;
     }
@@ -96,6 +99,32 @@ export async function POST(request: NextRequest) {
 
     const normalizedTarget = customerId.replace(/-/g, '');
     const verified = accounts.some((cid) => cid.replace(/-/g, '') === normalizedTarget);
+
+    if (verified) {
+      if (userRecord) {
+        await upsertGoogleAdsUserOAuth({
+          userId: authResult.id,
+          accessToken: userRecord.accessToken,
+          refreshToken: userRecord.refreshToken,
+          tokenType: userRecord.tokenType,
+          accessibleCustomerIds: userRecord.accessibleCustomerIds,
+          googleEmail: userRecord.googleEmail,
+          verifiedCustomerId: customerId,
+        });
+      } else if (adoptionId) {
+        if (!adoptionRecord) adoptionRecord = await getAdoptionGoogleOAuthRecord(adoptionId);
+        if (adoptionRecord) {
+          await upsertAdoptionGoogleOAuthRecord({
+            adoptionId,
+            accessToken: adoptionRecord.accessToken,
+            refreshToken: adoptionRecord.refreshToken,
+            tokenType: adoptionRecord.tokenType,
+            accessibleCustomerIds: adoptionRecord.accessibleCustomerIds,
+            verifiedCustomerId: customerId,
+          });
+        }
+      }
+    }
 
     return NextResponse.json({ verified, customerId, accounts });
   } catch (error: any) {
