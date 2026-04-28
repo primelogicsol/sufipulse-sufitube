@@ -22,9 +22,12 @@ const writeAll = (records: any[]) => {
 };
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
   const { id } = await params;
   const credits = readAll().filter((c: any) => c.release_id === id);
   return NextResponse.json(credits);

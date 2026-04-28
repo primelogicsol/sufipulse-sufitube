@@ -125,7 +125,7 @@ export interface CMSRelease {
     startTime: string; // HH:MM:SS.mmm
     endTime: string; // HH:MM:SS.mmm
     lineRef?: string;
-    sourceType?: 'manual' | 'srt' | 'vtt' | 'ass';
+    sourceType?: 'manual' | 'srt' | 'vtt' | 'ass' | 'youtube_captions' | 'video_ocr';
     active?: boolean;
   }>;
   subtitleTranslations?: Record<string, Record<string, string>>;
@@ -158,6 +158,11 @@ export interface CMSRelease {
     backColor?: string;
     bold?: boolean;
     italic?: boolean;
+    underline?: boolean;
+    scaleX?: number;
+    scaleY?: number;
+    spacing?: number;
+    angle?: number;
     outline?: number;
     shadow?: number;
     alignment?: number;

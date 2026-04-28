@@ -54,6 +54,11 @@ export type ASSStylePack = {
   backColor?: string;
   bold?: boolean;
   italic?: boolean;
+  underline?: boolean;
+  scaleX?: number;
+  scaleY?: number;
+  spacing?: number;
+  angle?: number;
   outline?: number;
   shadow?: number;
   alignment?: number;
@@ -74,6 +79,11 @@ export const DEFAULT_STYLE_PACK: ASSStylePack = {
   backColor: '#000000',
   bold: true,
   italic: false,
+  underline: false,
+  scaleX: 100,
+  scaleY: 100,
+  spacing: 0,
+  angle: 0,
   outline: 2,
   shadow: 0,
   alignment: 2,

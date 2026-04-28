@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 // Language code mapping: our internal codes → Google Translate codes
 const LANG_CODE_MAP: Record<string, string> = {
@@ -52,12 +53,15 @@ async function translateText(text: string, sourceLang: string, targetLang: strin
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await req.json() as {
       texts: string[];
       sourceLang: string;
       targetLang: string;
-      tone?: string;
+      // tone reserved for Phase 3 (LLM rewriting layer) — currently unused
     };
 
     const { texts, sourceLang, targetLang } = body;

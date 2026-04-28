@@ -2,6 +2,7 @@ import { Trash2, SkipForward, Target } from 'lucide-react';
 import type { CMSRelease } from '@/lib/cms-storage';
 import type { ASSStylePack } from './release-constants';
 import { DEFAULT_STYLE_NAME, DEFAULT_STYLE_PACK } from './release-constants';
+import { cueTimeToSeconds } from './subtitle-utils';
 
 type Props = {
   form: Partial<CMSRelease>;
@@ -50,6 +51,12 @@ export function SubtitleCueListSection({
         const isMasterLang = selectedSubtitleLanguage === (form.defaultLanguage || 'en');
         const hasText = !!(form.subtitleTranslations?.[selectedSubtitleLanguage]?.[cue.id]?.trim());
         const hasPosition = Number.isFinite(cueMeta.positionX) && Number.isFinite(cueMeta.positionY);
+        const cueText = form.subtitleTranslations?.[selectedSubtitleLanguage]?.[cue.id] || '';
+        const wordCount = cueText.trim() ? cueText.trim().split(/\s+/).filter(Boolean).length : 0;
+        const durationCount = cueMeta.karaokeEffect && cueMeta.karaokeEffect !== 'none'
+          ? (cueMeta.karaokeDurationsMs || '').split(/[;,\s]+/).filter((s: string) => s.trim().length > 0).length
+          : 0;
+        const karaokeMismatch = durationCount > 0 && wordCount > 0 && durationCount !== wordCount;
 
         return (
           <div
@@ -111,6 +118,13 @@ export function SubtitleCueListSection({
                 type="text"
                 value={cue.endTime}
                 onChange={(e) => updateCue(cue.id, 'endTime', e.target.value)}
+                onBlur={(e) => {
+                  const end = cueTimeToSeconds(e.target.value);
+                  const start = cueTimeToSeconds(cue.startTime);
+                  if (Number.isFinite(end) && Number.isFinite(start) && end < start) {
+                    updateCue(cue.id, 'endTime', cue.startTime);
+                  }
+                }}
                 onClick={(e) => e.stopPropagation()}
                 className="form-input font-mono text-xs"
                 style={{ width: '116px', flexShrink: 0, color: '#ef4444' }}
@@ -318,13 +332,20 @@ export function SubtitleCueListSection({
                     <option value="ko">Outline (\ko)</option>
                   </select>
                   {cueMeta.karaokeEffect && cueMeta.karaokeEffect !== 'none' && (
-                    <input
-                      type="text"
-                      value={cueMeta.karaokeDurationsMs || ''}
-                      onChange={(e) => setCueMetadata(cue.id, { karaokeDurationsMs: e.target.value })}
-                      className="form-input text-xs w-full mt-1"
-                      placeholder="ms/word e.g. 320,260,420"
-                    />
+                    <>
+                      <input
+                        type="text"
+                        value={cueMeta.karaokeDurationsMs || ''}
+                        onChange={(e) => setCueMetadata(cue.id, { karaokeDurationsMs: e.target.value })}
+                        className="form-input text-xs w-full mt-1"
+                        placeholder="ms/word e.g. 320,260,420"
+                      />
+                      {karaokeMismatch && (
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--dash-status-rejected)' }}>
+                          {durationCount} duration{durationCount !== 1 ? 's' : ''} ≠ {wordCount} word{wordCount !== 1 ? 's' : ''} — falls back to even split
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

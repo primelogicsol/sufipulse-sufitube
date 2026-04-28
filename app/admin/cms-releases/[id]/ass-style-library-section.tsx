@@ -304,6 +304,49 @@ export function ASSStyleLibrarySection({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div>
+          <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Scale X (%)</label>
+          <input
+            type="number"
+            value={activeStyle.scaleX ?? 100}
+            onChange={(e) => updateStylePack(activeStyleName, { scaleX: Number(e.target.value || 100) })}
+            className="form-input"
+            placeholder="100"
+          />
+        </div>
+        <div>
+          <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Scale Y (%)</label>
+          <input
+            type="number"
+            value={activeStyle.scaleY ?? 100}
+            onChange={(e) => updateStylePack(activeStyleName, { scaleY: Number(e.target.value || 100) })}
+            className="form-input"
+            placeholder="100"
+          />
+        </div>
+        <div>
+          <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Letter Spacing (px)</label>
+          <input
+            type="number"
+            value={activeStyle.spacing ?? 0}
+            onChange={(e) => updateStylePack(activeStyleName, { spacing: Number(e.target.value || 0) })}
+            className="form-input"
+            placeholder="0"
+          />
+        </div>
+        <div>
+          <label className="block text-xs mb-1" style={{color: 'var(--dash-text-muted)'}}>Angle (°)</label>
+          <input
+            type="number"
+            value={activeStyle.angle ?? 0}
+            onChange={(e) => updateStylePack(activeStyleName, { angle: Number(e.target.value || 0) })}
+            className="form-input"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
       <div className="flex items-center gap-6 text-sm">
         <label className="inline-flex items-center gap-2" style={{color: 'var(--dash-text-primary)'}}>
           <input
@@ -322,6 +365,15 @@ export function ASSStyleLibrarySection({
             style={{accentColor: 'var(--dash-accent)'}}
           />
           Italic
+        </label>
+        <label className="inline-flex items-center gap-2" style={{color: 'var(--dash-text-primary)'}}>
+          <input
+            type="checkbox"
+            checked={!!activeStyle.underline}
+            onChange={(e) => updateStylePack(activeStyleName, { underline: e.target.checked })}
+            style={{accentColor: 'var(--dash-accent)'}}
+          />
+          Underline
         </label>
       </div>
     </div>

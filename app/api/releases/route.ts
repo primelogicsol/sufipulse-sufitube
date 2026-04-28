@@ -21,6 +21,15 @@ export async function GET(request: NextRequest) {
       if (!release) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
+      if (release.status !== 'published') {
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) {
+          return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        }
+        return NextResponse.json({ ...release, resolution_source: 'cms_slug' }, {
+          headers: { 'Cache-Control': 'no-store' },
+        });
+      }
       return NextResponse.json({
         ...release,
         resolution_source: 'cms_slug',
@@ -31,6 +40,15 @@ export async function GET(request: NextRequest) {
       const release = cmsServerStorage.getReleaseByYoutubeId(youtubeId);
       if (!release) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      if (release.status !== 'published') {
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) {
+          return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        }
+        return NextResponse.json({ ...release, resolution_source: 'cms_youtube_compat' }, {
+          headers: { 'Cache-Control': 'no-store' },
+        });
       }
       return NextResponse.json({
         ...release,
