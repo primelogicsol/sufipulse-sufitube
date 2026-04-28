@@ -25,9 +25,6 @@ const ADS_API_VERSION = 'v17';
  *   2. Adoption-level record (adoption-google-oauth.json, keyed by adoptionId) — legacy
  */
 export async function GET(request: NextRequest) {
-  const auth = await requireAuth(request);
-  if (auth instanceof NextResponse) return auth;
-
   const { searchParams } = new URL(request.url);
   const adoptionId = searchParams.get('adoptionId') || '';
   const recheck = searchParams.get('recheck') === '1';
@@ -35,6 +32,13 @@ export async function GET(request: NextRequest) {
   const REQUIRED_VARS = ['GOOGLE_ADS_CLIENT_ID', 'GOOGLE_ADS_DEVELOPER_TOKEN'] as const;
   const missingVars = REQUIRED_VARS.filter((v) => !process.env[v]);
   const configured = missingVars.length === 0;
+
+  // Return server configuration status publicly — no user data exposed here.
+  // Auth is only required to return connection/token details below.
+  const auth = await requireAuth(request);
+  if (auth instanceof NextResponse) {
+    return NextResponse.json({ configured, missing_vars: missingVars, connected: false });
+  }
 
   const userId = auth.id;
 

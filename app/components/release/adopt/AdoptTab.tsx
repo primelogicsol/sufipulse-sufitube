@@ -80,13 +80,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
   // ── Effects ───────────────────────────────────────────────────────────────
 
 
-  // Check at mount whether Google Ads is configured on this server
+  // Check at mount whether Google Ads is configured on this server.
+  // The status endpoint now returns configured/missing_vars even for unauthenticated requests.
+  // If the fetch fails entirely, leave as null (show Connect button optimistically).
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch('/api/google-ads/status');
         const payload = await res.json();
-        setGoogleAdsEnabled(Boolean(payload?.configured));
+        // Only mark disabled when server explicitly says not configured.
+        // null = unknown (optimistic: show button); false = server said missing vars.
+        setGoogleAdsEnabled(payload?.configured === false ? false : null);
         setGoogleAdsMissingVars(Array.isArray(payload?.missing_vars) ? payload.missing_vars : []);
       } catch {
         setGoogleAdsEnabled(null);
@@ -783,9 +787,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
         {/* ── RIGHT CARD: Use My Google Ads ── always visible, state-aware */}
         <div
-          onClick={() => googleAdsEnabled ? handleMethodSelect('use_my_google_ads') : undefined}
+          onClick={() => googleAdsEnabled !== false ? handleMethodSelect('use_my_google_ads') : undefined}
           className={`flex flex-col bg-neutral-900 border rounded-2xl transition-all duration-200 select-none ${
-            googleAdsEnabled
+            googleAdsEnabled !== false
               ? 'border-neutral-800 hover:border-blue-500/40 cursor-pointer group'
               : 'border-neutral-800/50 opacity-70 cursor-default'
           }`}
@@ -818,7 +822,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <div className="flex flex-col flex-1 px-7 pb-7 gap-5">
             <div>
               <h4 className={`text-[17px] font-semibold mb-2 transition-colors ${
-                googleAdsEnabled ? 'text-neutral-100 group-hover:text-blue-400' : 'text-neutral-400'
+                googleAdsEnabled !== false ? 'text-neutral-100 group-hover:text-blue-400' : 'text-neutral-400'
               }`}>
                 Use My Google Ads
               </h4>
@@ -829,7 +833,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
             <div className="border-t border-neutral-800/80" />
 
-            {googleAdsEnabled ? (
+            {googleAdsEnabled !== false ? (
               <>
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2.5 text-sm text-neutral-300">
@@ -859,9 +863,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 </div>
                 <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-xl px-4 py-3 text-center">
                   <p className="text-xs text-neutral-400 leading-relaxed">
-                    {googleAdsEnabled === null
-                      ? 'Checking availability…'
-                      : 'Google Ads account connection is temporarily unavailable.'}
+                    Google Ads account connection is temporarily unavailable.
                   </p>
                 </div>
               </>
