@@ -80,29 +80,28 @@ async function runChecks(base, label) {
 
   try {
     await page.goto(returnUrl, { waitUntil: 'networkidle', timeout: 30000 });
-    await page.waitForSelector('text=No Google Ads account found', { timeout: 15000 });
+    await page.waitForSelector('text=/Google connected as|No Google Ads account found/', { timeout: 15000 });
 
     const bodyText = await page.locator('body').textContent();
 
-    // New guided detection text
-    const hasNewText = bodyText.includes('SufiPulse will automatically detect');
+    // New rebuild copy: no-account heading must say "Google connected as"
+    const hasNewText = bodyText.includes('Google connected as') || bodyText.includes('Connected to Google, but no Google Ads');
     R.deploy_new_text = hasNewText ? 'PASS' : 'FAIL';
     if (!hasNewText) {
-      errs.push('DEPLOY: "SufiPulse will automatically detect" not found — old or wrong build running');
-      // Show what text IS in the no-account block for diagnosis
-      const noAcctBlock = await page.locator('text=No Google Ads account found').first()
+      errs.push('DEPLOY: new no-account copy not found — rebuild not yet deployed');
+      const noAcctBlock = await page.locator('text=/Google connected as|No Google Ads account found/').first()
         .evaluate(el => el.closest('[class]')?.textContent || el.parentElement?.textContent || '')
         .catch(() => '');
       errs.push('DEPLOY: no-account block text: ' + noAcctBlock.slice(0, 200));
     }
 
-    // Old blocked-state text should be absent from the NO-ACCOUNT block
-    // ("Not available on this server" may still exist on step 0 for unconfigured servers — that's OK)
-    // What must NOT appear here is the old manual "click Check again" copy
-    const hasOldCheckAgainText = bodyText.includes('click "Check again" to continue inside SufiPulse');
-    R.deploy_old_text = hasOldCheckAgainText ? 'FAIL' : 'PASS';
-    if (hasOldCheckAgainText) {
-      errs.push('DEPLOY: old "click Check again" copy found — old build is still running');
+    // Neither "Not available on this server" nor "Google Ads integration is being configured" should exist
+    const hasOldBlockedText = bodyText.includes('Not available on this server')
+                           || bodyText.includes('Google Ads integration is being configured')
+                           || bodyText.includes('click "Check again" to continue inside SufiPulse');
+    R.deploy_old_text = hasOldBlockedText ? 'FAIL' : 'PASS';
+    if (hasOldBlockedText) {
+      errs.push('DEPLOY: old blocked-state copy still present — rebuild not yet deployed');
     }
 
   } catch (e) {
@@ -139,7 +138,7 @@ async function runChecks(base, label) {
   // ── Return to OAuth return state for behavioral checks ────────────────────
   await page.goto(returnUrl, { waitUntil: 'networkidle', timeout: 30000 });
   try {
-    await page.waitForSelector('text=No Google Ads account found', { timeout: 15000 });
+    await page.waitForSelector('text=/Google connected as|No Google Ads account found/', { timeout: 15000 });
   } catch {
     errs.push('CHECKS: could not re-reach no-account state for behavioral checks');
     Object.assign(R, { check1: 'FAIL', check2: 'FAIL', check3: 'FAIL', check4: 'FAIL' });
@@ -152,7 +151,7 @@ async function runChecks(base, label) {
     const visible = await page.locator(`text=${MOCK_EMAIL}`).first().isVisible({ timeout: 3000 });
     R.check1 = visible ? 'PASS' : 'FAIL';
     if (!visible) {
-      const txt = await page.locator('text=No Google Ads account found').first().textContent().catch(() => '');
+      const txt = await page.locator('text=/Google connected as|No Google Ads account found/').first().textContent().catch(() => '');
       errs.push(`CHECK 1: "${MOCK_EMAIL}" not found. No-account text: "${txt}"`);
     }
   } catch (e) { R.check1 = 'FAIL'; errs.push(`CHECK 1: ${e.message}`); }
@@ -175,7 +174,7 @@ async function runChecks(base, label) {
     R.check2 = 'PASS';
   } else {
     R.check2 = 'FAIL';
-    const noAcctGone = !(await page.locator('text=No Google Ads account found').isVisible().catch(() => true));
+    const noAcctGone = !(await page.locator('text=/Google connected as|No Google Ads account found/').isVisible().catch(() => true));
     errs.push(`CHECK 2: recheck=1 call not triggered after focus. noAcctGone=${noAcctGone}. Recent calls: ${JSON.stringify(apiCalls.slice(-5))}`);
   }
 
@@ -226,8 +225,8 @@ function reportTarget(label, R, errs) {
   const icon = r => r === 'PASS' ? '✔' : r === 'FAIL' ? '✘' : r === '—' ? '—' : '?';
   console.log(`\n${label}`);
   console.log('DEPLOY:');
-  console.log(`  ${icon(R.deploy_new_text)}  new guided detection text in bundle`);
-  console.log(`  ${icon(R.deploy_old_text)}  old manual "check again" text absent`);
+  console.log(`  ${icon(R.deploy_new_text)}  rebuild copy live ("Google connected as…")`);
+  console.log(`  ${icon(R.deploy_old_text)}  old blocked-state copy absent`);
   console.log('BROWSER:');
   console.log(`  ${icon(R.gads_card)}  Google Ads card active (not blocked/misconfigured)`);
   console.log(`  ${icon(R.check1)}  Google email visible`);
