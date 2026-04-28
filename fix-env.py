@@ -4,7 +4,7 @@ new_vars = [
     'GOOGLE_ADS_CLIENT_SECRET=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',
     'GOOGLE_ADS_LOGIN_CUSTOMER_ID=2014066444',
     'GOOGLE_ADS_CREATE_MODE=draft',
-    'GOOGLE_ADS_REDIRECT_URI=https://test.sufipulse.com/api/google-ads/oauth/callback',
+    'GOOGLE_ADS_REDIRECT_URI=https://sufipulse.com/api/google-ads/oauth/callback',
 ]
 with open(env_file, 'r') as f:
     lines = [l for l in f.readlines() if not l.startswith('GOOGLE_ADS')]

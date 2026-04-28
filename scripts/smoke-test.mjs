@@ -5,7 +5,7 @@
  *   ADMIN_EMAIL=admin@sufipulse.com ADMIN_PASSWORD=yourpass node scripts/smoke-test.mjs
  *
  * Optional env:
- *   SMOKE_TEST_URL=https://test.sufipulse.com  (default)
+ *   SMOKE_TEST_URL=https://sufipulse.com  (default)
  *   TEST_USER_EMAIL=smoketest@example.com       (auto-registered if not present)
  *   TEST_USER_PASSWORD=TestPass123!             (used for auto-registration)
  */
@@ -26,7 +26,7 @@ try {
   }
 } catch {}
 
-const BASE           = process.env.SMOKE_TEST_URL  || envVars.SMOKE_TEST_URL  || 'https://test.sufipulse.com';
+const BASE           = process.env.SMOKE_TEST_URL  || envVars.SMOKE_TEST_URL  || 'https://sufipulse.com';
 const ADMIN_EMAIL    = process.env.ADMIN_EMAIL     || envVars.ADMIN_EMAIL     || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD  || envVars.ADMIN_PASSWORD  || '';
 const TEST_EMAIL     = process.env.TEST_USER_EMAIL || `smoketest_${Date.now()}@example.com`;

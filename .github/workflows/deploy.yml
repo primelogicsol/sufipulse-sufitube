@@ -200,8 +200,8 @@ jobs:
             curl -sI http://127.0.0.1:3001 | head -5
 
             echo ""
-            echo "── 4. curl https://test.sufipulse.com ──"
-            curl -sI https://test.sufipulse.com | head -5 \
+            echo "── 4. curl https://sufipulse.com ──"
+            curl -sI https://sufipulse.com | head -5 \
               || echo "(HTTPS not reachable from VPS — check from browser)"
 
             echo ""
