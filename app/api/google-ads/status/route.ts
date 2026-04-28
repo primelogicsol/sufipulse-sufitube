@@ -33,10 +33,34 @@ export async function GET(request: NextRequest) {
   const missingVars = REQUIRED_VARS.filter((v) => !process.env[v]);
   const configured = missingVars.length === 0;
 
-  // Return server configuration status publicly — no user data exposed here.
-  // Auth is only required to return connection/token details below.
+  // Auth is optional. Unauthenticated requests can still get adoption-level
+  // connection status when an adoptionId is provided — the UUID is the access token.
   const auth = await requireAuth(request);
   if (auth instanceof NextResponse) {
+    // Unauthenticated — check for adoption-level token before giving up
+    if (adoptionId) {
+      const adoptionRecord = await getAdoptionGoogleOAuthRecord(adoptionId);
+      if (adoptionRecord?.accessToken) {
+        const campaign = await getGoogleAdsCampaign(adoptionId);
+        return NextResponse.json({
+          configured,
+          missing_vars: missingVars,
+          connected: true,
+          adoption_id: adoptionId,
+          accessible_customer_ids: adoptionRecord.accessibleCustomerIds ?? [],
+          google_email: (adoptionRecord as any).googleEmail || null,
+          verified_customer_id: (adoptionRecord as any).verifiedCustomerId || null,
+          updated_at: adoptionRecord.updatedAt,
+          campaign: campaign
+            ? {
+                campaign_resource_name: campaign.campaignResourceName,
+                selected_customer_id: campaign.selectedCustomerId,
+                campaign_status: campaign.campaignStatus,
+              }
+            : null,
+        });
+      }
+    }
     return NextResponse.json({ configured, missing_vars: missingVars, connected: false });
   }
 

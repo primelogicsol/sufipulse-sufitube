@@ -71,6 +71,20 @@ export async function GET(request: NextRequest) {
       throw new Error(tokens.error_description || 'Token exchange failed');
     }
 
+    // Fetch Google account email for display in the SufiPulse UI
+    let googleEmail: string | null = null;
+    try {
+      const userinfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (userinfoRes.ok) {
+        const userinfo = await userinfoRes.json();
+        googleEmail = userinfo?.email || null;
+      }
+    } catch {
+      // Non-fatal
+    }
+
     // Discover which Google Ads customer accounts this token can access
     let accessibleCustomerIds: string[] = [];
     try {
@@ -106,7 +120,8 @@ export async function GET(request: NextRequest) {
         tokenType: tokens.token_type,
         expiresInSeconds: Number(tokens.expires_in || 0),
         accessibleCustomerIds,
-      });
+        googleEmail,
+      } as any);
     }
 
     return fallbackRedirect('success');
