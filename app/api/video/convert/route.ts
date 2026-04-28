@@ -6,8 +6,6 @@ import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
-import { Readable } from 'stream';
-import { pipeline } from 'stream/promises';
 import { requireAuth } from '@/server/middleware/authenticate';
 
 const TEMP_DIR = join(tmpdir(), 'sufipulse-video-temp');
@@ -88,15 +86,50 @@ export async function POST(request: NextRequest) {
     const inputPath = join(TEMP_DIR, `${id}_input.${ext}`);
     const outputPath = join(TEMP_DIR, `${id}_output.mp4`);
 
-    // Stream raw body directly to disk — no memory buffering
-    const nodeStream = Readable.fromWeb(request.body as any);
+    // Read Web ReadableStream chunk-by-chunk directly — avoids Readable.fromWeb
+    // conversion which drops chunks for large bodies in Next.js App Router.
+    const reader = (request.body as ReadableStream<Uint8Array>).getReader();
     const writeStream = createWriteStream(inputPath);
+    let bytesWritten = 0;
 
     try {
-      await pipeline(nodeStream, writeStream);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bytesWritten += value.byteLength;
+        if (bytesWritten > MAX_FILE_SIZE) {
+          writeStream.destroy();
+          try { unlinkSync(inputPath); } catch {}
+          return NextResponse.json(
+            { error: `File too large — max ${MAX_FILE_SIZE / 1024 / 1024} MB` },
+            { status: 413 }
+          );
+        }
+        // Respect backpressure
+        if (!writeStream.write(value)) {
+          await new Promise<void>(resolve => writeStream.once('drain', resolve));
+        }
+      }
+      await new Promise<void>((resolve, reject) =>
+        writeStream.end((err?: Error | null) => err ? reject(err) : resolve())
+      );
     } catch (err: any) {
+      reader.releaseLock();
+      writeStream.destroy();
       try { unlinkSync(inputPath); } catch {}
       return NextResponse.json({ error: `Upload failed: ${err.message}` }, { status: 500 });
+    } finally {
+      reader.releaseLock();
+    }
+
+    // Verify completeness against Content-Length if provided
+    const contentLength = Number(request.headers.get('content-length') || 0);
+    if (contentLength > 0 && Math.abs(bytesWritten - contentLength) > 1024) {
+      try { unlinkSync(inputPath); } catch {}
+      return NextResponse.json(
+        { error: `Upload incomplete: received ${bytesWritten} of ${contentLength} bytes. Try again.` },
+        { status: 400 }
+      );
     }
 
     try {
