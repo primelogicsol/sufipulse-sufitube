@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
-import { writeFile, unlink, readdir, stat, mkdir } from 'fs/promises';
+import { createWriteStream } from 'fs';
+import { unlink, readdir, stat, mkdir } from 'fs/promises';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
+import { Readable } from 'stream';
+import Busboy from 'busboy';
 import { requireAuth } from '@/server/middleware/authenticate';
 
 const TEMP_DIR = join(tmpdir(), 'sufipulse-video-temp');
 const TEMP_TTL_MS = 30 * 60 * 1000; // 30 min
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
 
+// Ensure temp dir exists
 async function ensureTempDir() {
   if (!existsSync(TEMP_DIR)) {
     await mkdir(TEMP_DIR, { recursive: true });
   }
 }
 
+// Lazy GC — delete files older than TEMP_TTL_MS
 async function cleanStaleFiles() {
   try {
     const files = await readdir(TEMP_DIR);
@@ -61,42 +66,117 @@ function runFfmpeg(inputPath: string, outputPath: string): Promise<void> {
   });
 }
 
+/**
+ * Stream multipart upload directly to disk using busboy.
+ * Avoids request.formData() which buffers the entire body in memory and
+ * fails for large files (300 MB+) in Next.js App Router.
+ */
+function saveUploadedFile(
+  request: NextRequest,
+  destPath: string
+): Promise<{ filename: string; mimeType: string; bytesWritten: number }> {
+  return new Promise((resolve, reject) => {
+    const headers: Record<string, string> = {};
+    request.headers.forEach((value, key) => { headers[key] = value; });
+
+    const bb = Busboy({ headers, limits: { fileSize: MAX_FILE_SIZE } });
+    let resolved = false;
+
+    bb.on('file', (_field, stream, info) => {
+      const writeStream = createWriteStream(destPath);
+      let bytesWritten = 0;
+
+      stream.on('data', (chunk: Buffer) => { bytesWritten += chunk.length; });
+
+      stream.on('limit', () => {
+        writeStream.destroy();
+        try { unlinkSync(destPath); } catch {}
+        if (!resolved) {
+          resolved = true;
+          reject(new Error(`File too large — max ${MAX_FILE_SIZE / 1024 / 1024} MB`));
+        }
+      });
+
+      stream.pipe(writeStream);
+
+      writeStream.on('finish', () => {
+        if (!resolved) {
+          resolved = true;
+          resolve({ filename: info.filename, mimeType: info.mimeType, bytesWritten });
+        }
+      });
+
+      writeStream.on('error', (err) => {
+        if (!resolved) { resolved = true; reject(err); }
+      });
+
+      stream.on('error', (err: Error) => {
+        if (!resolved) { resolved = true; reject(err); }
+      });
+    });
+
+    bb.on('error', (err: Error) => {
+      if (!resolved) { resolved = true; reject(err); }
+    });
+
+    // Pipe Web ReadableStream → Node.js Readable → busboy
+    if (!request.body) {
+      reject(new Error('No request body'));
+      return;
+    }
+    const nodeStream = Readable.fromWeb(request.body as any);
+    nodeStream.pipe(bb);
+    nodeStream.on('error', (err) => {
+      if (!resolved) { resolved = true; reject(err); }
+    });
+  });
+}
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
     await ensureTempDir();
-    void cleanStaleFiles(); // fire-and-forget
-
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
-
-    if (!file || file.size === 0) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: `File too large — max ${MAX_FILE_SIZE / 1024 / 1024} MB` }, { status: 413 });
-    }
+    void cleanStaleFiles();
 
     const id = randomUUID();
-    const ext = (file.name.split('.').pop()?.toLowerCase() ?? 'mp4').replace(/[^a-z0-9]/g, '');
-    const inputPath = join(TEMP_DIR, `${id}_input.${ext}`);
+    const inputPath = join(TEMP_DIR, `${id}_input.bin`);
     const outputPath = join(TEMP_DIR, `${id}_output.mp4`);
 
-    const bytes = await file.arrayBuffer();
-    await writeFile(inputPath, Buffer.from(bytes));
+    let uploadInfo: { filename: string; mimeType: string; bytesWritten: number };
+    try {
+      uploadInfo = await saveUploadedFile(request, inputPath);
+    } catch (err: any) {
+      try { unlinkSync(inputPath); } catch {}
+      return NextResponse.json({ error: err.message }, { status: err.message.includes('too large') ? 413 : 400 });
+    }
+
+    const { filename, bytesWritten } = uploadInfo;
+
+    // Rename to proper extension for FFmpeg detection
+    const ext = (filename.split('.').pop()?.toLowerCase() ?? 'mp4').replace(/[^a-z0-9]/g, '');
+    const renamedInput = join(TEMP_DIR, `${id}_input.${ext}`);
+    try {
+      const { rename } = await import('fs/promises');
+      await rename(inputPath, renamedInput);
+    } catch {
+      // If rename fails, FFmpeg will still try with the .bin file
+    }
+
+    const actualInput = existsSync(renamedInput) ? renamedInput : inputPath;
 
     try {
-      await runFfmpeg(inputPath, outputPath);
+      await runFfmpeg(actualInput, outputPath);
     } finally {
+      try { unlinkSync(actualInput); } catch {}
       try { unlinkSync(inputPath); } catch {}
     }
 
     return NextResponse.json({
       url: `/api/video/temp/${id}_output.mp4`,
-      originalName: file.name,
-      sizeMB: (file.size / 1024 / 1024).toFixed(1),
+      originalName: filename,
+      sizeMB: (bytesWritten / 1024 / 1024).toFixed(1),
     }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

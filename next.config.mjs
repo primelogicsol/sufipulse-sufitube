@@ -18,7 +18,7 @@ const nextConfig = {
   // Keep bcryptjs as a real node_modules entry in the standalone output instead of
   // bundling it into webpack chunks. This makes it available to scripts that run
   // outside of webpack (e.g. npm run seed:admin inside the container).
-  serverExternalPackages: ['bcryptjs'],
+  serverExternalPackages: ['bcryptjs', 'busboy'],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
