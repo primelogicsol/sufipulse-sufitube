@@ -37,7 +37,7 @@ export function ReleaseCreditsSection({ form, updatePublicCredits }: Props) {
           Production Credits
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {[['recordedAt','Recorded at'],['recordingEngineer','Recording Engineer'],['mixMaster','Mix & Master'],['soundDesign','Sound Design']].map(([key, label]) => (
+          {[['recordedAt','Recorded at'],['recordingEngineer','Recording Engineer'],['mixMaster','Mix & Master'],['soundDesign','Sound Design'],['productionSupervision','Production Supervision']].map(([key, label]) => (
             <div key={key}>
               <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>{label}</label>
               <input className="form-input w-full" placeholder={label} value={(form.publicCredits?.production as any)?.[key] || ''} onChange={(e) => updatePublicCredits('production', key, e.target.value)} />

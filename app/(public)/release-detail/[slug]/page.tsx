@@ -2273,6 +2273,7 @@ function Release() {
                                                     recordingEngineer: 'Lucas Ray, Michael "SufiPulse" Hartman',
                                                     mixMaster: 'Ryan Cole, Elijah James',
                                                     soundDesign: 'Elijah James',
+                                                    productionSupervision: 'SufiPulse Studio USA',
                                                 },
                                                 visual: {
                                                     videoDirection: 'SufiPulse Visuals',
@@ -2344,6 +2345,7 @@ function Release() {
                                                         { label: 'Recording Engineer', key: 'recordingEngineer' },
                                                         { label: 'Mix & Master', key: 'mixMaster' },
                                                         { label: 'Sound Design', key: 'soundDesign' },
+                                                        { label: 'Production Supervision', key: 'productionSupervision' },
                                                     ])}
                                                     {renderSeededSection(<Video className="w-5 h-5 text-amber-400" />, "Visual Credits", "visual", [
                                                         { label: 'Video Direction', key: 'videoDirection' },

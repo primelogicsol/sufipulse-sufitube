@@ -101,7 +101,7 @@ export function useReleaseForm({
     publicSponsors: [],
     publicCredits: {
       artistic: { leadVocalist: '', lyricist: '', composer: '', musicProducer: '', backgroundVocals: '' },
-      production: { recordedAt: '', recordingEngineer: '', mixMaster: '', soundDesign: '' },
+      production: { recordedAt: '', recordingEngineer: '', mixMaster: '', soundDesign: '', productionSupervision: '' },
       visual: { videoDirection: '', editing: '', thumbnailDesign: '', artwork: '' },
       literary: { romanTransliteration: '', englishTranslation: '', thematicInterpretation: '', proofreading: '' },
       rights: { publishedBy: '', platform: '', registeredReleaseId: '', releaseDateText: '', copyrightHolder: '', licensingText: '', licensingUrl: '' },

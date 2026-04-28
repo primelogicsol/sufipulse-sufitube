@@ -75,6 +75,7 @@ export interface CMSRelease {
       recordingEngineer?: string;
       mixMaster?: string;
       soundDesign?: string;
+      productionSupervision?: string;
     };
     visual?: {
       videoDirection?: string;
