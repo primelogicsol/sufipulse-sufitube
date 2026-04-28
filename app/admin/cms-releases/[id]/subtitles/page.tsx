@@ -26,6 +26,7 @@ import { ASSStyleLibrarySection } from '../ass-style-library-section';
 import { LanguageManagementSection } from '../language-management-section';
 import { SubtitleBulkControlsSection } from '../subtitle-bulk-controls-section';
 import { SocialShareKitSection } from '../social-share-kit-section';
+import DashboardLayout from '../../../../components/layout/DashboardLayout';
 
 export default function SubtitleEditorPage() {
   const { user } = useAuth();
@@ -357,28 +358,31 @@ export default function SubtitleEditorPage() {
 
   // ── Early returns ─────────────────────────────────────────────────────────
 
-  if (!isAdmin) return <div className="p-8 text-center">Unauthorized</div>;
+  if (!isAdmin) return <DashboardLayout><div className="p-8 text-center">Unauthorized</div></DashboardLayout>;
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--dash-bg-primary)' }}>
-      <div className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Loading subtitle editor…</div>
-    </div>
+    <DashboardLayout>
+      <div className="flex items-center justify-center py-24">
+        <div className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>Loading subtitle editor…</div>
+      </div>
+    </DashboardLayout>
   );
 
   if (notFound) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: 'var(--dash-bg-secondary)' }}>
-      <p className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>Release not found</p>
-      <Link href="/admin/cms-releases">
-        <button className="dashboard-btn-primary px-5 py-2 rounded-lg text-sm font-medium">Back to Releases</button>
-      </Link>
-    </div>
+    <DashboardLayout>
+      <div className="flex flex-col items-center justify-center gap-4 py-24">
+        <p className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>Release not found</p>
+        <Link href="/admin/cms-releases">
+          <button className="dashboard-btn-primary px-5 py-2 rounded-lg text-sm font-medium">Back to Releases</button>
+        </Link>
+      </div>
+    </DashboardLayout>
   );
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <>
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--dash-bg-primary)' }}>
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 py-6">
 
         {/* Header */}
@@ -748,7 +752,6 @@ export default function SubtitleEditorPage() {
         </div>
 
       </div>
-    </div>
 
     {/* YouTube Caption Import Modal */}
     {captionModalOpen && (
@@ -930,6 +933,6 @@ export default function SubtitleEditorPage() {
         </div>
       </div>
     )}
-    </>
+    </DashboardLayout>
   );
 }

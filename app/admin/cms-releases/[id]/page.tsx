@@ -42,6 +42,7 @@ import { SubtitleBulkControlsSection } from './subtitle-bulk-controls-section';
 import { WorkflowAssistantSection } from './workflow-assistant-section';
 import { SocialShareKitSection } from './social-share-kit-section';
 import { useReleaseForm, SAMPLE_PREVIEW_DURATION_SECONDS } from './use-release-form';
+import DashboardLayout from '../../../components/layout/DashboardLayout';
 export default function EditReleasePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -60,7 +61,6 @@ export default function EditReleasePage() {
     hasUnsavedChanges,
     loading, notFound,
     saving,
-    activeTab, setActiveTab,
     exportingZip,
     youtubeSyncing,
     errorMessage, setErrorMessage,
@@ -347,27 +347,29 @@ export default function EditReleasePage() {
   };
 
   if (!user?.role.includes('admin')) {
-    return <div className="p-8 text-center">Unauthorized</div>;
+    return <DashboardLayout><div className="p-8 text-center">Unauthorized</div></DashboardLayout>;
   }
 
   if (loading) {
-    return <div className="p-8 text-center">Loading...</div>;
+    return <DashboardLayout><div className="p-8 text-center">Loading...</div></DashboardLayout>;
   }
 
   if (notFound) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: 'var(--dash-bg-secondary)' }}>
-        <p className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>Release not found</p>
-        <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No release exists with ID &ldquo;{params.id}&rdquo;.</p>
-        <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
-          Legacy seeded IDs were removed. Import a real video from YouTube or create a new release.
-        </p>
-        <Link href="/admin/cms-releases">
-          <button className="dashboard-btn-primary px-5 py-2 rounded-lg text-sm font-medium">
-            Back to Releases
-          </button>
-        </Link>
-      </div>
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center gap-4 py-24">
+          <p className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>Release not found</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No release exists with ID &ldquo;{params.id}&rdquo;.</p>
+          <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
+            Legacy seeded IDs were removed. Import a real video from YouTube or create a new release.
+          </p>
+          <Link href="/admin/cms-releases">
+            <button className="dashboard-btn-primary px-5 py-2 rounded-lg text-sm font-medium">
+              Back to Releases
+            </button>
+          </Link>
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -549,8 +551,8 @@ export default function EditReleasePage() {
     : 'All critical workflow checks are complete. You can save and proceed to publishing/delivery actions.';
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: 'var(--dash-bg-secondary)'}}>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="px-4 py-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -1083,7 +1085,14 @@ export default function EditReleasePage() {
           {/* Structured Lyrics */}
           <div id="lyrics-structure-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-              <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Lyrics System Structure</h2>
+              <div>
+                <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Lyrics System Structure</h2>
+                {!isNew && (
+                  <Link href={`/admin/cms-releases/${params.id}/lyrics`} className="text-xs mt-0.5 inline-block hover:underline" style={{ color: 'var(--dash-accent)' }}>
+                    Open Lyrics Editor →
+                  </Link>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedLyricsStructureLanguage}
@@ -1401,7 +1410,14 @@ export default function EditReleasePage() {
           {/* Subtitle Timeline + Language Tracks */}
           <div id="subtitle-timeline-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-              <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Subtitle Timeline & Language Tracks</h2>
+              <div>
+                <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Subtitle Timeline & Language Tracks</h2>
+                {!isNew && (
+                  <Link href={`/admin/cms-releases/${params.id}/subtitles`} className="text-xs mt-0.5 inline-block hover:underline" style={{ color: 'var(--dash-accent)' }}>
+                    Open Subtitle Editor →
+                  </Link>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-80 cursor-pointer text-sm transition" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
                   <Upload size={16} />
@@ -2006,7 +2022,7 @@ export default function EditReleasePage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
 

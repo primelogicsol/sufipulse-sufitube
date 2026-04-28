@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Edit2, Trash2, Eye, EyeOff, Archive, MoreVertical, Download, RefreshCw, CheckSquare, Square } from 'lucide-react';
 import type { CMSRelease } from '@/lib/cms-storage';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 type YouTubeImportVideo = {
   id: string;
@@ -258,8 +259,8 @@ export default function CMSReleasesPage() {
   );
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--dash-bg-secondary)' }}>
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Data Store Notice */}
         <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-lg bg-blue-950/40 border border-blue-800/50 text-blue-300 text-sm">
           <span className="mt-0.5 flex-shrink-0">ℹ️</span>
@@ -624,6 +625,6 @@ export default function CMSReleasesPage() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
