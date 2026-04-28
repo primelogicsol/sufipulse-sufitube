@@ -9,6 +9,7 @@ export type AdoptionGoogleOAuthRecord = {
   expiresAt?: string;
   accessibleCustomerIds: string[];
   verifiedCustomerId?: string | null;
+  googleEmail?: string | null;
   updatedAt: string;
 };
 
@@ -56,6 +57,7 @@ export async function upsertAdoptionGoogleOAuthRecord(params: {
   expiresInSeconds?: number;
   accessibleCustomerIds?: string[];
   verifiedCustomerId?: string | null;
+  googleEmail?: string | null;
 }) {
   const store = await readStore();
   const now = new Date();
@@ -74,6 +76,9 @@ export async function upsertAdoptionGoogleOAuthRecord(params: {
     verifiedCustomerId: params.verifiedCustomerId !== undefined
       ? params.verifiedCustomerId
       : (existing?.verifiedCustomerId ?? null),
+    googleEmail: params.googleEmail !== undefined
+      ? params.googleEmail
+      : (existing?.googleEmail ?? null),
     updatedAt: now.toISOString(),
   };
 

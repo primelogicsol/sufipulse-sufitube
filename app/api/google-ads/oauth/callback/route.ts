@@ -139,6 +139,7 @@ export async function GET(request: NextRequest) {
         tokenType: tokens.token_type,
         expiresInSeconds: Number(tokens.expires_in || 0),
         accessibleCustomerIds,
+        googleEmail,
       });
     }
 

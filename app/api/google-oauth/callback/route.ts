@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         expiresInSeconds: Number(tokens.expires_in || 0),
         accessibleCustomerIds,
         googleEmail,
-      } as any);
+      });
     }
 
     return fallbackRedirect('success');
