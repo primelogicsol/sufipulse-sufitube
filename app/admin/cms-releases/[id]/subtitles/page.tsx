@@ -261,7 +261,18 @@ export default function SubtitleEditorPage() {
     setVideoOcrProgress({ stage: 'frames', pct: 0, detail: 'Starting…' });
     try {
       const { videoFileToParsedCues, cmsLangToTesseract } = await import('@/lib/subtitle-ingest/video-file-to-cues');
-      const cues = await videoFileToParsedCues(videoOcrFile, {
+      const { browserCanPlayFile, convertVideoForOcr } = await import('@/lib/subtitle-ingest/convert-video');
+
+      let ocrInput: File | string = videoOcrFile;
+
+      if (!browserCanPlayFile(videoOcrFile)) {
+        setVideoOcrProgress({ stage: 'frames', pct: 0, detail: `Converting "${videoOcrFile.name}" to H.264 on server…` });
+        ocrInput = await convertVideoForOcr(videoOcrFile, (msg) =>
+          setVideoOcrProgress({ stage: 'frames', pct: 0, detail: msg })
+        );
+      }
+
+      const cues = await videoFileToParsedCues(ocrInput, {
         fps: 2,
         subtitleZone: 0.25,
         ocrLang: cmsLangToTesseract(videoOcrLang),
@@ -828,7 +839,7 @@ export default function SubtitleEditorPage() {
               {videoOcrRunning && videoOcrProgress && (
                 <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: 'var(--dash-bg-secondary)', border: '1px solid var(--dash-border)' }}>
                   <div className="flex items-center justify-between text-xs" style={{ color: 'var(--dash-text-secondary)' }}>
-                    <span>{videoOcrProgress.stage === 'frames' ? 'Extracting frames' : videoOcrProgress.stage === 'ocr' ? 'Running OCR' : 'Building cues'}</span>
+                    <span>{videoOcrProgress.detail?.startsWith('Converting') || videoOcrProgress.detail?.startsWith('Uploading') ? 'Converting video' : videoOcrProgress.stage === 'frames' ? 'Extracting frames' : videoOcrProgress.stage === 'ocr' ? 'Running OCR' : 'Building cues'}</span>
                     <span>{videoOcrProgress.pct}%</span>
                   </div>
                   <div className="w-full rounded-full h-1.5 overflow-hidden" style={{ backgroundColor: 'var(--dash-border)' }}>

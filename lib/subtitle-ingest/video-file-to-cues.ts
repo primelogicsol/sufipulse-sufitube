@@ -64,7 +64,7 @@ const SEEK_TIMEOUT_MS = 8000;
 const METADATA_TIMEOUT_MS = 30_000;
 
 async function extractFrames(
-  file: File,
+  input: File | string,
   fps: number,
   subtitleZoneFraction: number,
   onProgress?: OcrProgressCallback
@@ -74,29 +74,33 @@ async function extractFrames(
     video.muted = true;
     video.preload = 'metadata';
 
-    // Pre-check: if browser reports zero support for this MIME type, fail fast
-    if (file.type && video.canPlayType(file.type) === '') {
+    const isFile = input instanceof File;
+
+    // canPlayType pre-check only for File inputs — converted URLs are already H.264
+    if (isFile && input.type && video.canPlayType(input.type) === '') {
       reject(new Error(
-        `Your browser cannot play ${file.type}. Try Chrome, or re-export the video as MP4 (H.264 codec).`
+        `Your browser cannot play ${input.type}. Try Chrome, or re-export the video as MP4 (H.264 codec).`
       ));
       return;
     }
 
-    const objectUrl = URL.createObjectURL(file);
-    const fileMeta = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB · ${file.type || 'unknown type'}`;
+    const src = isFile ? URL.createObjectURL(input) : input;
+    const fileMeta = isFile
+      ? `${input.name} · ${(input.size / 1024 / 1024).toFixed(1)} MB · ${input.type || 'unknown type'}`
+      : input;
 
     const metadataTimer = setTimeout(() => {
-      URL.revokeObjectURL(objectUrl);
+      if (isFile) URL.revokeObjectURL(src);
       reject(new Error(
         `Timed out waiting for video metadata. The file may be too large or corrupted. (${fileMeta})`
       ));
     }, METADATA_TIMEOUT_MS);
 
-    video.src = objectUrl;
+    video.src = src;
 
     video.addEventListener('error', () => {
       clearTimeout(metadataTimer);
-      URL.revokeObjectURL(objectUrl);
+      if (isFile) URL.revokeObjectURL(src);
       const code = video.error?.code;
       let msg: string;
       if (code === MediaError.MEDIA_ERR_DECODE || code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
@@ -169,10 +173,10 @@ async function extractFrames(
           onProgress?.('frames', Math.round((i / totalFrames) * 100), `Frame ${i + 1}/${totalFrames + 1}`);
         }
 
-        URL.revokeObjectURL(objectUrl);
+        if (isFile) URL.revokeObjectURL(src);
         resolve(frames);
       } catch (err) {
-        URL.revokeObjectURL(objectUrl);
+        if (isFile) URL.revokeObjectURL(src);
         reject(err);
       }
     });
@@ -305,7 +309,7 @@ function groupFramesIntoCues(frames: FrameResult[]): IngestCue[] {
  * by the server endpoint before writing to the CMS.
  */
 export async function videoFileToParsedCues(
-  file: File,
+  input: File | string,
   options: VideoOcrOptions = {}
 ): Promise<IngestCue[]> {
   const fps = Math.max(0.5, Math.min(5, options.fps ?? 2));
@@ -314,7 +318,7 @@ export async function videoFileToParsedCues(
   const { onProgress } = options;
 
   onProgress?.('frames', 0, 'Starting frame extraction…');
-  const frames = await extractFrames(file, fps, subtitleZone, onProgress);
+  const frames = await extractFrames(input, fps, subtitleZone, onProgress);
 
   onProgress?.('ocr', 0, 'Loading OCR engine…');
   const ocrResults = await ocrFrames(frames, ocrLang, onProgress);

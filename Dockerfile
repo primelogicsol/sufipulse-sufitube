@@ -47,6 +47,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install FFmpeg for server-side video conversion (H.265→H.264 for OCR)
+RUN apk add --no-cache ffmpeg
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
