@@ -49,9 +49,9 @@ export default function Founder() {
                         </h2>
 
                         <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="flex flex-col sm:flex-row gap-8 mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 items-start">
                                 <div className="flex-shrink-0">
-                                    <div className="w-48 h-56 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
+                                    <div className="w-48 h-56 mx-auto sm:mx-0 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
                                         <Image
                                             src="/dr-kumar-photo.png"
                                             alt="Dr. Ghulam Mohammad Kumar"
@@ -71,21 +71,21 @@ export default function Founder() {
                                     <p className="text-neutral-400 text-sm leading-relaxed">
                                         Spiritual guide, physician, and Sufi master whose life bridged medicine, mysticism, and structured institutional awakening. Fourteen years of contemplative retreat in Ganderbal shaped a vision that transcends individual legacy.
                                     </p>
+
+                                    <div className="mt-8 space-y-4 text-neutral-300 text-sm leading-relaxed">
+                                        <p>
+                                            Dr. Ghulam Mohammad Kumar's journey began within a Kashmiri heritage grounded in scholarly and spiritual traditions. Born in 1957 into a family rooted in learning and healing, he demonstrated exceptional contemplative nature and profound inner sensitivity from his earliest years.
+                                        </p>
+
+                                        <p>
+                                            He trained in modern medicine at Government Medical College Srinagar and practiced as a Medical Officer. Yet instinctively drawn deeper into inner inquiry, he transitioned from clinical practice toward a life devoted to spiritual depth and the pursuit of universal truth.
+                                        </p>
+
+                                        <p>
+                                            His formative years in Kashmir's rich spiritual landscape shaped a disposition that would ultimately bridge conventional medical training with the ancient wisdom traditions of Kashmiri Sufism.
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    Dr. Ghulam Mohammad Kumar's journey began within a Kashmiri heritage grounded in scholarly and spiritual traditions. Born in 1957 into a family rooted in learning and healing, he demonstrated exceptional contemplative nature and profound inner sensitivity from his earliest years.
-                                </p>
-
-                                <p>
-                                    He trained in modern medicine at Government Medical College Srinagar and practiced as a Medical Officer. Yet instinctively drawn deeper into inner inquiry, he transitioned from clinical practice toward a life devoted to spiritual depth and the pursuit of universal truth.
-                                </p>
-
-                                <p>
-                                    His formative years in Kashmir's rich spiritual landscape shaped a disposition that would ultimately bridge conventional medical training with the ancient wisdom traditions of Kashmiri Sufism.
-                                </p>
                             </div>
                         </div>
                     </div>
@@ -354,9 +354,9 @@ export default function Founder() {
                         </h2>
 
                         <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="flex flex-col sm:flex-row gap-8 mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 items-start">
                                 <div className="flex-shrink-0">
-                                    <div className="w-48 h-56 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
+                                    <div className="w-48 h-56 mx-auto sm:mx-0 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
                                         <Image
                                             src="/dr-fayaz-photo.jpg"
                                             alt="Dr. Fayaz Ahmad Khan"
@@ -376,21 +376,21 @@ export default function Founder() {
                                     <p className="text-neutral-400 text-sm leading-relaxed">
                                         Representative stewardship and institutional development guided under the constitutional framework of Mithaq — translating founding vision into operational systems, governance structures, and digital infrastructure.
                                     </p>
+
+                                    <div className="mt-8 space-y-4 text-neutral-300 text-sm leading-relaxed">
+                                        <p>
+                                            Representative stewardship oversees structural development, institutional governance integration, and digital expansion aligned with the founding charter.
+                                        </p>
+
+                                        <p>
+                                            The representative role focuses on architectural design: translating constitutional principles into operational systems, integrating editorial processes with production workflows, and establishing technological infrastructure that serves institutional permanence.
+                                        </p>
+
+                                        <p>
+                                            Structural development includes the construction of multi-layered governance systems, role-based participation frameworks, registry documentation protocols, and economic transparency mechanisms that reinforce charter authority.
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    Representative stewardship oversees structural development, institutional governance integration, and digital expansion aligned with the founding charter.
-                                </p>
-
-                                <p>
-                                    The representative role focuses on architectural design: translating constitutional principles into operational systems, integrating editorial processes with production workflows, and establishing technological infrastructure that serves institutional permanence.
-                                </p>
-
-                                <p>
-                                    Structural development includes the construction of multi-layered governance systems, role-based participation frameworks, registry documentation protocols, and economic transparency mechanisms that reinforce charter authority.
-                                </p>
                             </div>
                         </div>
                     </div>
