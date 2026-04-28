@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
-import { createWriteStream, createReadStream } from 'fs';
+import { createWriteStream } from 'fs';
 import { unlink, readdir, stat, mkdir, writeFile, readFile } from 'fs/promises';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
@@ -38,16 +38,19 @@ function runFfmpeg(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const proc = spawn('ffmpeg', [
       '-i', inputPath,
-      '-c:v', 'libx264', '-crf', '20', '-preset', 'fast', '-pix_fmt', 'yuv420p',
+      // ultrafast preset: ~5x faster than 'fast', significantly lower peak memory.
+      // H.265 decode is memory-intensive; 'fast' was triggering OOM on large files.
+      '-c:v', 'libx264', '-crf', '20', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p',
+      '-threads', '2',   // cap decoder+encoder threads to reduce peak RAM
       '-c:a', 'aac', '-b:a', '128k',
       '-movflags', '+faststart',
       '-y', outputPath,
     ]);
     let stderr = '';
     proc.stderr?.on('data', (d: Buffer) => { stderr += d.toString(); });
-    proc.on('close', (code) => {
+    proc.on('close', (code, signal) => {
       if (code === 0) resolve();
-      else reject(new Error(`FFmpeg exited ${code}. ${stderr.slice(-500)}`));
+      else reject(new Error(`FFmpeg exited ${code ?? `signal ${signal}`}. ${stderr.slice(-600)}`));
     });
     proc.on('error', (err: NodeJS.ErrnoException) => {
       reject(err.code === 'ENOENT'
@@ -169,17 +172,33 @@ export async function POST(request: NextRequest) {
         assembleStream.end((err?: Error | null) => err ? reject(err) : resolve())
       );
 
-      // Run FFmpeg on the assembled file
-      try {
-        await runFfmpeg(inputPath, outputPath);
-      } finally {
-        try { unlinkSync(inputPath); } catch {}
-      }
+      // Run FFmpeg — stream heartbeat newlines every 30 s so nginx proxy_read_timeout
+      // never fires during long conversions.  Client reads res.text() and parses the
+      // last non-empty line as JSON.
+      const encoder = new TextEncoder();
+      const body = new ReadableStream<Uint8Array>({
+        async start(ctrl) {
+          const keepalive = setInterval(() => {
+            try { ctrl.enqueue(encoder.encode('\n')); } catch {}
+          }, 30_000);
+          try {
+            await runFfmpeg(inputPath, outputPath);
+            clearInterval(keepalive);
+            try { ctrl.enqueue(encoder.encode(JSON.stringify({ url: `/api/video/temp/${uploadId}_output.mp4`, originalName: filename }))); } catch {}
+          } catch (e: any) {
+            clearInterval(keepalive);
+            try { ctrl.enqueue(encoder.encode(JSON.stringify({ error: e.message }))); } catch {}
+          } finally {
+            try { unlinkSync(inputPath); } catch {}
+            try { ctrl.close(); } catch {}
+          }
+        },
+      });
 
-      return NextResponse.json({
-        url: `/api/video/temp/${uploadId}_output.mp4`,
-        originalName: filename,
-      }, { status: 201 });
+      return new NextResponse(body, {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      });
 
     } catch (e: any) {
       try { unlinkSync(inputPath); } catch {}

@@ -41,7 +41,11 @@ export async function convertVideoForOcr(
     const chunk = file.slice(start, end);
     const pct = Math.round((i / totalChunks) * 100);
 
-    onProgress?.(`Uploading ${totalMB} MB — ${pct}% (part ${i + 1} of ${totalChunks})…`);
+    if (i === totalChunks - 1) {
+      onProgress?.(`Converting to H.264 — please wait, this takes a few minutes…`);
+    } else {
+      onProgress?.(`Uploading ${totalMB} MB — ${pct}% (part ${i + 1} of ${totalChunks})…`);
+    }
 
     const res = await fetch('/api/video/convert', {
       method: 'POST',
@@ -67,11 +71,14 @@ export async function convertVideoForOcr(
     }
 
     if (i === totalChunks - 1) {
-      // Last chunk — server has assembled + converted; response contains the URL
-      const data = await res.json().catch(() => ({}));
+      // Response is streamed: heartbeat '\n' lines keep nginx alive, final line is JSON.
+      const text = await res.text().catch(() => '');
+      const lastLine = text.split('\n').map(l => l.trim()).filter(Boolean).pop() ?? '';
+      let data: Record<string, string> = {};
+      try { data = JSON.parse(lastLine); } catch { /* malformed — data stays empty */ }
       if (!data.url) throw new Error(data.error || 'Conversion finished but no URL returned');
       onProgress?.('Conversion complete — starting frame extraction…');
-      return data.url as string;
+      return data.url;
     }
   }
 
