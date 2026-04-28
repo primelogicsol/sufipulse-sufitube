@@ -40,6 +40,7 @@ export function ProfileCardEditor({ role, displayName, status }: ProfileCardEdit
   const [avatar, setAvatar] = useState('');
   const [extras, setExtras] = useState<ProfileExtras>(EMPTY_EXTRAS);
   const [saved, setSaved] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   const avatarKey = user ? `sufipulse_avatar_${user.id}` : null;
   const extrasKey = user ? `sufipulse_profile_extras_${user.id}_${role}` : null;
@@ -57,13 +58,14 @@ export function ProfileCardEditor({ role, displayName, status }: ProfileCardEdit
     const file = e.target.files?.[0];
     if (!file || !avatarKey) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('Only JPG, PNG or WebP images are allowed');
+      setAvatarError('Only JPG, PNG or WebP images are allowed.');
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be under 2 MB');
+      setAvatarError('Image must be under 2 MB.');
       return;
     }
+    setAvatarError(null);
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
@@ -121,6 +123,9 @@ export function ProfileCardEditor({ role, displayName, status }: ProfileCardEdit
             </div>
           )}
           <p className="text-neutral-500 text-xs mt-2">Click the avatar to upload a profile picture (JPG / PNG / WebP, max 2 MB)</p>
+          {avatarError && (
+            <p className="text-red-400 text-xs mt-1">{avatarError}</p>
+          )}
         </div>
       </div>
 

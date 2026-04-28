@@ -16,6 +16,7 @@ export default function ReleaseEditorPage() {
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [chorusVocalistsText, setChorusVocalistsText] = useState('');
   const [form, setForm] = useState<Partial<Release>>({
     title: '',
@@ -90,11 +91,10 @@ export default function ReleaseEditorPage() {
         });
       }
       
-      alert('Release saved successfully!');
       router.push('/admin/cms/releases');
     } catch (error) {
       console.error('Error saving release:', error);
-      alert('Error saving release');
+      setSaveError('Error saving release. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -131,6 +131,13 @@ export default function ReleaseEditorPage() {
         >
           <ArrowLeft size={20} /> Back
         </button>
+
+        {saveError && (
+          <div className="mb-4 p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
+            <span>{saveError}</span>
+            <button type="button" onClick={() => setSaveError(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+          </div>
+        )}
 
         <h1 className="text-3xl font-bold mb-8" style={{color: 'var(--dash-text-primary)'}}>
           {isNew ? 'Create New Release' : 'Edit Release'}

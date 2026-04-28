@@ -15,7 +15,6 @@ export default function VocalistDashboardPage() {
       return;
     }
     if (!hasRoleAccess(user as any, 'vocalist')) {
-      alert('You do not have vocalist role access.');
       router.push('/');
     }
   }, [user]);

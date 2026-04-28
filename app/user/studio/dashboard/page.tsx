@@ -15,7 +15,6 @@ export default function StudioDashboardPage() {
       return;
     }
     if (!hasRoleAccess(user as any, 'studio')) {
-      alert('You do not have studio role access.');
       router.push('/');
     }
   }, [user]);

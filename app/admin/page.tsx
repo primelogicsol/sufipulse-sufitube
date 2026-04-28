@@ -205,7 +205,6 @@ export default function AdminDashboard() {
     if (!user) {
       router.push("/login");
     } else if (!user.role.includes("admin")) {
-      alert("Only Admin can access this page")
       router.push("/");
     } else {
       loadStats();

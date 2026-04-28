@@ -15,7 +15,6 @@ export default function ProducerDashboardPage() {
       return;
     }
     if (!hasRoleAccess(user as any, 'producer')) {
-      alert('You do not have producer role access.');
       router.push('/');
     }
   }, [user]);

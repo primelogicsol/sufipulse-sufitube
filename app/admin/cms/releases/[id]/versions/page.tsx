@@ -10,12 +10,13 @@ export default function VersionControlPage() {
   const [versions] = useState<ReleaseVersion[]>([]);
   const [loading] = useState(false);
   const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
+  const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
   async function restoreVersion(versionId: string) {
     if (!confirm('Restore this version? Current changes will be saved as a new version.')) return;
     try {
       console.log('Restoring version', versionId);
-      alert('Version restored successfully');
+      setRestoreMessage('Version restored successfully.');
     } catch (error) {
       console.error('Error restoring:', error);
     }
@@ -25,6 +26,12 @@ export default function VersionControlPage() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-[var(--dash-text-primary)] mb-2">Version History</h1>
+        {restoreMessage && (
+          <div className="mb-4 p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-green-500/10 border border-green-500/25 text-green-400">
+            <span>{restoreMessage}</span>
+            <button type="button" onClick={() => setRestoreMessage(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+          </div>
+        )}
         <p className="text-[var(--dash-text-secondary)] mb-8">Track and manage all versions of this release</p>
 
         {loading ? (

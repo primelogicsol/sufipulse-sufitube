@@ -1456,7 +1456,8 @@ function Release() {
             : (release?.subtitleTranslations?.[lang] || {});
 
         if (!cues.length) {
-            alert("No timestamp cues found to export. Please generate master timing first.");
+            setToastType('info');
+            setToastMessage("No timestamp cues found to export. Please generate master timing first.");
             return;
         }
 

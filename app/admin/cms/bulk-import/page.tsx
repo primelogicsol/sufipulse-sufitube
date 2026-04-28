@@ -18,6 +18,7 @@ export default function BulkImportPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [importType, setImportType] = useState<'releases' | 'credits' | 'lyrics' | 'media'>('releases');
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const templates = {
     releases: `title,slug,youtube_id,youtube_channel_id,youtube_channel_url,category,duration_formatted,status
@@ -335,11 +336,13 @@ export default function BulkImportPage() {
       setImports([importLog, ...imports]);
 
       if (failCount > 0) {
-        alert(`Imported ${successCount}/${totalRows} ${importType}. ${failCount} failed.`);
+        setImportMessage({ type: 'error', text: `Imported ${successCount}/${totalRows} ${importType}. ${failCount} failed.` });
+      } else {
+        setImportMessage({ type: 'success', text: `Imported ${successCount}/${totalRows} ${importType} successfully.` });
       }
     } catch (error) {
       console.error('Error uploading:', error);
-      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setImportMessage({ type: 'error', text: `Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -367,6 +370,12 @@ export default function BulkImportPage() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-[var(--dash-text-primary)] mb-6">Bulk Import</h1>
+        {importMessage && (
+          <div className={`mb-4 p-3 rounded-lg text-sm flex items-center justify-between gap-2 ${importMessage.type === 'success' ? 'bg-green-500/10 border border-green-500/25 text-green-400' : 'bg-red-500/10 border border-red-500/25 text-red-400'}`}>
+            <span>{importMessage.text}</span>
+            <button type="button" onClick={() => setImportMessage(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+          </div>
+        )}
 
         {/* Upload Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">

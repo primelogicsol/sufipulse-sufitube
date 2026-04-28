@@ -13,6 +13,7 @@ export default function MediaLibraryPage() {
   const [uploading, setUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [copied, setCopied] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadMedia();
@@ -42,7 +43,7 @@ export default function MediaLibraryPage() {
       loadMedia();
     } catch (error) {
       console.error('Error uploading:', error);
-      alert('Upload failed');
+      setUploadError('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -75,6 +76,12 @@ export default function MediaLibraryPage() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-[var(--dash-text-primary)] mb-6">Media Library</h1>
+        {uploadError && (
+          <div className="mb-4 p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
+            <span>{uploadError}</span>
+            <button type="button" onClick={() => setUploadError(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+          </div>
+        )}
 
         {/* Upload Section */}
         <div className="dashboard-card mb-6">

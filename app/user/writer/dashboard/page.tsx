@@ -51,7 +51,6 @@ export default function UserDashboardWriter() {
       return;
     }
     if (!hasRoleAccess(user as any, 'writer')) {
-      alert('You do not have writer role access.');
       router.push('/');
     }
   }, [user]);

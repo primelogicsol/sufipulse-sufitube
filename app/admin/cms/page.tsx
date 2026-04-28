@@ -31,6 +31,7 @@ export default function CMSPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     loadReleases();
@@ -99,7 +100,7 @@ export default function CMSPage() {
       await deleteRelease(release.id);
       setReleases(prev => prev.filter(r => r.id !== release.id));
     } catch (err: any) {
-      alert(`Delete failed: ${err.message}`);
+      setActionError(`Delete failed: ${err.message}`);
     } finally {
       setDeletingId(null);
     }
@@ -117,6 +118,12 @@ export default function CMSPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
+        {actionError && (
+          <div className="mb-4 p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
+            <span>{actionError}</span>
+            <button type="button" onClick={() => setActionError(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+          </div>
+        )}
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>

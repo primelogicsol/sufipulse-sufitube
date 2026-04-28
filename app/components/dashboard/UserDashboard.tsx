@@ -67,6 +67,9 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const [bankForm, setBankForm] = useState({
         holder_name: '', bank_name: '', account_number: '', iban_routing: '', swift_bic: '', account_type: 'savings', country: ''
     });
+    const [bankMessage, setBankMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const config = role === "writer" ? {
         title: "Writer Portal",
@@ -215,6 +218,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const handleBankSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
+        setBankMessage(null);
         try {
             const res = await fetch('/api/user/payout-account', {
                 method: 'POST',
@@ -230,11 +234,16 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                 }),
             });
             const data = await res.json();
-            if (!res.ok) { alert(data.error || 'Failed to save. Please try again.'); return; }
+            if (!res.ok) {
+                setBankMessage({ type: 'error', text: data.error || 'Failed to save. Please try again.' });
+                return;
+            }
             setBankFormOpen(false);
             await loadBankInfo();
-            alert('Bank account saved successfully. Admin will verify before first payout.');
-        } catch { alert('Failed to save. Please try again.'); }
+            setBankMessage({ type: 'success', text: 'Bank account saved. Admin will verify before first payout.' });
+        } catch {
+            setBankMessage({ type: 'error', text: 'Failed to save. Please try again.' });
+        }
     };
 
     useEffect(() => {
@@ -327,11 +336,25 @@ export default function UserDashboard({ role }: UserDashboardProps) {
     const handlePasswordUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setPasswordLoading(true);
-        setTimeout(() => {
-            alert("Password updated successfully!");
-            setPasswordForm({ currentPassword: '', newPassword: '' });
+        setPasswordMessage(null);
+        try {
+            const res = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setPasswordMessage({ type: 'error', text: data.error || 'Failed to update password.' });
+            } else {
+                setPasswordMessage({ type: 'success', text: 'Password updated successfully.' });
+                setPasswordForm({ currentPassword: '', newPassword: '' });
+            }
+        } catch {
+            setPasswordMessage({ type: 'error', text: 'Failed to update password. Please try again.' });
+        } finally {
             setPasswordLoading(false);
-        }, 500);
+        }
     };
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -348,12 +371,21 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             };
             reader.readAsDataURL(profileForm.avatar);
         }
-        setTimeout(() => {
-            alert("Profile updated successfully!");
-            setProfileLoading(false);
+        try {
+            if (profileForm.name && profileForm.name !== (user?.full_name || '')) {
+                await fetch('/api/user/profile', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name: profileForm.name }),
+                });
+            }
             setProfileSaveStatus('saved');
             setTimeout(() => setProfileSaveStatus('idle'), 1500);
-        }, 500);
+        } catch {
+            setProfileSaveStatus('error');
+        } finally {
+            setProfileLoading(false);
+        }
     };
 
     const handleDraftChange = (e: any) => {
@@ -406,7 +438,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             setActiveTab("my-content");
             loadData();  // reloads and re-prefills form
         } catch (err: any) {
-            alert(err?.message || "Error submitting");
+            setActionError(err?.message || "Error submitting. Please try again.");
         } finally {
             setSubmitLoading(false);
         }
@@ -432,8 +464,8 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             if (!res.ok) throw new Error('Failed to delete');
             setContentModal(false);
             loadData();
-        } catch (err: any) {
-            alert("Error deleting");
+        } catch {
+            setActionError("Error deleting item. Please try again.");
         }
     };
 
@@ -448,8 +480,8 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             if (!res.ok) throw new Error('Failed to update status');
             setContentModal(false);
             loadData();
-        } catch (err: any) {
-            alert("Error updating status");
+        } catch {
+            setActionError("Error updating status. Please try again.");
         }
     };
 
@@ -640,6 +672,16 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                         </header>
 
                         <main className="flex-1 p-8 overflow-y-auto bg-[var(--dash-bg-primary)]">
+
+                            {actionError && (
+                                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/25 rounded-lg flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+                                        <p className="text-sm font-medium text-red-400">{actionError}</p>
+                                    </div>
+                                    <button onClick={() => setActionError(null)} className="text-red-400/50 hover:text-red-400 transition shrink-0 text-lg leading-none">×</button>
+                                </div>
+                            )}
 
                             {submitSuccess && (
                                 <div className="mb-6 p-4 bg-green-500/10 border border-green-500/25 rounded-lg flex items-center justify-between gap-3">
@@ -1163,6 +1205,13 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                         </div>
                                     )}
 
+                                    {bankMessage && (
+                                        <div className={`p-3 rounded-lg text-sm flex items-center justify-between gap-2 ${bankMessage.type === 'success' ? 'bg-green-500/10 border border-green-500/25 text-green-400' : 'bg-red-500/10 border border-red-500/25 text-red-400'}`}>
+                                            <span>{bankMessage.text}</span>
+                                            <button type="button" onClick={() => setBankMessage(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+                                        </div>
+                                    )}
+
                                     {/* Threshold & Status Banner */}
                                     <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-5 flex items-start gap-4">
                                         <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
@@ -1415,6 +1464,12 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                             <button type="submit" disabled={passwordLoading} className="w-full cursor-pointer flex items-center justify-center bg-transparent border border-[var(--dash-border-hover)] text-[var(--dash-text-primary)] py-3 rounded-md font-bold hover:border-[var(--dash-accent)] hover:text-[var(--dash-accent)] mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300">
                                                 {passwordLoading ? <Loader className='w-4 h-4 animate-spin' /> : "Update Password"}
                                             </button>
+                                            {passwordMessage && (
+                                                <div className={`mt-3 p-3 rounded-lg text-sm flex items-center justify-between gap-2 ${passwordMessage.type === 'success' ? 'bg-green-500/10 border border-green-500/25 text-green-400' : 'bg-red-500/10 border border-red-500/25 text-red-400'}`}>
+                                                    <span>{passwordMessage.text}</span>
+                                                    <button type="button" onClick={() => setPasswordMessage(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+                                                </div>
+                                            )}
                                         </form>
                                     </div>
                                 </div>

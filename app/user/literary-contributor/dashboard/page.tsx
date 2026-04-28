@@ -15,7 +15,6 @@ export default function LiteraryContributorDashboardPage() {
       return;
     }
     if (!hasRoleAccess(user as any, 'literary')) {
-      alert('You do not have literary contributor role access.');
       router.push('/');
     }
   }, [user]);

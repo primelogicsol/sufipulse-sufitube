@@ -23,7 +23,6 @@ export function useAdminGuard() {
     if (!user) {
       router.push('/login');
     } else if (!user.role?.includes('admin')) {
-      alert('Only Admin can access this page');
       router.push('/');
     }
   }, [user, router]);

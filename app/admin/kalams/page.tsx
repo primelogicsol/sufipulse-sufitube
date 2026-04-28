@@ -49,6 +49,7 @@ function AdminKalamsInner() {
   const [filter, setFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected' | 'revision_requested'>(
     (searchParams?.get('status') as any) || 'submitted'
   );
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     loadKalams();
@@ -106,7 +107,7 @@ function AdminKalamsInner() {
       setReviewNotes('');
       loadKalams();
     } catch (err: any) {
-      alert(err.message || 'Failed to update status');
+      setActionError(err.message || 'Failed to update status');
     }
   };
 
@@ -127,6 +128,12 @@ function AdminKalamsInner() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {actionError && (
+          <div className="p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
+            <span>{actionError}</span>
+            <button type="button" onClick={() => setActionError(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+          </div>
+        )}
         <div className="dashboard-card">
           <div className="dashboard-tabs">
             <button

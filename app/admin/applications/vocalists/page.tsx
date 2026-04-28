@@ -42,6 +42,7 @@ export default function AdminVocalistApplications() {
     const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'under_review' | 'revision_requested'>('pending');
     const [processingAction, setProcessingAction] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [actionError, setActionError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authLoading) {
@@ -125,7 +126,7 @@ export default function AdminVocalistApplications() {
             setSelectedApp(null);
             loadApplications();
         } catch (err: any) {
-            alert(err?.message || 'Failed to update status');
+            setActionError(err?.message || 'Failed to update status');
         } finally {
             setProcessingAction(false);
         }
@@ -134,6 +135,12 @@ export default function AdminVocalistApplications() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
+                {actionError && (
+                    <div className="p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
+                        <span>{actionError}</span>
+                        <button type="button" onClick={() => setActionError(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+                    </div>
+                )}
                 <div className="dashboard-card">
                     <div className="flex flex-col gap-4 mb-6">
                         <div className="relative flex-1">

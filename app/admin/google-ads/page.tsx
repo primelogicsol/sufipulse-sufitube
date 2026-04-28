@@ -50,6 +50,7 @@ export default function AdminGoogleAdsPage() {
   const [actionResult, setActionResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
   const [studioStatus, setStudioStatus] = useState<StudioStatus | null>(null);
   const [connectingStudio, setConnectingStudio] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -88,7 +89,7 @@ export default function AdminGoogleAdsPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to start OAuth');
       window.location.href = data.authUrl;
     } catch (err: any) {
-      alert(`Could not start OAuth: ${err.message}`);
+      setOauthError(`Could not start OAuth: ${err.message}`);
       setConnectingStudio(false);
     }
   };
@@ -144,6 +145,12 @@ export default function AdminGoogleAdsPage() {
   return (
     <DashboardLayout>
       <div className="p-6 max-w-7xl mx-auto space-y-6">
+        {oauthError && (
+          <div className="p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
+            <span>{oauthError}</span>
+            <button type="button" onClick={() => setOauthError(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
