@@ -74,6 +74,7 @@ export default function SubtitleEditorPage() {
     lockAllCuePositions,
     setLockAllCuePositions,
     previewVideoDuration,
+    setPreviewVideoDuration,
     previewOrigin,
     showSafeGuides,
     setShowSafeGuides,
@@ -637,6 +638,7 @@ export default function SubtitleEditorPage() {
             previewHasYouTube={previewHasYouTube}
             previewTime={previewTime}
             setPreviewTime={setPreviewTime}
+            setPreviewVideoDuration={setPreviewVideoDuration}
             sendPreviewYouTubeCommand={sendPreviewYouTubeCommand}
             previewDuration={previewDuration}
             handleTimelineClick={handleTimelineClick}

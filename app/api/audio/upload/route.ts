@@ -55,9 +55,8 @@ export async function POST(request: NextRequest) {
     const filePath = join(AUDIO_DIR, filename);
     await writeFile(filePath, buffer);
 
-    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
     return NextResponse.json({
-      url: `${appUrl}/api/audio/${filename}`,
+      url: `/api/audio/${filename}`,
       filename,
       size: buffer.byteLength,
       mimeType: MIME[ext] || 'audio/mpeg',

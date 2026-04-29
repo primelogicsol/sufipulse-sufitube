@@ -1624,7 +1624,7 @@ export function useReleaseForm({
     previewTime, setPreviewTime,
     previewPlaying, setPreviewPlaying,
     lockAllCuePositions, setLockAllCuePositions,
-    previewVideoDuration,
+    previewVideoDuration, setPreviewVideoDuration,
     previewOrigin,
     showSafeGuides, setShowSafeGuides,
     autoAdvanceAfterStamp, setAutoAdvanceAfterStamp,

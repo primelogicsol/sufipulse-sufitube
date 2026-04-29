@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Play, Pause, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import type { CMSRelease } from '@/lib/cms-storage';
 import { assColorToRgba, getAlignmentLabel, normalizeHexColor, secondsToCueTime } from './subtitle-utils';
@@ -14,6 +15,7 @@ type Props = {
   previewHasYouTube: boolean;
   previewTime: number;
   setPreviewTime: React.Dispatch<React.SetStateAction<number>>;
+  setPreviewVideoDuration?: (d: number) => void;
   sendPreviewYouTubeCommand: (command: string, args?: any[]) => void;
   previewDuration: number;
   handleTimelineClick: (event: React.MouseEvent<HTMLDivElement>, duration: number) => void;
@@ -59,6 +61,7 @@ export function LiveAssPreviewSection({
   previewHasYouTube,
   previewTime,
   setPreviewTime,
+  setPreviewVideoDuration,
   sendPreviewYouTubeCommand,
   previewDuration,
   handleTimelineClick,
@@ -91,6 +94,27 @@ export function LiveAssPreviewSection({
   autoAdvanceAfterStamp,
   setAutoAdvanceAfterStamp,
 }: Props) {
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const isAudioRelease = !previewHasYouTube && !!form.audioUrl;
+
+  // Sync play/pause
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !isAudioRelease) return;
+    if (previewPlaying) { el.play().catch(() => {}); }
+    else { el.pause(); }
+  }, [previewPlaying, isAudioRelease]);
+
+  // Seek when previewTime jumps (external seek, not from timeupdate)
+  const lastAudioTime = useRef(0);
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !isAudioRelease) return;
+    if (Math.abs(el.currentTime - previewTime) > 0.5) {
+      el.currentTime = previewTime;
+    }
+  }, [previewTime, isAudioRelease]);
 
   const stampStart = () => {
     if (!previewCue) return;
@@ -405,6 +429,26 @@ export function LiveAssPreviewSection({
           />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#334155,transparent_55%),linear-gradient(135deg,#111827,#020617)]" />
+        )}
+        {isAudioRelease && (
+          <audio
+            ref={audioRef}
+            src={form.audioUrl}
+            preload="metadata"
+            className="hidden"
+            onTimeUpdate={() => {
+              const el = audioRef.current;
+              if (!el) return;
+              lastAudioTime.current = el.currentTime;
+              setPreviewTime(el.currentTime);
+            }}
+            onLoadedMetadata={() => {
+              const el = audioRef.current;
+              if (!el) return;
+              if (el.duration && Number.isFinite(el.duration)) setPreviewVideoDuration?.(el.duration);
+            }}
+            onEnded={() => setPreviewPlaying(false)}
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/45" />
         {showSafeGuides && (
