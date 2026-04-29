@@ -47,7 +47,7 @@ const Login = () => {
             } else if (user.role === 'literary') {
                 router.push('/user/literary-contributor/dashboard');
             } else if (user.role === 'studio') {
-                router.push('/user/studio-engineer/dashboard');
+                router.push('/user/studio/dashboard');
             } else {
                 router.push('/user/profile');
             }
@@ -112,6 +112,14 @@ const Login = () => {
                         {error && (
                             <div className="mb-6 p-4 bg-red-900/20 border border-red-800/50 rounded-md">
                                 <p className="text-red-400 text-sm">{error}</p>
+                                {error.toLowerCase().includes('verify') && (
+                                    <Link
+                                        href={`/verify-email${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
+                                        className="mt-2 inline-block text-xs text-[#D4AF37] hover:underline"
+                                    >
+                                        Go to email verification →
+                                    </Link>
+                                )}
                             </div>
                         )}
 

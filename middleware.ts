@@ -105,7 +105,15 @@ export async function middleware(request: NextRequest) {
 
     // Already authenticated → redirect away from login/register
     if (isAuthRoute && payload) {
-      return NextResponse.redirect(new URL('/user/dashboard', request.url));
+      const role = payload.role;
+      const dest = role === 'admin' ? '/admin'
+        : role === 'writer' ? '/user/writer/dashboard'
+        : role === 'vocalist' ? '/user/vocalist/dashboard'
+        : role === 'producer' ? '/user/producer/dashboard'
+        : role === 'literary' ? '/user/literary-contributor/dashboard'
+        : role === 'studio' ? '/user/studio/dashboard'
+        : '/user/profile';
+      return NextResponse.redirect(new URL(dest, request.url));
     }
   }
 

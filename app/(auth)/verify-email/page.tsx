@@ -1,21 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as api from "../../api/auth";
 import { Layout } from "../../components/layout/Layout";
 import { Loader, Lock } from "lucide-react";
 
 const VerifyOtpPage = () => {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
     const [email, setEmail] = useState<string>("");
     const [loading, setLoading] = useState(false)
     useEffect(() => {
+        const paramEmail = searchParams.get("email");
         const storedEmail = localStorage.getItem("email");
-        if (storedEmail) {
-            setEmail(storedEmail);
-        }
+        const resolved = paramEmail || storedEmail || "";
+        setEmail(resolved);
     }, [])
     const handleSubmit = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -79,4 +80,12 @@ const VerifyOtpPage = () => {
     );
 };
 
-export default VerifyOtpPage;
+import { Suspense } from "react";
+
+export default function VerifyEmailPage() {
+    return (
+        <Suspense>
+            <VerifyOtpPage />
+        </Suspense>
+    );
+}

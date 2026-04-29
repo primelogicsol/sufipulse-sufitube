@@ -146,6 +146,7 @@ export async function loginUser(email: string, password: string): Promise<{
 
   if (!user) throw new Error('Invalid email or password');
   if (user.is_blocked) throw new Error('Account is blocked. Please contact support.');
+  if (!user.is_verified) throw new Error('Please verify your email before logging in. Check your inbox for the verification code.');
   if (!(await verifyPassword(password, user.password_hash))) {
     throw new Error('Invalid email or password');
   }

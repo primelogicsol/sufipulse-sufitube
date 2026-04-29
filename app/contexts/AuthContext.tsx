@@ -29,10 +29,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [profileStatus, setProfileStatus] = useState<string>("")
     const router = useRouter();
 
-    // Restore session from httpOnly cookie on mount
+    // Restore session from httpOnly cookie on mount — try refresh if access token is expired
     useEffect(() => {
         fetch('/api/auth/me', { credentials: 'include' })
-            .then(res => res.ok ? res.json() : null)
+            .then(async res => {
+                if (res.ok) return res.json();
+                if (res.status === 401) {
+                    // Access token expired — attempt silent refresh
+                    const refreshRes = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+                    if (refreshRes.ok) {
+                        const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+                        if (meRes.ok) return meRes.json();
+                    }
+                }
+                return null;
+            })
             .then(data => { if (data?.data) setUser(data.data); })
             .catch(() => {})
             .finally(() => setLoading(false));
