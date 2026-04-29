@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Archive, MoreVertical, Download, RefreshCw, CheckSquare, Square } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, Archive, MoreVertical, Download, RefreshCw, CheckSquare, Square, ListVideo } from 'lucide-react';
 import type { CMSRelease } from '@/lib/cms-storage';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
@@ -17,6 +17,16 @@ type YouTubeImportVideo = {
   durationSeconds?: number;
   durationFormatted?: string;
   views?: number;
+  alreadyImported?: boolean;
+};
+
+type YouTubeImportPlaylist = {
+  id: string;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  publishedDate?: string;
+  itemCount?: number;
   alreadyImported?: boolean;
 };
 
@@ -36,6 +46,14 @@ export default function CMSReleasesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [directUrl, setDirectUrl] = useState('');
+
+  // Playlist import state
+  const [playlistPanelOpen, setPlaylistPanelOpen] = useState(false);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+  const [importingPlaylists, setImportingPlaylists] = useState(false);
+  const [playlists, setPlaylists] = useState<YouTubeImportPlaylist[]>([]);
+  const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(new Set());
+  const [playlistMessage, setPlaylistMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.role.includes('admin')) {
@@ -231,6 +249,59 @@ export default function CMSReleasesPage() {
     setSelectedVideoIds(new Set());
   };
 
+  const fetchPlaylists = async () => {
+    try {
+      setLoadingPlaylists(true);
+      setPlaylistMessage(null);
+      const res = await fetch('/api/releases/import-youtube/playlists');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to fetch playlists');
+      setPlaylists(Array.isArray(data.items) ? data.items : []);
+      setPlaylistPanelOpen(true);
+      setSelectedPlaylistIds(new Set());
+      setPlaylistMessage(`Found ${data.count || 0} playlists on the channel.`);
+    } catch (error: any) {
+      setPlaylistMessage(`Fetch failed: ${error?.message || 'Unknown error'}`);
+      setPlaylistPanelOpen(true);
+    } finally {
+      setLoadingPlaylists(false);
+    }
+  };
+
+  const importSelectedPlaylists = async () => {
+    const ids = Array.from(selectedPlaylistIds);
+    if (!ids.length) {
+      setPlaylistMessage('Select at least one playlist to import.');
+      return;
+    }
+    try {
+      setImportingPlaylists(true);
+      setPlaylistMessage(null);
+      const res = await fetch('/api/releases/import-youtube/playlists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playlistIds: ids }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Import failed');
+      setPlaylistMessage(`Imported ${data.importedCount || 0} playlist(s) as CMS releases.`);
+      await loadReleases();
+      await fetchPlaylists();
+    } catch (error: any) {
+      setPlaylistMessage(`Import failed: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setImportingPlaylists(false);
+    }
+  };
+
+  const togglePlaylistSelection = (id: string) => {
+    setSelectedPlaylistIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   if (!user?.role.includes('admin')) {
     return <div className="p-8 text-center">Unauthorized</div>;
   }
@@ -292,6 +363,13 @@ export default function CMSReleasesPage() {
             className="flex items-center gap-2 px-4 py-2 rounded-lg dashboard-btn-secondary font-medium text-sm disabled:opacity-60"
           >
             <Download size={16} /> {loadingYouTube ? 'Fetching...' : 'Fetch from YouTube'}
+          </button>
+          <button
+            onClick={fetchPlaylists}
+            disabled={loadingPlaylists}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg dashboard-btn-secondary font-medium text-sm disabled:opacity-60"
+          >
+            <ListVideo size={16} /> {loadingPlaylists ? 'Fetching...' : 'Fetch Playlists'}
           </button>
         </div>
 
@@ -386,6 +464,99 @@ export default function CMSReleasesPage() {
                         ID: {video.id} | {video.durationFormatted || '0:00'} | {video.views?.toLocaleString?.() || 0} views
                       </p>
                       {video.alreadyImported && (
+                        <p className="text-xs mt-1" style={{ color: 'var(--dash-status-approved)' }}>
+                          Already in CMS (import will update metadata only)
+                        </p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Playlist Import Panel */}
+        {playlistPanelOpen && (
+          <div className="mb-6 dashboard-card p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div>
+                <h2 className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>YouTube Playlist Picker</h2>
+                <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>
+                  Import channel playlists as CMS releases with format = playlist. They will appear in the Playlists filter on /releases.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlaylistIds(new Set(playlists.map(p => p.id)))}
+                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"
+                >
+                  <CheckSquare size={14} /> Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlaylistIds(new Set())}
+                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"
+                >
+                  <Square size={14} /> Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={fetchPlaylists}
+                  disabled={loadingPlaylists}
+                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"
+                >
+                  <RefreshCw size={14} /> Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={importSelectedPlaylists}
+                  disabled={importingPlaylists || selectedPlaylistIds.size === 0}
+                  className="dashboard-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"
+                >
+                  <Download size={14} /> {importingPlaylists ? 'Importing...' : `Import Selected (${selectedPlaylistIds.size})`}
+                </button>
+              </div>
+            </div>
+
+            {playlistMessage && (
+              <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{playlistMessage}</p>
+            )}
+
+            {playlists.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No playlists found on this channel.</p>
+            ) : (
+              <div className="max-h-80 overflow-auto border rounded-lg" style={{ borderColor: 'var(--dash-border)' }}>
+                {playlists.map((pl) => (
+                  <label
+                    key={pl.id}
+                    className="flex items-start gap-3 p-3 cursor-pointer"
+                    style={{ borderBottom: '1px solid var(--dash-border)' }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedPlaylistIds.has(pl.id)}
+                      onChange={() => togglePlaylistSelection(pl.id)}
+                      style={{ marginTop: 6, accentColor: 'var(--dash-accent)' }}
+                    />
+                    {pl.thumbnailUrl ? (
+                      <img
+                        src={pl.thumbnailUrl}
+                        alt={pl.title}
+                        style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--dash-border)' }}
+                      />
+                    ) : (
+                      <div style={{ width: 120, height: 68, borderRadius: 6, border: '1px solid var(--dash-border)', background: 'var(--dash-bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ListVideo size={28} style={{ color: 'var(--dash-text-muted)' }} />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-medium" style={{ color: 'var(--dash-text-primary)' }}>{pl.title}</p>
+                      <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>
+                        ID: {pl.id} | {pl.itemCount ?? 0} videos
+                      </p>
+                      {pl.alreadyImported && (
                         <p className="text-xs mt-1" style={{ color: 'var(--dash-status-approved)' }}>
                           Already in CMS (import will update metadata only)
                         </p>
