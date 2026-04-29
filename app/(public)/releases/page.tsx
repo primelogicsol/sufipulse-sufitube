@@ -8,7 +8,8 @@ import Link from 'next/link';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
 
-type FilterType = 'all' | 'native' | 'legacy';
+type FilterType = 'all' | 'native_governed' | 'legacy_registry';
+type FormatFilter = 'all' | 'video' | 'audio' | 'short' | 'live' | 'playlist';
 type DurationFilter = 'all' | 'short' | 'standard' | 'long';
 type SortOrder = 'all' | 'new' | 'old' | 'popular';
 
@@ -25,6 +26,8 @@ interface YouTubeRelease {
     durationFormatted: string;
     views: number;
     source: string;
+    format: 'video' | 'audio' | 'short' | 'live' | 'playlist';
+    govType: string;
 }
 
 export default function Releases() {
@@ -34,6 +37,7 @@ export default function Releases() {
     const [lastSync, setLastSync] = useState<string | null>(null);
 
     const [filterType, setFilterType] = useState<FilterType>('all');
+    const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
     const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
     const [yearFilter, setYearFilter] = useState<string>('all');
     const [sortOrder, setSortOrder] = useState<SortOrder>('all');
@@ -69,7 +73,9 @@ export default function Releases() {
                             durationSeconds: r.durationSeconds,
                             durationFormatted: r.durationFormatted,
                             views: r.viewCount || 0,
-                            source: 'native'
+                            source: 'native',
+                            format: r.format || (Number(r.durationSeconds) <= 60 ? 'short' : 'video'),
+                            govType: r.releaseType || '',
                         }));
                         break; // Success!
                     }
@@ -95,7 +101,9 @@ export default function Releases() {
                             durationSeconds: r.durationSeconds,
                             durationFormatted: r.durationFormatted,
                             views: r.viewCount || 0,
-                            source: 'native'
+                            source: 'native',
+                            format: r.format || (Number(r.durationSeconds) <= 60 ? 'short' : 'video'),
+                            govType: r.releaseType || '',
                         }));
                     }
                 } catch (e) {
@@ -107,9 +115,14 @@ export default function Releases() {
             let youtubeVideos: YouTubeRelease[] = [];
             try {
                 const { youtubeService } = await import('../../../lib/youtube-service');
-                youtubeVideos = mode === 'popular'
+                const raw = mode === 'popular'
                     ? await youtubeService.getPopularVideos(REGISTRY_FETCH_LIMIT)
                     : await youtubeService.getLatestVideos(REGISTRY_FETCH_LIMIT);
+                youtubeVideos = (raw as any[]).map((v) => ({
+                    ...v,
+                    format: v.format || (Number(v.durationSeconds) <= 60 ? 'short' : 'video'),
+                    govType: v.releaseType || v.govType || '',
+                }));
             } catch (ytErr) {
                 console.warn("YouTube Service fetch failed, using CMS data only", ytErr);
             }
@@ -121,10 +134,14 @@ export default function Releases() {
             const combined = [...cmsVideos, ...uniqueYoutubeVideos];
             
             if (combined.length === 0 && !lastFetchError) {
-                // If we got nothing at all and no error, maybe the CMS is empty? 
+                // If we got nothing at all and no error, maybe the CMS is empty?
                 // But the user expects at least the 14 static ones.
                 const { STATIC_YOUTUBE_VIDEOS } = await import('../../../app/data/youtube-videos');
-                setReleases(STATIC_YOUTUBE_VIDEOS);
+                setReleases((STATIC_YOUTUBE_VIDEOS as any[]).map((v) => ({
+                    ...v,
+                    format: v.format || (Number(v.durationSeconds) <= 60 ? 'short' : 'video'),
+                    govType: v.releaseType || v.govType || '',
+                })));
             } else {
                 setReleases(combined);
             }
@@ -138,7 +155,11 @@ export default function Releases() {
             // Last resort: show static data if everything crashed
             try {
                 const { STATIC_YOUTUBE_VIDEOS } = await import('../../../app/data/youtube-videos');
-                setReleases(STATIC_YOUTUBE_VIDEOS);
+                setReleases((STATIC_YOUTUBE_VIDEOS as any[]).map((v) => ({
+                    ...v,
+                    format: v.format || (Number(v.durationSeconds) <= 60 ? 'short' : 'video'),
+                    govType: v.releaseType || v.govType || '',
+                })));
             } catch (e) {}
         } finally {
             setLoading(false);
@@ -176,8 +197,9 @@ export default function Releases() {
 
     const filteredReleases = useMemo(() => {
         let filtered = releases.filter(release => {
-            if (filterType === 'native' && release.source !== 'native') return false;
-            if (filterType === 'legacy' && release.source !== 'youtube_legacy') return false;
+            if (filterType !== 'all' && release.govType !== filterType) return false;
+
+            if (filterFormat !== 'all' && release.format !== filterFormat) return false;
 
             if (durationFilter !== 'all') {
                 const minutes = release.durationSeconds / 60;
@@ -209,7 +231,7 @@ export default function Releases() {
         }
 
         return filtered;
-    }, [releases, filterType, durationFilter, yearFilter, searchQuery, sortOrder]);
+    }, [releases, filterType, filterFormat, durationFilter, yearFilter, searchQuery, sortOrder]);
 
     const totalPages = Math.ceil(filteredReleases.length / ITEMS_PER_PAGE);
     const paginatedReleases = useMemo(() => {
@@ -253,7 +275,7 @@ export default function Releases() {
                             <span className="text-xs text-neutral-500 uppercase tracking-wider">Filters</span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
                             <div>
                                 <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Type</label>
                                 <select
@@ -265,8 +287,27 @@ export default function Releases() {
                                     className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
                                 >
                                     <option value="all">All</option>
-                                    <option value="native">Native Governed</option>
-                                    <option value="legacy">Legacy Registry</option>
+                                    <option value="native_governed">Native Governed</option>
+                                    <option value="legacy_registry">Legacy Registry</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Format</label>
+                                <select
+                                    value={filterFormat}
+                                    onChange={(e) => {
+                                        setFilterFormat(e.target.value as FormatFilter);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
+                                >
+                                    <option value="all">All</option>
+                                    <option value="video">Videos</option>
+                                    <option value="audio">Audios</option>
+                                    <option value="short">Shorts</option>
+                                    <option value="live">Live</option>
+                                    <option value="playlist">Playlists</option>
                                 </select>
                             </div>
 
@@ -321,7 +362,7 @@ export default function Releases() {
                                 </select>
                             </div>
 
-                            <div className="md:col-span-2">
+                            <div className="md:col-span-2 lg:col-span-2">
                                 <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Search</label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600 pointer-events-none" />
@@ -338,7 +379,7 @@ export default function Releases() {
                                 </div>
                             </div>
 
-                            <div className="md:col-span-2 lg:col-span-1 flex items-end">
+                            <div className="md:col-span-2 lg:col-span-1 flex items-end" style={{alignSelf:'end'}}>
                                 <button
                                     onClick={() => fetchVideos(true)}
                                     className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none hover:border-amber-400/50 hover:text-amber-300 transition-colors"
@@ -396,8 +437,11 @@ export default function Releases() {
                                 <div className="text-neutral-500">No videos match your filters</div>
                                 <button
                                     onClick={() => {
+                                        setFilterType('all');
+                                        setFilterFormat('all');
                                         setDurationFilter('all');
                                         setYearFilter('all');
+                                        setSortOrder('all');
                                         setSearchQuery('');
                                     }}
                                     className="mt-4 text-amber-400 hover:text-amber-300 text-sm underline"

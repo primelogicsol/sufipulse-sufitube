@@ -3,7 +3,7 @@ import type { CMSRelease } from '@/lib/cms-storage';
 
 type ReleaseMediaInfoSectionProps = {
   form: Partial<CMSRelease>;
-  onInputChange: ChangeEventHandler<HTMLInputElement>;
+  onInputChange: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
 };
 
 export function ReleaseMediaInfoSection({ form, onInputChange }: ReleaseMediaInfoSectionProps) {
@@ -81,6 +81,42 @@ export function ReleaseMediaInfoSection({ form, onInputChange }: ReleaseMediaInf
             className="form-input w-full"
             placeholder="https://i.ytimg.com/vi/..."
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--dash-text-primary)' }}>
+              Format
+            </label>
+            <select
+              name="format"
+              value={form.format || ''}
+              onChange={onInputChange}
+              className="form-input w-full"
+            >
+              <option value="">— Unset —</option>
+              <option value="video">Video</option>
+              <option value="audio">Audio</option>
+              <option value="short">Short</option>
+              <option value="live">Live</option>
+              <option value="playlist">Playlist</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--dash-text-primary)' }}>
+              Type (Governance)
+            </label>
+            <select
+              name="releaseType"
+              value={form.releaseType || ''}
+              onChange={onInputChange}
+              className="form-input w-full"
+            >
+              <option value="">— Unset —</option>
+              <option value="native_governed">Native Governed</option>
+              <option value="legacy_registry">Legacy Registry</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

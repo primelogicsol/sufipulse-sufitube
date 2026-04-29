@@ -26,7 +26,8 @@ export interface CMSRelease {
   contentReadinessState?: 'draft' | 'editorial_ready' | 'web_published' | 'youtube_delivery_in_progress' | 'fully_delivered' | 'delivery_attention_required';
   category?: string;
   releaseType?: string;
-  
+  format?: 'video' | 'audio' | 'short' | 'live' | 'playlist';
+
   // Streaming platforms
   streamingPlatforms?: Array<{
     platform: string;

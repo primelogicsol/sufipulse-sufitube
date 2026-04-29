@@ -70,6 +70,7 @@ const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease
     likeCount: Number(existing?.likeCount || 0),
     status: existing?.status || 'draft',
     contentReadinessState: existing?.contentReadinessState || 'draft',
+    format: existing?.format || (Number(video.durationSeconds || existing?.durationSeconds || 0) <= 60 ? 'short' : 'video'),
     enableLyrics: existing?.enableLyrics !== false,
     enableCommentary: existing?.enableCommentary !== false,
     enableSponsors: !!existing?.enableSponsors,

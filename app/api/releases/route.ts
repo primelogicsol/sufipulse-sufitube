@@ -63,16 +63,50 @@ export async function GET(request: NextRequest) {
     }
 
     const sort = searchParams.get('sort');
+    const format = searchParams.get('format') || '';
+    const type = searchParams.get('type') || '';
+    const duration = searchParams.get('duration') || '';
+    const year = searchParams.get('year') || '';
+    const search = (searchParams.get('search') || '').toLowerCase().trim();
+
+    const applyFilters = (releases: CMSRelease[]) => {
+      return releases.filter((r) => {
+        if (format) {
+          const inferredFormat = r.format || (r.durationSeconds <= 60 ? 'short' : 'video');
+          if (inferredFormat !== format) return false;
+        }
+        if (type) {
+          if (r.releaseType !== type) return false;
+        }
+        if (duration) {
+          const mins = (r.durationSeconds || 0) / 60;
+          if (duration === 'short' && mins >= 3) return false;
+          if (duration === 'standard' && (mins < 3 || mins > 8)) return false;
+          if (duration === 'long' && mins <= 8) return false;
+        }
+        if (year) {
+          const releaseYear = new Date(r.releaseDate || r.createdAt || '').getFullYear();
+          if (releaseYear !== parseInt(year)) return false;
+        }
+        if (search) {
+          const haystack = `${r.title} ${r.description || ''}`.toLowerCase();
+          if (!haystack.includes(search)) return false;
+        }
+        return true;
+      });
+    };
 
     // Default to published only for public access; pass ?status=all to get everything (admin)
     if (!status || status === 'published') {
-      const releases = sort === 'ranked'
+      const base = sort === 'ranked'
         ? cmsServerStorage.getRankedReleases(limit ? parseInt(limit) : undefined)
         : cmsServerStorage.getPublishedReleases(limit ? parseInt(limit) : undefined);
+      const releases = (format || type || duration || year || search) ? applyFilters(base) : base;
       return NextResponse.json(releases, { headers: cacheHeaders });
     }
 
-    const releases = cmsServerStorage.getAllReleases(status !== 'all' ? { status } : undefined);
+    const base = cmsServerStorage.getAllReleases(status !== 'all' ? { status } : undefined);
+    const releases = (format || type || duration || year || search) ? applyFilters(base) : base;
     return NextResponse.json(releases, { headers: cacheHeaders });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -144,6 +178,7 @@ export async function POST(request: NextRequest) {
       contentReadinessState: body.contentReadinessState || 'draft',
       category: body.category,
       releaseType: body.releaseType,
+      format: body.format,
       writer: body.writer,
       vocalist: body.vocalist,
       chorusVocalists: Array.isArray(body.chorusVocalists) ? body.chorusVocalists : [],
