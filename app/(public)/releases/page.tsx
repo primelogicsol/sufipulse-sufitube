@@ -195,6 +195,27 @@ export default function Releases() {
         return Array.from(uniqueYears).sort((a, b) => b - a);
     }, [releases]);
 
+    const FORMAT_LABELS: Record<string, string> = {
+        video: 'Videos',
+        audio: 'Audios',
+        short: 'Shorts',
+        live: 'Live',
+        playlist: 'Playlists',
+    };
+    const FORMAT_ORDER = ['video', 'audio', 'short', 'live', 'playlist'];
+
+    const availableFormats = useMemo(() => {
+        const present = new Set(releases.map(r => r.format));
+        return FORMAT_ORDER.filter(f => present.has(f as any));
+    }, [releases]);
+
+    // If the active format filter is no longer present in loaded data, reset it
+    useEffect(() => {
+        if (filterFormat !== 'all' && !availableFormats.includes(filterFormat)) {
+            setFilterFormat('all');
+        }
+    }, [availableFormats]);
+
     const filteredReleases = useMemo(() => {
         let filtered = releases.filter(release => {
             if (filterType !== 'all' && release.govType !== filterType) return false;
@@ -303,11 +324,9 @@ export default function Releases() {
                                     className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
                                 >
                                     <option value="all">All</option>
-                                    <option value="video">Videos</option>
-                                    <option value="audio">Audios</option>
-                                    <option value="short">Shorts</option>
-                                    <option value="live">Live</option>
-                                    <option value="playlist">Playlists</option>
+                                    {availableFormats.map(f => (
+                                        <option key={f} value={f}>{FORMAT_LABELS[f]}</option>
+                                    ))}
                                 </select>
                             </div>
 
