@@ -1,4 +1,22 @@
 // lib/youtube-service.ts
+
+/**
+ * Format inference priority (from YouTube API data):
+ *  1. liveStreamingDetails present → 'live'
+ *  2. durationSeconds <= 60        → 'short'  (YouTube Shorts heuristic)
+ *  3. default                      → 'video'
+ *
+ * 'audio' and 'playlist' are admin-only designations — YouTube does not
+ * expose them as video-level fields in the Data API v3.
+ */
+export type ReleaseFormat = 'video' | 'audio' | 'short' | 'live' | 'playlist';
+
+function inferFormat(durationSeconds: number, hasLiveDetails: boolean): ReleaseFormat {
+    if (hasLiveDetails) return 'live';
+    if (durationSeconds <= 60) return 'short';
+    return 'video';
+}
+
 interface YouTubeVideo {
     id: string;
     title: string;
@@ -9,6 +27,16 @@ interface YouTubeVideo {
     durationFormatted: string;
     views: number;
     source: string;
+    format: ReleaseFormat;
+}
+
+export interface YouTubePlaylist {
+    id: string;
+    title: string;
+    description: string;
+    thumbnailUrl: string;
+    publishedDate: string;
+    itemCount: number;
 }
 
 interface YouTubeServiceConfig {
@@ -180,17 +208,19 @@ class YouTubeService {
             const videosData = chunkResults.flat();
 
             const formatted = videosData.map((video: any) => {
-                const searchItem = searchItemById.get(video.id);
+                const durationSecs = this.parseDuration(video.contentDetails?.duration || 'PT0S');
+                const hasLiveDetails = !!(video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime);
                 return {
                     id: video.id,
                     title: video.snippet.title,
                     description: video.snippet.description,
-                    thumbnailUrl: video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                    thumbnailUrl: video.snippet.thumbnails?.maxres?.url || video.snippet.thumbnails?.high?.url || video.snippet.thumbnails?.medium?.url,
                     publishedDate: video.snippet.publishedAt,
-                    durationSeconds: this.parseDuration(video.contentDetails.duration),
-                    durationFormatted: this.formatDuration(video.contentDetails.duration),
-                    views: parseInt(video.statistics.viewCount || '0'),
-                    source: 'youtube_legacy'
+                    durationSeconds: durationSecs,
+                    durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
+                    views: parseInt(video.statistics?.viewCount || '0'),
+                    source: 'youtube_legacy',
+                    format: inferFormat(durationSecs, hasLiveDetails),
                 };
             });
 
@@ -234,7 +264,7 @@ class YouTubeService {
         }
 
         try {
-            const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids}&key=${this.config.apiKey}`;
+            const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,liveStreamingDetails&id=${ids}&key=${this.config.apiKey}`;
             const data = await this.makeRequest(videosUrl);
 
             this.setCache(cacheKey, data.items || []);
@@ -347,16 +377,19 @@ class YouTubeService {
             }
 
             const video = videos[0];
+            const durationSecs = this.parseDuration(video.contentDetails?.duration || 'PT0S');
+            const hasLiveDetails = !!(video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime);
             const formatted: YouTubeVideo = {
                 id: video.id,
                 title: video.snippet.title,
                 description: video.snippet.description,
-                thumbnailUrl: video.snippet.thumbnails.maxres?.url || video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                thumbnailUrl: video.snippet.thumbnails?.maxres?.url || video.snippet.thumbnails?.high?.url || video.snippet.thumbnails?.medium?.url,
                 publishedDate: video.snippet.publishedAt,
-                durationSeconds: this.parseDuration(video.contentDetails.duration),
-                durationFormatted: this.formatDuration(video.contentDetails.duration),
-                views: parseInt(video.statistics.viewCount || '0'),
-                source: 'youtube_legacy'
+                durationSeconds: durationSecs,
+                durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
+                views: parseInt(video.statistics?.viewCount || '0'),
+                source: 'youtube_legacy',
+                format: inferFormat(durationSecs, hasLiveDetails),
             };
 
             console.log('✅ Successfully fetched video details');
@@ -402,6 +435,38 @@ class YouTubeService {
         }
     }
 
+    /**
+     * Fetch all public playlists for the SufiPulse channel.
+     * Returns playlist metadata only — items are fetched separately via playlistItems.list.
+     */
+    async getChannelPlaylists(maxResults: number = 50): Promise<YouTubePlaylist[]> {
+        if (!this.config.apiKey) {
+            console.warn('YouTube API key missing — cannot fetch playlists');
+            return [];
+        }
+        const cacheKey = `playlists_${this.config.channelId}_${maxResults}`;
+        const cached = this.getCache(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&channelId=${this.config.channelId}&maxResults=${maxResults}&key=${this.config.apiKey}`;
+            const data = await this.makeRequest(url);
+            const playlists: YouTubePlaylist[] = (data.items || []).map((item: any) => ({
+                id: item.id,
+                title: item.snippet?.title || '',
+                description: item.snippet?.description || '',
+                thumbnailUrl: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || '',
+                publishedDate: item.snippet?.publishedAt || '',
+                itemCount: item.contentDetails?.itemCount || 0,
+            }));
+            this.setCache(cacheKey, playlists);
+            return playlists;
+        } catch (err: any) {
+            console.error('Failed to fetch channel playlists:', err.message);
+            return [];
+        }
+    }
+
     // Utility methods
     isQuotaExceeded(): boolean {
         return this.quotaExceeded;
@@ -429,4 +494,4 @@ export const youtubeService = new YouTubeService();
 
 // Export types and class for advanced usage
 export type { YouTubeVideo, YouTubeServiceConfig };
-export { YouTubeService };
+export { YouTubeService, inferFormat };

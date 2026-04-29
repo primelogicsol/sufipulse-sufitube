@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { youtubeService } from '@/lib/youtube-service';
+import { youtubeService, inferFormat } from '@/lib/youtube-service';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { requireAdmin } from '@/server/middleware/authenticate';
@@ -70,7 +70,8 @@ const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease
     likeCount: Number(existing?.likeCount || 0),
     status: existing?.status || 'draft',
     contentReadinessState: existing?.contentReadinessState || 'draft',
-    format: existing?.format || (Number(video.durationSeconds || existing?.durationSeconds || 0) <= 60 ? 'short' : 'video'),
+    // Admin override takes precedence; otherwise use YouTube-inferred format from the caller
+    format: existing?.format || video.format || inferFormat(Number(video.durationSeconds || existing?.durationSeconds || 0), false),
     enableLyrics: existing?.enableLyrics !== false,
     enableCommentary: existing?.enableCommentary !== false,
     enableSponsors: !!existing?.enableSponsors,
@@ -169,6 +170,7 @@ export async function POST(request: NextRequest) {
 
       selected = detailed.map((video) => {
         const parsedDuration = parseIsoDurationSeconds(video?.contentDetails?.duration || 'PT0S');
+        const hasLiveDetails = !!(video?.liveStreamingDetails?.actualStartTime || video?.liveStreamingDetails?.scheduledStartTime);
         return {
           id: video.id,
           title: video?.snippet?.title || `Video ${video.id}`,
@@ -182,6 +184,7 @@ export async function POST(request: NextRequest) {
           durationSeconds: parsedDuration,
           durationFormatted: formatSeconds(parsedDuration),
           views: Number(video?.statistics?.viewCount || 0),
+          format: inferFormat(parsedDuration, hasLiveDetails),
         };
       });
     } else {
