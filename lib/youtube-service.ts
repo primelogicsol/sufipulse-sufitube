@@ -436,6 +436,60 @@ class YouTubeService {
     }
 
     /**
+     * Fetch completed live streams from the channel.
+     * Uses eventType=completed which returns videos that were live broadcasts.
+     * The videos.list response includes liveStreamingDetails so inferFormat()
+     * correctly assigns format='live' on import.
+     */
+    async getCompletedLiveStreams(maxResults: number = 50): Promise<YouTubeVideo[]> {
+        if (!this.config.apiKey) {
+            console.warn('YouTube API key missing — cannot fetch live streams');
+            return [];
+        }
+        const safeMax = Math.max(1, Math.min(maxResults, 50));
+        const cacheKey = `live_completed_${this.config.channelId}_${safeMax}`;
+        const cached = this.getCache(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${this.config.channelId}&maxResults=${safeMax}&type=video&eventType=completed&key=${this.config.apiKey}`;
+            const searchData = await this.makeRequest(searchUrl);
+            const items: any[] = searchData.items || [];
+
+            if (!items.length) {
+                this.setCache(cacheKey, []);
+                return [];
+            }
+
+            const ids = items.map((i: any) => i?.id?.videoId).filter(Boolean);
+            const detailed = await this.getVideosByIds(ids);
+
+            const result: YouTubeVideo[] = detailed.map((video: any) => {
+                const durationSecs = this.parseDuration(video.contentDetails?.duration || 'PT0S');
+                const hasLiveDetails = !!(video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime);
+                return {
+                    id: video.id,
+                    title: video.snippet?.title || '',
+                    description: video.snippet?.description || '',
+                    thumbnailUrl: video.snippet?.thumbnails?.maxres?.url || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || '',
+                    publishedDate: video.snippet?.publishedAt || '',
+                    durationSeconds: durationSecs,
+                    durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
+                    views: parseInt(video.statistics?.viewCount || '0'),
+                    source: 'youtube_legacy',
+                    format: inferFormat(durationSecs, hasLiveDetails),
+                };
+            });
+
+            this.setCache(cacheKey, result);
+            return result;
+        } catch (err: any) {
+            console.error('Failed to fetch live streams:', err.message);
+            return [];
+        }
+    }
+
+    /**
      * Fetch all public playlists for the SufiPulse channel.
      * Returns playlist metadata only — items are fetched separately via playlistItems.list.
      */

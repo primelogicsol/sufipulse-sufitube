@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Archive, MoreVertical, Download, RefreshCw, CheckSquare, Square, ListVideo } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, Archive, MoreVertical, Download, RefreshCw, CheckSquare, Square, ListVideo, Radio, Music } from 'lucide-react';
 import type { CMSRelease } from '@/lib/cms-storage';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
@@ -46,6 +46,14 @@ export default function CMSReleasesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [directUrl, setDirectUrl] = useState('');
+
+  // Live streams import state
+  const [livePanelOpen, setLivePanelOpen] = useState(false);
+  const [loadingLive, setLoadingLive] = useState(false);
+  const [importingLive, setImportingLive] = useState(false);
+  const [liveStreams, setLiveStreams] = useState<YouTubeImportVideo[]>([]);
+  const [selectedLiveIds, setSelectedLiveIds] = useState<Set<string>>(new Set());
+  const [liveMessage, setLiveMessage] = useState<string | null>(null);
 
   // Playlist import state
   const [playlistPanelOpen, setPlaylistPanelOpen] = useState(false);
@@ -249,6 +257,48 @@ export default function CMSReleasesPage() {
     setSelectedVideoIds(new Set());
   };
 
+  const fetchLiveStreams = async () => {
+    try {
+      setLoadingLive(true);
+      setLiveMessage(null);
+      const res = await fetch('/api/releases/import-youtube/live');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to fetch live streams');
+      setLiveStreams(Array.isArray(data.items) ? data.items : []);
+      setLivePanelOpen(true);
+      setSelectedLiveIds(new Set());
+      setLiveMessage(`Found ${data.count || 0} completed live streams on the channel.`);
+    } catch (error: any) {
+      setLiveMessage(`Fetch failed: ${error?.message || 'Unknown error'}`);
+      setLivePanelOpen(true);
+    } finally {
+      setLoadingLive(false);
+    }
+  };
+
+  const importSelectedLive = async () => {
+    const ids = Array.from(selectedLiveIds);
+    if (!ids.length) { setLiveMessage('Select at least one live stream to import.'); return; }
+    try {
+      setImportingLive(true);
+      setLiveMessage(null);
+      const res = await fetch('/api/releases/import-youtube/live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoIds: ids }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Import failed');
+      setLiveMessage(`Imported ${data.importedCount || 0} live stream(s) as CMS releases.`);
+      await loadReleases();
+      await fetchLiveStreams();
+    } catch (error: any) {
+      setLiveMessage(`Import failed: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setImportingLive(false);
+    }
+  };
+
   const fetchPlaylists = async () => {
     try {
       setLoadingPlaylists(true);
@@ -365,6 +415,13 @@ export default function CMSReleasesPage() {
             <Download size={16} /> {loadingYouTube ? 'Fetching...' : 'Fetch from YouTube'}
           </button>
           <button
+            onClick={fetchLiveStreams}
+            disabled={loadingLive}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg dashboard-btn-secondary font-medium text-sm disabled:opacity-60"
+          >
+            <Radio size={16} /> {loadingLive ? 'Fetching...' : 'Fetch Live Streams'}
+          </button>
+          <button
             onClick={fetchPlaylists}
             disabled={loadingPlaylists}
             className="flex items-center gap-2 px-4 py-2 rounded-lg dashboard-btn-secondary font-medium text-sm disabled:opacity-60"
@@ -475,6 +532,61 @@ export default function CMSReleasesPage() {
             )}
           </div>
         )}
+
+        {/* Live Streams Import Panel */}
+        {livePanelOpen && (
+          <div className="mb-6 dashboard-card p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div>
+                <h2 className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>
+                  <Radio size={16} className="inline mr-2 mb-0.5" />Live Streams
+                </h2>
+                <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>
+                  Completed live broadcasts from the channel. Imported with format = live — will appear in the Live filter on /releases.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setSelectedLiveIds(new Set(liveStreams.map(v => v.id)))} className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"><CheckSquare size={14} /> Select All</button>
+                <button type="button" onClick={() => setSelectedLiveIds(new Set())} className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"><Square size={14} /> Clear</button>
+                <button type="button" onClick={fetchLiveStreams} disabled={loadingLive} className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"><RefreshCw size={14} /> Refresh</button>
+                <button type="button" onClick={importSelectedLive} disabled={importingLive || selectedLiveIds.size === 0} className="dashboard-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60">
+                  <Download size={14} /> {importingLive ? 'Importing...' : `Import Selected (${selectedLiveIds.size})`}
+                </button>
+              </div>
+            </div>
+
+            {liveMessage && <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{liveMessage}</p>}
+
+            {liveStreams.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No completed live streams found on this channel.</p>
+            ) : (
+              <div className="max-h-80 overflow-auto border rounded-lg" style={{ borderColor: 'var(--dash-border)' }}>
+                {liveStreams.map((video) => (
+                  <label key={video.id} className="flex items-start gap-3 p-3 cursor-pointer" style={{ borderBottom: '1px solid var(--dash-border)' }}>
+                    <input type="checkbox" checked={selectedLiveIds.has(video.id)} onChange={() => setSelectedLiveIds(prev => { const next = new Set(prev); next.has(video.id) ? next.delete(video.id) : next.add(video.id); return next; })} style={{ marginTop: 6, accentColor: 'var(--dash-accent)' }} />
+                    <img src={video.thumbnailUrl || ''} alt={video.title} style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--dash-border)' }} />
+                    <div className="min-w-0">
+                      <p className="font-medium" style={{ color: 'var(--dash-text-primary)' }}>{video.title}</p>
+                      <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>ID: {video.id} | {video.durationFormatted || '—'} | {video.views?.toLocaleString?.() || 0} views</p>
+                      {video.alreadyImported && <p className="text-xs mt-1" style={{ color: 'var(--dash-status-approved)' }}>Already in CMS (re-import updates format to live)</p>}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Audio Notice Panel — always visible as an info card */}
+        <div className="mb-6 dashboard-card p-4 flex items-start gap-3">
+          <Music size={18} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--dash-accent)' }} />
+          <div>
+            <p className="font-semibold text-sm" style={{ color: 'var(--dash-text-primary)' }}>Audio Releases</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--dash-text-muted)' }}>
+              YouTube has no audio-only format. To mark a release as Audio: open the release in the editor → Media Information → Format → select <strong>Audio</strong>. It will then appear in the Audios filter on /releases.
+            </p>
+          </div>
+        </div>
 
         {/* Playlist Import Panel */}
         {playlistPanelOpen && (
