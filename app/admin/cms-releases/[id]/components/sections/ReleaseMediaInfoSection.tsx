@@ -11,8 +11,11 @@ type ReleaseMediaInfoSectionProps = {
   onFieldChange?: (field: keyof CMSRelease, value: any) => void;
 };
 
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB per chunk
+
 export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: ReleaseMediaInfoSectionProps) {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -23,19 +26,51 @@ export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: 
     setUploading(true);
     setUploadError(null);
     setUploadSuccess(false);
+    setUploadProgress('');
     try {
-      const res = await fetch('/api/audio/upload', {
-        method: 'POST',
-        headers: { 'x-filename': file.name },
-        body: file,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-      onFieldChange?.('audioUrl', data.url);
-      onFieldChange?.('webOnly', true);
+      const uploadId = crypto.randomUUID();
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const totalMB = (file.size / 1024 / 1024).toFixed(1);
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const chunk = file.slice(start, start + CHUNK_SIZE);
+        const pct = Math.round((i / totalChunks) * 100);
+        setUploadProgress(
+          totalChunks === 1
+            ? `Uploading ${totalMB} MB…`
+            : `Uploading ${totalMB} MB — ${pct}% (part ${i + 1}/${totalChunks})…`
+        );
+
+        const res = await fetch('/api/audio/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'X-Upload-Id': uploadId,
+            'X-Chunk-Index': String(i),
+            'X-Total-Chunks': String(totalChunks),
+            'X-Filename': encodeURIComponent(file.name),
+          },
+          body: chunk,
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Upload failed at part ${i + 1}/${totalChunks} (HTTP ${res.status})`);
+        }
+
+        if (i === totalChunks - 1) {
+          const data = await res.json();
+          onFieldChange?.('audioUrl', data.url);
+          onFieldChange?.('webOnly', true);
+        }
+      }
+
+      setUploadProgress('');
       setUploadSuccess(true);
     } catch (err: any) {
       setUploadError(err.message);
+      setUploadProgress('');
     } finally {
       setUploading(false);
     }
@@ -213,7 +248,7 @@ export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: 
                 className="flex items-center gap-2 px-4 py-2 text-sm dashboard-btn-secondary disabled:opacity-60"
               >
                 {uploading ? (
-                  <><Loader2 size={14} className="animate-spin" /> Uploading...</>
+                  <><Loader2 size={14} className="animate-spin" /> {uploadProgress || 'Uploading…'}</>
                 ) : (
                   <><Upload size={14} /> Upload Audio File</>
                 )}
