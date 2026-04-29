@@ -1,0 +1,66 @@
+User-Agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /user/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+User-Agent: Googlebot
+Allow: /
+Allow: /releases
+Allow: /literary-journal
+Allow: /about/
+Allow: /writers
+Allow: /vocalists
+Allow: /producers
+Allow: /studio
+Allow: /contact
+Disallow: /admin/
+Disallow: /user/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+User-Agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /user/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+User-Agent: anthropic-ai
+Allow: /
+Disallow: /admin/
+Disallow: /user/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+User-Agent: Claude-Web
+Allow: /
+Disallow: /admin/
+Disallow: /user/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+User-Agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /user/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+User-Agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /user/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+Host: http://localhost:3000
+Sitemap: http://localhost:3000/sitemap.xml

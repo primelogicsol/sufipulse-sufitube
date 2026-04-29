@@ -1666,8 +1666,44 @@ function Release() {
                             </div>
                         </div>
 
+                        {/* Audio Player — shown for audio-format releases with an audioUrl */}
+                        {(release.format === 'audio' || release.audioUrl) && release.audioUrl && (
+                            <div className="mb-8">
+                                <div className="rounded-xl border border-neutral-800 bg-neutral-900/60 p-6">
+                                    {/* Thumbnail / cover art */}
+                                    {release.thumbnailUrl && (
+                                        <div className="flex justify-center mb-5">
+                                            <img
+                                                src={release.thumbnailUrl}
+                                                alt={release.release_title || release.title}
+                                                className="w-48 h-48 object-cover rounded-lg border border-neutral-700 shadow-xl"
+                                            />
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-neutral-500 uppercase tracking-widest text-center mb-3">Audio Release</p>
+                                    <audio
+                                        controls
+                                        src={release.audioUrl}
+                                        className="w-full"
+                                        style={{ borderRadius: 8 }}
+                                        preload="metadata"
+                                    />
+                                    <div className="flex items-center justify-between mt-3 text-xs text-neutral-500">
+                                        <span>{release.durationFormatted || release.duration_formatted || ''}</span>
+                                        <a
+                                            href={release.audioUrl}
+                                            download
+                                            className="flex items-center gap-1 hover:text-amber-400 transition-colors"
+                                        >
+                                            <Download className="w-3.5 h-3.5" /> Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Video Player - Hero Position */}
-                        {(resolvedVideoId || (release.youtube_url && !release.youtube_url.includes('PLACEHOLDER'))) ? (
+                        {!release.audioUrl && (resolvedVideoId || (release.youtube_url && !release.youtube_url.includes('PLACEHOLDER'))) ? (
                             <div className="mb-8">
                                 <div
                                     ref={containerRef}

@@ -27,6 +27,8 @@ export interface CMSRelease {
   category?: string;
   releaseType?: string;
   format?: 'video' | 'audio' | 'short' | 'live' | 'playlist';
+  audioUrl?: string;
+  webOnly?: boolean;
 
   // Streaming platforms
   streamingPlatforms?: Array<{

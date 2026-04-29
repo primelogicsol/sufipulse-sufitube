@@ -179,6 +179,8 @@ export async function POST(request: NextRequest) {
       category: body.category,
       releaseType: body.releaseType,
       format: body.format,
+      audioUrl: body.audioUrl,
+      webOnly: body.webOnly || false,
       writer: body.writer,
       vocalist: body.vocalist,
       chorusVocalists: Array.isArray(body.chorusVocalists) ? body.chorusVocalists : [],

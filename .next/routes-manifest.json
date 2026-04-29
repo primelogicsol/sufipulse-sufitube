@@ -1,0 +1,981 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com https://js.stripe.com https://www.googletagmanager.com https://apis.google.com https://accounts.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://i.ytimg.com https://i3.ytimg.com https://i9.ytimg.com https://img.youtube.com https://lh3.googleusercontent.com https://www.gstatic.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://js.stripe.com https://accounts.google.com; connect-src 'self' https://api.stripe.com https://www.googleapis.com https://googleads.googleapis.com https://youtube.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; media-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self'"
+        }
+      ],
+      "regex": "^(?:/(.*))(?:/)?$"
+    }
+  ],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/admin/cms/releases/[id]/edit",
+      "regex": "^/admin/cms/releases/([^/]+?)/edit(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/cms/releases/(?<nxtPid>[^/]+?)/edit(?:/)?$"
+    },
+    {
+      "page": "/admin/cms/releases/[id]/versions",
+      "regex": "^/admin/cms/releases/([^/]+?)/versions(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/cms/releases/(?<nxtPid>[^/]+?)/versions(?:/)?$"
+    },
+    {
+      "page": "/admin/cms-releases/[id]",
+      "regex": "^/admin/cms\\-releases/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/cms\\-releases/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/admin/cms-releases/[id]/lyrics",
+      "regex": "^/admin/cms\\-releases/([^/]+?)/lyrics(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/cms\\-releases/(?<nxtPid>[^/]+?)/lyrics(?:/)?$"
+    },
+    {
+      "page": "/admin/cms-releases/[id]/subtitles",
+      "regex": "^/admin/cms\\-releases/([^/]+?)/subtitles(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/cms\\-releases/(?<nxtPid>[^/]+?)/subtitles(?:/)?$"
+    },
+    {
+      "page": "/adopt-song/request/[id]",
+      "regex": "^/adopt\\-song/request/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/adopt\\-song/request/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/users/[id]",
+      "regex": "^/api/admin/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/users/[id]/role",
+      "regex": "^/api/admin/users/([^/]+?)/role(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/users/(?<nxtPid>[^/]+?)/role(?:/)?$"
+    },
+    {
+      "page": "/api/adoptions/[id]",
+      "regex": "^/api/adoptions/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/adoptions/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/adoptions/[id]/checkout",
+      "regex": "^/api/adoptions/([^/]+?)/checkout(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/adoptions/(?<nxtPid>[^/]+?)/checkout(?:/)?$"
+    },
+    {
+      "page": "/api/adoptions/[id]/confirm",
+      "regex": "^/api/adoptions/([^/]+?)/confirm(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/adoptions/(?<nxtPid>[^/]+?)/confirm(?:/)?$"
+    },
+    {
+      "page": "/api/adoptions/[id]/google-oauth",
+      "regex": "^/api/adoptions/([^/]+?)/google\\-oauth(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/adoptions/(?<nxtPid>[^/]+?)/google\\-oauth(?:/)?$"
+    },
+    {
+      "page": "/api/adoptions/[id]/google-oauth/status",
+      "regex": "^/api/adoptions/([^/]+?)/google\\-oauth/status(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/adoptions/(?<nxtPid>[^/]+?)/google\\-oauth/status(?:/)?$"
+    },
+    {
+      "page": "/api/articles/[id]",
+      "regex": "^/api/articles/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/articles/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/audio/[filename]",
+      "regex": "^/api/audio/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPfilename": "nxtPfilename"
+      },
+      "namedRegex": "^/api/audio/(?<nxtPfilename>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/contacts/[id]",
+      "regex": "^/api/contacts/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/contacts/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/infrastructure/[id]",
+      "regex": "^/api/infrastructure/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/infrastructure/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/kalams/[id]",
+      "regex": "^/api/kalams/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/kalams/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/literary/[id]",
+      "regex": "^/api/literary/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/literary/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/partnerships/[id]",
+      "regex": "^/api/partnerships/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/partnerships/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/performance-assignments/[id]",
+      "regex": "^/api/performance\\-assignments/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/performance\\-assignments/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/producers/[id]",
+      "regex": "^/api/producers/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/producers/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]",
+      "regex": "^/api/releases/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]/credits",
+      "regex": "^/api/releases/([^/]+?)/credits(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)/credits(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]/import-captions",
+      "regex": "^/api/releases/([^/]+?)/import\\-captions(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)/import\\-captions(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]/import-captions/from-video",
+      "regex": "^/api/releases/([^/]+?)/import\\-captions/from\\-video(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)/import\\-captions/from\\-video(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]/lyrics",
+      "regex": "^/api/releases/([^/]+?)/lyrics(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)/lyrics(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]/social-share-kit",
+      "regex": "^/api/releases/([^/]+?)/social\\-share\\-kit(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)/social\\-share\\-kit(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]/subtitles",
+      "regex": "^/api/releases/([^/]+?)/subtitles(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)/subtitles(?:/)?$"
+    },
+    {
+      "page": "/api/releases/[id]/youtube-subtitles",
+      "regex": "^/api/releases/([^/]+?)/youtube\\-subtitles(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/releases/(?<nxtPid>[^/]+?)/youtube\\-subtitles(?:/)?$"
+    },
+    {
+      "page": "/api/royalties/[id]",
+      "regex": "^/api/royalties/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/royalties/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/sadas/[id]",
+      "regex": "^/api/sadas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/sadas/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/session-requests/[id]",
+      "regex": "^/api/session\\-requests/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/session\\-requests/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/studio/[id]",
+      "regex": "^/api/studio/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/studio/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/studio-access-codes/[id]",
+      "regex": "^/api/studio\\-access\\-codes/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/studio\\-access\\-codes/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/video/temp/[filename]",
+      "regex": "^/api/video/temp/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPfilename": "nxtPfilename"
+      },
+      "namedRegex": "^/api/video/temp/(?<nxtPfilename>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/vocalists/[id]",
+      "regex": "^/api/vocalists/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/vocalists/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/writers/[id]",
+      "regex": "^/api/writers/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/writers/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/literary-journal/[slug]",
+      "regex": "^/literary\\-journal/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/literary\\-journal/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/release-detail/[slug]",
+      "regex": "^/release\\-detail/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/release\\-detail/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/releases-cms/[slug]",
+      "regex": "^/releases\\-cms/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/releases\\-cms/(?<nxtPslug>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/about/founder",
+      "regex": "^/about/founder(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/about/founder(?:/)?$"
+    },
+    {
+      "page": "/about/institutional-partners",
+      "regex": "^/about/institutional\\-partners(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/about/institutional\\-partners(?:/)?$"
+    },
+    {
+      "page": "/about/our-network",
+      "regex": "^/about/our\\-network(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/about/our\\-network(?:/)?$"
+    },
+    {
+      "page": "/about/what-is-sufipulse",
+      "regex": "^/about/what\\-is\\-sufipulse(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/about/what\\-is\\-sufipulse(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/admin/applications/literary",
+      "regex": "^/admin/applications/literary(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/applications/literary(?:/)?$"
+    },
+    {
+      "page": "/admin/applications/producers",
+      "regex": "^/admin/applications/producers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/applications/producers(?:/)?$"
+    },
+    {
+      "page": "/admin/applications/studio",
+      "regex": "^/admin/applications/studio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/applications/studio(?:/)?$"
+    },
+    {
+      "page": "/admin/applications/vocalists",
+      "regex": "^/admin/applications/vocalists(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/applications/vocalists(?:/)?$"
+    },
+    {
+      "page": "/admin/applications/writers",
+      "regex": "^/admin/applications/writers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/applications/writers(?:/)?$"
+    },
+    {
+      "page": "/admin/articles",
+      "regex": "^/admin/articles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/articles(?:/)?$"
+    },
+    {
+      "page": "/admin/auto-setup",
+      "regex": "^/admin/auto\\-setup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/auto\\-setup(?:/)?$"
+    },
+    {
+      "page": "/admin/cms",
+      "regex": "^/admin/cms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/cms(?:/)?$"
+    },
+    {
+      "page": "/admin/cms/bulk-import",
+      "regex": "^/admin/cms/bulk\\-import(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/cms/bulk\\-import(?:/)?$"
+    },
+    {
+      "page": "/admin/cms/media",
+      "regex": "^/admin/cms/media(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/cms/media(?:/)?$"
+    },
+    {
+      "page": "/admin/cms/releases",
+      "regex": "^/admin/cms/releases(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/cms/releases(?:/)?$"
+    },
+    {
+      "page": "/admin/cms/roles",
+      "regex": "^/admin/cms/roles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/cms/roles(?:/)?$"
+    },
+    {
+      "page": "/admin/cms-releases",
+      "regex": "^/admin/cms\\-releases(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/cms\\-releases(?:/)?$"
+    },
+    {
+      "page": "/admin/contact-messages",
+      "regex": "^/admin/contact\\-messages(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/contact\\-messages(?:/)?$"
+    },
+    {
+      "page": "/admin/google-ads",
+      "regex": "^/admin/google\\-ads(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/google\\-ads(?:/)?$"
+    },
+    {
+      "page": "/admin/infrastructure",
+      "regex": "^/admin/infrastructure(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/infrastructure(?:/)?$"
+    },
+    {
+      "page": "/admin/kalams",
+      "regex": "^/admin/kalams(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/kalams(?:/)?$"
+    },
+    {
+      "page": "/admin/partnerships",
+      "regex": "^/admin/partnerships(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/partnerships(?:/)?$"
+    },
+    {
+      "page": "/admin/performance-assignments",
+      "regex": "^/admin/performance\\-assignments(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/performance\\-assignments(?:/)?$"
+    },
+    {
+      "page": "/admin/production-workflow",
+      "regex": "^/admin/production\\-workflow(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/production\\-workflow(?:/)?$"
+    },
+    {
+      "page": "/admin/release-workflow",
+      "regex": "^/admin/release\\-workflow(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/release\\-workflow(?:/)?$"
+    },
+    {
+      "page": "/admin/royalties",
+      "regex": "^/admin/royalties(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/royalties(?:/)?$"
+    },
+    {
+      "page": "/admin/sadas",
+      "regex": "^/admin/sadas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/sadas(?:/)?$"
+    },
+    {
+      "page": "/admin/session-requests",
+      "regex": "^/admin/session\\-requests(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/session\\-requests(?:/)?$"
+    },
+    {
+      "page": "/admin/setup",
+      "regex": "^/admin/setup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/setup(?:/)?$"
+    },
+    {
+      "page": "/admin/song-adoptions",
+      "regex": "^/admin/song\\-adoptions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/song\\-adoptions(?:/)?$"
+    },
+    {
+      "page": "/admin/studio-access-codes",
+      "regex": "^/admin/studio\\-access\\-codes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/studio\\-access\\-codes(?:/)?$"
+    },
+    {
+      "page": "/admin/studio-sessions",
+      "regex": "^/admin/studio\\-sessions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/studio\\-sessions(?:/)?$"
+    },
+    {
+      "page": "/admin/users",
+      "regex": "^/admin/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/users(?:/)?$"
+    },
+    {
+      "page": "/admin/youtube-sync",
+      "regex": "^/admin/youtube\\-sync(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/youtube\\-sync(?:/)?$"
+    },
+    {
+      "page": "/adoption-cancel",
+      "regex": "^/adoption\\-cancel(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/adoption\\-cancel(?:/)?$"
+    },
+    {
+      "page": "/adoption-success",
+      "regex": "^/adoption\\-success(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/adoption\\-success(?:/)?$"
+    },
+    {
+      "page": "/collaboration",
+      "regex": "^/collaboration(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/collaboration(?:/)?$"
+    },
+    {
+      "page": "/contact",
+      "regex": "^/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contact(?:/)?$"
+    },
+    {
+      "page": "/contributor-policy",
+      "regex": "^/contributor\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contributor\\-policy(?:/)?$"
+    },
+    {
+      "page": "/cookie-policy",
+      "regex": "^/cookie\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cookie\\-policy(?:/)?$"
+    },
+    {
+      "page": "/email-verified",
+      "regex": "^/email\\-verified(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/email\\-verified(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/forgot-password",
+      "regex": "^/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/governance",
+      "regex": "^/governance(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance(?:/)?$"
+    },
+    {
+      "page": "/governance/content-stewardship",
+      "regex": "^/governance/content\\-stewardship(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance/content\\-stewardship(?:/)?$"
+    },
+    {
+      "page": "/governance/diwan-e-amanat",
+      "regex": "^/governance/diwan\\-e\\-amanat(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance/diwan\\-e\\-amanat(?:/)?$"
+    },
+    {
+      "page": "/governance/majlis-e-nazr",
+      "regex": "^/governance/majlis\\-e\\-nazr(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance/majlis\\-e\\-nazr(?:/)?$"
+    },
+    {
+      "page": "/governance/mithaq",
+      "regex": "^/governance/mithaq(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance/mithaq(?:/)?$"
+    },
+    {
+      "page": "/governance/production-oversight",
+      "regex": "^/governance/production\\-oversight(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance/production\\-oversight(?:/)?$"
+    },
+    {
+      "page": "/governance/release-protocol",
+      "regex": "^/governance/release\\-protocol(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance/release\\-protocol(?:/)?$"
+    },
+    {
+      "page": "/governance/royalty-transparency",
+      "regex": "^/governance/royalty\\-transparency(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/governance/royalty\\-transparency(?:/)?$"
+    },
+    {
+      "page": "/icon.svg",
+      "regex": "^/icon\\.svg(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.svg(?:/)?$"
+    },
+    {
+      "page": "/inside-studio",
+      "regex": "^/inside\\-studio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/inside\\-studio(?:/)?$"
+    },
+    {
+      "page": "/legal/disclaimer",
+      "regex": "^/legal/disclaimer(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/legal/disclaimer(?:/)?$"
+    },
+    {
+      "page": "/literary-contributors",
+      "regex": "^/literary\\-contributors(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/literary\\-contributors(?:/)?$"
+    },
+    {
+      "page": "/literary-journal",
+      "regex": "^/literary\\-journal(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/literary\\-journal(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/my-adoptions",
+      "regex": "^/my\\-adoptions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/my\\-adoptions(?:/)?$"
+    },
+    {
+      "page": "/official-channels",
+      "regex": "^/official\\-channels(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/official\\-channels(?:/)?$"
+    },
+    {
+      "page": "/og",
+      "regex": "^/og(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/og(?:/)?$"
+    },
+    {
+      "page": "/privacy-policy",
+      "regex": "^/privacy\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy\\-policy(?:/)?$"
+    },
+    {
+      "page": "/producers",
+      "regex": "^/producers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/producers(?:/)?$"
+    },
+    {
+      "page": "/product-infrastructure",
+      "regex": "^/product\\-infrastructure(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/product\\-infrastructure(?:/)?$"
+    },
+    {
+      "page": "/production/music-style-selection",
+      "regex": "^/production/music\\-style\\-selection(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/production/music\\-style\\-selection(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/release-policy",
+      "regex": "^/release\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/release\\-policy(?:/)?$"
+    },
+    {
+      "page": "/releases",
+      "regex": "^/releases(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/releases(?:/)?$"
+    },
+    {
+      "page": "/releases-cms",
+      "regex": "^/releases\\-cms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/releases\\-cms(?:/)?$"
+    },
+    {
+      "page": "/reset-password",
+      "regex": "^/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reset\\-password(?:/)?$"
+    },
+    {
+      "page": "/robots.txt",
+      "regex": "^/robots\\.txt(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/robots\\.txt(?:/)?$"
+    },
+    {
+      "page": "/royalty-policy",
+      "regex": "^/royalty\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/royalty\\-policy(?:/)?$"
+    },
+    {
+      "page": "/sitemap.xml",
+      "regex": "^/sitemap\\.xml(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sitemap\\.xml(?:/)?$"
+    },
+    {
+      "page": "/studio",
+      "regex": "^/studio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/studio(?:/)?$"
+    },
+    {
+      "page": "/studio-engineers",
+      "regex": "^/studio\\-engineers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/studio\\-engineers(?:/)?$"
+    },
+    {
+      "page": "/studio-sessions",
+      "regex": "^/studio\\-sessions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/studio\\-sessions(?:/)?$"
+    },
+    {
+      "page": "/support",
+      "regex": "^/support(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/support(?:/)?$"
+    },
+    {
+      "page": "/support/thank-you",
+      "regex": "^/support/thank\\-you(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/support/thank\\-you(?:/)?$"
+    },
+    {
+      "page": "/terms-of-service",
+      "regex": "^/terms\\-of\\-service(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms\\-of\\-service(?:/)?$"
+    },
+    {
+      "page": "/user/literary-contributor/dashboard",
+      "regex": "^/user/literary\\-contributor/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/literary\\-contributor/dashboard(?:/)?$"
+    },
+    {
+      "page": "/user/literary-contributor/profile",
+      "regex": "^/user/literary\\-contributor/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/literary\\-contributor/profile(?:/)?$"
+    },
+    {
+      "page": "/user/producer/dashboard",
+      "regex": "^/user/producer/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/producer/dashboard(?:/)?$"
+    },
+    {
+      "page": "/user/producer/profile",
+      "regex": "^/user/producer/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/producer/profile(?:/)?$"
+    },
+    {
+      "page": "/user/profile",
+      "regex": "^/user/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/profile(?:/)?$"
+    },
+    {
+      "page": "/user/profile/royalties",
+      "regex": "^/user/profile/royalties(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/profile/royalties(?:/)?$"
+    },
+    {
+      "page": "/user/studio/dashboard",
+      "regex": "^/user/studio/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/studio/dashboard(?:/)?$"
+    },
+    {
+      "page": "/user/studio/profile",
+      "regex": "^/user/studio/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/studio/profile(?:/)?$"
+    },
+    {
+      "page": "/user/vocalist/dashboard",
+      "regex": "^/user/vocalist/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/vocalist/dashboard(?:/)?$"
+    },
+    {
+      "page": "/user/vocalist/profile",
+      "regex": "^/user/vocalist/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/vocalist/profile(?:/)?$"
+    },
+    {
+      "page": "/user/writer/dashboard",
+      "regex": "^/user/writer/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/writer/dashboard(?:/)?$"
+    },
+    {
+      "page": "/user/writer/profile",
+      "regex": "^/user/writer/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user/writer/profile(?:/)?$"
+    },
+    {
+      "page": "/verify-email",
+      "regex": "^/verify\\-email(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/verify\\-email(?:/)?$"
+    },
+    {
+      "page": "/vocalists",
+      "regex": "^/vocalists(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/vocalists(?:/)?$"
+    },
+    {
+      "page": "/writers",
+      "regex": "^/writers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/writers(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

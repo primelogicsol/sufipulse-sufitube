@@ -821,7 +821,11 @@ export default function EditReleasePage() {
 
           {/* Media Info */}
           <div id="media-info-section">
-            <ReleaseMediaInfoSection form={form} onInputChange={handleInputChange} />
+            <ReleaseMediaInfoSection
+              form={form}
+              onInputChange={handleInputChange}
+              onFieldChange={(field, value) => setForm((f: any) => ({ ...f, [field]: value }))}
+            />
           </div>
 
           {/* Streaming Platforms */}
