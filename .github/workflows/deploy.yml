@@ -84,6 +84,14 @@ jobs:
                   - app-audit:/app/.data/audit
                 env_file:
                   - .env
+                environment:
+                  EMAIL_PROVIDER: "smtp"
+                  SMTP_HOST: "smtp.ionos.com"
+                  SMTP_PORT: "587"
+                  SMTP_SECURE: "false"
+                  SMTP_USER: "contact@sufipulse.com"
+                  EMAIL_FROM: "contact@sufipulse.com"
+                  EMAIL_FROM_NAME: "SufiPulse"
 
             volumes:
               app-data:
@@ -126,6 +134,7 @@ jobs:
             _e GOOGLE_ADS_REDIRECT_URI      "${{ secrets.GOOGLE_ADS_REDIRECT_URI }}"
             _e GOOGLE_ADS_LOGIN_CUSTOMER_ID "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
             _e GOOGLE_ADS_CREATE_MODE       "manual_review"
+            _e SMTP_PASS                    "${{ secrets.SMTP_PASS }}"
 
             # ── VALIDATE REQUIRED VAR NAMES ──────────────────────────────────
             _s="env-validate"
@@ -133,7 +142,8 @@ jobs:
             for var in JWT_SECRET NEXT_PUBLIC_APP_URL \
                        GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET \
                        GOOGLE_ADS_DEVELOPER_TOKEN GOOGLE_ADS_REDIRECT_URI \
-                       GOOGLE_ADS_LOGIN_CUSTOMER_ID GOOGLE_ADS_CREATE_MODE; do
+                       GOOGLE_ADS_LOGIN_CUSTOMER_ID GOOGLE_ADS_CREATE_MODE \
+                       SMTP_PASS; do
               if grep -q "^${var}=.\+" .env 2>/dev/null; then
                 echo "  OK:      ${var}"
               else
