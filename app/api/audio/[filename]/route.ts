@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createReadStream, existsSync, statSync } from 'fs';
+import { readFile, stat } from 'fs/promises';
+import { existsSync } from 'fs';
 import { join, extname } from 'path';
 
 const AUDIO_DIR = join(process.cwd(), '.data', 'audio');
@@ -30,19 +31,12 @@ export async function GET(
 
   const ext = extname(filename).toLowerCase();
   const contentType = MIME[ext] || 'audio/mpeg';
-  const { size: total } = statSync(filePath);
+  const { size: total } = await stat(filePath);
   const range = request.headers.get('range');
 
-  const nodeStreamToWeb = (start?: number, end?: number): ReadableStream<Uint8Array> => {
-    const nodeStream = createReadStream(filePath, start !== undefined ? { start, end } : undefined);
-    return new ReadableStream({
-      start(controller) {
-        nodeStream.on('data', (chunk) => controller.enqueue(chunk as Uint8Array));
-        nodeStream.on('end', () => controller.close());
-        nodeStream.on('error', (err) => controller.error(err));
-      },
-      cancel() { nodeStream.destroy(); },
-    });
+  const cacheHeaders = {
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'Accept-Ranges': 'bytes',
   };
 
   if (range) {
@@ -57,24 +51,27 @@ export async function GET(
       });
     }
 
-    return new NextResponse(nodeStreamToWeb(start, end), {
+    const clampedEnd = Math.min(end, total - 1);
+    const fileBuffer = await readFile(filePath);
+    const chunk = fileBuffer.subarray(start, clampedEnd + 1);
+
+    return new NextResponse(chunk, {
       status: 206,
       headers: {
+        ...cacheHeaders,
         'Content-Type': contentType,
-        'Content-Range': `bytes ${start}-${end}/${total}`,
-        'Content-Length': String(end - start + 1),
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Range': `bytes ${start}-${clampedEnd}/${total}`,
+        'Content-Length': String(chunk.byteLength),
       },
     });
   }
 
-  return new NextResponse(nodeStreamToWeb(), {
+  const fileBuffer = await readFile(filePath);
+  return new NextResponse(fileBuffer, {
     headers: {
+      ...cacheHeaders,
       'Content-Type': contentType,
       'Content-Length': String(total),
-      'Accept-Ranges': 'bytes',
-      'Cache-Control': 'public, max-age=31536000, immutable',
     },
   });
 }

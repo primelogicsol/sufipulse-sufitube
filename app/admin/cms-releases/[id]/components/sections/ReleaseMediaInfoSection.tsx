@@ -232,7 +232,7 @@ export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: 
               </p>
             )}
 
-            {/* Preview player */}
+            {/* Preview player — auto-populates duration fields from loaded metadata */}
             {form.audioUrl && (
               <div>
                 <p className="text-xs mb-1" style={{ color: 'var(--dash-text-muted)' }}>Preview</p>
@@ -241,6 +241,21 @@ export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: 
                   src={form.audioUrl}
                   className="w-full"
                   style={{ height: 36, borderRadius: 6 }}
+                  preload="metadata"
+                  onLoadedMetadata={(e) => {
+                    const el = e.currentTarget;
+                    const dur = el.duration;
+                    if (!dur || !Number.isFinite(dur) || dur <= 0) return;
+                    const secs = Math.round(dur);
+                    onFieldChange?.('durationSeconds', secs);
+                    const h = Math.floor(secs / 3600);
+                    const m = Math.floor((secs % 3600) / 60);
+                    const s = secs % 60;
+                    const formatted = h > 0
+                      ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+                      : `${m}:${String(s).padStart(2, '0')}`;
+                    onFieldChange?.('durationFormatted', formatted);
+                  }}
                 />
               </div>
             )}
