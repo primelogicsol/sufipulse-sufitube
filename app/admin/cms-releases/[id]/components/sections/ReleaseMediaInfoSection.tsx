@@ -24,9 +24,11 @@ export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: 
     setUploadError(null);
     setUploadSuccess(false);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/audio/upload', { method: 'POST', body: fd });
+      const res = await fetch('/api/audio/upload', {
+        method: 'POST',
+        headers: { 'x-filename': file.name },
+        body: file,
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
       onFieldChange?.('audioUrl', data.url);
