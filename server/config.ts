@@ -18,7 +18,12 @@ const requireSecret = (key: string, devFallback: string): string => {
   if (!v && process.env.NODE_ENV === 'production' && !isBuildPhase) {
     throw new Error(`[startup] ${key} is required in production but is not set. Set it in your environment before starting the server.`);
   }
-  return v || devFallback;
+  const resolved = v || devFallback;
+  // Warn loudly if the known-public dev placeholder is in use (even in dev)
+  if (resolved === devFallback && !isBuildPhase) {
+    console.warn(`[startup] WARNING: ${key} is using the dev fallback. Set a strong secret before deploying to production.`);
+  }
+  return resolved;
 };
 
 const optInt = (key: string, fallback: number): number => {
