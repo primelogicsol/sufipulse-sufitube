@@ -47,6 +47,9 @@ export default function MyAccountPage() {
     ? user.assigned_roles
     : user.role ? [user.role] : [];
 
+  const CONTRIBUTOR_ROLE_SET = new Set(['writer', 'vocalist', 'producer', 'studio', 'literary']);
+  const isContributor = assignedRoles.some(r => CONTRIBUTOR_ROLE_SET.has(r));
+
   const portalLinks = assignedRoles
     .filter(r => r !== 'admin' && ROLE_PORTAL_MAP[r])
     .map(r => ROLE_PORTAL_MAP[r]);
@@ -91,17 +94,19 @@ export default function MyAccountPage() {
             </div>
           </div>
 
-          {/* Royalty Payouts */}
-          <Link
-            href="/user/profile/royalties"
-            className="flex items-center justify-between w-full px-5 py-4 rounded-xl border border-white/10 bg-white/[0.03] hover:border-[var(--color-gold)]/40 hover:bg-[var(--color-gold)]/5 transition-colors mb-3"
-          >
-            <div className="flex items-center gap-3">
-              <Banknote className="w-4 h-4 text-[var(--color-text-tertiary)]" />
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">Royalty Payouts</span>
-            </div>
-            <span className="text-[var(--color-gold)] text-xs">→</span>
-          </Link>
+          {/* Royalty Payouts — contributors only */}
+          {isContributor && (
+            <Link
+              href="/user/profile/royalties"
+              className="flex items-center justify-between w-full px-5 py-4 rounded-xl border border-white/10 bg-white/[0.03] hover:border-[var(--color-gold)]/40 hover:bg-[var(--color-gold)]/5 transition-colors mb-3"
+            >
+              <div className="flex items-center gap-3">
+                <Banknote className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+                <span className="text-sm font-medium text-[var(--color-text-primary)]">Royalty Payouts</span>
+              </div>
+              <span className="text-[var(--color-gold)] text-xs">→</span>
+            </Link>
+          )}
 
           {/* Admin link */}
           {isAdmin && (

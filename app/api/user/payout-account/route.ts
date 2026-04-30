@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { requireAuth } from '@/server/middleware/authenticate';
 
+const CONTRIBUTOR_ROLES = new Set(['writer', 'vocalist', 'producer', 'studio', 'literary', 'admin']);
+
 const DATA_FILE = path.join(process.cwd(), '.data', 'payout-accounts.json');
 
 interface PayoutAccount {
@@ -42,6 +44,10 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  if (!CONTRIBUTOR_ROLES.has(authResult.role)) {
+    return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+  }
+
   const records = readAll();
   const account = records.find(r => r.user_id === authResult.id) || null;
   return NextResponse.json({ account });
@@ -51,6 +57,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+
+  if (!CONTRIBUTOR_ROLES.has(authResult.role)) {
+    return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+  }
 
   const body = await request.json();
   const {

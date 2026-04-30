@@ -50,8 +50,18 @@ export default function RoyaltiesPage() {
     notes: '',
   });
 
+  const CONTRIBUTOR_ROLE_SET = new Set(['writer', 'vocalist', 'producer', 'studio', 'literary']);
+
   useEffect(() => {
     if (user === null) { router.push('/login'); return; }
+    if (user) {
+      const roles: string[] = Array.isArray((user as any).assigned_roles)
+        ? (user as any).assigned_roles
+        : user.role ? [user.role] : [];
+      if (!roles.some(r => CONTRIBUTOR_ROLE_SET.has(r))) {
+        router.push('/user/profile');
+      }
+    }
   }, [user, router]);
 
   useEffect(() => {

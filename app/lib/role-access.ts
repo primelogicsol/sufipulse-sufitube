@@ -22,7 +22,12 @@ export function getAssignedRoles(user: UserLike): AppRole[] {
     return ['admin', ...CONTRIBUTOR_ROLES];
   }
 
-  return [...CONTRIBUTOR_ROLES];
+  const primaryRole = String(user.role || '').toLowerCase() as AppRole;
+  if (CONTRIBUTOR_ROLES.includes(primaryRole)) {
+    return [primaryRole];
+  }
+
+  return [];
 }
 
 export function hasRoleAccess(user: UserLike, role: AppRole): boolean {
