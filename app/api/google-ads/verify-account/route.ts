@@ -10,7 +10,7 @@ import {
 } from '@/app/lib/server/adoption-google-oauth-store';
 import { getAuthUser } from '@/server/middleware/authenticate';
 
-const GADS_VER = process.env.GOOGLE_ADS_API_VERSION || 'v19';
+const GADS_VER = 'v17';
 const LIST_ACCESSIBLE = `https://googleads.googleapis.com/${GADS_VER}/customers:listAccessibleCustomers`;
 
 export type VerifyReasonCode =
