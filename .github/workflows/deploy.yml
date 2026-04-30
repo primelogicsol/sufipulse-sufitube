@@ -1,17 +1,10 @@
 name: Deploy to VPS
 
 on:
-  # Manual trigger from GitHub Actions UI — primary deployment method
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Reason for deploying (optional)'
-        required: false
-        default: 'manual deploy'
-  # Auto-deploy only when commit message contains [deploy]
   push:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -25,34 +18,10 @@ jobs:
       packages: write
 
     steps:
-      - name: Gate — skip auto-push unless [deploy] in commit message
-        if: github.event_name == 'push'
-        run: |
-          MSG="${{ github.event.head_commit.message }}"
-          echo "Commit message: $MSG"
-          if echo "$MSG" | grep -qF '[deploy]'; then
-            echo "DEPLOY_GATE=pass" >> $GITHUB_ENV
-            echo "[deploy] tag found — proceeding"
-          else
-            echo "DEPLOY_GATE=skip" >> $GITHUB_ENV
-            echo "No [deploy] tag — build will be skipped. Use workflow_dispatch to deploy manually."
-          fi
-
-      - name: Skip if gate not passed
-        if: github.event_name == 'push' && env.DEPLOY_GATE != 'pass'
-        run: |
-          echo "Deployment skipped — commit does not contain [deploy]."
-          echo "To deploy, either:"
-          echo "  1. Add [deploy] to the commit message"
-          echo "  2. Trigger manually from GitHub Actions > Deploy to VPS > Run workflow"
-          exit 0
-
       - name: Checkout code
-        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: actions/checkout@v4
 
       - name: Login to GHCR
-        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -60,7 +29,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
-        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -78,7 +46,6 @@ jobs:
           provenance: false
 
       - name: Deploy on VPS
-        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -96,11 +63,10 @@ jobs:
             echo "server-ip: $(hostname -I | awk '{print $1}')"
             mkdir -p /var/www/sufipulse-new
             cd /var/www/sufipulse-new
-            echo "pwd:       $(pwd)"
             [ "$(pwd)" = "/var/www/sufipulse-new" ] \
               || { echo "FATAL: wrong directory" >&2; exit 1; }
 
-            # ── WRITE docker-compose.yml (always sync from repo) ─────────────
+            # ── WRITE docker-compose.yml ─────────────────────────────────────
             _s="write-compose"
             cat > /var/www/sufipulse-new/docker-compose.yml << 'COMPOSE_EOF'
             name: sufipulse_new
@@ -138,12 +104,6 @@ jobs:
                 name: sufipulse_new_audit
                 driver: local
             COMPOSE_EOF
-            echo "docker-compose.yml written"
-
-            # ── DOCKER COMPOSE CHECK ─────────────────────────────────────────
-            _s="compose-check"
-            docker compose version \
-              || { echo "FATAL: docker compose plugin not available" >&2; exit 1; }
 
             # ── ENV FILE ─────────────────────────────────────────────────────
             _s="env-file"
@@ -152,9 +112,8 @@ jobs:
               exit 1
             fi
             chmod 600 .env
-            echo ".env: $(wc -l < .env) lines"
 
-            # ── INJECT GOOGLE ADS SECRETS (idempotent, values never logged) ──
+            # ── INJECT SECRETS ───────────────────────────────────────────────
             _s="inject-secrets"
             _e() {
               k="$1"; v="$2"
@@ -170,42 +129,24 @@ jobs:
             _e GOOGLE_ADS_CREATE_MODE       "manual_review"
             _e SMTP_PASS                    "${{ secrets.SMTP_PASS }}"
 
-            # ── VALIDATE REQUIRED VAR NAMES ──────────────────────────────────
-            _s="env-validate"
-            echo "=== ENV VALIDATION ==="
-            for var in JWT_SECRET NEXT_PUBLIC_APP_URL \
-                       GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET \
-                       GOOGLE_ADS_DEVELOPER_TOKEN GOOGLE_ADS_REDIRECT_URI \
-                       GOOGLE_ADS_LOGIN_CUSTOMER_ID GOOGLE_ADS_CREATE_MODE \
-                       SMTP_PASS; do
-              if grep -q "^${var}=.\+" .env 2>/dev/null; then
-                echo "  OK:      ${var}"
-              else
-                echo "  MISSING: ${var}"
-              fi
-            done
-            echo "=== END ENV VALIDATION ==="
-
             # ── GHCR AUTH ────────────────────────────────────────────────────
             _s="docker-login"
             docker logout ghcr.io 2>/dev/null || true
             echo "${{ secrets.GITHUB_TOKEN }}" \
               | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            # ── PULL EXACT SHA IMAGE ─────────────────────────────────────────
+            # ── PULL AND DEPLOY ──────────────────────────────────────────────
             _s="docker-pull"
             IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
             export SUFIPULSE_IMAGE="ghcr.io/${IMAGE_REPO}:${{ github.sha }}"
             echo "pulling: ${SUFIPULSE_IMAGE}"
             docker compose -p sufipulse_new pull app
 
-            # ── RECREATE CONTAINER ───────────────────────────────────────────
             _s="docker-up"
             docker compose -p sufipulse_new up -d --force-recreate app
 
-            # ── HEALTH CHECK (retry up to 60 s) ──────────────────────────────
+            # ── HEALTH CHECK ─────────────────────────────────────────────────
             _s="health-check"
-            echo "waiting for app to be ready..."
             healthy=0
             for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
               if curl -fsS http://127.0.0.1:3001 >/dev/null 2>&1; then
@@ -216,62 +157,24 @@ jobs:
               echo "attempt ${i}/12 — waiting 5s..."
               sleep 5
             done
-            if [ "$healthy" -ne 1 ]; then
-              echo "=== HEALTH CHECK FAILED ===" >&2
+            [ "$healthy" -eq 1 ] || {
               docker compose -p sufipulse_new logs app --tail=150 >&2
-              docker compose -p sufipulse_new ps >&2
               exit 1
-            fi
+            }
 
             # ── CLEANUP ──────────────────────────────────────────────────────
             _s="cleanup"
             docker image prune -f
 
-            # ── POST-DEPLOY VERIFICATION ─────────────────────────────────────
+            # ── VERIFY ───────────────────────────────────────────────────────
             _s="verify"
-            echo ""
-            echo "════════════════════════════════════════"
-            echo "  POST-DEPLOY VERIFICATION"
-            echo "════════════════════════════════════════"
-
-            echo ""
-            echo "── 1. docker compose -p sufipulse_new ps ──"
             docker compose -p sufipulse_new ps
-
-            echo ""
-            echo "── 2. docker ps (all containers + ports) ──"
-            docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
-
-            echo ""
-            echo "── 3. curl http://127.0.0.1:3001 ──"
-            curl -sI http://127.0.0.1:3001 | head -5
-
-            echo ""
-            echo "── 4. curl https://sufipulse.com ──"
-            curl -sI https://sufipulse.com | head -5 \
-              || echo "(HTTPS not reachable from VPS — check from browser)"
-
-            echo ""
-            echo "── 5. Old live app safety check ──"
-            echo "All running containers (old app must NOT be stopped):"
-            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-            echo ""
-            echo "── 6. /api/version commit verification ──"
             VERSION_JSON=$(curl -sf http://127.0.0.1:3001/api/version 2>/dev/null || echo '{}')
             DEPLOYED_COMMIT=$(echo "$VERSION_JSON" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4 || echo 'unknown')
-            EXPECTED_COMMIT="${{ github.sha }}"
-            echo "  expected: ${EXPECTED_COMMIT}"
-            echo "  deployed: ${DEPLOYED_COMMIT}"
-            if [ "$DEPLOYED_COMMIT" = "$EXPECTED_COMMIT" ]; then
-              echo "  VERSION CHECK: PASS — correct SHA is live"
-            else
-              echo "  VERSION CHECK: FAIL — deployed commit does not match (may still be cached; check logs)" >&2
-            fi
+            echo "expected: ${{ github.sha }}"
+            echo "deployed: ${DEPLOYED_COMMIT}"
+            [ "$DEPLOYED_COMMIT" = "${{ github.sha }}" ] \
+              && echo "VERSION CHECK: PASS" \
+              || echo "VERSION CHECK: FAIL (may still be warming up)"
 
-            echo ""
-            echo "════════════════════════════════════════"
-            echo "  DEPLOY COMPLETE"
-            echo "  image:  ${SUFIPULSE_IMAGE}"
-            echo "  commit: ${{ github.sha }}"
-            echo "════════════════════════════════════════"
+            echo "DEPLOY COMPLETE — ${{ github.sha }}"
