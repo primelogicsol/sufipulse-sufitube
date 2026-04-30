@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { entityGetAll } from '@/lib/entity-storage-server';
 
 export async function GET() {
   try {
-    const releases = entityGetAll('releases');
+    const releases = cmsServerStorage.getAllReleases({ status: 'published' });
     const writers = entityGetAll('writers');
     const partnerships = entityGetAll('partnerships');
 
