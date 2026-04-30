@@ -427,7 +427,7 @@ export default function Releases() {
                         <div className="flex items-center justify-center min-h-96">
                             <div className="text-neutral-500 flex flex-col items-center">
                                 <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-                                Loading SufiTube Archive...
+                                Loading...
                             </div>
                         </div>
                     )}
