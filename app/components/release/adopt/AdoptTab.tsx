@@ -1520,10 +1520,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
           {isTokenExpired ? (
             <button
               type="button"
-              onClick={() => { clearError(); setOauthConnected(false); setOauthChecked(true); setEnteredCustomerId(''); }}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+              disabled={isConnectingOAuth}
+              onClick={() => { clearError(); startOAuth(); }}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
             >
-              <Globe className="w-5 h-5" /> Reconnect Google Ads Account
+              {isConnectingOAuth
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Google…</>
+                : <><Globe className="w-5 h-5" /> Reconnect Google Ads Account</>}
             </button>
           ) : (
             <button
