@@ -1287,17 +1287,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
     );
   };
 
-  // ── Step 4 for use_my_google_ads: Connect & Verify Google Ads Account ──────
+  // ── Step 4 for use_my_google_ads: Enter Google Ads details (no OAuth required) ──
   const renderGoogleConnect = () => {
     if (!adoption) return null;
 
     const cidNormalized = enteredCustomerId.replace(/-/g, '');
     const cidValid = /^\d{10}$/.test(cidNormalized);
 
+    // OAuth start — kept for future use but not shown in primary UI
     const startOAuth = async () => {
       setIsConnectingOAuth(true);
       setSubmitError('');
-      // Persist entered values so they survive the OAuth redirect
       if (enteredCustomerId) localStorage.setItem('sp_gads_cid', enteredCustomerId);
       if (enteredEmail)      localStorage.setItem('sp_gads_email', enteredEmail);
       try {
@@ -1315,289 +1315,21 @@ export function AdoptTab({ release }: AdoptTabProps) {
       }
     };
 
-    // ── Loading ───────────────────────────────────────────────────────────────
-    if (!oauthChecked) {
-      return (
-        <div className="flex items-center justify-center gap-3 py-16 text-sm text-neutral-500">
-          <Loader2 className="w-5 h-5 animate-spin" /> Checking connection status…
-        </div>
-      );
-    }
-
-    // ── Server not configured ─────────────────────────────────────────────────
-    if (!oauthConfigured) {
-      return (
-        <div className="space-y-5 animate-in fade-in duration-300">
-          <div className="border border-amber-800/30 bg-amber-900/10 rounded-xl p-5 text-center space-y-2">
-            <Settings className="w-8 h-8 text-amber-400 mx-auto" />
-            <p className="text-sm font-semibold text-neutral-200">Google Ads API connection is not available right now.</p>
-            <p className="text-sm text-neutral-500 leading-relaxed">
-              You can still submit your campaign request. SufiPulse will manually verify your Google Ads account and prepare the campaign structure.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-              Google Ads Customer ID <span className="text-neutral-600">(optional — provide if you have it)</span>
-            </label>
-            <input
-              type="text"
-              value={enteredCustomerId}
-              onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
-              placeholder="xxx-xxx-xxxx"
-              className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
-            />
-            <p className="text-xs text-neutral-600 mt-1.5">
-              Found in the top-right corner of your Google Ads account. Leave blank if you don&apos;t have it yet.
-            </p>
-          </div>
-
-          {submitError && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
-              {submitError}
-            </div>
-          )}
-
-          <button
-            type="button"
-            disabled={isSubmittingManualReview || !adoption?.id}
-            onClick={handleManualReview}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isSubmittingManualReview
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-              : <><Check className="w-5 h-5" /> Submit for Manual Review</>}
-          </button>
-
-          <button
-            type="button"
-            onClick={switchToManaged}
-            className="w-full py-3 border border-neutral-700 hover:border-amber-500/40 text-neutral-400 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
-          >
-            Switch to Managed by SufiTube Instead
-          </button>
-        </div>
-      );
-    }
-
-    // ── Verified ─────────────────────────────────────────────────────────────
-    if (verifiedCustomerId && !isVerifying) {
-      return (
-        <div className="space-y-5 animate-in fade-in duration-300">
-          <div className="border border-green-800/30 bg-green-900/10 rounded-xl p-5 space-y-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center flex-shrink-0">
-                <Check className="w-4 h-4 text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-green-400">Google Ads account verified</p>
-                {googleEmail && <p className="text-xs text-neutral-500">{googleEmail}</p>}
-              </div>
-            </div>
-            <div className="bg-neutral-900/80 rounded-lg px-4 py-2.5 flex items-center justify-between">
-              <span className="text-xs text-neutral-500">Customer ID</span>
-              <span className="font-mono text-sm text-neutral-200">{verifiedCustomerId}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setStep(5)}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            Continue to Review <ArrowRight className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleGoogleDisconnect}
-            disabled={isDisconnecting}
-            className="w-full text-xs text-neutral-600 hover:text-red-400 transition-colors py-1"
-          >
-            {isDisconnecting ? 'Disconnecting…' : 'Disconnect and use a different account'}
-          </button>
-        </div>
-      );
-    }
-
-    // ── Verifying ─────────────────────────────────────────────────────────────
-    if (isVerifying) {
-      return (
-        <div className="flex items-center justify-center gap-3 py-16 text-sm text-neutral-500">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-400" /> Verifying {enteredCustomerId || cidNormalized}…
-        </div>
-      );
-    }
-
-    // ── Verification failed ───────────────────────────────────────────────────
-    if (verifyError) {
-      const rc = verifyReasonCode || 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE';
-      const connectedEmail = verifyErrorDetail?.connectedGoogleEmail || googleEmail || enteredEmail;
-
-      const isTokenExpired = rc === 'OAUTH_TOKEN_EXPIRED' || rc === 'NO_OAUTH_TOKEN';
-
-      const headlines: Record<string, string> = {
-        NO_OAUTH_TOKEN:                        'Google Ads connection expired',
-        OAUTH_TOKEN_EXPIRED:                   'Google Ads connection expired',
-        MISSING_DEVELOPER_TOKEN:               'Google Ads API not configured on this server',
-        GOOGLE_ACCOUNT_MISMATCH:               'Google account mismatch',
-        GOOGLE_ADS_API_CALL_FAILED:            'Google Ads API returned an error',
-        NO_ACCESSIBLE_CUSTOMERS:               'No Google Ads accounts found',
-        CUSTOMER_NOT_DIRECTLY_ACCESSIBLE:      'Customer ID not found in this account',
-        CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC:   'Customer ID not accessible (direct + manager accounts checked)',
-      };
-      const details: Record<string, string> = {
-        NO_OAUTH_TOKEN:                      'Your Google Ads connection has expired or is incomplete. Please reconnect your Google Ads account to continue.',
-        OAUTH_TOKEN_EXPIRED:                 'Your Google Ads connection has expired or is incomplete. Please reconnect your Google Ads account to continue.',
-        MISSING_DEVELOPER_TOKEN:             'The server is missing GOOGLE_ADS_DEVELOPER_TOKEN. Contact the SufiPulse admin.',
-        GOOGLE_ACCOUNT_MISMATCH:             `The connected Google account (${connectedEmail}) is different from the email you entered (${enteredEmail}). Sign in with the correct Google account.`,
-        GOOGLE_ADS_API_CALL_FAILED:          verifyErrorDetail?.error || 'The Google Ads API rejected the request.',
-        NO_ACCESSIBLE_CUSTOMERS:             `The connected Google account (${connectedEmail}) has no accessible Google Ads accounts. Check that the account has active Ads access.`,
-        CUSTOMER_NOT_DIRECTLY_ACCESSIBLE:    `Customer ID ${enteredCustomerId} was not found in the accounts accessible to ${connectedEmail}. It may be under a manager account — or the Customer ID may be wrong.`,
-        CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC: `Customer ID ${enteredCustomerId} was not found directly or through any manager accounts accessible to ${connectedEmail}. Verify the Customer ID and that this Google account has access.`,
-      };
-
-      const clearError = () => {
-        setVerifyError(null);
-        setVerifyReasonCode(null);
-        setVerifyErrorDetail(null);
-        setSubmitError('');
-      };
-
-      return (
-        <div className="space-y-5 animate-in fade-in duration-300">
-          <div className="text-center space-y-1">
-            <h3 className="text-lg font-semibold text-neutral-100">
-              {headlines[rc] || 'Verification failed'}
-            </h3>
-            <p className="text-xs text-neutral-500 leading-relaxed max-w-sm mx-auto">
-              {details[rc] || 'An unexpected error occurred during verification.'}
-            </p>
-          </div>
-
-          <div className="flex justify-center">
-            <span className="font-mono text-[10px] text-neutral-600 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded">
-              {rc}
-            </span>
-          </div>
-
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
-            {connectedEmail && (
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-neutral-500">Connected Google account</span>
-                <span className="text-neutral-300">{connectedEmail}</span>
-              </div>
-            )}
-            {enteredEmail && enteredEmail !== connectedEmail && (
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-neutral-500">Email you entered</span>
-                <span className="text-yellow-400">{enteredEmail}</span>
-              </div>
-            )}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-neutral-500">Customer ID entered</span>
-              <span className="font-mono text-neutral-300">{enteredCustomerId || '—'}</span>
-            </div>
-            {verifyErrorDetail?.accounts && verifyErrorDetail.accounts.length > 0 && (
-              <div className="flex items-start justify-between px-4 py-3 gap-4">
-                <span className="text-neutral-500 flex-shrink-0">Accounts found ({verifyErrorDetail.accounts.length})</span>
-                <span className="font-mono text-neutral-400 text-xs text-right">{verifyErrorDetail.accounts.join(', ')}</span>
-              </div>
-            )}
-            {rc === 'GOOGLE_ADS_API_CALL_FAILED' && verifyErrorDetail?.google_ads_error && (
-              <div className="px-4 py-3">
-                <span className="text-neutral-500 block mb-1 text-xs">API error detail</span>
-                <pre className="text-[10px] text-red-400 whitespace-pre-wrap break-all">{JSON.stringify(verifyErrorDetail.google_ads_error, null, 2)}</pre>
-              </div>
-            )}
-          </div>
-
-          {submitError && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
-              {submitError}
-            </div>
-          )}
-
-          {isTokenExpired ? (
-            <button
-              type="button"
-              disabled={isConnectingOAuth}
-              onClick={() => { clearError(); startOAuth(); }}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isConnectingOAuth
-                ? <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Google…</>
-                : <><Globe className="w-5 h-5" /> Reconnect Google Ads Account</>}
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={isSubmittingManualReview}
-              onClick={handleManualReview}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isSubmittingManualReview
-                ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting request…</>
-                : <><Check className="w-5 h-5" /> Submit Adoption Request for Manual Review</>}
-            </button>
-          )}
-
-          <div className="relative flex items-center gap-3 py-1">
-            <div className="flex-1 border-t border-neutral-800" />
-            <span className="text-xs text-neutral-700 flex-shrink-0">or</span>
-            <div className="flex-1 border-t border-neutral-800" />
-          </div>
-
-          <div className="space-y-2">
-            {!isTokenExpired && (
-            <button
-              type="button"
-              onClick={() => { clearError(); setEnteredCustomerId(''); }}
-              className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
-            >
-              Try a Different Customer ID
-            </button>
-            )}
-            <button
-              type="button"
-              onClick={() => { clearError(); setOauthConnected(false); setOauthChecked(true); setEnteredCustomerId(''); }}
-              className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
-            >
-              Reconnect a Different Google Account
-            </button>
-            <button
-              type="button"
-              onClick={switchToManaged}
-              className="w-full py-3 border border-neutral-800 hover:border-amber-500/40 text-neutral-500 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
-            >
-              Switch to Managed by SufiTube
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    // ── Entry form: not connected OR connected but not yet verified ────────────
+    // ── Simple direct entry form — no OAuth required ─────────────────────────
     return (
       <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
         <div className="text-center">
-          <h3 className="text-2xl font-medium text-neutral-100 mb-2">Verify Your Google Ads Account</h3>
+          <h3 className="text-2xl font-medium text-neutral-100 mb-2">Connect Your Google Ads Account</h3>
           <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
-            Enter your Google account email and Google Ads Customer ID. SufiPulse will verify access via the Google Ads API.
+            Enter your Google Ads details below. SufiPulse will review and set up your campaign within 24 hours.
           </p>
         </div>
 
-        {/* Connected badge */}
-        {oauthConnected && googleEmail && (
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-green-900/15 border border-green-800/30 rounded-xl">
-            <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
-            <span className="text-xs text-green-400">Connected as <span className="font-medium">{googleEmail}</span></span>
-          </div>
-        )}
-
         <div className="space-y-4">
-          {/* Email */}
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">Google account email</label>
+            <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+              Google account email <span className="text-neutral-600">(optional)</span>
+            </label>
             <input
               type="email"
               value={enteredEmail}
@@ -1607,9 +1339,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
             />
           </div>
 
-          {/* Customer ID */}
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">Google Ads Customer ID</label>
+            <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+              Google Ads Customer ID <span className="text-red-400">*</span>
+            </label>
             <input
               type="text"
               value={enteredCustomerId}
@@ -1618,32 +1351,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
               className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
             />
             <p className="text-xs text-neutral-600 mt-1.5">
-              You can find this in the top-right corner of your Google Ads account.
+              Found in the top-right corner of your Google Ads account dashboard.
             </p>
           </div>
+        </div>
 
-          {/* Auto-discovery suggestions */}
-          {oauthConnected && accessibleCustomerIds.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs text-neutral-600">Auto-detected accounts — click to fill:</p>
-              <div className="flex flex-wrap gap-2">
-                {accessibleCustomerIds.map(cid => (
-                  <button
-                    key={cid}
-                    type="button"
-                    onClick={() => setEnteredCustomerId(cid)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-colors ${
-                      enteredCustomerId === cid
-                        ? 'border-blue-500/60 bg-blue-500/10 text-blue-300'
-                        : 'border-neutral-700 text-neutral-400 hover:border-neutral-500'
-                    }`}
-                  >
-                    {cid}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-500 leading-relaxed">
+          By submitting, you authorise SufiPulse to prepare a campaign structure inside your Google Ads account. You remain the account owner and pay Google directly. No charges are made through SufiPulse.
         </div>
 
         {submitError && (
@@ -1652,48 +1366,27 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
         )}
 
-        {/* Primary action */}
-        {oauthConnected ? (
-          <button
-            type="button"
-            disabled={!cidValid || isVerifying}
-            onClick={() => verifyManualEntry(enteredCustomerId)}
-            className="flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
-          >
-            <Check className="w-5 h-5" /> Verify Google Ads Account
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={isConnectingOAuth}
-            onClick={startOAuth}
-            className="flex w-full items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
-          >
-            {isConnectingOAuth
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Connecting…</>
-              : <><Globe className="w-5 h-5" /> Connect Google Account &amp; Verify</>
-            }
-          </button>
-        )}
+        <button
+          type="button"
+          disabled={isSubmittingManualReview || !cidValid}
+          onClick={handleManualReview}
+          className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          {isSubmittingManualReview
+            ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+            : <><Check className="w-5 h-5" /> Submit Campaign Request</>}
+        </button>
 
-        <p className="text-xs text-neutral-700 text-center">
-          {oauthConnected
-            ? 'Google Ads API · account must be accessible to the connected Google profile'
-            : 'Google OAuth 2.0 · Scope: Google Ads API read access'}
-        </p>
-
-        {oauthConnected && (
-          <button
-            type="button"
-            onClick={handleGoogleDisconnect}
-            disabled={isDisconnecting}
-            className="w-full text-xs text-neutral-600 hover:text-red-400 transition-colors py-1"
-          >
-            {isDisconnecting ? 'Disconnecting…' : 'Disconnect and reconnect a different account'}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={switchToManaged}
+          className="w-full py-3 border border-neutral-800 hover:border-amber-500/40 text-neutral-500 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
+        >
+          Switch to Managed by SufiTube Instead
+        </button>
       </div>
     );
+
   };
 
   const renderForm = () => (
