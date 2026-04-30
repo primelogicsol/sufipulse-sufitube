@@ -5,14 +5,21 @@ import Link from 'next/link';
 import { Music, ArrowRight, Loader2, LogIn } from 'lucide-react';
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  draft:          { label: 'Draft',           color: 'text-neutral-500', bg: 'bg-neutral-800/60' },
-  pending_review: { label: 'Pending Review',  color: 'text-amber-400',   bg: 'bg-amber-900/20' },
-  admin_review:   { label: 'Admin Review',    color: 'text-amber-400',   bg: 'bg-amber-900/20' },
-  approved:       { label: 'Approved',        color: 'text-green-400',   bg: 'bg-green-900/20' },
-  scheduled:      { label: 'Scheduled',       color: 'text-blue-400',    bg: 'bg-blue-900/20' },
-  live:           { label: 'Live',            color: 'text-green-300',   bg: 'bg-green-900/30' },
-  completed:      { label: 'Completed',       color: 'text-neutral-300', bg: 'bg-neutral-800/40' },
-  cancelled:      { label: 'Cancelled',       color: 'text-red-400',     bg: 'bg-red-900/20' },
+  draft:                           { label: 'Draft',                color: 'text-neutral-500', bg: 'bg-neutral-800/60' },
+  pending_review:                  { label: 'Pending Review',       color: 'text-amber-400',   bg: 'bg-amber-900/20' },
+  admin_review:                    { label: 'Admin Review',         color: 'text-amber-400',   bg: 'bg-amber-900/20' },
+  campaign_preparation_requested:  { label: 'Campaign Preparing',   color: 'text-amber-400',   bg: 'bg-amber-900/20' },
+  approved:                        { label: 'Approved',             color: 'text-green-400',   bg: 'bg-green-900/20' },
+  awaiting_user_approval:          { label: 'Awaiting Your Approval', color: 'text-amber-300', bg: 'bg-amber-900/30' },
+  google_ads_verified:             { label: 'Ads Verified',         color: 'text-green-400',   bg: 'bg-green-900/20' },
+  google_ads_verification_failed:  { label: 'Verification Failed',  color: 'text-red-400',     bg: 'bg-red-900/20' },
+  pending_google_ads_manual_review:{ label: 'Ads Manual Review',    color: 'text-amber-400',   bg: 'bg-amber-900/20' },
+  scheduled:                       { label: 'Scheduled',            color: 'text-blue-400',    bg: 'bg-blue-900/20' },
+  live:                            { label: 'Live',                 color: 'text-green-300',   bg: 'bg-green-900/30' },
+  monitoring:                      { label: 'Monitoring',           color: 'text-blue-300',    bg: 'bg-blue-900/20' },
+  completed:                       { label: 'Completed',            color: 'text-neutral-300', bg: 'bg-neutral-800/40' },
+  report_ready:                    { label: 'Report Ready',         color: 'text-green-300',   bg: 'bg-green-900/30' },
+  cancelled:                       { label: 'Cancelled',            color: 'text-red-400',     bg: 'bg-red-900/20' },
 };
 
 const INTENTION_LABELS: Record<string, string> = {

@@ -32,7 +32,8 @@ function resolveTimelineStep(adoption: any): TimelineKey {
     return Date.now() - created > 3 * 86400000 ? 'monitoring' : 'live';
   }
   if (['scheduled', 'campaign_prepared', 'awaiting_user_approval', 'approved'].includes(status)) return 'prepared';
-  if (status === 'admin_review') return 'under_review';
+  if (['admin_review', 'google_ads_verified', 'pending_google_ads_manual_review', 'google_ads_verification_failed'].includes(status)) return 'under_review';
+  if (status === 'campaign_preparation_requested') return 'payment_received';
   if (status === 'pending_review') {
     if (payment === 'paid' || methodType === 'use_my_google_ads') return 'under_review';
     return 'payment_received';

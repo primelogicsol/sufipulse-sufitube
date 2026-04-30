@@ -6,6 +6,7 @@ import {
 import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
 import { getCampaignRequest } from '@/app/lib/server/google-ads-campaign-request-store';
 import { getAuthUser, requireAdmin } from '@/server/middleware/authenticate';
+import { sendAdoptionStatusEmail } from '@/server/services/email';
 
 /**
  * GET /api/adoptions/[id]
@@ -130,6 +131,22 @@ export async function PATCH(
     }
   }
 
+  const prevStatus = adoption.adoptionStatus;
   const updated = updateAdoptionRecord(id, patch);
+
+  // Fire status-change emails for key lifecycle transitions
+  const newStatus = patch.adoptionStatus;
+  const EMAIL_TRIGGERS = new Set(['pending_review', 'campaign_preparation_requested', 'live', 'completed', 'report_ready']);
+  if (newStatus && newStatus !== prevStatus && EMAIL_TRIGGERS.has(newStatus) && adoption.sponsorEmail) {
+    sendAdoptionStatusEmail(
+      adoption.sponsorEmail,
+      adoption.sponsorName || 'Sponsor',
+      newStatus,
+      adoption.releaseTitle || 'your song',
+      id,
+      { amount: patch.amountPaid ?? adoption.amountPaid, reportUrl: patch.reportUrl ?? adoption.reportUrl }
+    ).catch(() => {});
+  }
+
   return NextResponse.json(updated);
 }

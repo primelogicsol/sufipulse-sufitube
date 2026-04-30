@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { applyWebhookEventIfNew } from '@/app/lib/server/adoption-payment-store';
 import { getAdoptionRecord, updateAdoptionRecord } from '@/app/lib/server/adoption-store';
+import { sendAdoptionStatusEmail } from '@/server/services/email';
 
 const getStripeClient = () => {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -18,9 +19,10 @@ export const config = { api: { bodyParser: false } };
 
 // Status ranks — a webhook must never move an adoption backward.
 const STATUS_RANK: Record<string, number> = {
-  draft: 0, pending_review: 1, admin_review: 2, approved: 3,
-  campaign_prepared: 4, awaiting_user_approval: 4, scheduled: 5,
-  live: 6, monitoring: 7, completed: 8, report_ready: 9,
+  draft: 0, pending_review: 1,
+  campaign_preparation_requested: 2, admin_review: 2,
+  approved: 3, campaign_prepared: 4, awaiting_user_approval: 4,
+  scheduled: 5, live: 6, monitoring: 7, completed: 8, report_ready: 9,
 };
 
 function canAdvanceTo(currentStatus: string, targetStatus: string): boolean {
@@ -80,10 +82,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine safe target status — never downgrade beyond what already happened.
-    const targetAdoptionStatus = 'admin_review';
+    const targetAdoptionStatus = 'campaign_preparation_requested';
     const current = getAdoptionRecord(adoptionId);
     const safeAdoptionStatus = current && !canAdvanceTo(current.adoptionStatus, targetAdoptionStatus)
-      ? current.adoptionStatus   // already at admin_review or higher — preserve it
+      ? current.adoptionStatus
       : targetAdoptionStatus;
 
     try {
@@ -97,16 +99,26 @@ export async function POST(request: NextRequest) {
         eventType: event.type,
       });
 
-      // Sync main adoption store, preserving any status higher than admin_review.
+      // Sync main adoption store, preserving any status higher than campaign_preparation_requested.
       if (current) {
+        const didAdvance = canAdvanceTo(current.adoptionStatus, targetAdoptionStatus);
         updateAdoptionRecord(adoptionId, {
           paymentStatus: 'paid',
           amountPaid,
           ...(paymentReference(stripeSessionId)),
-          ...(canAdvanceTo(current.adoptionStatus, targetAdoptionStatus)
-            ? { adoptionStatus: targetAdoptionStatus }
-            : {}),
+          ...(didAdvance ? { adoptionStatus: targetAdoptionStatus } : {}),
         });
+
+        if (didAdvance && current.sponsorEmail) {
+          sendAdoptionStatusEmail(
+            current.sponsorEmail,
+            current.sponsorName || 'Sponsor',
+            targetAdoptionStatus,
+            current.releaseTitle || 'your song',
+            adoptionId,
+            { amount: amountPaid }
+          ).catch(() => {});
+        }
       }
     } catch (err) {
       console.error('Failed to persist adoption payment after Stripe payment:', err);

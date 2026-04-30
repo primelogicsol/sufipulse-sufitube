@@ -13,6 +13,11 @@ import {
 // Lifecycle transitions available per current status.
 // Only forward moves are allowed; never backward.
 const LIFECYCLE_NEXT: Record<string, { status: string; label: string; icon: any; color: string }> = {
+    campaign_preparation_requested: { status: 'approved', label: 'Approve Campaign',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
+    awaiting_user_approval:         { status: 'approved', label: 'Approve Campaign',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
+    pending_google_ads_manual_review: { status: 'approved', label: 'Approve Manual',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
+    google_ads_verified:            { status: 'approved', label: 'Approve Verified',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
+    approved:   { status: 'scheduled',   label: 'Mark Scheduled', icon: Rocket,   color: 'text-amber-400 hover:text-amber-300' },
     scheduled:  { status: 'live',        label: 'Mark Live',      icon: Play,     color: 'text-green-400 hover:text-green-300' },
     live:       { status: 'monitoring',  label: 'Mark Monitoring', icon: Activity, color: 'text-blue-400 hover:text-blue-300' },
     monitoring: { status: 'completed',   label: 'Mark Completed',  icon: Flag,     color: 'text-purple-400 hover:text-purple-300' },
@@ -340,14 +345,18 @@ export default function AdminSongAdoptions() {
                         <option value="all">All Statuses</option>
                         <option value="draft">Draft</option>
                         <option value="pending_review">Pending Review</option>
+                        <option value="campaign_preparation_requested">Campaign Prep Req.</option>
                         <option value="pending_google_ads_manual_review">Ads Manual Review</option>
                         <option value="google_ads_verification_failed">Ads Verify Failed</option>
                         <option value="google_ads_verified">Ads Verified</option>
+                        <option value="awaiting_user_approval">Awaiting User Approval</option>
                         <option value="admin_review">Admin Review</option>
                         <option value="approved">Approved</option>
                         <option value="scheduled">Scheduled</option>
                         <option value="live">Live</option>
+                        <option value="monitoring">Monitoring</option>
                         <option value="completed">Completed</option>
+                        <option value="report_ready">Report Ready</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
                     <select value={methodFilter} onChange={(e) => setMethodFilter(e.target.value)} className="dashboard-input max-w-56">
@@ -427,7 +436,7 @@ export default function AdminSongAdoptions() {
                                                 <button onClick={() => { setSelectedAdoption(adoption); setLaunchState(defaultLaunch()); }} className="p-1 text-neutral-400 hover:text-neutral-200" title="View Details">
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                {(adoption.adoptionStatus === 'pending_review' || adoption.adoptionStatus === 'admin_review') && (
+                                                {(['pending_review', 'admin_review', 'campaign_preparation_requested', 'awaiting_user_approval', 'pending_google_ads_manual_review', 'google_ads_verified', 'google_ads_verification_failed'].includes(adoption.adoptionStatus)) && (
                                                     <>
                                                         <button onClick={() => updateAdoptionStatus(adoption.id, 'approved')} className="p-1 text-green-400 hover:text-green-300" title="Approve"><Check className="w-4 h-4" /></button>
                                                         <button onClick={() => updateAdoptionStatus(adoption.id, 'cancelled')} className="p-1 text-red-400 hover:text-red-300" title="Reject"><X className="w-4 h-4" /></button>
@@ -594,7 +603,7 @@ export default function AdminSongAdoptions() {
                                     />
                                 </div>
 
-                                {(['pending_review', 'admin_review', 'pending_google_ads_manual_review', 'google_ads_verification_failed', 'google_ads_verified'].includes(selectedAdoption.adoptionStatus)) && launchState.step === 'idle' && (
+                                {(['pending_review', 'admin_review', 'campaign_preparation_requested', 'awaiting_user_approval', 'pending_google_ads_manual_review', 'google_ads_verification_failed', 'google_ads_verified'].includes(selectedAdoption.adoptionStatus)) && launchState.step === 'idle' && (
                                     <div className="space-y-2">
                                         {(selectedAdoption.adoptionStatus === 'pending_google_ads_manual_review' || selectedAdoption.adoptionStatus === 'google_ads_verification_failed') && (
                                             <p className="text-xs text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2">

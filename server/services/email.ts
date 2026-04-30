@@ -146,6 +146,70 @@ const templates = {
         <p>Visit us at <a href="${config.app.url}">${config.app.url}</a></p>
       </div>`,
   }),
+
+  adoptionSubmitted: (name: string, songTitle: string, refId: string) => ({
+    subject: `Your sponsorship for "${songTitle}" has been received`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#b45309">SufiPulse — Sponsorship Received</h2>
+        <p>Assalamu Alaikum ${name},</p>
+        <p>Your sponsorship request for <strong>"${songTitle}"</strong> has been received and is under review.</p>
+        <p>You can track your campaign status at any time:</p>
+        <p><a href="${config.app.url}/adopt-song/request/${refId}" style="color:#d97706">Track Your Sponsorship →</a></p>
+        <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
+      </div>`,
+  }),
+
+  adoptionPaymentReceived: (name: string, songTitle: string, amount: number, refId: string) => ({
+    subject: `Payment confirmed — "${songTitle}" campaign in preparation`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#b45309">SufiPulse — Payment Confirmed</h2>
+        <p>Assalamu Alaikum ${name},</p>
+        <p>Payment of <strong>$${amount}</strong> for <strong>"${songTitle}"</strong> has been received. Our team is preparing your campaign.</p>
+        <p><a href="${config.app.url}/adopt-song/request/${refId}" style="color:#d97706">Track Your Campaign →</a></p>
+        <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
+      </div>`,
+  }),
+
+  adoptionLive: (name: string, songTitle: string, refId: string) => ({
+    subject: `Your campaign for "${songTitle}" is now live`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#15803d">SufiPulse — Campaign Live</h2>
+        <p>Assalamu Alaikum ${name},</p>
+        <p>Your campaign for <strong>"${songTitle}"</strong> is now live and reaching listeners.</p>
+        <p>May this kalam be a source of light for everyone who discovers it.</p>
+        <p><a href="${config.app.url}/adopt-song/request/${refId}" style="color:#d97706">View Campaign Status →</a></p>
+        <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
+      </div>`,
+  }),
+
+  adoptionCompleted: (name: string, songTitle: string, refId: string) => ({
+    subject: `Campaign completed — report being prepared for "${songTitle}"`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#b45309">SufiPulse — Campaign Completed</h2>
+        <p>Assalamu Alaikum ${name},</p>
+        <p>Your campaign for <strong>"${songTitle}"</strong> has completed its run. A detailed performance report is being prepared.</p>
+        <p>JazakAllah Khair for your generous sponsorship.</p>
+        <p><a href="${config.app.url}/adopt-song/request/${refId}" style="color:#d97706">View Summary →</a></p>
+        <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
+      </div>`,
+  }),
+
+  adoptionReportReady: (name: string, songTitle: string, reportUrl: string, refId: string) => ({
+    subject: `Your performance report is ready — "${songTitle}"`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#b45309">SufiPulse — Report Ready</h2>
+        <p>Assalamu Alaikum ${name},</p>
+        <p>Your performance report for <strong>"${songTitle}"</strong> is ready.</p>
+        <p><a href="${reportUrl || config.app.url + '/adopt-song/request/' + refId}" style="color:#d97706;font-weight:bold">View Your Report →</a></p>
+        <p>Thank you for helping this kalam reach more hearts.</p>
+        <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
+      </div>`,
+  }),
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -167,4 +231,27 @@ export async function sendPasswordResetEmail(to: string, name: string, code: str
 export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
   const { subject, html } = templates.welcome(name);
   await sendEmail({ to, subject, html });
+}
+
+export async function sendAdoptionStatusEmail(
+  to: string,
+  name: string,
+  status: string,
+  songTitle: string,
+  refId: string,
+  extra?: { amount?: number; reportUrl?: string }
+): Promise<void> {
+  let tmpl: { subject: string; html: string } | null = null;
+  if (status === 'campaign_preparation_requested') {
+    tmpl = templates.adoptionPaymentReceived(name, songTitle, extra?.amount || 0, refId);
+  } else if (status === 'submitted' || status === 'pending_review') {
+    tmpl = templates.adoptionSubmitted(name, songTitle, refId);
+  } else if (status === 'live') {
+    tmpl = templates.adoptionLive(name, songTitle, refId);
+  } else if (status === 'completed') {
+    tmpl = templates.adoptionCompleted(name, songTitle, refId);
+  } else if (status === 'report_ready') {
+    tmpl = templates.adoptionReportReady(name, songTitle, extra?.reportUrl || '', refId);
+  }
+  if (tmpl) await sendEmail({ to, subject: tmpl.subject, html: tmpl.html });
 }
