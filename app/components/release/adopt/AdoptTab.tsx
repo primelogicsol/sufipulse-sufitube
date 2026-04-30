@@ -299,7 +299,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         }).catch(() => {});
       } else {
         const reasonCode = data.reasonCode ||
-          (res.ok ? 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE' : 'GOOGLE_ADS_API_CALL_FAILED');
+          (res.status === 401 ? 'OAUTH_TOKEN_EXPIRED' : res.ok ? 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE' : 'GOOGLE_ADS_API_CALL_FAILED');
         setVerifyError('not_verified');
         setVerifyReasonCode(reasonCode);
         setVerifyErrorDetail({
@@ -1402,8 +1402,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
       const rc = verifyReasonCode || 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE';
       const connectedEmail = verifyErrorDetail?.connectedGoogleEmail || googleEmail || enteredEmail;
 
+      const isTokenExpired = rc === 'OAUTH_TOKEN_EXPIRED' || rc === 'NO_OAUTH_TOKEN';
+
       const headlines: Record<string, string> = {
-        NO_OAUTH_TOKEN:                        'Google account not connected',
+        NO_OAUTH_TOKEN:                        'Google Ads connection expired',
+        OAUTH_TOKEN_EXPIRED:                   'Google Ads connection expired',
         MISSING_DEVELOPER_TOKEN:               'Google Ads API not configured on this server',
         GOOGLE_ACCOUNT_MISMATCH:               'Google account mismatch',
         GOOGLE_ADS_API_CALL_FAILED:            'Google Ads API returned an error',
@@ -1412,10 +1415,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
         CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC:   'Customer ID not accessible (direct + manager accounts checked)',
       };
       const details: Record<string, string> = {
-        NO_OAUTH_TOKEN:                      'No OAuth token found for this session. Complete Google sign-in first, then retry.',
+        NO_OAUTH_TOKEN:                      'Your Google Ads connection has expired or is incomplete. Please reconnect your Google Ads account to continue.',
+        OAUTH_TOKEN_EXPIRED:                 'Your Google Ads connection has expired or is incomplete. Please reconnect your Google Ads account to continue.',
         MISSING_DEVELOPER_TOKEN:             'The server is missing GOOGLE_ADS_DEVELOPER_TOKEN. Contact the SufiPulse admin.',
         GOOGLE_ACCOUNT_MISMATCH:             `The connected Google account (${connectedEmail}) is different from the email you entered (${enteredEmail}). Sign in with the correct Google account.`,
-        GOOGLE_ADS_API_CALL_FAILED:          verifyErrorDetail?.error || 'The Google Ads API rejected the request. The OAuth token may have expired or lack Ads scope.',
+        GOOGLE_ADS_API_CALL_FAILED:          verifyErrorDetail?.error || 'The Google Ads API rejected the request.',
         NO_ACCESSIBLE_CUSTOMERS:             `The connected Google account (${connectedEmail}) has no accessible Google Ads accounts. Check that the account has active Ads access.`,
         CUSTOMER_NOT_DIRECTLY_ACCESSIBLE:    `Customer ID ${enteredCustomerId} was not found in the accounts accessible to ${connectedEmail}. It may be under a manager account — or the Customer ID may be wrong.`,
         CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC: `Customer ID ${enteredCustomerId} was not found directly or through any manager accounts accessible to ${connectedEmail}. Verify the Customer ID and that this Google account has access.`,
@@ -1482,16 +1486,26 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={isSubmittingManualReview}
-            onClick={handleManualReview}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isSubmittingManualReview
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting request…</>
-              : <><Check className="w-5 h-5" /> Submit Adoption Request for Manual Review</>}
-          </button>
+          {isTokenExpired ? (
+            <button
+              type="button"
+              onClick={() => { clearError(); setOauthConnected(false); setOauthChecked(true); setEnteredCustomerId(''); }}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <Globe className="w-5 h-5" /> Reconnect Google Ads Account
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isSubmittingManualReview}
+              onClick={handleManualReview}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isSubmittingManualReview
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting request…</>
+                : <><Check className="w-5 h-5" /> Submit Adoption Request for Manual Review</>}
+            </button>
+          )}
 
           <div className="relative flex items-center gap-3 py-1">
             <div className="flex-1 border-t border-neutral-800" />
@@ -1500,6 +1514,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
 
           <div className="space-y-2">
+            {!isTokenExpired && (
             <button
               type="button"
               onClick={() => { clearError(); setEnteredCustomerId(''); }}
@@ -1507,6 +1522,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
             >
               Try a Different Customer ID
             </button>
+            )}
             <button
               type="button"
               onClick={() => { clearError(); setOauthConnected(false); setOauthChecked(true); setEnteredCustomerId(''); }}

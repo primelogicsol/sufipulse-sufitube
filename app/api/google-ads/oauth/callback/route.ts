@@ -73,7 +73,13 @@ export async function GET(request: NextRequest) {
 
     const tokens = await tokenRes.json();
     if (!tokenRes.ok || !tokens.access_token) {
+      console.error('[google-ads/callback] token exchange failed:', JSON.stringify(tokens));
       throw new Error(tokens.error_description || 'Token exchange failed');
+    }
+    console.log('[google-ads/callback] token exchange OK — scope:', tokens.scope || '(not returned)', 'has_refresh:', !!tokens.refresh_token);
+    const scopeIncludesAdwords = (tokens.scope || '').includes('adwords');
+    if (!scopeIncludesAdwords) {
+      console.warn('[google-ads/callback] WARNING: adwords scope not present in token response. scope:', tokens.scope);
     }
 
     // Fetch Google account email for display in SufiPulse UI

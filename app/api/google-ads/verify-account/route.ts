@@ -16,6 +16,7 @@ const LIST_ACCESSIBLE = `https://googleads.googleapis.com/${GADS_VER}/customers:
 export type VerifyReasonCode =
   | 'MISSING_DEVELOPER_TOKEN'
   | 'NO_OAUTH_TOKEN'
+  | 'OAUTH_TOKEN_EXPIRED'
   | 'GOOGLE_ACCOUNT_MISMATCH'
   | 'GOOGLE_ADS_API_CALL_FAILED'
   | 'NO_ACCESSIBLE_CUSTOMERS'
@@ -24,12 +25,6 @@ export type VerifyReasonCode =
   | 'VERIFIED_DIRECT'
   | 'VERIFIED_VIA_MANAGER';
 
-/**
- * POST /api/google-ads/verify-account
- *
- * Body: { adoptionId, userId, customerId, enteredEmail? }
- * Returns: { verified, reasonCode, customerId, accounts, connectedGoogleEmail, debug }
- */
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const {
@@ -52,20 +47,15 @@ export async function POST(request: NextRequest) {
   console.log('[verify-account] API version:', GADS_VER);
 
   const user = await getAuthUser(request);
-  console.log('[verify-account] SufiPulse user authenticated:', !!user, user ? `id=${user.id}` : '');
 
   if (!user && !adoptionId) {
-    console.error('[verify-account] ABORT: no user and no adoptionId → NO_OAUTH_TOKEN');
     return NextResponse.json(
       { error: 'Authentication or adoptionId required.', reasonCode: 'NO_OAUTH_TOKEN' as VerifyReasonCode },
       { status: 401 }
     );
   }
   if (user && userId && userId !== user.id) {
-    return NextResponse.json(
-      { error: 'Forbidden', reasonCode: 'NO_OAUTH_TOKEN' as VerifyReasonCode },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: 'Forbidden', reasonCode: 'NO_OAUTH_TOKEN' as VerifyReasonCode }, { status: 403 });
   }
   if (!customerId) {
     return NextResponse.json({ error: 'customerId is required.' }, { status: 400 });
@@ -75,11 +65,7 @@ export async function POST(request: NextRequest) {
   }
 
   const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
-  console.log('[verify-account] GOOGLE_ADS_DEVELOPER_TOKEN present:', !!developerToken);
-  console.log('[verify-account] GOOGLE_ADS_LOGIN_CUSTOMER_ID (MCC):', process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || '(not set)');
-
   if (!developerToken) {
-    console.error('[verify-account] ABORT: reasonCode=MISSING_DEVELOPER_TOKEN');
     return NextResponse.json(
       { error: 'Google Ads is not configured on this server.', reasonCode: 'MISSING_DEVELOPER_TOKEN' as VerifyReasonCode },
       { status: 503 }
@@ -88,214 +74,213 @@ export async function POST(request: NextRequest) {
 
   const effectiveUserId = userId || user?.id || '';
 
-  // ── Resolve access token ───────────────────────────────────────────────────
+  // ── 1. Load stored OAuth record ──────────────────────────────────────────
   let accessToken: string | null = null;
-  let userRecord = effectiveUserId ? await getGoogleAdsUserOAuth(effectiveUserId) : null;
+  let hasRefreshToken = false;
+  let tokenExpired = false;
 
-  console.log('[verify-account] userOAuthRecord found:', !!userRecord);
-  if (userRecord) {
-    console.log('[verify-account] userOAuthRecord.googleEmail:', userRecord.googleEmail || '(none)');
-    console.log('[verify-account] userOAuthRecord.hasAccessToken:', !!userRecord.accessToken);
-    console.log('[verify-account] userOAuthRecord.hasRefreshToken:', !!userRecord.refreshToken);
-  }
+  const userRecord = effectiveUserId ? await getGoogleAdsUserOAuth(effectiveUserId) : null;
+  let adoptionRecord = adoptionId ? await getAdoptionGoogleOAuthRecord(adoptionId) : null;
 
-  if (userRecord?.accessToken) {
-    accessToken = await getValidUserAccessToken(effectiveUserId, userRecord);
-    console.log('[verify-account] getValidUserAccessToken resolved:', !!accessToken);
-  }
+  const activeRecord = userRecord || adoptionRecord;
+  const connectedGoogleEmail: string | null = activeRecord?.googleEmail ?? null;
 
-  let adoptionRecord = null;
-  if (!accessToken && adoptionId) {
-    adoptionRecord = await getAdoptionGoogleOAuthRecord(adoptionId);
-    console.log('[verify-account] adoptionOAuthRecord found:', !!adoptionRecord);
-    if (adoptionRecord) {
-      console.log('[verify-account] adoptionOAuthRecord.googleEmail:', adoptionRecord.googleEmail || '(none)');
-      console.log('[verify-account] adoptionOAuthRecord.hasAccessToken:', !!adoptionRecord.accessToken);
-      console.log('[verify-account] adoptionOAuthRecord.hasRefreshToken:', !!adoptionRecord.refreshToken);
-    }
-    if (adoptionRecord?.accessToken) {
-      // Refresh if expired
-      const isExpired = adoptionRecord.expiresAt
-        ? Date.now() + 5 * 60 * 1000 >= new Date(adoptionRecord.expiresAt).getTime()
-        : false;
-      if (isExpired && adoptionRecord.refreshToken) {
-        const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
-        const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
-        if (clientId && clientSecret) {
-          try {
-            const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: new URLSearchParams({
-                client_id: clientId,
-                client_secret: clientSecret,
-                refresh_token: adoptionRecord.refreshToken,
-                grant_type: 'refresh_token',
-              }),
-            });
-            const refreshed = await refreshRes.json();
-            if (refreshRes.ok && refreshed.access_token) {
-              await upsertAdoptionGoogleOAuthRecord({
-                adoptionId,
-                accessToken: refreshed.access_token,
-                refreshToken: adoptionRecord.refreshToken,
-                tokenType: refreshed.token_type || adoptionRecord.tokenType,
-                expiresInSeconds: Number(refreshed.expires_in || 3600),
-                accessibleCustomerIds: adoptionRecord.accessibleCustomerIds,
-                googleEmail: adoptionRecord.googleEmail,
-              });
-              accessToken = refreshed.access_token;
-              console.log('[verify-account] adoption token refreshed successfully');
-            } else {
-              accessToken = adoptionRecord.accessToken;
-            }
-          } catch {
-            accessToken = adoptionRecord.accessToken;
-          }
-        } else {
-          accessToken = adoptionRecord.accessToken;
-        }
-      } else {
-        accessToken = adoptionRecord.accessToken;
-      }
-    }
-  }
-
-  const connectedGoogleEmail: string | null =
-    userRecord?.googleEmail ?? adoptionRecord?.googleEmail ?? null;
+  console.log('[verify-account] userRecord found:', !!userRecord);
+  console.log('[verify-account] adoptionRecord found:', !!adoptionRecord);
   console.log('[verify-account] connectedGoogleEmail:', connectedGoogleEmail || '(unknown)');
 
+  if (userRecord?.accessToken) {
+    hasRefreshToken = !!userRecord.refreshToken;
+    tokenExpired = userRecord.expiresAt
+      ? Date.now() >= new Date(userRecord.expiresAt).getTime()
+      : false;
+    accessToken = await getValidUserAccessToken(effectiveUserId, userRecord);
+    console.log('[verify-account] user token — expired:', tokenExpired, 'refreshed:', accessToken !== userRecord.accessToken);
+  } else if (adoptionRecord?.accessToken) {
+    hasRefreshToken = !!adoptionRecord.refreshToken;
+    tokenExpired = adoptionRecord.expiresAt
+      ? Date.now() >= new Date(adoptionRecord.expiresAt).getTime()
+      : false;
+
+    console.log('[verify-account] adoption token — expired:', tokenExpired, 'hasRefresh:', hasRefreshToken);
+
+    // Proactively refresh if we know the token is expired and have a refresh token
+    if (tokenExpired && hasRefreshToken) {
+      const refreshed = await refreshAdoptionToken(adoptionId, adoptionRecord.refreshToken!);
+      if (refreshed) {
+        accessToken = refreshed;
+        console.log('[verify-account] proactive refresh succeeded');
+      } else {
+        accessToken = adoptionRecord.accessToken;
+        console.log('[verify-account] proactive refresh failed — using stored token');
+      }
+    } else {
+      accessToken = adoptionRecord.accessToken;
+    }
+  }
+
+  // ── Debug snapshot ───────────────────────────────────────────────────────
+  const tokenDebug = {
+    hasAccessToken: !!accessToken,
+    hasRefreshToken,
+    tokenExpired,
+    tokenSource: userRecord ? 'user_record' : adoptionRecord ? 'adoption_record' : 'none',
+    connectedGoogleEmail,
+    requestedScopeIncludesAdwords: true, // oauth/start always sets adwords scope
+    apiVersion: GADS_VER,
+    developerTokenPresent: !!developerToken,
+    mccId: process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || null,
+  };
+  console.log('[verify-account] tokenDebug:', JSON.stringify(tokenDebug));
+
   if (!accessToken) {
-    console.error('[verify-account] ABORT: reasonCode=NO_OAUTH_TOKEN — no accessToken found');
     return NextResponse.json(
       {
-        error: 'No OAuth token found. Complete Google sign-in first.',
+        error: 'No OAuth token found. Please reconnect your Google Ads account.',
         reasonCode: 'NO_OAUTH_TOKEN' as VerifyReasonCode,
         connectedGoogleEmail: null,
-        debug: { adoptionId, userId: effectiveUserId, userRecordFound: !!userRecord, adoptionRecordFound: !!adoptionRecord },
+        debug: { ...tokenDebug, adoptionId, userId: effectiveUserId },
       },
       { status: 401 }
     );
   }
 
   const normalizedTarget = customerId.replace(/-/g, '');
-  console.log('[verify-account] normalizedTarget:', normalizedTarget);
-
   const emailMismatch =
     !!enteredEmail &&
     !!connectedGoogleEmail &&
     enteredEmail.toLowerCase().trim() !== connectedGoogleEmail.toLowerCase().trim();
-  if (emailMismatch) {
-    console.warn(`[verify-account] EMAIL MISMATCH: entered="${enteredEmail}" connected="${connectedGoogleEmail}"`);
-  }
 
-  async function callListAccessible(loginCustomerId?: string): Promise<{
-    ok: boolean;
-    resourceNames: string[];
-    errorPayload: unknown;
-    httpStatus: number;
-  }> {
+  // ── 2. Call Google Ads API ───────────────────────────────────────────────
+  async function callListAccessible(token: string, loginCustomerId?: string) {
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${accessToken!}`,
+      Authorization: `Bearer ${token}`,
       'developer-token': developerToken!,
     };
-    if (loginCustomerId) headers['login-customer-id'] = loginCustomerId;
+    if (loginCustomerId) headers['login-customer-id'] = loginCustomerId.replace(/-/g, '');
 
     console.log(
-      `[verify-account] → listAccessibleCustomers${loginCustomerId ? ` login-customer-id=${loginCustomerId}` : ' (no login-customer-id)'}`
+      `[verify-account] → listAccessibleCustomers${loginCustomerId ? ` login-customer-id=${loginCustomerId}` : ''}`
     );
 
     const res = await fetch(LIST_ACCESSIBLE, { headers });
     const rawText = await res.text();
-    let payload: { resourceNames?: string[]; error?: unknown };
+    let payload: { resourceNames?: string[]; error?: unknown } = {};
     try {
       payload = JSON.parse(rawText);
     } catch {
-      console.error(`[verify-account] ← HTTP ${res.status} non-JSON body:`, rawText.slice(0, 200));
+      console.error(`[verify-account] ← HTTP ${res.status} non-JSON:`, rawText.slice(0, 300));
       payload = { error: `HTTP ${res.status} — non-JSON response` };
     }
-    console.log(`[verify-account] ← HTTP ${res.status}:`, JSON.stringify(payload));
+    console.log(`[verify-account] ← HTTP ${res.status}:`, JSON.stringify(payload).slice(0, 300));
     return {
       ok: res.ok,
+      status: res.status,
       resourceNames: Array.isArray(payload.resourceNames) ? payload.resourceNames : [],
       errorPayload: payload.error ?? null,
-      httpStatus: res.status,
     };
   }
 
   try {
-    console.log('[verify-account] API call: yes');
-    let result = await callListAccessible();
+    const mccId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || '';
 
-    const mccId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
+    // First attempt
+    let result = await callListAccessible(accessToken);
+
+    // ── 401: try token refresh and retry once ──────────────────────────────
+    if (result.status === 401 && hasRefreshToken) {
+      console.log('[verify-account] got 401 — attempting token refresh');
+      const refreshToken = adoptionRecord?.refreshToken || userRecord?.refreshToken || null;
+      if (refreshToken) {
+        const newToken = adoptionRecord
+          ? await refreshAdoptionToken(adoptionId, refreshToken)
+          : null;
+        if (newToken) {
+          accessToken = newToken;
+          console.log('[verify-account] token refreshed — retrying API call');
+          result = await callListAccessible(accessToken);
+        }
+      }
+    }
+
+    // ── Still 401 after refresh attempt ───────────────────────────────────
+    if (result.status === 401) {
+      console.error('[verify-account] 401 after refresh attempt — token expired or revoked');
+      return NextResponse.json(
+        {
+          error: 'Google Ads connection expired or incomplete. Please reconnect your Google Ads account.',
+          reasonCode: 'OAUTH_TOKEN_EXPIRED' as VerifyReasonCode,
+          connectedGoogleEmail,
+          debug: { ...tokenDebug, googleAdsApiHttpStatus: 401, googleAdsApiErrorMessage: result.errorPayload },
+        },
+        { status: 401 }
+      );
+    }
+
+    // ── Retry with MCC login-customer-id if empty or failed ───────────────
     if ((!result.ok || result.resourceNames.length === 0) && mccId) {
-      console.log(`[verify-account] first call empty/failed — retrying with MCC=${mccId}`);
-      result = await callListAccessible(mccId);
+      console.log(`[verify-account] retrying with MCC=${mccId}`);
+      result = await callListAccessible(accessToken, mccId);
     }
 
     if (!result.ok) {
-      console.error(`[verify-account] ABORT: reasonCode=GOOGLE_ADS_API_CALL_FAILED HTTP ${result.httpStatus}`);
       return NextResponse.json(
         {
-          error: `Google Ads API error (HTTP ${result.httpStatus})`,
+          error: `Google Ads API error (HTTP ${result.status})`,
           reasonCode: 'GOOGLE_ADS_API_CALL_FAILED' as VerifyReasonCode,
           google_ads_error: result.errorPayload,
           connectedGoogleEmail,
-          debug: { httpStatus: result.httpStatus, customerId, normalizedTarget, connectedGoogleEmail, emailMismatch },
+          debug: { ...tokenDebug, googleAdsApiHttpStatus: result.status, googleAdsApiErrorMessage: result.errorPayload },
         },
         { status: 502 }
       );
     }
 
-    const resourceNames = result.resourceNames;
-    const normalizedAccounts = resourceNames.map((rn: string) =>
+    // ── Normalize accounts ────────────────────────────────────────────────
+    const normalizedAccounts = result.resourceNames.map((rn: string) =>
       rn.replace('customers/', '').replace(/-/g, '')
     );
     const accounts = normalizedAccounts.map((id: string) =>
       id.length === 10 ? `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}` : id
     );
 
-    console.log('[verify-account] resourceNames from Google:', resourceNames);
-    console.log('[verify-account] normalized accounts:', normalizedAccounts);
-    console.log(`[verify-account] target="${normalizedTarget}" vs [${normalizedAccounts.join(', ')}]`);
+    console.log('[verify-account] accessible accounts:', normalizedAccounts);
+    console.log('[verify-account] target:', normalizedTarget);
 
     if (normalizedAccounts.length === 0) {
       const reasonCode: VerifyReasonCode = emailMismatch ? 'GOOGLE_ACCOUNT_MISMATCH' : 'NO_ACCESSIBLE_CUSTOMERS';
-      console.warn(`[verify-account] FINAL: reasonCode=${reasonCode} — no accounts returned`);
       return NextResponse.json({
         verified: false,
         reasonCode,
         customerId,
         accounts: [],
         connectedGoogleEmail,
-        debug: { normalizedTarget, normalizedAccounts: [], emailMismatch },
+        debug: { ...tokenDebug, normalizedTarget, normalizedAccounts, emailMismatch, googleAdsApiHttpStatus: result.status },
       });
     }
 
+    // ── Check direct match ────────────────────────────────────────────────
     let verified = normalizedAccounts.includes(normalizedTarget);
     let verifiedViaManager: string | null = null;
-    console.log('[verify-account] direct match:', verified);
 
+    // ── Check MCC hierarchy ───────────────────────────────────────────────
     if (!verified) {
-      console.log('[verify-account] checking MCC hierarchy...');
       for (const mccNormalized of normalizedAccounts) {
         try {
-          console.log(`[verify-account] trying manager login-customer-id=${mccNormalized}`);
           const mccRes = await fetch(
             `https://googleads.googleapis.com/${GADS_VER}/customers/${normalizedTarget}`,
             {
               headers: {
-                Authorization: `Bearer ${accessToken!}`,
-                'developer-token': developerToken!,
+                Authorization: `Bearer ${accessToken}`,
+                'developer-token': developerToken,
                 'login-customer-id': mccNormalized,
               },
             }
           );
-          console.log(`[verify-account] MCC HTTP ${mccRes.status} target=${normalizedTarget} via manager=${mccNormalized}`);
+          console.log(`[verify-account] MCC check HTTP ${mccRes.status} target=${normalizedTarget} via=${mccNormalized}`);
           if (mccRes.ok) {
             verified = true;
             verifiedViaManager = mccNormalized;
-            console.log(`[verify-account] verified via manager=${mccNormalized}`);
             break;
           }
         } catch (err) {
@@ -304,19 +289,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let reasonCode: VerifyReasonCode;
-    if (verified && verifiedViaManager) {
-      reasonCode = 'VERIFIED_VIA_MANAGER';
-    } else if (verified) {
-      reasonCode = 'VERIFIED_DIRECT';
-    } else if (emailMismatch) {
-      reasonCode = 'GOOGLE_ACCOUNT_MISMATCH';
-    } else {
-      reasonCode = 'CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC';
-    }
+    const reasonCode: VerifyReasonCode = verified && verifiedViaManager
+      ? 'VERIFIED_VIA_MANAGER'
+      : verified
+      ? 'VERIFIED_DIRECT'
+      : emailMismatch
+      ? 'GOOGLE_ACCOUNT_MISMATCH'
+      : 'CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC';
 
-    console.log(`[verify-account] FINAL: reasonCode=${reasonCode} verified=${verified} connectedEmail=${connectedGoogleEmail}`);
+    console.log(`[verify-account] FINAL: ${reasonCode} verified=${verified}`);
 
+    // ── Persist verification ──────────────────────────────────────────────
     if (verified) {
       if (userRecord) {
         await upsertGoogleAdsUserOAuth({
@@ -328,19 +311,16 @@ export async function POST(request: NextRequest) {
           googleEmail: userRecord.googleEmail,
           verifiedCustomerId: customerId,
         });
-      } else if (adoptionId) {
-        if (!adoptionRecord) adoptionRecord = await getAdoptionGoogleOAuthRecord(adoptionId);
-        if (adoptionRecord) {
-          await upsertAdoptionGoogleOAuthRecord({
-            adoptionId,
-            accessToken: adoptionRecord.accessToken,
-            refreshToken: adoptionRecord.refreshToken,
-            tokenType: adoptionRecord.tokenType,
-            accessibleCustomerIds: accounts,
-            googleEmail: adoptionRecord.googleEmail,
-            verifiedCustomerId: customerId,
-          });
-        }
+      } else if (adoptionRecord) {
+        await upsertAdoptionGoogleOAuthRecord({
+          adoptionId,
+          accessToken: adoptionRecord.accessToken,
+          refreshToken: adoptionRecord.refreshToken,
+          tokenType: adoptionRecord.tokenType,
+          accessibleCustomerIds: accounts,
+          googleEmail: adoptionRecord.googleEmail,
+          verifiedCustomerId: customerId,
+        });
       }
     }
 
@@ -351,12 +331,13 @@ export async function POST(request: NextRequest) {
       accounts,
       connectedGoogleEmail,
       debug: {
+        ...tokenDebug,
         normalizedTarget,
         normalizedAccounts,
         totalAccounts: accounts.length,
         emailMismatch,
         verifiedViaManager,
-        apiVersion: GADS_VER,
+        googleAdsApiHttpStatus: result.status,
       },
     });
   } catch (error: any) {
@@ -366,8 +347,51 @@ export async function POST(request: NextRequest) {
         error: error?.message || 'Failed to verify Google Ads account.',
         reasonCode: 'GOOGLE_ADS_API_CALL_FAILED' as VerifyReasonCode,
         connectedGoogleEmail,
+        debug: tokenDebug,
       },
       { status: 500 }
     );
+  }
+}
+
+async function refreshAdoptionToken(adoptionId: string, refreshToken: string): Promise<string | null> {
+  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  if (!clientId || !clientSecret || !refreshToken) return null;
+
+  try {
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.access_token) {
+      console.error('[verify-account] token refresh failed:', data);
+      return null;
+    }
+    const record = await import('@/app/lib/server/adoption-google-oauth-store')
+      .then(m => m.getAdoptionGoogleOAuthRecord(adoptionId));
+    if (record) {
+      await import('@/app/lib/server/adoption-google-oauth-store')
+        .then(m => m.upsertAdoptionGoogleOAuthRecord({
+          adoptionId,
+          accessToken: data.access_token,
+          refreshToken,
+          tokenType: data.token_type || record.tokenType,
+          expiresInSeconds: Number(data.expires_in || 3600),
+          accessibleCustomerIds: record.accessibleCustomerIds,
+          googleEmail: record.googleEmail,
+        }));
+    }
+    return data.access_token;
+  } catch (err) {
+    console.error('[verify-account] refresh exception:', err);
+    return null;
   }
 }
