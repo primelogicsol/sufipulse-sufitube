@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   oauthUrl.searchParams.set('client_id', clientId);
   oauthUrl.searchParams.set('redirect_uri', redirectUri);
   oauthUrl.searchParams.set('response_type', 'code');
-  oauthUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/adwords');
+  oauthUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/adwords https://www.googleapis.com/auth/userinfo.email');
   oauthUrl.searchParams.set('access_type', 'offline');
   oauthUrl.searchParams.set('prompt', 'consent');
   oauthUrl.searchParams.set('state', state);

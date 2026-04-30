@@ -184,22 +184,23 @@ export async function POST(request: NextRequest) {
   try {
     const mccId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || '';
 
-    // First attempt
+    // First attempt — no login-customer-id header
     let result = await callListAccessible(accessToken);
 
-    // ── 401: try token refresh and retry once ──────────────────────────────
+    // ── 401: try token refresh and retry once ─────────────────────────────
+    // Handles both userRecord and adoptionRecord expired tokens.
     if (result.status === 401 && hasRefreshToken) {
       console.log('[verify-account] got 401 — attempting token refresh');
-      const refreshToken = adoptionRecord?.refreshToken || userRecord?.refreshToken || null;
-      if (refreshToken) {
-        const newToken = adoptionRecord
-          ? await refreshAdoptionToken(adoptionId, refreshToken)
-          : null;
-        if (newToken) {
-          accessToken = newToken;
-          console.log('[verify-account] token refreshed — retrying API call');
-          result = await callListAccessible(accessToken);
-        }
+      let newToken: string | null = null;
+      if (adoptionRecord?.refreshToken) {
+        newToken = await refreshAdoptionToken(adoptionId, adoptionRecord.refreshToken);
+      } else if (userRecord?.refreshToken) {
+        newToken = await refreshUserToken(effectiveUserId, userRecord.refreshToken);
+      }
+      if (newToken) {
+        accessToken = newToken;
+        console.log('[verify-account] token refreshed — retrying API call');
+        result = await callListAccessible(accessToken);
       }
     }
 
@@ -217,12 +218,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Retry with MCC login-customer-id if empty or failed ───────────────
-    if ((!result.ok || result.resourceNames.length === 0) && mccId) {
-      console.log(`[verify-account] retrying with MCC=${mccId}`);
-      result = await callListAccessible(accessToken, mccId);
-    }
-
     if (!result.ok) {
       return NextResponse.json(
         {
@@ -236,16 +231,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Normalize accounts ────────────────────────────────────────────────
-    const normalizedAccounts = result.resourceNames.map((rn: string) =>
+    // ── Normalize direct accounts ─────────────────────────────────────────
+    let normalizedAccounts = result.resourceNames.map((rn: string) =>
       rn.replace('customers/', '').replace(/-/g, '')
     );
+
+    console.log('[verify-account] direct accessible accounts:', normalizedAccounts);
+    console.log('[verify-account] target:', normalizedTarget);
+
+    // ── MCC listAccessibleCustomers retry ─────────────────────────────────
+    // If target not found in direct results (or direct results empty), always
+    // retry with the MCC login-customer-id. This discovers sub-accounts managed
+    // by the MCC that are not "directly accessible" to the authenticated user.
+    if (mccId && !normalizedAccounts.includes(normalizedTarget)) {
+      console.log(`[verify-account] target not in direct accounts — retrying listAccessibleCustomers with MCC=${mccId}`);
+      const mccResult = await callListAccessible(accessToken, mccId);
+      if (mccResult.ok && mccResult.resourceNames.length > 0) {
+        const mccNormalized = mccResult.resourceNames.map((rn: string) =>
+          rn.replace('customers/', '').replace(/-/g, '')
+        );
+        console.log('[verify-account] MCC-accessible accounts:', mccNormalized);
+        // Merge without duplicates — keep MCC account itself in the list for hierarchy checks
+        normalizedAccounts = [...new Set([...normalizedAccounts, ...mccNormalized])];
+      }
+    }
+
     const accounts = normalizedAccounts.map((id: string) =>
       id.length === 10 ? `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}` : id
     );
-
-    console.log('[verify-account] accessible accounts:', normalizedAccounts);
-    console.log('[verify-account] target:', normalizedTarget);
 
     if (normalizedAccounts.length === 0) {
       const reasonCode: VerifyReasonCode = emailMismatch ? 'GOOGLE_ACCOUNT_MISMATCH' : 'NO_ACCESSIBLE_CUSTOMERS';
@@ -263,7 +276,9 @@ export async function POST(request: NextRequest) {
     let verified = normalizedAccounts.includes(normalizedTarget);
     let verifiedViaManager: string | null = null;
 
-    // ── Check MCC hierarchy ───────────────────────────────────────────────
+    // ── Check MCC hierarchy (GET customers) ───────────────────────────────
+    // For each accessible account, try fetching the target customer using that
+    // account as login-customer-id. Covers nested MCC structures.
     if (!verified) {
       for (const mccNormalized of normalizedAccounts) {
         try {
@@ -277,14 +292,14 @@ export async function POST(request: NextRequest) {
               },
             }
           );
-          console.log(`[verify-account] MCC check HTTP ${mccRes.status} target=${normalizedTarget} via=${mccNormalized}`);
+          console.log(`[verify-account] MCC GET check HTTP ${mccRes.status} target=${normalizedTarget} via=${mccNormalized}`);
           if (mccRes.ok) {
             verified = true;
             verifiedViaManager = mccNormalized;
             break;
           }
         } catch (err) {
-          console.warn(`[verify-account] MCC check error manager=${mccNormalized}:`, err);
+          console.warn(`[verify-account] MCC GET check error manager=${mccNormalized}:`, err);
         }
       }
     }
@@ -392,6 +407,49 @@ async function refreshAdoptionToken(adoptionId: string, refreshToken: string): P
     return data.access_token;
   } catch (err) {
     console.error('[verify-account] refresh exception:', err);
+    return null;
+  }
+}
+
+async function refreshUserToken(userId: string, refreshToken: string): Promise<string | null> {
+  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  if (!clientId || !clientSecret || !refreshToken) return null;
+
+  try {
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.access_token) {
+      console.error('[verify-account] user token refresh failed:', data);
+      return null;
+    }
+    const { getGoogleAdsUserOAuth, upsertGoogleAdsUserOAuth } =
+      await import('@/app/lib/server/google-ads-oauth-store');
+    const record = await getGoogleAdsUserOAuth(userId);
+    if (record) {
+      await upsertGoogleAdsUserOAuth({
+        userId,
+        accessToken: data.access_token,
+        refreshToken,
+        tokenType: data.token_type || record.tokenType,
+        expiresInSeconds: Number(data.expires_in || 3600),
+        accessibleCustomerIds: record.accessibleCustomerIds,
+        googleEmail: record.googleEmail,
+        verifiedCustomerId: record.verifiedCustomerId,
+      });
+    }
+    return data.access_token;
+  } catch (err) {
+    console.error('[verify-account] user refresh exception:', err);
     return null;
   }
 }
