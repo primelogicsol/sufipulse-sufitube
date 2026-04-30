@@ -114,7 +114,50 @@ export async function POST(request: NextRequest) {
       console.log('[verify-account] adoptionOAuthRecord.hasRefreshToken:', !!adoptionRecord.refreshToken);
     }
     if (adoptionRecord?.accessToken) {
-      accessToken = adoptionRecord.accessToken;
+      // Refresh if expired
+      const isExpired = adoptionRecord.expiresAt
+        ? Date.now() + 5 * 60 * 1000 >= new Date(adoptionRecord.expiresAt).getTime()
+        : false;
+      if (isExpired && adoptionRecord.refreshToken) {
+        const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
+        const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+        if (clientId && clientSecret) {
+          try {
+            const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                client_id: clientId,
+                client_secret: clientSecret,
+                refresh_token: adoptionRecord.refreshToken,
+                grant_type: 'refresh_token',
+              }),
+            });
+            const refreshed = await refreshRes.json();
+            if (refreshRes.ok && refreshed.access_token) {
+              await upsertAdoptionGoogleOAuthRecord({
+                adoptionId,
+                accessToken: refreshed.access_token,
+                refreshToken: adoptionRecord.refreshToken,
+                tokenType: refreshed.token_type || adoptionRecord.tokenType,
+                expiresInSeconds: Number(refreshed.expires_in || 3600),
+                accessibleCustomerIds: adoptionRecord.accessibleCustomerIds,
+                googleEmail: adoptionRecord.googleEmail,
+              });
+              accessToken = refreshed.access_token;
+              console.log('[verify-account] adoption token refreshed successfully');
+            } else {
+              accessToken = adoptionRecord.accessToken;
+            }
+          } catch {
+            accessToken = adoptionRecord.accessToken;
+          }
+        } else {
+          accessToken = adoptionRecord.accessToken;
+        }
+      } else {
+        accessToken = adoptionRecord.accessToken;
+      }
     }
   }
 
