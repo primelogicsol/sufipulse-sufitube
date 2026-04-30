@@ -1,6 +1,14 @@
 name: Deploy to VPS
 
 on:
+  # Manual trigger from GitHub Actions UI — primary deployment method
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for deploying (optional)'
+        required: false
+        default: 'manual deploy'
+  # Auto-deploy only when commit message contains [deploy]
   push:
     branches:
       - main
@@ -17,10 +25,34 @@ jobs:
       packages: write
 
     steps:
+      - name: Gate — skip auto-push unless [deploy] in commit message
+        if: github.event_name == 'push'
+        run: |
+          MSG="${{ github.event.head_commit.message }}"
+          echo "Commit message: $MSG"
+          if echo "$MSG" | grep -qF '[deploy]'; then
+            echo "DEPLOY_GATE=pass" >> $GITHUB_ENV
+            echo "[deploy] tag found — proceeding"
+          else
+            echo "DEPLOY_GATE=skip" >> $GITHUB_ENV
+            echo "No [deploy] tag — build will be skipped. Use workflow_dispatch to deploy manually."
+          fi
+
+      - name: Skip if gate not passed
+        if: github.event_name == 'push' && env.DEPLOY_GATE != 'pass'
+        run: |
+          echo "Deployment skipped — commit does not contain [deploy]."
+          echo "To deploy, either:"
+          echo "  1. Add [deploy] to the commit message"
+          echo "  2. Trigger manually from GitHub Actions > Deploy to VPS > Run workflow"
+          exit 0
+
       - name: Checkout code
+        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: actions/checkout@v4
 
       - name: Login to GHCR
+        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -28,6 +60,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
+        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -45,6 +78,7 @@ jobs:
           provenance: false
 
       - name: Deploy on VPS
+        if: github.event_name != 'push' || env.DEPLOY_GATE == 'pass'
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.VPS_HOST }}
