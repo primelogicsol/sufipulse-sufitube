@@ -1428,7 +1428,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
     }
 
     // ── Phase 3: OAuth connected — pick / verify account ─────────────────────
-    if (oauthConnected && oauthChecked) {
+    // showManualFallback takes priority — let Phase 2 render if user clicked "Submit Manually"
+    if (oauthConnected && oauthChecked && !showManualFallback) {
       const accountsToShow = accessibleCustomerIds.length > 0 ? accessibleCustomerIds : [];
       const targetCid = enteredCustomerId || (accountsToShow.length > 0 ? accountsToShow[0] : '');
       const targetNorm = targetCid.replace(/-/g, '');
@@ -1528,6 +1529,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
               Submit Manually Instead
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={switchToManaged}
+            className="w-full py-3 border border-amber-700/40 hover:border-amber-500/60 text-amber-600 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
+          >
+            Switch to Managed by SufiPulse Instead
+          </button>
         </div>
       );
     }
