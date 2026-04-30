@@ -181,7 +181,7 @@ It is a voice for the Mubtala , the one caught in drug addiction, and a reminder
     publishedDate: '2026-01-13',
     durationSeconds: 161,
     durationFormatted: '2:41',
-    views: 40820,
+    views: 40828,
     source: 'native'
   },
   {
