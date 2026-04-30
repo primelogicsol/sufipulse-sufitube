@@ -5,6 +5,7 @@ import {
 } from '@/app/lib/server/adoption-store';
 import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
 import { getCampaignRequest } from '@/app/lib/server/google-ads-campaign-request-store';
+import { OWNER_SETTABLE_STATUSES } from '@/app/lib/server/adoption-status';
 import { getAuthUser, requireAdmin } from '@/server/middleware/authenticate';
 import { sendAdoptionStatusEmail } from '@/server/services/email';
 
@@ -121,6 +122,14 @@ export async function PATCH(
     if (key in body) patch[String(key)] = body[key as string];
   }
 
+  // Gate: non-admin cannot set restricted lifecycle statuses
+  if (!isAdmin && patch.adoptionStatus != null && !OWNER_SETTABLE_STATUSES.has(patch.adoptionStatus)) {
+    return NextResponse.json(
+      { error: `Status "${patch.adoptionStatus}" can only be set by an admin.` },
+      { status: 403 }
+    );
+  }
+
   // Gate: cannot promote use_my_google_ads to pending_review without a customer ID
   if (patch.adoptionStatus === 'pending_review' && (patch.methodType ?? adoption.methodType) === 'use_my_google_ads') {
     if (!patch.googleAdsCustomerId && !adoption.googleAdsCustomerId) {
@@ -136,7 +145,11 @@ export async function PATCH(
 
   // Fire status-change emails for key lifecycle transitions
   const newStatus = patch.adoptionStatus;
-  const EMAIL_TRIGGERS = new Set(['pending_review', 'campaign_preparation_requested', 'live', 'completed', 'report_ready']);
+  const EMAIL_TRIGGERS = new Set([
+    'pending_review', 'campaign_preparation_requested',
+    'approved', 'scheduled',
+    'live', 'completed', 'report_ready',
+  ]);
   if (newStatus && newStatus !== prevStatus && EMAIL_TRIGGERS.has(newStatus) && adoption.sponsorEmail) {
     sendAdoptionStatusEmail(
       adoption.sponsorEmail,

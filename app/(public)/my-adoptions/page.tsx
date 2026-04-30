@@ -161,10 +161,27 @@ export default function MyAdoptionsPage() {
 
                   <div className="flex items-center gap-1 mb-5">
                     {(['pending_review', 'approved', 'live', 'completed'] as const).map((s) => {
-                      const statuses = ['draft', 'pending_review', 'admin_review', 'approved', 'scheduled', 'live', 'completed'];
+                      const statuses = [
+                        'draft',
+                        'pending_review', 'pending_google_ads_manual_review', 'google_ads_verification_pending',
+                        'google_ads_verified', 'google_ads_verification_failed',
+                        'campaign_preparation_requested', 'admin_review', 'awaiting_user_approval',
+                        'approved',
+                        'campaign_prepared', 'prepared', 'scheduled',
+                        'live', 'monitoring',
+                        'completed', 'report_ready',
+                      ];
+                      const milestones: Record<string, string[]> = {
+                        pending_review: ['pending_review', 'pending_google_ads_manual_review', 'google_ads_verification_pending', 'google_ads_verified', 'campaign_preparation_requested', 'admin_review', 'awaiting_user_approval'],
+                        approved: ['approved'],
+                        live: ['campaign_prepared', 'prepared', 'scheduled', 'live', 'monitoring'],
+                        completed: ['completed', 'report_ready'],
+                      };
                       const currentIdx = statuses.indexOf(adoption.adoptionStatus);
-                      const stepIdx = statuses.indexOf(s);
-                      const reached = currentIdx >= stepIdx;
+                      const milestoneStatuses = milestones[s] || [s];
+                      const reached = milestoneStatuses.some(
+                        (ms) => statuses.indexOf(ms) <= currentIdx && currentIdx >= 0
+                      );
                       return (
                         <div
                           key={s}

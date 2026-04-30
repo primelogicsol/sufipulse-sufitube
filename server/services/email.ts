@@ -210,6 +210,30 @@ const templates = {
         <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
       </div>`,
   }),
+
+  adoptionApproved: (name: string, songTitle: string, refId: string) => ({
+    subject: `Your sponsorship for "${songTitle}" has been approved`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#15803d">SufiPulse — Sponsorship Approved</h2>
+        <p>Assalamu Alaikum ${name},</p>
+        <p>Your sponsorship for <strong>"${songTitle}"</strong> has been approved. We are now preparing your campaign for launch.</p>
+        <p><a href="${config.app.url}/adopt-song/request/${refId}" style="color:#d97706">Track Your Campaign →</a></p>
+        <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
+      </div>`,
+  }),
+
+  adoptionScheduled: (name: string, songTitle: string, refId: string) => ({
+    subject: `Your campaign for "${songTitle}" has been scheduled`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#1d4ed8">SufiPulse — Campaign Scheduled</h2>
+        <p>Assalamu Alaikum ${name},</p>
+        <p>Your campaign for <strong>"${songTitle}"</strong> is scheduled and will go live shortly. We will notify you as soon as it launches.</p>
+        <p><a href="${config.app.url}/adopt-song/request/${refId}" style="color:#d97706">View Campaign →</a></p>
+        <p style="color:#666;font-size:12px">Reference: ${refId.slice(-12)}</p>
+      </div>`,
+  }),
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -246,6 +270,10 @@ export async function sendAdoptionStatusEmail(
     tmpl = templates.adoptionPaymentReceived(name, songTitle, extra?.amount || 0, refId);
   } else if (status === 'submitted' || status === 'pending_review') {
     tmpl = templates.adoptionSubmitted(name, songTitle, refId);
+  } else if (status === 'approved') {
+    tmpl = templates.adoptionApproved(name, songTitle, refId);
+  } else if (status === 'scheduled') {
+    tmpl = templates.adoptionScheduled(name, songTitle, refId);
   } else if (status === 'live') {
     tmpl = templates.adoptionLive(name, songTitle, refId);
   } else if (status === 'completed') {

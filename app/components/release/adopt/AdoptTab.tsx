@@ -290,7 +290,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         setVerifiedAt(new Date().toISOString());
         setVerifyError(null);
         setVerifyReasonCode(data.reasonCode || 'VERIFIED_DIRECT');
-        fetch(`/api/adoptions/${adoption.id}`, {
+        await fetch(`/api/adoptions/${adoption.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -313,7 +313,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           accounts: data.accounts,
           httpStatus: res.status,
         });
-        fetch(`/api/adoptions/${adoption.id}`, {
+        await fetch(`/api/adoptions/${adoption.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -349,6 +349,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
         : enteredCustomerId;
       const email = googleEmail || enteredEmail;
 
+      // Persist CID so it survives page reloads (same as OAuth path)
+      if (formatted) localStorage.setItem('sp_gads_cid', formatted);
+      if (email)     localStorage.setItem('sp_gads_email', email);
+
       const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -362,7 +366,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       });
       if (!patchRes.ok) throw new Error('Failed to save adoption');
 
-      await fetch('/api/google-ads/campaign-requests', {
+      const crRes = await fetch('/api/google-ads/campaign-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -386,6 +390,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
           reviewReason: 'google_ads_auto_verification_failed',
         }),
       });
+      if (!crRes.ok) {
+        const errData = await crRes.json().catch(() => ({}));
+        throw new Error((errData as any).error || `Failed to submit review request (${crRes.status})`);
+      }
 
       setIsManualReview(true);
       setSelectedGoogleCustomerId(formatted);
@@ -926,7 +934,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ paymentStatus: 'paid', adoptionStatus: 'admin_review' }),
+        body: JSON.stringify({ paymentStatus: 'paid', adoptionStatus: 'campaign_preparation_requested' }),
       });
       setStep(5);
       return;

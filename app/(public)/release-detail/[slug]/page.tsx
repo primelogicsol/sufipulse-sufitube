@@ -627,10 +627,15 @@ function Release() {
     }, [videoLoaded]);
 
     // Auto-switch to Adopt tab when returning from login (?adopt=1) or Google OAuth (?adoption_oauth=success)
+    const tabsRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('adopt') === '1' || params.get('adoption_oauth') === 'success') {
             setActiveTab('adopt');
+            // Scroll tabs into view on mobile so adopt content is visible
+            setTimeout(() => {
+                tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
         }
     }, []);
 
@@ -2053,7 +2058,7 @@ function Release() {
                         <ReleaseAlertSubscribe releaseId={release?.id} />
 
                         {/* Tabs & Action Buttons */}
-                        <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-4 mb-8 border-b border-neutral-800">
+                        <div ref={tabsRef} className="flex flex-col lg:flex-row justify-between lg:items-end gap-4 mb-8 border-b border-neutral-800">
                             <div className="flex justify-between w-full lg:w-auto gap-0.5 sm:gap-2 pb-0">
                                 {release.enable_credits !== false && (
                                     <button

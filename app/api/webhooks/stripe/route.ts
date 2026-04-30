@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { applyWebhookEventIfNew } from '@/app/lib/server/adoption-payment-store';
 import { getAdoptionRecord, updateAdoptionRecord } from '@/app/lib/server/adoption-store';
+import { canAdvanceTo } from '@/app/lib/server/adoption-status';
 import { sendAdoptionStatusEmail } from '@/server/services/email';
 
 const getStripeClient = () => {
@@ -16,20 +17,6 @@ const getStripeClient = () => {
 
 // Stripe requires the raw body to verify signatures — disable Next.js body parsing
 export const config = { api: { bodyParser: false } };
-
-// Status ranks — a webhook must never move an adoption backward.
-const STATUS_RANK: Record<string, number> = {
-  draft: 0, pending_review: 1,
-  campaign_preparation_requested: 2, admin_review: 2,
-  approved: 3, campaign_prepared: 4, awaiting_user_approval: 4,
-  scheduled: 5, live: 6, monitoring: 7, completed: 8, report_ready: 9,
-};
-
-function canAdvanceTo(currentStatus: string, targetStatus: string): boolean {
-  const current = STATUS_RANK[currentStatus] ?? -1;
-  const target = STATUS_RANK[targetStatus] ?? -1;
-  return target > current;
-}
 
 export async function POST(request: NextRequest) {
   const stripe = getStripeClient();
@@ -144,6 +131,35 @@ export async function POST(request: NextRequest) {
         });
       } catch (err) {
         console.error('Failed to persist adoption payment failure:', err);
+      }
+    }
+  }
+
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge;
+    // Try to find adoptionId from payment intent metadata via session metadata
+    const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : null;
+    if (paymentIntentId) {
+      try {
+        await stripe.paymentIntents.retrieve(paymentIntentId);
+        const sessionsList = await stripe.checkout.sessions.list({ payment_intent: paymentIntentId, limit: 1 });
+        const session = sessionsList.data[0];
+        const adoptionId = session?.metadata?.adoption_id || null;
+        if (adoptionId) {
+          await applyWebhookEventIfNew({
+            eventId: event.id,
+            adoptionId,
+            paymentStatus: 'failed',
+            adoptionStatus: 'pending_review',
+            eventType: event.type,
+          });
+          const current = getAdoptionRecord(adoptionId);
+          if (current) {
+            updateAdoptionRecord(adoptionId, { paymentStatus: 'failed' });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to handle charge.refunded:', err);
       }
     }
   }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getAdoptionPaymentRecord, upsertAdoptionPaymentRecord } from '@/app/lib/server/adoption-payment-store';
 import { getAdoptionRecord, updateAdoptionRecord } from '@/app/lib/server/adoption-store';
+import { canAdvanceTo } from '@/app/lib/server/adoption-status';
 import { requireAuth } from '@/server/middleware/authenticate';
 import { sendAdoptionStatusEmail } from '@/server/services/email';
 
@@ -19,8 +20,8 @@ export async function POST(
 
   const { id } = await params;
 
-  const existing = await getAdoptionPaymentRecord(id);
-  if (existing?.userId && existing.userId !== authResult.id) {
+  const existingPayment = await getAdoptionPaymentRecord(id);
+  if (existingPayment?.userId && existingPayment.userId !== authResult.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -34,6 +35,12 @@ export async function POST(
     const sessionId = String(body?.session_id || '').trim();
     if (!sessionId) {
       return NextResponse.json({ verified: false, reason: 'missing_session_id' }, { status: 400 });
+    }
+
+    // Path B (use_my_google_ads) does not use Stripe — reject URL manipulation
+    const adoptionSnapshot = getAdoptionRecord(id);
+    if (adoptionSnapshot?.methodType === 'use_my_google_ads') {
+      return NextResponse.json({ verified: false, reason: 'payment_not_applicable' }, { status: 400 });
     }
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -57,6 +64,11 @@ export async function POST(
       return NextResponse.json({ verified: false, reason: 'payment_not_completed', payment_record: failed });
     }
 
+    // Idempotency — if this session was already confirmed paid, skip re-processing
+    if (existingPayment?.stripeSessionId === session.id && existingPayment?.paymentStatus === 'paid') {
+      return NextResponse.json({ verified: true, idempotent: true, adoption: getAdoptionRecord(id) });
+    }
+
     // Payment confirmed — update both stores
     const targetStatus = 'campaign_preparation_requested';
     const paidRecord = await upsertAdoptionPaymentRecord(id, {
@@ -68,17 +80,9 @@ export async function POST(
       lastEventType: 'checkout.session.verified',
     });
 
-    const adoption = getAdoptionRecord(id);
     // Only advance status if not already at a higher stage (webhook may have fired first)
-    const STATUS_RANK: Record<string, number> = {
-      draft: 0, pending_review: 1,
-      campaign_preparation_requested: 2, admin_review: 2,
-      approved: 3, campaign_prepared: 4, awaiting_user_approval: 4,
-      scheduled: 5, live: 6, monitoring: 7, completed: 8, report_ready: 9,
-    };
-    const currentRank = STATUS_RANK[adoption?.adoptionStatus ?? ''] ?? -1;
-    const targetRank = STATUS_RANK[targetStatus];
-    const shouldAdvance = targetRank > currentRank;
+    const currentAdoption = getAdoptionRecord(id);
+    const shouldAdvance = currentAdoption ? canAdvanceTo(currentAdoption.adoptionStatus, targetStatus) : true;
 
     updateAdoptionRecord(id, {
       paymentStatus: 'paid',
@@ -88,12 +92,12 @@ export async function POST(
       ...(shouldAdvance ? { adoptionStatus: targetStatus } : {}),
     });
 
-    if (shouldAdvance && adoption?.sponsorEmail) {
+    if (shouldAdvance && currentAdoption?.sponsorEmail) {
       sendAdoptionStatusEmail(
-        adoption.sponsorEmail,
-        adoption.sponsorName || 'Sponsor',
+        currentAdoption.sponsorEmail,
+        currentAdoption.sponsorName || 'Sponsor',
         targetStatus,
-        adoption.releaseTitle || 'your song',
+        currentAdoption.releaseTitle || 'your song',
         id,
         { amount: amountPaid }
       ).catch(() => {});

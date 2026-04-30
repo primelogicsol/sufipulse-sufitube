@@ -39,7 +39,14 @@ export async function GET(request: NextRequest) {
   const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
 
   const fallbackRedirect = (status: string, reason?: string) => {
-    const base = returnSlug ? `${appUrl}/release-detail/${returnSlug}` : `${appUrl}/`;
+    let base: string;
+    if (returnSlug) {
+      base = `${appUrl}/release-detail/${returnSlug}`;
+    } else if (adoptionId) {
+      base = `${appUrl}/adopt-song/request/${adoptionId}`;
+    } else {
+      base = `${appUrl}/`;
+    }
     const url = new URL(base);
     if (status === 'success') {
       // New canonical success URL — opens Adopt tab and triggers state restoration

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { upsertGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
-import { requireAuth } from '@/server/middleware/authenticate';
+import { getAdoptionRecord } from '@/app/lib/server/adoption-store';
+import { getAuthUser } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/campaign-draft
@@ -9,10 +10,11 @@ import { requireAuth } from '@/server/middleware/authenticate';
  * Use this to persist user intent before the campaign is authorized and submitted.
  *
  * Body: { adoptionId, releaseId, userId, youtubeVideoId, budgetAmount, selectedCustomerId, campaignObjective }
+ *
+ * Auth: optional — adoption UUID serves as the access token for anonymous drafts.
  */
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
+  const user = await getAuthUser(request);
 
   const body = await request.json();
   const {
@@ -36,6 +38,20 @@ export async function POST(request: NextRequest) {
       { error: 'adoptionId and selectedCustomerId are required.' },
       { status: 400 }
     );
+  }
+
+  // Verify caller owns this adoption (authenticated user or anonymous draft)
+  const adoption = getAdoptionRecord(adoptionId);
+  if (!adoption) {
+    return NextResponse.json({ error: 'Adoption not found.' }, { status: 404 });
+  }
+  if (user) {
+    if (adoption.userId && adoption.userId !== user.id && user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden.' }, { status: 403 });
+    }
+  } else if (adoption.userId != null) {
+    // Adoption belongs to a registered user but caller is unauthenticated
+    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
   const record = await upsertGoogleAdsCampaign({

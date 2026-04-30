@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, renameSync, mkdirSync, existsSync } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
@@ -77,7 +77,7 @@ export interface AdoptionRecord {
   // Google Ads
   oauthStatus: OAuthStatus;
   googleAdsCustomerId?: string | null;
-  googleAdsVerificationStatus?: string | null;
+  googleAdsVerificationStatus?: 'verified' | 'failed' | 'manual_review_required' | null;
   campaignStatus: CampaignStatus;
   campaignResourceName?: string | null;
 
@@ -108,7 +108,9 @@ function readStore(): Store {
 
 function writeStore(store: Store): void {
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-  writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf-8');
+  const tmp = `${STORE_PATH}.tmp`;
+  writeFileSync(tmp, JSON.stringify(store, null, 2), 'utf-8');
+  renameSync(tmp, STORE_PATH);
 }
 
 function deriveOwnership(methodType: MethodType): {
