@@ -29,7 +29,7 @@ import { requireAuth } from '@/server/middleware/authenticate';
  *   live          → create campaign in ENABLED state immediately
  */
 
-const ADS_API_VERSION = 'v17';
+const ADS_API_VERSION = 'v22';
 const CREATE_MODE = (process.env.GOOGLE_ADS_CREATE_MODE || 'manual_review') as
   | 'draft'
   | 'manual_review'

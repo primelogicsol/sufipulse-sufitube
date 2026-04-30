@@ -8,7 +8,7 @@ import {
 import { getAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 import { getGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
 
-const ADS_API_VERSION = 'v17';
+const ADS_API_VERSION = 'v22';
 
 /**
  * GET /api/google-ads/status?adoptionId=...&recheck=1

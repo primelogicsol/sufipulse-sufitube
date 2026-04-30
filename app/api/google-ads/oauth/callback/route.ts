@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     let accessibleCustomerIds: string[] = [];
     try {
       const accessibleRes = await fetch(
-        'https://googleads.googleapis.com/v17/customers:listAccessibleCustomers',
+        'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
           headers: {
             Authorization: `Bearer ${tokens.access_token}`,

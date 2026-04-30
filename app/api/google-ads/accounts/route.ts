@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   if (refresh && record.accessToken && process.env.GOOGLE_ADS_DEVELOPER_TOKEN) {
     try {
       const res = await fetch(
-        'https://googleads.googleapis.com/v17/customers:listAccessibleCustomers',
+        'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
         {
           headers: {
             Authorization: `Bearer ${record.accessToken}`,
