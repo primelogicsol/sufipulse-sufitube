@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
       sponsorCity?: string;
       adopterType?: string;
       campaignIntention?: string;
-      dedicatedMessage?: string;
       dedicationMessage?: string;
       campaignObjective?: string;
       targetRegions?: string[];

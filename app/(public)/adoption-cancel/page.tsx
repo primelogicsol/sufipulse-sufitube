@@ -23,11 +23,20 @@ function AdoptionCancelContent() {
             Adoption reference: <span className="font-mono text-neutral-300">{adoptionId}</span>
           </p>
         )}
-        <Link href="/">
-          <button className="px-8 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium rounded-xl transition-colors">
-            Return Home
-          </button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {adoptionId && (
+            <Link href={`/adopt-song/request/${adoptionId}`}>
+              <button className="px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl transition-colors w-full sm:w-auto">
+                Return to My Sponsorship
+              </button>
+            </Link>
+          )}
+          <Link href="/">
+            <button className="px-8 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-medium rounded-xl transition-colors w-full sm:w-auto">
+              Return Home
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

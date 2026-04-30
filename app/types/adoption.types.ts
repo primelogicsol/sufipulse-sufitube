@@ -3,7 +3,15 @@ export interface SongAdoption {
   release_id: string;
   user_id?: string;
   method_type: 'managed_sufitube' | 'use_my_google_ads';
-  adoption_status: 'draft' | 'pending_review' | 'approved' | 'scheduled' | 'live' | 'completed' | 'cancelled';
+  adoption_status:
+    | 'draft' | 'submitted' | 'pending_review'
+    | 'pending_google_ads_manual_review' | 'google_ads_verification_pending'
+    | 'google_ads_verified' | 'google_ads_verification_failed'
+    | 'campaign_preparation_requested' | 'admin_review'
+    | 'approved' | 'campaign_prepared' | 'awaiting_user_approval'
+    | 'under_review' | 'prepared' | 'scheduled'
+    | 'live' | 'monitoring' | 'completed' | 'report_ready'
+    | 'cancelled' | 'failed';
   google_ads_campaign_resource?: string;
   payment_route?: 'google_direct' | 'stripe_sufipulse';
   package_id?: string;

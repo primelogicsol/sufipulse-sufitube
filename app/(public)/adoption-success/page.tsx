@@ -16,16 +16,22 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft:            'Draft',
-  pending_review:   'Pending Review',
-  admin_review:     'Pending Admin Review',
-  approved:         'Approved',
-  scheduled:        'Scheduled',
-  live:             'Live',
-  monitoring:       'Monitoring',
-  completed:        'Completed',
-  report_ready:     'Report Ready',
-  cancelled:        'Cancelled',
+  draft:                            'Draft',
+  pending_review:                   'Pending Review',
+  admin_review:                     'Pending Admin Review',
+  campaign_preparation_requested:   'Campaign Preparing',
+  campaign_prepared:                'Campaign Prepared',
+  awaiting_user_approval:           'Awaiting Your Approval',
+  google_ads_verified:              'Google Ads Verified',
+  google_ads_verification_failed:   'Verification Failed',
+  pending_google_ads_manual_review: 'Manual Review',
+  approved:                         'Approved',
+  scheduled:                        'Scheduled',
+  live:                             'Live',
+  monitoring:                       'Monitoring',
+  completed:                        'Completed',
+  report_ready:                     'Report Ready',
+  cancelled:                        'Cancelled',
 };
 
 const PAYMENT_COLOR: Record<string, string> = {

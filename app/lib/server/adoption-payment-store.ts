@@ -1,11 +1,13 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
+import type { AdoptionStatus } from './adoption-store';
+
 type AdoptionPaymentRecord = {
   adoptionId: string;
   userId?: string;
   paymentStatus: 'unpaid' | 'pending' | 'paid' | 'failed';
-  adoptionStatus: string;
+  adoptionStatus: AdoptionStatus | string; // string fallback for legacy records
   amountPaid: number;
   stripeSessionId?: string;
   lastEventType?: string;
