@@ -434,6 +434,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                 }
                 setSubmitSuccess({ type: 'new', term: config.term });
                 setTimeout(() => setSubmitSuccess(null), 6000);
+                setDraftForm(config.draftDefaults);
             }
             setActiveTab("my-content");
             loadData();  // reloads and re-prefills form
@@ -489,9 +490,15 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         const s = statusText?.toLowerCase();
         if (s === 'approved' || s === 'published') return 'text-green-400 bg-green-400/10';
         if (s === 'rejected' || s === 'declined') return 'text-red-400 bg-red-400/10';
-        if (s === 'under review' || s === 'under_review') return 'text-blue-400 bg-blue-400/10';
+        if (s === 'under review' || s === 'under_review' || s === 'submitted') return 'text-blue-400 bg-blue-400/10';
         if (s === 'revision_requested' || s === 'revision requested') return 'text-yellow-400 bg-yellow-400/10';
         return 'text-neutral-400 bg-neutral-400/10';
+    };
+
+    const getStatusLabel = (statusText: string) => {
+        const s = statusText?.toLowerCase();
+        if (s === 'submitted' || s === 'under_review' || s === 'under review') return 'Under Review';
+        return statusText.replace(/_/g, ' ');
     };
 
     const stats = {
@@ -1028,12 +1035,17 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                         <p className="text-xs font-semibold text-yellow-400">Revision requested by admin</p>
                                                     </div>
                                                 )}
-                                                <div className="flex justify-between items-center mb-4">
+                                                <div className="flex justify-between items-center mb-2">
                                                     <h3 className="text-lg font-bold text-[var(--dash-text-primary)] line-clamp-2 leading-tight flex-1 pr-4">{item.title}</h3>
                                                     <span className={`px-2.5 py-1 text-xs capitalize font-semibold rounded-full border border-current whitespace-nowrap ${getStatusColor(item.status)}`}>
-                                                        {item.status.replace("_", " ")}
+                                                        {getStatusLabel(item.status)}
                                                     </span>
                                                 </div>
+                                                {(item.status === 'submitted' || item.status === 'under_review' || item.status === 'under review') && (
+                                                    <p className="text-xs text-blue-400/80 mb-3">
+                                                        Your submission is under review. You'll be notified once it's approved or if revisions are needed.
+                                                    </p>
+                                                )}
                                                 <div className="space-y-1.5 mb-6 text-sm flex-1">
                                                     {Object.entries({
                                                         Language: item.language,
@@ -1486,7 +1498,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                         <h2 className="text-xl font-bold text-[var(--dash-text-primary)]">
                                             {selectedItem.status === 'revision requested' || selectedItem.status === 'revision_requested' ? 'Revision Request' : 'Item Review'}
                                         </h2>
-                                        <span className={`text-xs font-semibold capitalize px-2 py-0.5 rounded-full border border-current ${getStatusColor(selectedItem.status)}`}>{selectedItem.status.replace('_', ' ')}</span>
+                                        <span className={`text-xs font-semibold capitalize px-2 py-0.5 rounded-full border border-current ${getStatusColor(selectedItem.status)}`}>{getStatusLabel(selectedItem.status)}</span>
                                     </div>
                                     <button onClick={() => { setContentModal(false); setSelectedItem(null); }} className="cursor-pointer text-[var(--dash-text-muted)] hover:text-white transition-colors">
                                         <XCircle className="w-6 h-6" />
