@@ -75,6 +75,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [isSubmittingManualReview, setIsSubmittingManualReview] = useState(false);
   const [verifyReasonCode, setVerifyReasonCode] = useState<string | null>(null);
   const [verifyErrorDetail, setVerifyErrorDetail] = useState<any>(null);
+  const [showManualFallback, setShowManualFallback] = useState(false);
+  const [isDraftingCampaign, setIsDraftingCampaign] = useState(false);
 
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
@@ -258,10 +260,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
     })();
   }, [adoption?.id, selectedMethod]);
 
-  // Explicit verification — called when user clicks "Verify Google Ads Account"
-  const verifyManualEntry = async (rawCustomerId: string) => {
+  // Explicit verification — returns true if verified, false otherwise
+  const verifyManualEntry = async (rawCustomerId: string): Promise<boolean> => {
     const normalized = rawCustomerId.replace(/-/g, '');
-    if (!normalized || !adoption?.id) return;
+    if (!normalized || !adoption?.id) return false;
     const formatted = normalized.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
     setVerifiedCustomerId(null);
     setVerifyError(null);
@@ -297,6 +299,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
             adoptionStatus: 'google_ads_verified',
           }),
         }).catch(() => {});
+        return true;
       } else {
         const reasonCode = data.reasonCode ||
           (res.status === 401 ? 'OAUTH_TOKEN_EXPIRED' : res.ok ? 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE' : 'GOOGLE_ADS_API_CALL_FAILED');
@@ -319,11 +322,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
             adoptionStatus: 'google_ads_verification_failed',
           }),
         }).catch(() => {});
+        return false;
       }
     } catch {
       setVerifyError('error');
       setVerifyReasonCode('GOOGLE_ADS_API_CALL_FAILED');
       setVerifyErrorDetail({ error: 'Network error — unable to reach verification service.' });
+      return false;
     } finally {
       setIsVerifying(false);
     }
@@ -419,6 +424,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setIsRecheckingAccounts(false); setVerifiedAt(null); setGoogleEmail(null); setJustDetected(false);
     setEnteredEmail(''); setEnteredCustomerId('');
     setIsManualReview(false); setIsSubmittingManualReview(false);
+    setShowManualFallback(false); setIsDraftingCampaign(false);
     setFormData({
       public_display_mode: 'full_name', public_location_mode: 'city_country',
       agree_to_terms: false, agree_to_promotional_use: false, billing_enabled: false,
@@ -445,9 +451,75 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setSubmitError('');
     setEnteredEmail('');
     setEnteredCustomerId('');
+    setShowManualFallback(false);
+    setIsDraftingCampaign(false);
     // Keep formData (full_name, email, country, city, budget etc.) intact
     // Take user to the sponsor info form — already filled, they just need to continue
     setStep(3);
+  };
+
+  const startOAuth = async () => {
+    if (!adoption?.id) return;
+    setIsConnectingOAuth(true);
+    setSubmitError('');
+    if (enteredCustomerId) localStorage.setItem('sp_gads_cid', enteredCustomerId);
+    if (enteredEmail)      localStorage.setItem('sp_gads_email', enteredEmail);
+    try {
+      const res = await fetch('/api/google-ads/oauth/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adoptionId: adoption.id, userId: user?.id, returnSlug: release?.slug || '' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authUrl) throw new Error(data.error || 'Could not start Google connection');
+      window.location.href = data.authUrl;
+    } catch (err: any) {
+      setSubmitError(err.message || 'Could not start Google connection. Please try again.');
+      setIsConnectingOAuth(false);
+    }
+  };
+
+  const createCampaignDraft = async (cidOverride?: string) => {
+    if (!adoption?.id) return;
+    const cid = cidOverride || verifiedCustomerId || enteredCustomerId;
+    if (!cid) return;
+    setIsDraftingCampaign(true);
+    try {
+      await fetch('/api/google-ads/campaign-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          adoptionId: adoption.id,
+          releaseId: release.id,
+          userId: user?.id || '',
+          youtubeVideoId: release?.youtube_video_id || release?.youtubeId || '',
+          budgetAmount: formData.custom_budget || adoption.amountDue || 0,
+          selectedCustomerId: cid,
+        }),
+      });
+      await fetch(`/api/adoptions/${adoption.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          adoptionStatus: 'awaiting_user_approval',
+          oauthStatus: oauthConnected ? 'connected' : 'not_connected',
+        }),
+      }).catch(() => {});
+    } catch {
+      // Non-fatal — proceed to review anyway
+    } finally {
+      setIsDraftingCampaign(false);
+    }
+  };
+
+  const handleVerifyAndContinue = async (cidToVerify: string) => {
+    const success = await verifyManualEntry(cidToVerify);
+    if (success) {
+      await createCampaignDraft(cidToVerify.replace(/-/g, '').replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'));
+      setStep(5);
+    }
   };
 
   const recheckGoogleAdsAccounts = async () => {
@@ -1287,77 +1359,282 @@ export function AdoptTab({ release }: AdoptTabProps) {
     );
   };
 
-  // ── Step 4 for use_my_google_ads: Enter Google Ads details (no OAuth required) ──
+  // ── Step 4 for use_my_google_ads: Connect Google Ads ─────────────────────
   const renderGoogleConnect = () => {
     if (!adoption) return null;
 
     const cidNormalized = enteredCustomerId.replace(/-/g, '');
     const cidValid = /^\d{10}$/.test(cidNormalized);
+    const serverConfigured = googleAdsEnabled !== false;
 
-    // OAuth start — kept for future use but not shown in primary UI
-    const startOAuth = async () => {
-      setIsConnectingOAuth(true);
-      setSubmitError('');
-      if (enteredCustomerId) localStorage.setItem('sp_gads_cid', enteredCustomerId);
-      if (enteredEmail)      localStorage.setItem('sp_gads_email', enteredEmail);
-      try {
-        const res = await fetch('/api/google-ads/oauth/start', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adoptionId: adoption.id, userId: user?.id, returnSlug: release?.slug || '' }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.authUrl) throw new Error(data.error || 'Could not start Google connection');
-        window.location.href = data.authUrl;
-      } catch (err: any) {
-        setSubmitError(err.message || 'Could not start Google connection. Please try again.');
-        setIsConnectingOAuth(false);
-      }
-    };
+    // ── Phase 4: Verified — ready to continue ─────────────────────────────────
+    if (verifiedCustomerId) {
+      return (
+        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+          <div className="text-center">
+            <h3 className="text-2xl font-medium text-neutral-100 mb-2">Google Ads Account Verified</h3>
+            <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
+              Account confirmed. SufiPulse will prepare the campaign structure inside your account.
+            </p>
+          </div>
 
-    // ── Simple direct entry form — no OAuth required ─────────────────────────
+          <div className="bg-green-900/20 border border-green-700/40 rounded-xl px-5 py-4 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
+                <Check className="w-4 h-4 text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-green-300">Account Verified</p>
+                <p className="text-xs text-green-500 font-mono">{verifiedCustomerId}</p>
+              </div>
+            </div>
+            {googleEmail && (
+              <p className="text-xs text-neutral-500 pl-11">Google account: {googleEmail}</p>
+            )}
+          </div>
+
+          {submitError && (
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
+              {submitError}
+            </div>
+          )}
+
+          <button
+            type="button"
+            disabled={isDraftingCampaign}
+            onClick={async () => {
+              await createCampaignDraft(verifiedCustomerId);
+              setStep(5);
+            }}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            {isDraftingCampaign
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparing campaign draft…</>
+              : <>Continue to Review <ArrowRight className="w-5 h-5" /></>}
+          </button>
+
+          <button
+            type="button"
+            onClick={switchToManaged}
+            className="w-full py-3 border border-neutral-800 hover:border-amber-500/40 text-neutral-500 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
+          >
+            Switch to Managed by SufiTube Instead
+          </button>
+        </div>
+      );
+    }
+
+    // ── Phase 3: OAuth connected — pick / verify account ─────────────────────
+    if (oauthConnected && oauthChecked) {
+      const accountsToShow = accessibleCustomerIds.length > 0 ? accessibleCustomerIds : [];
+      const targetCid = enteredCustomerId || (accountsToShow.length > 0 ? accountsToShow[0] : '');
+      const targetNorm = targetCid.replace(/-/g, '');
+      const targetValid = /^\d{10}$/.test(targetNorm);
+
+      return (
+        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+          <div className="text-center">
+            <h3 className="text-2xl font-medium text-neutral-100 mb-2">Select Your Google Ads Account</h3>
+            <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
+              Google sign-in successful. Select or confirm your Google Ads Customer ID to verify access.
+            </p>
+          </div>
+
+          {/* Connected email badge */}
+          {googleEmail && (
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl">
+              <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+              <span className="text-sm text-neutral-300">Signed in as <span className="text-white font-medium">{googleEmail}</span></span>
+            </div>
+          )}
+
+          {accountsToShow.length > 0 ? (
+            <div>
+              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+                Google Ads Account <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={enteredCustomerId || accountsToShow[0]}
+                onChange={e => setEnteredCustomerId(e.target.value)}
+                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono outline-none transition-colors"
+              >
+                {accountsToShow.map(cid => (
+                  <option key={cid} value={cid}>{cid}</option>
+                ))}
+              </select>
+              <p className="text-xs text-neutral-600 mt-1.5">{accountsToShow.length} account{accountsToShow.length > 1 ? 's' : ''} found on this Google account.</p>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+                Google Ads Customer ID <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={enteredCustomerId}
+                onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
+                placeholder="xxx-xxx-xxxx"
+                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
+              />
+              <p className="text-xs text-neutral-600 mt-1.5">No accounts detected automatically. Enter your Customer ID manually (found in the top-right of your Google Ads dashboard).</p>
+            </div>
+          )}
+
+          {verifyError && (
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3">
+              <p className="font-medium mb-1">Verification failed</p>
+              <p className="text-xs text-red-300/80">
+                {verifyReasonCode === 'OAUTH_TOKEN_EXPIRED' && 'Your Google session expired. Please reconnect.'}
+                {verifyReasonCode === 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE' && 'This account ID was not found under your Google account. Check you entered the correct Customer ID.'}
+                {verifyReasonCode === 'GOOGLE_ADS_API_CALL_FAILED' && 'Could not reach the Google Ads API. Please try again.'}
+                {!['OAUTH_TOKEN_EXPIRED', 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE', 'GOOGLE_ADS_API_CALL_FAILED'].includes(verifyReasonCode || '') && (verifyErrorDetail?.error || 'Verification failed. Please try a different account or submit manually.')}
+              </p>
+            </div>
+          )}
+
+          {submitError && (
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
+              {submitError}
+            </div>
+          )}
+
+          <button
+            type="button"
+            disabled={isVerifying || !targetValid}
+            onClick={() => handleVerifyAndContinue(enteredCustomerId || (accountsToShow[0] ?? ''))}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            {isVerifying
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying account…</>
+              : <><Check className="w-5 h-5" /> Verify & Continue</>}
+          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => { setOauthConnected(false); setOauthChecked(false); setVerifyError(null); }}
+              className="flex-1 py-3 border border-neutral-800 hover:border-neutral-600 text-neutral-500 hover:text-neutral-300 text-sm font-medium rounded-xl transition-colors"
+            >
+              Reconnect Google Account
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowManualFallback(true); setVerifyError(null); }}
+              className="flex-1 py-3 border border-neutral-800 hover:border-neutral-600 text-neutral-500 hover:text-neutral-300 text-sm font-medium rounded-xl transition-colors"
+            >
+              Submit Manually Instead
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Phase 2: Manual fallback entry ────────────────────────────────────────
+    if (showManualFallback || !serverConfigured) {
+      return (
+        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+          <div className="text-center">
+            <h3 className="text-2xl font-medium text-neutral-100 mb-2">Enter Google Ads Details</h3>
+            <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
+              SufiPulse will verify your account and set up your campaign within 24 hours.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+                Google account email <span className="text-neutral-600">(optional)</span>
+              </label>
+              <input
+                type="email"
+                value={enteredEmail}
+                onChange={e => setEnteredEmail(e.target.value)}
+                placeholder="you@gmail.com"
+                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-700 outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+                Google Ads Customer ID <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={enteredCustomerId}
+                onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
+                placeholder="xxx-xxx-xxxx"
+                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
+              />
+              <p className="text-xs text-neutral-600 mt-1.5">Found in the top-right corner of your Google Ads dashboard.</p>
+            </div>
+          </div>
+
+          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-500 leading-relaxed">
+            By submitting, you authorise SufiPulse to prepare a campaign structure inside your Google Ads account. You remain the account owner and pay Google directly.
+          </div>
+
+          {submitError && (
+            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
+              {submitError}
+            </div>
+          )}
+
+          <button
+            type="button"
+            disabled={isSubmittingManualReview || !cidValid}
+            onClick={handleManualReview}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            {isSubmittingManualReview
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+              : <><Check className="w-5 h-5" /> Submit for Review</>}
+          </button>
+
+          {serverConfigured && (
+            <button
+              type="button"
+              onClick={() => setShowManualFallback(false)}
+              className="w-full py-3 border border-neutral-800 hover:border-blue-500/40 text-neutral-500 hover:text-blue-400 text-sm font-medium rounded-xl transition-colors"
+            >
+              ← Sign in with Google instead
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={switchToManaged}
+            className="w-full py-3 border border-neutral-800 hover:border-amber-500/40 text-neutral-500 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
+          >
+            Switch to Managed by SufiTube Instead
+          </button>
+        </div>
+      );
+    }
+
+    // ── Phase 1 (default): Connect via OAuth ─────────────────────────────────
     return (
       <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
         <div className="text-center">
           <h3 className="text-2xl font-medium text-neutral-100 mb-2">Connect Your Google Ads Account</h3>
           <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
-            Enter your Google Ads details below. SufiPulse will review and set up your campaign within 24 hours.
+            Sign in with your Google account to link your Google Ads account. SufiPulse will verify access and prepare your campaign.
           </p>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-              Google account email <span className="text-neutral-600">(optional)</span>
-            </label>
-            <input
-              type="email"
-              value={enteredEmail}
-              onChange={e => setEnteredEmail(e.target.value)}
-              placeholder="you@gmail.com"
-              className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-700 outline-none transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-              Google Ads Customer ID <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={enteredCustomerId}
-              onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
-              placeholder="xxx-xxx-xxxx"
-              className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
-            />
-            <p className="text-xs text-neutral-600 mt-1.5">
-              Found in the top-right corner of your Google Ads account dashboard.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-500 leading-relaxed">
-          By submitting, you authorise SufiPulse to prepare a campaign structure inside your Google Ads account. You remain the account owner and pay Google directly. No charges are made through SufiPulse.
+        {/* Step tracker */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-5 py-4 space-y-2.5">
+          {[
+            { label: 'Sponsor info collected', done: true },
+            { label: 'Connect Google account', done: false, active: true },
+            { label: 'Verify Google Ads access', done: false },
+            { label: 'Campaign draft prepared', done: false },
+          ].map(({ label, done, active }) => (
+            <div key={label} className="flex items-center gap-3">
+              <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500/20 border border-green-500/40' : active ? 'bg-blue-500/20 border border-blue-500/40 animate-pulse' : 'bg-neutral-800 border border-neutral-700'}`}>
+                {done ? <Check className="w-3 h-3 text-green-400" /> : active ? <div className="w-2 h-2 rounded-full bg-blue-400" /> : <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />}
+              </div>
+              <span className={`text-sm ${done ? 'text-neutral-300' : active ? 'text-blue-300' : 'text-neutral-600'}`}>{label}</span>
+            </div>
+          ))}
         </div>
 
         {submitError && (
@@ -1368,13 +1645,36 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
         <button
           type="button"
-          disabled={isSubmittingManualReview || !cidValid}
-          onClick={handleManualReview}
-          className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          disabled={isConnectingOAuth}
+          onClick={startOAuth}
+          className="w-full py-4 bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-900 font-semibold rounded-xl transition-colors flex items-center justify-center gap-3"
         >
-          {isSubmittingManualReview
-            ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-            : <><Check className="w-5 h-5" /> Submit Campaign Request</>}
+          {isConnectingOAuth ? (
+            <><Loader2 className="w-5 h-5 animate-spin text-neutral-600" /> Connecting…</>
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>
+              Sign in with Google
+            </>
+          )}
+        </button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-800" /></div>
+          <div className="relative flex justify-center text-xs text-neutral-600"><span className="bg-black px-3">or</span></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowManualFallback(true)}
+          className="w-full py-3 border border-neutral-800 hover:border-neutral-600 text-neutral-500 hover:text-neutral-300 text-sm font-medium rounded-xl transition-colors"
+        >
+          Enter Customer ID manually
         </button>
 
         <button
@@ -1386,7 +1686,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
         </button>
       </div>
     );
-
   };
 
   const renderForm = () => (
@@ -1869,107 +2168,62 @@ export function AdoptTab({ release }: AdoptTabProps) {
   };
 
   const renderSuccess = () => {
-    // ── use_my_google_ads: dedicated thank-you / confirmation page ────────────
+    const StatusDot = ({ done, active }: { done?: boolean; active?: boolean }) => (
+      <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500/20 border border-green-500/40' : active ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-neutral-800 border border-neutral-700'}`}>
+        {done ? <Check className="w-3 h-3 text-green-400" /> : active ? <Loader2 className="w-3 h-3 text-amber-400 animate-spin" /> : <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />}
+      </div>
+    );
+
+    // ── use_my_google_ads ─────────────────────────────────────────────────────
     if (selectedMethod === 'use_my_google_ads') {
       const budget = formData.custom_budget || adoption?.amountDue || 0;
       const dur = getDuration(budget);
       const regions = formData.target_regions?.length ? formData.target_regions : ['Global'];
       const languages = formData.target_languages?.length ? formData.target_languages : ['All'];
       const ytId = release?.youtube_video_id || release?.youtubeId || '';
+      const displayCid = selectedGoogleCustomerId || enteredCustomerId || '—';
+      const isViaOAuth = oauthConnected && !!verifiedCustomerId;
 
-      // ── Manual review confirmation ────────────────────────────────────────
-      if (isManualReview) {
-        return (
-          <div className="max-w-xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
-            <div className="text-center space-y-4">
-              <div className="w-20 h-20 mx-auto bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center">
-                <Clock className="w-9 h-9 text-amber-400" />
-              </div>
-              <h3 className="text-2xl font-serif font-light text-neutral-100 leading-snug">
-                Your Google Ads campaign request has been submitted for manual review.
-              </h3>
-              <p className="text-sm text-neutral-500 leading-relaxed max-w-md mx-auto">
-                SufiPulse will verify your Google Ads account and prepare the campaign structure if the account is eligible. You remain the account owner and pay Google directly.
-              </p>
-            </div>
+      const pathBSteps = [
+        { label: 'Submitted', done: true },
+        { label: 'Google Account Connected', done: isViaOAuth || isManualReview },
+        { label: 'Ads Account Verified', done: !!verifiedCustomerId || isManualReview },
+        { label: 'Campaign Draft Created', done: !!verifiedCustomerId, active: isManualReview },
+        { label: 'Awaiting User Approval', done: false, active: !!verifiedCustomerId },
+        { label: 'Campaign Live', done: false },
+        { label: 'Monitoring', done: false },
+        { label: 'Completed', done: false },
+        { label: 'Report Ready', done: false },
+      ];
 
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
-              <div className="flex items-start justify-between px-5 py-3">
-                <span className="text-neutral-500">Song Adopted</span>
-                <span className="text-neutral-200 font-medium text-right max-w-[60%]">{release?.release_title || '—'}</span>
-              </div>
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-neutral-500">Budget</span>
-                <span className="text-amber-400 font-bold">${budget}</span>
-              </div>
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-neutral-500">Google Ads Account</span>
-                <span className="text-amber-400 font-mono text-xs">{selectedGoogleCustomerId || enteredCustomerId || '—'}</span>
-              </div>
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-neutral-500">Review Status</span>
-                <span className="text-amber-400 text-xs font-medium bg-amber-900/40 px-2 py-0.5 rounded">Pending Manual Review</span>
-              </div>
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-neutral-500">Payment Route</span>
-                <span className="text-neutral-300">Pay Google Directly</span>
-              </div>
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-neutral-500">Reference ID</span>
-                <span className="text-neutral-500 text-xs font-mono">{adoption?.id?.slice(-12) || '—'}</span>
-              </div>
-            </div>
-
-            <div className="bg-amber-900/10 border border-amber-800/30 rounded-xl px-5 py-4 text-sm text-neutral-400 leading-relaxed">
-              SufiPulse will be in touch once the account is verified. No payment is required through SufiPulse — you pay Google directly.
-            </div>
-
-            <button onClick={resetFlow} className="w-full text-neutral-400 hover:text-white transition-colors text-sm py-2">
-              Return to Overview
-            </button>
-          </div>
-        );
-      }
-
-      // ── Standard verified path ────────────────────────────────────────────
       return (
         <div className="max-w-xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
           <div className="text-center space-y-4">
-            <div className="w-20 h-20 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
-              <Check className="w-9 h-9 text-green-500" />
+            <div className={`w-20 h-20 mx-auto ${isManualReview ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-green-500/10 border border-green-500/20'} rounded-full flex items-center justify-center`}>
+              {isManualReview ? <Clock className="w-9 h-9 text-amber-400" /> : <Check className="w-9 h-9 text-green-500" />}
             </div>
             <h3 className="text-2xl font-serif font-light text-neutral-100 leading-snug">
-              Campaign request submitted.
+              {isManualReview ? 'Campaign request submitted for review.' : 'Campaign draft ready. Awaiting your approval.'}
             </h3>
             <p className="text-sm text-neutral-500 leading-relaxed max-w-md mx-auto">
-              SufiPulse will prepare the campaign structure in your Google Ads account. You remain the account owner and pay Google directly.
+              {isManualReview
+                ? 'SufiPulse will verify your Google Ads account and prepare the campaign structure. You remain the account owner and pay Google directly.'
+                : 'SufiPulse has prepared the campaign structure inside your Google Ads account. You remain the owner and pay Google directly when you approve the campaign.'}
             </p>
           </div>
 
-          {/* Campaign status progression */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-2">
-            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Campaign Status</p>
-            {[
-              { label: 'Google Ads account connected', done: true },
-              { label: `Customer ID selected (${selectedGoogleCustomerId || '—'})`, done: !!selectedGoogleCustomerId },
-              { label: 'Campaign request submitted to SufiPulse', done: true },
-              { label: 'Awaiting campaign preparation', done: false, active: true },
-              { label: 'Awaiting Google billing / approval', done: false },
-            ].map(({ label, done, active }) => (
+          {/* Status timeline */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-2.5">
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Campaign Progress</p>
+            {pathBSteps.map(({ label, done, active }) => (
               <div key={label} className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500/20 border border-green-500/40' : active ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-neutral-800 border border-neutral-700'}`}>
-                  {done
-                    ? <Check className="w-3 h-3 text-green-400" />
-                    : active
-                      ? <Loader2 className="w-3 h-3 text-amber-400" />
-                      : <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />}
-                </div>
+                <StatusDot done={done} active={active} />
                 <span className={`text-sm ${done ? 'text-neutral-300' : active ? 'text-amber-400' : 'text-neutral-600'}`}>{label}</span>
               </div>
             ))}
           </div>
 
-          {/* Full campaign confirmation table */}
+          {/* Campaign details */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
             <div className="flex items-start justify-between px-5 py-3">
               <span className="text-neutral-500">Song Adopted</span>
@@ -2002,7 +2256,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </div>
             <div className="flex items-center justify-between px-5 py-3">
               <span className="text-neutral-500">Google Ads Account</span>
-              <span className="text-green-400 font-mono text-xs">{selectedGoogleCustomerId || '—'}</span>
+              <span className={`font-mono text-xs ${verifiedCustomerId ? 'text-green-400' : 'text-amber-400'}`}>{displayCid}</span>
             </div>
             <div className="flex items-center justify-between px-5 py-3">
               <span className="text-neutral-500">Payment Route</span>
@@ -2014,8 +2268,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </div>
           </div>
 
-          <div className="border border-neutral-800 bg-neutral-900/50 rounded-xl px-5 py-4 text-sm text-neutral-500 leading-relaxed">
-            Google Ads account connected. SufiPulse will prepare the campaign structure in your account. You remain the owner and pay Google directly.
+          <div className={`border rounded-xl px-5 py-4 text-sm leading-relaxed ${isManualReview ? 'border-amber-800/30 bg-amber-900/10 text-neutral-400' : 'border-neutral-800 bg-neutral-900/50 text-neutral-500'}`}>
+            {isManualReview
+              ? 'SufiPulse will be in touch once the account is verified. No payment is required through SufiPulse — you pay Google directly.'
+              : 'No payment is required through SufiPulse. Your ad spend will be billed by Google through your selected account after you approve and launch the campaign.'}
           </div>
 
           <button onClick={resetFlow} className="w-full text-neutral-400 hover:text-white transition-colors text-sm py-2">
@@ -2025,35 +2281,54 @@ export function AdoptTab({ release }: AdoptTabProps) {
       );
     }
 
-    // ── managed_sufitube: existing success page ───────────────────────────────
+    // ── managed_sufitube ──────────────────────────────────────────────────────
     const ytId2 = release?.youtube_video_id || release?.youtubeId || '';
+    const pathASteps = [
+      { label: 'Submitted', done: true },
+      { label: 'Payment Received', done: adoption?.paymentStatus === 'paid', active: adoption?.paymentStatus === 'pending' },
+      { label: 'Campaign Preparing', done: false, active: adoption?.paymentStatus === 'paid' },
+      { label: 'Campaign Live', done: false },
+      { label: 'Monitoring', done: false },
+      { label: 'Completed', done: false },
+      { label: 'Report Ready', done: false },
+    ];
 
     return (
-      <div className="max-w-xl mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
-        <div className="w-24 h-24 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
-          <Check className="w-10 h-10 text-green-500" />
+      <div className="max-w-xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500">
+        <div className="text-center space-y-3">
+          <div className="w-24 h-24 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
+            <Check className="w-10 h-10 text-green-500" />
+          </div>
+          <h3 className="text-3xl font-serif font-light text-neutral-100">Adoption Complete</h3>
+          <p className="text-neutral-400 leading-relaxed max-w-md mx-auto">
+            May your contribution bring ease and contemplation to whoever discovers this kalam.
+          </p>
         </div>
 
-        <h3 className="text-3xl font-serif font-light text-neutral-100 mb-2">Adoption Complete</h3>
-        <p className="text-neutral-400 leading-relaxed mb-8">
-          May your contribution bring ease and contemplation to whoever discovers this kalam. Your sponsorship has been recorded and will be reviewed shortly.
-        </p>
+        {/* Status timeline */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-2.5">
+          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Campaign Progress</p>
+          {pathASteps.map(({ label, done, active }) => (
+            <div key={label} className="flex items-center gap-3">
+              <StatusDot done={done} active={active} />
+              <span className={`text-sm ${done ? 'text-neutral-300' : active ? 'text-amber-400' : 'text-neutral-600'}`}>{label}</span>
+            </div>
+          ))}
+        </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-left mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <BarChart className="w-5 h-5 text-neutral-400" />
-            <div className="font-medium text-neutral-200">Adoption Status</div>
+        <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
+          <div className="flex items-center justify-between px-5 py-3">
+            <span className="text-neutral-500">Amount</span>
+            <span className="text-amber-400 font-bold">${adoption?.amountDue || 0}</span>
           </div>
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
-            <span className="text-neutral-500 text-sm">Campaign Status</span>
-            <span className="text-amber-400 text-sm font-medium bg-amber-900/40 px-2 py-0.5 rounded">Pending Review</span>
+          <div className="flex items-center justify-between px-5 py-3">
+            <span className="text-neutral-500">Payment</span>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded ${adoption?.paymentStatus === 'paid' ? 'text-green-400 bg-green-900/40' : 'text-amber-400 bg-amber-900/40'}`}>
+              {adoption?.paymentStatus === 'paid' ? 'Received' : 'Pending'}
+            </span>
           </div>
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
-            <span className="text-neutral-500 text-sm">Amount</span>
-            <span className="text-neutral-300 text-sm font-medium">${adoption?.amountDue || 0}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-neutral-500 text-sm">Reference ID</span>
+          <div className="flex items-center justify-between px-5 py-3">
+            <span className="text-neutral-500">Reference ID</span>
             <span className="text-neutral-500 text-xs font-mono">{adoption?.id?.slice(-12) || '—'}</span>
           </div>
         </div>
