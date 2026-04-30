@@ -230,6 +230,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       setOauthChecked(false);
       return;
     }
+    setOauthChecked(false); // reset so the spinner shows while re-checking
     (async () => {
       try {
         const params = new URLSearchParams({ adoptionId: adoption.id });
@@ -1369,6 +1370,16 @@ export function AdoptTab({ release }: AdoptTabProps) {
     const cidNormalized = enteredCustomerId.replace(/-/g, '');
     const cidValid = /^\d{10}$/.test(cidNormalized);
     const serverConfigured = googleAdsEnabled !== false;
+
+    // ── Loading: OAuth status poll in flight — show spinner to prevent phase flipping ──
+    if (!oauthChecked && !verifiedCustomerId && !showManualFallback) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 space-y-3">
+          <Loader2 className="w-7 h-7 text-neutral-600 animate-spin" />
+          <p className="text-sm text-neutral-600">Checking connection…</p>
+        </div>
+      );
+    }
 
     // ── Phase 4: Verified — ready to continue ─────────────────────────────────
     if (verifiedCustomerId) {
