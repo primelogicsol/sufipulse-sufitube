@@ -73,6 +73,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [enteredCustomerId, setEnteredCustomerId] = useState('');
   const [isManualReview, setIsManualReview] = useState(false);
   const [isSubmittingManualReview, setIsSubmittingManualReview] = useState(false);
+  const [verifyReasonCode, setVerifyReasonCode] = useState<string | null>(null);
+  const [verifyErrorDetail, setVerifyErrorDetail] = useState<any>(null);
 
   const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
@@ -263,6 +265,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
     const formatted = normalized.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
     setVerifiedCustomerId(null);
     setVerifyError(null);
+    setVerifyReasonCode(null);
+    setVerifyErrorDetail(null);
     setIsVerifying(true);
     try {
       const res = await fetch('/api/google-ads/verify-account', {
@@ -273,6 +277,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           adoptionId: adoption.id,
           userId: user?.id || '',
           customerId: normalized,
+          enteredEmail: enteredEmail || googleEmail || '',
         }),
       });
       const data = await res.json();
@@ -281,7 +286,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         setSelectedGoogleCustomerId(formatted);
         setVerifiedAt(new Date().toISOString());
         setVerifyError(null);
-        // Persist verified status on the adoption record
+        setVerifyReasonCode(data.reasonCode || 'VERIFIED_DIRECT');
         fetch(`/api/adoptions/${adoption.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -293,8 +298,17 @@ export function AdoptTab({ release }: AdoptTabProps) {
           }),
         }).catch(() => {});
       } else {
+        const reasonCode = data.reasonCode ||
+          (res.ok ? 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE' : 'GOOGLE_ADS_API_CALL_FAILED');
         setVerifyError('not_verified');
-        // Persist failed status on the adoption record so admin can see it
+        setVerifyReasonCode(reasonCode);
+        setVerifyErrorDetail({
+          error: data.error,
+          google_ads_error: data.google_ads_error,
+          connectedGoogleEmail: data.connectedGoogleEmail,
+          accounts: data.accounts,
+          httpStatus: res.status,
+        });
         fetch(`/api/adoptions/${adoption.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -308,6 +322,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
       }
     } catch {
       setVerifyError('error');
+      setVerifyReasonCode('GOOGLE_ADS_API_CALL_FAILED');
+      setVerifyErrorDetail({ error: 'Network error — unable to reach verification service.' });
     } finally {
       setIsVerifying(false);
     }
@@ -1383,31 +1399,81 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     // ── Verification failed ───────────────────────────────────────────────────
     if (verifyError) {
-      const displayEmail = googleEmail || enteredEmail;
+      const rc = verifyReasonCode || 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE';
+      const connectedEmail = verifyErrorDetail?.connectedGoogleEmail || googleEmail || enteredEmail;
+
+      const headlines: Record<string, string> = {
+        NO_OAUTH_TOKEN:                        'Google account not connected',
+        MISSING_DEVELOPER_TOKEN:               'Google Ads API not configured on this server',
+        GOOGLE_ACCOUNT_MISMATCH:               'Google account mismatch',
+        GOOGLE_ADS_API_CALL_FAILED:            'Google Ads API returned an error',
+        NO_ACCESSIBLE_CUSTOMERS:               'No Google Ads accounts found',
+        CUSTOMER_NOT_DIRECTLY_ACCESSIBLE:      'Customer ID not found in this account',
+        CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC:   'Customer ID not accessible (direct + manager accounts checked)',
+      };
+      const details: Record<string, string> = {
+        NO_OAUTH_TOKEN:                      'No OAuth token found for this session. Complete Google sign-in first, then retry.',
+        MISSING_DEVELOPER_TOKEN:             'The server is missing GOOGLE_ADS_DEVELOPER_TOKEN. Contact the SufiPulse admin.',
+        GOOGLE_ACCOUNT_MISMATCH:             `The connected Google account (${connectedEmail}) is different from the email you entered (${enteredEmail}). Sign in with the correct Google account.`,
+        GOOGLE_ADS_API_CALL_FAILED:          verifyErrorDetail?.error || 'The Google Ads API rejected the request. The OAuth token may have expired or lack Ads scope.',
+        NO_ACCESSIBLE_CUSTOMERS:             `The connected Google account (${connectedEmail}) has no accessible Google Ads accounts. Check that the account has active Ads access.`,
+        CUSTOMER_NOT_DIRECTLY_ACCESSIBLE:    `Customer ID ${enteredCustomerId} was not found in the accounts accessible to ${connectedEmail}. It may be under a manager account — or the Customer ID may be wrong.`,
+        CUSTOMER_NOT_ACCESSIBLE_THROUGH_MCC: `Customer ID ${enteredCustomerId} was not found directly or through any manager accounts accessible to ${connectedEmail}. Verify the Customer ID and that this Google account has access.`,
+      };
+
+      const clearError = () => {
+        setVerifyError(null);
+        setVerifyReasonCode(null);
+        setVerifyErrorDetail(null);
+        setSubmitError('');
+      };
+
       return (
         <div className="space-y-5 animate-in fade-in duration-300">
-          {/* Header */}
           <div className="text-center space-y-1">
             <h3 className="text-lg font-semibold text-neutral-100">
-              We couldn&apos;t automatically verify this Google Ads account.
+              {headlines[rc] || 'Verification failed'}
             </h3>
             <p className="text-xs text-neutral-500 leading-relaxed max-w-sm mx-auto">
-              This can happen if the account is new, still being activated, or not yet visible through the Google Ads API.
+              {details[rc] || 'An unexpected error occurred during verification.'}
             </p>
           </div>
 
-          {/* Entered details */}
+          <div className="flex justify-center">
+            <span className="font-mono text-[10px] text-neutral-600 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded">
+              {rc}
+            </span>
+          </div>
+
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
-            {displayEmail && (
+            {connectedEmail && (
               <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-neutral-500">Google account</span>
-                <span className="text-neutral-300">{displayEmail}</span>
+                <span className="text-neutral-500">Connected Google account</span>
+                <span className="text-neutral-300">{connectedEmail}</span>
+              </div>
+            )}
+            {enteredEmail && enteredEmail !== connectedEmail && (
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-neutral-500">Email you entered</span>
+                <span className="text-yellow-400">{enteredEmail}</span>
               </div>
             )}
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-neutral-500">Customer ID entered</span>
               <span className="font-mono text-neutral-300">{enteredCustomerId || '—'}</span>
             </div>
+            {verifyErrorDetail?.accounts && verifyErrorDetail.accounts.length > 0 && (
+              <div className="flex items-start justify-between px-4 py-3 gap-4">
+                <span className="text-neutral-500 flex-shrink-0">Accounts found ({verifyErrorDetail.accounts.length})</span>
+                <span className="font-mono text-neutral-400 text-xs text-right">{verifyErrorDetail.accounts.join(', ')}</span>
+              </div>
+            )}
+            {rc === 'GOOGLE_ADS_API_CALL_FAILED' && verifyErrorDetail?.google_ads_error && (
+              <div className="px-4 py-3">
+                <span className="text-neutral-500 block mb-1 text-xs">API error detail</span>
+                <pre className="text-[10px] text-red-400 whitespace-pre-wrap break-all">{JSON.stringify(verifyErrorDetail.google_ads_error, null, 2)}</pre>
+              </div>
+            )}
           </div>
 
           {submitError && (
@@ -1416,7 +1482,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
             </div>
           )}
 
-          {/* Primary: manual review — creates adoption record and notifies admin */}
           <button
             type="button"
             disabled={isSubmittingManualReview}
@@ -1435,23 +1500,20 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
 
           <div className="space-y-2">
-            {/* Option 1: Try a different customer ID */}
             <button
               type="button"
-              onClick={() => { setVerifyError(null); setEnteredCustomerId(''); setSubmitError(''); }}
+              onClick={() => { clearError(); setEnteredCustomerId(''); }}
               className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
             >
               Try a Different Customer ID
             </button>
-            {/* Option 2: Reconnect Google account */}
             <button
               type="button"
-              onClick={() => { setVerifyError(null); setSubmitError(''); setOauthConnected(false); setOauthChecked(true); setEnteredCustomerId(''); }}
+              onClick={() => { clearError(); setOauthConnected(false); setOauthChecked(true); setEnteredCustomerId(''); }}
               className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
             >
               Reconnect a Different Google Account
             </button>
-            {/* Option 3: Switch to managed */}
             <button
               type="button"
               onClick={switchToManaged}
