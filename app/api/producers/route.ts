@@ -23,11 +23,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
-    if (!body.email) return NextResponse.json({ error: 'email is required' }, { status: 400 });
+    if (!body.email && !authResult.email) {
+      return NextResponse.json({ error: 'email is required' }, { status: 400 });
+    }
     const record = entityCreate('producers', {
       ...body,
+      user_id: authResult.id,
+      email: body.email || authResult.email,
       profile_status: body.profile_status || 'pending',
       submitted_at: new Date().toISOString(),
     });

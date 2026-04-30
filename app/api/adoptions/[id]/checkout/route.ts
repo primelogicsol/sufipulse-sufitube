@@ -62,33 +62,36 @@ export async function POST(
 
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      customer_email: sponsorEmail || adoption.sponsorEmail || undefined,
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            unit_amount: Math.round(amountUSD * 100),
-            product_data: {
-              name: packageName ? `Song Adoption – ${packageName}` : 'Song Adoption – Custom Budget',
-              description: releaseTitle
-                ? `Sponsor the spread of "${releaseTitle}" — managed by SufiPulse`
-                : 'Sufi kalam sponsorship — managed by SufiPulse',
+    const session = await stripe.checkout.sessions.create(
+      {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        customer_email: sponsorEmail || adoption.sponsorEmail || undefined,
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              unit_amount: Math.round(amountUSD * 100),
+              product_data: {
+                name: packageName ? `Song Adoption – ${packageName}` : 'Song Adoption – Custom Budget',
+                description: releaseTitle
+                  ? `Sponsor the spread of "${releaseTitle}" — managed by SufiPulse`
+                  : 'Sufi kalam sponsorship — managed by SufiPulse',
+              },
             },
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          adoption_id: id,
+          method_type: 'managed_sufitube',
+          sponsor_name: sponsorName || adoption.sponsorName || '',
         },
-      ],
-      metadata: {
-        adoption_id: id,
-        method_type: 'managed_sufitube',
-        sponsor_name: sponsorName || adoption.sponsorName || '',
+        success_url: `${appUrl}/adoption-success?adoption_id=${id}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/adoption-cancel?adoption_id=${id}`,
       },
-      success_url: `${appUrl}/adoption-success?adoption_id=${id}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/adoption-cancel?adoption_id=${id}`,
-    });
+      { idempotencyKey: `checkout-${id}-${authResult!.id}` }
+    );
 
     // Update adoption record with pending payment
     updateAdoptionRecord(id, {

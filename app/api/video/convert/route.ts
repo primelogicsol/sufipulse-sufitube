@@ -7,6 +7,9 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
 import { requireAuth } from '@/server/middleware/authenticate';
+import { applyRateLimit, createRateLimiter } from '@/server/middleware/rate-limit';
+
+const videoConvertLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 3 });
 
 const TEMP_DIR = join(tmpdir(), 'sufipulse-video-temp');
 const TEMP_TTL_MS = 30 * 60 * 1000;
@@ -82,6 +85,9 @@ async function readBodyToBuffer(request: NextRequest, maxBytes: number): Promise
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+
+  const rateLimited = await applyRateLimit(request, videoConvertLimiter);
+  if (rateLimited) return rateLimited;
 
   await ensureTempDir();
   void cleanStaleFiles();

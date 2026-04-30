@@ -200,7 +200,7 @@ async function resolveUserAccessToken(
       });
       return tokens.access_token;
     }
-    return adoptionRecord.accessToken;
+    return null;
   }
   return null;
 }

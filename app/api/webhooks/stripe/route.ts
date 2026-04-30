@@ -49,15 +49,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
-  if (
-    event.type === 'checkout.session.completed' ||
-    event.type === 'payment_intent.succeeded'
-  ) {
+  if (event.type === 'checkout.session.completed') {
     let adoptionId: string | null = null;
     let stripeSessionId: string | null = null;
     let amountPaid = 0;
 
-    if (event.type === 'checkout.session.completed') {
+    {
       const session = event.data.object as Stripe.Checkout.Session;
       adoptionId = session.metadata?.adoption_id || null;
       stripeSessionId = session.id;

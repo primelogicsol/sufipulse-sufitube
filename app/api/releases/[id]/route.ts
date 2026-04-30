@@ -82,7 +82,7 @@ export async function GET(
 
     if (release.status !== 'published') {
       const user = await getAuthUser(request);
-      if (!user || !String(user.role || '').includes('admin')) {
+      if (!user || user.role !== 'admin') {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
       return NextResponse.json(release);

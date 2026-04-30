@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
     if (!amountUSD || amountUSD < 1) {
       return NextResponse.json({ error: 'Minimum amount is $1' }, { status: 400 });
     }
+    if (amountUSD > 10000) {
+      return NextResponse.json({ error: 'Amount exceeds maximum of $10,000' }, { status: 400 });
+    }
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amountUSD * 100),

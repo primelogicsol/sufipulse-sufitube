@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { applyRateLimit, createRateLimiter } from '@/server/middleware/rate-limit';
+
+const notifySubscribersLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, maxRequests: 5 });
 import { sendEmail } from '@/app/lib/email';
 
 const SUBSCRIBERS_FILE = path.join(process.cwd(), '.data', 'subscribers.json');
@@ -20,6 +23,9 @@ const readSubscribers = (): Subscriber[] => {
 export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
+
+  const rateLimited = await applyRateLimit(request, notifySubscribersLimiter);
+  if (rateLimited) return rateLimited;
 
   try {
     const { title, youtubeId, youtubePlaylistId, slug } = await request.json();
