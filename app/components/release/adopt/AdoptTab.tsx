@@ -590,6 +590,37 @@ export function AdoptTab({ release }: AdoptTabProps) {
     if (!selectedMethod) return;
     setFieldErrors({});
 
+    // Auth gate: require a SufiPulse account before submitting the adoption form.
+    // For use_my_google_ads the draft was already created at the budget step so adoption.id
+    // is available for the return URL. For managed_sufitube we create a minimal draft here
+    // so the auth wall can pass adoptionId back after login for state restoration.
+    if (!user) {
+      if (!adoption?.id) {
+        try {
+          const res = await fetch('/api/adoptions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              releaseId: release.id,
+              releaseTitle: release.title || release.release_title,
+              releaseSlug: release.slug,
+              methodType: selectedMethod,
+              amountDue: selectedPackage?.amount || formData.custom_budget || 0,
+              currency: 'USD',
+              adoptionStatus: 'draft',
+            }),
+          });
+          if (res.ok) {
+            const draft = await res.json();
+            setAdoption(draft);
+          }
+        } catch { /* ignore — auth wall still shown without adoptionId */ }
+      }
+      setShowAuthWall(true);
+      return;
+    }
+
     if (!formData.agree_to_terms || !formData.agree_to_promotional_use) {
       setSubmitError('Please accept both consent checkboxes to continue.');
       return;
@@ -2089,8 +2120,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mb-3">
                   <Lock className="w-5 h-5 text-amber-400" />
                 </div>
-                <h4 className="text-neutral-100 font-medium mb-1">Sign in to complete your sponsorship</h4>
-                <p className="text-neutral-400 text-sm">Please sign in to complete your sponsorship payment. Your campaign details have been saved.</p>
+                <h4 className="text-neutral-100 font-medium mb-1">Sign in to continue</h4>
+                <p className="text-neutral-400 text-sm">A SufiPulse account is required to adopt a song. Your campaign details have been saved.</p>
               </div>
               <div className="space-y-3 pt-2">
                 <a
