@@ -50,9 +50,7 @@ const persist = () => {
   try {
     fs.mkdirSync(SERVER_DATA_DIR, { recursive: true });
     const releases = cmsStorage.exportReleases();
-    const tmp = `${SERVER_DATA_FILE}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(releases, null, 2), 'utf8');
-    fs.renameSync(tmp, SERVER_DATA_FILE);
+    fs.writeFileSync(SERVER_DATA_FILE, JSON.stringify(releases, null, 2), 'utf8');
   } catch (error) {
     console.error('Failed to persist server CMS storage:', error);
   }
