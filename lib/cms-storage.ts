@@ -4,6 +4,8 @@
  * Can be swapped with Supabase when ready
  */
 
+import { sortReleases } from './release-utils';
+
 export interface CMSRelease {
   id: string;
   title: string;
@@ -29,6 +31,8 @@ export interface CMSRelease {
   format?: 'video' | 'audio' | 'short' | 'live' | 'playlist';
   audioUrl?: string;
   webOnly?: boolean;
+  source?: string;
+  visibility?: 'public' | 'private' | 'unlisted';
 
   // Streaming platforms
   streamingPlatforms?: Array<{
@@ -239,13 +243,33 @@ export interface CMSRelease {
   publishedAt?: string;
 }
 
+export interface LyricsRequest {
+  id: string;
+  releaseId: string;
+  releaseSlug: string;
+  releaseTitle: string;
+  languageCode: string;
+  languageName: string;
+  requesterName?: string;
+  requesterEmail: string;
+  note?: string;
+  notifyWhenPublished: boolean;
+  status: 'pending' | 'reviewed' | 'fulfilled' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  userId?: string;
+}
+
 const STORAGE_KEY = 'sufipulse_cms_releases';
+const REQUESTS_STORAGE_KEY = 'sufipulse_lyrics_requests';
 
 // Server-side in-memory storage for when localStorage isn't available
 let serverSideReleases: Array<[string, CMSRelease]> | null = null;
+let serverSideRequests: Array<[string, LyricsRequest]> | null = null;
 
 class CMSStorage {
   private releases: Map<string, CMSRelease> = new Map();
+  private requests: Map<string, LyricsRequest> = new Map();
   private isServerSide: boolean = typeof window === 'undefined';
 
   constructor() {
@@ -258,6 +282,9 @@ class CMSStorage {
       if (serverSideReleases) {
         this.releases = new Map(serverSideReleases);
       }
+      if (serverSideRequests) {
+        this.requests = new Map(serverSideRequests);
+      }
       return;
     }
     
@@ -268,26 +295,77 @@ class CMSStorage {
         const data = JSON.parse(stored);
         this.releases = new Map(data);
       }
+      const storedReq = localStorage.getItem(REQUESTS_STORAGE_KEY);
+      if (storedReq) {
+        const data = JSON.parse(storedReq);
+        this.requests = new Map(data);
+      }
     } catch (error) {
-      console.error('Failed to load CMS releases from storage:', error);
+      console.error('Failed to load CMS data from storage:', error);
     }
   }
 
   private saveToStorage(): void {
     const data = Array.from(this.releases.entries());
+    const reqData = Array.from(this.requests.entries());
     
     if (typeof window === 'undefined') {
       // Server-side: save to in-memory storage
       serverSideReleases = data;
+      serverSideRequests = reqData;
       return;
     }
     
     // Client-side: save to localStorage
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(reqData));
     } catch (error) {
-      console.error('Failed to save CMS releases to storage:', error);
+      console.error('Failed to save CMS data to storage:', error);
     }
+  }
+
+  // Lyrics Requests
+  saveLyricsRequest(request: LyricsRequest): LyricsRequest {
+    const now = new Date().toISOString();
+    const reqData: LyricsRequest = {
+      ...request,
+      updatedAt: now,
+      createdAt: request.createdAt || now
+    };
+
+    this.requests.set(request.id, reqData);
+    this.saveToStorage();
+    return reqData;
+  }
+
+  getLyricsRequest(id: string): LyricsRequest | null {
+    return this.requests.get(id) || null;
+  }
+
+  getAllLyricsRequests(): LyricsRequest[] {
+    return Array.from(this.requests.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  deleteLyricsRequest(id: string): boolean {
+    const deleted = this.requests.delete(id);
+    if (deleted) {
+      this.saveToStorage();
+    }
+    return deleted;
+  }
+
+  importLyricsRequests(reqs: LyricsRequest[]): void {
+    for (const req of reqs) {
+      this.requests.set(req.id, req);
+    }
+    this.saveToStorage();
+  }
+
+  exportLyricsRequests(): LyricsRequest[] {
+    return Array.from(this.requests.values());
   }
 
   // Create or Update
@@ -330,22 +408,59 @@ class CMSStorage {
 
   getAllReleases(filter?: { status?: string; category?: string }): CMSRelease[] {
     let releases = Array.from(this.releases.values());
+    
+    if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
+      console.log(`[CMSStorage] getAllReleases: rawCount=${releases.length}, filter=${JSON.stringify(filter)}`);
+    }
 
     if (filter?.status) {
+      const before = releases.length;
       releases = releases.filter(r => r.status === filter.status);
+      if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
+        console.log(`[CMSStorage] Filtered by status '${filter.status}': ${before} -> ${releases.length}`);
+      }
     }
     if (filter?.category) {
       releases = releases.filter(r => r.category === filter.category);
     }
 
-    return releases.sort((a, b) => 
-      new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
-    );
+    const sorted = sortReleases(releases, 'all');
+    
+    if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
+      if (sorted.length > 0) {
+        console.log(`[CMSStorage] Returning ${sorted.length} releases. Top 3:`, 
+          sorted.slice(0, 3).map(r => `${r.title} (${r.status}) [${r.publishedAt || r.releaseDate}]`)
+        );
+      } else {
+        console.log(`[CMSStorage] Returning 0 releases.`);
+      }
+    }
+
+    return sorted;
   }
 
   getPublishedReleases(limit?: number): CMSRelease[] {
-    const releases = this.getAllReleases({ status: 'published' });
-    return limit ? releases.slice(0, limit) : releases;
+    return this.getPublicReleases(limit);
+  }
+
+  getPublicReleases(limit?: number): CMSRelease[] {
+    const releases = Array.from(this.releases.values());
+    
+    // Normalize and Filter
+    const publicReleases = releases
+      .map(r => ({
+        ...r,
+        status: r.status || 'published',
+        visibility: r.visibility || 'public',
+        format: r.format || (r.durationSeconds <= 60 ? 'short' : 'video'),
+        releaseType: r.releaseType || 'studio-release',
+        // Ensure we have a valid date for sorting
+        publishedAt: r.publishedAt || r.releaseDate || r.createdAt || r.updatedAt || new Date().toISOString(),
+      }))
+      .filter(r => r.status === 'published' && r.visibility === 'public');
+
+    const sorted = sortReleases(publicReleases, 'all');
+    return limit ? sorted.slice(0, limit) : sorted;
   }
 
   // Delete

@@ -85,7 +85,7 @@ class YouTubeService {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    private async makeRequest(url: string, retries = this.config.maxRetries): Promise<any> {
+    private async makeRequest(url: string, retries = this.config.maxRetries, noCache = false): Promise<any> {
         // Check if quota is exceeded and not yet reset
         if (this.quotaExceeded && this.quotaResetTime && Date.now() < this.quotaResetTime) {
             throw new Error('YouTube API quota exceeded. Using static data fallback.');
@@ -95,7 +95,11 @@ class YouTubeService {
             // Next.js App Router dynamic fetch caching: revalidate only on server
             const fetchOptions: any = {};
             if (typeof window === 'undefined') {
-                fetchOptions.next = { revalidate: 14400 };
+                if (noCache) {
+                    fetchOptions.cache = 'no-store';
+                } else {
+                    fetchOptions.next = { revalidate: 14400 };
+                }
             }
 
             const response = await fetch(url, fetchOptions);
@@ -322,11 +326,63 @@ class YouTubeService {
 
     async getLatestVideos(count: number = 10): Promise<YouTubeVideo[]> {
         try {
+            // Use the Uploads playlist for most reliable "latest" order
+            const uploadsPlaylistId = this.config.channelId.replace('UC', 'UU');
+            const results = await this.getPlaylistVideos(uploadsPlaylistId, count);
+            
+            if (results && results.length > 0) {
+                return results;
+            }
+
+            // Fallback to search if playlist fails
             return await this.searchVideos('', count, 'date');
         } catch (error) {
-            console.log('API failed, using static data');
+            console.error('[YouTubeService] getLatestVideos failed:', error.message);
             const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
             return STATIC_YOUTUBE_VIDEOS.slice(0, count);
+        }
+    }
+
+    async getPlaylistVideos(playlistId: string, maxResults: number = 50): Promise<YouTubeVideo[]> {
+        const safeMax = Math.max(1, Math.min(maxResults, 50));
+        const cacheKey = `playlist_items_${playlistId}_${safeMax}`;
+        const cached = this.getCache(cacheKey);
+        if (cached) return cached;
+
+        if (!this.config.apiKey) return [];
+
+        try {
+            const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${playlistId}&maxResults=${safeMax}&key=${this.config.apiKey}`;
+            const data = await this.makeRequest(url, this.config.maxRetries, true); // Use noCache for imports
+            const items = data.items || [];
+
+            if (!items.length) return [];
+
+            const ids = items.map((i: any) => i.contentDetails?.videoId).filter(Boolean);
+            const detailed = await this.getVideosByIds(ids);
+
+            const result: YouTubeVideo[] = detailed.map((video: any) => {
+                const durationSecs = this.parseDuration(video.contentDetails?.duration || 'PT0S');
+                const hasLiveDetails = !!(video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime);
+                return {
+                    id: video.id,
+                    title: video.snippet?.title || '',
+                    description: video.snippet?.description || '',
+                    thumbnailUrl: video.snippet?.thumbnails?.maxres?.url || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || '',
+                    publishedDate: video.snippet?.publishedAt || '',
+                    durationSeconds: durationSecs,
+                    durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
+                    views: parseInt(video.statistics?.viewCount || '0'),
+                    source: 'youtube_legacy',
+                    format: inferFormat(durationSecs, hasLiveDetails),
+                };
+            });
+
+            this.setCache(cacheKey, result);
+            return result;
+        } catch (err: any) {
+            console.error(`Failed to fetch playlist ${playlistId}:`, err.message);
+            return [];
         }
     }
 

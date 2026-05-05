@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const limit = searchParams.get('limit');
 
+    console.log(`[API /api/releases] GET: status=${status}, youtubeId=${youtubeId}, slug=${slug}`);
+
     if (slug) {
       const release = cmsServerStorage.getReleaseBySlug(slug);
       if (!release) {
@@ -69,15 +71,19 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get('year') || '';
     const search = (searchParams.get('search') || '').toLowerCase().trim();
 
+    const normalize = (r: CMSRelease): CMSRelease => ({
+      ...r,
+      status: r.status || 'published',
+      visibility: r.visibility || 'public',
+      format: r.format || (r.durationSeconds <= 60 ? 'short' : 'video'),
+      releaseType: r.releaseType || 'studio-release',
+      releaseDate: r.releaseDate || (r.publishedAt ? r.publishedAt.slice(0,10) : (r.createdAt ? r.createdAt.slice(0,10) : new Date().toISOString().slice(0,10))),
+    });
+
     const applyFilters = (releases: CMSRelease[]) => {
-      return releases.filter((r) => {
-        if (format) {
-          const inferredFormat = r.format || (r.durationSeconds <= 60 ? 'short' : 'video');
-          if (inferredFormat !== format) return false;
-        }
-        if (type) {
-          if (r.releaseType !== type) return false;
-        }
+      return releases.map(normalize).filter((r) => {
+        if (format && r.format !== format) return false;
+        if (type && r.releaseType !== type) return false;
         if (duration) {
           const mins = (r.durationSeconds || 0) / 60;
           if (duration === 'short' && mins >= 3) return false;
@@ -85,7 +91,7 @@ export async function GET(request: NextRequest) {
           if (duration === 'long' && mins <= 8) return false;
         }
         if (year) {
-          const releaseYear = new Date(r.releaseDate || r.createdAt || '').getFullYear();
+          const releaseYear = new Date(r.releaseDate).getFullYear();
           if (releaseYear !== parseInt(year)) return false;
         }
         if (search) {
@@ -97,18 +103,24 @@ export async function GET(request: NextRequest) {
     };
 
     // Default to published only for public access; pass ?status=all to get everything (admin)
+    let base: CMSRelease[] = [];
     if (!status || status === 'published') {
-      const base = sort === 'ranked'
+      base = sort === 'ranked'
         ? cmsServerStorage.getRankedReleases(limit ? parseInt(limit) : undefined)
         : cmsServerStorage.getPublishedReleases(limit ? parseInt(limit) : undefined);
-      const releases = (format || type || duration || year || search) ? applyFilters(base) : base;
-      return NextResponse.json(releases, { headers: cacheHeaders });
+    } else {
+      base = cmsServerStorage.getAllReleases(status !== 'all' ? { status } : undefined);
     }
 
-    const base = cmsServerStorage.getAllReleases(status !== 'all' ? { status } : undefined);
-    const releases = (format || type || duration || year || search) ? applyFilters(base) : base;
-    return NextResponse.json(releases, { headers: cacheHeaders });
+    const filtered = (format || type || duration || year || search) ? applyFilters(base) : base.map(normalize);
+    console.log(`[API /api/releases] Returning ${filtered.length} releases (out of ${base.length} base).`);
+    if (filtered.length > 0) {
+      console.log(`[API /api/releases] First 3:`, filtered.slice(0, 3).map(r => `${r.title} (${r.status}) [${r.releaseDate}]`));
+    }
+
+    return NextResponse.json(filtered, { headers: cacheHeaders });
   } catch (error: any) {
+    console.error(`[API /api/releases] ERROR:`, error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

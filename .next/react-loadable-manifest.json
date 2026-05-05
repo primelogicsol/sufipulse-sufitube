@@ -2,14 +2,14 @@
   "app\\(public)\\release-detail\\[slug]\\page.tsx -> ../../../../lib/youtube-service": {
     "id": 23102,
     "files": [
-      "static/chunks/1184.86c691ef4af2cd02.js",
-      "static/chunks/3102.b6095cd66a8e54f3.js"
+      "static/chunks/1184.a3c29ecd95e68146.js",
+      "static/chunks/3102.5114826c66990b62.js"
     ]
   },
   "app\\(public)\\release-detail\\[slug]\\page.tsx -> ../../../components/release/adopt/AdoptTab": {
-    "id": 1845,
+    "id": 84322,
     "files": [
-      "static/chunks/1845.9c4590e33e28dc66.js"
+      "static/chunks/4322.644e8a3376f171fb.js"
     ]
   },
   "app\\(public)\\release-detail\\[slug]\\page.tsx -> ../../../components/release/lyrics/VideoOverlay": {
@@ -21,14 +21,14 @@
   "app\\(public)\\releases\\page.tsx -> ../../../app/data/youtube-videos": {
     "id": 1184,
     "files": [
-      "static/chunks/1184.86c691ef4af2cd02.js"
+      "static/chunks/1184.a3c29ecd95e68146.js"
     ]
   },
   "app\\(public)\\releases\\page.tsx -> ../../../lib/youtube-service": {
     "id": 23102,
     "files": [
-      "static/chunks/1184.86c691ef4af2cd02.js",
-      "static/chunks/3102.b6095cd66a8e54f3.js"
+      "static/chunks/1184.a3c29ecd95e68146.js",
+      "static/chunks/3102.5114826c66990b62.js"
     ]
   },
   "app\\admin\\cms-releases\\[id]\\page.tsx -> @/lib/subtitle-ingest/convert-video": {
@@ -55,13 +55,6 @@
       "static/chunks/930.cb331f74f3027d03.js"
     ]
   },
-  "app\\page.tsx -> ../lib/youtube-service": {
-    "id": 23102,
-    "files": [
-      "static/chunks/1184.86c691ef4af2cd02.js",
-      "static/chunks/3102.b6095cd66a8e54f3.js"
-    ]
-  },
   "lib\\subtitle-ingest\\video-file-to-cues.ts -> tesseract.js": {
     "id": 71597,
     "files": [
@@ -77,7 +70,7 @@
   "node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
     "id": 31646,
     "files": [
-      "static/chunks/1646.235e5fa2a248b1d6.js"
+      "static/chunks/1646.b25f118aaf889c47.js"
     ]
   }
 }

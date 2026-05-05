@@ -3,6 +3,7 @@ import { youtubeService, inferFormat } from '@/lib/youtube-service';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { revalidatePath } from 'next/cache';
 
 const slugify = (value: string): string => {
   const base = String(value || '')
@@ -11,25 +12,6 @@ const slugify = (value: string): string => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   return base || 'release';
-};
-
-const parseIsoDurationSeconds = (duration: string): number => {
-  const normalized = String(duration || '').trim();
-  const hours = Number(normalized.match(/(\d+)H/)?.[1] || 0);
-  const minutes = Number(normalized.match(/(\d+)M/)?.[1] || 0);
-  const seconds = Number(normalized.match(/(\d+)S/)?.[1] || 0);
-  return hours * 3600 + minutes * 60 + seconds;
-};
-
-const formatSeconds = (totalSeconds: number): string => {
-  const safe = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(safe / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const seconds = safe % 60;
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  }
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
 const buildUniqueSlug = (title: string, youtubeId: string, currentReleaseId?: string): string => {
@@ -53,6 +35,7 @@ const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease
   const id = existing?.id || `release_${Date.now()}_${video.id}`;
   const slug = buildUniqueSlug(video.title, video.id, existing?.id);
   const now = new Date().toISOString();
+  const publishedDate = video.publishedDate || video.publishedAt || existing?.releaseDate || now;
 
   return {
     ...(existing || {}),
@@ -63,55 +46,29 @@ const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
     thumbnailUrl: video.thumbnailUrl,
     description: video.description || existing?.description || '',
-    releaseDate: (video.publishedDate || existing?.releaseDate || now).slice(0, 10),
+    releaseDate: publishedDate.slice(0, 10),
+    publishedAt: video.publishedAt || video.publishedDate || existing?.publishedAt || now,
     durationSeconds: Number(video.durationSeconds || existing?.durationSeconds || 0),
     durationFormatted: video.durationFormatted || existing?.durationFormatted || '0:00',
     viewCount: Number(video.views || existing?.viewCount || 0),
     likeCount: Number(existing?.likeCount || 0),
-    status: existing?.status || 'draft',
+    status: existing?.status || 'published',
     contentReadinessState: existing?.contentReadinessState || 'draft',
-    // Admin override takes precedence; otherwise use YouTube-inferred format from the caller
-    format: existing?.format || video.format || inferFormat(Number(video.durationSeconds || existing?.durationSeconds || 0), false),
+    releaseType: existing?.releaseType || 'studio-release',
+    format: existing?.format || video.format || (Number(video.durationSeconds) <= 60 ? 'short' : 'video'),
+    source: 'youtube',
+    visibility: 'public',
     enableLyrics: existing?.enableLyrics !== false,
     enableCommentary: existing?.enableCommentary !== false,
     enableSponsors: !!existing?.enableSponsors,
     enableAdoption: existing?.enableAdoption !== false,
     enableCredits: existing?.enableCredits !== false,
-    publicCommentary: existing?.publicCommentary || [
-      {
-        id: 'context',
-        title: 'Historical Context',
-        content: '',
-        isPublished: true,
-      },
-      {
-        id: 'theme',
-        title: 'Thematic Interpretation',
-        content: '',
-        isPublished: true,
-      },
-    ],
-    publicSponsorsIntro: existing?.publicSponsorsIntro || '',
-    publicSponsors: existing?.publicSponsors || [],
-    publicCredits: existing?.publicCredits || {},
     availableLanguages: existing?.availableLanguages || ['en', 'ur'],
     defaultLanguage: existing?.defaultLanguage || 'en',
     lyrics: existing?.lyrics || {},
-    lyricsStructure: existing?.lyricsStructure || {},
-    masterTimingVersion: existing?.masterTimingVersion || 1,
-    subtitleCues: existing?.subtitleCues || [],
-    subtitleTranslations: existing?.subtitleTranslations || {},
-    subtitleLanguageStatuses: existing?.subtitleLanguageStatuses || {},
-    subtitleLanguageAssignments: existing?.subtitleLanguageAssignments || {},
-    subtitleCueMetadata: existing?.subtitleCueMetadata || {},
-    subtitleStylePacks: existing?.subtitleStylePacks || {},
-    subtitleReviewLogs: existing?.subtitleReviewLogs || [],
-    youtubeSubtitleAutoSync: existing?.youtubeSubtitleAutoSync !== false,
-    youtubeCaptionTracks: existing?.youtubeCaptionTracks || {},
     createdAt: existing?.createdAt || now,
     updatedAt: now,
-    publishedAt: existing?.publishedAt,
-  };
+  } as CMSRelease;
 };
 
 export async function GET(request: NextRequest) {
@@ -125,8 +82,8 @@ export async function GET(request: NextRequest) {
       ? 500
       : Math.max(1, Math.min(Number(searchParams.get('max') || 25), 500));
 
-    const videos = await youtubeService.searchVideos('', max, 'date');
-    const rows = (videos || []).map((video) => ({
+    const videos = await youtubeService.getLatestVideos(max);
+    const rows = (videos || []).map((video: any) => ({
       id: video.id,
       title: video.title,
       description: video.description,
@@ -154,63 +111,79 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
+    // Clear cache BEFORE fetching to ensure we get the absolute latest from YouTube
+    youtubeService.clearCache();
+
     const body = await request.json().catch(() => ({}));
     const requestedIds = Array.isArray(body.videoIds) ? body.videoIds.filter(Boolean) : [];
 
     let selected: any[] = [];
 
     if (requestedIds.length) {
-      // Use direct lookup for selected IDs so imports are not limited by search page size.
-      const detailed: any[] = [];
-      for (let i = 0; i < requestedIds.length; i += 50) {
-        const batchIds = requestedIds.slice(i, i + 50);
-        const batch = await youtubeService.getVideosByIds(batchIds);
-        detailed.push(...batch);
+      for (const vid of requestedIds) {
+        try {
+          const detail = await youtubeService.getVideoDetails(vid);
+          if (detail) selected.push(detail);
+        } catch (e) {
+          console.error(`Failed to fetch details for ${vid}:`, e);
+        }
       }
-
-      selected = detailed.map((video) => {
-        const parsedDuration = parseIsoDurationSeconds(video?.contentDetails?.duration || 'PT0S');
-        const hasLiveDetails = !!(video?.liveStreamingDetails?.actualStartTime || video?.liveStreamingDetails?.scheduledStartTime);
-        return {
-          id: video.id,
-          title: video?.snippet?.title || `Video ${video.id}`,
-          description: video?.snippet?.description || '',
-          thumbnailUrl:
-            video?.snippet?.thumbnails?.maxres?.url ||
-            video?.snippet?.thumbnails?.high?.url ||
-            video?.snippet?.thumbnails?.medium?.url ||
-            '',
-          publishedDate: video?.snippet?.publishedAt || new Date().toISOString(),
-          durationSeconds: parsedDuration,
-          durationFormatted: formatSeconds(parsedDuration),
-          views: Number(video?.statistics?.viewCount || 0),
-          format: inferFormat(parsedDuration, hasLiveDetails),
-        };
-      });
     } else {
-      selected = await youtubeService.searchVideos('', 500, 'date');
+      // Default: fetch latest 100
+      selected = await youtubeService.getLatestVideos(100);
     }
 
     if (!selected.length) {
-      return NextResponse.json({ error: 'No videos selected for import' }, { status: 400 });
+      return NextResponse.json({ error: 'No videos found to import' }, { status: 404 });
     }
 
+    console.log(`[ImportYouTube] First 10 IDs: ${selected.slice(0, 10).map(v => v.id).join(', ')}`);
+
     const imported: CMSRelease[] = [];
-    // Batch: collect all mapped releases, save once per batch of 10 to avoid large single writes
-    const batchSize = 10;
-    for (let i = 0; i < selected.length; i += batchSize) {
-      const batch = selected.slice(i, i + batchSize);
-      const mappedBatch = batch.map((video) => {
-        const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
-        return mapVideoToRelease(video, existing);
-      });
-      mappedBatch.forEach((mapped) => {
-        imported.push(cmsServerStorage.saveRelease(mapped));
-      });
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    console.log(`[ImportYouTube] Processing ${selected.length} videos...`);
+
+    for (const video of selected) {
+      // Normalize search titles for logging
+      const isTarget = video.title.includes('Kemis Taani') || video.title.includes('Phir Likh');
+      
+      const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
+      if (!existing) {
+        createdCount++;
+        if (isTarget) console.log(`[ImportYouTube] TARGET FOUND (New): ${video.title} (ID: ${video.id})`);
+      } else {
+        updatedCount++;
+        if (isTarget) console.log(`[ImportYouTube] TARGET FOUND (Existing): ${video.title} (ID: ${video.id})`);
+      }
+      
+      const mapped = mapVideoToRelease(video, existing);
+      const saved = cmsServerStorage.saveRelease(mapped);
+      imported.push(saved);
+    }
+
+    // Clear cache and revalidate public paths
+    youtubeService.clearCache();
+    revalidatePath('/');
+    revalidatePath('/releases');
+    
+    const allReleases = cmsServerStorage.getAllReleases();
+    const newest = imported.length > 0 ? imported[0] : null;
+
+    console.log(`[ImportYouTube] Sync complete. Created: ${createdCount}, Updated: ${updatedCount}, Total: ${allReleases.length}`);
+    if (newest) {
+      console.log(`[ImportYouTube] Newest synced: ${newest.title} [${newest.publishedAt || newest.releaseDate}]`);
     }
 
     return NextResponse.json({
-      importedCount: imported.length,
+      fetchedCount: selected.length,
+      createdCount,
+      updatedCount,
+      skippedCount: 0,
+      totalSavedReleases: allReleases.length,
+      newestSavedTitle: newest?.title,
+      newestSavedPublishedAt: newest?.publishedAt || newest?.releaseDate,
       items: imported,
     });
   } catch (error: any) {

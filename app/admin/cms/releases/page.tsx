@@ -66,23 +66,110 @@ export default function ReleasesPage() {
     'archived': 'bg-gray-50 border-gray-200'
   };
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    fetched: number;
+    created: number;
+    updated: number;
+    total: number;
+    newestTitle?: string;
+    newestPublishedAt?: string;
+  } | null>(null);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch('/api/releases/import-youtube', { method: 'POST' });
+      if (!res.ok) throw new Error('Sync failed');
+      const data = await res.json();
+      
+      const items = data.items || [];
+      const updated = items.filter((r: any) => r.updatedAt !== r.createdAt).length;
+      const created = items.length - updated;
+      
+      setSyncResult({
+        fetched: data.importedCount || items.length,
+        created,
+        updated,
+        total: items.length,
+        newestTitle: items[0]?.title,
+        newestPublishedAt: items[0]?.publishedAt || items[0]?.releaseDate
+      });
+      
+      loadReleases();
+    } catch (error) {
+      console.error('Error syncing:', error);
+      alert('Failed to sync with YouTube');
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto" style={{background: 'var(--dash-bg-primary)', color: 'var(--dash-text-primary)', padding: '2rem'}}>
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold" style={{color: 'var(--dash-text-primary)'}}>Release Management</h1>
-          <Link
-            href="/admin/cms/releases/new/edit"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition"
-            style={{
-              backgroundColor: 'var(--dash-accent)',
-              color: '#000',
-              textDecoration: 'none'
-            }}
-          >
-            <Plus size={20} /> New Release
-          </Link>
+          <div className="flex gap-4">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition disabled:opacity-50"
+              style={{
+                backgroundColor: 'var(--dash-bg-secondary)',
+                color: 'var(--dash-text-primary)',
+                border: '1px solid var(--dash-border)',
+                cursor: syncing ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <Check size={20} className={syncing ? 'animate-spin' : ''} />
+              {syncing ? 'Syncing...' : 'Sync Latest Videos'}
+            </button>
+            <Link
+              href="/admin/cms/releases/new/edit"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition"
+              style={{
+                backgroundColor: 'var(--dash-accent)',
+                color: '#000',
+                textDecoration: 'none'
+              }}
+            >
+              <Plus size={20} /> New Release
+            </Link>
+          </div>
         </div>
+
+        {syncResult && (
+          <div className="mb-8 p-6 rounded-lg border" style={{ backgroundColor: 'var(--dash-bg-secondary)', borderColor: 'var(--dash-accent-muted)' }}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--dash-accent)' }}>Sync Complete</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+              <div>
+                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>FETCHED</p>
+                <p className="text-xl font-bold">{syncResult.fetched}</p>
+              </div>
+              <div>
+                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>CREATED</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--dash-status-approved)' }}>{syncResult.created}</p>
+              </div>
+              <div>
+                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>UPDATED</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--dash-accent)' }}>{syncResult.updated}</p>
+              </div>
+              <div>
+                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>TOTAL STORED</p>
+                <p className="text-xl font-bold">{syncResult.total}</p>
+              </div>
+            </div>
+            {syncResult.newestTitle && (
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--dash-border)' }}>
+                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>LATEST SYNCED</p>
+                <p className="font-bold">{syncResult.newestTitle}</p>
+                <p className="text-xs" style={{ color: 'var(--dash-text-secondary)' }}>{new Date(syncResult.newestPublishedAt!).toLocaleDateString()}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2" style={{borderBottom: '1px solid var(--dash-border)'}}>
           {['all', 'draft', 'in_review', 'approved', 'published', 'archived'].map((status) => (

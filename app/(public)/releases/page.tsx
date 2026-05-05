@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
+import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
 
 type FilterType = 'all' | 'native_governed' | 'legacy_registry';
 type FormatFilter = 'all' | 'video' | 'audio' | 'short' | 'live' | 'playlist';
@@ -30,6 +31,8 @@ interface YouTubeRelease {
     govType: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function Releases() {
     const [releases, setReleases] = useState<YouTubeRelease[]>([]);
     const [loading, setLoading] = useState(true);
@@ -47,6 +50,19 @@ export default function Releases() {
     const fetchVideos = async (showLoader: boolean = false, mode: SortOrder = sortOrder) => {
         if (showLoader) {
             setLoading(true);
+            try {
+                // Check if we should do a server-side sync (if admin is logged in)
+                const syncRes = await fetch('/api/releases/import-youtube', { method: 'POST' });
+                if (syncRes.ok) {
+                    console.log("Server-side sync successful");
+                } else {
+                    // If not admin or sync fails, just clear client cache and re-fetch
+                    const { youtubeService } = await import('../../../lib/youtube-service');
+                    youtubeService.clearCache();
+                }
+            } catch (e) {
+                console.warn("Sync/Cache clear failed", e);
+            }
         }
 
         try {
@@ -69,7 +85,7 @@ export default function Releases() {
                             title: r.title,
                             description: r.description,
                             thumbnailUrl: r.thumbnailUrl,
-                            publishedDate: r.releaseDate,
+                            publishedDate: getBestReleaseDate(r),
                             durationSeconds: r.durationSeconds,
                             durationFormatted: r.durationFormatted,
                             views: r.viewCount || 0,
@@ -97,7 +113,7 @@ export default function Releases() {
                             title: r.title,
                             description: r.description,
                             thumbnailUrl: r.thumbnailUrl,
-                            publishedDate: r.releaseDate,
+                            publishedDate: getBestReleaseDate(r),
                             durationSeconds: r.durationSeconds,
                             durationFormatted: r.durationFormatted,
                             views: r.viewCount || 0,
@@ -111,41 +127,12 @@ export default function Releases() {
                 }
             }
 
-            // 2. Fetch from YouTube Service (Live API or Static Fallback)
-            let youtubeVideos: YouTubeRelease[] = [];
-            try {
-                const { youtubeService } = await import('../../../lib/youtube-service');
-                const raw = mode === 'popular'
-                    ? await youtubeService.getPopularVideos(REGISTRY_FETCH_LIMIT)
-                    : await youtubeService.getLatestVideos(REGISTRY_FETCH_LIMIT);
-                youtubeVideos = (raw as any[]).map((v) => ({
-                    ...v,
-                    format: v.format || (Number(v.durationSeconds) <= 60 ? 'short' : 'video'),
-                    govType: v.releaseType || v.govType || '',
-                }));
-            } catch (ytErr) {
-                console.warn("YouTube Service fetch failed, using CMS data only", ytErr);
-            }
-
-            // 3. Merge: prefer CMS data for overlapping IDs, but include unique YouTube videos
-            const cmsIds = new Set(cmsVideos.map(v => v.id));
-            const uniqueYoutubeVideos = youtubeVideos.filter(v => !cmsIds.has(v.id));
-            
-            const combined = [...cmsVideos, ...uniqueYoutubeVideos];
-            
-            if (combined.length === 0 && !lastFetchError) {
-                // If we got nothing at all and no error, maybe the CMS is empty?
-                // But the user expects at least the 14 static ones.
-                const { STATIC_YOUTUBE_VIDEOS } = await import('../../../app/data/youtube-videos');
-                setReleases((STATIC_YOUTUBE_VIDEOS as any[]).map((v) => ({
-                    ...v,
-                    format: v.format || (Number(v.durationSeconds) <= 60 ? 'short' : 'video'),
-                    govType: v.releaseType || v.govType || '',
-                })));
-            } else {
-                setReleases(combined);
+            console.log(`[ReleasesPage] Fetched ${cmsVideos.length} releases from CMS API.`);
+            if (cmsVideos.length > 0) {
+              console.log(`[ReleasesPage] First 3:`, cmsVideos.slice(0, 3).map(v => `${v.title} (${v.publishedDate})`));
             }
             
+            setReleases(cmsVideos);
             setError(null);
             setLastSync(new Date().toISOString());
         } catch (err: any) {
@@ -157,6 +144,7 @@ export default function Releases() {
                 const { STATIC_YOUTUBE_VIDEOS } = await import('../../../app/data/youtube-videos');
                 setReleases((STATIC_YOUTUBE_VIDEOS as any[]).map((v) => ({
                     ...v,
+                    publishedDate: v.publishedDate || v.publishedAt || new Date().toISOString(),
                     format: v.format || (Number(v.durationSeconds) <= 60 ? 'short' : 'video'),
                     govType: v.releaseType || v.govType || '',
                 })));
@@ -230,7 +218,7 @@ export default function Releases() {
             }
 
             if (yearFilter !== 'all') {
-                const releaseYear = new Date(release.publishedDate).getFullYear();
+                const releaseYear = new Date(getBestReleaseDate(release)).getFullYear();
                 if (releaseYear !== parseInt(yearFilter)) return false;
             }
 
@@ -243,15 +231,7 @@ export default function Releases() {
             return true;
         });
 
-        if (sortOrder === 'new') {
-            filtered.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
-        } else if (sortOrder === 'old') {
-            filtered.sort((a, b) => new Date(a.publishedDate).getTime() - new Date(b.publishedDate).getTime());
-        } else if (sortOrder === 'popular') {
-            filtered.sort((a, b) => b.views - a.views);
-        }
-
-        return filtered;
+        return sortReleases(filtered, sortOrder);
     }, [releases, filterType, filterFormat, durationFilter, yearFilter, searchQuery, sortOrder]);
 
     const totalPages = Math.ceil(filteredReleases.length / ITEMS_PER_PAGE);

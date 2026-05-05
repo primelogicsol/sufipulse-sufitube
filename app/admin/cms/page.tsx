@@ -19,7 +19,8 @@ import {
   Image,
   Users,
   BookOpen,
-  Settings
+  Settings,
+  Globe
 } from 'lucide-react';
 
 export default function CMSPage() {
@@ -176,6 +177,15 @@ export default function CMSPage() {
             <Users className="mb-2" size={24} style={{color: 'var(--dash-accent)'}} />
             <p className="font-semibold" style={{color: 'var(--dash-text-primary)'}}>Roles & Permissions</p>
             <p className="text-sm" style={{color: 'var(--dash-text-secondary)'}}>Access control</p>
+          </Link>
+
+          <Link
+            href="/admin/cms/lyrics-requests"
+            className="dashboard-card p-4 cursor-pointer hover:border-[color:var(--dash-accent)] transition"
+          >
+            <Globe className="mb-2" size={24} style={{color: 'var(--dash-accent)'}} />
+            <p className="font-semibold" style={{color: 'var(--dash-text-primary)'}}>Lyrics Requests</p>
+            <p className="text-sm" style={{color: 'var(--dash-text-secondary)'}}>On-demand translations</p>
           </Link>
         </div>
 

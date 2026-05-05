@@ -7,3 +7,5 @@ export type { LanguageSelectorProps } from './LanguageSelector';
 export { SideBySideComparison } from './SideBySideComparison';
 
 export { SubtitlePasteEditor } from './SubtitlePasteEditor';
+
+export { LyricsRequestModal } from './LyricsRequestModal';

@@ -14,6 +14,7 @@ import { CountUp } from './components/ui/CountUp';
 import { literaryArticles } from './data/literary-articles';
 import Image from 'next/image';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
+import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
 
 interface FeaturedArticle {
   id: string;
@@ -37,6 +38,8 @@ interface Publication {
   youtube_video_id?: string;
   description?: string;
 }
+
+export const dynamic = 'force-dynamic';
 
 export default function Home() {
   // const { releases, loading } = useReleases();
@@ -98,7 +101,7 @@ export default function Home() {
           type: 'music' as const,
           title: r.title,
           slug: r.youtubeId,
-          published_at: r.releaseDate,
+          published_at: getBestReleaseDate(r),
           description: r.description,
           artwork_url: r.thumbnailUrl,
           youtube_video_id: r.youtubeId,
@@ -106,7 +109,7 @@ export default function Home() {
 
         const [rankedRes, recentRes] = await Promise.all([
           fetch('/api/releases?status=published&sort=ranked&limit=8'),
-          fetch('/api/releases?status=published&limit=8'),
+          fetch('/api/releases?status=published&limit=100'), // Fetch more to ensure correct sorting before slicing
         ]);
 
         let rankedMusic: Publication[] = [];
@@ -118,33 +121,27 @@ export default function Home() {
         let recentMusic: Publication[] = [];
         if (recentRes.ok) {
           const data: any[] = await recentRes.json();
-          if (Array.isArray(data)) recentMusic = data.filter((r: any) => r.youtubeId).map(toPublication);
+          if (Array.isArray(data)) {
+            console.log(`[Homepage] Fetched ${data.length} recent releases.`);
+            recentMusic = data.filter((r: any) => r.youtube_video_id || r.youtubeId).map(toPublication);
+          }
         }
 
-        if (rankedMusic.length > 0 || recentMusic.length > 0) {
-          setLatestPublications(rankedMusic.length > 0 ? rankedMusic : recentMusic);
-          setRecentReleases(recentMusic.length > 0 ? recentMusic : rankedMusic);
+        const sortedRecent = sortReleases(recentMusic, 'all').slice(0, 8);
+        console.log(`[Homepage] Sorted recent count: ${sortedRecent.length}`);
+        if (sortedRecent.length > 0) {
+          console.log(`[Homepage] Top item: ${sortedRecent[0].title}`);
+        }
+
+        if (rankedMusic.length > 0 || sortedRecent.length > 0) {
+          setLatestPublications(rankedMusic.length > 0 ? rankedMusic : sortedRecent);
+          setRecentReleases(sortedRecent);
           setLastReleaseSync(new Date().toISOString());
           setPubsLoading(false);
           return;
         }
 
-        // Fallback: YouTube API (recency order)
-        const { youtubeService } = await import('../lib/youtube-service');
-        const videos = await youtubeService.getLatestVideos(8);
-        const ytMusic: Publication[] = videos.map((video: any) => ({
-          id: video.id,
-          type: 'music' as const,
-          title: video.title,
-          slug: video.id,
-          published_at: video.publishedDate,
-          description: video.description,
-          artwork_url: video.thumbnailUrl,
-          youtube_video_id: video.id,
-        }));
-        setLatestPublications(ytMusic.slice(0, 8));
-        setRecentReleases(ytMusic.slice(0, 8));
-        setLastReleaseSync(new Date().toISOString());
+        // Fallback: If everything else failed, use static data if we have it
       } catch (err) {
         console.error('Error fetching latest music releases:', err);
         setLatestPublications([]);
