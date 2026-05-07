@@ -13,16 +13,43 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
     const youtubeId = searchParams.get('youtubeId');
+    const key = searchParams.get('key');
     const status = searchParams.get('status');
     const limit = searchParams.get('limit');
 
-    console.log(`[API /api/releases] GET: status=${status}, youtubeId=${youtubeId}, slug=${slug}`);
+    console.log(`[API /api/releases] GET: status=${status}, key=${key}, youtubeId=${youtubeId}, slug=${slug}`);
+
+    if (key) {
+      const release = cmsServerStorage.getReleaseByKey(key);
+      if (!release) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      if (release.status !== 'published') {
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) {
+          return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        }
+        return NextResponse.json({ ...release, resolution_source: 'cms_key_admin' }, {
+          headers: { 'Cache-Control': 'no-store' },
+        });
+      }
+      return NextResponse.json({
+        ...release,
+        resolution_source: 'cms_key',
+      }, { headers: cacheHeaders });
+    }
 
     if (slug) {
       const release = cmsServerStorage.getReleaseBySlug(slug);
       if (!release) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
+
+      // Ensure thumbnail is present for resilience
+      if (!release.thumbnailUrl && release.youtubeId) {
+        release.thumbnailUrl = `https://i.ytimg.com/vi/${release.youtubeId}/hqdefault.jpg`;
+      }
+
       if (release.status !== 'published') {
         const authResult = await requireAdmin(request);
         if (authResult instanceof NextResponse) {
@@ -37,7 +64,6 @@ export async function GET(request: NextRequest) {
         resolution_source: 'cms_slug',
       }, { headers: cacheHeaders });
     }
-
     if (youtubeId) {
       const release = cmsServerStorage.getReleaseByYoutubeId(youtubeId);
       if (!release) {
