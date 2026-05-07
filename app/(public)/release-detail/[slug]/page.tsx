@@ -806,7 +806,12 @@ function Release() {
   }, []);
 
   const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return "";
+    }
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -2210,7 +2215,6 @@ function Release() {
                         <button
                           onClick={() => {
                             if (resolvedVideoId) {
-                              setVideoReady(false);
                               setVideoLoaded(true);
                             } else {
                               window.open(
