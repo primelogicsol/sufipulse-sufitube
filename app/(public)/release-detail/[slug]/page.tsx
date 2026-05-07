@@ -616,10 +616,10 @@ function Release() {
   const [videoReady, setVideoReady] = useState(false);
   const [release, setRelease] = useState<any>(null);
   const [resolutionSource, setResolutionSource] = useState<
-    "cms_slug" | "cms_youtube_compat" | "external_youtube_fallback" | null
+   "cms_key" | "cms_slug" | "cms_youtube_compat" | "external_youtube_fallback" | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
 
   const handlePlatformStatusChange = async (idx: number, newStatus: string) => {
     if (!release) return;
@@ -714,9 +714,24 @@ function Release() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVideoEnded, setIsVideoEnded] = useState(false);
   const [videoDuration, setVideoDuration] = useState(0);
+
   const [hasReached70, setHasReached70] = useState(false);
   const trackedMilestones = useRef<Set<number>>(new Set());
   const [officialSubscribeReady, setOfficialSubscribeReady] = useState(false);
+
+  const resolvedVideoId =
+    release?.youtubeId ||
+    release?.youtube_video_id ||
+    release?.youtubeVideoId ||
+    (slug && slug.length === 11 ? slug : "");
+
+  console.log("VIDEO ID:", resolvedVideoId);
+
+  useEffect(() => {
+    if (resolvedVideoId) {
+      console.log("Initializing player for:", resolvedVideoId);
+    }
+  }, [resolvedVideoId]);
 
   // Master Timing Generator State
   const [masterTimingText, setMasterTimingText] = useState("");
@@ -830,18 +845,6 @@ function Release() {
     : `${effectiveYouTubeChannelUrl}${effectiveYouTubeChannelUrl.includes("?") ? "&" : "?"}sub_confirmation=1`;
   const joinSufiPulseUrl = process.env.NEXT_PUBLIC_JOIN_URL || "/register";
 
-  const resolvedVideoId =
-    release?.youtubeId ||
-    release?.youtube_video_id ||
-    release?.youtubeVideoId ||
-    release?.videoId ||
-    getYouTubeVideoId(
-      release?.youtube_url ||
-        release?.youtubeUrl ||
-        release?.mediaUrl ||
-        release?.videoUrl,
-    ) ||
-    (slug && slug.length === 11 ? slug : "");
   const thumbnailCandidates = buildYouTubeThumbnailCandidates(resolvedVideoId, [
     release?.thumbnail_url,
     release?.thumbnailUrl,
@@ -1136,47 +1139,30 @@ function Release() {
           apple_music_url: "",
         });
 
-        setError(null);
+        setReleaseError(null);
 
         let resolvedRelease: any = null;
         let resolvedSource:
+          | "cms_key"
           | "cms_slug"
           | "cms_youtube_compat"
           | "external_youtube_fallback"
           | null = null;
 
-        // 1) Try by slug — isolated so a network failure doesn't skip the youtubeId fallback
+        // 1) Try combined key lookup (slug, youtubeId, etc.)
         try {
-          const slugRes = await fetch(
-            `/api/releases?slug=${encodeURIComponent(slug)}`,
+          const keyRes = await fetch(
+            `/api/releases?key=${encodeURIComponent(slug)}`,
           );
-          if (slugRes.ok) {
-            const data = await slugRes.json();
+          if (keyRes.ok) {
+            const data = await keyRes.json();
             if (data && !data.error) {
               resolvedRelease = data;
-              resolvedSource = "cms_slug" as const;
+              resolvedSource = "cms_key" as const;
             }
           }
         } catch {
-          // Slug lookup failed — continue to youtubeId fallback
-        }
-
-        // 2) Try by youtubeId (URL slug may be a YouTube video ID)
-        if (!resolvedRelease) {
-          try {
-            const compatRes = await fetch(
-              `/api/releases?youtubeId=${encodeURIComponent(slug)}`,
-            );
-            if (compatRes.ok) {
-              const data = await compatRes.json();
-              if (data && !data.error) {
-                resolvedRelease = data;
-                resolvedSource = "cms_youtube_compat" as const;
-              }
-            }
-          } catch {
-            // YoutubeId lookup also failed — will fall through to YouTube API
-          }
+          // Key lookup failed — will fall through to YouTube API
         }
 
         if (resolvedRelease) {
@@ -1195,7 +1181,7 @@ function Release() {
         const videos = await youtubeService.getVideosByIds(slug);
 
         if (!videos || videos.length === 0) {
-          setError("Video not found on SufiTube.");
+          setReleaseError("Video not found on SufiTube.");
           setLoading(false);
           return;
         }
@@ -1250,7 +1236,7 @@ function Release() {
       } catch (err: any) {
         console.error("Critical error in fetchVideoDetails:", err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        setError(`Failed to load release details: ${errorMessage}`);
+        setReleaseError(`Failed to load release details: ${errorMessage}`);
       } finally {
         setLoading(false);
       }
@@ -1768,13 +1754,13 @@ function Release() {
     );
   }
 
-  if (error || !release) {
+  if (releaseError || !release) {
     return (
       <Layout>
         <PageContainer>
           <div className="max-w-5xl mx-auto flex items-center justify-center min-h-96">
             <div className="text-neutral-500">
-              {error || "Release not found"}
+              {releaseError || "Release not found"}
             </div>
           </div>
         </PageContainer>
@@ -2210,7 +2196,7 @@ function Release() {
                     <>
                       <img
                         src={thumbnailCandidates[0]}
-                        alt={release.release_title}
+                        alt={release.release_title || release.title}
                         className="w-full h-full object-cover"
                         data-thumb-index="0"
                         onError={(e) => {
@@ -2229,7 +2215,7 @@ function Release() {
                             } else {
                               window.open(
                                 release.youtube_url ||
-                                  `https://www.youtube.com/results?search_query=${encodeURIComponent(release.release_title)}`,
+                                  `https://www.youtube.com/results?search_query=${encodeURIComponent(release.release_title || release.title)}`,
                                 "_blank",
                               );
                             }
@@ -2243,114 +2229,31 @@ function Release() {
                           />
                         </button>
                       </div>
-                      {release.duration_seconds && (
+                      {(release.duration_seconds || release.durationFormatted) && (
                         <div className="absolute bottom-4 right-4 bg-black/90 backdrop-blur-sm px-3 py-1.5 rounded text-sm text-white font-medium">
-                          {formatDuration(release.duration_seconds)}
+                          {release.durationFormatted ||
+                            formatDuration(release.duration_seconds)}
                         </div>
                       )}
                     </>
                   ) : resolvedVideoId ? (
-                    <>
-                      <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
-                        <YouTube
-                          videoId={resolvedVideoId}
-                          opts={{
-                            width: "100%",
-                            height: "100%",
-                            playerVars: {
-                              controls: 0,
-                              autoplay: 1,
-                              modestbranding: 1,
-                              rel: 0,
-                              playsinline: 1,
-                              iv_load_policy: 3,
-                              showinfo: 0,
-                            },
-                          }}
-                          onReady={(event) => {
-                            setPlayerTarget(event.target);
-                            try {
-                              const duration = event.target?.getDuration?.();
-                              if (duration) {
-                                setVideoDuration(Number(duration));
-                              }
-                            } catch (e) {}
-                            setVideoReady(true);
-                          }}
-                          onStateChange={(event) => {
-                            setIsPlaying(event.data === 1);
-                          }}
-                          className="w-full h-full"
-                        />
-                      </div>
-
-                      {/* Video Overlay Layer (Lyrics/Subtitles) */}
-                      {videoReady && (
-                        <div className="absolute inset-0 pointer-events-none z-[20]">
-                          <VideoOverlay
-                            videoId={resolvedVideoId}
-                            currentTime={currentTime}
-                            activeLanguage={selectedSubtitleLanguage}
-                            release={release}
-                            showCaptions={showCaptions}
-                          />
-                        </div>
-                      )}
-
-                      {/* CC Language Indicator Badge */}
-                      {showCaptions && selectedSubtitleLanguage && (
-                        <div className="absolute top-4 left-4 z-[25] bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-md border border-blue-500/30 flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                          <span className="text-xs text-blue-200 font-medium">
-                            CC: {getLanguageLabel(selectedSubtitleLanguage)}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Video Controls Overlay */}
-                      <div className="absolute left-0 right-0 bottom-0 z-[24] p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={togglePlayback}
-                            className="p-2 rounded-md bg-black/55 hover:bg-black/80 text-white border border-white/10 pointer-events-auto"
-                            title={isPlaying ? "Pause" : "Play"}
-                          >
-                            {isPlaying ? (
-                              <Pause className="w-4 h-4" />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                          </button>
-
-                          <input
-                            type="range"
-                            min={0}
-                            max={videoDuration || 0}
-                            value={Math.min(
-                              currentTime,
-                              videoDuration || currentTime,
-                            )}
-                            onChange={(e) => scrubTo(Number(e.target.value))}
-                            className="flex-1 accent-amber-500 pointer-events-auto"
-                          />
-
-                          <span className="text-xs text-neutral-200 min-w-[84px] text-right">
-                            {formatDuration(Math.floor(currentTime || 0))} /{" "}
-                            {formatDuration(Math.floor(videoDuration || 0))}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="absolute top-4 right-4 z-[25] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => setShowPlayerSettings((prev) => !prev)}
-                          className="p-2 bg-black/60 hover:bg-black/90 rounded-md text-white backdrop-blur-sm border border-white/10 pointer-events-auto"
-                          title="Player settings"
-                        >
-                          <Settings2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${resolvedVideoId}?autoplay=1`}
+                      width="100%"
+                      height="100%"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                      className="w-full h-full aspect-video"
+                    ></iframe>
+                  ) : release.mediaUrl || release.videoUrl ? (
+                    <video
+                      controls
+                      className="w-full h-full"
+                      poster={thumbnailCandidates[0]}
+                    >
+                      <source src={release.mediaUrl || release.videoUrl} />
+                      Your browser does not support the video tag.
+                    </video>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-neutral-500 bg-neutral-900/50">
                       <div className="text-center">
@@ -3168,8 +3071,10 @@ function Release() {
                             )}
                           </select>
                           <button
-                            onClick={() => setCaptionsEnabled(!captionsEnabled)}
-                            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
+                            onClick={() => {
+                              const newVal = !captionsEnabled;
+                              setCaptionsEnabled(newVal);
+                            }}                            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
                               captionsEnabled
                                 ? "bg-emerald-900/30 border-emerald-700/50 text-emerald-300"
                                 : "bg-neutral-700 border-neutral-600 text-neutral-400"
