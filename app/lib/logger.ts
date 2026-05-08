@@ -61,10 +61,7 @@ class Logger {
       outputFn(this.formatLog(entry));
     }
 
-    // In production, also log errors to stderr for monitoring tools
-    if (this.isProduction && level === 'error' && typeof process !== 'undefined' && process.stderr) {
-      process.stderr.write(JSON.stringify(entry) + '\n');
-    }
+
   }
 
   debug(message: string, context?: Record<string, any>) {

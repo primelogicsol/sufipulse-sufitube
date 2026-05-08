@@ -27,6 +27,8 @@
     "@sentry/nextjs": "^10.47.0",
     "@stripe/react-stripe-js": "^6.2.0",
     "@stripe/stripe-js": "^9.3.1",
+    "@swc/core": "^1.15.33",
+    "@swc/helpers": "^0.5.21",
     "@t3-oss/env-nextjs": "^0.13.11",
     "@types/nodemailer": "^7.0.11",
     "bcryptjs": "^3.0.3",
@@ -57,6 +59,7 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.4.1",
     "playwright": "^1.59.1",
+    "swc-node": "^1.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

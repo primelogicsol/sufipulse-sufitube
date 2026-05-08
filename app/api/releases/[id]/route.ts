@@ -137,7 +137,17 @@ export async function PUT(
       }
     }
 
-    const merged = { ...existing, ...body, slug: nextSlug, youtubeId: nextYoutubeId, id };
+    const merged = { 
+      ...existing, 
+      ...body, 
+      id: existing.id, // Always preserve the original ID
+      slug: nextSlug, 
+      youtubeId: nextYoutubeId,
+      // Preserve critical fields that should not be easily changed
+      source: existing.source,
+      status: body.status || existing.status,
+      visibility: body.visibility || existing.visibility,
+    };
 
     // Generate social share kit whenever status becomes published (first publish or re-publish)
     const isBeingPublished = existing.status !== 'published' && merged.status === 'published';

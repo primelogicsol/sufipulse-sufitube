@@ -1,0 +1,10 @@
+{
+  "HomePage": {
+    "title": "SufiPulse — Sacred Sufi Music, Poetry & Kalam",
+    "description": "The premier platform for authentic Sufi music, sacred poetry, and literary works from Kashmir and the Indian Subcontinent."
+  },
+  "ReleasePage": {
+    "title": "{releaseTitle} | SufiPulse",
+    "description": "Listen to {releaseTitle}, a sacred Sufi music release from SufiPulse."
+  }
+}

@@ -10,10 +10,23 @@ const REQUESTS_DATA_FILE = path.join(SERVER_DATA_DIR, 'lyrics-requests.json');
 const SEED_FILE = path.join(process.cwd(), 'lib', 'cms-seed-releases.json');
 
 let hydrated = false;
+let lastHydratedMtime = 0;
 
-const ensureHydrated = () => {
-  if (hydrated) return;
+const ensureHydrated = (force = false) => {
+  let currentMtime = 0;
+  try {
+    if (fs.existsSync(SERVER_DATA_FILE)) {
+      currentMtime = fs.statSync(SERVER_DATA_FILE).mtimeMs;
+    }
+  } catch (e) {}
 
+  const needsRehydration = force || !hydrated || (currentMtime > lastHydratedMtime);
+
+  if (!needsRehydration) {
+    return;
+  }
+
+  console.log(`[cms-storage-server] ${force ? 'FORCING' : 'Triggering'} re-hydration from disk... (File Mtime: ${currentMtime}, Last: ${lastHydratedMtime})`);
   try {
     if (fs.existsSync(SERVER_DATA_FILE)) {
       const raw = fs.readFileSync(SERVER_DATA_FILE, 'utf8');
@@ -48,85 +61,70 @@ const ensureHydrated = () => {
     }
 
     hydrated = true;
-  } catch (error) {
+    lastHydratedMtime = currentMtime;
+    } catch (error) {
     console.error('Failed to hydrate server CMS storage:', error);
     hydrated = true;
-  }
-};
+    }
+    };
+
 
 const persist = () => {
+  const data = cmsStorage.exportReleases();
+  const reqData = cmsStorage.exportLyricsRequests();
+  
   try {
-    fs.mkdirSync(SERVER_DATA_DIR, { recursive: true });
-    const releases = cmsStorage.exportReleases();
-    fs.writeFileSync(SERVER_DATA_FILE, JSON.stringify(releases, null, 2), 'utf8');
-    
-    const requests = cmsStorage.exportLyricsRequests();
-    fs.writeFileSync(REQUESTS_DATA_FILE, JSON.stringify(requests, null, 2), 'utf8');
+    if (!fs.existsSync(SERVER_DATA_DIR)) {
+      fs.mkdirSync(SERVER_DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(SERVER_DATA_FILE, JSON.stringify(data, null, 2));
+    fs.writeFileSync(REQUESTS_DATA_FILE, JSON.stringify(reqData, null, 2));
   } catch (error) {
-    console.error('Failed to persist server CMS storage:', error);
+    console.error('Failed to persist CMS data to disk:', error);
   }
 };
 
 export const cmsServerStorage = {
-  getRelease(id: string) {
+  forceHydrate(): void {
+    ensureHydrated(true);
+  },
+
+  getRelease(id: string): CMSRelease | null {
     ensureHydrated();
     return cmsStorage.getRelease(id);
   },
 
-  getReleaseBySlug(slug: string) {
+  getReleaseBySlug(slug: string): CMSRelease | null {
     ensureHydrated();
     return cmsStorage.getReleaseBySlug(slug);
   },
 
-  getReleaseByYoutubeId(youtubeId: string) {
+  getReleaseByYoutubeId(youtubeId: string): CMSRelease | null {
     ensureHydrated();
     return cmsStorage.getReleaseByYoutubeId(youtubeId);
   },
 
-  getAllReleases(filter?: { status?: string; category?: string }) {
+  getAllReleases(filter?: { status?: string; category?: string }): CMSRelease[] {
     ensureHydrated();
     return cmsStorage.getAllReleases(filter);
   },
 
-  getPublishedReleases(limit?: number) {
+  getPublishedReleases(limit?: number): CMSRelease[] {
     ensureHydrated();
-    return cmsStorage.getPublicReleases(limit);
+    return cmsStorage.getPublishedReleases(limit);
   },
 
-  getPublicReleases(limit?: number) {
-    ensureHydrated();
-    return cmsStorage.getPublicReleases(limit);
-  },
-
-  getRankedReleases(limit?: number) {
-    ensureHydrated();
-    const releases = cmsStorage.getPublicReleases();
-    const now = Date.now();
-    const thirtyDaysMs = 30 * 24 * 3_600_000;
-    const scored = releases.map((r) => {
-      const ageMs = now - new Date(getBestReleaseDate(r)).getTime();
-      const recency = Math.max(0, 1 - ageMs / thirtyDaysMs);
-      const score = (r.viewCount || 0) * 0.5 + (r.likeCount || 0) * 0.3 + recency * 100 * 0.2;
-      return { release: r, score };
-    });
-    scored.sort((a, b) => b.score - a.score);
-    const ranked = scored.map((s) => s.release);
-    return limit ? ranked.slice(0, limit) : ranked;
-  },
-
-  saveRelease(release: CMSRelease) {
+  saveRelease(release: CMSRelease): CMSRelease {
     ensureHydrated();
     const saved = cmsStorage.saveRelease(release);
     persist();
     return saved;
   },
 
-  deleteRelease(id: string) {
+  deleteRelease(id: string): boolean {
     ensureHydrated();
     const deleted = cmsStorage.deleteRelease(id);
-    if (deleted) {
-      persist();
-    }
+    if (deleted) persist();
     return deleted;
   },
 
@@ -137,22 +135,8 @@ export const cmsServerStorage = {
     return saved;
   },
 
-  getLyricsRequest(id: string) {
-    ensureHydrated();
-    return cmsStorage.getLyricsRequest(id);
-  },
-
   getAllLyricsRequests() {
     ensureHydrated();
     return cmsStorage.getAllLyricsRequests();
-  },
-
-  deleteLyricsRequest(id: string) {
-    ensureHydrated();
-    const deleted = cmsStorage.deleteLyricsRequest(id);
-    if (deleted) {
-      persist();
-    }
-    return deleted;
-  },
+  }
 };

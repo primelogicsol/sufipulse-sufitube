@@ -197,7 +197,7 @@ export default function Home() {
             </h1>
 
             <p className="text-[var(--text-xl)] text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-10 leading-[var(--leading-relaxed)] font-light">
-              SufiPulse Studio USA is a disciplined institution for the authorship, performance, production, review, and entrusted release of sacred expression through structured governance and transparent stewardship.
+              SufiPulse Studio USA, managed by Dr. Kumar Foundation USA, is a disciplined institution dedicated to the authorship, performance, production, review, and entrusted release of sacred expression through structured governance and transparent stewardship.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">

@@ -26,6 +26,9 @@ interface YouTubeVideo {
     durationSeconds: number;
     durationFormatted: string;
     views: number;
+    likes?: number;
+    comments?: number;
+    liveBroadcastContent?: string;
     source: string;
     format: ReleaseFormat;
 }
@@ -55,7 +58,7 @@ class YouTubeService {
 
     constructor(config: Partial<YouTubeServiceConfig> = {}) {
         this.config = {
-            apiKey: config.apiKey || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEY || '',
+            apiKey: config.apiKey || process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
             channelId: config.channelId || 'UCraDr3i5A3k0j7typ6tOOsQ',
             cacheExpiryMs: config.cacheExpiryMs || 4 * 60 * 60 * 1000, // 4 hours
             maxRetries: config.maxRetries || 3,
@@ -223,6 +226,9 @@ class YouTubeService {
                     durationSeconds: durationSecs,
                     durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
                     views: parseInt(video.statistics?.viewCount || '0'),
+                    likes: parseInt(video.statistics?.likeCount || '0'),
+                    comments: parseInt(video.statistics?.commentCount || '0'),
+                    liveBroadcastContent: video.snippet.liveBroadcastContent || 'none',
                     source: 'youtube_legacy',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };
@@ -373,6 +379,9 @@ class YouTubeService {
                     durationSeconds: durationSecs,
                     durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
                     views: parseInt(video.statistics?.viewCount || '0'),
+                    likes: parseInt(video.statistics?.likeCount || '0'),
+                    comments: parseInt(video.statistics?.commentCount || '0'),
+                    liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
                     source: 'youtube_legacy',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };
@@ -444,6 +453,9 @@ class YouTubeService {
                 durationSeconds: durationSecs,
                 durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
                 views: parseInt(video.statistics?.viewCount || '0'),
+                likes: parseInt(video.statistics?.likeCount || '0'),
+                comments: parseInt(video.statistics?.commentCount || '0'),
+                liveBroadcastContent: video.snippet.liveBroadcastContent || 'none',
                 source: 'youtube_legacy',
                 format: inferFormat(durationSecs, hasLiveDetails),
             };
@@ -532,6 +544,9 @@ class YouTubeService {
                     durationSeconds: durationSecs,
                     durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
                     views: parseInt(video.statistics?.viewCount || '0'),
+                    likes: parseInt(video.statistics?.likeCount || '0'),
+                    comments: parseInt(video.statistics?.commentCount || '0'),
+                    liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
                     source: 'youtube_legacy',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };

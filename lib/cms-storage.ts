@@ -107,6 +107,20 @@ export interface CMSRelease {
     };
   };
   
+  // YouTube Operational Metadata (Cached)
+  youtubeStats?: {
+    viewCount: number;
+    likeCount: number;
+    commentCount: number;
+    duration: string;
+    durationSeconds: number;
+    publishedAt: string;
+    thumbnailUrl: string;
+    title: string;
+    liveBroadcastContent: string;
+  };
+  lastYoutubeSyncAt?: string;
+
   // Metadata
   availableLanguages: string[];
   defaultLanguage: string;

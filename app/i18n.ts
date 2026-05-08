@@ -79,17 +79,30 @@ export function formatNumber(number: number, locale: Locale = defaultLocale): st
   return number.toLocaleString('en-US');
 }
 
+import en from '@/messages/en.json';
+import ur from '@/messages/ur.json';
+
+const messages: Record<Locale, any> = {
+  en,
+  ur,
+};
+
 /**
  * Translate a key path to actual text
- * Simple implementation - for production use next-intl package
  */
 export function t(key: string, locale: Locale = defaultLocale): string {
-  // This is a placeholder - in production, load from message files
   const keys = key.split('.');
-  let value: any = keys[0];
+  let value = messages[locale] || messages[defaultLocale];
   
-  // TODO: Implement actual message loading from en.json / ur.json
-  return value;
+  for (const k of keys) {
+    if (value && typeof value === 'object' && k in value) {
+      value = value[k];
+    } else {
+      return key; // Fallback to key if not found
+    }
+  }
+
+  return typeof value === 'string' ? value : key;
 }
 
 export default {

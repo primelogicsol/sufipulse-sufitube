@@ -2,8 +2,9 @@
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Music, Filter, Search, Play, Calendar, Eye, Youtube } from 'lucide-react';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { Music, Filter, Search, Play, Calendar, Eye, Youtube, Clock, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
@@ -12,14 +13,14 @@ import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
 type FilterType = 'all' | 'native_governed' | 'legacy_registry';
 type FormatFilter = 'all' | 'video' | 'audio' | 'short' | 'live' | 'playlist';
 type DurationFilter = 'all' | 'short' | 'standard' | 'long';
-type SortOrder = 'all' | 'new' | 'old' | 'popular';
+type SortOrder = 'default' | 'newest' | 'oldest' | 'popular';
 
 const ITEMS_PER_PAGE = 12;
-const REGISTRY_FETCH_LIMIT = 500;
 
 interface YouTubeRelease {
     id: string;
     title: string;
+    slug: string;
     description: string;
     thumbnailUrl: string;
     publishedDate: string;
@@ -29,538 +30,436 @@ interface YouTubeRelease {
     source: string;
     format: 'video' | 'audio' | 'short' | 'live' | 'playlist';
     govType: string;
+    // Expanded fields for search
+    vocalist: string;
+    writer: string;
+    tags: string;
+    youtubeId: string;
 }
 
-export const dynamic = 'force-dynamic';
-
 export default function Releases() {
+    const { user } = useAuth();
     const [releases, setReleases] = useState<YouTubeRelease[]>([]);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [lastSync, setLastSync] = useState<string | null>(null);
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
     const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
     const [yearFilter, setYearFilter] = useState<string>('all');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('all');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('default');
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
-    const fetchVideos = async (showLoader: boolean = false, mode: SortOrder = sortOrder) => {
-        if (showLoader) {
-            setLoading(true);
-            try {
-                // Check if we should do a server-side sync (if admin is logged in)
-                const syncRes = await fetch('/api/releases/import-youtube', { method: 'POST' });
-                if (syncRes.ok) {
-                    console.log("Server-side sync successful");
-                } else {
-                    // If not admin or sync fails, just clear client cache and re-fetch
-                    const { youtubeService } = await import('../../../lib/youtube-service');
-                    youtubeService.clearCache();
-                }
-            } catch (e) {
-                console.warn("Sync/Cache clear failed", e);
-            }
-        }
-
+    const fetchVideos = async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
-            // 1. Fetch from CMS API (Robust Fetch with absolute URL fallback and retry)
-            let cmsVideos: YouTubeRelease[] = [];
-            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-            const endpoints = [
-                '/api/releases?status=published',
-                `${baseUrl}/api/releases?status=published`
-            ];
-
-            let lastFetchError = null;
-            for (const url of endpoints) {
-                try {
-                    const cmsRes = await fetch(url, { cache: 'no-store' });
-                    if (cmsRes.ok) {
-                        const cmsData = await cmsRes.json();
-                        cmsVideos = cmsData.map((r: any) => ({
-                            id: r.youtubeId || r.id,
-                            title: r.title,
-                            description: r.description,
-                            thumbnailUrl: r.thumbnailUrl,
-                            publishedDate: getBestReleaseDate(r),
-                            durationSeconds: r.durationSeconds,
-                            durationFormatted: r.durationFormatted,
-                            views: r.viewCount || 0,
-                            source: 'native',
-                            format: r.format || (Number(r.durationSeconds) <= 60 ? 'short' : 'video'),
-                            govType: r.releaseType || '',
-                        }));
-                        break; // Success!
-                    }
-                } catch (e) {
-                    lastFetchError = e;
-                    console.warn(`Registry fetch failed for ${url}, trying next...`, e);
-                }
-            }
-
-            // If everything failed, try one more time after a short delay
-            if (cmsVideos.length === 0 && lastFetchError) {
-                await new Promise(r => setTimeout(r, 1000));
-                try {
-                    const retryRes = await fetch('/api/releases?status=published', { cache: 'no-store' });
-                    if (retryRes.ok) {
-                        const cmsData = await retryRes.json();
-                        cmsVideos = cmsData.map((r: any) => ({
-                            id: r.youtubeId || r.id,
-                            title: r.title,
-                            description: r.description,
-                            thumbnailUrl: r.thumbnailUrl,
-                            publishedDate: getBestReleaseDate(r),
-                            durationSeconds: r.durationSeconds,
-                            durationFormatted: r.durationFormatted,
-                            views: r.viewCount || 0,
-                            source: 'native',
-                            format: r.format || (Number(r.durationSeconds) <= 60 ? 'short' : 'video'),
-                            govType: r.releaseType || '',
-                        }));
-                    }
-                } catch (e) {
-                    console.error("Final registry retry failed", e);
-                }
-            }
-
-            console.log(`[ReleasesPage] Fetched ${cmsVideos.length} releases from CMS API.`);
-            if (cmsVideos.length > 0) {
-              console.log(`[ReleasesPage] First 3:`, cmsVideos.slice(0, 3).map(v => `${v.title} (${v.publishedDate})`));
-            }
+            const url = new URL('/api/releases', window.location.origin);
+            url.searchParams.set('status', 'published');
             
-            setReleases(cmsVideos);
+            const cmsRes = await fetch(url.toString(), { cache: 'no-store' });
+            if (!cmsRes.ok) throw new Error('Failed to fetch releases');
+            const responseData = await cmsRes.json();
+            const cmsData = responseData.items || [];
+            
+            const mappedData = cmsData.map((r: any) => ({
+                id: r.youtubeId || r.id,
+                slug: r.slug,
+                title: r.title,
+                description: r.description || '',
+                thumbnailUrl: r.thumbnail || '',
+                publishedDate: r.publishedAt,
+                durationSeconds: Number(r.durationSeconds || 0),
+                durationFormatted: r.duration || '0:00',
+                views: Number(r.viewCount || 0),
+                source: r.source || 'native',
+                format: r.format || 'video',
+                govType: r.releaseType || 'native_governed',
+                // Metadata for search
+                vocalist: [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
+                writer: [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' '),
+                tags: Array.isArray(r.tags) ? r.tags.join(' ') : (r.description?.match(/#\w+/g)?.join(' ') || ''),
+                youtubeId: r.youtubeId || '',
+                lastYoutubeSyncAt: r.lastYoutubeSyncAt
+            }));
+
+            setReleases(mappedData);
             setError(null);
-            setLastSync(new Date().toISOString());
-        } catch (err: any) {
-            console.error("Critical error fetching videos:", err);
-            setError(err.message || "Failed to load videos");
             
-            // Last resort: show static data if everything crashed
-            try {
-                const { STATIC_YOUTUBE_VIDEOS } = await import('../../../app/data/youtube-videos');
-                setReleases((STATIC_YOUTUBE_VIDEOS as any[]).map((v) => ({
-                    ...v,
-                    publishedDate: v.publishedDate || v.publishedAt || new Date().toISOString(),
-                    format: v.format || (Number(v.durationSeconds) <= 60 ? 'short' : 'video'),
-                    govType: v.releaseType || v.govType || '',
-                })));
-            } catch (e) {}
+            if (responseData.needsRefresh && !silent) {
+                console.log('🔄 YouTube metadata is stale (>24h). Background refresh recommended.');
+            }
+        } catch (err: any) {
+            console.error("Error fetching releases:", err);
+            setError(err.message || "Failed to load releases");
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
+        }
+    };
+
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const res = await fetch('/api/releases/import-youtube', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoIds: [] }) // Empty array = fetch latest 100
+            });
+            if (!res.ok) throw new Error('Sync failed');
+            await fetchVideos(true);
+            alert('Sync complete! Latest videos imported.');
+        } catch (err: any) {
+            console.error("Sync error:", err);
+            alert('Failed to sync: ' + err.message);
+        } finally {
+            setSyncing(false);
         }
     };
 
     useEffect(() => {
-        fetchVideos(true, sortOrder);
-
-        // Keep releases automatically refreshed without manual intervention.
-        const refreshTimer = setInterval(() => {
-            fetchVideos(false, sortOrder);
-        }, 15 * 60 * 1000);
-
-        return () => clearInterval(refreshTimer);
+        fetchVideos();
     }, []);
-
-    // Re-fetch with the right API order when switching to/from "popular"
-    const prevSortRef = useRef<SortOrder>('all');
-    const prev = prevSortRef.current;
-    useEffect(() => {
-        const changed = (sortOrder === 'popular') !== (prev === 'popular');
-        prevSortRef.current = sortOrder;
-        if (changed) {
-            fetchVideos(true, sortOrder);
-        }
-    }, [sortOrder]);
-
-    const years = useMemo(() => {
-        const uniqueYears = new Set(
-            releases.map(r => new Date(r.publishedDate).getFullYear())
-        );
-        return Array.from(uniqueYears).sort((a, b) => b - a);
-    }, [releases]);
-
-    const FORMAT_LABELS: Record<string, string> = {
-        video: 'Videos',
-        audio: 'Audios',
-        short: 'Shorts',
-        live: 'Live',
-        playlist: 'Playlists',
-    };
-    const FORMAT_ORDER = ['video', 'audio', 'short', 'live', 'playlist'];
-
-    const availableFormats = useMemo(() => {
-        const present = new Set(releases.map(r => r.format));
-        return FORMAT_ORDER.filter(f => present.has(f as any));
-    }, [releases]);
-
-    // If the active format filter is no longer present in loaded data, reset it
-    useEffect(() => {
-        if (filterFormat !== 'all' && !availableFormats.includes(filterFormat)) {
-            setFilterFormat('all');
-        }
-    }, [availableFormats]);
 
     const filteredReleases = useMemo(() => {
         let filtered = releases.filter(release => {
             if (filterType !== 'all' && release.govType !== filterType) return false;
-
             if (filterFormat !== 'all' && release.format !== filterFormat) return false;
-
             if (durationFilter !== 'all') {
                 const minutes = release.durationSeconds / 60;
                 if (durationFilter === 'short' && minutes >= 3) return false;
                 if (durationFilter === 'standard' && (minutes < 3 || minutes > 8)) return false;
                 if (durationFilter === 'long' && minutes <= 8) return false;
             }
-
             if (yearFilter !== 'all') {
-                const releaseYear = new Date(getBestReleaseDate(release)).getFullYear();
+                const releaseYear = new Date(release.publishedDate).getFullYear();
                 if (releaseYear !== parseInt(yearFilter)) return false;
             }
-
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
-                return release.title.toLowerCase().includes(query) ||
-                    release.description.toLowerCase().includes(query);
+                return (
+                    release.title.toLowerCase().includes(query) ||
+                    release.description.toLowerCase().includes(query) ||
+                    release.vocalist.toLowerCase().includes(query) ||
+                    release.writer.toLowerCase().includes(query) ||
+                    release.tags.toLowerCase().includes(query) ||
+                    release.youtubeId.toLowerCase().includes(query) ||
+                    release.slug.toLowerCase().includes(query)
+                );
             }
-
             return true;
         });
 
-        return sortReleases(filtered, sortOrder);
-    }, [releases, filterType, filterFormat, durationFilter, yearFilter, searchQuery, sortOrder]);
+        // Use standard sort names but map to utility or implement directly
+        // Mapping: default -> all, newest -> new, oldest -> old, popular -> popular
+        const internalSortMap: Record<string, string> = {
+            default: 'all',
+            newest: 'new',
+            oldest: 'old',
+            popular: 'popular'
+        };
 
+        return sortReleases(filtered as any, internalSortMap[sortOrder]) as unknown as YouTubeRelease[];
+    }, [releases, filterType, filterFormat, durationFilter, yearFilter, searchQuery, sortOrder]);
+    
     const totalPages = Math.ceil(filteredReleases.length / ITEMS_PER_PAGE);
     const paginatedReleases = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         return filteredReleases.slice(startIndex, startIndex + ITEMS_PER_PAGE);
     }, [filteredReleases, currentPage]);
 
-    const formatViewsDisplay = (count: number) => {
-        if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-        if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-        return count.toString();
-    };
+    const years = useMemo(() => {
+        const yearSet = new Set<number>();
+        releases.forEach(r => {
+            const year = new Date(r.publishedDate).getFullYear();
+            if (!isNaN(year)) yearSet.add(year);
+        });
+        return Array.from(yearSet).sort((a, b) => b - a);
+    }, [releases]);
 
     return (
         <Layout>
-            <Section className="pt-16 pb-6">
-                <PageContainer>
-                    <div className="max-w-5xl mx-auto text-center">
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 leading-tight">
-                            SufiTube
-                        </h1>
-                        <p className="text-2xl md:text-3xl text-amber-400/90 mb-3 font-light">
-                            Official Visual Release Registry
-                        </p>
-                        <p className="text-lg text-neutral-300 leading-relaxed">
-                            Experience the soulful renditions, studio sessions, and official visual releases from SufiPulse.
-                        </p>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <PageContainer>
-                <div className="max-w-7xl mx-auto">
-
-                    {/* ── Global Reach Analytics Strip ── */}
+            <section className="w-full overflow-hidden pt-24">
+                <div className="max-w-7xl mx-auto px-6 lg:px-8">
                     <GlobalReachStrip />
-
-                    <div className="mb-8 space-y-6">
-                        <div className="flex items-center gap-2">
-                            <Filter className="w-4 h-4 text-neutral-500" />
-                            <span className="text-xs text-neutral-500 uppercase tracking-wider">Filters</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
+                </div>
+            </section>
+            
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="mb-8">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                             <div>
-                                <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Type</label>
-                                <select
-                                    value={filterType}
-                                    onChange={(e) => {
-                                        setFilterType(e.target.value as FilterType);
-                                        setCurrentPage(1);
-                                    }}
-                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
-                                >
-                                    <option value="all">All</option>
-                                    <option value="native_governed">Native Governed</option>
-                                    <option value="legacy_registry">Legacy Registry</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Format</label>
-                                <select
-                                    value={filterFormat}
-                                    onChange={(e) => {
-                                        setFilterFormat(e.target.value as FormatFilter);
-                                        setCurrentPage(1);
-                                    }}
-                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
-                                >
-                                    <option value="all">All</option>
-                                    {availableFormats.map(f => (
-                                        <option key={f} value={f}>{FORMAT_LABELS[f]}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Duration</label>
-                                <select
-                                    value={durationFilter}
-                                    onChange={(e) => {
-                                        setDurationFilter(e.target.value as DurationFilter);
-                                        setCurrentPage(1);
-                                    }}
-                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
-                                >
-                                    <option value="all">All</option>
-                                    <option value="short">Short (&lt; 3 min)</option>
-                                    <option value="standard">Standard (3-8 min)</option>
-                                    <option value="long">Long (&gt; 8 min)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Year</label>
-                                <select
-                                    value={yearFilter}
-                                    onChange={(e) => {
-                                        setYearFilter(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
-                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
-                                >
-                                    <option value="all">All Years</option>
-                                    {years.map(year => (
-                                        <option key={year} value={year.toString()}>{year}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Sort</label>
-                                <select
-                                    value={sortOrder}
-                                    onChange={(e) => {
-                                        setSortOrder(e.target.value as SortOrder);
-                                        setCurrentPage(1);
-                                    }}
-                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700"
-                                >
-                                    <option value="all">All</option>
-                                    <option value="new">Newest</option>
-                                    <option value="old">Oldest</option>
-                                    <option value="popular">Most Popular</option>
-                                </select>
-                            </div>
-
-                            <div className="md:col-span-2 lg:col-span-2">
-                                <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Search</label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600 pointer-events-none" />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => {
-                                            setSearchQuery(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        placeholder="Search releases..."
-                                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-neutral-700 placeholder:text-neutral-600"
-                                    />
+                                <div className="inline-block px-3 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold mb-4">
+                                    Musical Registry
                                 </div>
-                            </div>
-
-                            <div className="md:col-span-2 lg:col-span-1 flex items-end" style={{alignSelf:'end'}}>
-                                <button
-                                    onClick={() => fetchVideos(true)}
-                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 px-3 py-2 text-sm focus:outline-none hover:border-amber-400/50 hover:text-amber-300 transition-colors"
-                                >
-                                    Sync Latest Videos
-                                </button>
+                                <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-4">
+                                    Browse Releases
+                                </h1>
+                                <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl">
+                                    Explore the institutional registry of sacred words, voices, and productions.
+                                </p>
                             </div>
                         </div>
 
-                        {!loading && !error && filteredReleases.length > 0 && (
-                            <div className="flex items-center justify-between text-xs text-neutral-500">
-                                <span>
-                                    Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredReleases.length)} of {filteredReleases.length} videos
-                                </span>
-                                <div className="flex items-center gap-4">
-                                    {lastSync && <span>Synced: {new Date(lastSync).toLocaleString()}</span>}
-                                    {totalPages > 1 && (
-                                        <span>Page {currentPage} of {totalPages}</span>
+                        {/* Unified Toolbar Panel */}
+                        <div className="p-5 bg-[var(--color-slate)]/50 border border-white/5 rounded-2xl overflow-hidden">
+                            <div className="flex flex-wrap items-end gap-6">
+                                {/* Filters Label */}
+                                <div className="flex items-center gap-2 mb-2 mr-2 shrink-0">
+                                    <Filter className="w-4 h-4 text-[var(--color-gold)]" />
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">Filters:</span>
+                                </div>
+
+                                {/* Type */}
+                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
+                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Type</span>
+                                    <select 
+                                        value={filterType} 
+                                        onChange={(e) => { setFilterType(e.target.value as FilterType); setCurrentPage(1); }}
+                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
+                                    >
+                                        <option value="all">All Types</option>
+                                        <option value="native_governed">Governed</option>
+                                        <option value="legacy_registry">Legacy Registry</option>
+                                    </select>
+                                </div>
+
+                                {/* Format */}
+                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
+                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Format</span>
+                                    <select 
+                                        value={filterFormat} 
+                                        onChange={(e) => { setFilterFormat(e.target.value as FormatFilter); setCurrentPage(1); }}
+                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
+                                    >
+                                        <option value="all">All Formats</option>
+                                        <option value="video">Videos</option>
+                                        <option value="audio">Audios</option>
+                                        <option value="short">Shorts</option>
+                                        <option value="live">Live</option>
+                                    </select>
+                                </div>
+
+                                {/* Duration */}
+                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
+                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Duration</span>
+                                    <select 
+                                        value={durationFilter} 
+                                        onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
+                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
+                                    >
+                                        <option value="all">All Durations</option>
+                                        <option value="short">Short (&lt; 3m)</option>
+                                        <option value="standard">Standard (3-8m)</option>
+                                        <option value="long">Long (&gt; 8m)</option>
+                                    </select>
+                                </div>
+
+                                {/* Year */}
+                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
+                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Year</span>
+                                    <select 
+                                        value={yearFilter} 
+                                        onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
+                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
+                                    >
+                                        <option value="all">All Years</option>
+                                        {years.map(y => <option key={y} value={y}>{y}</option>)}
+                                    </select>
+                                </div>
+
+                                {/* Sort */}
+                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto md:max-w-[240px]">
+                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Sort</span>
+                                    <select 
+                                        value={sortOrder} 
+                                        onChange={(e) => { setSortOrder(e.target.value as SortOrder); setCurrentPage(1); }}
+                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
+                                    >
+                                        <option value="default">Default</option>
+                                        <option value="newest">Newest First</option>
+                                        <option value="oldest">Oldest First</option>
+                                        <option value="popular">Most Popular</option>
+                                    </select>
+                                </div>
+
+                                {/* Search & Sync Container */}
+                                <div className="flex flex-1 items-end gap-3 min-w-[280px] w-full lg:w-auto">
+                                    <div className="relative flex-1 min-w-0">
+                                        <span className="block text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1 mb-1.5">Search</span>
+                                        <div className="relative">
+                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] w-4.5 h-4.5" />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search registry..."
+                                                className="w-full bg-[var(--color-midnight)] border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-gold)]/50 outline-none transition-all"
+                                                value={searchQuery}
+                                                onChange={(e) => {
+                                                    setSearchQuery(e.target.value);
+                                                    setCurrentPage(1);
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    {user?.role === 'admin' && (
+                                        <button
+                                            onClick={handleSync}
+                                            disabled={syncing}
+                                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-xl text-sm font-bold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 transition-all disabled:opacity-50 whitespace-nowrap h-[42px] shrink-0"
+                                        >
+                                            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                                            {syncing ? 'Syncing...' : 'Sync Latest'}
+                                        </button>
                                     )}
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
 
-                    {loading && (
-                        <div className="flex items-center justify-center min-h-96">
-                            <div className="text-neutral-500 flex flex-col items-center">
-                                <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-                                Loading...
-                            </div>
+                    {loading ? (
+                        <div className="py-24 flex flex-col items-center justify-center">
+                            <div className="w-12 h-12 border-2 border-[var(--color-gold)]/20 border-t-[var(--color-gold)] rounded-full animate-spin mb-4"></div>
+                            <p className="text-[var(--color-text-secondary)]">Accessing registry records...</p>
                         </div>
-                    )}
-
-                    {error && (
-                        <div className="flex items-center justify-center min-h-96">
-                            <div className="text-red-400 bg-red-400/10 px-6 py-4 rounded shadow-sm border border-red-400/20">
-                                {error}
-                            </div>
+                    ) : error ? (
+                        <div className="py-24 text-center">
+                            <p className="text-red-400 mb-4">{error}</p>
+                            <button 
+                                onClick={() => fetchVideos()}
+                                className="px-6 py-2 bg-[var(--color-gold)] text-[var(--color-midnight)] rounded font-bold"
+                            >
+                                Retry
+                            </button>
                         </div>
-                    )}
-
-                    {!loading && !error && releases.length === 0 && (
-                        <div className="flex items-center justify-center min-h-96 border border-neutral-800 rounded bg-neutral-900/30">
-                            <div className="text-center">
-                                <Youtube className="w-16 h-16 text-neutral-700 mx-auto mb-4" strokeWidth={1} />
-                                <div className="text-neutral-500">No videos found on the channel.</div>
-                            </div>
+                    ) : filteredReleases.length === 0 ? (
+                        <div className="py-24 text-center">
+                            <Music className="w-16 h-16 text-[var(--color-border)] mx-auto mb-4" />
+                            <p className="text-[var(--color-text-secondary)] text-xl">No releases found matching your criteria.</p>
+                            <button 
+                                onClick={() => {
+                                    setFilterType('all');
+                                    setFilterFormat('all');
+                                    setDurationFilter('all');
+                                    setYearFilter('all');
+                                    setSearchQuery('');
+                                    setSortOrder('default');
+                                    setCurrentPage(1);
+                                }}
+                                className="mt-4 text-[var(--color-gold)] hover:underline"
+                            >
+                                Clear all filters
+                            </button>
                         </div>
-                    )}
-
-                    {!loading && !error && filteredReleases.length === 0 && releases.length > 0 && (
-                        <div className="flex items-center justify-center min-h-96 border border-neutral-800 rounded bg-neutral-900/30">
-                            <div className="text-center">
-                                <Search className="w-16 h-16 text-neutral-700 mx-auto mb-4" strokeWidth={1} />
-                                <div className="text-neutral-500">No videos match your filters</div>
-                                <button
-                                    onClick={() => {
-                                        setFilterType('all');
-                                        setFilterFormat('all');
-                                        setDurationFilter('all');
-                                        setYearFilter('all');
-                                        setSortOrder('all');
-                                        setSearchQuery('');
-                                    }}
-                                    className="mt-4 text-amber-400 hover:text-amber-300 text-sm underline"
-                                >
-                                    Clear all filters
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {!loading && !error && paginatedReleases.length > 0 && (
+                    ) : (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                                {paginatedReleases.map((video) => {
-                                    const thumbnailCandidates = buildYouTubeThumbnailCandidates(video.id, [video.thumbnailUrl]);
-
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {paginatedReleases.map((release) => {
+                                    const thumbCandidates = buildYouTubeThumbnailCandidates(release.id, [release.thumbnailUrl]);
                                     return (
-                                        <Link
-                                            key={video.id}
-                                            href={`/release-detail/${video.id}`}
-                                            className="group block bg-gradient-to-b from-neutral-900/40 to-neutral-900/10 border border-neutral-800 rounded-xl p-4 hover:border-amber-400/40 hover:bg-neutral-900/60 transition-all hover:shadow-xl hover:shadow-amber-400/10"
+                                        <Link 
+                                            key={release.id + release.slug} 
+                                            href={`/release-detail/${release.slug || release.id}`}
+                                            className="group flex flex-col bg-[#101a33] border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/40 transition-all duration-300 shadow-xl min-h-[420px]"
                                         >
-                                        <div className="relative aspect-video w-full mb-4 rounded-lg overflow-hidden border border-neutral-800 bg-neutral-950">
-                                            <img
-                                                src={thumbnailCandidates[0]}
-                                                alt={video.title}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                data-thumb-index="0"
-                                                onError={(e) => {
-                                                    advanceThumbnailFallback(e.currentTarget, thumbnailCandidates);
-                                                }}
-                                            />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                                <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl shadow-red-900/50">
-                                                    <Play className="w-8 h-8 text-white ml-1" fill="currentColor" />
+                                            <div className="relative aspect-video overflow-hidden bg-black">
+                                                <img 
+                                                    src={thumbCandidates[0]} 
+                                                    alt={release.title}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    onError={(e) => advanceThumbnailFallback(e.currentTarget, thumbCandidates)}
+                                                />
+                                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                                    <div className="w-12 h-12 rounded-full bg-[var(--color-gold)]/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all duration-300">
+                                                        <Play className="w-6 h-6 text-[#101a33] ml-0.5" fill="currentColor" />
+                                                    </div>
+                                                </div>
+                                                <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold text-white backdrop-blur-sm">
+                                                    {release.durationFormatted}
+                                                </div>
+                                                {release.format === 'live' && (
+                                                    <div className="absolute top-2 left-2 bg-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
+                                                        Live
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="p-5 flex flex-col flex-1 gap-4">
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gold)]/80">
+                                                        {release.govType === 'native_governed' ? 'Governed' : 'Registry'}
+                                                    </span>
+                                                    <span className="text-[10px] text-white/20">•</span>
+                                                    <span className="text-[10px] text-white/40 uppercase tracking-[0.2em]">
+                                                        {release.format}
+                                                    </span>
+                                                </div>
+                                                
+                                                <h3 className="text-lg font-semibold text-white/90 group-hover:text-[var(--color-gold)] transition-colors line-clamp-3 leading-snug min-h-[5.4rem]">
+                                                    {release.title}
+                                                </h3>
+                                                
+                                                <div className="mt-auto flex items-center justify-between pt-1 text-xs text-zinc-400 font-medium shrink-0">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Calendar className="w-4 h-4 opacity-50" />
+                                                            <span>{new Date(release.publishedDate).getFullYear()}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Eye className="w-4 h-4 opacity-50" />
+                                                            <span>{release.views.toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                    {release.source === 'youtube' && (
+                                                        <Youtube className="w-4 h-4 text-red-500/50" />
+                                                    )}
                                                 </div>
                                             </div>
-
-                                        </div>
-
-                                        <h3 className="text-sm! font-bold text-white mb-2 group-hover:text-amber-400 transition-colors line-clamp-2 leading-snug">
-                                            {video.title}
-                                        </h3>
-
-                                        <div className="flex items-center justify-between text-xs text-neutral-400 mt-4 pt-4 border-t border-neutral-800/60">
-                                            <div className="flex items-center gap-1.5 font-medium tracking-wide">
-                                                <Calendar className="w-3.5 h-3.5 opacity-70" />
-                                                {new Date(video.publishedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                            </div>
-                                            <div className='flex gap-2'>
-                                                <div className="px-2 py-1 rounded text-xs font-medium text-white tracking-wide border border-white/10">
-                                                    {video.durationFormatted}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 font-medium tracking-wide">
-                                                    <Eye className="w-3.5 h-3.5 opacity-70" />
-                                                    {formatViewsDisplay(video.views)} views
-                                                </div>
-                                            </div>
-                                        </div>
                                         </Link>
                                     );
                                 })}
                             </div>
 
+                            {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="flex items-center justify-center gap-2 mt-12 mb-8">
-                                    <button
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                <div className="mt-16 flex items-center justify-center gap-4">
+                                    <button 
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                         disabled={currentPage === 1}
-                                        className="px-4 py-2 text-sm border border-neutral-800 rounded bg-neutral-900/50 text-neutral-400 hover:border-amber-400/50 hover:text-amber-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-neutral-800 disabled:hover:text-neutral-400 transition-colors"
+                                        className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        Previous
+                                        <ChevronLeft className="w-5 h-5" />
                                     </button>
-
-                                    <div className="flex items-center gap-1">
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                                            if (
-                                                page === 1 ||
-                                                page === totalPages ||
-                                                (page >= currentPage - 1 && page <= currentPage + 1)
-                                            ) {
-                                                return (
-                                                    <button
-                                                        key={page}
-                                                        onClick={() => setCurrentPage(page)}
-                                                        className={`w-10 h-10 rounded text-sm border transition-colors ${currentPage === page
-                                                            ? 'border-amber-400 bg-amber-400/10 text-amber-400 font-bold'
-                                                            : 'border-neutral-800 bg-neutral-900/50 text-neutral-500 hover:border-amber-400/50 hover:text-amber-400'
-                                                            }`}
-                                                    >
-                                                        {page}
-                                                    </button>
-                                                );
-                                            } else if (
-                                                page === currentPage - 2 ||
-                                                page === currentPage + 2
-                                            ) {
-                                                return (
-                                                    <span key={page} className="text-neutral-600 px-2">
-                                                        ...
-                                                    </span>
-                                                );
-                                            }
-                                            return null;
-                                        })}
+                                    
+                                    <div className="flex items-center gap-2">
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-10 h-10 rounded-full text-sm font-bold transition-all ${
+                                                    currentPage === page 
+                                                        ? 'bg-[var(--color-gold)] text-[var(--color-midnight)]' 
+                                                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-gold)]'
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
                                     </div>
 
-                                    <button
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    <button 
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                         disabled={currentPage === totalPages}
-                                        className="px-4 py-2 text-sm border border-neutral-800 rounded bg-neutral-900/50 text-neutral-400 hover:border-amber-400/50 hover:text-amber-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-neutral-800 disabled:hover:text-neutral-400 transition-colors"
+                                        className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        Next
+                                        <ChevronRight className="w-5 h-5" />
                                     </button>
                                 </div>
                             )}
                         </>
                     )}
-                </div>
-            </PageContainer>
+                </PageContainer>
+            </Section>
         </Layout>
     );
 }

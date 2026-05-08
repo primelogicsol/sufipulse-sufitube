@@ -300,7 +300,7 @@ export function Footer() {
                   </p>
                 </a>
                 <a
-                  href="https://psc.dekoshurcrafts.com"
+                  href="https://purplesoul.shop"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group"
