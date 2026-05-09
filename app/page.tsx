@@ -15,6 +15,7 @@ import { literaryArticles } from './data/literary-articles';
 import Image from 'next/image';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
+import GlobalReachStrip from './components/releases/GlobalReachStrip';
 
 interface FeaturedArticle {
   id: string;
@@ -101,7 +102,7 @@ export default function Home() {
           slug: r.youtubeId,
           published_at: getBestReleaseDate(r),
           description: r.description,
-          artwork_url: r.thumbnailUrl,
+          artwork_url: r.thumbnail || r.thumbnailUrl,
           youtube_video_id: r.youtubeId,
         });
 
@@ -112,13 +113,15 @@ export default function Home() {
 
         let rankedMusic: Publication[] = [];
         if (rankedRes.ok) {
-          const data: any[] = await rankedRes.json();
+          const json = await rankedRes.json();
+          const data = Array.isArray(json) ? json : json.items || [];
           if (Array.isArray(data)) rankedMusic = data.filter((r: any) => r.youtubeId).map(toPublication);
         }
 
         let recentMusic: Publication[] = [];
         if (recentRes.ok) {
-          const data: any[] = await recentRes.json();
+          const json = await recentRes.json();
+          const data = Array.isArray(json) ? json : json.items || [];
           if (Array.isArray(data)) {
             console.log(`[Homepage] Fetched ${data.length} recent releases.`);
             recentMusic = data.filter((r: any) => r.youtube_video_id || r.youtubeId).map(toPublication);
@@ -490,6 +493,12 @@ export default function Home() {
 
       <Section background="midnight" spacing="normal">
         <PageContainer>
+          <GlobalReachStrip />
+        </PageContainer>
+      </Section>
+
+      <Section background="midnight" spacing="normal">
+        <PageContainer>
           <div className="max-w-6xl mx-auto mb-12 sm:text-center">
             <div className="inline-block px-3 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded text-[var(--text-xs)] text-[var(--color-gold)] uppercase tracking-widest font-semibold mb-4">
               Registry Highlights
@@ -805,21 +814,14 @@ export default function Home() {
                 const cardContent = (
                   <Card hoverable>
                     {pub.type === 'music' && (pub.artwork_url || pub.youtube_video_id) ? (
-                      // <div className="aspect-square w-full overflow-hidden rounded mb-4">
-                      //   <img
-                      //     src={pub.artwork_url || `https://i.ytimg.com/vi/${pub.youtube_video_id}/hqdefault.jpg`}
-                      //     alt={pub.title}
-                      //     className="w-full h-[90%] object-cover"
-                      //     loading="lazy"
-                      //   />
-                      // </div>
-                      <div
-                        className="w-full h-full p-36 bg-cover bg-center"
-                        style={{
-                          backgroundImage: `url(${pub.artwork_url || `https://i.ytimg.com/vi/${pub.youtube_video_id}/hqdefault.jpg`
-                            })`,
-                        }}
-                      />
+                      <div className="aspect-video w-full overflow-hidden rounded mb-4 bg-black">
+                        <img
+                          src={pub.artwork_url || `https://i.ytimg.com/vi/${pub.youtube_video_id}/hqdefault.jpg`}
+                          alt={pub.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      </div>
                     ) : (
                       <div className="aspect-square w-full bg-gradient-to-br from-[var(--color-midnight)] to-[var(--color-slate)] mb-4 rounded flex items-center justify-center">
                         {pub.type === 'music' ? (
