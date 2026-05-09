@@ -187,140 +187,143 @@ export default function Releases() {
             
             <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="mb-8">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div className="mb-12">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                             <div>
-                                <div className="inline-block px-3 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold mb-4">
-                                    Musical Registry
+                                <div className="inline-block px-3 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded text-[10px] text-[var(--color-gold)] uppercase tracking-widest font-bold mb-4">
+                                    Archive Registry
                                 </div>
-                                <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-4">
+                                <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-4 tracking-tight">
                                     Browse Releases
                                 </h1>
-                                <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl">
-                                    Explore the institutional registry of sacred words, voices, and productions.
+                                <p className="text-[var(--text-base)] md:text-lg text-[var(--color-text-secondary)] max-w-2xl leading-relaxed">
+                                    Explore the institutional registry of sacred words, voices, and productions curated across the SufiPulse network.
                                 </p>
                             </div>
                         </div>
 
-                        {/* Unified Toolbar Panel */}
-                        <div className="p-5 bg-[var(--color-slate)]/50 border border-white/5 rounded-2xl overflow-hidden">
-                            <div className="flex flex-wrap items-end gap-6">
-                                {/* Filters Label */}
-                                <div className="flex items-center gap-2 mb-2 mr-2 shrink-0">
-                                    <Filter className="w-4 h-4 text-[var(--color-gold)]" />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">Filters:</span>
-                                </div>
-
-                                {/* Type */}
-                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
-                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Type</span>
-                                    <select 
-                                        value={filterType} 
-                                        onChange={(e) => { setFilterType(e.target.value as FilterType); setCurrentPage(1); }}
-                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
-                                    >
-                                        <option value="all">All Types</option>
-                                        <option value="native_governed">Governed</option>
-                                        <option value="legacy_registry">Legacy Registry</option>
-                                    </select>
-                                </div>
-
-                                {/* Format */}
-                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
-                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Format</span>
-                                    <select 
-                                        value={filterFormat} 
-                                        onChange={(e) => { setFilterFormat(e.target.value as FormatFilter); setCurrentPage(1); }}
-                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
-                                    >
-                                        <option value="all">All Formats</option>
-                                        <option value="video">Videos</option>
-                                        <option value="audio">Audios</option>
-                                        <option value="short">Shorts</option>
-                                        <option value="live">Live</option>
-                                    </select>
-                                </div>
-
-                                {/* Duration */}
-                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
-                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Duration</span>
-                                    <select 
-                                        value={durationFilter} 
-                                        onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
-                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
-                                    >
-                                        <option value="all">All Durations</option>
-                                        <option value="short">Short (&lt; 3m)</option>
-                                        <option value="standard">Standard (3-8m)</option>
-                                        <option value="long">Long (&gt; 8m)</option>
-                                    </select>
-                                </div>
-
-                                {/* Year */}
-                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto">
-                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Year</span>
-                                    <select 
-                                        value={yearFilter} 
-                                        onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
-                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
-                                    >
-                                        <option value="all">All Years</option>
-                                        {years.map(y => <option key={y} value={y}>{y}</option>)}
-                                    </select>
-                                </div>
-
-                                {/* Sort */}
-                                <div className="flex flex-col gap-1.5 shrink-0 w-full sm:w-auto md:max-w-[240px]">
-                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1">Sort</span>
-                                    <select 
-                                        value={sortOrder} 
-                                        onChange={(e) => { setSortOrder(e.target.value as SortOrder); setCurrentPage(1); }}
-                                        className="bg-[var(--color-midnight)] border border-white/10 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full"
-                                    >
-                                        <option value="default">Default</option>
-                                        <option value="newest">Newest First</option>
-                                        <option value="oldest">Oldest First</option>
-                                        <option value="popular">Most Popular</option>
-                                    </select>
-                                </div>
-
-                                {/* Search & Sync Container */}
-                                <div className="flex flex-1 items-end gap-3 min-w-[280px] w-full lg:w-auto">
-                                    <div className="relative flex-1 min-w-0">
-                                        <span className="block text-[10px] text-neutral-500 uppercase tracking-widest font-bold ml-1 mb-1.5">Search</span>
-                                        <div className="relative">
-                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] w-4.5 h-4.5" />
-                                            <input 
-                                                type="text" 
-                                                placeholder="Search registry..."
-                                                className="w-full bg-[var(--color-midnight)] border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-gold)]/50 outline-none transition-all"
-                                                value={searchQuery}
-                                                onChange={(e) => {
-                                                    setSearchQuery(e.target.value);
-                                                    setCurrentPage(1);
-                                                }}
-                                            />
-                                        </div>
+                        {/* Responsive Toolbar Panel */}
+                        <div className="p-6 bg-[var(--color-slate)]/40 border border-white/5 rounded-2xl">
+                            <div className="flex flex-col gap-6">
+                                {/* Search Row */}
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] w-5 h-5" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search title, vocalist, writer, or tags..."
+                                            className="w-full bg-[var(--color-midnight)] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-gold)]/50 outline-none transition-all placeholder:text-[var(--color-text-tertiary)]"
+                                            value={searchQuery}
+                                            onChange={(e) => {
+                                                setSearchQuery(e.target.value);
+                                                setCurrentPage(1);
+                                            }}
+                                        />
                                     </div>
                                     {user?.role === 'admin' && (
                                         <button
                                             onClick={handleSync}
                                             disabled={syncing}
-                                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-xl text-sm font-bold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 transition-all disabled:opacity-50 whitespace-nowrap h-[42px] shrink-0"
+                                            className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-xl text-sm font-bold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 transition-all disabled:opacity-50 whitespace-nowrap h-[48px]"
                                         >
                                             <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                                            {syncing ? 'Syncing...' : 'Sync Latest'}
+                                            {syncing ? 'Syncing...' : 'Sync Registry'}
                                         </button>
                                     )}
+                                </div>
+
+                                {/* Filters Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    {/* Type */}
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Governance</label>
+                                        <select 
+                                            value={filterType} 
+                                            onChange={(e) => { setFilterType(e.target.value as FilterType); setCurrentPage(1); }}
+                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                        >
+                                            <option value="all">All Status</option>
+                                            <option value="native_governed">Governed</option>
+                                            <option value="legacy_registry">Legacy Registry</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Format */}
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Format</label>
+                                        <select 
+                                            value={filterFormat} 
+                                            onChange={(e) => { setFilterFormat(e.target.value as FormatFilter); setCurrentPage(1); }}
+                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                        >
+                                            <option value="all">All Formats</option>
+                                            <option value="video">Videos</option>
+                                            <option value="audio">Audios</option>
+                                            <option value="short">Shorts</option>
+                                            <option value="live">Live</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Length</label>
+                                        <select 
+                                            value={durationFilter} 
+                                            onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
+                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                        >
+                                            <option value="all">Any Length</option>
+                                            <option value="short">Short (&lt; 3m)</option>
+                                            <option value="standard">Standard (3-8m)</option>
+                                            <option value="long">Long (&gt; 8m)</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Year */}
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Year</label>
+                                        <select 
+                                            value={yearFilter} 
+                                            onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
+                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                        >
+                                            <option value="all">All Years</option>
+                                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                                        </select>
+                                    </div>
+
+                                    {/* Sort */}
+                                    <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-auto">
+                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Order</label>
+                                        <select 
+                                            value={sortOrder} 
+                                            onChange={(e) => { setSortOrder(e.target.value as SortOrder); setCurrentPage(1); }}
+                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                        >
+                                            <option value="default">Default</option>
+                                            <option value="newest">Newest First</option>
+                                            <option value="oldest">Oldest First</option>
+                                            <option value="popular">Most Popular</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {loading ? (
-                        <div className="py-24 flex flex-col items-center justify-center">
-                            <div className="w-12 h-12 border-2 border-[var(--color-gold)]/20 border-t-[var(--color-gold)] rounded-full animate-spin mb-4"></div>
-                            <p className="text-[var(--color-text-secondary)]">Accessing registry records...</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {[...Array(8)].map((_, i) => (
+                                <div key={i} className="flex flex-col bg-[#101a33]/40 border border-white/5 rounded-2xl overflow-hidden h-[420px] animate-pulse">
+                                    <div className="aspect-video bg-[var(--color-midnight)]/50"></div>
+                                    <div className="p-5 flex flex-col gap-4">
+                                        <div className="h-3 w-24 bg-[var(--color-midnight)]/50 rounded"></div>
+                                        <div className="h-6 w-full bg-[var(--color-midnight)]/50 rounded"></div>
+                                        <div className="h-6 w-3/4 bg-[var(--color-midnight)]/50 rounded"></div>
+                                        <div className="mt-auto h-4 w-full bg-[var(--color-midnight)]/50 rounded"></div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : error ? (
                         <div className="py-24 text-center">

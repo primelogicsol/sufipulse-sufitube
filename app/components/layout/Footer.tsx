@@ -1,6 +1,8 @@
-
+"use client";
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -23,90 +25,35 @@ export function Footer() {
           py-[var(--space-12)]
         `.trim()}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
-            <h4
-              className={`
-                text-[var(--text-base)]
-                font-medium
-                mb-[var(--space-4)]
-                uppercase-spaced
-                leading-tight
-              `.trim()}
-              style={{ color: '#F4D03F' }}
-            >
-              Creative<br/>Contributors
-            </h4>
-            <ul className="space-y-[var(--space-2)]">
-              <FooterLink href="/writers">Writers (Ahl-e-Qalam)</FooterLink>
-              <FooterLink href="/vocalists">Vocalists (Ahl-e-Sada)</FooterLink>
-              <FooterLink href="/producers">Producers (Ahl-e-Naghma)</FooterLink>
-              <FooterLink href="/literary-contributors">Literary Writers (Ahl-e-Taḥreer)</FooterLink>
-            </ul>
-          </div>
+        {/* Mobile Accordion / Desktop Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+          <FooterSection title="Creative Contributors">
+            <FooterLink href="/writers">Writers (Ahl-e-Qalam)</FooterLink>
+            <FooterLink href="/vocalists">Vocalists (Ahl-e-Sada)</FooterLink>
+            <FooterLink href="/producers">Producers (Ahl-e-Naghma)</FooterLink>
+            <FooterLink href="/literary-contributors">Literary Writers (Ahl-e-Taḥreer)</FooterLink>
+          </FooterSection>
 
-          <div>
-            <h4
-              className={`
-                text-[var(--text-base)]
-                font-medium
-                mb-[var(--space-4)]
-                uppercase-spaced
-                leading-tight
-              `.trim()}
-              style={{ color: '#F4D03F' }}
-            >
-              Production<br/>Infrastructure
-            </h4>
-            <ul className="space-y-[var(--space-2)]">
-              <FooterLink href="/studio">Studio (Karkhana-e-Sada)</FooterLink>
-              <FooterLink href="/studio-engineers">Studio Engineers</FooterLink>
-              <FooterLink href="/literary-journal">Literary Journal</FooterLink>
-              <FooterLink href="/releases">Releases</FooterLink>
-            </ul>
-          </div>
+          <FooterSection title="Production Infrastructure">
+            <FooterLink href="/studio">Studio (Karkhana-e-Sada)</FooterLink>
+            <FooterLink href="/studio-engineers">Studio Engineers</FooterLink>
+            <FooterLink href="/literary-journal">Literary Journal</FooterLink>
+            <FooterLink href="/releases">Releases</FooterLink>
+          </FooterSection>
 
-          <div>
-            <h4
-              className={`
-                text-[var(--text-base)]
-                font-medium
-                mb-[var(--space-4)]
-                uppercase-spaced
-                leading-tight
-              `.trim()}
-              style={{ color: '#F4D03F' }}
-            >
-              Institutional<br/>Identity
-            </h4>
-            <ul className="space-y-[var(--space-2)]">
-              <FooterLink href="/about/what-is-sufipulse">What is SufiPulse</FooterLink>
-              <FooterLink href="/about/founder">Founder</FooterLink>
-              <FooterLink href="/about/our-network">Our Network</FooterLink>
-              <FooterLink href="/about/institutional-partners">Institutional Partners</FooterLink>
-            </ul>
-          </div>
+          <FooterSection title="Institutional Identity">
+            <FooterLink href="/about/what-is-sufipulse">What is SufiPulse</FooterLink>
+            <FooterLink href="/about/founder">Founder</FooterLink>
+            <FooterLink href="/about/our-network">Our Network</FooterLink>
+            <FooterLink href="/about/institutional-partners">Institutional Partners</FooterLink>
+          </FooterSection>
 
-          <div>
-            <h4
-              className={`
-                text-[var(--text-base)]
-                font-medium
-                mb-[var(--space-4)]
-                uppercase-spaced
-                leading-tight
-              `.trim()}
-              style={{ color: '#F4D03F' }}
-            >
-              Institutional<br/>Engagement
-            </h4>
-            <ul className="space-y-[var(--space-2)]">
-              <FooterLink href="/official-channels">Official Channels</FooterLink>
-              <FooterLink href="/collaboration">Institutional Collaboration</FooterLink>
-              <FooterLink href="/product-infrastructure">Product Infrastructure</FooterLink>
-              <FooterLink href="/governance">Governance</FooterLink>
-            </ul>
-          </div>
+          <FooterSection title="Institutional Engagement">
+            <FooterLink href="/official-channels">Official Channels</FooterLink>
+            <FooterLink href="/collaboration">Institutional Collaboration</FooterLink>
+            <FooterLink href="/product-infrastructure">Product Infrastructure</FooterLink>
+            <FooterLink href="/governance">Governance</FooterLink>
+          </FooterSection>
         </div>
 
         {/* YouTube Subscribe Banner */}
@@ -154,87 +101,17 @@ export function Footer() {
             text-[var(--color-text-tertiary)]
           `.trim()}
         >
-          <Link
-            href="/privacy-policy"
-            className={`
-              hover:text-[var(--color-gold)]
-              transition-colors
-              duration-[var(--transition-base)]
-            `.trim()}
-          >
-            Privacy Policy
-          </Link>
-          <Link
-            href="/terms-of-service"
-            className={`
-              hover:text-[var(--color-gold)]
-              transition-colors
-              duration-[var(--transition-base)]
-            `.trim()}
-          >
-            Terms of Service
-          </Link>
-          <Link
-            href="/cookie-policy"
-            className={`
-              hover:text-[var(--color-gold)]
-              transition-colors
-              duration-[var(--transition-base)]
-            `.trim()}
-          >
-            Cookie Policy
-          </Link>
-          <Link
-            href="/legal/disclaimer"
-            className={`
-              hover:text-[var(--color-gold)]
-              transition-colors
-              duration-[var(--transition-base)]
-            `.trim()}
-          >
-            Disclaimer
-          </Link>
-          <Link
-            href="/contributor-policy"
-            className={`
-              hover:text-[var(--color-gold)]
-              transition-colors
-              duration-[var(--transition-base)]
-            `.trim()}
-          >
-            Contributor Policy
-          </Link>
-          <Link
-            href="/royalty-policy"
-            className={`
-              hover:text-[var(--color-gold)]
-              transition-colors
-              duration-[var(--transition-base)]
-            `.trim()}
-          >
-            Royalty Policy
-          </Link>
-          <Link
-            href="/release-policy"
-            className={`
-              hover:text-[var(--color-gold)]
-              transition-colors
-              duration-[var(--transition-base)]
-            `.trim()}
-          >
-            Release Policy
-          </Link>
+          <Link href="/privacy-policy" className="hover:text-[var(--color-gold)] transition-colors">Privacy Policy</Link>
+          <Link href="/terms-of-service" className="hover:text-[var(--color-gold)] transition-colors">Terms of Service</Link>
+          <Link href="/cookie-policy" className="hover:text-[var(--color-gold)] transition-colors">Cookie Policy</Link>
+          <Link href="/legal/disclaimer" className="hover:text-[var(--color-gold)] transition-colors">Disclaimer</Link>
+          <Link href="/contributor-policy" className="hover:text-[var(--color-gold)] transition-colors">Contributor Policy</Link>
+          <Link href="/royalty-policy" className="hover:text-[var(--color-gold)] transition-colors">Royalty Policy</Link>
+          <Link href="/release-policy" className="hover:text-[var(--color-gold)] transition-colors">Release Policy</Link>
         </div>
 
-        <div
-          className={`
-            mt-[var(--space-6)]
-            pt-[var(--space-6)]
-            border-t
-            border-[var(--color-border)]
-          `.trim()}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-6">
+        <div className="mt-[var(--space-6)] pt-[var(--space-6)] border-t border-[var(--color-border)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-8">
             <div className="flex flex-col items-start gap-4">
               <div className="flex items-center gap-4">
                 <Image
@@ -261,70 +138,30 @@ export function Footer() {
             </div>
 
             <div>
-              <h4
-                className={`
-                  text-[var(--text-base)]
-                  font-medium
-                  mb-[var(--space-4)]
-                  uppercase-spaced
-                `.trim()}
-                style={{ color: '#F4D03F' }}
-              >
+              <h4 className="text-[var(--text-base)] font-medium mb-6 uppercase tracking-widest text-[var(--color-gold)]">
                 Institutional Extensions
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                <a
-                  href="https://sufisciencecenter.info/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group"
-                >
-                  <p className="text-[var(--text-sm)] text-[var(--color-text-primary)] font-medium leading-tight group-hover:text-[var(--color-gold)] transition-colors duration-[var(--transition-base)]">
-                    Sufi Science Center USA
-                  </p>
-                  <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight mt-1">
-                    Sacred research and contemplative inquiry
-                  </p>
-                </a>
-                <a
-                  href="https://dkf.sufisciencecenter.info/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group"
-                >
-                  <p className="text-[var(--text-sm)] text-[var(--color-text-primary)] font-medium leading-tight group-hover:text-[var(--color-gold)] transition-colors duration-[var(--transition-base)]">
-                    Dr. Kumar Foundation USA
-                  </p>
-                  <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight mt-1">
-                    Spiritual stewardship and cultural awakening
-                  </p>
-                </a>
-                <a
-                  href="https://purplesoul.shop"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group"
-                >
-                  <p className="text-[var(--text-sm)] text-[var(--color-text-primary)] font-medium leading-tight group-hover:text-[var(--color-gold)] transition-colors duration-[var(--transition-base)]">
-                    Purple Soul Collective USA
-                  </p>
-                  <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight mt-1">
-                    Ethical commerce and creative expression
-                  </p>
-                </a>
-                <a
-                  href="https://primelogicsol.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group"
-                >
-                  <p className="text-[var(--text-sm)] text-[var(--color-text-primary)] font-medium leading-tight group-hover:text-[var(--color-gold)] transition-colors duration-[var(--transition-base)]">
-                    Prime Logic Solutions USA
-                  </p>
-                  <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight mt-1">
-                    Secure infrastructure and digital systems
-                  </p>
-                </a>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                <ExtensionLink 
+                  href="https://sufisciencecenter.info/" 
+                  title="Sufi Science Center USA"
+                  desc="Sacred research and contemplative inquiry"
+                />
+                <ExtensionLink 
+                  href="https://dkf.sufisciencecenter.info/" 
+                  title="Dr. Kumar Foundation USA"
+                  desc="Spiritual stewardship and cultural awakening"
+                />
+                <ExtensionLink 
+                  href="https://purplesoul.shop" 
+                  title="Purple Soul Collective USA"
+                  desc="Ethical commerce and creative expression"
+                />
+                <ExtensionLink 
+                  href="https://primelogicsol.com/" 
+                  title="Prime Logic Solutions USA"
+                  desc="Secure infrastructure and digital systems"
+                />
               </div>
             </div>
           </div>
@@ -334,26 +171,52 @@ export function Footer() {
   );
 }
 
-interface FooterLinkProps {
-  href: string;
-  children: React.ReactNode;
+function FooterSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border-b border-white/5 md:border-none">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between py-4 md:py-0 md:mb-6 text-left md:cursor-default"
+      >
+        <h4 className="text-[var(--text-base)] font-medium uppercase tracking-widest text-[var(--color-gold)] leading-tight">
+          {title}
+        </h4>
+        <ChevronDown 
+          className={`w-4 h-4 text-[var(--color-gold)] transition-transform duration-300 md:hidden ${isOpen ? 'rotate-180' : ''}`} 
+        />
+      </button>
+      <ul className={`space-y-3 pb-6 md:pb-0 transition-all duration-300 ${isOpen ? 'block' : 'hidden md:block'}`}>
+        {children}
+      </ul>
+    </div>
+  );
 }
 
-function FooterLink({ href, children }: FooterLinkProps) {
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <li>
       <Link
         href={href}
-        className={`
-          text-[var(--text-xs)]
-          text-[var(--color-text-secondary)]
-          hover:text-[var(--color-gold)]
-          transition-colors
-          duration-[var(--transition-base)]
-        `.trim()}
+        className="text-[var(--text-xs)] text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors"
       >
         {children}
       </Link>
     </li>
   );
 }
+
+function ExtensionLink({ href, title, desc }: { href: string; title: string; desc: string }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="group">
+      <p className="text-[var(--text-sm)] text-[var(--color-text-primary)] font-medium leading-tight group-hover:text-[var(--color-gold)] transition-colors">
+        {title}
+      </p>
+      <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight mt-1">
+        {desc}
+      </p>
+    </a>
+  );
+}
+

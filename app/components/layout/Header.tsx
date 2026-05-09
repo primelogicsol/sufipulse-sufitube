@@ -269,17 +269,7 @@ export function Header() {
       {isMobileMenuOpen && (
         <>
           <div
-            className={`
-              fixed
-              inset-0
-              bg-black
-              bg-opacity-50
-              z-[var(--z-overlay)]
-              transition-opacity
-              duration-[var(--transition-base)]
-              pointer-events-auto
-              
-            `.trim()}
+            className="fixed inset-0 bg-[var(--color-midnight)]/80 backdrop-blur-sm z-[var(--z-overlay)] transition-opacity duration-500"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
@@ -290,69 +280,51 @@ export function Header() {
               top-0
               right-0
               bottom-0
-              w-[280px]
+              w-full
+              xs:w-[320px]
               bg-[var(--color-slate)]
               z-[var(--z-modal)]
-              shadow-[var(--shadow-elevated)]
+              shadow-2xl
               overflow-y-auto
               transition-transform
-              duration-[var(--transition-base)]
+              duration-500
+              border-l border-white/5
             `.trim()}
           >
-            <div className="flex items-center justify-between p-[var(--space-4)] border-b border-[var(--color-border-strong)]">
-              <span
-                className={`
-                  text-[var(--text-lg)]
-                  font-[var(--font-headline)]
-                  font-semibold
-                  text-[var(--color-text-primary)]
-                `.trim()}
-              >
-                Menu
-              </span>
+            <div className="flex items-center justify-between p-6 border-b border-white/5 bg-[var(--color-midnight)]/20">
+              <div className="flex items-center gap-3">
+                <div className="w-1 h-6 bg-[var(--color-gold)] rounded-full"></div>
+                <span className="text-lg font-bold text-[var(--color-text-primary)] uppercase tracking-widest">
+                  Menu
+                </span>
+              </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`
-                  text-[var(--color-text-primary)]
-                  hover:text-[var(--color-gold)]
-                  transition-colors
-                  duration-[var(--transition-base)]
-                  p-2
-                `.trim()}
+                className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors rounded-full bg-white/5"
                 aria-label="Close menu"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
-            <nav className="p-[var(--space-4)]">
+            <nav className="p-6 flex flex-col gap-2">
               <Link
                 href="/"
-                className={`
-                  flex
-                  items-center
-                  py-[var(--space-4)]
-                  border-b
-                  border-[var(--color-border)]
-                  transition-colors
-                  duration-[var(--transition-base)]
-                `.trim()}
-                onClick={(e) => {
-                  setIsMobileMenuOpen(false);
-                }}
+                className="flex items-center p-4 mb-4 bg-[var(--color-midnight)]/30 border border-white/5 rounded-2xl hover:border-[var(--color-gold)]/30 transition-all group"
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Image
-                  src="/sufitube-logo-v5.png"
-                  alt="SufiTube Studio"
+                  src="/sufipulse-logo-v5.png"
+                  alt="SufiPulse"
                   width={120}
                   height={32}
-                  className="h-8 w-auto object-contain"
+                  className="h-8 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
                 />
               </Link>
 
               <Link
                 href="/literary-journal"
-                className="block text-left py-[var(--space-4)] text-[var(--color-text-primary)] hover:text-[var(--color-gold)] font-medium border-b border-[var(--color-border)] transition-colors duration-[var(--transition-base)]"
+                className="flex items-center justify-between p-4 text-[var(--color-text-primary)] hover:text-[var(--color-gold)] font-bold text-sm uppercase tracking-widest bg-white/5 rounded-xl border border-transparent hover:border-[var(--color-gold)]/20 transition-all"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Literary Journal
@@ -362,7 +334,20 @@ export function Header() {
               <MobileDualNameSection title="Production Infrastructure" items={productionItems} />
               <MobileDualNameSection title="Governance" items={governanceItems} />
 
-              <MobileNavSection title="About" items={aboutItems} />
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <MobileNavSection title="About & Engagement" items={aboutItems} />
+              </div>
+
+              <div className="mt-8 p-6 bg-[var(--color-midnight)]/50 rounded-2xl border border-[var(--color-gold)]/10 text-center">
+                <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] mb-3">Institutional Access</p>
+                <Link 
+                  href="/register" 
+                  className="inline-block w-full py-3 bg-[var(--color-gold)] text-[var(--color-midnight)] font-bold rounded-lg text-xs uppercase tracking-widest hover:bg-[var(--color-gold)]/90 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Join the Network
+                </Link>
+              </div>
             </nav>
           </div>
         </>

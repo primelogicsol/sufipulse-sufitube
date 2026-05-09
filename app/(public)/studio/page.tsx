@@ -1,60 +1,41 @@
 "use client"
-import { Mic as Mic2, Radio, CircleCheck as CheckCircle2, ArrowRight, Shield, MapPin, Building2, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Mic as Mic2, Radio, CircleCheck as CheckCircle2, ArrowRight, Shield, MapPin, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { DualNameHero } from '../../components/primitives/DualNameHero';
-// import { roleDisplayMap } from '../../lib/roleDisplayMap';
+import { Badge } from '../../components/primitives/Badge';
+import { PrimaryButton } from '../../components/primitives/PrimaryButton';
+import { Card } from '../../components/primitives/Card';
 import { useState, useRef } from 'react';
-// import { Link } from 'react-router-dom';
 import StudioCredentialsForm from '../../components/studio/StudioCredentialsForm';
 import Link from 'next/link';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 
 export default function Studio() {
     const [expandedStage, setExpandedStage] = useState<string | null>(null);
-    const [networkApplicationExpanded, setNetworkApplicationExpanded] = useState(false);
     const [showCredentialsForm, setShowCredentialsForm] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    const toggleStage = (stage: string) => {
-        setExpandedStage(expandedStage === stage ? null : stage);
-    };
-
     const scrollLeft = () => {
         if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+            scrollContainerRef.current.scrollBy({ left: -240, behavior: 'smooth' });
         }
     };
 
     const scrollRight = () => {
         if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
-        }
-    };
-
-    const operationalScrollRef = useRef<HTMLDivElement>(null);
-
-    const scrollOperationalLeft = () => {
-        if (operationalScrollRef.current) {
-            operationalScrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
-        }
-    };
-
-    const scrollOperationalRight = () => {
-        if (operationalScrollRef.current) {
-            operationalScrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+            scrollContainerRef.current.scrollBy({ left: 240, behavior: 'smooth' });
         }
     };
 
     const productionPath = [
-        { id: 'approval', title: 'Approved Kalam' },
-        { id: 'alignment', title: 'Vocalist Alignment' },
-        { id: 'composition', title: 'Composition Structuring' },
-        { id: 'recording', title: 'Recording' },
-        { id: 'mixing', title: 'Mixing' },
-        { id: 'mastering', title: 'Mastering' },
-        { id: 'registry', title: 'Registry Confirmation' }
+        { id: 'approval', title: 'Approved Kalam', description: 'Editorial council authorization' },
+        { id: 'alignment', title: 'Vocalist Alignment', description: 'Matching voice to sacred text' },
+        { id: 'composition', title: 'Composition', description: 'Thematic musical structuring' },
+        { id: 'recording', title: 'Recording', description: 'Master-grade capture' },
+        { id: 'mixing', title: 'Mixing', description: 'Technical element balancing' },
+        { id: 'mastering', title: 'Mastering', description: 'Final sonic validation' },
+        { id: 'registry', title: 'Registry', description: 'Institutional authorization' }
     ];
 
     const studioResponsibilities = [
@@ -70,511 +51,225 @@ export default function Studio() {
         },
         {
             icon: CheckCircle2,
-            title: 'Technical Quality Control',
+            title: 'Quality Control',
             description: 'Ensuring audio integrity, format compatibility, and sonic consistency.'
         },
         {
             icon: Shield,
-            title: 'Metadata Preparation',
+            title: 'Metadata Integrity',
             description: 'Supporting Registry with technical documentation and file specifications.'
         }
     ];
 
     return (
         <Layout>
-            <Section className="pt-24 pb-8">
+            <Section background="midnight" spacing="spacious">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <div className="mb-6">
+                            <Badge variant="gold">Institutional Division</Badge>
+                        </div>
+                        <h1 className="text-[var(--text-4xl)] md:text-[64px] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight">
                             Studio
                         </h1>
-                        <p className="text-xl text-amber-400/90 mb-6 border-b border-amber-400/20 pb-4 inline-block">
+                        <p className="text-[var(--text-xl)] text-[var(--color-gold)] font-medium mb-10 tracking-wide uppercase">
                             {roleDisplayMap.studio.mystical}
                         </p>
+                        <p className="text-[var(--text-lg)] text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto">
+                            The Studio operates after editorial approval and before registry authorization. It is responsible for recording, technical quality, and master validation across the SufiPulse network.
+                        </p>
+                    </div>
+                </PageContainer>
+            </Section>
 
-                        <div className="mt-8 max-w-3xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                The Studio operates after editorial approval and before registry authorization. It is responsible for recording, technical quality, and master validation across the SufiPulse network.
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="mb-12 text-center md:text-left">
+                            <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)] mb-4">
+                                Mandate & Responsibilities
+                            </h2>
+                            <p className="text-[var(--color-text-secondary)] max-w-2xl">
+                                The Studio operates after editorial approval. No recording begins without structured assignment and institutional alignment.
                             </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {studioResponsibilities.map((item, idx) => (
+                                <Card key={idx} className="bg-[var(--color-midnight)]/30 border-[var(--color-text-tertiary)]/10">
+                                    <item.icon className="w-8 h-8 text-[var(--color-gold)] mb-4" />
+                                    <h3 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)] mb-2">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed">
+                                        {item.description}
+                                    </p>
+                                </Card>
+                            ))}
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Studio Mandate & Production Path
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="mb-12 text-center">
+                            <Badge variant="outline" className="mb-4">Production Path</Badge>
+                            <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)]">
+                                Sequential Workflow
+                            </h2>
+                        </div>
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 leading-relaxed mb-6">
-                                The Studio operates after editorial approval. No recording begins without structured assignment.
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-4 mb-6">
-                                {studioResponsibilities.map((item, idx) => {
-                                    const Icon = item.icon;
-                                    return (
-                                        <div key={idx} className="flex items-start gap-3">
-                                            <Icon className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-white font-medium text-sm mb-1">{item.title}</p>
-                                                <p className="text-neutral-400 text-xs leading-relaxed">
-                                                    {item.description}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <div className="hidden lg:block">
-                                <div
-                                    ref={scrollContainerRef}
-                                    className="flex items-start gap-2 overflow-x-auto scrollbar-hide mb-3"
-                                >
-                                    {productionPath.map((stage, idx) => (
-                                        <div key={idx} className="flex items-center">
-                                            <button
-                                                onClick={() => toggleStage(stage.id)}
-                                                className="flex flex-col items-start group cursor-pointer min-w-[120px]"
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center mb-2 group-hover:bg-amber-400/20 transition-colors">
-                                                    <span className="text-amber-400 font-bold text-sm">{idx + 1}</span>
-                                                </div>
-                                                <p className="text-left text-xs text-neutral-300 leading-tight group-hover:text-amber-400 transition-colors">
-                                                    {stage.title}
-                                                </p>
-                                            </button>
-
-                                            {idx < productionPath.length - 1 && (
-                                                <ArrowRight className="w-4 h-4 text-amber-400/30 mx-1 flex-shrink-0 mt-4" />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex items-center justify-center gap-2">
-                                    <button
-                                        onClick={scrollLeft}
-                                        className="w-8 h-8 rounded-full bg-neutral-900/80 border border-neutral-800 flex items-center justify-center hover:bg-neutral-800 transition-colors"
-                                        aria-label="Scroll left"
-                                    >
-                                        <ChevronLeft className="w-4 h-4 text-neutral-400" />
-                                    </button>
-                                    <button
-                                        onClick={scrollRight}
-                                        className="w-8 h-8 rounded-full bg-neutral-900/80 border border-neutral-800 flex items-center justify-center hover:bg-neutral-800 transition-colors"
-                                        aria-label="Scroll right"
-                                    >
-                                        <ChevronRight className="w-4 h-4 text-neutral-400" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="lg:hidden space-y-2">
+                        <div className="relative group">
+                            <div
+                                ref={scrollContainerRef}
+                                className="flex items-start gap-4 overflow-x-auto scrollbar-hide pb-8 px-4"
+                            >
                                 {productionPath.map((stage, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => toggleStage(stage.id)}
-                                        className="flex items-start gap-3 w-full text-left group"
-                                    >
-                                        <div className="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-400/20 transition-colors">
-                                            <span className="text-amber-400 font-bold text-xs">{idx + 1}</span>
-                                        </div>
-                                        <div className="flex-1 pt-1">
-                                            <p className="text-neutral-300 text-sm font-medium group-hover:text-amber-400 transition-colors">
+                                    <div key={idx} className="flex items-center flex-shrink-0">
+                                        <div className="flex flex-col items-center text-center w-[180px]">
+                                            <div className="w-12 h-12 rounded-full bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 flex items-center justify-center mb-4 text-[var(--color-gold)] font-bold">
+                                                {idx + 1}
+                                            </div>
+                                            <h4 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-1">
                                                 {stage.title}
+                                            </h4>
+                                            <p className="text-[11px] text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                                                {stage.description}
                                             </p>
                                         </div>
-                                    </button>
+                                        {idx < productionPath.length - 1 && (
+                                            <ArrowRight className="w-5 h-5 text-[var(--color-gold)]/20 mx-2 flex-shrink-0" />
+                                        )}
+                                    </div>
                                 ))}
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Operational Discipline
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <div>
-                                    <p className="text-white font-medium mb-3">Scheduling Principles</p>
-                                    <p className="text-neutral-300 text-sm leading-relaxed mb-2">
-                                        Studio time is allocated based on approved queue.
-                                    </p>
-                                    <p className="text-neutral-300 text-sm leading-relaxed mb-2">
-                                        Sessions follow structured scheduling.
-                                    </p>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Revisions are documented before final mastering.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <p className="text-white font-medium mb-3">Collaboration Chain</p>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Writers (Ahl-e-Qalam)</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Vocalists (Ahl-e-Sada)</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Producers (Ahl-e-Naghma)</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Studio (Karkhana-e-Sada)</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Studio Network Architecture
-                        </h2>
-
-                        <div className="grid md:grid-cols-2 gap-6 mb-6">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <MapPin className="w-5 h-5 text-amber-400" />
-                                    <p className="text-white font-semibold">Central Studio</p>
-                                </div>
-                                <p className="text-neutral-400 text-sm mb-4">USA — Virginia</p>
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Production oversight</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Final master validation</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Registry coordination</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <MapPin className="w-5 h-5 text-amber-400" />
-                                    <p className="text-white font-semibold">Remote Studios</p>
-                                </div>
-                                <div className="flex gap-3 mb-4">
-                                    <span className="text-neutral-400 text-xs">Canada</span>
-                                    <span className="text-neutral-600">•</span>
-                                    <span className="text-neutral-400 text-xs">UAE</span>
-                                    <span className="text-neutral-600">•</span>
-                                    <span className="text-neutral-400 text-xs">India</span>
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Regional recording</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Centralized review</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Governance alignment</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-6">
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-2">
-                                Recording within the SufiPulse Studio Network is reserved for works authored by approved writers (Ahl-e-Qalam) and performed by approved vocalists (Ahl-e-Sada).
-                            </p>
-                            <p className="text-neutral-400 text-sm leading-relaxed">
-                                Regional flexibility does not alter governance standards.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Operational Workflow & Network Participation
-                        </h2>
-
-                        <div className="hidden lg:block">
-                            <div
-                                ref={operationalScrollRef}
-                                className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2 mb-3"
-                            >
-                                <div className="min-w-[140px]">
-                                    <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                        <p className="text-neutral-300 text-xs font-medium">Approved Kalam</p>
-                                    </div>
-                                </div>
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                                <div className="min-w-[140px]">
-                                    <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                        <p className="text-neutral-300 text-xs font-medium">Vocalist Assignment</p>
-                                    </div>
-                                </div>
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                                <div className="min-w-[140px]">
-                                    <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                        <p className="text-neutral-300 text-xs font-medium">Network Allocation</p>
-                                    </div>
-                                </div>
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                                <div className="min-w-[140px]">
-                                    <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                        <p className="text-neutral-300 text-xs font-medium">Recording</p>
-                                    </div>
-                                </div>
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                                <div className="min-w-[140px]">
-                                    <div className="bg-amber-400/10 border border-amber-400/30 rounded-lg p-3">
-                                        <p className="text-amber-400 text-xs font-semibold">Central Review</p>
-                                    </div>
-                                </div>
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                                <div className="min-w-[140px]">
-                                    <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                        <p className="text-neutral-300 text-xs font-medium">Master Confirmation</p>
-                                    </div>
-                                </div>
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                                <div className="min-w-[140px]">
-                                    <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                        <p className="text-neutral-300 text-xs font-medium">Registry Authorization</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-center gap-2">
-                                <button
-                                    onClick={scrollOperationalLeft}
-                                    className="w-8 h-8 rounded-full bg-neutral-900/80 border border-neutral-800 flex items-center justify-center hover:bg-neutral-800 transition-colors"
-                                    aria-label="Scroll left"
-                                >
-                                    <ChevronLeft className="w-4 h-4 text-neutral-400" />
-                                </button>
-                                <button
-                                    onClick={scrollOperationalRight}
-                                    className="w-8 h-8 rounded-full bg-neutral-900/80 border border-neutral-800 flex items-center justify-center hover:bg-neutral-800 transition-colors"
-                                    aria-label="Scroll right"
-                                >
-                                    <ChevronRight className="w-4 h-4 text-neutral-400" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="lg:hidden space-y-2">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                <p className="text-neutral-300 text-xs font-medium">Approved Kalam</p>
-                            </div>
-                            <div className="flex">
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-                            </div>
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                <p className="text-neutral-300 text-xs font-medium">Vocalist Assignment</p>
-                            </div>
-                            <div className="flex">
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-                            </div>
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                <p className="text-neutral-300 text-xs font-medium">Network Allocation</p>
-                            </div>
-                            <div className="flex">
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-                            </div>
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                <p className="text-neutral-300 text-xs font-medium">Recording</p>
-                            </div>
-                            <div className="flex">
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-                            </div>
-                            <div className="bg-amber-400/10 border border-amber-400/30 rounded-lg p-3">
-                                <p className="text-amber-400 text-xs font-semibold">Central Review</p>
-                            </div>
-                            <div className="flex">
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-                            </div>
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                <p className="text-neutral-300 text-xs font-medium">Master Confirmation</p>
-                            </div>
-                            <div className="flex">
-                                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-                            </div>
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                                <p className="text-neutral-300 text-xs font-medium">Registry Authorization</p>
-                            </div>
-                        </div>
-
-                        <p className="text-neutral-400 text-xs mt-4">
-                            All stages operate within coordinated oversight.
-                        </p>
-
-                        <div className="mt-8">
-                            <h3 className="text-lg font-semibold text-white mb-4">
-                                Network Studio Participation
-                            </h3>
-
-                            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-5">
-                                    <p className="text-white font-medium text-sm mb-3">Role in Workflow</p>
-                                    <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                        Network studios provide:
-                                    </p>
-                                    <div className="space-y-2 mb-4">
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Recording environment for assigned vocalists</p>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Session execution under central scheduling</p>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">File delivery aligned with production protocol</p>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-white font-medium text-sm mb-2 mt-4">Operational Boundaries</p>
-                                    <div className="space-y-2">
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">No independent mixing or mastering</p>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">No direct publication authority</p>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Central review precedes registry authorization</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-5">
-                                    <p className="text-white font-medium text-sm mb-3">Network Studio Eligibility & Onboarding</p>
-                                    <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                        Studios may request inclusion within the SufiPulse production network. Admission is evaluated on technical readiness and governance alignment.
-                                    </p>
-                                    <p className="text-white font-medium text-sm mb-2 mt-4">Requirements</p>
-                                    <div className="space-y-2">
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Demonstrated professional recording capability</p>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Acoustic standards appropriate for master-grade capture</p>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Alignment with documented production protocol</p>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                            <p className="text-neutral-300 text-sm">Acceptance of centralized review and validation process</p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <button
-                                onClick={() => setShowCredentialsForm(!showCredentialsForm)}
-                                className="w-full bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+                                onClick={scrollLeft}
+                                className="absolute left-0 top-6 -translate-x-4 w-10 h-10 rounded-full bg-[var(--color-slate)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                {showCredentialsForm ? 'Hide Form' : 'Submit Studio Credentials'}
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                onClick={scrollRight}
+                                className="absolute right-0 top-6 translate-x-4 w-10 h-10 rounded-full bg-[var(--color-slate)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <ChevronRight size={20} />
                             </button>
                         </div>
-
-                        {showCredentialsForm && (
-                            <div className="mt-8">
-                                <h3 className="text-2xl font-bold text-white mb-2">
-                                    Network Studio Eligibility & Consideration
-                                </h3>
-                                <p className="text-lg text-amber-400 mb-4">Karkhana-e-Sada</p>
-                                <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                                    Studios may request inclusion within the SufiPulse production network.<br />
-                                    Submissions are reviewed for technical readiness and governance alignment.
-                                </p>
-                                <StudioCredentialsForm />
-                            </div>
-                        )}
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Final Compliance Statement
+                    <div className="max-w-6xl mx-auto">
+                        <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)] mb-12 text-center">
+                            Studio Network Architecture
                         </h2>
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                            <div className="grid md:grid-cols-2 gap-4 mb-6">
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Master format compliance</p>
+                        <div className="grid md:grid-cols-2 gap-8 mb-12">
+                            <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8">
+                                <div className="flex items-center gap-3 mb-6 text-[var(--color-gold)]">
+                                    <MapPin className="w-6 h-6" />
+                                    <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Central Studio</h3>
                                 </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Contributor confirmation</p>
+                                <div className="text-[var(--text-sm)] text-[var(--color-text-secondary)] mb-6 font-medium">
+                                    USA — Virginia
                                 </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Metadata verification</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Registry clearance</p>
-                                </div>
+                                <ul className="space-y-4">
+                                    {[
+                                        'Primary production oversight',
+                                        'Final master validation authority',
+                                        'Direct Registry coordination'
+                                    ].map((text, i) => (
+                                        <li key={i} className="flex items-start gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)] mt-2" />
+                                            <span className="text-[var(--text-base)] text-[var(--color-text-secondary)]">{text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
 
-                            <div className="border border-neutral-800/50 rounded-lg p-4 mb-4">
-                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                    Network studios do not independently publish under the SufiPulse name. All recordings must originate from approved writers and approved vocalists and follow documented workflow before registry authorization.
-                                </p>
+                            <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8">
+                                <div className="flex items-center gap-3 mb-6 text-[var(--color-gold)]">
+                                    <MapPin className="w-6 h-6" />
+                                    <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Remote Studios</h3>
+                                </div>
+                                <div className="flex gap-2 mb-6">
+                                    {['Canada', 'UAE', 'India'].map((c) => (
+                                        <span key={c} className="text-[var(--text-xs)] px-2 py-0.5 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 text-[var(--color-gold)] rounded">
+                                            {c}
+                                        </span>
+                                    ))}
+                                </div>
+                                <ul className="space-y-4">
+                                    {[
+                                        'Regional recording environments',
+                                        'Localized vocalist coordination',
+                                        'Centralized review alignment'
+                                    ].map((text, i) => (
+                                        <li key={i} className="flex items-start gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)] mt-2" />
+                                            <span className="text-[var(--text-base)] text-[var(--color-text-secondary)]">{text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
+                        </div>
 
-                            <div className="mt-6">
-                                <Link
-                                    href="/governance"
-                                    className="inline-flex items-center gap-2 text-neutral-300 hover:text-amber-400 transition-colors text-xs"
-                                >
-                                    <Shield className="w-3.5 h-3.5" />
-                                    View Governance Framework
-                                </Link>
+                        <div className="bg-[var(--color-midnight)] p-6 rounded-lg border border-[var(--color-gold)]/20 text-center max-w-3xl mx-auto">
+                            <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed italic">
+                                "Recording within the SufiPulse Studio Network is reserved for works authored by approved writers and performed by approved vocalists. Regional flexibility does not alter governance standards."
+                            </p>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="midnight" spacing="normal" className="pb-24">
+                <PageContainer>
+                    <div className="max-w-4xl mx-auto">
+                        <div className="text-center mb-12">
+                            <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)] mb-4">
+                                Institutional Access
+                            </h2>
+                            <p className="text-[var(--color-text-secondary)]">
+                                Studios may request inclusion within the SufiPulse production network. Admission is evaluated on technical readiness and governance alignment.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-8">
+                            <PrimaryButton 
+                                onClick={() => setShowCredentialsForm(!showCredentialsForm)}
+                                className="w-full md:w-auto min-w-[240px]"
+                            >
+                                {showCredentialsForm ? 'Hide Credentials Form' : 'Submit Studio Credentials'}
+                            </PrimaryButton>
+
+                            {showCredentialsForm && (
+                                <Card className="w-full bg-[var(--color-slate)] border-[var(--color-border)] p-8">
+                                    <div className="mb-8 border-b border-[var(--color-border)] pb-6">
+                                        <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+                                            Network Studio Eligibility
+                                        </h3>
+                                        <p className="text-[var(--color-gold)] font-medium">Karkhana-e-Sada</p>
+                                    </div>
+                                    <StudioCredentialsForm />
+                                </Card>
+                            )}
+                        </div>
+
+                        <div className="mt-16 pt-8 border-t border-[var(--color-text-tertiary)]/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-3">
+                                <Shield className="w-5 h-5 text-[var(--color-gold)]" />
+                                <span className="text-[var(--text-sm)] text-[var(--color-text-secondary)]">Final Registry Authorization Required</span>
                             </div>
+                            <Link href="/governance" className="text-[var(--text-sm)] text-[var(--color-gold)] hover:underline font-medium">
+                                View Governance Framework →
+                            </Link>
                         </div>
                     </div>
                 </PageContainer>
@@ -582,3 +277,4 @@ export default function Studio() {
         </Layout>
     );
 }
+

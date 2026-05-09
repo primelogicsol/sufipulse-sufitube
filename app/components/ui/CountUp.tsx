@@ -10,12 +10,17 @@ interface CountUpProps {
 }
 
 export function CountUp({ target, suffix = '', duration = 1400, className, style }: CountUpProps) {
-  const [display, setDisplay] = useState(0);
+  // Start from 50% of target if target > 10, otherwise 0
+  const initialValue = target > 10 ? Math.floor(target * 0.5) : 0;
+  const [display, setDisplay] = useState(initialValue);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
 
   useEffect(() => {
-    if (target === 0) return;
+    if (target === 0) {
+      setDisplay(0);
+      return;
+    }
 
     const el = ref.current;
     if (!el) return;
@@ -27,23 +32,30 @@ export function CountUp({ target, suffix = '', duration = 1400, className, style
           observer.disconnect();
 
           const start = performance.now();
+          const startValue = initialValue;
+          
           const tick = (now: number) => {
             const elapsed = now - start;
             const progress = Math.min(elapsed / duration, 1);
-            // ease-out cubic
-            const eased = 1 - Math.pow(1 - progress, 3);
-            setDisplay(Math.round(eased * target));
-            if (progress < 1) requestAnimationFrame(tick);
+            
+            // ease-out expo
+            const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            
+            setDisplay(Math.round(startValue + (target - startValue) * eased));
+            
+            if (progress < 1) {
+              requestAnimationFrame(tick);
+            }
           };
           requestAnimationFrame(tick);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.1 } // Lower threshold for faster start
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [target, duration]);
+  }, [target, duration, initialValue]);
 
   return (
     <span ref={ref} className={className} style={style}>

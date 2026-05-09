@@ -1,10 +1,12 @@
 "use client";
-import { Feather, BookOpen, Users, ArrowRight, Shield, CircleCheck as CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Feather, BookOpen, Users, ArrowRight, Shield, CircleCheck as CheckCircle2, ChevronLeft, ChevronRight, Pen, FileCheck, Mic, Disc3, CheckCircle } from 'lucide-react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
+import { Badge } from '../../components/primitives/Badge';
+import { PrimaryButton } from '../../components/primitives/PrimaryButton';
+import { Card } from '../../components/primitives/Card';
 import { roleDisplayMap } from '../../components/lib/roleDisplayMap';
-// import { Link } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 import { WriterCredentialsForm } from '../../components/writers/WriterCredentialsForm';
 import Link from 'next/link';
@@ -24,13 +26,13 @@ export default function Writers() {
 
   const scrollWorkflowLeft = () => {
     if (workflowScrollRef.current) {
-      workflowScrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+      workflowScrollRef.current.scrollBy({ left: -240, behavior: 'smooth' });
     }
   };
 
   const scrollWorkflowRight = () => {
     if (workflowScrollRef.current) {
-      workflowScrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+      workflowScrollRef.current.scrollBy({ left: 240, behavior: 'smooth' });
     }
   };
 
@@ -57,392 +59,214 @@ export default function Writers() {
     }
   ];
 
+  const workflowStages = [
+    { id: 1, title: 'Kalam Submission', desc: 'Writers submit original works' },
+    { id: 2, title: 'Editorial Review', desc: 'Thematic and linguistic alignment' },
+    { id: 3, title: 'Vocalist Assignment', desc: 'Matching voice to sacred text' },
+    { id: 4, title: 'Musical Structuring', desc: 'Thematic composition' },
+    { id: 5, title: 'Studio Recording', desc: 'Master-grade capture' },
+    { id: 6, title: 'Master Validation', desc: 'Technical quality check' },
+    { id: 7, title: 'Registry Authorization', desc: 'Final institutional lock' }
+  ];
+
   return (
     <Layout>
-      <Section className="pt-48 pb-8">
+      <Section background="midnight" spacing="spacious">
         <PageContainer>
-          <div className="max-w-4xl">
-            <h1 className="text-5xl font-bold text-white mb-2">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="mb-6">
+              <Badge variant="gold">Creative Division</Badge>
+            </div>
+            <h1 className="text-[var(--text-4xl)] md:text-[64px] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight">
               Writers
             </h1>
-            <p className="text-xl text-amber-400/90 mb-6 border-b border-amber-400/20 pb-4 inline-block">
+            <p className="text-[var(--text-xl)] text-[var(--color-gold)] font-medium mb-10 tracking-wide uppercase">
               {roleDisplayMap.writer.mystical}
             </p>
-
-            <div className="mt-8 max-w-3xl">
-              <p className="text-neutral-300 leading-relaxed">
-                Writers originate kalam within the SufiPulse institutional framework. All submissions enter structured editorial review before production consideration.
-              </p>
-            </div>
+            <p className="text-[var(--text-lg)] text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto">
+              Writers originate kalam within the SufiPulse institutional framework. All submissions enter structured editorial review before production consideration.
+            </p>
           </div>
         </PageContainer>
       </Section>
 
-      <Section className="py-12">
+      <Section background="slate" spacing="normal">
         <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Writer Mandate & Role Definition
-            </h2>
-
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-              <p className="text-neutral-300 leading-relaxed mb-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-12 text-center md:text-left">
+              <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)] mb-4">
+                Writer Mandate & Role Definition
+              </h2>
+              <p className="text-[var(--color-text-secondary)] max-w-2xl">
                 The Writer operates before musical structuring and studio allocation. No kalam enters production without documented editorial alignment.
               </p>
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                {writerResponsibilities.map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={idx} className="flex items-start gap-3">
-                      <Icon className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-white font-medium text-sm mb-1">{item.title}</p>
-                        <p className="text-neutral-400 text-xs leading-relaxed">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {writerResponsibilities.map((item, idx) => (
+                <Card key={idx} className="bg-[var(--color-midnight)]/30 border-[var(--color-text-tertiary)]/10">
+                  <item.icon className="w-8 h-8 text-[var(--color-gold)] mb-4" />
+                  <h3 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)] mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed">
+                    {item.description}
+                  </p>
+                </Card>
+              ))}
             </div>
           </div>
         </PageContainer>
       </Section>
 
-      <Section className="py-12">
+      <Section background="midnight" spacing="normal">
         <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-12 text-center">
+              <Badge variant="outline" className="mb-4">Institutional Workflow</Badge>
+              <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)]">
+                Production Lifecycle Position
+              </h2>
+            </div>
+
+            <div className="relative group">
+              <div
+                ref={workflowScrollRef}
+                className="flex items-start gap-4 overflow-x-auto scrollbar-hide pb-8 px-4"
+              >
+                {workflowStages.map((stage) => (
+                  <div key={stage.id} className="flex items-center flex-shrink-0">
+                    <div className="flex flex-col items-center text-center w-[180px]">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 font-bold ${stage.id === 1 ? 'bg-[var(--color-gold)] text-[var(--color-midnight)]' : 'bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 text-[var(--color-gold)]'}`}>
+                        {stage.id}
+                      </div>
+                      <h4 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-1">
+                        {stage.title}
+                      </h4>
+                      <p className="text-[11px] text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                        {stage.desc}
+                      </p>
+                    </div>
+                    {stage.id < workflowStages.length && (
+                      <ArrowRight className="w-5 h-5 text-[var(--color-gold)]/20 mx-2 flex-shrink-0" />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={scrollWorkflowLeft}
+                className="absolute left-0 top-6 -translate-x-4 w-10 h-10 rounded-full bg-[var(--color-slate)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={scrollWorkflowRight}
+                className="absolute right-0 top-6 translate-x-4 w-10 h-10 rounded-full bg-[var(--color-slate)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        </PageContainer>
+      </Section>
+
+      <Section background="slate" spacing="normal">
+        <PageContainer>
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)] mb-10 text-center md:text-left">
               Operational Framework
             </h2>
 
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <p className="text-white font-medium mb-3">Structural Discipline</p>
-                  <p className="text-neutral-300 text-sm leading-relaxed mb-2">
-                    Writers submit original kalam for documented review.
-                  </p>
-                  <p className="text-neutral-300 text-sm leading-relaxed mb-2">
-                    Textual structure respects linguistic precision and clarity.
-                  </p>
-                  <p className="text-neutral-300 text-sm leading-relaxed">
-                    Submission format follows institutional guidelines.
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-white font-medium mb-3">Collaborative Position</p>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                      <p className="text-neutral-300 text-sm">Writers originate kalam</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                      <p className="text-neutral-300 text-sm">Editorial Council reviews</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                      <p className="text-neutral-300 text-sm">Vocalists interpret</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                      <p className="text-neutral-300 text-sm">Producers structure musically</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                      <p className="text-neutral-300 text-sm">Studio executes recording</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-px bg-linear-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-              <div className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-4">
-                <p className="text-neutral-300 text-sm leading-relaxed">
-                  Writers do not independently assign vocalists, authorize publication, or enter production without editorial clearance.
-                </p>
-              </div>
-            </div>
-          </div>
-        </PageContainer>
-      </Section>
-
-      <Section className="py-12">
-        <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Production Workflow Position
-            </h2>
-
-            <div className="hidden lg:block">
-              <div
-                ref={workflowScrollRef}
-                className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2 mb-3"
-              >
-                <div className="min-w-35">
-                  <div className="bg-amber-400/10 border border-amber-400/30 rounded-lg p-3">
-                    <p className="text-amber-400 text-xs font-semibold">Kalam Submission</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-amber-400/30 shrink-0" />
-                <div className="min-w-35">
-                  <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                    <p className="text-neutral-300 text-xs font-medium">Editorial Review</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-amber-400/30 shrink-0" />
-                <div className="min-w-35">
-                  <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                    <p className="text-neutral-300 text-xs font-medium text-nowrap">Vocalist Assignment</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-amber-400/30 shrink-0" />
-                <div className="min-w-35">
-                  <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                    <p className="text-neutral-300 text-xs font-medium">Musical Structuring</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-amber-400/30 shrink-0" />
-                <div className="min-w-35">
-                  <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                    <p className="text-neutral-300 text-xs font-medium">Studio Recording</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-amber-400/30 shrink-0" />
-                <div className="min-w-35">
-                  <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                    <p className="text-neutral-300 text-xs font-medium">Master Validation</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-amber-400/30 shrink-0" />
-                <div className="min-w-35">
-                  <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                    <p className="text-neutral-300 text-xs font-medium text-nowrap">Registry Authorization</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  onClick={scrollWorkflowLeft}
-                  className="w-8 h-8 rounded-full bg-neutral-900/80 border border-neutral-800 flex items-center justify-center hover:bg-neutral-800 transition-colors"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft className="w-4 h-4 text-neutral-400" />
-                </button>
-                <button
-                  onClick={scrollWorkflowRight}
-                  className="w-8 h-8 rounded-full bg-neutral-900/80 border border-neutral-800 flex items-center justify-center hover:bg-neutral-800 transition-colors"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="w-4 h-4 text-neutral-400" />
-                </button>
-              </div>
-            </div>
-
-            <div className="lg:hidden space-y-2">
-              <div className="bg-amber-400/10 border border-amber-400/30 rounded-lg p-3">
-                <p className="text-amber-400 text-xs font-semibold">Kalam Submission</p>
-              </div>
-              <div className="flex">
-                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-              </div>
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                <p className="text-neutral-300 text-xs font-medium">Editorial Review</p>
-              </div>
-              <div className="flex">
-                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-              </div>
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                <p className="text-neutral-300 text-xs font-medium">Vocalist Assignment</p>
-              </div>
-              <div className="flex">
-                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-              </div>
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                <p className="text-neutral-300 text-xs font-medium">Musical Structuring</p>
-              </div>
-              <div className="flex">
-                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-              </div>
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                <p className="text-neutral-300 text-xs font-medium">Studio Recording</p>
-              </div>
-              <div className="flex">
-                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-              </div>
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                <p className="text-neutral-300 text-xs font-medium">Master Validation</p>
-              </div>
-              <div className="flex">
-                <ArrowRight className="w-4 h-4 text-amber-400/30 rotate-90" />
-              </div>
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-3">
-                <p className="text-neutral-300 text-xs font-medium">Registry Authorization</p>
-              </div>
-            </div>
-
-            <p className="text-neutral-400 text-xs mt-4">
-              Each stage operates under documented institutional coordination.
-            </p>
-          </div>
-        </PageContainer>
-      </Section>
-
-      <Section className="py-12">
-        <PageContainer>
-          <div id="submission" className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Submission & Structural Alignment
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                <p className="text-white font-semibold mb-4">Role in Workflow</p>
-
-                <p className="text-neutral-300 text-sm leading-relaxed mb-4">
-                  Writers operate at the origin of the production chain.
-                </p>
-
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Original kalam composition</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Thematic coherence</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Linguistic discipline</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Structured stanza integrity</p>
-                  </div>
-                </div>
-
-                <div className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-3 mt-4">
-                  <p className="text-neutral-400 text-xs leading-relaxed">
-                    Editorial review precedes all production allocation.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                <p className="text-white font-semibold mb-4">Eligibility & Submission</p>
-
-                <p className="text-neutral-300 text-sm leading-relaxed mb-4">
-                  Writers may request institutional consideration through formal submission.
-                </p>
-
-                <p className="text-white text-xs font-medium mb-2">Requirements:</p>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Original authorship</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Structured format</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Linguistic precision</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Alignment with charter principles</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-neutral-300 text-sm">Acceptance of editorial governance</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setShowApplicationForm(!showApplicationForm)}
-                  className="w-full bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-                >
-                  {showApplicationForm ? 'Hide Application Form' : 'Apply as Writer'}
-                </button>
-              </div>
-            </div>
-
-            {showApplicationForm && (
-              <div id="apply-form" className="mt-8">
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  Writer Eligibility & Consideration
+            <div className="grid md:grid-cols-2 gap-12 mb-12">
+              <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8">
+                <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-6 flex items-center gap-3">
+                  <Pen className="w-5 h-5 text-[var(--color-gold)]" /> Structural Discipline
                 </h3>
-                <p className="text-lg text-amber-400 mb-4">Ahl-e-Qalam</p>
-                <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                  Writers may request consideration for inclusion within the SufiPulse editorial structure.<br />
-                  Submissions are reviewed for thematic alignment and structural readiness.
-                </p>
-                <WriterCredentialsForm />
+                <ul className="space-y-4">
+                  {[
+                    'Writers submit original kalam for documented review',
+                    'Textual structure respects linguistic precision',
+                    'Submission format follows institutional guidelines'
+                  ].map((text, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)] mt-2" />
+                      <span className="text-[var(--text-base)] text-[var(--color-text-secondary)]">{text}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            )}
+
+              <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8">
+                <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-6 flex items-center gap-3">
+                  <Users className="w-5 h-5 text-[var(--color-gold)]" /> Collaborative Position
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { label: 'Writers', desc: 'Originate kalam' },
+                    { label: 'Editorial Council', desc: 'Reviews & Authorizes' },
+                    { label: 'Vocalists', desc: 'Interpret & Perform' },
+                    { label: 'Producers', desc: 'Structure Musically' }
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="text-[var(--text-sm)] text-[var(--color-text-primary)] font-medium">{step.label}</span>
+                      <span className="text-[var(--text-xs)] text-[var(--color-gold)] opacity-70 uppercase tracking-widest">{step.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[var(--color-midnight)] p-6 rounded-lg border border-[var(--color-gold)]/20 text-center max-w-3xl mx-auto">
+              <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed italic">
+                "Writers do not independently assign vocalists, authorize publication, or enter production without editorial clearance from the Majlis-e-Nazr."
+              </p>
+            </div>
           </div>
         </PageContainer>
       </Section>
 
-      <Section className="py-12 pb-20">
+      <Section background="midnight" spacing="normal" className="pb-24">
         <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Structural Boundaries
-            </h2>
+          <div className="max-w-4xl mx-auto">
+            <div id="apply-form" className="text-center mb-12">
+              <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)] mb-4">
+                Institutional Access
+              </h2>
+              <p className="text-[var(--color-text-secondary)]">
+                Writers may request consideration for inclusion within the SufiPulse editorial structure. Admission is evaluated on thematic alignment and linguistic precision.
+              </p>
+            </div>
 
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                  <p className="text-neutral-300 text-sm">Editorial clearance required</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                  <p className="text-neutral-300 text-sm">No self-publication authority</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                  <p className="text-neutral-300 text-sm">Textual integrity verification</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                  <p className="text-neutral-300 text-sm">No production bypass</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                  <p className="text-neutral-300 text-sm">Documented revision cycle</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                  <p className="text-neutral-300 text-sm">Governance alignment mandatory</p>
-                </div>
-              </div>
+            <div className="flex flex-col items-center gap-8">
+              <PrimaryButton 
+                onClick={() => setShowApplicationForm(!showApplicationForm)}
+                className="w-full md:w-auto min-w-[240px]"
+              >
+                {showApplicationForm ? 'Hide Application Form' : 'Apply as Writer'}
+              </PrimaryButton>
 
-              <div className="border border-neutral-800/50 rounded-lg p-4 mb-4">
-                <p className="text-neutral-300 text-sm leading-relaxed">
-                  Origination does not equal publication. All kalam operates within institutional review.
-                </p>
-              </div>
+              {showApplicationForm && (
+                <Card className="w-full bg-[var(--color-slate)] border-[var(--color-border)] p-8">
+                  <div className="mb-8 border-b border-[var(--color-border)] pb-6">
+                    <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+                      Writer Eligibility & Consideration
+                    </h3>
+                    <p className="text-[var(--color-gold)] font-medium">Ahl-e-Qalam</p>
+                  </div>
+                  <WriterCredentialsForm />
+                </Card>
+              )}
+            </div>
 
-              <div className="mt-6">
-                <Link
-                  href="/governance"
-                  className="inline-flex items-center gap-2 text-neutral-300 hover:text-amber-400 transition-colors text-xs"
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  View Governance Framework
-                </Link>
+            <div className="mt-16 pt-8 border-t border-[var(--color-text-tertiary)]/10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-[var(--color-gold)]" />
+                <span className="text-[var(--text-sm)] text-[var(--color-text-secondary)]">Constitutional Alignment Mandatory</span>
               </div>
+              <Link href="/governance" className="text-[var(--text-sm)] text-[var(--color-gold)] hover:underline font-medium">
+                View Governance Framework →
+              </Link>
             </div>
           </div>
         </PageContainer>
@@ -450,3 +274,4 @@ export default function Writers() {
     </Layout>
   );
 }
+
