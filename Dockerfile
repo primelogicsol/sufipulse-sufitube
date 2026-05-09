@@ -1,16 +1,14 @@
-# Multi-stage build for production
-FROM node:20-alpine AS base
+# Use Debian-based image for maximum compatibility
+FROM node:20-bookworm-slim AS base
 
 # 1. Install dependencies only when needed
 FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-# Ensure devDependencies are installed for the build step
-RUN npm ci
+# Use npm install for better resilience across different build environments
+RUN npm install
 
 # 2. Rebuild the source code only when needed
 FROM base AS builder
@@ -49,37 +47,26 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install FFmpeg for server-side video conversion (H.265→H.264 for OCR)
-RUN apk add --no-cache ffmpeg
+# Install FFmpeg for server-side video conversion
+RUN apt-get update && apt-get install -y ffmpeg --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user (using standard Alpine flags)
-RUN addgroup -S -g 1001 nodejs && \
-    adduser -S -u 1001 -G nodejs nextjs
-
-# Create data and Next.js cache directories with correct ownership
+# Use the built-in 'node' user for security
+# Ensure directories have correct ownership
 RUN mkdir -p /app/.data/audit /app/.next/cache && \
-    chown -R nextjs:nodejs /app/.data /app/.next/cache
+    chown -R node:node /app
 
-# Copy necessary files
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Copy necessary files with correct ownership
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-# Seed data bundled in image
-COPY --from=builder /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
-
-# Explicitly copy the FULL compiled server directory from the builder.
-COPY --from=builder /app/.next/server/app ./.next/server/app
-COPY --from=builder /app/.next/server/app-paths-manifest.json ./.next/server/app-paths-manifest.json
-COPY --from=builder /app/.next/server/server-reference-manifest.json ./.next/server/server-reference-manifest.json
-COPY --from=builder /app/.next/server/server-reference-manifest.js ./.next/server/server-reference-manifest.js
-
-# Operational scripts
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/scripts/seed-admin.js ./scripts/seed-admin.js
+# Seed data and operational scripts
+COPY --from=builder --chown=node:node /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
+COPY --from=builder --chown=node:node /app/package.json ./package.json
+COPY --from=builder --chown=node:node /app/scripts/seed-admin.js ./scripts/seed-admin.js
 
 # Switch to non-root user
-USER nextjs
+USER node
 
 EXPOSE 3000
 
@@ -91,4 +78,5 @@ ENV APP_COMMIT=$APP_COMMIT
 ENV BUILD_TIME=$BUILD_TIME
 
 CMD ["node", "server.js"]
+
 
