@@ -95,16 +95,19 @@ export default function Home() {
     // Latest publications — fetch ranked (carousel) and date-sorted (grid) in parallel
     const fetchLatestPublications = async () => {
       try {
-        const toPublication = (r: any): Publication => ({
-          id: r.id,
-          type: 'music' as const,
-          title: r.title,
-          slug: r.youtubeId,
-          published_at: getBestReleaseDate(r),
-          description: r.description,
-          artwork_url: r.thumbnail || r.thumbnailUrl,
-          youtube_video_id: r.youtubeId,
-        });
+        const toPublication = (r: any): Publication => {
+          const videoId = r.youtubeId || r.youtube_video_id || r.videoId || '';
+          return {
+            id: r.id,
+            type: 'music' as const,
+            title: r.title,
+            slug: videoId,
+            published_at: getBestReleaseDate(r),
+            description: r.description,
+            artwork_url: r.thumbnail || r.thumbnail_url || r.thumbnailUrl,
+            youtube_video_id: videoId,
+          };
+        };
 
         const [rankedRes, recentRes] = await Promise.all([
           fetch('/api/releases?status=published&sort=ranked&limit=8'),
@@ -534,6 +537,7 @@ export default function Home() {
                       {featuredReleases[currentSlide]?.youtube_video_id || featuredReleases[currentSlide]?.slug ? (
                         <div className="relative w-full overflow-hidden rounded-lg shadow-2xl" style={{ aspectRatio: '16/9' }}>
                           <img
+                            key={activeVideoId}
                             src={activeThumbnailCandidates[0]}
                             alt={featuredReleases[currentSlide]?.title}
                             className="w-full h-full object-cover bg-black group-hover:scale-[1.02] transition-transform duration-[var(--transition-base)]"
