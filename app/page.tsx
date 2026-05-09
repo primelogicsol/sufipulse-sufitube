@@ -15,7 +15,6 @@ import { literaryArticles } from './data/literary-articles';
 import Image from 'next/image';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
-import GlobalReachStrip from './components/releases/GlobalReachStrip';
 
 interface FeaturedArticle {
   id: string;
@@ -491,12 +490,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </PageContainer>
-      </Section>
-
-      <Section background="midnight" spacing="normal">
-        <PageContainer>
-          <GlobalReachStrip />
         </PageContainer>
       </Section>
 
