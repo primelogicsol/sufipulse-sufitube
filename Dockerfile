@@ -1,16 +1,18 @@
 # Multi-stage build for production
 FROM node:20-alpine AS base
 
-# Install dependencies only when needed
+# 1. Install dependencies only when needed
 FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
+# Ensure devDependencies are installed for the build step
 RUN npm ci
 
-# Rebuild the source code only when needed
+# 2. Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -41,7 +43,7 @@ ENV NEXT_PUBLIC_APP_COMMIT=$NEXT_PUBLIC_APP_COMMIT
 # Build the application
 RUN npm run build
 
-# Production image, copy all the files and run next
+# 3. Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
@@ -50,36 +52,29 @@ ENV NODE_ENV=production
 # Install FFmpeg for server-side video conversion (H.265→H.264 for OCR)
 RUN apk add --no-cache ffmpeg
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Create non-root user (using standard Alpine flags)
+RUN addgroup -S -g 1001 nodejs && \
+    adduser -S -u 1001 -G nodejs nextjs
 
 # Create data and Next.js cache directories with correct ownership
-RUN mkdir -p /app/.data/audit /app/.next/cache
-RUN chown -R nextjs:nodejs /app/.data /app/.next/cache
+RUN mkdir -p /app/.data/audit /app/.next/cache && \
+    chown -R nextjs:nodejs /app/.data /app/.next/cache
 
 # Copy necessary files
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-# Seed data bundled in image — used by cms-storage-server.ts to populate the
-# volume on first run when .data/cms-releases.json doesn't exist yet
+
+# Seed data bundled in image
 COPY --from=builder /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
-# .data is excluded from .dockerignore and is provided via Docker volume at runtime
 
 # Explicitly copy the FULL compiled server directory from the builder.
-# Next.js standalone tracing can omit route.js files that lack file-traced
-# imports (e.g. /api/adoptions, /api/admin/users). Copying the builder's
-# .next/server/app on top of the standalone output ensures every compiled
-# route and manifest is present in the production image.
 COPY --from=builder /app/.next/server/app ./.next/server/app
 COPY --from=builder /app/.next/server/app-paths-manifest.json ./.next/server/app-paths-manifest.json
 COPY --from=builder /app/.next/server/server-reference-manifest.json ./.next/server/server-reference-manifest.json
 COPY --from=builder /app/.next/server/server-reference-manifest.js ./.next/server/server-reference-manifest.js
 
-# Operational scripts — not part of the Next.js bundle but needed inside the container.
-# package.json is copied explicitly because standalone ships a stripped-down version
-# that omits custom npm scripts like seed:admin.
+# Operational scripts
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/scripts/seed-admin.js ./scripts/seed-admin.js
 
@@ -96,3 +91,4 @@ ENV APP_COMMIT=$APP_COMMIT
 ENV BUILD_TIME=$BUILD_TIME
 
 CMD ["node", "server.js"]
+
