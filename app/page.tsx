@@ -39,8 +39,6 @@ interface Publication {
   description?: string;
 }
 
-export const dynamic = 'force-dynamic';
-
 export default function Home() {
   // const { releases, loading } = useReleases();
   // const featuredReleases = releases

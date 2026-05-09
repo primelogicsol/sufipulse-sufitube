@@ -1,3 +1,9 @@
 {
-  "/api/releases/route": "app/api/releases/route.js"
+  "/(public)/releases/page": "app/(public)/releases/page.js",
+  "/api/analytics/youtube-reach/route": "app/api/analytics/youtube-reach/route.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/auth/refresh/route": "app/api/auth/refresh/route.js",
+  "/api/releases/route": "app/api/releases/route.js",
+  "/icon.svg/route": "app/icon.svg/route.js",
+  "/page": "app/page.js"
 }
