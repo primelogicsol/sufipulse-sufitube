@@ -88,9 +88,19 @@ export default function CMSReleasesPage() {
       const url = filter === 'all' ? '/api/releases?status=all' : `/api/releases?status=${filter}`;
       const res = await fetch(url);
       const data = await res.json();
-      setReleases(Array.isArray(data) ? data : []);
+      
+      // The API now returns an object { items, count, needsRefresh }
+      if (data && Array.isArray(data.items)) {
+        setReleases(data.items);
+      } else if (Array.isArray(data)) {
+        // Fallback for legacy array response
+        setReleases(data);
+      } else {
+        setReleases([]);
+      }
     } catch (error) {
       console.error('Failed to load releases:', error);
+      setReleases([]);
     } finally {
       setLoading(false);
     }
@@ -223,27 +233,45 @@ export default function CMSReleasesPage() {
     }
     
     // Extract ID if URL is pasted
-    const match = id.match(/(?:v=|youtu\.be\/|\/embed\/)([0-9A-Za-z_-]{11})/);
-    if (match) id = match[1];
+    const regex = /(?:v=|youtu\.be\/|\/embed\/|\/v\/|\/shorts\/|^)([0-9A-Za-z_-]{11})(?:[?&]|$)/;
+    const match = id.match(regex);
+    if (match) {
+        id = match[1];
+    } else if (id.length !== 11) {
+        setYoutubeMessage('Could not extract a valid 11-character YouTube ID from the input.');
+        return;
+    }
 
     try {
       setImportingYouTube(true);
       setYoutubeMessage(null);
-      const res = await fetch('/api/releases/import-youtube', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoIds: [id] }),
-      });
+      
+      // Fetch metadata first to show in the picker
+      const res = await fetch(`/api/releases/import-youtube?videoIds=${id}`);
       const data = await res.json();
+      
       if (!res.ok) {
-        throw new Error(data?.error || 'Import failed');
+        throw new Error(data?.error || 'Fetch failed');
       }
 
-      setYoutubeMessage(`Successfully imported unlisted/private Video ID: ${id}`);
+      const fetchedVideo = data.items?.[0];
+      if (!fetchedVideo) {
+        throw new Error('Video details could not be retrieved from YouTube.');
+      }
+
+      // Add to the list and select it
+      setYoutubeVideos(prev => {
+        const exists = prev.find(v => v.id === fetchedVideo.id);
+        if (exists) return prev;
+        return [fetchedVideo, ...prev];
+      });
+      setSelectedVideoIds(prev => new Set(prev).add(fetchedVideo.id));
+      setYoutubePanelOpen(true);
+      
+      setYoutubeMessage(`Fetched: ${fetchedVideo.title}. You can now click "Import Selected" below.`);
       setDirectUrl('');
-      await loadReleases();
     } catch (error: any) {
-      setYoutubeMessage(`Direct import failed: ${error?.message || 'Unknown error'}`);
+      setYoutubeMessage(`Fetch failed: ${error?.message || 'Unknown error'}`);
     } finally {
       setImportingYouTube(false);
     }

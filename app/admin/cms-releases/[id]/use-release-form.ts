@@ -659,6 +659,7 @@ export function useReleaseForm({
         } catch { /* ignore */ }
 
         setOriginalForm(data);
+        setForm(data); // Ensure current form matches exactly what server returned
         setSuccessMessage(`Release "${data.title}" saved successfully${data.youtubeSubtitleAutoSync ? ' and synced to YouTube' : ''}`);
 
         if (data.youtubeSubtitleAutoSync !== false) {
@@ -666,7 +667,10 @@ export function useReleaseForm({
         }
 
         if (isNew && data.id) {
-          setTimeout(() => onNavigate(`/admin/cms-releases/${data.id}`), 1500);
+          // If it's a new release, redirect to the edit page for that ID after a brief delay
+          setTimeout(() => {
+            onNavigate(`/admin/cms-releases/${data.id}`);
+          }, 1500);
         }
       } else {
         const error = await res.json();
@@ -683,7 +687,7 @@ export function useReleaseForm({
   // ── Plain save (no form validation — used by sub-routes) ─────────────────
 
   const handleSave = async () => {
-    if (isNew) return;
+    if (isNew) return handleSubmit({ preventDefault: () => {} } as React.FormEvent);
     setErrorMessage(null);
     setSuccessMessage(null);
     try {
@@ -696,6 +700,7 @@ export function useReleaseForm({
       if (res.ok) {
         const data = await res.json();
         setOriginalForm(data);
+        setForm(data);
         setSuccessMessage('Saved.');
         if (data.youtubeSubtitleAutoSync !== false) {
           await syncYouTubeSubtitles({ releaseId: data.id, mode: 'update-changed', silent: true });

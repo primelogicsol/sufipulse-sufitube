@@ -1613,6 +1613,9 @@ function Release() {
 
     try {
       const updatedRelease = {
+        // Identity (required for upsert/creation of legacy releases)
+        slug: release?.slug || slug,
+        youtubeId: release?.youtubeId || release?.youtube_video_id || release?.youtubeVideoId || (slug.length === 11 ? slug : ""),
         // Basic fields (camelCase to match CMS)
         title: editTitle,
         description: editDescription,

@@ -1832,25 +1832,41 @@ export default function EditReleasePage() {
           </div>
 
           {/* Submit */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 mt-12 pt-8 border-t border-[var(--dash-border)]">
             <button
               type="submit"
-              disabled={saving || !hasUnsavedChanges && !isNew}
-              className={`flex items-center gap-2 px-6 py-2 rounded-lg transition font-medium disabled:opacity-60 ${
+              disabled={saving || (!hasUnsavedChanges && !isNew)}
+              className={`flex items-center gap-2 px-8 py-2.5 rounded-lg transition-all font-semibold shadow-lg disabled:opacity-50 ${
                 hasUnsavedChanges || isNew
-                  ? 'dashboard-btn-primary'
-                  : 'dashboard-btn-secondary'
+                  ? 'dashboard-btn-primary scale-100 hover:scale-[1.02]'
+                  : 'bg-green-900/30 text-green-400 border border-green-800/50 cursor-default'
               }`}
-              title={hasUnsavedChanges ? 'Save changes (Ctrl+S)' : 'No changes to save'}
+              title={hasUnsavedChanges ? 'Save changes (Ctrl+S)' : isNew ? 'Create release' : 'No changes to save'}
             >
-              <Save size={20} />
-              {saving ? 'Saving...' : hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+              {saving ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : !hasUnsavedChanges && !isNew ? (
+                <>
+                  <CheckSquare className="w-5 h-5" />
+                  Saved
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  {isNew ? 'Create Release' : 'Save Changes'}
+                </>
+              )}
             </button>
-            <Link href="/admin/cms-releases">
-              <button type="button" className="dashboard-btn-secondary px-6 py-2">
-                Cancel
-              </button>
-            </Link>
+            <button 
+              type="button" 
+              onClick={() => router.push('/admin/cms-releases')}
+              className="dashboard-btn-secondary px-8 py-2.5 rounded-lg font-medium transition-all hover:bg-neutral-800"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>

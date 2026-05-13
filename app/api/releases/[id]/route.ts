@@ -94,7 +94,7 @@ export async function GET(
   }
 }
 
-// PUT /api/releases/[id] (update)
+// PUT /api/releases/[id] (update or upsert for admins)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -106,21 +106,37 @@ export async function PUT(
   try {
     const rawBody = await request.json();
     const body = normalizeFieldNames(rawBody);
-    const existing = cmsServerStorage.getRelease(id);
+    let existing = cmsServerStorage.getRelease(id);
 
-    if (!existing) {
-      return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+    // If it doesn't exist, we'll create it (upsert)
+    // This happens when an admin edits a "legacy" YouTube release from the public page
+    const nextYoutubeId = String(body.youtubeId || (existing?.youtubeId) || (id.length === 11 ? id : '')).trim();
+    
+    // Check if this YouTube ID already exists under a different CMS ID
+    if (!existing && nextYoutubeId) {
+      const youtubeOwner = cmsServerStorage.getReleaseByYoutubeId(nextYoutubeId);
+      if (youtubeOwner) {
+        apiLogger.info(`Legacy edit pivot: Mapping YouTube ID ${nextYoutubeId} to existing CMS ID ${youtubeOwner.id}`);
+        existing = youtubeOwner;
+      }
     }
 
-    const nextSlug = String(body.slug ?? existing.slug ?? '').trim();
-    const nextYoutubeId = String(body.youtubeId ?? existing.youtubeId ?? '').trim();
+    const isNew = !existing;
+    const now = new Date().toISOString();
+
+    if (isNew) {
+      apiLogger.info(`Creating new release via upsert (PUT) for ID: ${id}`);
+    }
+
+    const nextSlug = String(body.slug || (existing?.slug) || id).trim();
 
     if (!nextSlug) {
       return NextResponse.json({ error: 'slug is required' }, { status: 400 });
     }
 
+    // Collision checks
     const slugOwner = cmsServerStorage.getReleaseBySlug(nextSlug);
-    if (slugOwner && slugOwner.id !== id) {
+    if (slugOwner && slugOwner.id !== (existing?.id || id)) {
       return NextResponse.json(
         { error: `Release slug already exists: ${nextSlug}` },
         { status: 409 }
@@ -129,7 +145,7 @@ export async function PUT(
 
     if (nextYoutubeId) {
       const youtubeOwner = cmsServerStorage.getReleaseByYoutubeId(nextYoutubeId);
-      if (youtubeOwner && youtubeOwner.id !== id) {
+      if (youtubeOwner && youtubeOwner.id !== (existing?.id || id)) {
         return NextResponse.json(
           { error: `YouTube ID already linked to release: ${nextYoutubeId}` },
           { status: 409 }
@@ -138,19 +154,35 @@ export async function PUT(
     }
 
     const merged = { 
-      ...existing, 
+      ...(existing || {
+        id,
+        status: 'published',
+        source: 'cms',
+        createdAt: now,
+        availableLanguages: ['en', 'ur'],
+        defaultLanguage: 'en',
+        enableLyrics: true,
+        enableCommentary: true,
+        enableSponsors: false,
+        enableAdoption: true,
+        enableCredits: true,
+      }), 
       ...body, 
-      id: existing.id, // Always preserve the original ID
+      id: existing?.id || id, // Always enforce the correct ID
       slug: nextSlug, 
       youtubeId: nextYoutubeId,
-      // Preserve critical fields that should not be easily changed
-      source: existing.source,
-      status: body.status || existing.status,
-      visibility: body.visibility || existing.visibility,
+      updatedAt: now,
     };
 
+    // Preserve critical fields for existing releases unless explicitly changed and valid
+    if (existing) {
+       merged.source = existing.source || merged.source;
+       merged.status = body.status || existing.status;
+       merged.visibility = body.visibility || existing.visibility;
+    }
+
     // Generate social share kit whenever status becomes published (first publish or re-publish)
-    const isBeingPublished = existing.status !== 'published' && merged.status === 'published';
+    const isBeingPublished = (!existing || existing.status !== 'published') && merged.status === 'published';
     if (isBeingPublished && merged.youtubeId) {
       merged.socialShareKit = generateSocialShareKit(merged as any);
     }
@@ -159,19 +191,19 @@ export async function PUT(
 
     // Audit log
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
-    apiLogger.info(`Release updated: ${id}`, { id, slug: nextSlug });
+    apiLogger.info(`Release ${isNew ? 'created' : 'updated'} via PUT: ${id}`, { id, slug: nextSlug });
     auditLog({
       userId: authResult.id,
       userEmail: authResult.email,
-      action: 'release_updated',
+      action: isNew ? 'release_created' : 'release_updated',
       resourceType: 'release',
       resourceId: id,
-      details: { title: body.title, slug: nextSlug },
+      details: { title: merged.title, slug: nextSlug },
       ipAddress: ip,
     });
 
     // Auto-notify subscribers when a release is first published
-    if (existing.status !== 'published' && updated.status === 'published' && updated.youtubeId) {
+    if ((!existing || existing.status !== 'published') && updated.status === 'published' && updated.youtubeId) {
       const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       fetch(`${base}/api/admin/notify-subscribers`, {
         method: 'POST',
@@ -187,6 +219,7 @@ export async function PUT(
 
     return NextResponse.json(updated);
   } catch (error: any) {
+    console.error(`[API /api/releases/${id}] PUT ERROR:`, error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
