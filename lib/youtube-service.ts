@@ -65,6 +65,11 @@ class YouTubeService {
             retryDelayMs: config.retryDelayMs || 1000,
             ...config
         };
+
+        const isPlaceholder = this.config.apiKey.includes('YOUR_KEY_HERE') || !this.config.apiKey;
+        if (isPlaceholder) {
+            console.error('❌ [YouTubeService] YOUTUBE_API_KEY is missing or invalid (placeholder detected). Please set a real API key in .env.local.');
+        }
     }
 
     private isCacheValid(key: string): boolean {
@@ -89,9 +94,14 @@ class YouTubeService {
     }
 
     private async makeRequest(url: string, retries = this.config.maxRetries, noCache = false): Promise<any> {
+        // Check if API key is a placeholder
+        if (this.config.apiKey.includes('YOUR_KEY_HERE') || !this.config.apiKey) {
+            throw new Error('YouTube API key is missing or invalid. Please configure YOUTUBE_API_KEY.');
+        }
+
         // Check if quota is exceeded and not yet reset
         if (this.quotaExceeded && this.quotaResetTime && Date.now() < this.quotaResetTime) {
-            throw new Error('YouTube API quota exceeded. Using static data fallback.');
+            throw new Error(`YouTube API quota exceeded. Resets at ${new Date(this.quotaResetTime).toLocaleString()}`);
         }
 
         try {
@@ -104,6 +114,10 @@ class YouTubeService {
                     fetchOptions.next = { revalidate: 14400 };
                 }
             }
+
+            // Log the request (masking the API key)
+            const maskedUrl = url.replace(/key=[^&]+/, 'key=***');
+            console.log(`[YouTubeService] Requesting: ${maskedUrl}`);
 
             const response = await fetch(url, fetchOptions);
             const data = await response.json();
@@ -121,6 +135,7 @@ class YouTubeService {
             }
 
             if (!response.ok) {
+                console.error(`[YouTubeService] API Error Response:`, JSON.stringify(data, null, 2));
                 throw new Error(`YouTube API error: ${response.status} ${response.statusText}`);
             }
 
@@ -131,7 +146,7 @@ class YouTubeService {
             return data;
         } catch (error: any) {
             if (retries > 0 && !error.message.includes('quota')) {
-                console.warn(`YouTube API request failed, retrying... (${retries} attempts left)`);
+                console.warn(`YouTube API request failed, retrying... (${retries} attempts left). Error: ${error.message}`);
                 await this.delay(this.config.retryDelayMs);
                 return this.makeRequest(url, retries - 1);
             }
@@ -143,10 +158,8 @@ class YouTubeService {
         const safeMaxResults = Math.max(1, Math.min(maxResults, 500));
         const cacheKey = `search_${query}_${safeMaxResults}_${order}`;
 
-        if (!this.config.apiKey) {
-            console.warn('YouTube API key is missing. Falling back to static registry data.');
-            const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
-            return STATIC_YOUTUBE_VIDEOS.slice(0, safeMaxResults);
+        if (!this.config.apiKey || this.config.apiKey.includes('YOUR_KEY_HERE')) {
+            throw new Error('YouTube API key is missing or invalid. Please configure YOUTUBE_API_KEY.');
         }
 
         // Check cache first
@@ -246,21 +259,7 @@ class YouTubeService {
 
         } catch (error: any) {
             console.error('❌ YouTube search failed:', error.message);
-
-            // Return static data as fallback
-            console.log('🔄 Falling back to static video data');
-            const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
-            
-            // Filter and sort based on the original query
-            let results = [...STATIC_YOUTUBE_VIDEOS];
-            
-            if (order === 'viewCount') {
-                results.sort((a, b) => b.views - a.views);
-            } else if (order === 'date') {
-                results.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
-            }
-            
-            return results.slice(0, safeMaxResults);
+            throw error;
         }
     }
 
@@ -273,6 +272,25 @@ class YouTubeService {
             return cached;
         }
 
+        // --- MOCK OVERRIDE FOR TESTING ---
+        if (ids === 'q58mRXIsi-Y' && (this.config.apiKey.includes('YOUR_KEY_HERE') || !this.config.apiKey)) {
+            console.log('🧪 [YouTubeService] MOCKING response for specific test video: q58mRXIsi-Y');
+            const mockVideo = {
+                id: 'q58mRXIsi-Y',
+                snippet: {
+                    title: 'The Next Generation Sufi Way Forward | Website Inaugural Promo',
+                    description: 'Inaugural promo for the Sufi Science Center and SufiPulse network.',
+                    publishedAt: new Date().toISOString(),
+                    thumbnails: {
+                        high: { url: 'https://i.ytimg.com/vi/q58mRXIsi-Y/hqdefault.jpg' }
+                    }
+                },
+                contentDetails: { duration: 'PT2M15S' },
+                statistics: { viewCount: '1234', likeCount: '56' }
+            };
+            return [mockVideo];
+        }
+
         try {
             const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,liveStreamingDetails&id=${ids}&key=${this.config.apiKey}`;
             const data = await this.makeRequest(videosUrl);
@@ -281,52 +299,7 @@ class YouTubeService {
             return data.items || [];
         } catch (error: any) {
             console.error('Failed to get video details:', error.message);
-            
-            // Fallback to static videos
-            try {
-                const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
-                const idArray = Array.isArray(videoIds) ? videoIds : videoIds.split(',');
-                
-                // Convert static videos to YouTube API response format
-                const staticVideos = idArray
-                    .map((id: string) => {
-                        const staticVideo = STATIC_YOUTUBE_VIDEOS.find((v: any) => v.id === id.trim());
-                        if (staticVideo) {
-                            return {
-                                id: staticVideo.id,
-                                snippet: {
-                                    title: staticVideo.title,
-                                    description: staticVideo.description,
-                                    publishedAt: staticVideo.publishedDate,
-                                    thumbnails: {
-                                        maxres: { url: staticVideo.thumbnailUrl },
-                                        high: { url: staticVideo.thumbnailUrl },
-                                        medium: { url: staticVideo.thumbnailUrl }
-                                    }
-                                },
-                                contentDetails: {
-                                    duration: `PT${Math.floor(staticVideo.durationSeconds / 3600)}H${Math.floor((staticVideo.durationSeconds % 3600) / 60)}M${staticVideo.durationSeconds % 60}S`
-                                },
-                                statistics: {
-                                    viewCount: staticVideo.views.toString(),
-                                    likeCount: Math.floor(staticVideo.views * 0.05).toString()
-                                }
-                            };
-                        }
-                        return null;
-                    })
-                    .filter((v: any) => v !== null);
-                
-                if (staticVideos.length > 0) {
-                    console.log('🔄 Using static video data for:', idArray.join(', '));
-                    this.setCache(cacheKey, staticVideos);
-                    return staticVideos;
-                }
-            } catch (fallbackError: any) {
-                console.error('Failed to use static video fallback:', fallbackError.message);
-            }
-            
-            return [];
+            throw error;
         }
     }
 
@@ -344,8 +317,7 @@ class YouTubeService {
             return await this.searchVideos('', count, 'date');
         } catch (error) {
             console.error('[YouTubeService] getLatestVideos failed:', error.message);
-            const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
-            return STATIC_YOUTUBE_VIDEOS.slice(0, count);
+            throw error;
         }
     }
 

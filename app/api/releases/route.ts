@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
-import { requireAdmin } from '@/server/middleware/authenticate';
+import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
 import { resolveRelease } from '@/lib/release-resolver';
 
 const cacheHeaders = {
@@ -27,8 +27,18 @@ export async function GET(request: NextRequest) {
     }
 
     // --- FAST LIST MODE ---
+    const status = searchParams.get('status') || 'published';
+    const user = await getAuthUser(request);
+    const isAdmin = user?.role === 'admin';
+
     console.time('[releases] loadAll');
-    let base = cmsServerStorage.getPublishedReleases();
+    let base: CMSRelease[] = [];
+    
+    if (isAdmin || status === 'all') {
+      base = cmsServerStorage.getAllReleases(status !== 'all' ? { status } : undefined);
+    } else {
+      base = cmsServerStorage.getPublishedReleases();
+    }
     console.timeEnd('[releases] loadAll');
 
     // 24-hour staleness check
@@ -67,13 +77,15 @@ export async function GET(request: NextRequest) {
         vocalist: r.vocalist,
         writer: r.writer,
         tags: r.tags,
+        status: r.status,
       };
     });
 
     console.time('[releases] filter');
     let filtered = merged;
-    if (format || type || duration || year || search) {
+    if (format || type || duration || year || search || (status && status !== 'all' && !isAdmin)) {
       filtered = merged.filter((r) => {
+        if (status && status !== 'all' && r.status !== status && !isAdmin) return false;
         if (format && r.format !== format) return false;
         if (type && r.releaseType !== type) return false;
         if (duration) {
@@ -101,8 +113,13 @@ export async function GET(request: NextRequest) {
         count: filtered.length
     };
 
+    const noCache = searchParams.get('refresh') === '1' || searchParams.get('nocache') === '1';
+    const headers = noCache 
+      ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' }
+      : cacheHeaders;
+
     console.timeEnd('[releases] total');
-    return NextResponse.json(responseData, { headers: cacheHeaders });
+    return NextResponse.json(responseData, { headers });
 
   } catch (error: any) {
     console.error(`[API /api/releases] ERROR:`, error);
@@ -110,4 +127,110 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-// ... (rest of file)
+
+/**
+ * Normalize snake_case field names from the public page to camelCase
+ * so they match the CMSRelease type used by the CMS dashboard.
+ */
+function normalizeFieldNames(body: Record<string, any>): Record<string, any> {
+  const snakeToCamel = (str: string) =>
+    str.replace(/(_[a-z])/g, (group) => group.toUpperCase().replace('_', ''));
+
+  const result: Record<string, any> = {};
+
+  for (const [key, value] of Object.entries(body)) {
+    // Map known snake_case → camelCase fields from the public page
+    const fieldMap: Record<string, string> = {
+      release_title: 'title',
+      subtitle_cues: 'subtitleCues',
+      subtitle_translations: 'subtitleTranslations',
+      subtitle_language_statuses: 'subtitleLanguageStatuses',
+      subtitle_cue_metadata: 'subtitleCueMetadata',
+      subtitle_style_packs: 'subtitleStylePacks',
+      language_style_overrides: 'languageStyleOverrides',
+      public_credits: 'publicCredits',
+      public_commentary: 'publicCommentary',
+      public_sponsors: 'publicSponsors',
+      public_sponsors_intro: 'publicSponsorsIntro',
+      lyrics_structure: 'lyricsStructure',
+      youtube_video_id: 'youtubeId',
+      youtube_channel_id: 'youtubeChannelId',
+      youtube_channel_url: 'youtubeChannelUrl',
+      youtube_subtitle_auto_sync: 'youtubeSubtitleAutoSync',
+      youtube_caption_tracks: 'youtubeCaptionTracks',
+      content_readiness_state: 'contentReadinessState',
+      duration_seconds: 'durationSeconds',
+      duration_formatted: 'durationFormatted',
+      view_count: 'viewCount',
+      like_count: 'likeCount',
+      enable_lyrics: 'enableLyrics',
+      enable_commentary: 'enableCommentary',
+      enable_sponsors: 'enableSponsors',
+      enable_adoption: 'enableAdoption',
+      enable_credits: 'enableCredits',
+      available_languages: 'availableLanguages',
+      default_language: 'defaultLanguage',
+    };
+
+    const normalizedKey = fieldMap[key] || (key.includes('_') ? snakeToCamel(key) : key);
+    result[normalizedKey] = value;
+  }
+
+  return result;
+}
+
+// POST /api/releases (create)
+export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
+  try {
+    const rawBody = await request.json();
+    const body = normalizeFieldNames(rawBody);
+    
+    const id = body.id || `release_${Date.now()}`;
+    const slug = String(body.slug || '').trim();
+    const youtubeId = String(body.youtubeId || '').trim();
+
+    if (!slug) {
+      return NextResponse.json({ error: 'slug is required' }, { status: 400 });
+    }
+
+    if (cmsServerStorage.getRelease(id)) {
+      return NextResponse.json({ error: `Release ID already exists: ${id}` }, { status: 409 });
+    }
+
+    if (cmsServerStorage.getReleaseBySlug(slug)) {
+      return NextResponse.json({ error: `Release slug already exists: ${slug}` }, { status: 409 });
+    }
+
+    if (youtubeId) {
+      const youtubeOwner = cmsServerStorage.getReleaseByYoutubeId(youtubeId);
+      if (youtubeOwner) {
+        return NextResponse.json(
+          { error: `YouTube ID already linked to release: ${youtubeId}` },
+          { status: 409 }
+        );
+      }
+    }
+
+    const now = new Date().toISOString();
+    const release: CMSRelease = {
+      ...body,
+      id,
+      slug,
+      youtubeId,
+      status: body.status || 'draft',
+      createdAt: now,
+      updatedAt: now,
+      source: body.source || 'native',
+    } as CMSRelease;
+
+    const saved = cmsServerStorage.saveRelease(release);
+
+    return NextResponse.json(saved, { status: 201 });
+  } catch (error: any) {
+    console.error(`[API /api/releases] POST ERROR:`, error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

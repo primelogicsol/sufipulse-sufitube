@@ -52,37 +52,50 @@ export default function Releases() {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
-    const fetchVideos = async (silent = false) => {
+    const fetchVideos = async (silent = false, refresh = false) => {
         if (!silent) setLoading(true);
         try {
             const url = new URL('/api/releases', window.location.origin);
             url.searchParams.set('status', 'published');
+            if (refresh) url.searchParams.set('refresh', '1');
             
             const cmsRes = await fetch(url.toString(), { cache: 'no-store' });
             if (!cmsRes.ok) throw new Error('Failed to fetch releases');
             const responseData = await cmsRes.json();
-            const cmsData = responseData.items || [];
             
-            const mappedData = cmsData.map((r: any) => ({
-                id: r.youtubeId || r.id,
-                slug: r.slug,
-                title: r.title,
-                description: r.description || '',
-                thumbnailUrl: r.thumbnail || '',
-                publishedDate: r.publishedAt,
-                durationSeconds: Number(r.durationSeconds || 0),
-                durationFormatted: r.duration || '0:00',
-                views: Number(r.viewCount || 0),
-                source: r.source || 'native',
-                format: r.format || 'video',
-                govType: r.releaseType || 'native_governed',
-                // Metadata for search
-                vocalist: [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
-                writer: [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' '),
-                tags: Array.isArray(r.tags) ? r.tags.join(' ') : (r.description?.match(/#\w+/g)?.join(' ') || ''),
-                youtubeId: r.youtubeId || '',
-                lastYoutubeSyncAt: r.lastYoutubeSyncAt
-            }));
+            // Handle both legacy array and new object { items, count } formats
+            const cmsData = Array.isArray(responseData) 
+                ? responseData 
+                : (responseData.items || []);
+            
+            const mappedData = cmsData.map((r: any) => {
+                const source = r.source || 'native';
+                return {
+                    id: r.youtubeId || r.id,
+                    slug: r.slug,
+                    title: r.title,
+                    description: r.description || '',
+                    thumbnailUrl: r.thumbnail || r.thumbnailUrl || '',
+                    publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
+                    publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
+                    durationSeconds: Number(r.durationSeconds || 0),
+                    durationFormatted: r.duration || r.durationFormatted || '0:00',
+                    views: Number(r.views || r.viewCount || 0),
+                    source: source,
+                    format: r.format || 'video',
+                    govType: source === 'youtube_legacy' ? 'legacy_registry' : 'native_governed',
+                    // Metadata for search
+                    vocalist: typeof r.vocalist === 'string' 
+                        ? r.vocalist 
+                        : [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
+                    writer: typeof r.writer === 'string'
+                        ? r.writer
+                        : [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' '),
+                    tags: Array.isArray(r.tags) ? r.tags.join(' ') : (r.description?.match(/#\w+/g)?.join(' ') || ''),
+                    youtubeId: r.youtubeId || '',
+                    lastYoutubeSyncAt: r.lastYoutubeSyncAt
+                };
+            });
 
             setReleases(mappedData);
             setError(null);
@@ -106,9 +119,16 @@ export default function Releases() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ videoIds: [] }) // Empty array = fetch latest 100
             });
-            if (!res.ok) throw new Error('Sync failed');
-            await fetchVideos(true);
-            alert('Sync complete! Latest videos imported.');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Sync failed');
+            
+            await fetchVideos(true, true);
+            
+            if (data.message) {
+                alert(data.message);
+            } else {
+                alert('Sync complete! Latest videos imported.');
+            }
         } catch (err: any) {
             console.error("Sync error:", err);
             alert('Failed to sync: ' + err.message);

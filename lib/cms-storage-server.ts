@@ -121,6 +121,16 @@ export const cmsServerStorage = {
     return saved;
   },
 
+  bulkSaveReleases(releases: CMSRelease[]): CMSRelease[] {
+    ensureHydrated();
+    const saved: CMSRelease[] = [];
+    for (const r of releases) {
+      saved.push(cmsStorage.saveRelease(r));
+    }
+    persist();
+    return saved;
+  },
+
   deleteRelease(id: string): boolean {
     ensureHydrated();
     const deleted = cmsStorage.deleteRelease(id);
