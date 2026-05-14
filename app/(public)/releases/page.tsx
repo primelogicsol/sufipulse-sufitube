@@ -206,7 +206,7 @@ function SyncResultModal({
                                                     {[
                                                         { label: 'In Registry', active: result.diagnostic.existsInDb },
                                                         { label: 'Public Visible', active: result.diagnostic.publicVisibleAfterSync },
-                                                        { label: 'Filter Pass', active: result.diagnostic.reasonHiddenAfterSync === 'none' }
+                                                        { label: 'UI Filter Pass', active: result.diagnostic.visibleUnderCurrentFilters }
                                                     ].map(status => (
                                                         <div key={status.label} className="flex items-center gap-1 text-[10px] font-bold">
                                                             {status.active ? (
@@ -225,17 +225,17 @@ function SyncResultModal({
 
                                         {/* Final Visibility Context */}
                                         <div className={`p-4 rounded-xl border ${
-                                            result.diagnostic.publicVisibleAfterSync && result.diagnostic.reasonHiddenAfterSync === 'none'
+                                            result.diagnostic.publicVisibleAfterSync && result.diagnostic.visibleUnderCurrentFilters
                                                 ? 'bg-emerald-500/5 border-emerald-500/10'
                                                 : 'bg-amber-500/5 border-amber-500/10'
                                         }`}>
                                             <p className="text-xs font-medium leading-relaxed">
-                                                {result.diagnostic.publicVisibleAfterSync && result.diagnostic.reasonHiddenAfterSync === 'none' ? (
+                                                {result.diagnostic.publicVisibleAfterSync && result.diagnostic.visibleUnderCurrentFilters ? (
                                                     <span className="text-emerald-200/70">✓ Latest upload is imported and visible on this page.</span>
                                                 ) : !result.diagnostic.publicVisibleAfterSync ? (
                                                     <span className="text-amber-200/70">⚠ Imported successfully, but restricted. Reason: {result.diagnostic.reasonHiddenAfterSync}.</span>
                                                 ) : (
-                                                    <span className="text-amber-200/70">⚠ Imported successfully, but hidden by active UI filters: {result.diagnostic.activeFilters?.join(', ')}.</span>
+                                                    <span className="text-amber-200/70">⚠ Imported successfully, but hidden by active UI filters: {result.diagnostic.activeFilters?.length ? result.diagnostic.activeFilters.join(', ') : 'None'}.</span>
                                                 )}
                                             </p>
                                         </div>
