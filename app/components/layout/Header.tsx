@@ -184,33 +184,32 @@ export function Header() {
             max-w-[1400px]
             mx-auto
             px-[var(--padding-mobile)]
-            lg:px-[var(--padding-desktop)]
+            xl:px-[var(--padding-desktop)]
             flex
             items-center
             justify-between
             gap-4
           `.trim()}
         >
-          {/* Desktop Navigation - Always visible on lg screens and above */}
-          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center">
+          {/* Desktop Navigation - Always visible on xl screens and above */}
+          <nav className="hidden xl:flex items-center gap-5 flex-1 justify-center text-[15px]">
 
-            {/* <img src="/sufitube-logo.png" alt="SufiTube Studio" className="h-44 py-2 w-auto object-contain" /> */}
-            <Link href={"/"} className="mt-2">
+            <Link href={"/"} className="mt-2 flex items-center shrink-0">
               <Image
                 src="/sufipulse-logo-v5.png"
                 alt="sufipulse Studio"
                 width={100}
                 height={100}
-                className='py-2'
+                className="h-9 sm:h-10 lg:h-11 w-auto object-contain py-1"
               />
             </Link>
-            <Link href={"/releases"} className="mt-2">
+            <Link href={"/releases"} className="mt-2 flex items-center shrink-0">
               <Image
                 src="/sufitube-logo-v5.png"
                 alt="sufitube Studio"
                 width={150}
                 height={150}
-                className='py-2'
+                className="h-9 sm:h-10 lg:h-11 w-auto object-contain py-1"
               />
             </Link>
             <Link
@@ -232,25 +231,38 @@ export function Header() {
             <DualNameDropdownMenu className='text-nowrap' label="Production Infrastructure" items={productionItems} isActive={false} />
             <DualNameDropdownMenu className='text-nowrap' label="Governance" items={governanceItems} isActive={false} />
             <DropdownMenu className='text-nowrap' label="About" items={aboutItems} isActive={false} />
-            <AvatarMenu />
+            <div className="shrink-0">
+              <AvatarMenu />
+            </div>
           </nav>
 
-          {/* Mobile logo and hamburger - Only visible on small screens */}
-          <Link href="/" className="lg:hidden mt-1" aria-label="Go to homepage">
-            <Image
-              src="/sufipulse-logo-v5.png"
-              alt="sufipulse Studio"
-              width={84}
-              height={84}
-              className="py-1"
-            />
-          </Link>
+          {/* Mobile logo and hamburger - Only visible on screens smaller than xl */}
+          <div className="xl:hidden flex items-center gap-3 shrink-0">
+            <Link href="/" className="mt-1 flex items-center shrink-0" aria-label="Go to homepage">
+              <Image
+                src="/sufipulse-logo-v5.png"
+                alt="sufipulse Studio"
+                width={84}
+                height={84}
+                className="h-8 w-auto object-contain py-1"
+              />
+            </Link>
+            <Link href="/releases" className="mt-1 flex items-center shrink-0" aria-label="Go to SufiTube">
+              <Image
+                src="/sufitube-logo-v5.png"
+                alt="sufitube Studio"
+                width={120}
+                height={120}
+                className="h-8 w-auto object-contain py-1"
+              />
+            </Link>
+          </div>
 
-          {/* Mobile hamburger - Only visible on small screens */}
+          {/* Mobile hamburger - Only visible on screens smaller than xl */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
             className={`
-              lg:hidden
+              xl:hidden
               text-[var(--color-text-primary)]
               hover:text-[var(--color-gold)]
               transition-colors
@@ -258,6 +270,7 @@ export function Header() {
               p-2
               text-nowrap
               block
+              shrink-0
             `.trim()}
             aria-label="Open menu"
           >
@@ -308,19 +321,35 @@ export function Header() {
             </div>
 
             <nav className="p-6 flex flex-col gap-2">
-              <Link
-                href="/"
-                className="flex items-center p-4 mb-4 bg-[var(--color-midnight)]/30 border border-white/5 rounded-2xl hover:border-[var(--color-gold)]/30 transition-all group"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Image
-                  src="/sufipulse-logo-v5.png"
-                  alt="SufiPulse"
-                  width={120}
-                  height={32}
-                  className="h-8 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
-                />
-              </Link>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <Link
+                  href="/"
+                  className="flex items-center justify-center p-4 bg-[var(--color-midnight)]/30 border border-white/5 rounded-2xl hover:border-[var(--color-gold)]/30 transition-all group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Image
+                    src="/sufipulse-logo-v5.png"
+                    alt="SufiPulse"
+                    width={100}
+                    height={28}
+                    className="h-7 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+
+                <Link
+                  href="/releases"
+                  className="flex items-center justify-center p-4 bg-[var(--color-midnight)]/30 border border-white/5 rounded-2xl hover:border-[var(--color-gold)]/30 transition-all group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Image
+                    src="/sufitube-logo-v5.png"
+                    alt="SufiTube"
+                    width={100}
+                    height={28}
+                    className="h-7 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+              </div>
 
               <Link
                 href="/literary-journal"
