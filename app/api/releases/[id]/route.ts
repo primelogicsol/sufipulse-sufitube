@@ -84,6 +84,11 @@ export async function GET(
     const user = await getAuthUser(request);
     const isAdmin = user?.role === 'admin';
 
+    // Senior Logic: Dynamic Thumbnail Backfill
+    if (!release.thumbnailUrl && release.youtubeId) {
+      release.thumbnailUrl = `https://i.ytimg.com/vi/${release.youtubeId}/maxresdefault.jpg`;
+    }
+
     if (release.status !== 'published') {
       if (!isAdmin) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });

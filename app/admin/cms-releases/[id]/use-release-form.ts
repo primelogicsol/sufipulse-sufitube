@@ -254,6 +254,10 @@ export function useReleaseForm({
           channelId: String(data.channelId || ''),
           channelTitle: String(data.channelTitle || ''),
           channelUrl: String(data.channelUrl || ''),
+          title: String(data.title || ''),
+          durationSeconds: Number(data.durationSeconds || 0),
+          durationFormatted: String(data.durationFormatted || '0:00'),
+          thumbnailUrl: String(data.thumbnailUrl || ''),
         });
       } catch {
         if (!cancelled) setFetchedYouTubeChannel(null);
@@ -286,6 +290,12 @@ export function useReleaseForm({
       if (isNew && (!prev.durationSeconds || prev.durationSeconds === 0) && fetchedYouTubeChannel.durationSeconds) {
         next.durationSeconds = fetchedYouTubeChannel.durationSeconds;
         next.durationFormatted = fetchedYouTubeChannel.durationFormatted || '0:00';
+        changed = true;
+      }
+
+      // Senior Logic: Auto-fill thumbnail for new releases
+      if (isNew && !prev.thumbnailUrl && fetchedYouTubeChannel.thumbnailUrl) {
+        next.thumbnailUrl = fetchedYouTubeChannel.thumbnailUrl;
         changed = true;
       }
 
@@ -625,11 +635,12 @@ export function useReleaseForm({
 
     const updated: Partial<CMSRelease> = { ...form, [name]: finalValue };
     
-    // Senior Logic: Auto-fetch metadata if ID was changed
-    if (name === 'youtubeId' && isNew && finalValue.length === 11) {
-       // We don't call the API directly here to avoid race conditions with the debounce timer in the useEffect,
-       // but we ensure the form state is ready for the effect to pick it up.
-       // The existing useEffect already handles fetching metadata when youtubeId changes.
+    // Senior Logic: Auto-fetch metadata and generate thumbnail if ID was changed
+    if (name === 'youtubeId' && finalValue.length === 11) {
+       // Auto-generate thumbnail URL if current one is empty or from a different ID
+       if (!updated.thumbnailUrl || updated.thumbnailUrl.includes('i.ytimg.com/vi/')) {
+         updated.thumbnailUrl = `https://i.ytimg.com/vi/${finalValue}/maxresdefault.jpg`;
+       }
     }
     if (name === 'status') {
       if (value === 'draft') updated.contentReadinessState = 'draft';
