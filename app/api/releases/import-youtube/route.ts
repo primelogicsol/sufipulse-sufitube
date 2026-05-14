@@ -116,30 +116,67 @@ export async function POST(request: NextRequest) {
     const latestVideo = selected[0];
 
     const toSave: CMSRelease[] = [];
+    const diagnostics: any[] = [];
     let newCount = 0;
     let updatedCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
 
     for (const video of selected) {
+      const diag: any = {
+        youtubeId: video.id,
+        title: video.title,
+        publishedAt: video.publishedDate,
+        durationSeconds: video.durationSeconds,
+        format: video.format,
+        candidateForImport: true,
+        importAction: 'none',
+        importReason: 'none',
+        publicVisibleAfterSync: false,
+        reasonHiddenAfterSync: 'none'
+      };
+
       try {
         const pubDate = new Date(video.publishedDate);
-        if (pubDate < cutoffDate && !requestedIds.length) {
+        const isLatest = video.id === latestVideo.id;
+
+        if (pubDate < cutoffDate && !requestedIds.length && !isLatest) {
           skippedCount++;
+          diag.candidateForImport = false;
+          diag.importAction = 'skipped';
+          diag.importReason = `Published before cutoff date (${cutoffDate.toLocaleDateString()})`;
+          diagnostics.push(diag);
           continue;
         }
 
         const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
         if (!existing) {
           newCount++;
+          diag.importAction = 'created';
+          diag.importReason = 'New YouTube upload detected';
         } else {
           updatedCount++;
+          diag.importAction = 'updated';
+          diag.importReason = 'Existing registry record updated with fresh metadata';
+          diag.dbRecordId = existing.id;
         }
-        toSave.push(mapVideoToRelease(video, existing));
-      } catch (err) {
+        
+        const mapped = mapVideoToRelease(video, existing);
+        toSave.push(mapped);
+        
+        // Immediate visibility check on mapped data
+        diag.publicVisibleAfterSync = mapped.status === 'published' && mapped.visibility === 'public';
+        if (!diag.publicVisibleAfterSync) {
+          diag.reasonHiddenAfterSync = mapped.status !== 'published' ? 'status_not_published' : 'visibility_not_public';
+        }
+      } catch (err: any) {
         console.error(`[Import] Failed to process video ${video.id}:`, err);
         errorCount++;
+        diag.importAction = 'failed';
+        diag.importReason = err.message || 'Mapping or validation error';
+        diag.dbErrorMessage = err.message;
       }
+      diagnostics.push(diag);
     }
 
     const saved = cmsServerStorage.bulkSaveReleases(toSave);
@@ -147,23 +184,24 @@ export async function POST(request: NextRequest) {
     revalidatePath('/');
     revalidatePath('/releases');
 
-    // Diagnostic for latest video
+    // Diagnostic for latest video specifically
+    const latestDiag = diagnostics.find(d => d.youtubeId === latestVideo.id);
     const latestInDb = cmsServerStorage.getReleaseByYoutubeId(latestVideo.id);
-    const diagnostic = {
-      latestYoutubeId: latestVideo.id,
-      latestTitle: latestVideo.title,
-      latestPublishedAt: latestVideo.publishedDate,
-      existsInDb: !!latestInDb,
-      publicVisible: latestInDb?.status === 'published' && latestInDb?.visibility === 'public',
-      reasonHidden: !latestInDb 
-        ? 'missing_from_db' 
-        : latestInDb.status !== 'published' 
-          ? 'status_not_published' 
-          : latestInDb.visibility !== 'public' 
-            ? 'visibility_not_public' 
-            : 'none'
-    };
     
+    if (latestDiag) {
+      latestDiag.existsInDb = !!latestInDb;
+      if (latestInDb) {
+        latestDiag.dbRecordId = latestInDb.id;
+        latestDiag.publicVisibleAfterSync = latestInDb.status === 'published' && latestInDb.visibility === 'public';
+        latestDiag.reasonHiddenAfterSync = !latestDiag.publicVisibleAfterSync 
+          ? (latestInDb.status !== 'published' ? 'status_not_published' : 'visibility_not_public')
+          : 'none';
+      } else {
+        latestDiag.existsInDb = false;
+        latestDiag.reasonHiddenAfterSync = 'missing_from_db';
+      }
+    }
+
     return NextResponse.json({
       importedCount: saved.length,
       newCount,
@@ -172,13 +210,14 @@ export async function POST(request: NextRequest) {
       errorCount,
       checkedCount: selected.length,
       isFallback,
-      diagnostic,
+      diagnostic: latestDiag,
+      diagnostics: diagnostics.slice(0, 50), // Return details for first 50 to avoid huge response
       message: isFallback 
         ? 'Sync completed using static fallback data (API key missing or quota exceeded).' 
         : `Sync Registry Complete. Checked ${selected.length} uploads from last ${lookbackDays} days. ${newCount} new, ${updatedCount} updated, ${skippedCount} skipped.`,
       details: {
         lookbackDays,
-        latestVideo: diagnostic
+        latestVideo: latestDiag
       }
     });
   } catch (error: any) {

@@ -67,12 +67,15 @@ export async function GET(request: NextRequest) {
       if (now - lastSync > oneDayMs) needsRefresh = true;
 
       // Merge Strategy: CMS editorial priority, then YouTube Operational Cache
+      // Senior Logic: Dynamic Thumbnail Backfill
+      const thumbnail = r.thumbnailUrl || (r.youtubeId ? `https://i.ytimg.com/vi/${r.youtubeId}/maxresdefault.jpg` : '');
+
       return {
         id: r.id,
         slug: r.slug,
         youtubeId: r.youtubeId,
         title: r.title, // CMS editorial title
-        thumbnail: r.thumbnailUrl, // CMS editorial thumb
+        thumbnail,      // Generated or editorial thumb
         duration: r.youtubeStats?.duration || r.durationFormatted || '0:00',
         durationSeconds: r.youtubeStats?.durationSeconds || r.durationSeconds || 0,
         publishedAt: r.youtubeStats?.publishedAt || r.publishedAt || r.releaseDate || r.createdAt,

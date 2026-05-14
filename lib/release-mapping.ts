@@ -12,23 +12,27 @@ export const slugify = (value: string): string => {
 
 export const buildUniqueSlug = (title: string, youtubeId: string, currentReleaseId?: string): string => {
   const base = slugify(title);
-  const fallback = `${base}-${youtubeId.toLowerCase()}`;
-
+  
+  // 1. Try base slug
   const byBase = cmsServerStorage.getReleaseBySlug(base);
   if (!byBase || byBase.id === currentReleaseId) {
     return base;
   }
 
+  // 2. Try base + youtubeId (canonical unique fallback)
+  const fallback = `${base}-${youtubeId.toLowerCase()}`;
   const byFallback = cmsServerStorage.getReleaseBySlug(fallback);
   if (!byFallback || byFallback.id === currentReleaseId) {
     return fallback;
   }
 
+  // 3. Absolute fallback
   return `${fallback}-${Date.now()}`;
 };
 
 export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease => {
-  const id = existing?.id || `release_${Date.now()}_${video.id}`;
+  // Use youtubeId as canonical ID for YouTube releases to prevent duplicates
+  const id = existing?.id || video.id;
   const slug = existing?.slug || buildUniqueSlug(video.title || video.snippet?.title || 'Untitled', video.id, existing?.id);
   const now = new Date().toISOString();
   
@@ -40,6 +44,17 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
   const likes = Number(video.likes || video.statistics?.likeCount || 0);
   const comments = Number(video.comments || video.statistics?.commentCount || 0);
   const publishedAt = video.publishedDate || video.snippet?.publishedAt || now;
+
+  // Infer release type from title if not already set
+  const lowerTitle = title.toLowerCase();
+  let releaseType = existing?.releaseType || 'studio-release';
+  if (lowerTitle.includes('teaser') || lowerTitle.includes('official teaser')) {
+    releaseType = 'teaser';
+  } else if (lowerTitle.includes('promo')) {
+    releaseType = 'promo';
+  } else if (lowerTitle.includes('trailer')) {
+    releaseType = 'trailer';
+  }
 
   const youtubeStats = {
     viewCount: views,
@@ -75,6 +90,12 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     status: existing?.status || 'published',
     visibility: existing?.visibility || 'public',
     source: existing?.source || 'youtube',
+    releaseType,
+    
+    // Core dates
+    releaseDate: existing?.releaseDate || publishedAt.slice(0, 10),
+    publishedAt: existing?.publishedAt || publishedAt,
+    
     availableLanguages: existing?.availableLanguages || ['en', 'ur'],
     defaultLanguage: existing?.defaultLanguage || 'en',
     lyrics: existing?.lyrics || {},

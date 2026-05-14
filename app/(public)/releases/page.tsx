@@ -46,7 +46,7 @@ export default function Releases() {
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-    const [durationFilter, setDurationFilter] = useState<DurationFilter>('long');
+    const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
     const [yearFilter, setYearFilter] = useState<string>('all');
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');
@@ -127,16 +127,71 @@ export default function Releases() {
             let message = data.message || 'Sync complete!';
             
             if (data.diagnostic) {
-                message += '\n\n' + 
-                  '--- Latest YouTube Upload ---\n' +
-                  `Title: ${data.diagnostic.latestTitle}\n` +
-                  `Published: ${new Date(data.diagnostic.latestPublishedAt).toLocaleDateString()}\n` +
-                  `YouTube ID: ${data.diagnostic.latestYoutubeId}\n` +
-                  `In Registry: ${data.diagnostic.existsInDb ? 'Yes' : 'No'}\n` +
-                  `Public Visible: ${data.diagnostic.publicVisible ? 'Yes' : 'No'}`;
+                const d = data.diagnostic;
                 
-                if (data.diagnostic.reasonHidden && data.diagnostic.reasonHidden !== 'none') {
-                    message += `\nReason Hidden: ${data.diagnostic.reasonHidden}`;
+                // Calculate visibility under current filters
+                const govType = 'legacy_registry'; // YouTube imports are always legacy registry
+                const activeFilters: string[] = [];
+                let visibleUnderCurrentFilters = true;
+
+                if (filterType !== 'all' && govType !== filterType) {
+                    visibleUnderCurrentFilters = false;
+                    activeFilters.push(`Governance: ${filterType}`);
+                }
+                if (filterFormat !== 'all' && d.format !== filterFormat) {
+                    visibleUnderCurrentFilters = false;
+                    activeFilters.push(`Format: ${filterFormat}`);
+                }
+                if (durationFilter !== 'all') {
+                    const mins = (d.durationSeconds || 0) / 60;
+                    let hiddenByDuration = false;
+                    if (durationFilter === 'short' && mins >= 3) hiddenByDuration = true;
+                    if (durationFilter === 'standard' && (mins < 3 || mins > 8)) hiddenByDuration = true;
+                    if (durationFilter === 'long' && mins <= 8) hiddenByDuration = true;
+                    
+                    if (hiddenByDuration) {
+                        visibleUnderCurrentFilters = false;
+                        activeFilters.push(`Length: ${durationFilter === 'long' ? 'Long (> 8m)' : durationFilter === 'standard' ? 'Standard (3-8m)' : 'Short (< 3m)'}`);
+                    }
+                }
+                if (yearFilter !== 'all') {
+                    const pubYear = new Date(d.publishedAt).getFullYear();
+                    if (pubYear !== parseInt(yearFilter)) {
+                        visibleUnderCurrentFilters = false;
+                        activeFilters.push(`Year: ${yearFilter}`);
+                    }
+                }
+                if (searchQuery) {
+                    const query = searchQuery.toLowerCase();
+                    const title = (d.title || '').toLowerCase();
+                    if (!title.includes(query)) {
+                        visibleUnderCurrentFilters = false;
+                        activeFilters.push(`Search: "${searchQuery}"`);
+                    }
+                }
+
+                message += '\n\n' + 
+                  '--- Latest YouTube Upload Diagnostics ---\n' +
+                  `Title: ${d.latestTitle || d.title}\n` +
+                  `Published: ${new Date(d.latestPublishedAt || d.publishedAt).toLocaleDateString()}\n` +
+                  `YouTube ID: ${d.latestYoutubeId || d.youtubeId}\n` +
+                  `Candidate: ${d.candidateForImport ? 'Yes' : 'No'}\n` +
+                  `Action: ${d.importAction}\n` +
+                  `Reason: ${d.importReason}\n` +
+                  `In Registry: ${d.existsInDb ? 'Yes' : 'No'}\n` +
+                  `Public Visible: ${d.publicVisibleAfterSync ? 'Yes' : 'No'}\n` +
+                  `Visible Under Current Filters: ${visibleUnderCurrentFilters ? 'Yes' : 'No'}`;
+                
+                if (!visibleUnderCurrentFilters && activeFilters.length > 0) {
+                    message += `\nHidden by active filters: ${activeFilters.join(', ')}`;
+                }
+
+                if (d.reasonHiddenAfterSync && d.reasonHiddenAfterSync !== 'none') {
+                    message += `\nReason Hidden: ${d.reasonHiddenAfterSync}`;
+                }
+
+                if (d.dbRecordId) {
+                    message += `\nRecord ID: ${d.dbRecordId}`;
                 }
             }
 
@@ -380,7 +435,7 @@ export default function Releases() {
                                 onClick={() => {
                                     setFilterType('all');
                                     setFilterFormat('all');
-                                    setDurationFilter('long');
+                                    setDurationFilter('all');
                                     setYearFilter('all');
                                     setSearchQuery('');
                                     setSortOrder('newest');
