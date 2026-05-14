@@ -185,7 +185,7 @@ export const youtubeAnalyticsService = {
       const snapshot: AnalyticsSnapshot = {
         period: "lifetime",
         title: "SufiPulse Global Reach",
-        subtitle: "Lifetime audience intelligence from the official SufiPulse SufiTube channel.",
+        subtitle: "Lifetime audience intelligence from the official SufiPulse SufiTube channel, updated from the latest verified YouTube Analytics snapshot.",
         ageGender: {
           gender: genderSplit,
           ageGroups

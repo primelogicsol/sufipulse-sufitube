@@ -9,6 +9,9 @@ const DEFAULT_PAYLOAD: GlobalReachPayload = {
   channelId: 'UCraDr3i5A3k0j7typ6tOOsQ',
   scope: 'lifetime',
   status: 'active',
+  period: 'lifetime',
+  title: "SufiPulse Global Reach",
+  subtitle: "Lifetime audience intelligence from the official SufiPulse SufiTube channel, updated from the latest verified YouTube Analytics snapshot.",
   performance: {
     impressions: 955500,
     views: 82100,
@@ -43,8 +46,8 @@ const DEFAULT_PAYLOAD: GlobalReachPayload = {
       { code: 'TR', name: 'Turkey', views: 5000 }
     ]
   },
-  lastUpdated: new Date(2026, 4, 15, 3, 0).toISOString(),
-  nextRefreshAt: new Date(2026, 4, 22, 3, 0).toISOString()
+  lastUpdated: new Date().toISOString(),
+  nextRefreshAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 };
 
 export const analyticsStorage = {

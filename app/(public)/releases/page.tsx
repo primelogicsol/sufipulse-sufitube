@@ -2,10 +2,11 @@
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Music, Filter, Search, Play, Calendar, Eye, Youtube, Clock, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { Music, Filter, Search, Play, Calendar, Eye, Youtube, Clock, ChevronLeft, ChevronRight, RefreshCw, X, CheckCircle, AlertTriangle, Info, ExternalLink } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
 import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
@@ -37,12 +38,254 @@ interface YouTubeRelease {
     youtubeId: string;
 }
 
+interface SyncResult {
+    message?: string;
+    newCount: number;
+    updatedCount: number;
+    skippedCount: number;
+    errorCount: number;
+    checkedCount: number;
+    isFallback?: boolean;
+    diagnostic?: {
+        youtubeId: string;
+        title: string;
+        publishedAt: string;
+        candidateForImport: boolean;
+        importAction: string;
+        importReason: string;
+        existsInDb: boolean;
+        publicVisibleAfterSync: boolean;
+        reasonHiddenAfterSync: string;
+        dbRecordId?: string;
+        dbErrorMessage?: string;
+        format?: string;
+        durationSeconds?: number;
+        // Fields for UI logic
+        visibleUnderCurrentFilters?: boolean;
+        activeFilters?: string[];
+    };
+    details?: {
+        lookbackDays: number;
+    };
+}
+
+function SyncResultModal({ 
+    open, 
+    onClose, 
+    result, 
+    error,
+    onRefresh
+}: { 
+    open: boolean; 
+    onClose: () => void; 
+    result: SyncResult | null; 
+    error: string | null;
+    onRefresh: () => void;
+}) {
+    if (!open) return null;
+
+    return (
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
+            <div 
+                className="absolute inset-0 bg-[var(--color-midnight)]/80 backdrop-blur-sm transition-opacity"
+                onClick={onClose}
+            />
+            
+            <div className="relative w-full max-w-2xl bg-[var(--color-slate)] border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/5 bg-[var(--color-midnight)]/20">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-1.5 h-8 rounded-full ${error ? 'bg-red-500' : 'bg-[var(--color-gold)]'}`} />
+                        <div>
+                            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                                {error ? 'Sync Failed' : 'Sync Registry Complete'}
+                            </h2>
+                            {!error && (
+                                <p className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-widest font-medium mt-0.5">
+                                    Official YouTube channel synchronized
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="p-2 text-[var(--color-text-tertiary)] hover:text-white transition-colors rounded-full hover:bg-white/5"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    {error ? (
+                        <div className="flex flex-col items-center py-8 text-center">
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                                <AlertTriangle className="w-8 h-8 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Something went wrong</h3>
+                            <p className="text-[var(--color-text-secondary)] max-w-sm mb-6">
+                                {error}
+                            </p>
+                            <button 
+                                onClick={onRefresh}
+                                className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all flex items-center gap-2"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                Try Again
+                            </button>
+                        </div>
+                    ) : result ? (
+                        <div className="space-y-8">
+                            {/* Summary Chips */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {[
+                                    { label: 'Checked', value: result.checkedCount, color: 'text-blue-400' },
+                                    { label: 'New', value: result.newCount, color: 'text-emerald-400' },
+                                    { label: 'Updated', value: result.updatedCount, color: 'text-amber-400' },
+                                    { label: 'Skipped', value: result.skippedCount, color: 'text-[var(--color-text-tertiary)]' }
+                                ].map(chip => (
+                                    <div key={chip.label} className="p-3 bg-[var(--color-midnight)]/40 border border-white/5 rounded-2xl text-center">
+                                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-tighter font-bold mb-1">{chip.label}</p>
+                                        <p className={`text-xl font-black ${chip.color}`}>{chip.value}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Lookback Info */}
+                            <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-start gap-3">
+                                <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                                <p className="text-xs text-blue-100/70 leading-relaxed">
+                                    The registry was updated with uploads from the last <strong>{result.details?.lookbackDays || 30} days</strong>. {result.isFallback && 'Note: Fallback data was used due to API limitations.'}
+                                </p>
+                            </div>
+
+                            {/* Latest Upload Card */}
+                            {result.diagnostic && (
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-black text-[var(--color-gold)] uppercase tracking-[0.2em] ml-1">
+                                        Latest YouTube Upload
+                                    </h3>
+                                    
+                                    <div className="bg-[var(--color-midnight)]/60 border border-white/5 rounded-2xl p-6 space-y-6">
+                                        <div className="flex flex-col gap-2">
+                                            <h4 className="text-lg font-bold text-white leading-tight">
+                                                {result.diagnostic.title}
+                                            </h4>
+                                            <div className="flex items-center gap-3 text-[10px] text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest">
+                                                <span>Published {new Date(result.diagnostic.publishedAt).toLocaleDateString()}</span>
+                                                <span className="text-white/10">•</span>
+                                                <span className="flex items-center gap-1">
+                                                    ID: {result.diagnostic.youtubeId}
+                                                    <a href={`https://youtube.com/watch?v=${result.diagnostic.youtubeId}`} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">
+                                                        <ExternalLink className="w-3 h-3" />
+                                                    </a>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/5 pt-6">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Import Status</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter ${
+                                                        result.diagnostic.importAction === 'created' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                        result.diagnostic.importAction === 'updated' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                                                        'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
+                                                    }`}>
+                                                        {result.diagnostic.importAction}
+                                                    </span>
+                                                    <span className="text-xs text-[var(--color-text-secondary)] font-medium">
+                                                        Candidate: {result.diagnostic.candidateForImport ? 'Yes' : 'No'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Registry Status</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {[
+                                                        { label: 'In Registry', active: result.diagnostic.existsInDb },
+                                                        { label: 'Public Visible', active: result.diagnostic.publicVisibleAfterSync },
+                                                        { label: 'Filter Pass', active: result.diagnostic.reasonHiddenAfterSync === 'none' }
+                                                    ].map(status => (
+                                                        <div key={status.label} className="flex items-center gap-1 text-[10px] font-bold">
+                                                            {status.active ? (
+                                                                <CheckCircle className="w-3 h-3 text-emerald-500" />
+                                                            ) : (
+                                                                <AlertTriangle className="w-3 h-3 text-red-500" />
+                                                            )}
+                                                            <span className={status.active ? 'text-emerald-500/80' : 'text-red-500/80'}>
+                                                                {status.label}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Final Visibility Context */}
+                                        <div className={`p-4 rounded-xl border ${
+                                            result.diagnostic.publicVisibleAfterSync && result.diagnostic.reasonHiddenAfterSync === 'none'
+                                                ? 'bg-emerald-500/5 border-emerald-500/10'
+                                                : 'bg-amber-500/5 border-amber-500/10'
+                                        }`}>
+                                            <p className="text-xs font-medium leading-relaxed">
+                                                {result.diagnostic.publicVisibleAfterSync && result.diagnostic.reasonHiddenAfterSync === 'none' ? (
+                                                    <span className="text-emerald-200/70">✓ Latest upload is imported and visible on this page.</span>
+                                                ) : !result.diagnostic.publicVisibleAfterSync ? (
+                                                    <span className="text-amber-200/70">⚠ Imported successfully, but restricted. Reason: {result.diagnostic.reasonHiddenAfterSync}.</span>
+                                                ) : (
+                                                    <span className="text-amber-200/70">⚠ Imported successfully, but hidden by active UI filters: {result.diagnostic.activeFilters?.join(', ')}.</span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="p-6 border-t border-white/5 bg-[var(--color-midnight)]/20 flex flex-wrap items-center justify-end gap-3">
+                    {result?.diagnostic?.youtubeId && (
+                        <Link 
+                            href={`/release-detail/${result.diagnostic.youtubeId}`}
+                            className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-white hover:bg-white/10 transition-all"
+                            onClick={onClose}
+                        >
+                            View Release
+                        </Link>
+                    )}
+                    <button 
+                        onClick={onRefresh}
+                        className="px-6 py-2.5 bg-[var(--color-gold)] text-[var(--color-midnight)] rounded-xl text-xs font-bold hover:bg-[var(--color-gold)]/90 transition-all"
+                    >
+                        Refresh List
+                    </button>
+                    <button 
+                        onClick={onClose}
+                        className="px-6 py-2.5 bg-[var(--color-midnight)] border border-white/10 rounded-xl text-xs font-bold text-zinc-400 hover:text-white transition-all"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Releases() {
     const { user } = useAuth();
+    const router = useRouter();
     const [releases, setReleases] = useState<YouTubeRelease[]>([]);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [syncModalOpen, setSyncModalOpen] = useState(false);
+    const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+    const [syncError, setSyncError] = useState<string | null>(null);
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
@@ -113,6 +356,7 @@ export default function Releases() {
 
     const handleSync = async () => {
         setSyncing(true);
+        setSyncError(null);
         try {
             const res = await fetch('/api/releases/import-youtube', { 
                 method: 'POST',
@@ -123,8 +367,6 @@ export default function Releases() {
             if (!res.ok) throw new Error(data.error || 'Sync failed');
             
             await fetchVideos(true, true);
-            
-            let message = data.message || 'Sync complete!';
             
             if (data.diagnostic) {
                 const d = data.diagnostic;
@@ -170,35 +412,17 @@ export default function Releases() {
                     }
                 }
 
-                message += '\n\n' + 
-                  '--- Latest YouTube Upload Diagnostics ---\n' +
-                  `Title: ${d.latestTitle || d.title}\n` +
-                  `Published: ${new Date(d.latestPublishedAt || d.publishedAt).toLocaleDateString()}\n` +
-                  `YouTube ID: ${d.latestYoutubeId || d.youtubeId}\n` +
-                  `Candidate: ${d.candidateForImport ? 'Yes' : 'No'}\n` +
-                  `Action: ${d.importAction}\n` +
-                  `Reason: ${d.importReason}\n` +
-                  `In Registry: ${d.existsInDb ? 'Yes' : 'No'}\n` +
-                  `Public Visible: ${d.publicVisibleAfterSync ? 'Yes' : 'No'}\n` +
-                  `Visible Under Current Filters: ${visibleUnderCurrentFilters ? 'Yes' : 'No'}`;
-                
-                if (!visibleUnderCurrentFilters && activeFilters.length > 0) {
-                    message += `\nHidden by active filters: ${activeFilters.join(', ')}`;
-                }
-
-                if (d.reasonHiddenAfterSync && d.reasonHiddenAfterSync !== 'none') {
-                    message += `\nReason Hidden: ${d.reasonHiddenAfterSync}`;
-                }
-
-                if (d.dbRecordId) {
-                    message += `\nRecord ID: ${d.dbRecordId}`;
-                }
+                // Add filter info to diagnostic for modal use
+                d.visibleUnderCurrentFilters = visibleUnderCurrentFilters;
+                d.activeFilters = activeFilters;
             }
 
-            alert(message);
+            setSyncResult(data);
+            setSyncModalOpen(true);
         } catch (err: any) {
             console.error("Sync error:", err);
-            alert('Failed to sync: ' + err.message);
+            setSyncError(err.message);
+            setSyncModalOpen(true);
         } finally {
             setSyncing(false);
         }
@@ -555,6 +779,17 @@ export default function Releases() {
                     )}
                 </PageContainer>
             </Section>
+
+            <SyncResultModal 
+                open={syncModalOpen} 
+                onClose={() => setSyncModalOpen(false)}
+                result={syncResult}
+                error={syncError}
+                onRefresh={() => {
+                    fetchVideos(false, true);
+                    setSyncModalOpen(false);
+                }}
+            />
         </Layout>
     );
 }
