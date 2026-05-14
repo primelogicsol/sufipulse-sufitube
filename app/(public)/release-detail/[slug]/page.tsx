@@ -1156,8 +1156,10 @@ function Release() {
 
         // 1) Try combined key lookup (slug, youtubeId, etc.)
         try {
+          // If we detect admin status (even if AuthContext is still loading, 
+          // the cookie will be sent and the API will handle it), we request fresh data.
           const keyRes = await fetch(
-            `/api/releases?key=${encodeURIComponent(slug)}`,
+            `/api/releases?key=${encodeURIComponent(slug)}&nocache=1`,
           );
           if (keyRes.ok) {
             const data = await keyRes.json();

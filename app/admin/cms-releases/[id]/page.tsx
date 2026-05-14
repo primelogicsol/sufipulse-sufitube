@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Plus, Upload, Youtube, CheckSquare, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Upload, Youtube, CheckSquare, RefreshCw, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -58,6 +58,8 @@ export default function EditReleasePage() {
   const {
     form, setForm,
     originalForm,
+    clearAutosave,
+    recoverAutosave,
     hasUnsavedChanges,
     loading, notFound,
     saving,
@@ -570,6 +572,35 @@ export default function EditReleasePage() {
               )}
             </div>
           </div>
+
+          {!isNew && typeof window !== 'undefined' && localStorage.getItem(`sufipulse_autosave_${params.id}`) && (
+            <div className="flex items-center gap-3 p-3 rounded-lg animate-in fade-in slide-in-from-top-4 duration-500" style={{ backgroundColor: 'var(--dash-accent-muted)', border: '1px solid var(--dash-accent)' }}>
+              <div className="flex-1">
+                <p className="text-sm font-medium" style={{ color: 'var(--dash-text-primary)' }}>
+                  Unsaved changes from a previous session found.
+                </p>
+                <p className="text-xs" style={{ color: 'var(--dash-text-secondary)' }}>
+                  You were editing this release but didn't save. Would you like to restore your work?
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={recoverAutosave}
+                  className="dashboard-btn-primary px-3 py-1.5 text-xs flex items-center gap-2"
+                >
+                  <RefreshCw size={12} /> Restore Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAutosave}
+                  className="dashboard-btn-secondary px-3 py-1.5 text-xs"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Status Messages */}
@@ -669,6 +700,7 @@ export default function EditReleasePage() {
               <div>
                 <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
                   YouTube ID <span style={{color: 'var(--dash-status-rejected)'}}>*</span>
+                  {youtubeChannelLookupLoading && <Loader2 size={12} className="inline ml-2 animate-spin" style={{ color: 'var(--dash-accent)' }} />}
                 </label>
                 <input
                   type="text"
@@ -1231,8 +1263,8 @@ export default function EditReleasePage() {
                               if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                             }}
                           />
-                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">G��</button>
-                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">G��</button>
+                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
+                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Cancel</button>
                         </div>
                       ) : (
                         <button
@@ -1303,8 +1335,8 @@ export default function EditReleasePage() {
                                   if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                                 }}
                               />
-                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">G��</button>
-                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">G��</button>
+                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
+                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Cancel</button>
                             </>
                           ) : (
                             <>
@@ -1870,6 +1902,44 @@ export default function EditReleasePage() {
           </div>
         </form>
       </div>
+
+      {/* Floating Save Bar */}
+      {!isNew && hasUnsavedChanges && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-bottom-8 duration-500">
+          <div className="flex items-center gap-4 px-6 py-3 rounded-full shadow-2xl backdrop-blur-md border border-amber-500/30 bg-neutral-900/90">
+            <div className="flex flex-col">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-500">Unsaved Changes</span>
+              <span className="text-[10px] text-neutral-400">Press Ctrl+S or click save</span>
+            </div>
+            <div className="h-8 w-[1px] bg-neutral-700" />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const formEl = document.querySelector('form');
+                  formEl?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }}
+                disabled={saving}
+                className="dashboard-btn-primary px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2"
+              >
+                {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                {saving ? 'Saving...' : 'Save Now'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                   if (confirm('Discard all unsaved changes in this session?')) {
+                     window.location.reload();
+                   }
+                }}
+                className="dashboard-btn-secondary px-5 py-2 rounded-full text-sm font-bold"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Import Captions Modal */}
       {captionModalOpen && (

@@ -21,6 +21,8 @@ export default function LyricsEditorPage() {
     if (!isAdmin) router.push('/admin');
   }, [user]);
 
+  const isNew = releaseId === 'new';
+
   const {
     form,
     loading, notFound,
@@ -37,7 +39,7 @@ export default function LyricsEditorPage() {
     handleSave,
   } = useReleaseForm({
     releaseId,
-    isNew: false,
+    isNew,
     ready: isAdmin,
     onNavigate: (path) => router.push(path),
   });

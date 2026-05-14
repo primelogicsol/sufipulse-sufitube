@@ -259,19 +259,31 @@ export interface CMSRelease {
 
 export interface LyricsRequest {
   id: string;
-  releaseId: string;
-  releaseSlug: string;
+  releaseId?: string;
+  releaseSlug?: string;
   releaseTitle: string;
-  languageCode: string;
+  languageCode?: string;
   languageName: string;
+  requestType: string;
   requesterName?: string;
-  requesterEmail: string;
-  note?: string;
-  notifyWhenPublished: boolean;
-  status: 'pending' | 'reviewed' | 'fulfilled' | 'rejected';
+  requesterEmail?: string;
+  userId?: string;
+  status: 'pending' | 'in_review' | 'assigned' | 'in_translation' | 'completed' | 'sent_to_user' | 'published' | 'rejected' | 'closed';
+  priority: 'normal' | 'high' | 'urgent';
+  requestedMessage?: string;
+  adminNotes?: string;
+  translatedLyrics?: string;
+  translationNotes?: string;
+  completedBy?: string;
+  completedAt?: string;
+  sentToUser: boolean;
+  sentToUserAt?: string;
+  sentToUserEmail?: string;
+  publishedToRelease: boolean;
+  publishedAt?: string;
+  sourceUrl?: string;
   createdAt: string;
   updatedAt: string;
-  userId?: string;
 }
 
 const STORAGE_KEY = 'sufipulse_cms_releases';

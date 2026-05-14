@@ -15,6 +15,12 @@ export async function GET(request: NextRequest) {
     const key = searchParams.get('key');
     const slug = searchParams.get('slug');
     const youtubeId = searchParams.get('youtubeId');
+    const user = await getAuthUser(request);
+    const isAdmin = user?.role === 'admin';
+    const noCache = isAdmin || searchParams.get('refresh') === '1' || searchParams.get('nocache') === '1';
+    const headers = noCache 
+      ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' }
+      : cacheHeaders;
 
     // --- SINGLE DETAIL MODE ---
     const lookupKey = key || slug || youtubeId;
@@ -23,13 +29,12 @@ export async function GET(request: NextRequest) {
       if (!release) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(release, { headers: cacheHeaders });
+        
+      return NextResponse.json(release, { headers });
     }
 
     // --- FAST LIST MODE ---
     const status = searchParams.get('status') || 'published';
-    const user = await getAuthUser(request);
-    const isAdmin = user?.role === 'admin';
 
     console.time('[releases] loadAll');
     let base: CMSRelease[] = [];
@@ -122,11 +127,6 @@ export async function GET(request: NextRequest) {
         needsRefresh,
         count: filtered.length
     };
-
-    const noCache = isAdmin || searchParams.get('refresh') === '1' || searchParams.get('nocache') === '1';
-    const headers = noCache 
-      ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' }
-      : cacheHeaders;
 
     console.timeEnd('[releases] total');
     return NextResponse.json(responseData, { headers });

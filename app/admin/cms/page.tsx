@@ -180,7 +180,7 @@ export default function CMSPage() {
           </Link>
 
           <Link
-            href="/admin/cms/lyrics-requests"
+            href="/admin/lyrics-requests"
             className="dashboard-card p-4 cursor-pointer hover:border-[color:var(--dash-accent)] transition"
           >
             <Globe className="mb-2" size={24} style={{color: 'var(--dash-accent)'}} />

@@ -36,6 +36,8 @@ export default function SubtitleEditorPage() {
 
   const isAdmin = user?.role?.includes('admin') ?? false;
 
+  const isNew = releaseId === 'new';
+
   const {
     form,
     setForm,

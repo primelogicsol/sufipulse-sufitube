@@ -64,6 +64,7 @@ const navigationSections = [
       { path: '/admin/kalams',                  label: 'Kalams (Ahl-e-Qalam)',       icon: Music },
       { path: '/admin/sadas',                   label: 'Sadas (Ahl-e-Sada)',         icon: Mic },
       { path: '/admin/articles',                label: 'Articles (Ahl-e-Tahreer)',   icon: BookOpen },
+      { path: '/admin/lyrics-requests',         label: 'Lyrics Requests',            icon: Mail },
       { path: '/admin/performance-assignments', label: 'Performance Assignments',    icon: Mic },
     ],
   },

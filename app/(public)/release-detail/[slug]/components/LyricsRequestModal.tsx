@@ -33,6 +33,7 @@ export function LyricsRequestModal({
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,12 +42,13 @@ export function LyricsRequestModal({
       setLanguageName(initialLanguageName);
       setError(null);
       setIsSuccess(false);
+      setSuccessMsg(null);
     }
   }, [isOpen, initialLanguageCode, initialLanguageName]);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const code = e.target.value;
-    const lang = languages.find(l => l.key === code);
+    const lang = languages.find(l => (l as any).key === code || (l as any).code === code);
     setLanguageCode(code);
     setLanguageName(lang?.label || code);
   };
@@ -57,16 +59,19 @@ export function LyricsRequestModal({
     setError(null);
 
     try {
-      const response = await fetch(`/api/releases/${releaseId}/lyrics-request`, {
+      const response = await fetch(`/api/lyrics-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          releaseId,
+          slug: window.location.pathname.split('/').pop(),
+          songTitle: releaseTitle,
+          language: languageName,
           languageCode,
-          languageName,
           requesterName: name,
           requesterEmail: email,
-          note,
-          notifyWhenPublished
+          requestedMessage: note,
+          sourceUrl: window.location.href
         })
       });
 
@@ -76,9 +81,10 @@ export function LyricsRequestModal({
         throw new Error(data.message || data.error || 'Failed to submit request');
       }
 
+      setSuccessMsg(data.message);
       setIsSuccess(true);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'We could not submit your request. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -120,7 +126,7 @@ export function LyricsRequestModal({
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Request Received</h3>
               <p className="text-neutral-400 text-sm mb-6">
-                Thank you. Your lyrics request for <span className="text-amber-400">{languageName}</span> has been received. Our team will review and prioritize requests based on demand.
+                {successMsg || `Thank you. Your lyrics request for ${languageName} has been received. Our team will review and prioritize requests based on demand.`}
               </p>
               <button
                 onClick={onClose}

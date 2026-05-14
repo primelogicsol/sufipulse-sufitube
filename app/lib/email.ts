@@ -15,7 +15,9 @@ const emailLogger = logger.api;
 type EmailTemplate =
   | 'verification'
   | 'password-reset'
-  | 'welcome';
+  | 'welcome'
+  | 'lyrics-request-confirmation'
+  | 'lyrics-request-admin-notification';
 
 interface SendEmailOptions {
   to: string;
@@ -194,6 +196,60 @@ const templates: Record<EmailTemplate, (data: Record<string, string>) => { subje
       </div>
     `,
   }),
+
+  'lyrics-request-confirmation': ({ songTitle, language, name }) => ({
+    subject: `Lyrics Translation Request Received: ${songTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+        <h2 style="color: #1a1a1a;">Request Received</h2>
+        <p>Hi ${name || 'there'},</p>
+        <p>Thank you for your interest in SufiPulse. Your request for <strong>${language}</strong> lyrics translation for <strong>"${songTitle}"</strong> has been received.</p>
+        <p>Our team will review and prioritize translation requests based on audience demand.</p>
+        <div style="background: #fafafa; padding: 15px; border-radius: 4px; margin: 20px 0;">
+          <p style="margin: 0; font-size: 14px;"><strong>Requested Language:</strong> ${language}</p>
+          <p style="margin: 5px 0 0; font-size: 14px;"><strong>Status:</strong> Pending Review</p>
+        </div>
+        <p style="color: #666; font-size: 13px;">We will notify you via this email address as soon as the translation is published.</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="color: #999; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} SufiPulse. All rights reserved.</p>
+      </div>
+    `,
+  }),
+
+  'lyrics-request-admin-notification': ({ songTitle, language, requesterName, requesterEmail, note }) => ({
+    subject: `New Lyrics Translation Request: ${language}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+        <h2 style="color: #d97706;">New Translation Request</h2>
+        <p>A user has submitted a new lyrics translation request.</p>
+        <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse: collapse; margin: 20px 0;">
+          <tr style="background: #f9f9f9;">
+            <td width="30%" style="font-weight: bold; border-bottom: 1px solid #eee;">Song</td>
+            <td style="border-bottom: 1px solid #eee;">${songTitle}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border-bottom: 1px solid #eee;">Language</td>
+            <td style="border-bottom: 1px solid #eee;">${language}</td>
+          </tr>
+          <tr style="background: #f9f9f9;">
+            <td style="font-weight: bold; border-bottom: 1px solid #eee;">Requester</td>
+            <td style="border-bottom: 1px solid #eee;">${requesterName || 'Anonymous'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; border-bottom: 1px solid #eee;">Email</td>
+            <td style="border-bottom: 1px solid #eee;">${requesterEmail || 'Not provided'}</td>
+          </tr>
+          <tr style="background: #f9f9f9;">
+            <td style="font-weight: bold;">Note</td>
+            <td>${note || 'No note provided'}</td>
+          </tr>
+        </table>
+        <div style="text-align: center; margin-top: 30px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/lyrics-requests" style="background: #d97706; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Admin Dashboard</a>
+        </div>
+      </div>
+    `,
+  }),
 };
 
 // Public API
@@ -217,3 +273,14 @@ export const sendWelcomeEmail = async (to: string, name: string): Promise<void> 
   const { subject, html } = templates.welcome({ name });
   await sendEmail({ to, subject, html });
 };
+
+export const sendLyricsRequestConfirmationEmail = async (to: string, data: { songTitle: string; language: string; name?: string }): Promise<void> => {
+  const { subject, html } = templates['lyrics-request-confirmation'](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendLyricsRequestAdminNotificationEmail = async (to: string, data: { songTitle: string; language: string; requesterName?: string; requesterEmail?: string; note?: string }): Promise<void> => {
+  const { subject, html } = templates['lyrics-request-admin-notification'](data);
+  await sendEmail({ to, subject, html });
+};
+

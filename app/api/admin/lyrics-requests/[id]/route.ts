@@ -4,6 +4,26 @@ import { requireAdmin } from '@/server/middleware/authenticate';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
+  const { id } = await params;
+
+  try {
+    const req = cmsServerStorage.getAllLyricsRequests().find(r => r.id === id);
+    if (!req) {
+      return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+    }
+    return NextResponse.json(req);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -14,27 +34,20 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const existing = cmsServerStorage.getLyricsRequest(id);
+    const existing = cmsServerStorage.getAllLyricsRequests().find(r => r.id === id);
     if (!existing) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
 
     const body = await request.json();
-    const { status } = body;
-
-    if (!['pending', 'reviewed', 'fulfilled', 'rejected'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-    }
-
     const updated = {
       ...existing,
-      status,
+      ...body,
       updatedAt: new Date().toISOString()
     };
 
-    cmsServerStorage.saveLyricsRequest(updated);
-
-    return NextResponse.json(updated);
+    const saved = cmsServerStorage.saveLyricsRequest(updated);
+    return NextResponse.json(saved);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -54,7 +67,6 @@ export async function DELETE(
     if (!deleted) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
-
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

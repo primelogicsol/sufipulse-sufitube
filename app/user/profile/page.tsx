@@ -119,6 +119,18 @@ export default function MyAccountPage() {
             </Link>
           )}
 
+          {/* My Lyrics Requests — all logged-in users */}
+          <Link
+            href="/user/lyrics-requests"
+            className="flex items-center justify-between w-full px-5 py-4 rounded-xl border border-white/10 bg-white/[0.03] hover:border-[var(--color-gold)]/40 hover:bg-[var(--color-gold)]/5 transition-colors mb-6"
+          >
+            <div className="flex items-center gap-3">
+              <Languages className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">My Lyrics Requests</span>
+            </div>
+            <span className="text-[var(--color-gold)] text-xs">→</span>
+          </Link>
+
           {/* Role portals */}
           {portalLinks.length > 0 && (
             <div className="space-y-3 mb-6">
