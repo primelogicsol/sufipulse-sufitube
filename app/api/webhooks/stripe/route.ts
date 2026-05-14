@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
         updateAdoptionRecord(adoptionId, {
           paymentStatus: 'paid',
           amountPaid,
+          publicListingApproved: true,
           ...(paymentReference(stripeSessionId)),
           ...(didAdvance ? { adoptionStatus: targetAdoptionStatus } : {}),
         });

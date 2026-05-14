@@ -90,23 +90,19 @@ export const youtubeAnalyticsService = {
       const token = await getAccessToken();
 
       const [discoveryRaw, trafficRaw, demographicsRaw, geoRaw] = await Promise.all([
-        // Performance query
         analyticsQuery(token, {
           metrics: 'impressions,impressionClickThroughRate,views,estimatedMinutesWatched,averageViewDuration',
         }),
-        // Recommendation / Traffic query
         analyticsQuery(token, {
           dimensions: 'insightTrafficSourceType',
           metrics: 'views',
           sort: '-views',
           maxResults: '50',
         }),
-        // Demographics query
         analyticsQuery(token, {
           dimensions: 'ageGroup,gender',
           metrics: 'viewerPercentage',
         }),
-        // Geographies query
         analyticsQuery(token, {
           dimensions: 'country',
           metrics: 'views',
@@ -115,15 +111,22 @@ export const youtubeAnalyticsService = {
         }),
       ]);
 
+      console.log('[youtubeAnalyticsService] API Results Received:', {
+        discoveryRows: discoveryRaw.rows?.length ?? 0,
+        trafficRows: trafficRaw.rows?.length ?? 0,
+        demographicsRows: demographicsRaw.rows?.length ?? 0,
+        geoRows: geoRaw.rows?.length ?? 0
+      });
+
       // 1. Process Performance
       const dr = discoveryRaw.rows?.[0] ?? [0, 0, 0, 0, 0];
-      const impressions = Number(dr[0]) || null;
+      const impressions = Number(dr[0]) || 0;
       const ctrDecimal = Number(dr[1]) || 0;
-      const ctr = impressions ? Math.round(ctrDecimal * 1000) / 10 : null;
-      const views = Number(dr[2]) || null;
-      const avgDurationSecs = Number(dr[4]) || null;
-      const avgViewDurationFormatted = avgDurationSecs ? fmtDuration(avgDurationSecs) : null;
-      const watchTimeHours = dr[3] ? Math.round(Number(dr[3]) / 60) : null;
+      const ctr = impressions > 0 ? Math.round(ctrDecimal * 1000) / 10 : 0;
+      const views = Number(dr[2]) || 0;
+      const avgDurationSecs = Number(dr[4]) || 0;
+      const avgViewDurationFormatted = avgDurationSecs > 0 ? fmtDuration(avgDurationSecs) : '0:00';
+      const watchTimeHours = dr[3] ? Math.round(Number(dr[3]) / 60) : 0;
 
       // 2. Process Recommendation Engine
       let recViews = 0;
@@ -218,7 +221,14 @@ export const youtubeAnalyticsService = {
         snapshot.errorMessage = undefined;
         analyticsStorage.saveSnapshot(snapshot);
       } else {
-        console.warn('[youtubeAnalyticsService] Fetched data seems empty or invalid, skipping save.');
+        console.warn('[youtubeAnalyticsService] Fetched data seems empty or invalid, skipping full save but updating check status.');
+        const currentSnapshot = analyticsStorage.getSnapshot();
+        analyticsStorage.saveSnapshot({
+          ...currentSnapshot,
+          checkedAt: new Date().toISOString(),
+          nextRefreshAt: nextFriday.toISOString(),
+          status: currentSnapshot.status === 'error' ? 'active' : currentSnapshot.status
+        });
       }
 
       return snapshot;

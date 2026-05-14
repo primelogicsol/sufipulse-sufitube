@@ -1094,14 +1094,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
         {/* ── RIGHT CARD: Use My Google Ads ── */}
         <div
-          onClick={() => googleAdsEnabled !== false ? handleMethodSelect('use_my_google_ads') : undefined}
+          onClick={() => googleAdsConfigured !== false ? handleMethodSelect('use_my_google_ads') : undefined}
           className={`group relative flex flex-col bg-[var(--color-slate)]/40 border rounded-3xl transition-all duration-500 overflow-hidden backdrop-blur-sm ${
-            googleAdsEnabled !== false
+            googleAdsConfigured !== false
               ? 'border-[var(--color-border-strong)] hover:border-blue-500/40 cursor-pointer'
               : 'border-[var(--color-border-strong)]/50 opacity-60 cursor-default'
           }`}
         >
-          {googleAdsEnabled !== false && (
+          {googleAdsConfigured !== false && (
             <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           )}
 
@@ -1117,7 +1117,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
             <div className="space-y-4">
               <h4 className={`text-2xl font-serif transition-colors duration-300 ${
-                googleAdsEnabled !== false ? 'text-[var(--color-text-primary)] group-hover:text-blue-400' : 'text-[var(--color-text-tertiary)]'
+                googleAdsConfigured !== false ? 'text-[var(--color-text-primary)] group-hover:text-blue-400' : 'text-[var(--color-text-tertiary)]'
               }`}>
                 Google Ads Direct
               </h4>
@@ -1142,7 +1142,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
               ))}
             </ul>
 
-            {googleAdsEnabled !== false ? (
+            {googleAdsConfigured !== false ? (
               <button
                 className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-blue-500/10 active:scale-[0.98]"
               >

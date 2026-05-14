@@ -212,9 +212,12 @@ export default function GlobalReachStrip() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (isManualRefresh = false) => {
     try {
-      const r = await fetch("/api/public/youtube/global-reach");
+      const url = isManualRefresh 
+        ? `/api/public/youtube/global-reach?refresh=1&t=${Date.now()}` 
+        : `/api/public/youtube/global-reach?t=${Date.now()}`;
+      const r = await fetch(url);
       const d = await r.json();
       if (d && !d.error) setData(d);
     } catch (err) {
@@ -237,7 +240,8 @@ export default function GlobalReachStrip() {
       const res = await fetch("/api/admin/youtube-analytics/global-reach/refresh", { method: 'POST' });
       const result = await res.json();
       if (result.success) {
-        await fetchAnalytics();
+        // Pass true to trigger cache-busting and fresh fetch
+        await fetchAnalytics(true);
         alert("Global Reach analytics refreshed successfully!");
       } else {
         throw new Error(result.error || "Refresh failed");

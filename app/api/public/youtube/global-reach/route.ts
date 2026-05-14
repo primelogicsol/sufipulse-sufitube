@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { youtubeAnalyticsService } from '@/lib/youtube-analytics-service';
 
 export const dynamic = 'force-dynamic';
@@ -8,9 +8,12 @@ const cacheHeaders = {
 };
 
 // GET /api/public/youtube/global-reach
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const refresh = searchParams.get('refresh') === '1';
+
   try {
-    const analytics = await youtubeAnalyticsService.getLifetimeGlobalReachAnalytics();
+    const analytics = await youtubeAnalyticsService.getLifetimeGlobalReachAnalytics(refresh);
     
     // Return only public-safe fields as requested
     const publicSafe = {
@@ -23,10 +26,15 @@ export async function GET() {
       geographies: analytics.geographies,
       lastUpdated: analytics.lastUpdated,
       nextRefreshAt: analytics.nextRefreshAt,
-      status: analytics.status
+      status: analytics.status,
+      errorMessage: analytics.errorMessage // useful for debugging
     };
 
-    return NextResponse.json(publicSafe, { headers: cacheHeaders });
+    const headers: Record<string, string> = refresh 
+      ? { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate', 'Pragma': 'no-cache', 'Expires': '0' }
+      : { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=60' };
+
+    return NextResponse.json(publicSafe, { headers });
   } catch (error: any) {
     console.error('[API /api/public/youtube/global-reach] ERROR:', error);
     return NextResponse.json({ error: 'Failed to fetch global reach analytics' }, { status: 500 });
