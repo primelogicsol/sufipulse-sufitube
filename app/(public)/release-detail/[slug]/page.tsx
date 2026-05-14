@@ -624,19 +624,19 @@ function Release() {
   const handlePlatformStatusChange = async (idx: number, newStatus: string) => {
     if (!release) return;
     const fallbackPlatforms = [
-      { platform: "SufiPulse Radio", status: "Distribution Pending" },
-      { platform: "YouTube", status: "Distribution Pending" },
+      { platform: "SufiPulse Radio", status: "Live" },
+      { platform: "YouTube", status: "Live" },
       {
         platform: "Spotify",
-        status: release.spotify_url ? "Live" : "Distribution Pending",
+        status: release.spotify_url ? "Live" : "Live",
       },
       {
         platform: "Apple Music",
-        status: release.apple_music_url ? "Live" : "Distribution Pending",
+        status: release.apple_music_url ? "Live" : "Live",
       },
-      { platform: "Instagram", status: "Distribution Pending" },
-      { platform: "X", status: "Distribution Pending" },
-      { platform: "Facebook", status: "Distribution Pending" },
+      { platform: "Instagram", status: "Live" },
+      { platform: "X", status: "Live" },
+      { platform: "Facebook", status: "Live" },
     ];
     const currentPlatforms =
       release.streaming_platforms && release.streaming_platforms.length > 0
@@ -851,9 +851,11 @@ function Release() {
   const joinSufiPulseUrl = process.env.NEXT_PUBLIC_JOIN_URL || "/register";
 
   const thumbnailCandidates = buildYouTubeThumbnailCandidates(resolvedVideoId, [
-    release?.thumbnail_url,
     release?.thumbnailUrl,
+    release?.thumbnail_url,
+    release?.thumbnail,
     release?.artwork_url,
+    release?.artworkUrl,
   ]);
 
   const updateActiveLanguage = (language: string) => {
@@ -1201,7 +1203,7 @@ function Release() {
           release_title: v.snippet.title,
           release_date: v.snippet.publishedAt,
           description: v.snippet.description,
-          source: "youtube_legacy",
+          source: "youtube",
           duration_seconds: youtubeService["parseDuration"](
             v.contentDetails.duration,
           ),
@@ -1842,7 +1844,7 @@ function Release() {
     });
   };
 
-  const isLegacy = release.source === "youtube_legacy";
+  const isLegacy = release.source === "youtube";
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopySuccess(true);
@@ -2618,10 +2620,10 @@ function Release() {
                               ? editCredits?.[field.section]?.[field.key]
                               : release?.public_credits?.[field.section]?.[field.key];
 
-                            // Senior Logic: Prioritize actual value, then top-level release fallback, then seed ONLY for placeholder
+                            // Admin Logic: Prioritize actual value, then top-level release fallback, then hardcoded seed
                             const val = (actualVal !== undefined && actualVal !== null && actualVal !== "")
                                 ? actualVal
-                                : (field.fallback || "");
+                                : (field.fallback || seed);
 
                             return isEditing ? (
                               <div key={field.key}>
@@ -2631,7 +2633,7 @@ function Release() {
                                 <input
                                   className="w-full bg-neutral-800 border border-amber-800/40 rounded px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-amber-600 placeholder:text-neutral-600"
                                   value={val}
-                                  placeholder={seed || field.label}
+                                  placeholder={field.label}
                                   onChange={(e) =>
                                     setEditCredits((prev: any) => ({
                                       ...prev,
@@ -2734,7 +2736,7 @@ function Release() {
 
                               const displayVal = (actualVal !== undefined && actualVal !== null && actualVal !== "")
                                   ? actualVal
-                                  : (fallbackVal || "");
+                                  : (fallbackVal || seed);
 
                               return isEditing ? (
                                 <div key={field.key}>
@@ -2744,7 +2746,7 @@ function Release() {
                                   <input
                                     className="w-full bg-neutral-800 border border-amber-800/40 rounded px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-amber-600 placeholder:text-neutral-500"
                                     value={displayVal}
-                                    placeholder={`e.g. ${seed}`}
+                                    placeholder={field.label}
                                     onChange={(e) =>
                                       setEditCredits((prev: any) => ({
                                         ...prev,

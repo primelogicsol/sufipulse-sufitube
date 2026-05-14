@@ -74,6 +74,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
 
     status: existing?.status || 'published',
     visibility: existing?.visibility || 'public',
+    source: existing?.source || 'youtube',
     availableLanguages: existing?.availableLanguages || ['en', 'ur'],
     defaultLanguage: existing?.defaultLanguage || 'en',
     lyrics: existing?.lyrics || {},

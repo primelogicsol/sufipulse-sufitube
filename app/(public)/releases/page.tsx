@@ -83,7 +83,7 @@ export default function Releases() {
                     views: Number(r.views || r.viewCount || 0),
                     source: source,
                     format: r.format || 'video',
-                    govType: source === 'youtube_legacy' ? 'legacy_registry' : 'native_governed',
+                    govType: source === 'youtube' ? 'legacy_registry' : 'native_governed',
                     // Metadata for search
                     vocalist: typeof r.vocalist === 'string' 
                         ? r.vocalist 
@@ -117,18 +117,30 @@ export default function Releases() {
             const res = await fetch('/api/releases/import-youtube', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videoIds: [] }) // Empty array = fetch latest 100
+                body: JSON.stringify({ videoIds: [], lookbackDays: 30 }) 
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
             
             await fetchVideos(true, true);
             
-            if (data.message) {
-                alert(data.message);
-            } else {
-                alert('Sync complete! Latest videos imported.');
+            let message = data.message || 'Sync complete!';
+            
+            if (data.diagnostic) {
+                message += '\n\n' + 
+                  '--- Latest YouTube Upload ---\n' +
+                  `Title: ${data.diagnostic.latestTitle}\n` +
+                  `Published: ${new Date(data.diagnostic.latestPublishedAt).toLocaleDateString()}\n` +
+                  `YouTube ID: ${data.diagnostic.latestYoutubeId}\n` +
+                  `In Registry: ${data.diagnostic.existsInDb ? 'Yes' : 'No'}\n` +
+                  `Public Visible: ${data.diagnostic.publicVisible ? 'Yes' : 'No'}`;
+                
+                if (data.diagnostic.reasonHidden && data.diagnostic.reasonHidden !== 'none') {
+                    message += `\nReason Hidden: ${data.diagnostic.reasonHidden}`;
+                }
             }
+
+            alert(message);
         } catch (err: any) {
             console.error("Sync error:", err);
             alert('Failed to sync: ' + err.message);
@@ -241,14 +253,19 @@ export default function Releases() {
                                         />
                                     </div>
                                     {user?.role === 'admin' && (
-                                        <button
-                                            onClick={handleSync}
-                                            disabled={syncing}
-                                            className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-xl text-sm font-bold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 transition-all disabled:opacity-50 whitespace-nowrap h-[48px]"
-                                        >
-                                            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                                            {syncing ? 'Syncing...' : 'Sync Registry'}
-                                        </button>
+                                        <div className="flex flex-col gap-2">
+                                            <button
+                                                onClick={handleSync}
+                                                disabled={syncing}
+                                                className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-xl text-sm font-bold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 transition-all disabled:opacity-50 whitespace-nowrap h-[48px]"
+                                            >
+                                                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                                                {syncing ? 'Syncing...' : 'Sync New Releases'}
+                                            </button>
+                                            <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-tight ml-1">
+                                                Checks official YouTube for fresh uploads.
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
 

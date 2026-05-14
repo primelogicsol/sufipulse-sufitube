@@ -42,7 +42,7 @@ interface Publication {
 export default function Home() {
   // const { releases, loading } = useReleases();
   // const featuredReleases = releases
-  //   .filter(r => r.youtube_video_id && r.source === 'youtube_legacy')
+  //   .filter(r => r.youtube_video_id && r.source === 'youtube')
   //   .slice(0, 6);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [featuredArticles, setFeaturedArticles] = useState<FeaturedArticle[]>([]);

@@ -242,7 +242,7 @@ class YouTubeService {
                     likes: parseInt(video.statistics?.likeCount || '0'),
                     comments: parseInt(video.statistics?.commentCount || '0'),
                     liveBroadcastContent: video.snippet.liveBroadcastContent || 'none',
-                    source: 'youtube_legacy',
+                    source: 'youtube',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };
             });
@@ -354,7 +354,7 @@ class YouTubeService {
                     likes: parseInt(video.statistics?.likeCount || '0'),
                     comments: parseInt(video.statistics?.commentCount || '0'),
                     liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
-                    source: 'youtube_legacy',
+                    source: 'youtube',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };
             });
@@ -428,7 +428,7 @@ class YouTubeService {
                 likes: parseInt(video.statistics?.likeCount || '0'),
                 comments: parseInt(video.statistics?.commentCount || '0'),
                 liveBroadcastContent: video.snippet.liveBroadcastContent || 'none',
-                source: 'youtube_legacy',
+                source: 'youtube',
                 format: inferFormat(durationSecs, hasLiveDetails),
             };
 
@@ -519,7 +519,7 @@ class YouTubeService {
                     likes: parseInt(video.statistics?.likeCount || '0'),
                     comments: parseInt(video.statistics?.commentCount || '0'),
                     liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
-                    source: 'youtube_legacy',
+                    source: 'youtube',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };
             });
