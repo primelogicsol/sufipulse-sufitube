@@ -53,6 +53,7 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
             displayName,
             location,
             adopterType: a.adopterType || 'individual',
+            methodType: a.methodType || 'managed_sufitube',
             createdAt: a.createdAt,
           };
         });
