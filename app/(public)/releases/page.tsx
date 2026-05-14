@@ -46,9 +46,9 @@ export default function Releases() {
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-    const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
+    const [durationFilter, setDurationFilter] = useState<DurationFilter>('long');
     const [yearFilter, setYearFilter] = useState<string>('all');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('default');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -363,10 +363,10 @@ export default function Releases() {
                                 onClick={() => {
                                     setFilterType('all');
                                     setFilterFormat('all');
-                                    setDurationFilter('all');
+                                    setDurationFilter('long');
                                     setYearFilter('all');
                                     setSearchQuery('');
-                                    setSortOrder('default');
+                                    setSortOrder('newest');
                                     setCurrentPage(1);
                                 }}
                                 className="mt-4 text-[var(--color-gold)] hover:underline"

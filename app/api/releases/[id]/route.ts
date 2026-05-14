@@ -80,12 +80,18 @@ export async function GET(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
+    const user = await getAuthUser(request);
+    const isAdmin = user?.role === 'admin';
+
     if (release.status !== 'published') {
-      const user = await getAuthUser(request);
-      if (!user || user.role !== 'admin') {
+      if (!isAdmin) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
       return NextResponse.json(release);
+    }
+
+    if (isAdmin) {
+      return NextResponse.json(release, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
     }
 
     return NextResponse.json(release, { headers: cacheHeaders });

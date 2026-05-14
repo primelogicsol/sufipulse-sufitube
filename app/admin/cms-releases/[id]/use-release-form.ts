@@ -616,6 +616,7 @@ export function useReleaseForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     setErrorMessage(null);
     setSuccessMessage(null);
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Plus, Upload, Youtube } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Upload, Youtube, CheckSquare, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 import {

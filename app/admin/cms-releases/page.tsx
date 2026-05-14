@@ -85,7 +85,7 @@ export default function CMSReleasesPage() {
   const loadReleases = async () => {
     try {
       setLoading(true);
-      const url = filter === 'all' ? '/api/releases?status=all' : `/api/releases?status=${filter}`;
+      const url = filter === 'all' ? '/api/releases?status=all&refresh=1' : `/api/releases?status=${filter}&refresh=1`;
       const res = await fetch(url);
       const data = await res.json();
       
@@ -736,7 +736,7 @@ export default function CMSReleasesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--dash-border)' }}>
-                  {['Title', 'Status', 'Release Date', 'Views', 'Actions'].map((h) => (
+                  {['Title', 'Status', 'Format', 'Duration', 'Release Date', 'Views', 'Actions'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left font-semibold" style={{ color: 'var(--dash-text-secondary)' }}>
                       {h}
                     </th>
@@ -774,8 +774,34 @@ export default function CMSReleasesPage() {
                         {release.status}
                       </span>
                     </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                        style={{
+                          backgroundColor: release.format === 'short' ? 'rgba(239, 68, 68, 0.1)' : 
+                                           release.format === 'live' ? 'rgba(16, 185, 129, 0.1)' :
+                                           release.format === 'audio' ? 'rgba(59, 130, 246, 0.1)' :
+                                           'rgba(245, 158, 11, 0.1)',
+                          color: release.format === 'short' ? '#f87171' : 
+                                 release.format === 'live' ? '#34d399' :
+                                 release.format === 'audio' ? '#60a5fa' :
+                                 '#fbbf24',
+                          border: `1px solid ${
+                            release.format === 'short' ? 'rgba(239, 68, 68, 0.2)' : 
+                            release.format === 'live' ? 'rgba(16, 185, 129, 0.2)' :
+                            release.format === 'audio' ? 'rgba(59, 130, 246, 0.2)' :
+                            'rgba(245, 158, 11, 0.2)'
+                          }`,
+                        }}
+                      >
+                        {release.format || 'video'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--dash-text-secondary)' }}>
+                      {release.durationFormatted || '0:00'}
+                    </td>
                     <td className="px-4 py-3" style={{ color: 'var(--dash-text-secondary)' }}>
-                      {release.releaseDate || '—'}
+                      {release.releaseDate || release.publishedAt?.slice(0, 10) || '—'}
                     </td>
                     <td className="px-4 py-3" style={{ color: 'var(--dash-text-secondary)' }}>
                       {release.viewCount?.toLocaleString() ?? '—'}

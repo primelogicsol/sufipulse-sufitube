@@ -34,8 +34,11 @@ export async function GET(request: NextRequest) {
     console.time('[releases] loadAll');
     let base: CMSRelease[] = [];
     
-    if (isAdmin || status === 'all') {
+    if (isAdmin) {
       base = cmsServerStorage.getAllReleases(status !== 'all' ? { status } : undefined);
+    } else if (status === 'all') {
+      // Non-admins should only see published releases even if they ask for "all"
+      base = cmsServerStorage.getPublishedReleases();
     } else {
       base = cmsServerStorage.getPublishedReleases();
     }
@@ -107,13 +110,20 @@ export async function GET(request: NextRequest) {
     }
     console.timeEnd('[releases] filter');
 
+    // Final Sort: Latest First (by publishedAt descending)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.publishedAt || 0).getTime();
+      const dateB = new Date(b.publishedAt || 0).getTime();
+      return dateB - dateA;
+    });
+
     const responseData = {
         items: filtered,
         needsRefresh,
         count: filtered.length
     };
 
-    const noCache = searchParams.get('refresh') === '1' || searchParams.get('nocache') === '1';
+    const noCache = isAdmin || searchParams.get('refresh') === '1' || searchParams.get('nocache') === '1';
     const headers = noCache 
       ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' }
       : cacheHeaders;

@@ -13,7 +13,7 @@ export type ReleaseFormat = 'video' | 'audio' | 'short' | 'live' | 'playlist';
 
 function inferFormat(durationSeconds: number, hasLiveDetails: boolean): ReleaseFormat {
     if (hasLiveDetails) return 'live';
-    if (durationSeconds <= 60) return 'short';
+    if (durationSeconds > 0 && durationSeconds <= 180) return 'short';
     return 'video';
 }
 

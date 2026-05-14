@@ -27,7 +27,13 @@ const getReleaseDateMs = (r: any): number => {
 export function sortReleases(releases: any[], sortOrder: string = 'all') {
   const sorted = [...releases];
 
-  if (sortOrder === 'new' || sortOrder === 'newest' || sortOrder === 'all') {
+  if (sortOrder === 'updated') {
+    sorted.sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+  } else if (sortOrder === 'new' || sortOrder === 'newest' || sortOrder === 'all') {
     sorted.sort((a, b) => getReleaseDateMs(b) - getReleaseDateMs(a));
   } else if (sortOrder === 'old' || sortOrder === 'oldest') {
     sorted.sort((a, b) => getReleaseDateMs(a) - getReleaseDateMs(b));
