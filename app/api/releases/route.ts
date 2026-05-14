@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
 import { resolveRelease } from '@/lib/release-resolver';
 
 const cacheHeaders = {
-  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=3600',
 };
 
 export async function GET(request: NextRequest) {
@@ -237,6 +238,14 @@ export async function POST(request: NextRequest) {
     } as CMSRelease;
 
     const saved = cmsServerStorage.saveRelease(release);
+
+    // --- CACHE INVALIDATION ---
+    try {
+      revalidatePath('/');
+      revalidatePath('/releases');
+    } catch (cacheErr) {
+      console.warn('[API /api/releases] Cache revalidation failed', cacheErr);
+    }
 
     return NextResponse.json(saved, { status: 201 });
   } catch (error: any) {

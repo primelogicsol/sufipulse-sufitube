@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { auditLog } from '@/app/lib/audit-log';
 import { logger } from '@/app/lib/logger';
@@ -8,7 +9,7 @@ import { generateSocialShareKit } from '@/lib/social-share-generator';
 export const dynamic = 'force-dynamic';
 
 const cacheHeaders = {
-  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=300',
 };
 
 const apiLogger = logger.api;
@@ -195,6 +196,17 @@ export async function PUT(
 
     const updated = cmsServerStorage.saveRelease(merged as any);
 
+    // --- CACHE INVALIDATION ---
+    try {
+      revalidatePath('/');
+      revalidatePath('/releases');
+      revalidatePath(`/release-detail/${nextSlug}`);
+      // Also revalidate the generic pattern
+      revalidatePath('/release-detail/[slug]', 'page');
+    } catch (cacheErr) {
+      apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
+    }
+
     // Audit log
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
     apiLogger.info(`Release ${isNew ? 'created' : 'updated'} via PUT: ${id}`, { id, slug: nextSlug });
@@ -246,6 +258,15 @@ export async function DELETE(
     }
 
     cmsServerStorage.deleteRelease(id);
+
+    // --- CACHE INVALIDATION ---
+    try {
+      revalidatePath('/');
+      revalidatePath('/releases');
+      if (existing.slug) revalidatePath(`/release-detail/${existing.slug}`);
+    } catch (cacheErr) {
+      apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
+    }
 
     // Audit log
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';

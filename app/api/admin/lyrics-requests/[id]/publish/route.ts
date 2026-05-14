@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
@@ -80,6 +81,15 @@ export async function POST(
     }
 
     cmsServerStorage.saveRelease(updatedRelease);
+
+    // --- CACHE INVALIDATION ---
+    try {
+      revalidatePath('/');
+      revalidatePath('/releases');
+      revalidatePath(`/release-detail/${release.slug}`);
+    } catch (cacheErr) {
+      console.warn('[API /api/admin/lyrics-requests/publish] Cache revalidation failed', cacheErr);
+    }
 
     // Update the request status
     const updatedRequest = {

@@ -12,16 +12,22 @@ export async function GET(request: NextRequest) {
 
     const videos = await youtubeService.getVideosByIds(youtubeId);
     const video = Array.isArray(videos) ? videos[0] : null;
+
+    if (!video) {
+      return NextResponse.json({ error: 'Video not found or metadata unavailable' }, { status: 404 });
+    }
+
     const channelId = String(video?.snippet?.channelId || '').trim();
     const channelTitle = String(video?.snippet?.channelTitle || '').trim();
     const channelUrl = channelId ? `https://www.youtube.com/channel/${channelId}` : '';
 
-    if (!channelId) {
-      return NextResponse.json({ error: 'Channel metadata unavailable for this video' }, { status: 404 });
-    }
-
     return NextResponse.json({
       youtubeId,
+      title: video.snippet?.title || '',
+      description: video.snippet?.description || '',
+      thumbnailUrl: video.snippet?.thumbnails?.maxres?.url || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || video.snippet?.thumbnails?.default?.url || '',
+      durationSeconds: video.durationSeconds || 0,
+      durationFormatted: video.durationFormatted || '0:00',
       channelId,
       channelTitle,
       channelUrl,

@@ -187,6 +187,10 @@ export function useReleaseForm({
     channelId: string;
     channelTitle?: string;
     channelUrl: string;
+    title?: string;
+    durationSeconds?: number;
+    durationFormatted?: string;
+    thumbnailUrl?: string;
   } | null>(null);
   const [youtubeChannelLookupLoading, setYoutubeChannelLookupLoading] = useState(false);
 

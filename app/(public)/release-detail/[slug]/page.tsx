@@ -2580,8 +2580,6 @@ function Release() {
                             lyricist: "Dr. Zarf-e-Noori",
                             composer: "Dr. Zarf-e-Noori",
                             musicProducer: "Dr. Zarf-e-Noori",
-                            backgroundVocals: "",
-                            leadVocalist: "",
                           };
 
                           return [
@@ -2589,11 +2587,13 @@ function Release() {
                               label: "Lead Vocalist",
                               section: "artistic",
                               key: "leadVocalist",
+                              fallback: release?.vocalist || release?.lead_vocalists?.[0]
                             },
                             {
                               label: "Lyricist",
                               section: "artistic",
                               key: "lyricist",
+                              fallback: release?.writer?.name || release?.writer
                             },
                             {
                               label: "Composer",
@@ -2604,26 +2604,24 @@ function Release() {
                               label: "Music Producer",
                               section: "artistic",
                               key: "musicProducer",
+                              fallback: release?.producer?.name || release?.producer || release?.production_credits?.producer
                             },
                             {
                               label: "Background Vocals",
                               section: "artistic",
                               key: "backgroundVocals",
+                              fallback: release?.chorus_vocalists?.join(', ')
                             },
                           ].map((field) => {
-                            const seed = ARTISTIC_SEEDS[field.key] || "";
+                            const seed = (ARTISTIC_SEEDS as any)[field.key] || "";
                             const actualVal = isEditing
                               ? editCredits?.[field.section]?.[field.key]
-                              : release?.public_credits?.[field.section]?.[
-                                  field.key
-                                ];
+                              : release?.public_credits?.[field.section]?.[field.key];
 
-                            const val =
-                              actualVal !== undefined &&
-                              actualVal !== null &&
-                              actualVal !== ""
+                            // Senior Logic: Prioritize actual value, then top-level release fallback, then seed ONLY for placeholder
+                            const val = (actualVal !== undefined && actualVal !== null && actualVal !== "")
                                 ? actualVal
-                                : seed;
+                                : (field.fallback || "");
 
                             return isEditing ? (
                               <div key={field.key}>
@@ -2633,7 +2631,7 @@ function Release() {
                                 <input
                                   className="w-full bg-neutral-800 border border-amber-800/40 rounded px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-amber-600 placeholder:text-neutral-600"
                                   value={val}
-                                  placeholder={field.label}
+                                  placeholder={seed || field.label}
                                   onChange={(e) =>
                                     setEditCredits((prev: any) => ({
                                       ...prev,
@@ -2720,16 +2718,23 @@ function Release() {
                             {fields.map((field) => {
                               const seed =
                                 CREDITS_SEEDS[sectionKey]?.[field.key] || "";
-                              // For editing, show the actual stored value so the placeholder acts as hint, or if empty, forcefully seed it
+                              
+                              // Admin edited value
                               const actualVal = isEditing
                                 ? editCredits?.[sectionKey]?.[field.key]
-                                : release?.public_credits?.[sectionKey]?.[
-                                    field.key
-                                  ];
-                              const displayVal =
-                                actualVal !== undefined && actualVal !== null
+                                : release?.public_credits?.[sectionKey]?.[field.key];
+
+                              // Special case for release date text
+                              let fallbackVal = "";
+                              if (sectionKey === 'rights' && field.key === 'releaseDateText') {
+                                fallbackVal = release?.release_date ? new Date(release.release_date).toLocaleDateString() : "";
+                              } else if (sectionKey === 'rights' && field.key === 'publishedBy') {
+                                fallbackVal = "SufiPulse USA"; // Global default
+                              }
+
+                              const displayVal = (actualVal !== undefined && actualVal !== null && actualVal !== "")
                                   ? actualVal
-                                  : seed;
+                                  : (fallbackVal || "");
 
                               return isEditing ? (
                                 <div key={field.key}>
