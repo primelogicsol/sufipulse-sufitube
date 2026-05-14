@@ -418,6 +418,55 @@ export interface Notification {
 }
 
 /**
+ * YouTube Analytics Snapshot Schema
+ */
+export interface YouTubeAnalyticsSnapshot {
+  id: string; // "lifetime" or unique ID
+  channelId: string;
+  scope: 'lifetime';
+  period: 'lifetime';
+  title: string;
+  subtitle: string;
+  
+  performance: {
+    impressions: number | null;
+    views: number | null;
+    watchTimeHours: number | null;
+    clickThroughRate: number | null;
+    averageViewDurationSeconds: number | null;
+    averageViewDurationFormatted: string | null;
+  };
+  
+  ageGender: {
+    gender: {
+      female: number | null;
+      male: number | null;
+    };
+    ageGroups: { ageGroup: string; percentage: number | null }[];
+  };
+  
+  recommendationEngine: {
+    viewsPercentage: number | null;
+    label: string;
+  };
+  
+  geographies: {
+    totalCountries: number;
+    countries: {
+      code: string;
+      name: string;
+      views?: number;
+    }[];
+  };
+
+  lastUpdated: string;
+  nextRefreshAt: string;
+  checkedAt?: string;
+  errorMessage?: string;
+  status: 'active' | 'stale' | 'error';
+}
+
+/**
  * Export all schema types
  */
 export type DatabaseSchema = {
@@ -440,6 +489,7 @@ export type DatabaseSchema = {
   royalty_records: RoyaltyRecord;
   media_library: MediaLibrary;
   notifications: Notification;
+  youtube_analytics_snapshots: YouTubeAnalyticsSnapshot;
 };
 
 /**
