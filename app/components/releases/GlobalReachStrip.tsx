@@ -242,11 +242,11 @@ export default function GlobalReachStrip() {
       if (result.success) {
         // Pass true to trigger cache-busting and fresh fetch
         await fetchAnalytics(true);
-        alert("Global Reach analytics refreshed successfully!");
       } else {
         throw new Error(result.error || "Refresh failed");
       }
     } catch (err: any) {
+      console.error("Refresh failed:", err);
       alert("Failed to refresh analytics: " + err.message);
     } finally {
       setRefreshing(false);
@@ -256,6 +256,8 @@ export default function GlobalReachStrip() {
   if (!loading && !data) return null;
 
   const isStale = data?.status === 'stale';
+  const isError = data?.status === 'error';
+  const errorMessage = data?.errorMessage;
 
   return (
     <section className="py-12">
@@ -279,7 +281,30 @@ export default function GlobalReachStrip() {
               <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
               {refreshing ? 'Refreshing...' : 'Refresh Global Reach'}
             </button>
-            {isStale && (
+            {isError && errorMessage && (
+              <div className="flex flex-col items-end gap-1 mt-1 max-w-xs text-right">
+                <div className="flex items-center gap-1.5 text-rose-500 text-[10px] font-bold uppercase tracking-wider">
+                  <AlertCircle className="w-3 h-3" />
+                  API Error Detected
+                </div>
+                <p className="text-[9px] text-neutral-500 line-clamp-2 leading-relaxed">
+                  {errorMessage.includes("YouTube Analytics API has not been used") 
+                    ? "YouTube Analytics API is disabled in Google Console."
+                    : errorMessage}
+                </p>
+                {errorMessage.includes("https://console.developers.google.com") && (
+                  <a 
+                    href="https://console.developers.google.com/apis/api/youtubeanalytics.googleapis.com/overview" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[9px] text-amber-400 hover:underline font-bold"
+                  >
+                    Enable API Now →
+                  </a>
+                )}
+              </div>
+            )}
+            {isStale && !isError && (
               <div className="flex items-center gap-1.5 text-amber-500 text-[10px] font-bold uppercase tracking-wider">
                 <AlertCircle className="w-3 h-3" />
                 Snapshot is stale. Refresh recommended.

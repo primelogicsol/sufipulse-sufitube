@@ -162,6 +162,11 @@ export async function POST(request: NextRequest) {
         }
         
         const mapped = mapVideoToRelease(video, existing);
+        
+        // Force public visibility for synced YouTube content
+        mapped.status = 'published';
+        mapped.visibility = 'public';
+        
         toSave.push(mapped);
         
         // Immediate visibility check on mapped data

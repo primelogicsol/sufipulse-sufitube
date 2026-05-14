@@ -289,7 +289,7 @@ export default function Releases() {
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-    const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
+    const [durationFilter, setDurationFilter] = useState<DurationFilter>('long');
     const [yearFilter, setYearFilter] = useState<string>('all');
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');

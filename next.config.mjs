@@ -38,6 +38,15 @@ const nextConfig = {
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/admin/adopt-song',
+        destination: '/admin/song-adoptions',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

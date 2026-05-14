@@ -10,6 +10,11 @@
  * - Query engine with indexing
  * - Migration support
  * - Data seeding
+ * 
+ * ⚠️ PRODUCTION WARNING:
+ * This file-based JSON database is designed for the standalone SufiPulse registry.
+ * For high-concurrency production environments with thousands of simultaneous users,
+ * it is recommended to migrate to PostgreSQL + Prisma.
  */
 
 import fs from 'fs';
