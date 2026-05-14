@@ -7,8 +7,32 @@ import { SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.t
 const ADOPTION_PACKAGES: SongAdoptionPackage[] = [
   { id: 'pkg_1', method_type: 'managed_sufitube', package_name: 'Quick Boost', description: 'Short visibility push and early testing — ideal for first-time sponsors', currency: 'USD', amount: 39, estimated_impressions_min: 500, estimated_impressions_max: 3000, duration_days: 4, regions_targeted: ['Local'], reporting_level: 'Basic', is_active: true, sort_order: 1 },
   { id: 'pkg_2', method_type: 'managed_sufitube', package_name: 'Starter Reach', description: 'Focused promotional push for one kalam with community engagement', currency: 'USD', amount: 75, estimated_impressions_min: 3000, estimated_impressions_max: 10000, duration_days: 7, regions_targeted: ['Regional'], reporting_level: 'Basic', is_active: true, sort_order: 2 },
-  { id: 'pkg_3', method_type: 'managed_sufitube', package_name: 'Balanced Campaign', description: 'Stronger reach, better audience learning and diaspora discovery', currency: 'USD', amount: 199, estimated_impressions_min: 10000, estimated_impressions_max: 40000, duration_days: 14, regions_targeted: ['Regional', 'Diaspora'], reporting_level: 'Standard', is_active: true, sort_order: 3 },
+  { id: 'pkg_3', method_type: 'managed_sufitube', package_name: 'Balanced Campaign', description: 'Strong reach, better audience learning and diaspora discovery', currency: 'USD', amount: 199, estimated_impressions_min: 10000, estimated_impressions_max: 40000, duration_days: 14, regions_targeted: ['Regional', 'Diaspora'], reporting_level: 'Standard', is_active: true, sort_order: 3 },
   { id: 'pkg_4', method_type: 'managed_sufitube', package_name: 'Optimal Reach', description: 'Sustained promotion, wider discovery and stronger performance data', currency: 'USD', amount: 500, estimated_impressions_min: 50000, estimated_impressions_max: 150000, duration_days: 21, regions_targeted: ['Global'], reporting_level: 'Premium', is_active: true, sort_order: 4 },
+];
+
+const REGIONS = [
+  'Global', 'South Asia', 'India', 'Pakistan',
+  'United Kingdom', 'United States', 'Canada', 'Australia',
+  'MENA', 'Europe', 'East Africa', 'Southeast Asia',
+];
+
+const LANGUAGES = [
+  'All', 'English', 'Urdu', 'Hindi', 'Arabic',
+  'Punjabi', 'Kashmiri', 'Persian', 'Bengali', 'Turkish',
+];
+
+const INTENTIONS = [
+  { value: 'spiritual_reflection',  label: 'Spiritual Reflection' },
+  { value: 'ramadan_sacred_season', label: 'Ramadan / Sacred Season' },
+  { value: 'kashmiri_sufi_audience',label: 'Kashmiri Sufi Audience' },
+  { value: 'urdu_hindi_listeners',  label: 'Urdu / Hindi Listeners' },
+  { value: 'global_sufi_seekers',   label: 'Global Sufi Seekers' },
+  { value: 'youth_new_listeners',   label: 'Youth & New Listeners' },
+  { value: 'diaspora_outreach',     label: 'Diaspora Outreach' },
+  { value: 'general_awareness',     label: 'General Awareness' },
+  { value: 'memorial_dedication',   label: 'Memorial / Dedication' },
+  { value: 'institutional_support', label: 'Institutional Support' },
 ];
 import { useFormSecurity } from '../../../hooks/useFormSecurity';
 import { adoptionSchema, validateSchema } from '../../../lib/validation-schemas';
@@ -987,216 +1011,155 @@ export function AdoptTab({ release }: AdoptTabProps) {
   // ── Renderers ─────────────────────────────────────────────────────────────
 
   const renderIntro = () => (
-    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-      <div className="text-center">
-        <h3 className="text-3xl font-serif font-light text-neutral-100 mb-3">Adopt This Song</h3>
-        <p className="text-neutral-400 text-base leading-relaxed max-w-lg mx-auto">
+    <div className="space-y-12 animate-in fade-in zoom-in-95 duration-700">
+      <div className="text-center space-y-4">
+        <h3 className="text-4xl md:text-5xl font-serif text-[var(--color-text-primary)] tracking-tight">
+          Adopt This Song
+        </h3>
+        <p className="text-[var(--color-text-secondary)] text-lg leading-relaxed max-w-2xl mx-auto font-light">
           Help this kalam reach hearts that need it. Choose how you want to sponsor the spread of this piece.
         </p>
-        <p className="text-neutral-600 text-sm leading-relaxed max-w-md mx-auto mt-2">
-          Every campaign is reviewed before launch to ensure the message, audience, and budget remain aligned with the purpose of the release.
-        </p>
+        <div className="flex items-center justify-center gap-2 text-[var(--color-text-tertiary)] text-xs uppercase tracking-[0.2em] font-medium pt-2">
+          <span className="w-8 h-px bg-[var(--color-border-strong)]" />
+          Professional Campaign Management
+          <span className="w-8 h-px bg-[var(--color-border-strong)]" />
+        </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-
+      <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto">
         {/* ── LEFT CARD: Managed by SufiTube ── */}
         <div
           onClick={() => handleMethodSelect('managed_sufitube')}
-          className="flex flex-col bg-neutral-900 border border-neutral-800 hover:border-amber-500/40 rounded-2xl transition-all duration-200 cursor-pointer group select-none"
+          className="group relative flex flex-col bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-3xl transition-all duration-500 cursor-pointer overflow-hidden backdrop-blur-sm"
         >
-          {/* Logo */}
-          <div className="flex flex-col items-center pt-9 pb-5 px-8">
-            <div className="h-14 flex items-center justify-center mb-3">
-              <img
-                src="/sufitube-logo-v5.png"
-                alt="SufiTube"
-                className="h-10 w-auto object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fb = e.currentTarget.parentElement?.querySelector('[data-fallback]') as HTMLElement | null;
-                  if (fb) fb.style.display = 'flex';
-                }}
-              />
-              <div
-                data-fallback=""
-                style={{ display: 'none' }}
-                className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 items-center justify-center"
-              >
-                <svg width="22" height="22" viewBox="0 0 27 27" fill="none" aria-hidden="true">
-                  <path d="M10.5 7.5L22 13.5L10.5 19.5V7.5Z" fill="#C8A75E"/>
-                  <path d="M3 22Q5.5 19.5 8 22Q10.5 24.5 13 22Q15.5 19.5 18 22Q20.5 24.5 23 22" stroke="#C8A75E" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5"/>
-                </svg>
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-gold)]/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <div className="relative p-10 flex flex-col h-full space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--color-gold-muted)] flex items-center justify-center border border-[var(--color-gold)]/20 group-hover:scale-110 transition-transform duration-500">
+                <Music className="w-8 h-8 text-[var(--color-gold)]" />
               </div>
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 px-3 py-1 rounded-full border border-[var(--color-gold)]/10">
+                Managed
+              </span>
             </div>
-            <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-amber-500/70">SufiTube</span>
-          </div>
 
-          {/* Body */}
-          <div className="flex flex-col flex-1 px-7 pb-7 gap-5">
-            <div>
-              <h4 className="text-[17px] font-semibold text-neutral-100 mb-2 group-hover:text-amber-400 transition-colors">
-                Managed by SufiTube
+            <div className="space-y-4">
+              <h4 className="text-2xl font-serif text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors duration-300">
+                SufiPulse Managed
               </h4>
-              <p className="text-sm text-neutral-400 leading-[1.7]">
-                Best for supporters who want SufiPulse to handle the campaign, or prefer a fully managed promotion experience without using their own Google Ads account.
+              <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
+                The most seamless way to support. Our team handles every aspect of the campaign execution, targeting, and reporting.
               </p>
             </div>
 
-            <div className="border-t border-neutral-800/80" />
-
-            <div className="space-y-2.5">
-              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
-                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Easiest setup
-              </div>
-              <div className="flex items-center gap-2.5 text-sm text-neutral-300">
-                <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> We manage campaign execution
-              </div>
-            </div>
+            <ul className="space-y-3 flex-1">
+              {[
+                'Hassle-free setup',
+                'Expert audience targeting',
+                'Detailed performance reports',
+                'Secure Stripe payment'
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-3 text-sm text-[var(--color-text-secondary)]">
+                  <div className="w-5 h-5 rounded-full bg-[var(--color-gold)]/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-[var(--color-gold)]" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
 
             <button
-              onClick={(e) => { e.stopPropagation(); handleMethodSelect('managed_sufitube'); }}
-              className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-[#0F172A] text-sm font-bold rounded-xl transition-colors"
+              className="w-full py-4 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] text-[var(--color-midnight)] text-sm font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-[var(--color-gold)]/10 active:scale-[0.98]"
             >
               Sponsor Through SufiPulse
             </button>
-
-            <p className="text-xs text-center text-neutral-600">Recommended for most users</p>
           </div>
         </div>
 
-        {/* ── RIGHT CARD: Use My Google Ads ── always visible, state-aware */}
+        {/* ── RIGHT CARD: Use My Google Ads ── */}
         <div
           onClick={() => googleAdsEnabled !== false ? handleMethodSelect('use_my_google_ads') : undefined}
-          className={`flex flex-col bg-neutral-900 border rounded-2xl transition-all duration-200 select-none ${
+          className={`group relative flex flex-col bg-[var(--color-slate)]/40 border rounded-3xl transition-all duration-500 overflow-hidden backdrop-blur-sm ${
             googleAdsEnabled !== false
-              ? 'border-neutral-800 hover:border-blue-500/40 cursor-pointer group'
-              : 'border-neutral-800/50 opacity-70 cursor-default'
+              ? 'border-[var(--color-border-strong)] hover:border-blue-500/40 cursor-pointer'
+              : 'border-[var(--color-border-strong)]/50 opacity-60 cursor-default'
           }`}
         >
-          {/* Logo */}
-          <div className="flex flex-col items-center pt-9 pb-5 px-8">
-            <div className="h-14 flex items-center justify-center mb-3">
-              <div className="flex items-center gap-2">
-                <svg width="28" height="28" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                </svg>
-                <span className="text-[17px] font-normal leading-none" style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '-0.2px' }}>
-                  <span style={{ color: '#4285F4' }}>G</span>
-                  <span style={{ color: '#EA4335' }}>o</span>
-                  <span style={{ color: '#FBBC04' }}>o</span>
-                  <span style={{ color: '#4285F4' }}>g</span>
-                  <span style={{ color: '#34A853' }}>l</span>
-                  <span style={{ color: '#EA4335' }}>e</span>
-                  <span className="font-semibold ml-1" style={{ color: '#4285F4' }}>Ads</span>
-                </span>
-              </div>
-            </div>
-            <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-blue-400/60">Google Ads</span>
-          </div>
+          {googleAdsEnabled !== false && (
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          )}
 
-          {/* Body */}
-          <div className="flex flex-col flex-1 px-7 pb-7 gap-5">
-            <div>
-              <h4 className={`text-[17px] font-semibold mb-2 transition-colors ${
-                googleAdsEnabled !== false ? 'text-neutral-100 group-hover:text-blue-400' : 'text-neutral-400'
+          <div className="relative p-10 flex flex-col h-full space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform duration-500">
+                <Globe className="w-8 h-8 text-blue-400" />
+              </div>
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-blue-400/60 bg-blue-500/5 px-3 py-1 rounded-full border border-blue-500/10">
+                Direct
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className={`text-2xl font-serif transition-colors duration-300 ${
+                googleAdsEnabled !== false ? 'text-[var(--color-text-primary)] group-hover:text-blue-400' : 'text-[var(--color-text-tertiary)]'
               }`}>
-                Use My Google Ads
+                Google Ads Direct
               </h4>
-              <p className="text-sm text-neutral-400 leading-[1.7]">
-                Connect your own Google Ads account. We prepare the campaign structure and targeting inputs so you retain full control and ownership directly in your account.
+              <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
+                Connect your existing account. We provide the structure and targeting logic, while you maintain full billing control at Google.
               </p>
             </div>
 
-            <div className="border-t border-neutral-800/80" />
+            <ul className="space-y-3 flex-1">
+              {[
+                'Full account ownership',
+                'Pay Google directly',
+                'Retain performance data',
+                'Transparent setup'
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-3 text-sm text-[var(--color-text-secondary)]">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-blue-400" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
 
             {googleAdsEnabled !== false ? (
-              <>
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-2.5 text-sm text-neutral-300">
-                    <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Full ownership
-                  </div>
-                  <div className="flex items-center gap-2.5 text-sm text-neutral-300">
-                    <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> Pay Google directly
-                  </div>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleMethodSelect('use_my_google_ads'); }}
-                  className="w-full py-3.5 bg-[#4285F4] hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-colors"
-                >
-                  Connect My Google Ads Account
-                </button>
-                <p className="text-xs text-center text-neutral-600">Secure connection via Google</p>
-              </>
+              <button
+                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-blue-500/10 active:scale-[0.98]"
+              >
+                Connect Google Ads Account
+              </button>
             ) : (
-              <>
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-2.5 text-sm text-neutral-500">
-                    <Check className="w-3.5 h-3.5 text-neutral-600 flex-shrink-0" /> Full ownership of campaigns
-                  </div>
-                  <div className="flex items-center gap-2.5 text-sm text-neutral-500">
-                    <Check className="w-3.5 h-3.5 text-neutral-600 flex-shrink-0" /> Direct billing through Google
-                  </div>
-                </div>
-                <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-xl px-4 py-3 text-center">
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Google Ads account connection is temporarily unavailable.
-                  </p>
-                </div>
-              </>
+              <div className="bg-[var(--color-midnight)]/50 border border-[var(--color-border-strong)] rounded-2xl px-4 py-4 text-center">
+                <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
+                  Google Ads integration is temporarily unavailable.
+                </p>
+              </div>
             )}
           </div>
         </div>
-
       </div>
-
+      
+      <p className="text-center text-[var(--color-text-tertiary)] text-xs max-w-md mx-auto leading-relaxed">
+        Every campaign is reviewed by the SufiPulse team before launch to ensure alignment with the release's sacred purpose.
+      </p>
     </div>
   );
 
-  const REGIONS = [
-    'Global', 'South Asia', 'India', 'Pakistan',
-    'United Kingdom', 'United States', 'Canada', 'Australia',
-    'MENA', 'Europe', 'East Africa', 'Southeast Asia',
-  ];
-  const LANGUAGES = [
-    'All', 'English', 'Urdu', 'Hindi', 'Arabic',
-    'Punjabi', 'Kashmiri', 'Persian', 'Bengali', 'Turkish',
-  ];
-  const toggleRegion = (r: string) =>
-    setFormData(prev => {
-      const cur = prev.target_regions || [];
-      return { ...prev, target_regions: cur.includes(r) ? cur.filter(x => x !== r) : [...cur, r] };
-    });
-  const toggleLanguage = (l: string) =>
-    setFormData(prev => {
-      const cur = prev.target_languages || [];
-      return { ...prev, target_languages: cur.includes(l) ? cur.filter(x => x !== l) : [...cur, l] };
-    });
-
-  const INTENTIONS = [
-    { value: 'spiritual_reflection',  label: 'Spiritual Reflection' },
-    { value: 'ramadan_sacred_season', label: 'Ramadan / Sacred Season' },
-    { value: 'kashmiri_sufi_audience',label: 'Kashmiri Sufi Audience' },
-    { value: 'urdu_hindi_listeners',  label: 'Urdu / Hindi Listeners' },
-    { value: 'global_sufi_seekers',   label: 'Global Sufi Seekers' },
-    { value: 'youth_new_listeners',   label: 'Youth & New Listeners' },
-    { value: 'diaspora_outreach',     label: 'Diaspora Outreach' },
-    { value: 'general_awareness',     label: 'General Awareness' },
-    { value: 'memorial_dedication',   label: 'Memorial / Dedication' },
-    { value: 'institutional_support', label: 'Institutional Support' },
-  ];
-
   const renderIntention = () => (
-    <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-      <div className="text-center">
-        <h3 className="text-2xl font-medium text-neutral-100 mb-2">Campaign Intention</h3>
-        <p className="text-neutral-500 text-sm max-w-md mx-auto">What is your intention for sponsoring this kalam?</p>
+    <div className="max-w-3xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+      <div className="text-center space-y-3">
+        <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Campaign Intention</h3>
+        <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">
+          What is your spiritual intention for sponsoring this kalam?
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {INTENTIONS.map(({ value, label }) => {
           const selected = formData.campaign_objective === value;
           return (
@@ -1204,34 +1167,50 @@ export function AdoptTab({ release }: AdoptTabProps) {
               key={value}
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, campaign_objective: value as AdoptionFormData['campaign_objective'] }))}
-              className={`text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all duration-150 ${
+              className={`group relative text-left px-6 py-4 rounded-2xl border transition-all duration-300 ${
                 selected
-                  ? 'border-amber-500/60 bg-amber-500/10 text-amber-300'
-                  : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                  ? 'border-[var(--color-gold)] bg-[var(--color-gold-muted)] text-[var(--color-gold-bright)] ring-1 ring-[var(--color-gold)]/30'
+                  : 'border-[var(--color-border-strong)] bg-[var(--color-slate)]/20 text-[var(--color-text-secondary)] hover:border-[var(--color-gold)]/30 hover:bg-[var(--color-slate)]/40 hover:text-[var(--color-text-primary)]'
               }`}
             >
-              {selected && <span className="mr-1.5 text-amber-400">✓</span>}{label}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium tracking-tight">{label}</span>
+                {selected && (
+                  <div className="w-5 h-5 rounded-full bg-[var(--color-gold)] flex items-center justify-center animate-in zoom-in duration-300">
+                    <Check className="w-3 h-3 text-[var(--color-midnight)]" />
+                  </div>
+                )}
+              </div>
             </button>
           );
         })}
       </div>
 
-      <div>
-        <label className="block text-sm text-neutral-500 mb-2">Add a dedication or intention note <span className="text-neutral-700">(optional)</span></label>
-        <textarea
-          value={formData.dedication_message || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, dedication_message: e.target.value }))}
-          className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-500/50 h-20 placeholder-neutral-700 resize-none"
-          placeholder="e.g. In loving memory of… · For the seekers of the East · This Ramadan…"
-        />
+      <div className="space-y-3">
+        <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">
+          Dedication or Intention Note
+          <span className="normal-case font-normal text-[var(--color-text-tertiary)]/60">(Optional)</span>
+        </label>
+        <div className="relative group">
+          <textarea
+            value={formData.dedication_message || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, dedication_message: e.target.value }))}
+            className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] group-hover:border-[var(--color-border-strong)]/80 focus:border-[var(--color-gold)]/50 rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300 min-h-[120px] placeholder-[var(--color-text-tertiary)]/50 resize-none shadow-inner"
+            placeholder="e.g. In loving memory of… · For the seekers of the East · A gift for the community…"
+          />
+          <div className="absolute bottom-4 right-4 text-[10px] text-[var(--color-text-tertiary)]/40 pointer-events-none">
+            Will be reviewed for appropriateness
+          </div>
+        </div>
       </div>
 
       <button
         onClick={() => setStep(2)}
         disabled={!formData.campaign_objective}
-        className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+        className="group w-full py-5 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-[var(--color-midnight)] font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-[var(--color-gold)]/10 flex items-center justify-center gap-3 active:scale-[0.99]"
       >
-        Continue <ArrowRight className="w-4 h-4" />
+        Continue to Budget Selection
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </button>
     </div>
   );
@@ -1240,93 +1219,104 @@ export function AdoptTab({ release }: AdoptTabProps) {
     // ── use_my_google_ads: budget entry then connect ──
     if (selectedMethod === 'use_my_google_ads') {
       return (
-        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-          <h3 className="text-2xl font-medium text-neutral-100 mb-2 text-center">Campaign Budget</h3>
-          <p className="text-sm text-neutral-500 text-center mb-6">Set your total Google Ads spend for this kalam</p>
+        <div className="max-w-3xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+          <div className="text-center space-y-3">
+            <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Campaign Budget</h3>
+            <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">Set your total Google Ads spend for this kalam</p>
+          </div>
 
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 text-sm divide-y divide-neutral-800">
-            {[
-              { label: 'Quick Boost', sub: '1–5 days · $2–10/day', range: '$10–$49' },
-              { label: 'Starter Reach', sub: '5–10 days · $5–15/day', range: '$50–$99' },
-              { label: 'Balanced Campaign', sub: '7–14 days · $10–25/day · Recommended', range: '$100–$299', highlight: true },
-              { label: 'Optimal Reach', sub: '14–30 days · $15–35+/day', range: '$300+' },
-            ].map(({ label, sub, range, highlight }) => (
-              <div key={label} className="flex justify-between items-start py-3">
-                <div>
-                  <div className={highlight ? 'text-amber-400 font-medium' : 'text-neutral-300 font-medium'}>{label}</div>
-                  <div className="text-neutral-600 text-xs mt-0.5">{sub}</div>
-                </div>
-                <span className={highlight ? 'text-amber-500/70 text-xs pt-0.5' : 'text-neutral-400 text-xs pt-0.5'}>{range}</span>
+          <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl overflow-hidden backdrop-blur-sm shadow-xl">
+            <div className="p-6 border-b border-[var(--color-border-strong)] bg-[var(--color-slate)]/10">
+              <div className="flex items-center gap-2 text-[var(--color-gold)] font-medium text-sm uppercase tracking-wider">
+                <BarChart className="w-4 h-4" /> Reach Estimates
               </div>
-            ))}
-          </div>
-
-          <div>
-            <label className="block text-sm text-neutral-400 mb-2">Total Campaign Budget (USD) *</label>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm select-none">$</span>
-              <input
-                type="number"
-                min="10"
-                step="1"
-                value={formData.custom_budget || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
-                className={`w-full bg-neutral-900 border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-blue-500 ${
-                  formData.custom_budget && formData.custom_budget < 10 ? 'border-red-500' : 'border-neutral-800'
-                }`}
-                placeholder="Minimum 10"
-              />
             </div>
-            {formData.custom_budget && formData.custom_budget < 10
-              ? <p className="text-xs text-red-400 mt-1">Minimum campaign budget is $10.</p>
-              : <p className="text-xs text-neutral-600 mt-1">Your budget goes directly to Google Ads — SufiPulse does not charge you.</p>
-            }
-          </div>
-
-          {/* Target regions */}
-          <div>
-            <label className="block text-sm text-neutral-400 mb-3">
-              Target Regions <span className="text-neutral-700 text-xs">(select all that apply)</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {REGIONS.map(r => {
-                const sel = (formData.target_regions || []).includes(r);
-                return (
-                  <button key={r} type="button" onClick={() => toggleRegion(r)}
-                    className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                      sel ? 'border-blue-500/60 bg-blue-500/10 text-blue-300' : 'border-neutral-800 bg-neutral-900 text-neutral-500 hover:border-neutral-700 hover:text-neutral-300'
-                    }`}
-                  >{r}</button>
-                );
-              })}
+            <div className="divide-y divide-[var(--color-border-strong)]">
+              {[
+                { label: 'Quick Boost', sub: '1–5 days · $2–10/day', range: '$10–$49' },
+                { label: 'Starter Reach', sub: '5–10 days · $5–15/day', range: '$50–$99' },
+                { label: 'Balanced Campaign', sub: '7–14 days · $10–25/day · Recommended', range: '$100–$299', highlight: true },
+                { label: 'Optimal Reach', sub: '14–30 days · $15–35+/day', range: '$300+' },
+              ].map(({ label, sub, range, highlight }) => (
+                <div key={label} className={`flex justify-between items-center px-6 py-4 transition-colors ${highlight ? 'bg-[var(--color-gold-muted)]/50' : 'hover:bg-white/[0.02]'}`}>
+                  <div>
+                    <div className={`text-sm font-semibold tracking-tight ${highlight ? 'text-[var(--color-gold)]' : 'text-[var(--color-text-primary)]'}`}>
+                      {label}
+                      {highlight && <span className="ml-2 text-[10px] bg-[var(--color-gold)]/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Recommended</span>}
+                    </div>
+                    <div className="text-[var(--color-text-tertiary)] text-xs mt-0.5">{sub}</div>
+                  </div>
+                  <span className={`text-xs font-mono font-medium ${highlight ? 'text-[var(--color-gold)]' : 'text-[var(--color-text-secondary)]'}`}>{range}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Target languages */}
-          <div>
-            <label className="block text-sm text-neutral-400 mb-3">
-              Target Languages <span className="text-neutral-700 text-xs">(select all that apply)</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {LANGUAGES.map(l => {
-                const sel = (formData.target_languages || []).includes(l);
-                return (
-                  <button key={l} type="button" onClick={() => toggleLanguage(l)}
-                    className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                      sel ? 'border-blue-500/60 bg-blue-500/10 text-blue-300' : 'border-neutral-800 bg-neutral-900 text-neutral-500 hover:border-neutral-700 hover:text-neutral-300'
-                    }`}
-                  >{l}</button>
-                );
-              })}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">
+                Total Campaign Budget <span className="text-[var(--color-text-tertiary)]/60">(USD)</span>
+              </label>
+              <div className="relative group">
+                <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-gold)] font-serif text-2xl select-none">$</span>
+                <input
+                  type="number"
+                  min="10"
+                  step="1"
+                  value={formData.custom_budget || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
+                  className={`w-full bg-[var(--color-slate)]/20 border rounded-2xl pl-12 pr-6 py-5 text-[var(--color-text-primary)] text-2xl font-serif focus:outline-none transition-all duration-300 ${
+                    formData.custom_budget && formData.custom_budget < 10 ? 'border-[var(--color-error)]' : 'border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50'
+                  }`}
+                  placeholder="0"
+                />
+              </div>
+              <p className="text-[10px] text-[var(--color-text-tertiary)] pl-1 leading-relaxed">
+                Minimum budget is $10. Your budget goes directly to Google Ads — SufiPulse does not charge you.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Target Regions</label>
+                <div className="flex flex-wrap gap-2">
+                  {REGIONS.map(r => {
+                    const sel = (formData.target_regions || []).includes(r);
+                    return (
+                      <button key={r} type="button" onClick={() => toggleRegion(r)}
+                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                          sel ? 'border-blue-500 bg-blue-500/10 text-blue-300' : 'border-[var(--color-border-strong)] bg-[var(--color-slate)]/20 text-[var(--color-text-tertiary)] hover:border-[var(--color-text-tertiary)]/50 hover:text-[var(--color-text-secondary)]'
+                        }`}
+                      >{r}</button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-4">
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Target Languages</label>
+                <div className="flex flex-wrap gap-2">
+                  {LANGUAGES.map(l => {
+                    const sel = (formData.target_languages || []).includes(l);
+                    return (
+                      <button key={l} type="button" onClick={() => toggleLanguage(l)}
+                        className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                          sel ? 'border-blue-500 bg-blue-500/10 text-blue-300' : 'border-[var(--color-border-strong)] bg-[var(--color-slate)]/20 text-[var(--color-text-tertiary)] hover:border-[var(--color-text-tertiary)]/50 hover:text-[var(--color-text-secondary)]'
+                        }`}
+                      >{l}</button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
           <button
             onClick={() => setStep(3)}
             disabled={!formData.custom_budget || formData.custom_budget < 10}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
           >
-            Continue to Sponsor Details <ArrowRight className="w-4 h-4" />
+            Continue to Sponsor Details
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       );
@@ -1334,36 +1324,59 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     // ── managed_sufitube: package cards ──
     return (
-      <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-        <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Choose Your Budget</h3>
-        <div className="grid gap-4">
+      <div className="max-w-4xl mx-auto space-y-12 animate-in slide-in-from-right-12 duration-500">
+        <div className="text-center space-y-3">
+          <h3 className="text-3xl md:text-4xl font-serif text-[var(--color-text-primary)] tracking-tight">Choose Your Budget</h3>
+          <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">Select a sponsorship tier that aligns with your desired impact</p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           {packages.map((pkg) => (
             <button
               key={pkg.id}
               onClick={() => handlePackageSelect(pkg)}
-              className="flex items-center justify-between p-6 bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all group hover:bg-neutral-800/80"
+              className="group relative flex flex-col items-stretch p-8 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-3xl transition-all duration-500 text-left overflow-hidden backdrop-blur-sm"
             >
-              <div className="text-left">
-                <h4 className="text-lg font-medium text-neutral-100 mb-2">{pkg.package_name}</h4>
-                <p className="text-neutral-400 text-sm mb-3">{pkg.description}</p>
-                <div className="flex items-center gap-4 text-sm text-neutral-500">
-                  <span>~{pkg.estimated_impressions_min.toLocaleString()}–{pkg.estimated_impressions_max.toLocaleString()} impressions</span>
-                  <span>{pkg.duration_days} days</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold)]/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative space-y-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="text-xl font-serif text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors duration-300">{pkg.package_name}</h4>
+                    <p className="text-[var(--color-text-secondary)] text-xs mt-1 leading-relaxed line-clamp-2">{pkg.description}</p>
+                  </div>
+                  <div className="text-2xl font-serif font-bold text-[var(--color-gold)]">${pkg.amount}</div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-amber-500">${pkg.amount}</div>
-                <ArrowRight className="w-5 h-5 text-neutral-600 group-hover:text-amber-500 transition-colors mt-2" />
+
+                <div className="grid grid-cols-2 gap-4 py-4 border-y border-[var(--color-border-strong)]/50">
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest">Est. Reach</div>
+                    <div className="text-xs text-[var(--color-text-secondary)] font-medium">~{pkg.estimated_impressions_min.toLocaleString()}–{pkg.estimated_impressions_max.toLocaleString()}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest">Duration</div>
+                    <div className="text-xs text-[var(--color-text-secondary)] font-medium">{pkg.duration_days} Days</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-tertiary)]">
+                  <span>{pkg.reporting_level} Reporting</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 group-hover:text-[var(--color-gold)] transition-all" />
+                </div>
               </div>
             </button>
           ))}
+          
           <button
             onClick={handleCustomBudget}
-            className="flex items-center justify-center p-6 bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all hover:bg-neutral-800/80"
+            className="group relative flex flex-col items-center justify-center p-8 bg-[var(--color-midnight)] border border-dashed border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-3xl transition-all duration-500 space-y-4 min-h-[220px]"
           >
-            <div className="text-center">
-              <h4 className="text-lg font-medium text-neutral-100 mb-2">Custom Budget</h4>
-              <p className="text-neutral-400 text-sm">Specify your own amount</p>
+            <div className="w-12 h-12 rounded-full bg-[var(--color-slate)]/40 flex items-center justify-center border border-[var(--color-border-strong)] group-hover:border-[var(--color-gold)]/30 transition-all">
+              <Settings className="w-5 h-5 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-gold)] group-hover:rotate-90 transition-all duration-500" />
+            </div>
+            <div className="text-center space-y-1">
+              <h4 className="text-lg font-serif text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]">Custom Budget</h4>
+              <p className="text-[var(--color-text-tertiary)] text-xs">Specify your own sponsorship amount</p>
             </div>
           </button>
         </div>
@@ -1438,7 +1451,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <button
             type="button"
             onClick={switchToManaged}
-            className="w-full py-3 border border-neutral-800 hover:border-amber-500/40 text-neutral-500 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
+            className="w-full py-3 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 text-[var(--color-text-tertiary)] hover:text-[var(--color-gold)] text-sm font-medium rounded-xl transition-colors"
           >
             Switch to Managed by SufiTube Instead
           </button>
@@ -1465,7 +1478,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
           {/* Connected email badge */}
           {googleEmail && (
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-xl">
               <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
               <span className="text-sm text-neutral-300">Signed in as <span className="text-white font-medium">{googleEmail}</span></span>
             </div>
@@ -1479,7 +1492,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
               <select
                 value={enteredCustomerId || accountsToShow[0]}
                 onChange={e => setEnteredCustomerId(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono outline-none transition-colors"
+                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono outline-none transition-colors"
               >
                 {accountsToShow.map(cid => (
                   <option key={cid} value={cid}>{cid}</option>
@@ -1497,7 +1510,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 value={enteredCustomerId}
                 onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
                 placeholder="xxx-xxx-xxxx"
-                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
+                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
               />
               <p className="text-xs text-neutral-600 mt-1.5">No accounts detected automatically. Enter your Customer ID manually (found in the top-right of your Google Ads dashboard).</p>
             </div>
@@ -1581,7 +1594,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 value={enteredEmail}
                 onChange={e => setEnteredEmail(e.target.value)}
                 placeholder="you@gmail.com"
-                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-700 outline-none transition-colors"
+                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-700 outline-none transition-colors"
               />
             </div>
             <div>
@@ -1593,7 +1606,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 value={enteredCustomerId}
                 onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
                 placeholder="xxx-xxx-xxxx"
-                className="w-full bg-neutral-900 border border-neutral-800 focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
+                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
               />
               <p className="text-xs text-neutral-600 mt-1.5">Found in the top-right corner of your Google Ads dashboard.</p>
             </div>
@@ -1633,7 +1646,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           <button
             type="button"
             onClick={switchToManaged}
-            className="w-full py-3 border border-neutral-800 hover:border-amber-500/40 text-neutral-500 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
+            className="w-full py-3 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 text-[var(--color-text-tertiary)] hover:text-[var(--color-gold)] text-sm font-medium rounded-xl transition-colors"
           >
             Switch to Managed by SufiTube Instead
           </button>
@@ -1724,7 +1737,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   };
 
   const renderForm = () => (
-    <div className="max-w-2xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-300">
+    <div className="max-w-3xl mx-auto space-y-12 animate-in slide-in-from-right-12 duration-500">
       <input
         type="text"
         name="_bot_check"
@@ -1734,185 +1747,204 @@ export function AdoptTab({ release }: AdoptTabProps) {
         tabIndex={-1}
         autoComplete="off"
       />
-      <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Sponsor Information</h3>
+      
+      <div className="text-center space-y-3">
+        <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Sponsor Information</h3>
+        <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">Please provide your details for campaign coordination and institutional transparency</p>
+      </div>
 
-      {/* Connected Google Ads badge — for use_my_google_ads only */}
       {selectedMethod === 'use_my_google_ads' && oauthConnected && selectedGoogleCustomerId && (
-        <div className="flex items-center gap-3 px-4 py-3 border border-green-800/40 bg-green-900/10 rounded-xl">
-          <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+        <div className="flex items-center gap-4 px-6 py-4 border border-green-800/30 bg-green-900/10 rounded-2xl animate-in fade-in duration-500">
+          <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+            <Check className="w-5 h-5 text-green-400" />
+          </div>
           <div>
-            <div className="text-xs font-semibold text-green-400">Google Ads Connected</div>
-            <div className="text-xs text-neutral-500">Account: <span className="font-mono text-neutral-400">{selectedGoogleCustomerId}</span> · Status: Verified</div>
+            <div className="text-xs font-bold text-green-400 uppercase tracking-widest">Google Ads Connected</div>
+            <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">Verified Customer ID: <span className="font-mono text-[var(--color-text-primary)]">{selectedGoogleCustomerId}</span></div>
           </div>
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">Full Name *</label>
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Full Name *</label>
           <input
             type="text"
             name="full_name"
             value={formData.full_name || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-            className={`w-full bg-neutral-900 border ${fieldErrors.full_name ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+            className={`w-full bg-[var(--color-slate)]/20 border ${fieldErrors.full_name ? 'border-[var(--color-error)]' : 'border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50'} rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300`}
             required
           />
-          {fieldErrors.full_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.full_name}</p>}
+          {fieldErrors.full_name && <p className="text-[var(--color-error)] text-[10px] pl-1 font-medium">{fieldErrors.full_name}</p>}
         </div>
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">Email *</label>
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Email *</label>
           <input
             type="email"
             name="email"
             value={formData.email || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-            className={`w-full bg-neutral-900 border ${fieldErrors.email ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+            className={`w-full bg-[var(--color-slate)]/20 border ${fieldErrors.email ? 'border-[var(--color-error)]' : 'border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50'} rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300`}
             required
           />
-          {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
+          {fieldErrors.email && <p className="text-[var(--color-error)] text-[10px] pl-1 font-medium">{fieldErrors.email}</p>}
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">Country *</label>
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Country *</label>
           <input
             type="text"
             name="country"
             value={formData.country || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
-            className={`w-full bg-neutral-900 border ${fieldErrors.country ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+            className={`w-full bg-[var(--color-slate)]/20 border ${fieldErrors.country ? 'border-[var(--color-error)]' : 'border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50'} rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300`}
             required
           />
-          {fieldErrors.country && <p className="text-red-500 text-xs mt-1">{fieldErrors.country}</p>}
+          {fieldErrors.country && <p className="text-[var(--color-error)] text-[10px] pl-1 font-medium">{fieldErrors.country}</p>}
         </div>
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">City</label>
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">City</label>
           <input
             type="text"
             name="city"
             value={formData.city || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-            className={`w-full bg-neutral-900 border ${fieldErrors.city ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+            className={`w-full bg-[var(--color-slate)]/20 border ${fieldErrors.city ? 'border-[var(--color-error)]' : 'border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50'} rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300`}
           />
-          {fieldErrors.city && <p className="text-red-500 text-xs mt-1">{fieldErrors.city}</p>}
+          {fieldErrors.city && <p className="text-[var(--color-error)] text-[10px] pl-1 font-medium">{fieldErrors.city}</p>}
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm text-neutral-400 mb-2">Adopter Type *</label>
-        <select
-          name="adopter_type"
-          value={formData.adopter_type || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, adopter_type: e.target.value as any }))}
-          className={`w-full bg-neutral-900 border ${fieldErrors.adopter_type ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
-          required
-        >
-          <option value="">Select type</option>
-          <option value="individual">Individual</option>
-          <option value="family">Family</option>
-          <option value="institution">Institution</option>
-          <option value="trust">Trust</option>
-          <option value="sponsor_circle">Sponsor Circle</option>
-          <option value="anonymous">Anonymous</option>
-        </select>
-        {fieldErrors.adopter_type && <p className="text-red-500 text-xs mt-1">{fieldErrors.adopter_type}</p>}
+      <div className="space-y-8">
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Adopter Type *</label>
+          <select
+            name="adopter_type"
+            value={formData.adopter_type || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, adopter_type: e.target.value as any }))}
+            className={`w-full bg-[var(--color-slate)]/20 border ${fieldErrors.adopter_type ? 'border-[var(--color-error)]' : 'border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50'} rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300 appearance-none`}
+            required
+          >
+            <option value="" className="bg-[var(--color-midnight)]">Select type</option>
+            <option value="individual" className="bg-[var(--color-midnight)]">Individual</option>
+            <option value="family" className="bg-[var(--color-midnight)]">Family</option>
+            <option value="institution" className="bg-[var(--color-midnight)]">Institution</option>
+            <option value="trust" className="bg-[var(--color-midnight)]">Trust</option>
+            <option value="sponsor_circle" className="bg-[var(--color-midnight)]">Sponsor Circle</option>
+            <option value="anonymous" className="bg-[var(--color-midnight)]">Anonymous</option>
+          </select>
+          {fieldErrors.adopter_type && <p className="text-[var(--color-error)] text-[10px] pl-1 font-medium">{fieldErrors.adopter_type}</p>}
+        </div>
+
+        {selectedMethod === 'managed_sufitube' && (
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Preferred Audience Region</label>
+              <select
+                name="preferred_audience_region"
+                value={formData.preferred_audience_region || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, preferred_audience_region: e.target.value as any }))}
+                className={`w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50 rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300 appearance-none`}
+              >
+                <option value="local" className="bg-[var(--color-midnight)]">Local</option>
+                <option value="national" className="bg-[var(--color-midnight)]">National</option>
+                <option value="international" className="bg-[var(--color-midnight)]">International</option>
+                <option value="diaspora" className="bg-[var(--color-midnight)]">Diaspora</option>
+                <option value="custom" className="bg-[var(--color-midnight)]">Custom</option>
+              </select>
+            </div>
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Campaign Objective</label>
+              <select
+                name="campaign_objective"
+                value={formData.campaign_objective || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, campaign_objective: e.target.value as AdoptionFormData['campaign_objective'] }))}
+                className={`w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50 rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all duration-300 appearance-none`}
+              >
+                <option value="awareness" className="bg-[var(--color-midnight)]">Awareness</option>
+                <option value="devotional_reach" className="bg-[var(--color-midnight)]">Devotional Reach</option>
+                <option value="community_engagement" className="bg-[var(--color-midnight)]">Community Engagement</option>
+                <option value="event_support" className="bg-[var(--color-midnight)]">Event Support</option>
+                <option value="release_launch_support" className="bg-[var(--color-midnight)]">Release Launch Support</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
-      {selectedMethod === 'managed_sufitube' && (
-        <>
-          <div>
-            <label className="block text-sm text-neutral-400 mb-2">Preferred Audience Region</label>
+      <div className="space-y-6 pt-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Lock className="w-3.5 h-3.5 text-[var(--color-gold)]" />
+          <h4 className="text-sm font-serif text-[var(--color-text-primary)]">Privacy & Governance</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Public Display</label>
             <select
-              name="preferred_audience_region"
-              value={formData.preferred_audience_region || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, preferred_audience_region: e.target.value as any }))}
-              className={`w-full bg-neutral-900 border ${fieldErrors.preferred_audience_region ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+              name="public_display_mode"
+              value={formData.public_display_mode || 'full_name'}
+              onChange={(e) => setFormData(prev => ({ ...prev, public_display_mode: e.target.value as any }))}
+              className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none focus:border-[var(--color-gold)]/50 transition-all appearance-none"
             >
-              <option value="local">Local</option>
-              <option value="national">National</option>
-              <option value="international">International</option>
-              <option value="diaspora">Diaspora</option>
-              <option value="custom">Custom</option>
+              <option value="full_name" className="bg-[var(--color-midnight)]">Full Name</option>
+              <option value="initials_only" className="bg-[var(--color-midnight)]">Initials Only</option>
+              <option value="organization" className="bg-[var(--color-midnight)]">Organization Name</option>
+              <option value="anonymous" className="bg-[var(--color-midnight)]">Anonymous</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm text-neutral-400 mb-2">Campaign Objective</label>
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Location Display</label>
             <select
-              name="campaign_objective"
-              value={formData.campaign_objective || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, campaign_objective: e.target.value as AdoptionFormData['campaign_objective'] }))}
-              className={`w-full bg-neutral-900 border ${fieldErrors.campaign_objective ? 'border-red-500' : 'border-neutral-800'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500`}
+              name="public_location_mode"
+              value={formData.public_location_mode || 'city_country'}
+              onChange={(e) => setFormData(prev => ({ ...prev, public_location_mode: e.target.value as any }))}
+              className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl px-5 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none focus:border-[var(--color-gold)]/50 transition-all appearance-none"
             >
-              <option value="awareness">Awareness</option>
-              <option value="devotional_reach">Devotional Reach</option>
-              <option value="community_engagement">Community Engagement</option>
-              <option value="event_support">Event Support</option>
-              <option value="release_launch_support">Release Launch Support</option>
+              <option value="city_country" className="bg-[var(--color-midnight)]">City, Country</option>
+              <option value="country_only" className="bg-[var(--color-midnight)]">Country Only</option>
+              <option value="hide" className="bg-[var(--color-midnight)]">Hide Location</option>
             </select>
           </div>
-        </>
-      )}
-
-      {/* use_my_google_ads: campaign objective already chosen in step 1 — not repeated here */}
-
-      <div className="space-y-4">
-        <h4 className="text-lg font-medium text-neutral-100">Privacy Settings</h4>
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">Public Display</label>
-          <select
-            name="public_display_mode"
-            value={formData.public_display_mode || 'full_name'}
-            onChange={(e) => setFormData(prev => ({ ...prev, public_display_mode: e.target.value as any }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
-          >
-            <option value="full_name">Full Name</option>
-            <option value="initials_only">Initials Only</option>
-            <option value="organization">Organization Name</option>
-            <option value="anonymous">Anonymous</option>
-          </select>
         </div>
-        <div>
-          <label className="block text-sm text-neutral-400 mb-2">Location Display</label>
-          <select
-            name="public_location_mode"
-            value={formData.public_location_mode || 'city_country'}
-            onChange={(e) => setFormData(prev => ({ ...prev, public_location_mode: e.target.value as any }))}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500"
-          >
-            <option value="city_country">City, Country</option>
-            <option value="country_only">Country Only</option>
-            <option value="hide">Hide Location</option>
-          </select>
-        </div>
-      </div>
 
-      <div className="space-y-4">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={formData.agree_to_terms || false}
-            onChange={(e) => setFormData(prev => ({ ...prev, agree_to_terms: e.target.checked }))}
-            className="rounded border-neutral-800"
-            required
-          />
-          <span className="text-sm text-neutral-400">I agree to the terms of service</span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={formData.agree_to_promotional_use || false}
-            onChange={(e) => setFormData(prev => ({ ...prev, agree_to_promotional_use: e.target.checked }))}
-            className="rounded border-neutral-800"
-            required
-          />
-          <span className="text-sm text-neutral-400">I agree to respectful promotional use of my sponsorship</span>
-        </label>
+        <div className="space-y-4 pt-4 border-t border-[var(--color-border-strong)]">
+          <label className="flex items-start gap-4 group cursor-pointer">
+            <div className="mt-1 relative flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={formData.agree_to_terms || false}
+                onChange={(e) => setFormData(prev => ({ ...prev, agree_to_terms: e.target.checked }))}
+                className="w-5 h-5 rounded-lg border-[var(--color-border-strong)] bg-[var(--color-slate)]/40 text-[var(--color-gold)] focus:ring-[var(--color-gold)]/20 transition-all cursor-pointer"
+                required
+              />
+            </div>
+            <span className="text-xs text-[var(--color-text-secondary)] leading-relaxed group-hover:text-[var(--color-text-primary)] transition-colors">
+              I agree to the SufiPulse Sponsorship Terms and Privacy Policy. I understand that all campaigns are subject to institutional review.
+            </span>
+          </label>
+          <label className="flex items-start gap-4 group cursor-pointer">
+            <div className="mt-1 relative flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={formData.agree_to_promotional_use || false}
+                onChange={(e) => setFormData(prev => ({ ...prev, agree_to_promotional_use: e.target.checked }))}
+                className="w-5 h-5 rounded-lg border-[var(--color-border-strong)] bg-[var(--color-slate)]/40 text-[var(--color-gold)] focus:ring-[var(--color-gold)]/20 transition-all cursor-pointer"
+                required
+              />
+            </div>
+            <span className="text-xs text-[var(--color-text-secondary)] leading-relaxed group-hover:text-[var(--color-text-primary)] transition-colors">
+              I agree to the respectful public mention of my sponsorship in accordance with my privacy settings chosen above.
+            </span>
+          </label>
+        </div>
       </div>
 
       {submitError && (
-        <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+        <div className="text-sm text-[var(--color-error)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 rounded-2xl px-5 py-4 text-center animate-in shake duration-500">
           {submitError}
         </div>
       )}
@@ -1920,13 +1952,20 @@ export function AdoptTab({ release }: AdoptTabProps) {
       <button
         onClick={() => { setSubmitError(''); handleFormSubmit(); }}
         disabled={isSubmitting || !formData.agree_to_terms || !formData.agree_to_promotional_use}
-        className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+        className={`group w-full py-5 font-bold rounded-2xl transition-all duration-500 shadow-xl flex items-center justify-center gap-3 active:scale-[0.99] ${
+          selectedMethod === 'use_my_google_ads'
+            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/10'
+            : 'bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] text-[var(--color-midnight)] shadow-[var(--color-gold)]/10'
+        } disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed`}
       >
-        {isSubmitting
-          ? <><Loader2 className="w-5 h-5 animate-spin" /> Saving…</>
-          : selectedMethod === 'use_my_google_ads'
-            ? <>Continue to Connect Google Ads <ArrowRight className="w-4 h-4" /></>
-            : 'Continue to Review'}
+        {isSubmitting ? (
+          <><Loader2 className="w-5 h-5 animate-spin" /> Finalising Details…</>
+        ) : (
+          <>
+            {selectedMethod === 'use_my_google_ads' ? 'Continue to Google Ads Connection' : 'Continue to Final Review'}
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </>
+        )}
       </button>
     </div>
   );
@@ -1944,197 +1983,188 @@ export function AdoptTab({ release }: AdoptTabProps) {
       const canSubmit = !isSubmitting && !!selectedGoogleCustomerId && !!verifiedCustomerId && !!formData.billing_enabled;
 
       return (
-        <div className="max-w-xl mx-auto space-y-6 animate-in slide-in-from-right-8 duration-300">
-          <div className="text-center">
-            <h3 className="text-2xl font-medium text-neutral-100 mb-1">Review Campaign Request</h3>
-            <p className="text-sm text-neutral-500">Confirm all details before submitting to SufiPulse for review.</p>
+        <div className="max-w-2xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+          <div className="text-center space-y-3">
+            <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Review Campaign Request</h3>
+            <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">Confirm all details before submitting to SufiPulse for institutional review</p>
           </div>
 
-          {/* Full campaign details table */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
-            <div className="flex items-start justify-between px-5 py-3">
-              <span className="text-neutral-500">Song</span>
-              <span className="text-neutral-200 font-medium text-right max-w-[60%]">{release?.release_title || '—'}</span>
-            </div>
-            {ytId && (
-              <div className="flex items-start justify-between px-5 py-3">
-                <span className="text-neutral-500">YouTube URL</span>
-                <a href={`https://www.youtube.com/watch?v=${ytId}`} target="_blank" rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 font-mono text-xs truncate max-w-[60%]">
-                  youtube.com/watch?v={ytId}
-                </a>
+          <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-3xl overflow-hidden backdrop-blur-sm shadow-2xl">
+            <div className="p-6 border-b border-[var(--color-border-strong)] bg-[var(--color-slate)]/10 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[var(--color-gold-muted)] flex items-center justify-center">
+                <Music className="w-4 h-4 text-[var(--color-gold)]" />
               </div>
-            )}
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Budget</span>
-              <span className="text-amber-400 font-bold">${budget}</span>
+              <span className="text-sm font-serif text-[var(--color-text-primary)] truncate">{release?.release_title || 'Sacred Kalam'}</span>
             </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Duration</span>
-              <span className="text-neutral-300">{dur.days} days</span>
+            
+            <div className="divide-y divide-[var(--color-border-strong)]/50">
+              <div className="grid grid-cols-2">
+                <div className="p-6 space-y-1 border-r border-[var(--color-border-strong)]/50">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Total Budget</div>
+                  <div className="text-2xl font-serif text-[var(--color-gold)] font-bold">${budget}</div>
+                </div>
+                <div className="p-6 space-y-1">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Duration</div>
+                  <div className="text-lg font-serif text-[var(--color-text-primary)]">{dur.days} Days <span className="text-[var(--color-text-tertiary)] text-xs font-sans">(~${dur.daily}/day)</span></div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Targeting</div>
+                    <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{regions.join(', ')}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Languages</div>
+                    <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{languages.join(', ')}</div>
+                  </div>
+                </div>
+                <div className="space-y-1 pt-2">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Campaign Objective</div>
+                  <div className="text-xs text-[var(--color-text-primary)] font-medium capitalize">{(formData.campaign_objective || 'awareness').replace(/_/g, ' ')}</div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4 bg-[var(--color-midnight)]/30">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Sponsor Account</div>
+                    <div className="text-sm font-medium text-[var(--color-text-primary)]">{formData.full_name} <span className="text-[var(--color-text-tertiary)] text-[10px] font-normal font-mono ml-2">{formData.email}</span></div>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Google Ads Account</div>
+                    {selectedGoogleCustomerId ? (
+                      <div className="flex items-center justify-end gap-1.5 text-blue-400 font-mono text-xs">
+                        <Check className="w-3.5 h-3.5" /> {selectedGoogleCustomerId}
+                      </div>
+                    ) : (
+                      <div className="text-[var(--color-error)] text-[10px]">Verification Pending</div>
+                    )}
+                  </div>
+                </div>
+                {formData.dedication_message && (
+                  <div className="pt-2 border-t border-[var(--color-border-strong)]/30">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold mb-1.5">Spiritual Dedication</div>
+                    <p className="text-xs italic text-[var(--color-text-secondary)] leading-relaxed font-light">"{formData.dedication_message}"</p>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Daily Spend</span>
-              <span className="text-neutral-300">~${dur.daily}/day</span>
-            </div>
-            <div className="flex items-start justify-between px-5 py-3">
-              <span className="text-neutral-500">Target Regions</span>
-              <span className="text-neutral-300 text-right max-w-[60%]">{regions.join(', ')}</span>
-            </div>
-            <div className="flex items-start justify-between px-5 py-3">
-              <span className="text-neutral-500">Languages</span>
-              <span className="text-neutral-300 text-right max-w-[60%]">{languages.join(', ')}</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Objective</span>
-              <span className="text-neutral-300 capitalize">{(formData.campaign_objective || 'awareness').replace(/_/g, ' ')}</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Sponsor</span>
-              <span className="text-neutral-300">{formData.full_name || '—'}</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Email</span>
-              <span className="text-neutral-400 text-xs">{formData.email || '—'}</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Google Ads Account</span>
-              {selectedGoogleCustomerId && verifiedCustomerId ? (
-                <span className="flex items-center gap-1.5 text-green-400 font-mono text-xs">
-                  <Check className="w-3.5 h-3.5 shrink-0" />{selectedGoogleCustomerId}
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-blue-900/10 border border-blue-800/30 rounded-2xl p-6">
+              <label className="flex items-start gap-4 cursor-pointer group">
+                <div className="mt-1 relative flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.billing_enabled || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, billing_enabled: e.target.checked }))}
+                    className="w-5 h-5 rounded-lg border-blue-800/50 bg-blue-900/20 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer"
+                  />
+                </div>
+                <span className="text-xs text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors leading-relaxed">
+                  I confirm this Google Ads account has active billing configured. SufiPulse will not charge me; Google will bill my account directly after campaign launch.
                 </span>
-              ) : (
-                <span className="text-red-400 text-xs">Not verified — go back to step 4</span>
-              )}
+              </label>
             </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Payment Route</span>
-              <span className="text-neutral-300">Pay Google Directly</span>
-            </div>
-            {formData.dedication_message && (
-              <div className="px-5 py-3">
-                <span className="text-neutral-500 block text-xs mb-1">Dedication</span>
-                <span className="text-neutral-300 italic text-sm">"{formData.dedication_message}"</span>
+
+            {submitError && (
+              <div className="text-sm text-[var(--color-error)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 rounded-2xl px-5 py-4 text-center animate-in shake duration-500">
+                {submitError}
               </div>
             )}
-          </div>
 
-          {/* Billing confirmation */}
-          <div className="border border-neutral-800 bg-neutral-900/50 rounded-xl p-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.billing_enabled || false}
-                onChange={(e) => setFormData(prev => ({ ...prev, billing_enabled: e.target.checked }))}
-                className="mt-0.5 w-4 h-4 rounded border-neutral-600 flex-shrink-0"
-              />
-              <span className="text-sm text-neutral-400 leading-relaxed">
-                I confirm this Google Ads account has billing / payment configured inside Google Ads, or I will configure it before the campaign launches.
-              </span>
-            </label>
-          </div>
-
-          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-500 leading-relaxed">
-            You will not pay inside SufiPulse. Your ad spend will be billed by Google through your selected Google Ads account after the campaign is approved and launched.
-          </div>
-
-          {submitError && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
-              {submitError}
-            </div>
-          )}
-
-          {/* Verified path: normal submit */}
-          {(selectedGoogleCustomerId && verifiedCustomerId) ? (
             <button
               onClick={() => { setSubmitError(''); handlePayment(); }}
               disabled={!canSubmit}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
             >
-              {isSubmitting
-                ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-                : <><Check className="w-5 h-5" /> Submit Campaign Request</>}
+              {isSubmitting ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Submitting Request…</>
+              ) : (
+                <>
+                  Submit Campaign Request
+                  <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                </>
+              )}
             </button>
-          ) : (
-            /* No verified customer ID — offer manual review or go back */
-            <div className="space-y-3">
-              <div className="text-sm text-amber-400 border border-amber-700/40 bg-amber-900/20 rounded-lg px-4 py-3 text-center">
-                Google Ads account not yet verified. Submit for manual review or go back to verify.
-              </div>
-              <button
-                type="button"
-                disabled={isSubmittingManualReview}
-                onClick={handleManualReview}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                {isSubmittingManualReview
-                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-                  : <><Check className="w-5 h-5" /> Submit for Manual Review</>}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(4)}
-                className="w-full py-3 border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm font-medium rounded-xl transition-colors"
-              >
-                Go Back to Verify Google Ads Account
-              </button>
-            </div>
-          )}
+            
+            <button onClick={() => setStep(4)} className="w-full text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-xs uppercase tracking-widest font-bold py-2">
+              ← Back to verification
+            </button>
+          </div>
         </div>
       );
     }
 
     // ── managed_sufitube ─────────────────────────────────────────────────────
     return (
-      <div className="max-w-xl mx-auto space-y-6 animate-in slide-in-from-right-8 duration-300">
-        <h3 className="text-2xl font-medium text-neutral-100 mb-6 text-center">Review Your Campaign</h3>
+      <div className="max-w-2xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+        <div className="text-center space-y-3">
+          <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Review Sponsorship</h3>
+          <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">Please confirm your sponsorship details before proceeding to secure payment</p>
+        </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-neutral-800">
-            <Music className="w-4 h-4 text-amber-500" />
-            <span className="text-neutral-200 font-medium">{release?.release_title || 'Current Release'}</span>
+        <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-3xl overflow-hidden backdrop-blur-sm shadow-2xl">
+          <div className="p-6 border-b border-[var(--color-border-strong)] bg-[var(--color-slate)]/10 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-gold-muted)] flex items-center justify-center">
+              <Music className="w-4 h-4 text-[var(--color-gold)]" />
+            </div>
+            <span className="text-sm font-serif text-[var(--color-text-primary)] truncate">{release?.release_title || 'Sacred Kalam'}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-xs text-neutral-600 uppercase tracking-wider mb-1">Budget</div>
-              <div className="text-amber-500 font-bold text-xl">${budget}</div>
-            </div>
-            <div>
-              <div className="text-xs text-neutral-600 uppercase tracking-wider mb-1">Objective</div>
-              <div className="text-neutral-300 text-sm capitalize">
-                {(formData.campaign_objective || 'awareness').replace(/_/g, ' ')}
+          <div className="divide-y divide-[var(--color-border-strong)]/50">
+            <div className="grid grid-cols-2">
+              <div className="p-8 space-y-1 border-r border-[var(--color-border-strong)]/50">
+                <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Total Contribution</div>
+                <div className="text-3xl font-serif text-[var(--color-gold)] font-bold">${budget}</div>
               </div>
+              <div className="p-8 space-y-2">
+                <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Impact Tier</div>
+                <div className="text-lg font-serif text-[var(--color-text-primary)]">{impact?.tier || 'Custom'}</div>
+                <div className="text-[10px] bg-[var(--color-gold)]/5 text-[var(--color-gold)] px-2 py-0.5 rounded-full inline-block border border-[var(--color-gold)]/10 uppercase tracking-widest font-bold">SufiPulse Managed</div>
+              </div>
+            </div>
+
+            {impact && (
+              <div className="p-6 grid grid-cols-2 gap-8 bg-[var(--color-midnight)]/20">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Est. Reach</div>
+                  <div className="text-sm font-medium text-[var(--color-text-secondary)]">~{impact.min} – {impact.max} <span className="text-[var(--color-text-tertiary)] text-[10px] uppercase ml-1">Impressions</span></div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Duration</div>
+                  <div className="text-sm font-medium text-[var(--color-text-secondary)]">{impact.days} <span className="text-[var(--color-text-tertiary)] text-[10px] uppercase ml-1">Days</span></div>
+                </div>
+              </div>
+            )}
+
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Sponsor Details</div>
+                  <div className="text-sm font-medium text-[var(--color-text-primary)]">{formData.full_name}</div>
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] font-mono">{formData.email}</div>
+                </div>
+                <div className="text-right space-y-1">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Location</div>
+                  <div className="text-xs text-[var(--color-text-secondary)]">{formData.city}, {formData.country}</div>
+                </div>
+              </div>
+              {formData.dedication_message && (
+                <div className="pt-2 border-t border-[var(--color-border-strong)]/30">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold mb-1.5">Spiritual Dedication</div>
+                  <p className="text-xs italic text-[var(--color-text-secondary)] leading-relaxed font-light">"{formData.dedication_message}"</p>
+                </div>
+              )}
             </div>
           </div>
-
-          {impact && (
-            <div className="grid grid-cols-3 gap-3 pt-2 border-t border-neutral-800">
-              <div className="text-center">
-                <div className="text-xs text-neutral-600 mb-1">Est. Impressions</div>
-                <div className="text-xs text-neutral-300 font-medium">~{impact.min}–{impact.max}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xs text-neutral-600 mb-1">Duration</div>
-                <div className="text-xs text-neutral-300 font-medium">{impact.days} days</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xs text-neutral-600 mb-1">Tier</div>
-                <div className="text-xs text-amber-400 font-semibold">{impact.tier}</div>
-              </div>
-            </div>
-          )}
-
-          {formData.dedication_message && (
-            <div className="pt-3 border-t border-neutral-800">
-              <div className="text-xs text-neutral-600 uppercase tracking-wider mb-1">Dedication</div>
-              <div className="text-neutral-300 text-sm italic">"{formData.dedication_message}"</div>
-            </div>
-          )}
         </div>
 
         {submitError && !showAuthWall && (
-          <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
+          <div className="text-sm text-[var(--color-error)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 rounded-2xl px-5 py-4 text-center animate-in shake duration-500">
             {submitError}
           </div>
         )}
@@ -2145,58 +2175,42 @@ export function AdoptTab({ release }: AdoptTabProps) {
           if (adoption?.id) returnUrl.searchParams.set('adoptionId', adoption.id);
           const returnTo = encodeURIComponent(returnUrl.pathname + returnUrl.search);
           return (
-            <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl p-6 space-y-4">
-              <div className="text-center">
-                <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mb-3">
-                  <Lock className="w-5 h-5 text-amber-400" />
+            <div className="bg-[var(--color-slate)]/40 border border-[var(--color-gold)]/20 rounded-3xl p-8 space-y-6 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-500">
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 mx-auto bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20 rounded-2xl flex items-center justify-center mb-2">
+                  <Lock className="w-8 h-8 text-[var(--color-gold)]" />
                 </div>
-                <h4 className="text-neutral-100 font-medium mb-1">Sign in to continue</h4>
-                <p className="text-neutral-400 text-sm">A SufiPulse account is required to adopt a song. Your campaign details have been saved.</p>
+                <h4 className="text-xl font-serif text-[var(--color-text-primary)]">Sign in to continue</h4>
+                <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-sm mx-auto">A SufiPulse account is required to adopt a song. Your sponsorship details have been safely saved.</p>
               </div>
-              <div className="space-y-3 pt-2">
-                <a
-                  href={`/login?returnTo=${returnTo}`}
-                  className="block w-full py-3 bg-amber-600 hover:bg-amber-700 text-white text-center font-medium rounded-xl transition-colors"
-                >
-                  Sign In to Continue
-                </a>
-                <a
-                  href={`/register?returnTo=${returnTo}`}
-                  className="block w-full py-3 bg-neutral-700 hover:bg-neutral-600 text-white text-center font-medium rounded-xl transition-colors"
-                >
-                  Create Account
-                </a>
-                {adoption?.id && (
-                  <a
-                    href={`/adopt-song/request/${adoption.id}`}
-                    className="block w-full py-3 bg-transparent border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-200 text-center text-sm font-medium rounded-xl transition-colors"
-                  >
-                    Save and Continue Later
-                  </a>
-                )}
+              <div className="grid gap-3 pt-2">
+                <a href={`/login?returnTo=${returnTo}`} className="block w-full py-4 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] text-[var(--color-midnight)] text-center font-bold rounded-2xl transition-all shadow-lg shadow-[var(--color-gold)]/10">Sign In to Continue</a>
+                <a href={`/register?returnTo=${returnTo}`} className="block w-full py-4 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-[var(--color-border-strong)]/80 text-[var(--color-text-primary)] text-center font-bold rounded-2xl transition-all">Create Account</a>
               </div>
-              <p className="text-xs text-neutral-600 text-center">
-                Your sponsorship details have been saved and can be completed after signing in.
-              </p>
             </div>
           );
         })() : (
-          <>
-            {!stripeEnabled && (
-              <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-4 py-3 text-center">
-                Payment system unavailable. Contact support to complete your sponsorship.
-              </div>
-            )}
+          <div className="space-y-4">
             <button
               onClick={() => { setSubmitError(''); handlePayment(); }}
               disabled={isRedirectingToStripe || !stripeEnabled}
-              className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="group w-full py-5 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-[var(--color-midnight)] font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-[var(--color-gold)]/10 flex items-center justify-center gap-3 active:scale-[0.99]"
             >
-              {isRedirectingToStripe
-                ? <><Loader2 className="w-5 h-5 animate-spin" /> Redirecting to Stripe…</>
-                : <><CreditCard className="w-5 h-5" /> Confirm & Pay with Card</>}
+              {isRedirectingToStripe ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Preparing Payment…</>
+              ) : (
+                <>
+                  <CreditCard className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  Confirm & Pay with Card
+                </>
+              )}
             </button>
-          </>
+            <div className="flex items-center justify-center gap-4 text-[var(--color-text-tertiary)] text-[10px] uppercase tracking-widest font-bold">
+              <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> SSL Secure</span>
+              <span className="w-1 h-1 bg-[var(--color-border-strong)] rounded-full" />
+              <span>Powered by Stripe</span>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -2204,8 +2218,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   const renderSuccess = () => {
     const StatusDot = ({ done, active }: { done?: boolean; active?: boolean }) => (
-      <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500/20 border border-green-500/40' : active ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-neutral-800 border border-neutral-700'}`}>
-        {done ? <Check className="w-3 h-3 text-green-400" /> : active ? <Loader2 className="w-3 h-3 text-amber-400 animate-spin" /> : <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />}
+      <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500/20 border border-green-500/40' : active ? 'bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30' : 'bg-[var(--color-slate)] border border-[var(--color-border-strong)]'}`}>
+        {done ? <Check className="w-3 h-3 text-green-400" /> : active ? <Loader2 className="w-3 h-3 text-[var(--color-gold)] animate-spin" /> : <div className="w-1 h-1 rounded-full bg-[var(--color-text-tertiary)]" />}
       </div>
     );
 
@@ -2220,181 +2234,176 @@ export function AdoptTab({ release }: AdoptTabProps) {
       const isViaOAuth = oauthConnected && !!verifiedCustomerId;
 
       const pathBSteps = [
-        { label: 'Submitted', done: true },
-        { label: 'Google Account Connected', done: isViaOAuth || isManualReview },
-        { label: 'Ads Account Verified', done: !!verifiedCustomerId || isManualReview },
-        { label: 'Campaign Draft Created', done: !!verifiedCustomerId, active: isManualReview },
+        { label: 'Request Submitted', done: true },
+        { label: 'Google Account Linked', done: isViaOAuth || isManualReview },
+        { label: 'Account Verification', done: !!verifiedCustomerId || isManualReview },
+        { label: 'Campaign Preparation', done: !!verifiedCustomerId, active: isManualReview },
         { label: 'Awaiting User Approval', done: false, active: !!verifiedCustomerId },
-        { label: 'Campaign Live', done: false },
-        { label: 'Monitoring', done: false },
-        { label: 'Completed', done: false },
-        { label: 'Report Ready', done: false },
+        { label: 'Campaign Launched', done: false },
+        { label: 'Performance Monitoring', done: false },
+        { label: 'Campaign Complete', done: false },
+        { label: 'Impact Report Ready', done: false },
       ];
 
       return (
-        <div className="max-w-xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
-          <div className="text-center space-y-4">
-            <div className={`w-20 h-20 mx-auto ${isManualReview ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-green-500/10 border border-green-500/20'} rounded-full flex items-center justify-center`}>
-              {isManualReview ? <Clock className="w-9 h-9 text-amber-400" /> : <Check className="w-9 h-9 text-green-500" />}
+        <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in zoom-in-95 duration-700">
+          <div className="text-center space-y-6">
+            <div className={`w-24 h-24 mx-auto ${isManualReview ? 'bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20' : 'bg-green-500/5 border border-green-500/20'} rounded-3xl flex items-center justify-center rotate-12`}>
+              {isManualReview ? <Clock className="w-10 h-10 text-[var(--color-gold)] -rotate-12" /> : <Check className="w-10 h-10 text-green-500 -rotate-12" />}
             </div>
-            <h3 className="text-2xl font-serif font-light text-neutral-100 leading-snug">
-              {isManualReview ? 'Campaign request submitted for review.' : 'Campaign draft ready. Awaiting your approval.'}
-            </h3>
-            <p className="text-sm text-neutral-500 leading-relaxed max-w-md mx-auto">
-              {isManualReview
-                ? 'SufiPulse will verify your Google Ads account and prepare the campaign structure. You remain the account owner and pay Google directly.'
-                : 'SufiPulse has prepared the campaign structure inside your Google Ads account. You remain the owner and pay Google directly when you approve the campaign.'}
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-serif text-[var(--color-text-primary)]">
+                {isManualReview ? 'Request Submitted for Review' : 'Campaign Draft Ready'}
+              </h3>
+              <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-md mx-auto">
+                {isManualReview
+                  ? 'SufiPulse will verify your Google Ads account and prepare the campaign structure. You will be notified via email within 24 hours.'
+                  : 'SufiPulse has prepared the campaign structure inside your Google Ads account. Please sign in to your dashboard to review and approve the launch.'}
+              </p>
+            </div>
           </div>
 
-          {/* Status timeline */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-2.5">
-            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Campaign Progress</p>
-            {pathBSteps.map(({ label, done, active }) => (
-              <div key={label} className="flex items-center gap-3">
-                <StatusDot done={done} active={active} />
-                <span className={`text-sm ${done ? 'text-neutral-300' : active ? 'text-amber-400' : 'text-neutral-600'}`}>{label}</span>
+          <div className="grid md:grid-cols-2 gap-10">
+            <div className="space-y-6">
+              <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)] border-b border-[var(--color-border-strong)] pb-3">
+                  <span>Campaign Timeline</span>
+                  <span className="text-[var(--color-gold)]">Path Direct</span>
+                </div>
+                <div className="space-y-3.5">
+                  {pathBSteps.map(({ label, done, active }) => (
+                    <div key={label} className="flex items-center gap-3">
+                      <StatusDot done={done} active={active} />
+                      <span className={`text-[11px] font-bold uppercase tracking-wide ${done ? 'text-[var(--color-text-primary)]' : active ? 'text-[var(--color-gold)]' : 'text-[var(--color-text-tertiary)]'}`}>{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-
-          {/* Campaign details */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
-            <div className="flex items-start justify-between px-5 py-3">
-              <span className="text-neutral-500">Song Adopted</span>
-              <span className="text-neutral-200 font-medium text-right max-w-[60%]">{release?.release_title || '—'}</span>
             </div>
-            {ytId && (
-              <div className="flex items-start justify-between px-5 py-3">
-                <span className="text-neutral-500">YouTube</span>
-                <a href={`https://www.youtube.com/watch?v=${ytId}`} target="_blank" rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 font-mono text-xs truncate max-w-[60%]">
-                  watch?v={ytId}
-                </a>
+
+            <div className="space-y-6">
+              <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl overflow-hidden divide-y divide-[var(--color-border-strong)]">
+                <div className="p-5 flex justify-between items-center bg-[var(--color-slate)]/10">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">Reference ID</span>
+                  <span className="text-[10px] font-mono text-[var(--color-text-secondary)]">{adoption?.id?.slice(-12).toUpperCase()}</span>
+                </div>
+                <div className="p-5 space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-[var(--color-text-tertiary)]">Budget</span>
+                    <span className="text-xs font-bold text-[var(--color-text-primary)]">${budget}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-[var(--color-text-tertiary)]">Account ID</span>
+                    <span className="text-xs font-mono text-blue-400">{displayCid}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-[var(--color-text-tertiary)]">Status</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold)]">{isManualReview ? 'Manual Review' : 'Draft Prepared'}</span>
+                  </div>
+                </div>
+                <div className="p-5">
+                   <a href="/user/adoptions" className="flex items-center justify-between group">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold)]">View Dashboard</span>
+                    <ArrowRight className="w-4 h-4 text-[var(--color-gold)] group-hover:translate-x-1 transition-transform" />
+                   </a>
+                </div>
               </div>
-            )}
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Budget</span>
-              <span className="text-amber-400 font-bold">${budget}</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Duration</span>
-              <span className="text-neutral-300">{dur.days} days</span>
-            </div>
-            <div className="flex items-start justify-between px-5 py-3">
-              <span className="text-neutral-500">Target Regions</span>
-              <span className="text-neutral-300 text-right max-w-[60%]">{regions.join(', ')}</span>
-            </div>
-            <div className="flex items-start justify-between px-5 py-3">
-              <span className="text-neutral-500">Languages</span>
-              <span className="text-neutral-300 text-right max-w-[60%]">{languages.join(', ')}</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Google Ads Account</span>
-              <span className={`font-mono text-xs ${verifiedCustomerId ? 'text-green-400' : 'text-amber-400'}`}>{displayCid}</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Payment Route</span>
-              <span className="text-neutral-300">Pay Google Directly</span>
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-neutral-500">Reference ID</span>
-              <span className="text-neutral-500 text-xs font-mono">{adoption?.id?.slice(-12) || '—'}</span>
+              
+              <div className="bg-[var(--color-midnight)] border border-[var(--color-border-strong)] rounded-2xl p-5">
+                <p className="text-[11px] text-[var(--color-text-secondary)] leading-relaxed italic">
+                  {isManualReview 
+                    ? "Our team is manually verifying your account connection. This usually takes 2 to 6 hours during institutional business days."
+                    : "Your campaign is now waiting in your Google Ads account. No spend will occur until you explicitly click 'Launch' in your Google dashboard."}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className={`border rounded-xl px-5 py-4 text-sm leading-relaxed ${isManualReview ? 'border-amber-800/30 bg-amber-900/10 text-neutral-400' : 'border-neutral-800 bg-neutral-900/50 text-neutral-500'}`}>
-            {isManualReview
-              ? 'SufiPulse will be in touch once the account is verified. No payment is required through SufiPulse — you pay Google directly.'
-              : 'No payment is required through SufiPulse. Your ad spend will be billed by Google through your selected account after you approve and launch the campaign.'}
+          <div className="pt-4 border-t border-[var(--color-border-strong)] flex justify-center">
+            <button onClick={resetFlow} className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+              Finish and Close
+            </button>
           </div>
-
-          <button onClick={resetFlow} className="w-full text-neutral-400 hover:text-white transition-colors text-sm py-2">
-            Return to Overview
-          </button>
         </div>
       );
     }
 
     // ── managed_sufitube ──────────────────────────────────────────────────────
-    const ytId2 = release?.youtube_video_id || release?.youtubeId || '';
     const pathASteps = [
-      { label: 'Submitted', done: true },
+      { label: 'Request Submitted', done: true },
       { label: 'Payment Received', done: adoption?.paymentStatus === 'paid', active: adoption?.paymentStatus === 'pending' },
-      { label: 'Campaign Preparing', done: false, active: adoption?.paymentStatus === 'paid' },
+      { label: 'Campaign Engineering', done: false, active: adoption?.paymentStatus === 'paid' },
       { label: 'Campaign Live', done: false },
-      { label: 'Monitoring', done: false },
-      { label: 'Completed', done: false },
-      { label: 'Report Ready', done: false },
+      { label: 'Impact Monitoring', done: false },
+      { label: 'Goal Reached', done: false },
+      { label: 'Final Impact Report', done: false },
     ];
 
     return (
-      <div className="max-w-xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500">
-        <div className="text-center space-y-3">
-          <div className="w-24 h-24 mx-auto bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center">
-            <Check className="w-10 h-10 text-green-500" />
+      <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in zoom-in-95 duration-700">
+        <div className="text-center space-y-6">
+          <div className="w-24 h-24 mx-auto bg-green-500/5 border border-green-500/20 rounded-3xl flex items-center justify-center rotate-12">
+            <Check className="w-10 h-10 text-green-500 -rotate-12" />
           </div>
-          <h3 className="text-3xl font-serif font-light text-neutral-100">Adoption Complete</h3>
-          <p className="text-neutral-400 leading-relaxed max-w-md mx-auto">
-            May your contribution bring ease and contemplation to whoever discovers this kalam.
-          </p>
+          <div className="space-y-2">
+            <h3 className="text-4xl font-serif text-[var(--color-text-primary)]">Sponsorship Complete</h3>
+            <p className="text-[var(--color-text-secondary)] text-lg leading-relaxed max-w-md mx-auto font-light">
+              May your contribution bring ease and contemplation to every soul that discovers this sacred kalam.
+            </p>
+          </div>
         </div>
 
-        {/* Status timeline */}
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-2.5">
-          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Campaign Progress</p>
-          {pathASteps.map(({ label, done, active }) => (
-            <div key={label} className="flex items-center gap-3">
-              <StatusDot done={done} active={active} />
-              <span className={`text-sm ${done ? 'text-neutral-300' : active ? 'text-amber-400' : 'text-neutral-600'}`}>{label}</span>
+        <div className="grid md:grid-cols-2 gap-10">
+          <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl p-8 space-y-6">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)] border-b border-[var(--color-border-strong)] pb-4">
+              <span>Sponsorship Path</span>
+              <span className="text-[var(--color-gold)]">Managed by SufiPulse</span>
             </div>
-          ))}
-        </div>
+            <div className="space-y-4">
+              {pathASteps.map(({ label, done, active }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <StatusDot done={done} active={active} />
+                  <span className={`text-[11px] font-bold uppercase tracking-wide ${done ? 'text-[var(--color-text-primary)]' : active ? 'text-[var(--color-gold)]' : 'text-[var(--color-text-tertiary)]'}`}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800 text-sm">
-          <div className="flex items-center justify-between px-5 py-3">
-            <span className="text-neutral-500">Amount</span>
-            <span className="text-amber-400 font-bold">${adoption?.amountDue || 0}</span>
-          </div>
-          <div className="flex items-center justify-between px-5 py-3">
-            <span className="text-neutral-500">Payment</span>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded ${adoption?.paymentStatus === 'paid' ? 'text-green-400 bg-green-900/40' : 'text-amber-400 bg-amber-900/40'}`}>
-              {adoption?.paymentStatus === 'paid' ? 'Received' : 'Pending'}
-            </span>
-          </div>
-          <div className="flex items-center justify-between px-5 py-3">
-            <span className="text-neutral-500">Reference ID</span>
-            <span className="text-neutral-500 text-xs font-mono">{adoption?.id?.slice(-12) || '—'}</span>
-          </div>
-        </div>
-
-        {ytId2 && (() => {
-          const ytUrl = `https://www.youtube.com/watch?v=${ytId2}`;
-          const shareText = encodeURIComponent(`🎵 Just adopted this sacred kalam — listen on YouTube: ${ytUrl}`);
-          return (
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 text-left space-y-3">
-              <p className="text-sm font-medium text-neutral-200">Help this reach more listeners</p>
-              <div className="flex flex-wrap gap-2">
-                <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(ytUrl)}&text=${encodeURIComponent('🎵 Just adopted this sacred kalam on SufiPulse')}&hashtags=SufiMusic,Kalam,SufiPulse`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs text-neutral-300 transition-colors"
-                >𝕏 Share on X</a>
-                <a href={`https://wa.me/?text=${shareText}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs text-neutral-300 transition-colors"
-                >WhatsApp</a>
-                <a href={ytUrl}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800/40 rounded-lg text-xs text-red-300 transition-colors"
-                >Watch on YouTube</a>
+          <div className="space-y-8">
+            <div className="bg-[var(--color-midnight)] border border-[var(--color-border-strong)] rounded-2xl p-6 space-y-4 shadow-xl">
+              <div className="space-y-1">
+                <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Contribution</div>
+                <div className="text-2xl font-serif text-[var(--color-gold)] font-bold">${adoption?.amountDue || 0} <span className="text-xs font-sans text-[var(--color-text-secondary)] ml-1">USD</span></div>
+              </div>
+              <div className="flex justify-between items-center pt-4 border-t border-[var(--color-border-strong)]">
+                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Status</span>
+                <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${adoption?.paymentStatus === 'paid' ? 'text-green-400 bg-green-500/10 border border-green-500/20' : 'text-amber-400 bg-amber-500/10 border border-amber-500/20'}`}>
+                  {adoption?.paymentStatus === 'paid' ? 'Received' : 'Processing'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Ref ID</span>
+                <span className="text-[10px] font-mono text-[var(--color-text-secondary)]">{adoption?.id?.slice(-12).toUpperCase()}</span>
               </div>
             </div>
-          );
-        })()}
 
-        <button onClick={resetFlow} className="text-neutral-400 hover:text-white transition-colors text-sm">
-          Return to Overview
-        </button>
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] text-center">Help Spread the Message</p>
+              <div className="flex gap-2">
+                <button className="flex-1 py-3 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-[var(--color-text-primary)] rounded-xl text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all flex items-center justify-center gap-2">
+                   X Share
+                </button>
+                <button className="flex-1 py-3 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-[var(--color-text-primary)] rounded-xl text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all flex items-center justify-center gap-2">
+                   WhatsApp
+                </button>
+              </div>
+            </div>
+            
+            <a href="/user/adoptions" className="block w-full py-4 border border-[var(--color-gold)]/20 hover:border-[var(--color-gold)]/50 text-[var(--color-gold)] text-center text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl transition-all">
+              Return to Your Adoptions
+            </a>
+          </div>
+        </div>
       </div>
     );
   };
@@ -2519,14 +2528,29 @@ export function AdoptTab({ release }: AdoptTabProps) {
       )}
 
       <div className="pt-8 min-h-[500px]">
-        <div className="bg-neutral-900/30 border border-neutral-800 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div className="bg-[var(--color-slate)]/10 border border-[var(--color-border-strong)] rounded-3xl p-6 sm:p-12 relative overflow-hidden backdrop-blur-sm shadow-2xl">
+          {/* ── Progress Bar ── */}
           {step > 0 && !isSuccessScreen && (
-            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
-              <div className="text-sm font-medium text-neutral-500">
-                Step {step} <span className="text-neutral-700">of {selectedMethod === 'use_my_google_ads' ? 5 : 4}</span>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--color-border-strong)]/30">
+              <div 
+                className="h-full bg-gradient-to-r from-[var(--color-gold-muted)] to-[var(--color-gold)] transition-all duration-700 ease-out"
+                style={{ width: `${(step / (selectedMethod === 'use_my_google_ads' ? 5 : 4)) * 100}%` }}
+              />
+            </div>
+          )}
+
+          {step > 0 && !isSuccessScreen && (
+            <div className="absolute top-4 left-0 right-0 px-8 flex justify-between items-center z-10">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)] flex items-center gap-2">
+                <span className="text-[var(--color-gold)]">Step {step}</span>
+                <span className="w-1 h-1 bg-[var(--color-border-strong)] rounded-full" />
+                <span>{selectedMethod === 'use_my_google_ads' ? 5 : 4} Total</span>
               </div>
-              <button onClick={resetFlow} className="text-neutral-500 hover:text-white transition-colors p-2">
-                <X className="w-5 h-5" />
+              <button 
+                onClick={resetFlow} 
+                className="w-8 h-8 rounded-full bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-gold)]/40 transition-all group"
+              >
+                <X className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
               </button>
             </div>
           )}

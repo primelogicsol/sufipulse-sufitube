@@ -72,50 +72,39 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
   const getAdopterIcon = (type: string) => {
     switch (type) {
       case 'individual':
-        return <User className="w-4 h-4 text-neutral-400" />;
+        return <User className="w-3.5 h-3.5" />;
       case 'family':
-        return <Users className="w-4 h-4 text-neutral-400" />;
+        return <Users className="w-3.5 h-3.5" />;
       case 'institution':
-        return <Building className="w-4 h-4 text-neutral-400" />;
+        return <Building className="w-3.5 h-3.5" />;
       case 'trust':
-        return <Heart className="w-4 h-4 text-neutral-400" />;
+        return <Heart className="w-3.5 h-3.5" />;
       case 'sponsor_circle':
-        return <Users className="w-4 h-4 text-neutral-400" />;
+        return <Users className="w-3.5 h-3.5" />;
       default:
-        return <User className="w-4 h-4 text-neutral-400" />;
+        return <User className="w-3.5 h-3.5" />;
     }
   };
 
   const getAdopterTypeLabel = (type: string) => {
     switch (type) {
-      case 'individual':
-        return '';
-      case 'family':
-        return 'Family';
-      case 'institution':
-        return 'Institution';
-      case 'trust':
-        return 'Trust';
-      case 'sponsor_circle':
-        return 'Sponsor Circle';
-      case 'anonymous':
-        return '';
-      default:
-        return '';
+      case 'family': return 'Family';
+      case 'institution': return 'Institution';
+      case 'trust': return 'Trust';
+      case 'sponsor_circle': return 'Circle';
+      default: return '';
     }
   };
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-serif font-light text-neutral-100">Recent Adopters</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 animate-pulse">
-              <div className="h-4 bg-neutral-800 rounded mb-2"></div>
-              <div className="h-3 bg-neutral-800 rounded w-2/3"></div>
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <h3 className="text-3xl font-serif text-[var(--color-text-primary)]">Recent Adopters</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl p-6 animate-pulse">
+              <div className="h-4 bg-[var(--color-border-strong)] rounded w-1/2 mb-4"></div>
+              <div className="h-3 bg-[var(--color-border-strong)] rounded w-1/3"></div>
             </div>
           ))}
         </div>
@@ -125,19 +114,19 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
 
   if (adopters.length === 0) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-serif font-light text-neutral-100">Recent Adopters</h3>
-        </div>
-        <div className="text-center py-12">
+      <div className="space-y-8 animate-in fade-in duration-700">
+        <h3 className="text-3xl font-serif text-[var(--color-text-primary)]">Recent Adopters</h3>
+        <div className="relative group overflow-hidden bg-[var(--color-slate)]/10 border border-[var(--color-border-strong)] rounded-3xl p-16 text-center backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-gold)]/[0.02] to-transparent" />
           <button 
             onClick={onAdoptClick}
-            className="block mx-auto mb-4 focus:outline-none focus:ring-2 focus:ring-red-500/50 rounded-full transition-transform hover:scale-110"
-            aria-label="Adopt this kalam"
+            className="relative mb-6 focus:outline-none group-hover:scale-110 transition-transform duration-500"
           >
-            <Heart className="w-12 h-12 text-red-500 fill-red-500/20 animate-pulse" />
+            <div className="w-20 h-20 rounded-full bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20 flex items-center justify-center mx-auto">
+              <Heart className="w-8 h-8 text-[var(--color-gold)] fill-[var(--color-gold)]/20 animate-pulse" />
+            </div>
           </button>
-          <p className="text-neutral-400">
+          <p className="relative text-[var(--color-text-secondary)] font-light text-lg">
             No adopters yet. Be the first to sponsor this kalam.
           </p>
         </div>
@@ -146,55 +135,61 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-serif font-light text-neutral-100">Recent Adopters</h3>
-        {adopters.length >= limit && (
+        <h3 className="text-3xl font-serif text-[var(--color-text-primary)]">Recent Adopters</h3>
+        {adopters.length > 3 && (
           <button
             onClick={() => setShowAll(!showAll)}
-            className="text-neutral-400 hover:text-white transition-colors text-sm flex items-center gap-2"
+            className="text-[var(--color-gold)] hover:text-[var(--color-gold-hover)] transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2"
           >
             {showAll ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {showAll ? 'Show Less' : 'View All'}
+            {showAll ? 'Show Less' : `View All (${adopters.length})`}
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {adopters.slice(0, showAll ? adopters.length : 3).map((adopter) => (
           <div
             key={adopter.id}
-            className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-neutral-700 transition-colors"
+            className="group relative bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-2xl p-6 transition-all duration-500 backdrop-blur-sm overflow-hidden"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                {getAdopterIcon(adopter.adopterType)}
-                <span className="text-neutral-200 font-medium text-sm">
-                  {adopter.displayName}
-                </span>
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold)]/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+            <div className="relative space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-gold-muted)] flex items-center justify-center border border-[var(--color-gold)]/10 text-[var(--color-gold)]">
+                    {getAdopterIcon(adopter.adopterType)}
+                  </div>
+                  <span className="text-[var(--color-text-primary)] font-serif group-hover:text-[var(--color-gold)] transition-colors duration-300">
+                    {adopter.displayName}
+                  </span>
+                </div>
+                {getAdopterTypeLabel(adopter.adopterType) && (
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 px-2 py-0.5 rounded-full border border-[var(--color-gold)]/10">
+                    {getAdopterTypeLabel(adopter.adopterType)}
+                  </span>
+                )}
               </div>
-              {getAdopterTypeLabel(adopter.adopterType) && (
-                <span className="text-xs text-neutral-500 bg-neutral-800 px-2 py-1 rounded">
-                  {getAdopterTypeLabel(adopter.adopterType)}
-                </span>
+
+              {adopter.location && (
+                <div className="flex items-center gap-2 text-[var(--color-text-tertiary)] text-xs">
+                  <MapPin className="w-3 h-3 text-[var(--color-gold)]/40" />
+                  <span className="font-light tracking-wide">{adopter.location}</span>
+                </div>
               )}
             </div>
-
-            {adopter.location && (
-              <div className="flex items-center gap-2 text-neutral-400 text-sm">
-                <MapPin className="w-3 h-3" />
-                <span>{adopter.location}</span>
-              </div>
-            )}
           </div>
         ))}
       </div>
 
       {adopters.length > 3 && !showAll && (
-        <div className="text-center">
+        <div className="text-center pt-4">
           <button
             onClick={() => setShowAll(true)}
-            className="text-neutral-400 hover:text-white transition-colors text-sm"
+            className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all text-xs uppercase tracking-widest font-bold border-b border-transparent hover:border-[var(--color-text-primary)] pb-1"
           >
             +{adopters.length - 3} more adopters
           </button>
