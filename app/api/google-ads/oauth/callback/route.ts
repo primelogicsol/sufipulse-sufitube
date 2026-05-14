@@ -1,158 +1,106 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { upsertAdoptionGoogleOAuthRecord } from '@/app/lib/server/adoption-google-oauth-store';
 import { upsertGoogleAdsUserOAuth } from '@/app/lib/server/google-ads-oauth-store';
+import { getGoogleAdsConfig } from '@/lib/google-ads/config';
+
+const ADS_API_VERSION = 'v22';
 
 /**
  * GET /api/google-ads/oauth/callback
  *
- * Canonical Google OAuth2 callback for the "Use My Google Ads" flow.
- * Stores tokens in two places:
- *   1. By userId  → google-ads-oauth.json   (global per sponsor — reusable across songs)
- *   2. By adoptionId → adoption-google-oauth.json  (per song/adoption — backward compat)
- *
- * State param (JSON): { adoptionId, userId, returnSlug }
- *
- * Register in Google Cloud Console OAuth 2.0 credentials:
- *   http://localhost:3000/api/google-ads/oauth/callback        (local)
- *   https://yourdomain.com/api/google-ads/oauth/callback       (production)
+ * Handles the redirect back from Google OAuth2.
+ * Exchanges the auth code for tokens and persists them.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
+  const stateStr = searchParams.get('state') || '{}';
   const error = searchParams.get('error');
-  const rawState = searchParams.get('state') || '';
 
-  let adoptionId = '';
-  let userId = '';
-  let returnSlug = '';
-  try {
-    const parsed = JSON.parse(rawState);
-    adoptionId = parsed.adoptionId || '';
-    userId = parsed.userId || '';
-    returnSlug = parsed.returnSlug || '';
-  } catch {
-    adoptionId = rawState;
-  }
+  let state: any = {};
+  try { state = JSON.parse(stateStr); } catch {}
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
-  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  const config = getGoogleAdsConfig();
 
-  const fallbackRedirect = (status: string, reason?: string) => {
-    let base: string;
-    if (returnSlug) {
-      base = `${appUrl}/release-detail/${returnSlug}`;
-    } else if (adoptionId) {
-      base = `${appUrl}/adopt-song/request/${adoptionId}`;
-    } else {
-      base = `${appUrl}/`;
-    }
-    const url = new URL(base);
-    if (status === 'success') {
-      // New canonical success URL — opens Adopt tab and triggers state restoration
-      url.searchParams.set('adopt', '1');
-      url.searchParams.set('step', 'google_ads_connected');
-    } else {
-      url.searchParams.set('adoption_oauth', status);
-    }
-    if (adoptionId) url.searchParams.set('adoption_id', adoptionId);
-    if (reason) url.searchParams.set('reason', encodeURIComponent(reason));
+  const fallbackRedirect = (status: 'success' | 'error', msg?: string) => {
+    const url = new URL(request.url);
+    url.pathname = state.returnSlug ? `/release-detail/${state.returnSlug}` : '/my-adoptions';
+    url.search = '';
+    url.searchParams.set('adoption_id', state.adoptionId || '');
+    url.searchParams.set('step', 'google_ads_connected');
+    url.searchParams.set('adoption_oauth', status);
+    if (msg) url.searchParams.set('error', msg);
     return NextResponse.redirect(url.toString());
   };
 
-  if (error || !code) return fallbackRedirect('denied');
-  if (!clientId || !clientSecret) return fallbackRedirect('error', 'missing_credentials');
+  if (error) {
+    return fallbackRedirect('error', error);
+  }
 
-  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || `${appUrl}/api/google-ads/oauth/callback`;
+  if (!code) {
+    return fallbackRedirect('error', 'No authorization code returned from Google');
+  }
 
   try {
+    // 1. Exchange code for tokens
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         code,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
-        grant_type: 'authorization_code',
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        redirect_uri: config.redirectUri,
+        grant_type: 'authorization-code',
       }),
     });
 
     const tokens = await tokenRes.json();
-    if (!tokenRes.ok || !tokens.access_token) {
-      console.error('[google-ads/callback] token exchange failed:', JSON.stringify(tokens));
-      throw new Error(tokens.error_description || 'Token exchange failed');
-    }
-    console.log('[google-ads/callback] token exchange OK — scope:', tokens.scope || '(not returned)', 'has_refresh:', !!tokens.refresh_token);
-    const scopeIncludesAdwords = (tokens.scope || '').includes('adwords');
-    if (!scopeIncludesAdwords) {
-      console.warn('[google-ads/callback] WARNING: adwords scope not present in token response. scope:', tokens.scope);
+    if (!tokenRes.ok) {
+      throw new Error(tokens.error_description || tokens.error || 'Failed to exchange code for tokens');
     }
 
-    // Fetch Google account email for display in SufiPulse UI
-    let googleEmail: string | null = null;
+    // 2. Optional: fetch user email to identify the connected account
+    let googleEmail = null;
     try {
-      const userinfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+      const infoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
       });
-      if (userinfoRes.ok) {
-        const userinfo = await userinfoRes.json();
-        googleEmail = userinfo?.email || null;
+      if (infoRes.ok) {
+        const info = await infoRes.json();
+        googleEmail = info.email;
       }
-    } catch {
-      // Non-fatal
-    }
+    } catch {}
 
-    // Discover accessible Google Ads customer accounts
+    // 3. Fetch list of accessible customer IDs immediately to simplify the UI flow
     let accessibleCustomerIds: string[] = [];
     try {
-      const accessibleRes = await fetch(
-        'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers',
+      const customersRes = await fetch(
+        `https://googleads.googleapis.com/${ADS_API_VERSION}/customers:listAccessibleCustomers`,
         {
           headers: {
             Authorization: `Bearer ${tokens.access_token}`,
-            'developer-token': process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
+            'developer-token': config.developerToken,
           },
         }
       );
-      const payload = await accessibleRes.json();
-      if (accessibleRes.ok && Array.isArray(payload?.resourceNames)) {
-        accessibleCustomerIds = payload.resourceNames
-          .map((name: string) => String(name).split('/').pop() || '')
-          .filter(Boolean)
-          .map((cid: string) =>
-            cid.length === 10
-              ? `${cid.slice(0, 3)}-${cid.slice(3, 6)}-${cid.slice(6)}`
-              : cid
-          );
+      if (customersRes.ok) {
+        const data = await customersRes.json();
+        accessibleCustomerIds = (data.resourceNames ?? []).map((rn: string) =>
+          rn.replace('customers/', '').replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3')
+        );
       }
-    } catch {
-      // Non-fatal — token is still valid, customer IDs validated at campaign launch
-    }
+    } catch {}
 
-    // Store by userId — global per sponsor, reusable across any song adoption
-    if (userId) {
+    // 4. Persist tokens and account info
+    if (state.userId) {
       await upsertGoogleAdsUserOAuth({
-        userId,
+        userId: state.userId,
         accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token || null,
+        refreshToken: tokens.refresh_token,
         tokenType: tokens.token_type,
-        expiresInSeconds: Number(tokens.expires_in || 0),
-        accessibleCustomerIds,
+        expiresInSeconds: tokens.expires_in,
         googleEmail,
-      });
-    }
-
-    // Store by adoptionId — per song/adoption, backward compat with admin flow
-    if (adoptionId) {
-      await upsertAdoptionGoogleOAuthRecord({
-        adoptionId,
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token || null,
-        tokenType: tokens.token_type,
-        expiresInSeconds: Number(tokens.expires_in || 0),
         accessibleCustomerIds,
-        googleEmail,
       });
     }
 

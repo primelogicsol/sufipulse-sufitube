@@ -74,12 +74,24 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
   const [adoption, setAdoption] = useState<any | null>(null);
 
+  const budget = selectedPackage?.amount || formData.custom_budget || adoption?.amountDue || 0;
+  const isFormComplete = !!(
+    formData.full_name && 
+    formData.email && 
+    formData.country && 
+    formData.adopter_type && 
+    formData.agree_to_terms && 
+    formData.agree_to_promotional_use &&
+    formData.campaign_objective &&
+    budget >= 10
+  );
+
   // Google OAuth state
-  const [googleAdsEnabled, setGoogleAdsEnabled] = useState<boolean | null>(null);
+  const [googleAdsConfigured, setGoogleAdsConfigured] = useState<boolean | null>(null);
+  const [googleAdsMessage, setGoogleAdsMessage] = useState('');
   const [googleAdsMissingVars, setGoogleAdsMissingVars] = useState<string[]>([]);
   const [oauthConnected, setOauthConnected] = useState(false);
   const [oauthChecked, setOauthChecked] = useState(false);
-  const [oauthConfigured, setOauthConfigured] = useState(false);
   const [accessibleCustomerIds, setAccessibleCustomerIds] = useState<string[]>([]);
   const [selectedGoogleCustomerId, setSelectedGoogleCustomerId] = useState('');
   const [verifiedCustomerId, setVerifiedCustomerId] = useState<string | null>(null);
@@ -113,19 +125,22 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
 
   // Check at mount whether Google Ads is configured on this server.
-  // The status endpoint now returns configured/missing_vars even for unauthenticated requests.
-  // If the fetch fails entirely, leave as null (show Connect button optimistically).
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch('/api/google-ads/status');
         const payload = await res.json();
-        // Only mark disabled when server explicitly says not configured.
-        // null = unknown (optimistic: show button); false = server said missing vars.
-        setGoogleAdsEnabled(payload?.configured === false ? false : null);
-        setGoogleAdsMissingVars(Array.isArray(payload?.missing_vars) ? payload.missing_vars : []);
+        setGoogleAdsConfigured(payload?.available);
+        setGoogleAdsMessage(payload?.message || '');
+        setGoogleAdsMissingVars(Array.isArray(payload?.missing) ? payload.missing : []);
+        setOauthConnected(Boolean(payload?.connected));
+        if (payload?.googleEmail) setGoogleEmail(payload.googleEmail);
+        if (payload?.verifiedCustomerId) {
+          setVerifiedCustomerId(payload.verifiedCustomerId);
+          setSelectedGoogleCustomerId(payload.verifiedCustomerId);
+        }
       } catch {
-        setGoogleAdsEnabled(null);
+        setGoogleAdsConfigured(false);
         setGoogleAdsMissingVars([]);
       }
     })();
@@ -1173,13 +1188,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   : 'border-[var(--color-border-strong)] bg-[var(--color-slate)]/20 text-[var(--color-text-secondary)] hover:border-[var(--color-gold)]/30 hover:bg-[var(--color-slate)]/40 hover:text-[var(--color-text-primary)]'
               }`}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium tracking-tight">{label}</span>
-                {selected && (
-                  <div className="w-5 h-5 rounded-full bg-[var(--color-gold)] flex items-center justify-center animate-in zoom-in duration-300">
-                    <Check className="w-3 h-3 text-[var(--color-midnight)]" />
-                  </div>
-                )}
+              <div className="flex items-center justify-between gap-4 h-full">
+                <span className="text-sm font-medium tracking-tight leading-tight flex-1">{label}</span>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500 ${
+                  selected ? 'bg-[var(--color-gold)] scale-100' : 'bg-[var(--color-border-strong)]/50 scale-75 opacity-0 group-hover:opacity-100'
+                }`}>
+                  <Check className={`w-3 h-3 transition-colors ${selected ? 'text-[var(--color-midnight)]' : 'text-[var(--color-text-tertiary)]'}`} />
+                </div>
               </div>
             </button>
           );
@@ -1390,348 +1405,347 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     const cidNormalized = enteredCustomerId.replace(/-/g, '');
     const cidValid = /^\d{10}$/.test(cidNormalized);
-    const serverConfigured = googleAdsEnabled !== false;
+    const serverConfigured = googleAdsConfigured !== false;
 
-    // ── Loading: OAuth status poll in flight — show spinner to prevent phase flipping ──
+    // ── Loading: OAuth status poll in flight ──
     if (!oauthChecked && !verifiedCustomerId && !showManualFallback) {
       return (
-        <div className="flex flex-col items-center justify-center py-20 space-y-3">
-          <Loader2 className="w-7 h-7 text-neutral-600 animate-spin" />
-          <p className="text-sm text-neutral-600">Checking connection…</p>
+        <div className="flex flex-col items-center justify-center py-20 space-y-4 animate-in fade-in duration-500">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-[var(--color-gold)] animate-spin" />
+          </div>
+          <p className="text-sm text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Checking connection…</p>
         </div>
       );
     }
 
-    // ── Phase 4: Verified — ready to continue ─────────────────────────────────
+    // ── Phase 4: Verified — ready to continue ──
     if (verifiedCustomerId) {
       return (
-        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-          <div className="text-center">
-            <h3 className="text-2xl font-medium text-neutral-100 mb-2">Google Ads Account Verified</h3>
-            <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
-              Account confirmed. SufiPulse will prepare the campaign structure inside your account.
+        <div className="max-w-xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+          <div className="text-center space-y-3">
+            <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Account Verified</h3>
+            <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">
+              Your Google Ads account has been successfully linked. SufiPulse will prepare the campaign structure for your review.
             </p>
           </div>
 
-          <div className="bg-green-900/20 border border-green-700/40 rounded-xl px-5 py-4 space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
-                <Check className="w-4 h-4 text-green-400" />
+          <div className="bg-green-900/10 border border-green-800/30 rounded-3xl p-8 space-y-4 backdrop-blur-sm shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center flex-shrink-0">
+                <Check className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-300">Account Verified</p>
-                <p className="text-xs text-green-500 font-mono">{verifiedCustomerId}</p>
+                <div className="text-[10px] font-bold text-green-400 uppercase tracking-widest">Connected & Verified</div>
+                <div className="text-lg font-mono text-[var(--color-text-primary)] font-bold">{verifiedCustomerId}</div>
               </div>
             </div>
             {googleEmail && (
-              <p className="text-xs text-neutral-500 pl-11">Google account: {googleEmail}</p>
+              <div className="pt-4 border-t border-green-800/20">
+                <p className="text-xs text-[var(--color-text-tertiary)] flex items-center gap-2">
+                  <Globe className="w-3 h-3" /> Signed in as <span className="text-[var(--color-text-secondary)] font-medium">{googleEmail}</span>
+                </p>
+              </div>
             )}
           </div>
 
           {submitError && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
+            <div className="text-sm text-[var(--color-error)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 rounded-2xl px-5 py-4 text-center">
               {submitError}
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={isDraftingCampaign}
-            onClick={async () => {
-              await createCampaignDraft(verifiedCustomerId);
-              setStep(5);
-            }}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isDraftingCampaign
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparing campaign draft…</>
-              : <>Continue to Review <ArrowRight className="w-5 h-5" /></>}
-          </button>
+          <div className="space-y-4">
+            <button
+              type="button"
+              disabled={isDraftingCampaign}
+              onClick={async () => {
+                await createCampaignDraft(verifiedCustomerId);
+                setStep(5);
+              }}
+              className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
+            >
+              {isDraftingCampaign
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparing Draft…</>
+                : <>Continue to Review <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
+            </button>
 
-          <button
-            type="button"
-            onClick={switchToManaged}
-            className="w-full py-3 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 text-[var(--color-text-tertiary)] hover:text-[var(--color-gold)] text-sm font-medium rounded-xl transition-colors"
-          >
-            Switch to Managed by SufiTube Instead
-          </button>
+            <button
+              type="button"
+              onClick={switchToManaged}
+              className="w-full py-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-xs uppercase tracking-widest font-bold"
+            >
+              ← Switch to Managed by SufiPulse
+            </button>
+          </div>
         </div>
       );
     }
 
-    // ── Phase 3: OAuth connected — pick / verify account ─────────────────────
-    // showManualFallback takes priority — let Phase 2 render if user clicked "Submit Manually"
+    // ── Phase 3: OAuth connected — pick / verify account ──
     if (oauthConnected && oauthChecked && !showManualFallback) {
       const accountsToShow = accessibleCustomerIds.length > 0 ? accessibleCustomerIds : [];
       const targetCid = enteredCustomerId || (accountsToShow.length > 0 ? accountsToShow[0] : '');
-      const targetNorm = targetCid.replace(/-/g, '');
-      const targetValid = /^\d{10}$/.test(targetNorm);
+      const targetValid = /^\d{10}$/.test(targetCid.replace(/-/g, ''));
 
       return (
-        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-          <div className="text-center">
-            <h3 className="text-2xl font-medium text-neutral-100 mb-2">Select Your Google Ads Account</h3>
-            <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
-              Google sign-in successful. Select or confirm your Google Ads Customer ID to verify access.
+        <div className="max-w-xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+          <div className="text-center space-y-3">
+            <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Select Account</h3>
+            <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">
+              Please select the Google Ads Customer ID you wish to use for this campaign.
             </p>
           </div>
 
-          {/* Connected email badge */}
-          {googleEmail && (
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-xl">
-              <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span className="text-sm text-neutral-300">Signed in as <span className="text-white font-medium">{googleEmail}</span></span>
+          <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-3xl p-8 space-y-8 backdrop-blur-sm">
+            {googleEmail && (
+              <div className="flex items-center gap-3 px-5 py-3 bg-[var(--color-midnight)]/30 border border-[var(--color-border-strong)] rounded-2xl">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs text-[var(--color-text-secondary)] font-medium">Linked to <span className="text-[var(--color-text-primary)]">{googleEmail}</span></span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {accountsToShow.length > 0 ? (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest ml-1">Accessible Accounts</label>
+                  <div className="grid gap-2">
+                    {accountsToShow.map(cid => (
+                      <button
+                        key={cid}
+                        onClick={() => setEnteredCustomerId(cid)}
+                        className={`flex items-center justify-between px-6 py-4 rounded-2xl border transition-all duration-300 ${
+                          (enteredCustomerId || accountsToShow[0]) === cid
+                            ? 'border-blue-500 bg-blue-500/10 text-white'
+                            : 'border-[var(--color-border-strong)] bg-[var(--color-midnight)]/30 text-[var(--color-text-secondary)] hover:border-blue-500/40'
+                        }`}
+                      >
+                        <span className="font-mono text-sm font-bold tracking-wider">{cid}</span>
+                        {(enteredCustomerId || accountsToShow[0]) === cid && <Check className="w-4 h-4 text-blue-400" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest ml-1">Google Ads Customer ID</label>
+                  <input
+                    type="text"
+                    value={enteredCustomerId}
+                    onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
+                    placeholder="xxx-xxx-xxxx"
+                    className="w-full bg-[var(--color-midnight)]/30 border border-[var(--color-border-strong)] focus:border-blue-500/50 rounded-2xl px-6 py-4 text-[var(--color-text-primary)] font-mono text-lg font-bold tracking-widest focus:outline-none transition-all"
+                  />
+                  <p className="text-[10px] text-[var(--color-text-tertiary)] leading-relaxed ml-1">
+                    Enter the 10-digit ID found in the top-right corner of your Google Ads dashboard.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
 
-          {accountsToShow.length > 0 ? (
-            <div>
-              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                Google Ads Account <span className="text-red-400">*</span>
-              </label>
-              <select
-                value={enteredCustomerId || accountsToShow[0]}
-                onChange={e => setEnteredCustomerId(e.target.value)}
-                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono outline-none transition-colors"
-              >
-                {accountsToShow.map(cid => (
-                  <option key={cid} value={cid}>{cid}</option>
-                ))}
-              </select>
-              <p className="text-xs text-neutral-600 mt-1.5">{accountsToShow.length} account{accountsToShow.length > 1 ? 's' : ''} found on this Google account.</p>
-            </div>
-          ) : (
-            <div>
-              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                Google Ads Customer ID <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={enteredCustomerId}
-                onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
-                placeholder="xxx-xxx-xxxx"
-                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
-              />
-              <p className="text-xs text-neutral-600 mt-1.5">No accounts detected automatically. Enter your Customer ID manually (found in the top-right of your Google Ads dashboard).</p>
-            </div>
-          )}
-
-          {verifyError && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3">
-              <p className="font-medium mb-1">Verification failed</p>
-              <p className="text-xs text-red-300/80">
-                {verifyReasonCode === 'OAUTH_TOKEN_EXPIRED' && 'Your Google session expired. Please reconnect.'}
-                {verifyReasonCode === 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE' && 'This account ID was not found under your Google account. Check you entered the correct Customer ID.'}
-                {verifyReasonCode === 'GOOGLE_ADS_API_CALL_FAILED' && 'Could not reach the Google Ads API. Please try again.'}
-                {!['OAUTH_TOKEN_EXPIRED', 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE', 'GOOGLE_ADS_API_CALL_FAILED'].includes(verifyReasonCode || '') && (verifyErrorDetail?.error || 'Verification failed. Please try a different account or submit manually.')}
-              </p>
-            </div>
-          )}
-
-          {submitError && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
-              {submitError}
-            </div>
-          )}
-
-          <button
-            type="button"
-            disabled={isVerifying || !targetValid}
-            onClick={() => handleVerifyAndContinue(enteredCustomerId || (accountsToShow[0] ?? ''))}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isVerifying
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying account…</>
-              : <><Check className="w-5 h-5" /> Verify & Continue</>}
-          </button>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => { setOauthConnected(false); setOauthChecked(false); setVerifyError(null); }}
-              className="flex-1 py-3 border border-neutral-800 hover:border-neutral-600 text-neutral-500 hover:text-neutral-300 text-sm font-medium rounded-xl transition-colors"
-            >
-              Reconnect Google Account
-            </button>
-            <button
-              type="button"
-              onClick={() => { setShowManualFallback(true); setVerifyError(null); }}
-              className="flex-1 py-3 border border-neutral-800 hover:border-neutral-600 text-neutral-500 hover:text-neutral-300 text-sm font-medium rounded-xl transition-colors"
-            >
-              Submit Manually Instead
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={switchToManaged}
-            className="w-full py-3 border border-amber-700/40 hover:border-amber-500/60 text-amber-600 hover:text-amber-400 text-sm font-medium rounded-xl transition-colors"
-          >
-            Switch to Managed by SufiPulse Instead
-          </button>
-        </div>
-      );
-    }
-
-    // ── Phase 2: Manual fallback entry ────────────────────────────────────────
-    if (showManualFallback || !serverConfigured) {
-      return (
-        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-          <div className="text-center">
-            <h3 className="text-2xl font-medium text-neutral-100 mb-2">Enter Google Ads Details</h3>
-            <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
-              SufiPulse will verify your account and set up your campaign within 24 hours.
-            </p>
+            {verifyError && (
+              <div className="text-sm text-[var(--color-error)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 rounded-2xl px-6 py-4 animate-in shake duration-500">
+                <div className="font-bold uppercase tracking-widest text-[10px] mb-1">Verification Failed</div>
+                <p className="text-xs leading-relaxed opacity-80">
+                  {verifyReasonCode === 'OAUTH_TOKEN_EXPIRED' && 'Your Google session has expired. Please reconnect your account.'}
+                  {verifyReasonCode === 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE' && 'This Customer ID was not found under your connected Google account. Please verify the ID.'}
+                  {verifyReasonCode === 'GOOGLE_ADS_API_CALL_FAILED' && 'The Google Ads API is currently unresponsive. Please try again later.'}
+                  {!['OAUTH_TOKEN_EXPIRED', 'CUSTOMER_NOT_DIRECTLY_ACCESSIBLE', 'GOOGLE_ADS_API_CALL_FAILED'].includes(verifyReasonCode || '') && (verifyErrorDetail?.error || 'Verification failed. Please try a different account or submit manually.')}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                Google account email <span className="text-neutral-600">(optional)</span>
-              </label>
-              <input
-                type="email"
-                value={enteredEmail}
-                onChange={e => setEnteredEmail(e.target.value)}
-                placeholder="you@gmail.com"
-                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-700 outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                Google Ads Customer ID <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={enteredCustomerId}
-                onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
-                placeholder="xxx-xxx-xxxx"
-                className="w-full bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] focus:border-blue-500/60 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-neutral-700 outline-none transition-colors"
-              />
-              <p className="text-xs text-neutral-600 mt-1.5">Found in the top-right corner of your Google Ads dashboard.</p>
-            </div>
-          </div>
-
-          <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-500 leading-relaxed">
-            By submitting, you authorise SufiPulse to prepare a campaign structure inside your Google Ads account. You remain the account owner and pay Google directly.
-          </div>
-
-          {submitError && (
-            <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
-              {submitError}
-            </div>
-          )}
-
-          <button
-            type="button"
-            disabled={isSubmittingManualReview || !cidValid}
-            onClick={handleManualReview}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {isSubmittingManualReview
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
-              : <><Check className="w-5 h-5" /> Submit for Review</>}
-          </button>
-
-          {serverConfigured && (
             <button
               type="button"
-              onClick={() => setShowManualFallback(false)}
-              className="w-full py-3 border border-neutral-800 hover:border-blue-500/40 text-neutral-500 hover:text-blue-400 text-sm font-medium rounded-xl transition-colors"
+              disabled={isVerifying || !targetValid}
+              onClick={() => handleVerifyAndContinue(enteredCustomerId || (accountsToShow[0] ?? ''))}
+              className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
             >
-              ← Sign in with Google instead
+              {isVerifying
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying Account…</>
+                : <><Check className="w-5 h-5 group-hover:scale-110 transition-transform" /> Verify & Continue</>}
             </button>
-          )}
 
-          <button
-            type="button"
-            onClick={switchToManaged}
-            className="w-full py-3 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 text-[var(--color-text-tertiary)] hover:text-[var(--color-gold)] text-sm font-medium rounded-xl transition-colors"
-          >
-            Switch to Managed by SufiTube Instead
-          </button>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => { setOauthConnected(false); setOauthChecked(false); setVerifyError(null); }}
+                className="py-4 border border-[var(--color-border-strong)] hover:border-[var(--color-border-strong)]/80 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-all"
+              >
+                Reconnect Google
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowManualFallback(true); setVerifyError(null); }}
+                className="py-4 border border-[var(--color-border-strong)] hover:border-[var(--color-border-strong)]/80 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-all"
+              >
+                Submit Manually
+              </button>
+            </div>
+          </div>
         </div>
       );
     }
 
-    // ── Phase 1 (default): Choose how to connect ─────────────────────────────
+    // ── Phase 2: Manual fallback entry ──
+    if (showManualFallback || !serverConfigured) {
+      const targetValid = /^\d{10}$/.test(enteredCustomerId.replace(/-/g, ''));
+      
+      return (
+        <div className="max-w-xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+          <div className="text-center space-y-3">
+            <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Manual Submission</h3>
+            <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">
+              Enter your account details and SufiPulse will manually verify your campaign request within 24 hours.
+            </p>
+          </div>
+
+          <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-3xl p-8 space-y-8 backdrop-blur-sm">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest ml-1">Google Ads Email</label>
+                <input
+                  type="email"
+                  value={enteredEmail}
+                  onChange={e => setEnteredEmail(e.target.value)}
+                  placeholder="e.g. sponsor@gmail.com"
+                  className="w-full bg-[var(--color-midnight)]/30 border border-[var(--color-border-strong)] focus:border-blue-500/50 rounded-2xl px-6 py-4 text-[var(--color-text-primary)] text-sm focus:outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest ml-1">Customer ID</label>
+                <input
+                  type="text"
+                  value={enteredCustomerId}
+                  onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
+                  placeholder="xxx-xxx-xxxx"
+                  className="w-full bg-[var(--color-midnight)]/30 border border-[var(--color-border-strong)] focus:border-blue-500/50 rounded-2xl px-6 py-4 text-[var(--color-text-primary)] font-mono text-lg font-bold tracking-widest focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="bg-blue-900/10 border border-blue-800/20 rounded-2xl px-5 py-4 text-[10px] text-blue-300/60 leading-relaxed italic">
+              By submitting manually, you authorise SufiPulse to prepare the campaign structure inside your Google Ads account. You remain the account owner and pay Google directly.
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              type="button"
+              disabled={isSubmittingManualReview || !targetValid}
+              onClick={handleManualReview}
+              className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
+            >
+              {isSubmittingManualReview
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>
+                : <><Check className="w-5 h-5 group-hover:scale-110 transition-transform" /> Submit for Institutional Review</>}
+            </button>
+
+            <div className="grid grid-cols-1 gap-4">
+              {serverConfigured && (
+                <button
+                  type="button"
+                  onClick={() => setShowManualFallback(false)}
+                  className="py-4 border border-[var(--color-border-strong)] hover:border-[var(--color-border-strong)]/80 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-all"
+                >
+                  ← Return to Automatic Connection
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={switchToManaged}
+                className="py-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-[10px] font-bold uppercase tracking-widest"
+              >
+                Switch to Managed Path
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Phase 1 (default): Choose how to connect ──
     return (
-      <div className="space-y-5 animate-in slide-in-from-right-8 duration-300">
-        <div className="text-center">
-          <h3 className="text-2xl font-medium text-neutral-100 mb-2">Set Up Your Campaign</h3>
-          <p className="text-neutral-500 text-sm leading-relaxed max-w-md mx-auto">
-            Choose how you'd like to run your Google Ads campaign.
+      <div className="max-w-2xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+        <div className="text-center space-y-3">
+          <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Campaign Integration</h3>
+          <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">
+            Choose how you'd like to link your Google Ads account with SufiPulse.
           </p>
         </div>
 
-        {/* Option A: Enter Customer ID manually */}
-        <button
-          type="button"
-          onClick={() => setShowManualFallback(true)}
-          className="w-full text-left p-5 border border-neutral-700 hover:border-blue-500/50 bg-neutral-900 hover:bg-neutral-800/80 rounded-xl transition-colors group"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-blue-400 font-mono font-bold text-xs">ID</span>
+        <div className="grid gap-6">
+          {/* Option A: Enter Customer ID manually */}
+          <button
+            type="button"
+            onClick={() => setShowManualFallback(true)}
+            className="group relative text-left p-8 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-blue-500/40 rounded-3xl transition-all duration-500 backdrop-blur-sm overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative flex items-start gap-6">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-blue-400 font-mono font-bold text-lg">ID</span>
+              </div>
+              <div className="flex-1 space-y-2">
+                <h4 className="text-xl font-serif text-[var(--color-text-primary)] group-hover:text-blue-400 transition-colors">Manual Account Link</h4>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">Enter your Customer ID directly. Our team will verify and prepare your campaign structure within 24 hours. You maintain full billing control at Google.</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-[var(--color-text-tertiary)] group-hover:text-blue-400 mt-2 flex-shrink-0 transition-all group-hover:translate-x-1" />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-neutral-100 group-hover:text-white mb-0.5">Use My Google Ads Account</p>
-              <p className="text-xs text-neutral-500 leading-relaxed">Enter your Google Ads Customer ID — our team verifies and sets up your campaign within 24 hours. You pay Google directly.</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-neutral-600 group-hover:text-blue-400 mt-1 flex-shrink-0 transition-colors" />
-          </div>
-        </button>
+          </button>
 
-        {/* Option B: Switch to Managed */}
-        <button
-          type="button"
-          onClick={switchToManaged}
-          className="w-full text-left p-5 border border-amber-700/40 hover:border-amber-500/60 bg-amber-900/10 hover:bg-amber-900/20 rounded-xl transition-colors group"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Music className="w-5 h-5 text-amber-400" />
+          {/* Option B: Switch to Managed */}
+          <button
+            type="button"
+            onClick={switchToManaged}
+            className="group relative text-left p-8 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-3xl transition-all duration-500 backdrop-blur-sm overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold)]/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative flex items-start gap-6">
+              <div className="w-14 h-14 rounded-2xl bg-[var(--color-gold-muted)] border border-[var(--color-gold)]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                <Music className="w-6 h-6 text-[var(--color-gold)]" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h4 className="text-xl font-serif text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors">Managed by SufiPulse</h4>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">Let our team handle everything. No Google account required. Secure Stripe payment for ad spend, we manage the technical setup.</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-gold)] mt-2 flex-shrink-0 transition-all group-hover:translate-x-1" />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-amber-300 group-hover:text-amber-200 mb-0.5">Let SufiPulse Manage Everything</p>
-              <p className="text-xs text-neutral-500 leading-relaxed">Pay via Stripe — SufiPulse creates and runs the Google Ads campaign on your behalf. No Google account needed.</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-neutral-600 group-hover:text-amber-400 mt-1 flex-shrink-0 transition-colors" />
-          </div>
-        </button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-800" /></div>
-          <div className="relative flex justify-center text-xs text-neutral-600"><span className="bg-black px-3">or connect automatically</span></div>
+          </button>
         </div>
 
-        {submitError && (
-          <div className="text-sm text-red-400 border border-red-700/40 bg-red-900/20 rounded-xl px-4 py-3 text-center">
-            {submitError}
-          </div>
-        )}
+        <div className="relative py-4">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[var(--color-border-strong)]" /></div>
+          <div className="relative flex justify-center"><span className="bg-[var(--color-midnight)] px-6 text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--color-text-tertiary)]">or link automatically</span></div>
+        </div>
 
-        <button
-          type="button"
-          disabled={isConnectingOAuth}
-          onClick={startOAuth}
-          className="w-full py-3 bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-900 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-3"
-        >
-          {isConnectingOAuth ? (
-            <><Loader2 className="w-4 h-4 animate-spin text-neutral-600" /> Connecting…</>
-          ) : (
-            <>
-              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-              </svg>
-              Sign in with Google
-            </>
-          )}
-        </button>
-        <p className="text-xs text-center text-neutral-700">Google sign-in is currently limited to approved testers while app verification is in progress.</p>
+        <div className="space-y-6">
+          <button
+            type="button"
+            disabled={isConnectingOAuth}
+            onClick={startOAuth}
+            className="group w-full py-5 bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-900 font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-4 shadow-xl shadow-white/5 active:scale-[0.99]"
+          >
+            {isConnectingOAuth ? (
+              <><Loader2 className="w-5 h-5 animate-spin text-neutral-600" /> Connecting to Google…</>
+            ) : (
+              <>
+                <svg width="24" height="24" viewBox="0 0 48 48" aria-hidden="true">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Sign in with Google Ads
+              </>
+            )}
+          </button>
+          <p className="text-[10px] text-center text-[var(--color-text-tertiary)] uppercase tracking-widest leading-relaxed px-12">
+            Secure OAuth 2.0 connection. SufiPulse will only request access to manage your Google Ads campaigns.
+          </p>
+        </div>
       </div>
     );
   };
@@ -1997,55 +2011,57 @@ export function AdoptTab({ release }: AdoptTabProps) {
               <span className="text-sm font-serif text-[var(--color-text-primary)] truncate">{release?.release_title || 'Sacred Kalam'}</span>
             </div>
             
-            <div className="divide-y divide-[var(--color-border-strong)]/50">
+            <div className="divide-y divide-[var(--color-border-strong)]/30">
               <div className="grid grid-cols-2">
-                <div className="p-6 space-y-1 border-r border-[var(--color-border-strong)]/50">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Total Budget</div>
-                  <div className="text-2xl font-serif text-[var(--color-gold)] font-bold">${budget}</div>
+                <div className="p-8 space-y-2 border-r border-[var(--color-border-strong)]/30">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Total Budget</div>
+                  <div className="text-3xl font-serif text-[var(--color-gold)] font-bold">${budget}</div>
                 </div>
-                <div className="p-6 space-y-1">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Duration</div>
-                  <div className="text-lg font-serif text-[var(--color-text-primary)]">{dur.days} Days <span className="text-[var(--color-text-tertiary)] text-xs font-sans">(~${dur.daily}/day)</span></div>
+                <div className="p-8 space-y-2">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Duration</div>
+                  <div className="text-lg font-serif text-[var(--color-text-primary)] leading-none">{dur.days} Days</div>
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] font-sans mt-1">(~${dur.daily}/day)</div>
                 </div>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-6">
                 <div className="grid grid-cols-2 gap-8">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Targeting</div>
-                    <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{regions.join(', ')}</div>
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Targeting</div>
+                    <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed font-medium">{regions.join(', ')}</div>
                   </div>
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Languages</div>
-                    <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{languages.join(', ')}</div>
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Languages</div>
+                    <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed font-medium">{languages.join(', ')}</div>
                   </div>
                 </div>
-                <div className="space-y-1 pt-2">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Campaign Objective</div>
+                <div className="space-y-1.5">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Campaign Objective</div>
                   <div className="text-xs text-[var(--color-text-primary)] font-medium capitalize">{(formData.campaign_objective || 'awareness').replace(/_/g, ' ')}</div>
                 </div>
               </div>
 
-              <div className="p-6 space-y-4 bg-[var(--color-midnight)]/30">
+              <div className="p-6 space-y-6">
                 <div className="flex justify-between items-start gap-4">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Sponsor Account</div>
-                    <div className="text-sm font-medium text-[var(--color-text-primary)]">{formData.full_name} <span className="text-[var(--color-text-tertiary)] text-[10px] font-normal font-mono ml-2">{formData.email}</span></div>
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Sponsor Details</div>
+                    <div className="text-sm font-medium text-[var(--color-text-primary)]">{formData.full_name}</div>
+                    <div className="text-[11px] text-[var(--color-text-tertiary)] font-medium">{formData.email}</div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Google Ads Account</div>
+                  <div className="text-right space-y-1.5">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Google Ads Account</div>
                     {selectedGoogleCustomerId ? (
-                      <div className="flex items-center justify-end gap-1.5 text-blue-400 font-mono text-xs">
+                      <div className="flex items-center justify-end gap-1.5 text-blue-400 font-mono text-xs font-bold">
                         <Check className="w-3.5 h-3.5" /> {selectedGoogleCustomerId}
                       </div>
                     ) : (
-                      <div className="text-[var(--color-error)] text-[10px]">Verification Pending</div>
+                      <div className="text-[var(--color-error)] text-[10px] font-bold uppercase tracking-widest">Verification Pending</div>
                     )}
                   </div>
                 </div>
                 {formData.dedication_message && (
-                  <div className="pt-2 border-t border-[var(--color-border-strong)]/30">
-                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold mb-1.5">Spiritual Dedication</div>
+                  <div className="pt-4 border-t border-[var(--color-border-strong)]/30">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold mb-2">Spiritual Dedication</div>
                     <p className="text-xs italic text-[var(--color-text-secondary)] leading-relaxed font-light">"{formData.dedication_message}"</p>
                   </div>
                 )}
@@ -2115,47 +2131,47 @@ export function AdoptTab({ release }: AdoptTabProps) {
             <span className="text-sm font-serif text-[var(--color-text-primary)] truncate">{release?.release_title || 'Sacred Kalam'}</span>
           </div>
 
-          <div className="divide-y divide-[var(--color-border-strong)]/50">
+          <div className="divide-y divide-[var(--color-border-strong)]/30">
             <div className="grid grid-cols-2">
-              <div className="p-8 space-y-1 border-r border-[var(--color-border-strong)]/50">
-                <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Total Contribution</div>
+              <div className="p-8 space-y-2 border-r border-[var(--color-border-strong)]/30">
+                <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Total Contribution</div>
                 <div className="text-3xl font-serif text-[var(--color-gold)] font-bold">${budget}</div>
               </div>
               <div className="p-8 space-y-2">
-                <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Impact Tier</div>
-                <div className="text-lg font-serif text-[var(--color-text-primary)]">{impact?.tier || 'Custom'}</div>
-                <div className="text-[10px] bg-[var(--color-gold)]/5 text-[var(--color-gold)] px-2 py-0.5 rounded-full inline-block border border-[var(--color-gold)]/10 uppercase tracking-widest font-bold">SufiPulse Managed</div>
+                <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Impact Tier</div>
+                <div className="text-lg font-serif text-[var(--color-text-primary)] leading-none">{impact?.tier || 'Custom'}</div>
+                <div className="inline-flex items-center text-[9px] font-bold uppercase tracking-widest text-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 px-2 py-0.5 rounded-full border border-[var(--color-gold)]/10">SufiPulse Managed</div>
               </div>
             </div>
 
             {impact && (
-              <div className="p-6 grid grid-cols-2 gap-8 bg-[var(--color-midnight)]/20">
-                <div className="space-y-1">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Est. Reach</div>
-                  <div className="text-sm font-medium text-[var(--color-text-secondary)]">~{impact.min} – {impact.max} <span className="text-[var(--color-text-tertiary)] text-[10px] uppercase ml-1">Impressions</span></div>
+              <div className="p-6 grid grid-cols-2 gap-8 bg-transparent">
+                <div className="space-y-1.5">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Est. Reach</div>
+                  <div className="text-sm font-medium text-[var(--color-text-primary)]">~{impact.min} – {impact.max} <span className="text-[var(--color-text-tertiary)] text-[9px] uppercase ml-1 tracking-wider">Impressions</span></div>
                 </div>
-                <div className="space-y-1">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Duration</div>
-                  <div className="text-sm font-medium text-[var(--color-text-secondary)]">{impact.days} <span className="text-[var(--color-text-tertiary)] text-[10px] uppercase ml-1">Days</span></div>
+                <div className="space-y-1.5">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Duration</div>
+                  <div className="text-sm font-medium text-[var(--color-text-primary)]">{impact.days} <span className="text-[var(--color-text-tertiary)] text-[9px] uppercase ml-1 tracking-wider">Days</span></div>
                 </div>
               </div>
             )}
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-6">
               <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Sponsor Details</div>
+                <div className="space-y-1.5">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Sponsor Details</div>
                   <div className="text-sm font-medium text-[var(--color-text-primary)]">{formData.full_name}</div>
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] font-mono">{formData.email}</div>
+                  <div className="text-[11px] text-[var(--color-text-tertiary)] font-medium">{formData.email}</div>
                 </div>
-                <div className="text-right space-y-1">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">Location</div>
-                  <div className="text-xs text-[var(--color-text-secondary)]">{formData.city}, {formData.country}</div>
+                <div className="text-right space-y-1.5">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold">Location</div>
+                  <div className="text-xs text-[var(--color-text-secondary)] font-medium">{(formData.city ? formData.city + ', ' : '') + formData.country}</div>
                 </div>
               </div>
               {formData.dedication_message && (
-                <div className="pt-2 border-t border-[var(--color-border-strong)]/30">
-                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold mb-1.5">Spiritual Dedication</div>
+                <div className="pt-4 border-t border-[var(--color-border-strong)]/30">
+                  <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-[0.2em] font-bold mb-2">Spiritual Dedication</div>
                   <p className="text-xs italic text-[var(--color-text-secondary)] leading-relaxed font-light">"{formData.dedication_message}"</p>
                 </div>
               )}

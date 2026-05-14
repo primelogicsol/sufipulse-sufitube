@@ -180,7 +180,11 @@ export function getAdoptionsByUser(userId: string): AdoptionRecord[] {
 export function getAdoptionsByRelease(releaseId: string): AdoptionRecord[] {
   const store = readStore();
   return Object.values(store.adoptions)
-    .filter((r) => r.releaseId === releaseId && r.publicListingApproved)
+    .filter((r) => 
+      r.releaseId === releaseId && 
+      r.publicListingApproved && 
+      (r.paymentStatus === 'paid' || r.methodType === 'use_my_google_ads')
+    )
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 

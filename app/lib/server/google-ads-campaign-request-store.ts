@@ -43,6 +43,10 @@ export type GoogleAdsCampaignRequest = {
   status: CampaignRequestStatus;
   reviewReason?: string;
   adminNote?: string;
+  proposedTargeting?: string;
+  proposedBudget?: number;
+  proposedKeywords?: string;
+  proposedAdCopy?: string;
   campaignResourceName?: string;
   events: CampaignRequestEvent[];
   createdAt: string;
