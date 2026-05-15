@@ -13,7 +13,7 @@ import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
 
 type FilterType = 'all' | 'native_governed' | 'legacy_registry';
 type FormatFilter = 'all' | 'video' | 'audio' | 'short' | 'live' | 'playlist';
-type DurationFilter = 'all' | 'short' | 'standard' | 'long';
+type DurationFilter = 'default' | 'all' | 'short' | 'standard' | 'long';
 type SortOrder = 'default' | 'newest' | 'oldest' | 'popular';
 
 const ITEMS_PER_PAGE = 12;
@@ -299,7 +299,7 @@ export default function Releases() {
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-    const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
+    const [durationFilter, setDurationFilter] = useState<DurationFilter>('default');
     const [yearFilter, setYearFilter] = useState<string>('all');
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');
@@ -398,15 +398,28 @@ export default function Releases() {
                     activeFilters.push(`Format: ${filterFormat}`);
                 }
                 if (durationFilter !== 'all') {
-                    const mins = (d.durationSeconds || 0) / 60;
+                    const seconds = d.durationSeconds || 0;
                     let hiddenByDuration = false;
-                    if (durationFilter === 'short' && mins >= 3) hiddenByDuration = true;
-                    if (durationFilter === 'standard' && (mins < 3 || mins > 8)) hiddenByDuration = true;
-                    if (durationFilter === 'long' && mins <= 8) hiddenByDuration = true;
+                    
+                    if (durationFilter === 'default') {
+                        // Default = Standard and Long, no short
+                        if (seconds < 180 || d.format === 'short') hiddenByDuration = true;
+                    } else if (durationFilter === 'short' && seconds >= 180) {
+                        hiddenByDuration = true;
+                    } else if (durationFilter === 'standard' && (seconds < 180 || seconds > 480)) {
+                        hiddenByDuration = true;
+                    } else if (durationFilter === 'long' && seconds <= 480) {
+                        hiddenByDuration = true;
+                    }
                     
                     if (hiddenByDuration) {
                         visibleUnderCurrentFilters = false;
-                        activeFilters.push(`Length: ${durationFilter === 'long' ? 'Long (> 8m)' : durationFilter === 'standard' ? 'Standard (3-8m)' : 'Short (< 3m)'}`);
+                        activeFilters.push(`Length: ${
+                            durationFilter === 'default' ? 'Default (Standard/Long only)' :
+                            durationFilter === 'long' ? 'Long (> 8m)' : 
+                            durationFilter === 'standard' ? 'Standard (3-8m)' : 
+                            'Short (< 3m)'
+                        }`);
                     }
                 }
                 if (yearFilter !== 'all') {
@@ -447,18 +460,37 @@ export default function Releases() {
 
     const filteredReleases = useMemo(() => {
         let filtered = releases.filter(release => {
-            if (filterType !== 'all' && release.govType !== filterType) return false;
-            if (filterFormat !== 'all' && release.format !== filterFormat) return false;
-            if (durationFilter !== 'all') {
-                const minutes = release.durationSeconds / 60;
-                if (durationFilter === 'short' && minutes >= 3) return false;
-                if (durationFilter === 'standard' && (minutes < 3 || minutes > 8)) return false;
-                if (durationFilter === 'long' && minutes <= 8) return false;
+            // Governance filter
+            if (filterType !== 'all') {
+                if (filterType === 'native_governed' && release.govType !== 'native_governed') return false;
+                if (filterType === 'legacy_registry' && release.govType !== 'legacy_registry') return false;
             }
+
+            // Format filter
+            if (filterFormat !== 'all' && release.format !== filterFormat) return false;
+
+            // Length filter (Thresholds: < 3m, 3-8m, > 8m)
+            // Default = Standard + Long (Exclude all < 3m or format === 'short')
+            if (durationFilter !== 'all') {
+                const seconds = release.durationSeconds || 0;
+                if (durationFilter === 'default') {
+                    if (seconds < 180 || release.format === 'short') return false;
+                } else if (durationFilter === 'short' && seconds >= 180) {
+                    return false;
+                } else if (durationFilter === 'standard' && (seconds < 180 || seconds > 480)) {
+                    return false;
+                } else if (durationFilter === 'long' && seconds <= 480) {
+                    return false;
+                }
+            }
+
+            // Year filter
             if (yearFilter !== 'all') {
                 const releaseYear = new Date(release.publishedDate).getFullYear();
                 if (releaseYear !== parseInt(yearFilter)) return false;
             }
+
+            // Search filter
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 return (
@@ -601,6 +633,7 @@ export default function Releases() {
                                             onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
                                             className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
                                         >
+                                            <option value="default">Default</option>
                                             <option value="all">Any Length</option>
                                             <option value="short">Short (&lt; 3m)</option>
                                             <option value="standard">Standard (3-8m)</option>
@@ -672,7 +705,7 @@ export default function Releases() {
                                 onClick={() => {
                                     setFilterType('all');
                                     setFilterFormat('all');
-                                    setDurationFilter('all');
+                                    setDurationFilter('default');
                                     setYearFilter('all');
                                     setSearchQuery('');
                                     setSortOrder('newest');
