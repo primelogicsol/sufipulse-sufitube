@@ -96,6 +96,18 @@ const persist = () => {
 };
 
 export const cmsServerStorage = {
+  getInfo() {
+    return {
+      dataDir: SERVER_DATA_DIR,
+      dataFile: SERVER_DATA_FILE,
+      requestsFile: REQUESTS_DATA_FILE,
+      seedFile: SEED_FILE,
+      cwd: process.cwd(),
+      exists: fs.existsSync(SERVER_DATA_FILE),
+      mtime: fs.existsSync(SERVER_DATA_FILE) ? fs.statSync(SERVER_DATA_FILE).mtimeMs : 0
+    };
+  },
+
   forceHydrate(): void {
     ensureHydrated(true);
   },

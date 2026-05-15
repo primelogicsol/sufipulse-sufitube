@@ -19,9 +19,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(validationResult.error, { status: 400 });
     }
 
-    const { status, type, search, key, slug, youtubeId } = validationResult.data;
+    const { status, type, search, key, slug, youtubeId, t, forceHydrate } = validationResult.data;
     
-    // 1) Handle single lookup if key/slug/youtubeId is provided
+    // 0) Handle cache busting and re-hydration
+    if (forceHydrate || (t && Date.now() - Number(t) < 30000)) {
+      console.log(`[API /api/releases] Forcing disk re-hydration (t=${t})`);
+      cmsServerStorage.forceHydrate();
+    }
     // This is used by the release-detail page for fast CMS lookup
     const lookupKey = key || slug || youtubeId;
     if (lookupKey) {

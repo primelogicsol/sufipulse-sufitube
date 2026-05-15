@@ -154,12 +154,39 @@ function SyncResultModal({
                             </div>
 
                             {/* Lookback Info */}
-                            <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-start gap-3">
-                                <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                                <p className="text-xs text-blue-100/70 leading-relaxed">
-                                    The registry was updated with uploads from the last <strong>{result.details?.lookbackDays || 30} days</strong>. {result.isFallback && 'Note: Fallback data was used due to API limitations.'}
-                                </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-start gap-3">
+                                    <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-[10px] text-blue-400 uppercase font-black mb-1">Sync window</p>
+                                        <p className="text-xs text-blue-100/70 leading-relaxed">
+                                            Registry updated from last <strong>{result.details?.lookbackDays || 90} days</strong>.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex items-start gap-3">
+                                    <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-[10px] text-emerald-400 uppercase font-black mb-1">Registry Parity</p>
+                                        <p className="text-xs text-emerald-100/70 leading-relaxed">
+                                            Total stored releases: <strong>{result.registryCount || 'Calculating...'}</strong>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
+
+                            {/* Storage Proof (Admin only) */}
+                            {result.details?.serverInfo && (
+                                <div className="p-4 bg-[var(--color-midnight)]/60 border border-white/5 rounded-2xl">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <ExternalLink className="w-3 h-3 text-[var(--color-text-tertiary)]" />
+                                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-black">Storage Proof (Absolute Path)</p>
+                                    </div>
+                                    <code className="text-[9px] text-zinc-500 break-all font-mono">
+                                        {result.details.serverInfo.dataFile}
+                                    </code>
+                                </div>
+                            )}
 
                             {/* Latest Upload Card */}
                             {result.diagnostic && (

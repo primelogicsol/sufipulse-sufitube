@@ -189,6 +189,9 @@ export async function POST(request: NextRequest) {
     revalidatePath('/');
     revalidatePath('/releases');
 
+    const serverInfo = cmsServerStorage.getInfo();
+    const finalCount = cmsServerStorage.getAllReleases().length;
+
     // Diagnostic for latest video specifically
     const latestDiag = diagnostics.find(d => d.youtubeId === latestVideo.id);
     const latestInDb = cmsServerStorage.getReleaseByYoutubeId(latestVideo.id);
@@ -214,15 +217,18 @@ export async function POST(request: NextRequest) {
       skippedCount,
       errorCount,
       checkedCount: selected.length,
+      registryCount: finalCount,
+      serverInfo,
       isFallback,
       diagnostic: latestDiag,
       diagnostics: diagnostics.slice(0, 50), // Return details for first 50 to avoid huge response
       message: isFallback 
         ? 'Sync completed using static fallback data (API key missing or quota exceeded).' 
-        : `Sync Registry Complete. Checked ${selected.length} uploads from last ${lookbackDays} days. ${newCount} new, ${updatedCount} updated, ${skippedCount} skipped.`,
+        : `Sync Registry Complete. Checked ${selected.length} uploads from last ${lookbackDays} days. ${newCount} new, ${updatedCount} updated, ${skippedCount} skipped. Final Registry Count: ${finalCount}`,
       details: {
         lookbackDays,
-        latestVideo: latestDiag
+        latestVideo: latestDiag,
+        serverInfo
       }
     });
   } catch (error: any) {

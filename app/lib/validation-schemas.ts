@@ -193,6 +193,8 @@ export const releasesQuerySchema = z.object({
   search: z.string().optional(),
   refresh: z.string().optional(),
   nocache: z.string().optional(),
+  t: z.string().optional(),
+  forceHydrate: z.string().optional(),
 });
 
 /**
