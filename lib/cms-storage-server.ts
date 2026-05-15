@@ -4,10 +4,28 @@ import path from 'node:path';
 import { cmsStorage, type CMSRelease } from '@/lib/cms-storage';
 import { getBestReleaseDate } from './release-utils';
 
-const SERVER_DATA_DIR = path.join(process.cwd(), '.data');
+/**
+ * Robust Data Directory Resolution
+ * 1. Use process.env.DATA_DIR if provided
+ * 2. In standalone mode, use /app/.data if it exists
+ * 3. Default to process.cwd()/.data
+ */
+const resolveDataDir = () => {
+  if (process.env.DATA_DIR) return process.env.DATA_DIR;
+  
+  // Docker standard path
+  if (fs.existsSync('/app/.data')) return '/app/.data';
+  
+  // Fallback to local root
+  return path.join(process.cwd(), '.data');
+};
+
+const SERVER_DATA_DIR = resolveDataDir();
 const SERVER_DATA_FILE = path.join(SERVER_DATA_DIR, 'cms-releases.json');
 const REQUESTS_DATA_FILE = path.join(SERVER_DATA_DIR, 'lyrics-requests.json');
 const SEED_FILE = path.join(process.cwd(), 'lib', 'cms-seed-releases.json');
+
+console.log(`[cms-storage-server] Initialized with SERVER_DATA_DIR: ${SERVER_DATA_DIR}`);
 
 let hydrated = false;
 let lastHydratedMtime = 0;
