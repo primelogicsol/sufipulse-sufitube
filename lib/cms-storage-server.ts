@@ -6,18 +6,25 @@ import { getBestReleaseDate } from './release-utils';
 
 /**
  * Robust Data Directory Resolution
- * 1. Use process.env.DATA_DIR if provided
- * 2. In standalone mode, use /app/.data if it exists
- * 3. Default to process.cwd()/.data
+ * In Next.js standalone mode, process.cwd() can be nested.
+ * We must find the persistent Docker volume at /app/.data
  */
 const resolveDataDir = () => {
+  // 1. Environment variable override
   if (process.env.DATA_DIR) return process.env.DATA_DIR;
   
-  // Docker standard path
+  // 2. Explicit Docker persistent volume path (Highest priority in production)
   if (fs.existsSync('/app/.data')) return '/app/.data';
   
-  // Fallback to local root
-  return path.join(process.cwd(), '.data');
+  // 3. Handle standalone mode /app/.next/standalone -> /app/.data
+  const cwd = process.cwd();
+  if (cwd.includes('.next' + path.sep + 'standalone')) {
+    const parentDir = path.join(cwd, '..', '..', '.data');
+    if (fs.existsSync(parentDir)) return parentDir;
+  }
+  
+  // 4. Default fallback to local root
+  return path.join(cwd, '.data');
 };
 
 const SERVER_DATA_DIR = resolveDataDir();
