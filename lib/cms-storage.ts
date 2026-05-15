@@ -450,7 +450,7 @@ class CMSStorage {
       releases = releases.filter(r => r.category === filter.category);
     }
 
-    const sorted = sortReleases(releases, 'updated');
+    const sorted = sortReleases(releases, 'all');
     
     if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
       if (sorted.length > 0) {

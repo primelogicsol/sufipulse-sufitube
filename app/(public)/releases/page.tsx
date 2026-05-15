@@ -310,6 +310,8 @@ export default function Releases() {
         try {
             const url = new URL('/api/releases', window.location.origin);
             url.searchParams.set('status', 'published');
+            // Add cache busting
+            url.searchParams.set('t', Date.now().toString());
             if (refresh) url.searchParams.set('refresh', '1');
             
             const cmsRes = await fetch(url.toString(), { cache: 'no-store' });
@@ -376,7 +378,8 @@ export default function Releases() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
             
-            await fetchVideos(true, true);
+            // Immediately fetch with loading state and cache busting
+            await fetchVideos(false, true);
             
             if (data.diagnostic) {
                 const d = data.diagnostic;

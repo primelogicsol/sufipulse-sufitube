@@ -4,8 +4,6 @@
 
 export function getBestReleaseDate(r: any): string {
   return (
-    r.youtubeStats?.publishedAt ||
-    r.youtubePublishedAt || 
     r.publishedAt || 
     r.published_at || 
     r.releaseDate || 
@@ -14,6 +12,8 @@ export function getBestReleaseDate(r: any): string {
     r.created_at || 
     r.updatedAt || 
     r.updated_at ||
+    r.youtubeStats?.publishedAt ||
+    r.youtubePublishedAt || 
     new Date().toISOString()
   );
 }
