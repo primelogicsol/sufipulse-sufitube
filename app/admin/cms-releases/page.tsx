@@ -183,13 +183,16 @@ export default function CMSReleasesPage() {
     }
   };
 
-  const toggleVideoSelection = (id: string) => {
+  const toggleVideoSelection = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    // Explicitly prevent any other handling if needed, though onChange is usually safe
+    const isChecked = e.target.checked;
+    
     setSelectedVideoIds((previous) => {
       const next = new Set(previous);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
+      if (isChecked) {
         next.add(id);
+      } else {
+        next.delete(id);
       }
       return next;
     });
@@ -535,7 +538,7 @@ export default function CMSReleasesPage() {
                     <input
                       type="checkbox"
                       checked={selectedVideoIds.has(video.id)}
-                      onChange={() => toggleVideoSelection(video.id)}
+                      onChange={(e) => toggleVideoSelection(e, video.id)}
                       style={{ marginTop: 6, accentColor: 'var(--dash-accent)' }}
                     />
                     <img

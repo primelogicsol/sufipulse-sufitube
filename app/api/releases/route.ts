@@ -66,5 +66,81 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return NextResponse.json({ error: 'POST disabled for test' }, { status: 503 });
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
+  try {
+    const rawBody = await request.json();
+    const body = normalizeFieldNames(rawBody);
+    const now = new Date().toISOString();
+    
+    const id = body.id || `release_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const slug = body.slug || id;
+
+    // Check for collisions
+    if (cmsServerStorage.getRelease(id)) {
+      return NextResponse.json({ error: 'Release ID already exists' }, { status: 409 });
+    }
+    if (cmsServerStorage.getReleaseBySlug(slug)) {
+      return NextResponse.json({ error: 'Release slug already exists' }, { status: 409 });
+    }
+
+    const release: CMSRelease = {
+      id,
+      title: body.title || 'Untitled Release',
+      slug,
+      status: body.status || 'draft',
+      visibility: body.visibility || 'public',
+      source: body.source || 'cms',
+      format: body.format || 'video',
+      createdAt: now,
+      updatedAt: now,
+      availableLanguages: body.availableLanguages || ['en', 'ur'],
+      defaultLanguage: body.defaultLanguage || 'en',
+      enableLyrics: body.enableLyrics !== false,
+      enableCommentary: body.enableCommentary !== false,
+      enableSponsors: !!body.enableSponsors,
+      enableAdoption: body.enableAdoption !== false,
+      enableCredits: body.enableCredits !== false,
+      ...body,
+    };
+
+    const saved = cmsServerStorage.saveRelease(release);
+
+    // --- CACHE INVALIDATION ---
+    try {
+      revalidatePath('/');
+      revalidatePath('/releases');
+      revalidatePath(`/release-detail/${slug}`);
+      revalidatePath('/release-detail/[slug]', 'page');
+    } catch (cacheErr) {
+      console.warn('Cache revalidation failed during POST:', cacheErr);
+    }
+
+    return NextResponse.json(saved, { status: 201 });
+  } catch (err: any) {
+    console.error('[API /api/releases] POST ERROR:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+/**
+ * Normalizes field names from potential snake_case to camelCase
+ */
+function normalizeFieldNames(body: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = { ...body };
+  const fieldMap: Record<string, string> = {
+    release_title: 'title',
+    youtube_video_id: 'youtubeId',
+    duration_seconds: 'durationSeconds',
+    view_count: 'viewCount',
+    like_count: 'likeCount',
+  };
+
+  for (const [key, val] of Object.entries(fieldMap)) {
+    if (body[key] !== undefined && body[val] === undefined) {
+      result[val] = body[key];
+    }
+  }
+  return result;
 }

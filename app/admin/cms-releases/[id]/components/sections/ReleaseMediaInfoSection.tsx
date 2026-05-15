@@ -9,11 +9,12 @@ type ReleaseMediaInfoSectionProps = {
   form: Partial<CMSRelease>;
   onInputChange: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
   onFieldChange?: (field: keyof CMSRelease, value: any) => void;
+  fieldRefs?: any;
 };
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB per chunk
 
-export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: ReleaseMediaInfoSectionProps) {
+export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange, fieldRefs }: ReleaseMediaInfoSectionProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -89,6 +90,7 @@ export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: 
               Duration (seconds)
             </label>
             <input
+              ref={fieldRefs?.durationSeconds}
               type="number"
               name="durationSeconds"
               value={form.durationSeconds || 0}
@@ -158,6 +160,7 @@ export function ReleaseMediaInfoSection({ form, onInputChange, onFieldChange }: 
               Format
             </label>
             <select
+              ref={fieldRefs?.format}
               name="format"
               value={form.format || ''}
               onChange={onInputChange}

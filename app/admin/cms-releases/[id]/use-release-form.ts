@@ -209,6 +209,16 @@ export function useReleaseForm({
   const liveRef = useRef({ form, lockAllCuePositions: false });
   const carryForwardInitRef = useRef(false);
 
+  // Validation refs for focusing
+  const fieldRefs = {
+    title: useRef<HTMLInputElement>(null),
+    slug: useRef<HTMLInputElement>(null),
+    youtubeId: useRef<HTMLInputElement>(null),
+    durationSeconds: useRef<HTMLInputElement>(null),
+    status: useRef<HTMLSelectElement>(null),
+    format: useRef<HTMLSelectElement>(null),
+  };
+
   // Keep liveRef current every render
   liveRef.current = { form, lockAllCuePositions };
 
@@ -709,7 +719,7 @@ export function useReleaseForm({
     const newFieldErrors: Record<string, string> = {};
     if (!form.title?.trim()) newFieldErrors.title = 'Title is required';
     if (!form.slug?.trim()) newFieldErrors.slug = 'Slug is required';
-    if (!form.youtubeId?.trim()) newFieldErrors.youtubeId = 'YouTube ID is required';
+    if (!form.youtubeId?.trim()) newFieldErrors.youtubeId = 'YouTube ID is required. Paste a YouTube URL or video ID.';
     
     // Senior Logic: If duration is missing, it's usually because metadata hasn't fetched yet
     if (!form.durationSeconds || form.durationSeconds <= 0) {
@@ -722,7 +732,32 @@ export function useReleaseForm({
 
     if (Object.keys(newFieldErrors).length > 0) {
       setFieldErrors(newFieldErrors);
-      setErrorMessage('Please fix the highlighted fields before saving.');
+      
+      const firstErrorField = Object.keys(newFieldErrors)[0];
+      const fieldNameMap: Record<string, string> = {
+        title: 'Title',
+        slug: 'Slug',
+        youtubeId: 'YouTube ID',
+        durationSeconds: 'Duration',
+        status: 'Status',
+        format: 'Format'
+      };
+      
+      const missingFields = Object.keys(newFieldErrors)
+        .map(f => fieldNameMap[f] || f)
+        .join(', ');
+        
+      setErrorMessage(`Please fix the following fields before saving: ${missingFields}.`);
+
+      // Scroll and focus the first error
+      const ref = (fieldRefs as any)[firstErrorField];
+      if (ref && ref.current) {
+        ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Delay focus slightly to allow scroll to complete
+        setTimeout(() => {
+          if (ref.current) ref.current.focus();
+        }, 500);
+      }
       return;
     }
     setFieldErrors({});
@@ -1706,6 +1741,7 @@ export function useReleaseForm({
     previewYouTubeIframeRef,
     timelineRef,
     liveRef,
+    fieldRefs,
 
     // Language UI
     selectedSubtitleLanguage, setSelectedSubtitleLanguage,

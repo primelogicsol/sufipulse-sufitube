@@ -115,6 +115,7 @@ export default function EditReleasePage() {
     handleYouTubePaste,
     applyFetchedChannelDefaults,
     applyCarryForwardToCurrentForm,
+    fieldRefs,
     getLyricsBlocks,
     addLyricsBlock,
     updateLyricsBlock,
@@ -660,6 +661,7 @@ export default function EditReleasePage() {
                   Title <span style={{color: 'var(--dash-status-rejected)'}}>*</span>
                 </label>
                 <input
+                  ref={fieldRefs.title}
                   type="text"
                   name="title"
                   value={form.title || ''}
@@ -693,7 +695,7 @@ export default function EditReleasePage() {
                 </div>
                 {fieldErrors.slug
                   ? <p className="form-error-message">{fieldErrors.slug}</p>
-                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Auto-generated from title G�� edit to customise</p>
+                  : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Auto-generated from title — edit to customise</p>
                 }
               </div>
 
@@ -703,13 +705,14 @@ export default function EditReleasePage() {
                   {youtubeChannelLookupLoading && <Loader2 size={12} className="inline ml-2 animate-spin" style={{ color: 'var(--dash-accent)' }} />}
                 </label>
                 <input
+                  ref={fieldRefs.youtubeId}
                   type="text"
                   name="youtubeId"
                   value={form.youtubeId || ''}
                   onChange={handleInputChange}
                   onPaste={handleYouTubePaste}
                   className={`form-input w-full${fieldErrors.youtubeId ? ' form-error' : ''}`}
-                  placeholder="Paste YouTube URL or ID G�� e.g., LXb3EKWsInQ"
+                  placeholder="Paste a YouTube URL or video ID, for example: LXb3EKWsInQ"
                 />
                 {fieldErrors.youtubeId
                   ? <p className="form-error-message">{fieldErrors.youtubeId}</p>
@@ -834,6 +837,7 @@ export default function EditReleasePage() {
                     Status
                   </label>
                   <select
+                    ref={fieldRefs.status}
                     name="status"
                     value={form.status || 'draft'}
                     onChange={handleInputChange}
@@ -857,6 +861,7 @@ export default function EditReleasePage() {
               form={form}
               onInputChange={handleInputChange}
               onFieldChange={(field, value) => setForm((f: any) => ({ ...f, [field]: value }))}
+              fieldRefs={fieldRefs}
             />
           </div>
 
@@ -1642,8 +1647,8 @@ export default function EditReleasePage() {
                     title={`Auto-translate all cues from master language (${getLanguageLabel(form.defaultLanguage || 'en')}) to ${getLanguageLabel(selectedSubtitleLanguage)}`}
                   >
                     {autoTranslatingLang === selectedSubtitleLanguage
-                      ? 'GŦ TranslatingGǪ'
-                      : `G�� Auto-translate from ${getLanguageLabel(form.defaultLanguage || 'en')}`}
+                      ? '... Translating...'
+                      : `— Auto-translate from ${getLanguageLabel(form.defaultLanguage || 'en')}`}
                   </button>
                 )}
               </div>

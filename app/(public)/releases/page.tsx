@@ -74,13 +74,15 @@ function SyncResultModal({
     onClose, 
     result, 
     error,
-    onRefresh
+    onRefresh,
+    onClearFilters
 }: { 
     open: boolean; 
     onClose: () => void; 
     result: SyncResult | null; 
     error: string | null;
     onRefresh: () => void;
+    onClearFilters?: () => void;
 }) {
     if (!open) return null;
 
@@ -248,6 +250,14 @@ function SyncResultModal({
 
                 {/* Footer Actions */}
                 <div className="p-6 border-t border-white/5 bg-[var(--color-midnight)]/20 flex flex-wrap items-center justify-end gap-3">
+                    {result?.diagnostic?.visibleUnderCurrentFilters === false && onClearFilters && (
+                        <button 
+                            onClick={() => { onClearFilters(); onRefresh(); }}
+                            className="px-6 py-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs font-bold hover:bg-amber-500/20 transition-all"
+                        >
+                            Clear Filters
+                        </button>
+                    )}
                     {result?.diagnostic?.youtubeId && (
                         <Link 
                             href={`/release-detail/${result.diagnostic.youtubeId}`}
@@ -289,7 +299,7 @@ export default function Releases() {
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-    const [durationFilter, setDurationFilter] = useState<DurationFilter>('long');
+    const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
     const [yearFilter, setYearFilter] = useState<string>('all');
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');
