@@ -153,17 +153,46 @@ export const articleSubmissionSchema = z.object({
  * CMS Release Schemas
  */
 export const cmsReleaseSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(3, 'Title must be at least 3 characters').max(500, 'Title is too long'),
   slug: z.string().min(3, 'Slug must be at least 3 characters').max(500).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, and hyphens'),
-  youtube_id: z.string().max(100).optional().or(z.literal('')),
-  youtube_url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  description: z.string().max(5000).optional(),
-  duration_seconds: z.number().int().min(0).optional(),
-  web_only: z.boolean().optional(),
-  release_date: z.string().optional().or(z.literal('')),
-  writer: z.string().optional(),
-  vocalist: z.string().optional(),
-  producer: z.string().optional(),
+  youtubeId: z.string().max(100).optional().or(z.literal('')),
+  youtubeUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  description: z.string().max(10000).optional(),
+  durationSeconds: z.number().int().min(0).optional(),
+  durationFormatted: z.string().optional(),
+  status: z.enum(['draft', 'in_review', 'approved', 'published', 'unpublished', 'archived']).default('draft'),
+  releaseType: z.string().optional(),
+  category: z.string().optional(),
+  thumbnailUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  posterUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  webOnly: z.boolean().optional(),
+  releaseDate: z.string().optional().or(z.literal('')),
+  writer: z.object({
+    name: z.string(),
+    nameUrdu: z.string().optional(),
+  }).optional(),
+  vocalist: z.object({
+    name: z.string(),
+    nameUrdu: z.string().optional(),
+  }).optional(),
+  producer: z.object({
+    name: z.string(),
+  }).optional(),
+});
+
+export const releasesQuerySchema = z.object({
+  key: z.string().optional(),
+  slug: z.string().optional(),
+  youtubeId: z.string().optional(),
+  status: z.string().optional(),
+  format: z.string().optional(),
+  type: z.string().optional(),
+  duration: z.string().optional(),
+  year: z.string().optional(),
+  search: z.string().optional(),
+  refresh: z.string().optional(),
+  nocache: z.string().optional(),
 });
 
 /**
@@ -181,6 +210,36 @@ export const adoptionSchema = z.object({
   dedication_message: z.string().max(1000).optional(),
   public_display_mode: z.string().optional(),
   public_location_mode: z.string().optional(),
+});
+
+export const adoptionApiSchema = z.object({
+  releaseId: z.string().min(1, 'releaseId is required'),
+  releaseTitle: z.string().optional(),
+  releaseSlug: z.string().optional(),
+  methodType: z.enum(['managed_sufitube', 'use_my_google_ads']),
+  sponsorName: z.string().optional(),
+  sponsorEmail: z.string().email('Invalid email').optional(),
+  sponsorCountry: z.string().optional(),
+  sponsorCity: z.string().optional(),
+  adopterType: z.string().optional(),
+  campaignIntention: z.string().optional(),
+  dedicationMessage: z.string().max(1000).optional(),
+  campaignObjective: z.string().optional(),
+  targetRegions: z.array(z.string()).optional(),
+  targetLanguages: z.array(z.string()).optional(),
+  amountDue: z.number().optional(),
+  currency: z.string().optional(),
+  googleAdsCustomerId: z.string().optional(),
+  publicDisplayMode: z.string().optional(),
+  publicLocationMode: z.string().optional(),
+  isAnonymous: z.boolean().optional(),
+  adoptionStatus: z.string().optional(),
+});
+
+export const adoptionsQuerySchema = z.object({
+  me: z.string().optional(),
+  all: z.string().optional(),
+  releaseId: z.string().optional(),
 });
 
 /**
@@ -230,6 +289,29 @@ export const partnershipSchema = z.object({
 });
 
 /**
+ * Notification Schema
+ */
+export const notificationSchema = z.object({
+  to: z.string().email('Invalid recipient email address'),
+  subject: z.string().min(3, 'Subject must be at least 3 characters').max(255),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  role: z.string(),
+  event: z.string(),
+  message: z.string().min(10, 'Message must be at least 10 characters'),
+  action_url: z.string().url('Invalid action URL').optional().or(z.literal('')),
+  reference: z.string().optional(),
+});
+
+/**
+ * Translation Schema
+ */
+export const translationSchema = z.object({
+  texts: z.array(z.string()).min(1, 'At least one text is required'),
+  sourceLang: z.string().min(2, 'Source language is required'),
+  targetLang: z.string().min(2, 'Target language is required'),
+});
+
+/**
  * Helper function to validate and parse
  */
 export function validateSchema<T>(
@@ -244,12 +326,17 @@ export function validateSchema<T>(
 }
 
 /**
- * Helper to format Zod errors for form fields
+ * Helper to format Zod errors into a simple field-to-message mapping
  */
-export function formatFieldErrors(error: z.ZodError | null, fieldName: string): string | undefined {
-  if (!error) return undefined;
-  const issues = error.issues || [];
-  return issues.find((e: any) => e.path.includes(fieldName))?.message;
+export function formatFieldErrors(error: z.ZodError): Record<string, string> {
+  const fieldErrors: Record<string, string> = {};
+  error.errors.forEach((err) => {
+    const key = err.path.map(String).join('.');
+    if (key) {
+      fieldErrors[key] = err.message;
+    }
+  });
+  return fieldErrors;
 }
 
 export default {
@@ -271,6 +358,8 @@ export default {
   partnershipSchema,
   sessionRequestSchema,
   studioAccessCodeRequestSchema,
+  notificationSchema,
+  translationSchema,
   validateSchema,
   formatFieldErrors,
 };
