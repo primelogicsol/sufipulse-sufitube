@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { Mail, Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import * as api from "../../api/auth";
+import * as api from "@/app/lib/api-client";
 import Link from 'next/link';
 
 export default function ForgotPassword() {

@@ -15,15 +15,16 @@ export async function GET(request: NextRequest) {
   try {
     const analytics = await youtubeAnalyticsService.getLifetimeGlobalReachAnalytics(refresh);
     
-    // Return only public-safe fields as requested
+    // Return only public-safe fields from the Lifetime Snapshot
     const publicSafe = {
-      period: analytics.period,
       title: analytics.title,
       subtitle: analytics.subtitle,
-      ageGender: analytics.ageGender,
-      performance: analytics.performance,
-      recommendationEngine: analytics.recommendationEngine,
-      geographies: analytics.geographies,
+      // Map new nested structure to flat structure expected by the UI
+      ageGender: analytics.lifetimeSnapshot.ageGender,
+      performance: analytics.lifetimeSnapshot.performance,
+      recommendationEngine: analytics.lifetimeSnapshot.recommendationEngine,
+      geographies: analytics.lifetimeSnapshot.geographies,
+      
       lastUpdated: analytics.lastUpdated,
       nextRefreshAt: analytics.nextRefreshAt,
       status: analytics.status,

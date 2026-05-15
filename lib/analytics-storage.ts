@@ -1,51 +1,69 @@
 import { getTable, type YouTubeAnalyticsSnapshot } from './database-schema';
 
-export type GlobalReachPayload = YouTubeAnalyticsSnapshot;
+export type GlobalReachPayload = PublicGlobalReachPayload;
 export type AnalyticsSnapshot = YouTubeAnalyticsSnapshot;
 
-// Initial default data if database is empty
-const DEFAULT_PAYLOAD: GlobalReachPayload = {
+/**
+ * Sanitized payload for public UI
+ */
+export interface PublicGlobalReachPayload {
+  title: string;
+  subtitle: string;
+  ageGender: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['ageGender'];
+  performance: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['performance'];
+  recommendationEngine: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['recommendationEngine'];
+  geographies: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['geographies'];
+  lastUpdated: string;
+  status: 'active' | 'stale' | 'error';
+  errorMessage?: string;
+}
+
+// Initial default data: Verified Institutional Baseline
+const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
   id: "lifetime",
   channelId: 'UCraDr3i5A3k0j7typ6tOOsQ',
   scope: 'lifetime',
   status: 'active',
-  period: 'lifetime',
   title: "SufiPulse Global Reach",
   subtitle: "Lifetime audience intelligence from the official SufiPulse SufiTube channel, updated from the latest verified YouTube Analytics snapshot.",
-  performance: {
-    impressions: 955500,
-    views: 82100,
-    watchTimeHours: 8700,
-    clickThroughRate: 8.6,
-    averageViewDurationSeconds: 381,
-    averageViewDurationFormatted: "6:21"
+
+  // 1. Immutable Institutional Results
+  lifetimeSnapshot: {
+    performance: {
+      impressions: 964100,
+      views: 82200,
+      watchTimeHours: 8700,
+      clickThroughRate: 8.5,
+      averageViewDurationFormatted: "6:21"
+    },
+    ageGender: {
+      gender: { female: 42.7, male: 57.3 },
+      ageGroups: [
+        { ageGroup: "13-17", percentage: 3.7 },
+        { ageGroup: "18-24", percentage: 23.5 },
+        { ageGroup: "25-34", percentage: 42.3 },
+        { ageGroup: "35-44", percentage: 18.7 },
+        { ageGroup: "45-54", percentage: 8.1 },
+        { ageGroup: "55-64", percentage: 2.4 },
+        { ageGroup: "65+",   percentage: 1.3 }
+      ]
+    },
+    recommendationEngine: {
+      viewsPercentage: 87.7
+    },
+    geographies: {
+      totalCountries: 50
+    }
   },
-  ageGender: {
-    gender: { female: 43.2, male: 56.8 },
-    ageGroups: [
-      { ageGroup: "13-17", percentage: 3.6 },
-      { ageGroup: "18-24", percentage: 23.6 },
-      { ageGroup: "25-34", percentage: 42.6 },
-      { ageGroup: "35-44", percentage: 18.7 },
-      { ageGroup: "45-54", percentage: 8.1 },
-      { ageGroup: "55-64", percentage: 2.3 },
-      { ageGroup: "65+",   percentage: 1.2 }
-    ]
+
+  // 2. Live API Telemetry (Admins only)
+  apiStatus: {
+    connected: false,
+    lastCheck: new Date().toISOString(),
+    availableLiveMetrics: ["views", "watchTime", "averageDuration", "trafficSource"],
+    restrictedMetrics: ["impressions", "ctr", "demographics", "geography"]
   },
-  recommendationEngine: {
-    viewsPercentage: 88.1,
-    label: "views driven by the recommendation engine"
-  },
-  geographies: {
-    totalCountries: 47,
-    countries: [
-      { code: 'US', name: 'United States', views: 12000 },
-      { code: 'PK', name: 'Pakistan', views: 10500 },
-      { code: 'GB', name: 'United Kingdom', views: 8000 },
-      { code: 'IN', name: 'India', views: 7500 },
-      { code: 'TR', name: 'Turkey', views: 5000 }
-    ]
-  },
+
   lastUpdated: new Date().toISOString(),
   nextRefreshAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 };

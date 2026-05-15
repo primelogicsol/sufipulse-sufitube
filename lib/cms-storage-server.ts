@@ -13,22 +13,27 @@ let hydrated = false;
 let lastHydratedMtime = 0;
 
 const ensureHydrated = (force = false) => {
+  console.log(`[cms-storage-server] ensureHydrated(force=${force}) started. hydrated=${hydrated}`);
   let currentMtime = 0;
   try {
     if (fs.existsSync(SERVER_DATA_FILE)) {
       currentMtime = fs.statSync(SERVER_DATA_FILE).mtimeMs;
     }
-  } catch (e) {}
+  } catch (e: any) {
+    console.warn(`[cms-storage-server] Failed to stat ${SERVER_DATA_FILE}:`, e.message);
+  }
 
   const needsRehydration = force || !hydrated || (currentMtime > lastHydratedMtime);
 
   if (!needsRehydration) {
+    console.log(`[cms-storage-server] No rehydration needed.`);
     return;
   }
 
   console.log(`[cms-storage-server] ${force ? 'FORCING' : 'Triggering'} re-hydration from disk... (File Mtime: ${currentMtime}, Last: ${lastHydratedMtime})`);
   try {
     if (fs.existsSync(SERVER_DATA_FILE)) {
+      console.log(`[cms-storage-server] Reading ${SERVER_DATA_FILE}...`);
       const raw = fs.readFileSync(SERVER_DATA_FILE, 'utf8');
       const parsed = raw ? JSON.parse(raw) : [];
       const releases = Array.isArray(parsed) ? (parsed as CMSRelease[]) : [];
@@ -49,10 +54,13 @@ const ensureHydrated = (force = false) => {
           cmsStorage.importReleases(releases);
           persist();
         }
+      } else {
+        console.warn(`[cmsServerStorage] Seed file also NOT FOUND at ${SEED_FILE}`);
       }
     }
 
     if (fs.existsSync(REQUESTS_DATA_FILE)) {
+      console.log(`[cms-storage-server] Reading ${REQUESTS_DATA_FILE}...`);
       const raw = fs.readFileSync(REQUESTS_DATA_FILE, 'utf8');
       const parsed = raw ? JSON.parse(raw) : [];
       const requests = Array.isArray(parsed) ? (parsed as any[]) : [];
@@ -62,25 +70,32 @@ const ensureHydrated = (force = false) => {
 
     hydrated = true;
     lastHydratedMtime = currentMtime;
-    } catch (error) {
-    console.error('Failed to hydrate server CMS storage:', error);
+    console.log(`[cms-storage-server] Hydration successful.`);
+  } catch (error: any) {
+    console.error('[cms-storage-server] FATAL hydration error:', error);
+    // Mark as hydrated anyway to prevent infinite retry loops
     hydrated = true;
-    }
-    };
+  }
+};
 
 
 const persist = () => {
+  console.log(`[cms-storage-server] persist() started.`);
   const data = cmsStorage.exportReleases();
   const reqData = cmsStorage.exportLyricsRequests();
   
   try {
     if (!fs.existsSync(SERVER_DATA_DIR)) {
+      console.log(`[cms-storage-server] Creating directory ${SERVER_DATA_DIR}...`);
       fs.mkdirSync(SERVER_DATA_DIR, { recursive: true });
     }
+    console.log(`[cms-storage-server] Writing to ${SERVER_DATA_FILE}...`);
     fs.writeFileSync(SERVER_DATA_FILE, JSON.stringify(data, null, 2));
+    console.log(`[cms-storage-server] Writing to ${REQUESTS_DATA_FILE}...`);
     fs.writeFileSync(REQUESTS_DATA_FILE, JSON.stringify(reqData, null, 2));
-  } catch (error) {
-    console.error('Failed to persist CMS data to disk:', error);
+    console.log(`[cms-storage-server] Persistence successful.`);
+  } catch (error: any) {
+    console.error('[cms-storage-server] FATAL persistence error:', error);
   }
 };
 

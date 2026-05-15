@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     else if (role === 'vocalist') destination = '/user/vocalist/dashboard';
     else if (role === 'producer') destination = '/user/producer/dashboard';
     else if (role === 'literary') destination = '/user/literary-contributor/dashboard';
-    else if (role === 'studio') destination = '/user/studio-engineer/dashboard';
+    else if (role === 'studio') destination = '/user/studio/dashboard';
 
     const res = NextResponse.redirect(`${appUrl}${destination}`);
     const cookieOpts = {

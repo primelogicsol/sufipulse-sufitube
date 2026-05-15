@@ -5,9 +5,10 @@ import {
   getAllAdoptionRecords,
   getAdoptionsByUser,
   getAdoptionsByRelease,
-  type MethodType,
 } from '@/app/lib/server/adoption-store';
 import { getAuthUser, requireAdmin } from '@/server/middleware/authenticate';
+import { validateRequestBody, validateQueryParams } from '@/app/lib/api-middleware';
+import { adoptionApiSchema, adoptionsQuerySchema } from '@/app/lib/validation-schemas';
 
 /**
  * POST /api/adoptions
@@ -17,8 +18,11 @@ import { getAuthUser, requireAdmin } from '@/server/middleware/authenticate';
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
 
+  const validationResult = await validateRequestBody(request, adoptionApiSchema);
+  if (validationResult instanceof NextResponse) return validationResult;
+
   try {
-    const body = await request.json();
+    const body = validationResult.data;
     const {
       releaseId,
       releaseTitle,
@@ -41,36 +45,7 @@ export async function POST(request: NextRequest) {
       publicLocationMode = 'city_country',
       isAnonymous = false,
       adoptionStatus = 'draft',
-    }: {
-      releaseId: string;
-      releaseTitle?: string;
-      releaseSlug?: string;
-      methodType: MethodType;
-      sponsorName?: string;
-      sponsorEmail?: string;
-      sponsorCountry?: string;
-      sponsorCity?: string;
-      adopterType?: string;
-      campaignIntention?: string;
-      dedicationMessage?: string;
-      campaignObjective?: string;
-      targetRegions?: string[];
-      targetLanguages?: string[];
-      amountDue?: number;
-      currency?: string;
-      googleAdsCustomerId?: string;
-      publicDisplayMode?: string;
-      publicLocationMode?: string;
-      isAnonymous?: boolean;
-      adoptionStatus?: string;
     } = body;
-
-    if (!releaseId || !methodType) {
-      return NextResponse.json({ error: 'releaseId and methodType are required' }, { status: 400 });
-    }
-    if (methodType !== 'managed_sufitube' && methodType !== 'use_my_google_ads') {
-      return NextResponse.json({ error: 'Invalid methodType' }, { status: 400 });
-    }
 
     const record = createAdoptionRecord({
       releaseId,
@@ -86,11 +61,11 @@ export async function POST(request: NextRequest) {
       campaignIntention,
       dedicationMessage,
       campaignObjective: campaignObjective || 'awareness',
-      targetRegions,
-      targetLanguages,
-      amountDue,
+      targetRegions: targetRegions || ['Global'],
+      targetLanguages: targetLanguages || ['All'],
+      amountDue: amountDue || 0,
       amountPaid: 0,
-      currency,
+      currency: currency || 'USD',
       paymentProvider: null,
       paymentReference: null,
       paymentRoute: null,
@@ -101,7 +76,7 @@ export async function POST(request: NextRequest) {
       publicDisplayMode,
       publicLocationMode,
       publicListingApproved: false,
-      isAnonymous,
+      isAnonymous: isAnonymous || false,
       adminNote: null,
       reportUrl: null,
       adoptionStatus: adoptionStatus as any,
@@ -120,9 +95,15 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const me = searchParams.get('me') === '1';
-  const all = searchParams.get('all') === '1';
-  const releaseId = searchParams.get('releaseId');
+  
+  const validationResult = validateQueryParams(searchParams, adoptionsQuerySchema);
+  if (!validationResult.success) {
+    return NextResponse.json(validationResult.error, { status: 400 });
+  }
+
+  const { me: meParam, all: allParam, releaseId } = validationResult.data;
+  const me = meParam === '1';
+  const all = allParam === '1';
 
   if (all) {
     const adminCheck = await requireAdmin(request);

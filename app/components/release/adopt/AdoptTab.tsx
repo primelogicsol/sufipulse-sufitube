@@ -1,14 +1,24 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2, Lock, ExternalLink, Clock } from 'lucide-react';
+import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2, Lock, ExternalLink, Clock, AlertCircle } from 'lucide-react';
 import { SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
 
 const ADOPTION_PACKAGES: SongAdoptionPackage[] = [
-  { id: 'pkg_1', method_type: 'managed_sufitube', package_name: 'Quick Boost', description: 'Short visibility push and early testing — ideal for first-time sponsors', currency: 'USD', amount: 39, estimated_impressions_min: 500, estimated_impressions_max: 3000, duration_days: 4, regions_targeted: ['Local'], reporting_level: 'Basic', is_active: true, sort_order: 1 },
-  { id: 'pkg_2', method_type: 'managed_sufitube', package_name: 'Starter Reach', description: 'Focused promotional push for one kalam with community engagement', currency: 'USD', amount: 75, estimated_impressions_min: 3000, estimated_impressions_max: 10000, duration_days: 7, regions_targeted: ['Regional'], reporting_level: 'Basic', is_active: true, sort_order: 2 },
-  { id: 'pkg_3', method_type: 'managed_sufitube', package_name: 'Balanced Campaign', description: 'Strong reach, better audience learning and diaspora discovery', currency: 'USD', amount: 199, estimated_impressions_min: 10000, estimated_impressions_max: 40000, duration_days: 14, regions_targeted: ['Regional', 'Diaspora'], reporting_level: 'Standard', is_active: true, sort_order: 3 },
-  { id: 'pkg_4', method_type: 'managed_sufitube', package_name: 'Optimal Reach', description: 'Sustained promotion, wider discovery and stronger performance data', currency: 'USD', amount: 500, estimated_impressions_min: 50000, estimated_impressions_max: 150000, duration_days: 21, regions_targeted: ['Global'], reporting_level: 'Premium', is_active: true, sort_order: 4 },
+  { id: 'pkg_1', method_type: 'managed_sufitube', package_name: 'Blessing Support', description: 'Early visibility push and community testing — ideal for first-time sponsors', currency: 'USD', amount: 25, estimated_impressions_min: 500, estimated_impressions_max: 3000, duration_days: 4, regions_targeted: ['Local'], reporting_level: 'Basic', is_active: true, sort_order: 1 },
+  { id: 'pkg_2', method_type: 'managed_sufitube', package_name: 'Light Campaign', description: 'Focused promotional push for one kalam with community engagement', currency: 'USD', amount: 50, estimated_impressions_min: 3000, estimated_impressions_max: 10000, duration_days: 7, regions_targeted: ['Regional'], reporting_level: 'Basic', is_active: true, sort_order: 2 },
+  { id: 'pkg_3', method_type: 'managed_sufitube', package_name: 'Noor Campaign', description: 'Strong reach, better audience learning and diaspora discovery', currency: 'USD', amount: 100, estimated_impressions_min: 10000, estimated_impressions_max: 40000, duration_days: 14, regions_targeted: ['Regional', 'Diaspora'], reporting_level: 'Standard', is_active: true, sort_order: 3 },
+  { id: 'pkg_4', method_type: 'managed_sufitube', package_name: 'Sama Outreach', description: 'Sustained promotion, wider discovery and stronger performance data', currency: 'USD', amount: 250, estimated_impressions_min: 50000, estimated_impressions_max: 150000, duration_days: 21, regions_targeted: ['Global'], reporting_level: 'Premium', is_active: true, sort_order: 4 },
+  { id: 'pkg_5', method_type: 'managed_sufitube', package_name: 'Global Support', description: 'Institutional scale promotion to global seekers of truth', currency: 'USD', amount: 500, estimated_impressions_min: 150000, estimated_impressions_max: 450000, duration_days: 30, regions_targeted: ['Global'], reporting_level: 'Institutional', is_active: true, sort_order: 5 },
+];
+
+const DIRECT_PACKAGES: any[] = [
+  { id: 'dir_1', name: 'Starter Test', amount: 50, sub: 'Ideal for initial testing', impressions: '~5k–15k' },
+  { id: 'dir_2', name: 'Focused Outreach', amount: 100, sub: 'Deeper community reach', impressions: '~15k–45k' },
+  { id: 'dir_3', name: 'Regional Reach', amount: 250, sub: 'Regional scale discovery', impressions: '~45k–150k' },
+  { id: 'dir_4', name: 'Wider Discovery', amount: 500, sub: 'Global seeker engagement', impressions: '~150k–500k' },
 ];
 
 const REGIONS = [
@@ -23,16 +33,16 @@ const LANGUAGES = [
 ];
 
 const INTENTIONS = [
-  { value: 'spiritual_reflection',  label: 'Spiritual Reflection' },
-  { value: 'ramadan_sacred_season', label: 'Ramadan / Sacred Season' },
-  { value: 'kashmiri_sufi_audience',label: 'Kashmiri Sufi Audience' },
-  { value: 'urdu_hindi_listeners',  label: 'Urdu / Hindi Listeners' },
-  { value: 'global_sufi_seekers',   label: 'Global Sufi Seekers' },
-  { value: 'youth_new_listeners',   label: 'Youth & New Listeners' },
-  { value: 'diaspora_outreach',     label: 'Diaspora Outreach' },
-  { value: 'general_awareness',     label: 'General Awareness' },
-  { value: 'memorial_dedication',   label: 'Memorial / Dedication' },
-  { value: 'institutional_support', label: 'Institutional Support' },
+  { value: 'spread_divine_love',    label: 'Spread Divine Love' },
+  { value: 'reach_seekers_truth',   label: 'Reach Seekers of Truth' },
+  { value: 'support_sacred_music',  label: 'Support Sacred Music' },
+  { value: 'share_sufi_wisdom',    label: 'Share Sufi Wisdom' },
+  { value: 'honor_loved_one',      label: 'Honor a Loved One' },
+  { value: 'dedicate_for_healing', label: 'Dedicate for Healing' },
+  { value: 'promote_peace',        label: 'Promote Peace' },
+  { value: 'support_artist',       label: 'Support the Artist' },
+  { value: 'preserve_poetry',      label: 'Preserve Spiritual Poetry' },
+  { value: 'global_sufi_outreach', label: 'Global Sufi Outreach' },
 ];
 import { useFormSecurity } from '../../../hooks/useFormSecurity';
 import { adoptionSchema, validateSchema } from '../../../lib/validation-schemas';
@@ -114,7 +124,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [showManualFallback, setShowManualFallback] = useState(false);
   const [isDraftingCampaign, setIsDraftingCampaign] = useState(false);
 
-  const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  const [stripeEnabled, setStripeEnabled] = useState(false);
 
   // Custom budget modal (managed flow only)
   const [showCustomModal, setShowCustomModal] = useState(false);
@@ -123,6 +133,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   // ── Effects ───────────────────────────────────────────────────────────────
 
+  // Check Stripe availability on mount
+  useEffect(() => {
+    const hasPaymentLink = !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_SONG_PAYMENT_LINK;
+    fetch('/api/payment/status')
+      .then(res => res.json())
+      .then(data => setStripeEnabled(!!data.available || hasPaymentLink))
+      .catch(() => setStripeEnabled(!!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || hasPaymentLink));
+  }, []);
 
   // Check at mount whether Google Ads is configured on this server.
   useEffect(() => {
@@ -481,6 +499,26 @@ export function AdoptTab({ release }: AdoptTabProps) {
       agree_to_terms: false, agree_to_promotional_use: false, billing_enabled: false,
       setup_help_requested: false, auto_generate_copy: true, auto_generate_keywords: true,
       asset_suggestions: true, target_regions: [], target_languages: [],
+    });
+  };
+
+  const toggleRegion = (region: string) => {
+    setFormData(prev => {
+      const current = prev.target_regions || [];
+      const next = current.includes(region)
+        ? current.filter(r => r !== region)
+        : [...current, region];
+      return { ...prev, target_regions: next };
+    });
+  };
+
+  const toggleLanguage = (lang: string) => {
+    setFormData(prev => {
+      const current = prev.target_languages || [];
+      const next = current.includes(lang)
+        ? current.filter(l => l !== lang)
+        : [...current, lang];
+      return { ...prev, target_languages: next };
     });
   };
 
@@ -985,41 +1023,119 @@ export function AdoptTab({ release }: AdoptTabProps) {
       return;
     }
 
-    if (!stripeEnabled) {
-      setSubmitError('Payment system is currently unavailable. Please contact support.');
+    // 1. Audit and Select Tier-Specific Payment Link
+    // We specifically avoid using the generic NEXT_PUBLIC_STRIPE_ADOPT_SONG_PAYMENT_LINK
+    // for these tiers if their specific links are missing, to avoid amount mismatches.
+    let paymentLink = '';
+    let tierLabel = '';
+
+    if (budget === 25) {
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25 || '';
+      tierLabel = '25';
+    } else if (budget === 50) {
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_50 || '';
+      tierLabel = '50';
+    } else if (budget === 100) {
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_100 || '';
+      tierLabel = '100';
+    } else if (budget === 250) {
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_250 || '';
+      tierLabel = '250';
+    } else if (budget === 500) {
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_500 || '';
+      tierLabel = '500';
+    } else if (budget > 0) {
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_CUSTOM || '';
+      tierLabel = 'custom';
+    }
+
+    // Prioritise Tier-Specific Payment Link if configured
+    if (paymentLink) {
+      setIsSubmitting(true);
+      try {
+        const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ 
+            paymentStatus: 'pending', 
+            paymentRoute: 'stripe_payment_link',
+            adoptionStatus: 'pending_payment',
+            amountDue: budget,
+            expectedPaymentAmount: budget,
+            paymentLinkTier: tierLabel
+          }),
+        });
+        if (!patchRes.ok) throw new Error('Failed to initialise payment');
+        window.location.href = paymentLink;
+      } catch (err: any) {
+        setSubmitError(`Payment error: ${err.message}`);
+        setIsSubmitting(false);
+      }
       return;
     }
 
-    setIsRedirectingToStripe(true);
+    // 2. Fallback to Option 2: Dynamic Checkout Session API
+    // We only try this if stripeEnabled is true (which could be from API config or legacy link)
+    if (stripeEnabled) {
+      setIsRedirectingToStripe(true);
+      try {
+        const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            amountUSD: budget,
+            releaseTitle: release?.release_title,
+            sponsorName: formData.full_name,
+            sponsorEmail: formData.email,
+            packageName: selectedPackage?.package_name,
+          }),
+        });
+        
+        if (res.ok) {
+          const body = await res.json();
+          window.location.href = body.url;
+          return;
+        }
+
+        if (res.status === 401) {
+          setShowAuthWall(true);
+          setIsRedirectingToStripe(false);
+          return;
+        }
+        
+        // If it failed with 503 (not configured) or other error, fall through to manual fallback
+        console.warn('Stripe Checkout API failed or not configured, falling back to manual review.');
+      } catch (err) {
+        console.error('Stripe Checkout API error:', err);
+      }
+      setIsRedirectingToStripe(false);
+    }
+
+    // 3. Final Fallback: Manual Coordination (when no payment links or API are configured)
+    setIsSubmitting(true);
+    setSubmitError('Electronic payment for this tier is not configured yet. Your request can still be submitted for manual payment coordination.');
+    
     try {
-      const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
-        method: 'POST',
+      const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          amountUSD: budget,
-          releaseTitle: release?.release_title,
-          sponsorName: formData.full_name,
-          sponsorEmail: formData.email,
-          packageName: selectedPackage?.package_name,
+        body: JSON.stringify({ 
+          paymentStatus: 'pending', 
+          paymentRoute: 'manual_coordination',
+          adoptionStatus: 'pending_review' 
         }),
       });
-      const body = await res.json();
-      if (res.status === 401) {
-        setShowAuthWall(true);
-        setIsRedirectingToStripe(false);
-        return;
-      }
-      if (!res.ok) {
-        const msg = typeof body.error === 'string'
-          ? body.error
-          : body.error?.message || 'Checkout failed';
-        throw new Error(msg);
-      }
-      window.location.href = body.url;
+      if (!patchRes.ok) throw new Error('Failed to save manual submission');
+      
+      // Final success state for manual coordination
+      setStep(5);
     } catch (err: any) {
-      setSubmitError(`Payment error: ${err.message}`);
-      setIsRedirectingToStripe(false);
+      setSubmitError(`Error: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1231,66 +1347,70 @@ export function AdoptTab({ release }: AdoptTabProps) {
   );
 
   const renderPackageSelection = () => {
-    // ── use_my_google_ads: budget entry then connect ──
+    // ── use_my_google_ads: selectable tiers + custom budget ──
     if (selectedMethod === 'use_my_google_ads') {
       return (
-        <div className="max-w-3xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
+        <div className="max-w-4xl mx-auto space-y-12 animate-in slide-in-from-right-12 duration-500">
           <div className="text-center space-y-3">
-            <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Campaign Budget</h3>
-            <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">Set your total Google Ads spend for this kalam</p>
+            <h3 className="text-3xl md:text-4xl font-serif text-[var(--color-text-primary)] tracking-tight">Campaign Budget</h3>
+            <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">Set your planned Google Ads spend. You pay Google directly from your own account.</p>
           </div>
 
-          <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl overflow-hidden backdrop-blur-sm shadow-xl">
-            <div className="p-6 border-b border-[var(--color-border-strong)] bg-[var(--color-slate)]/10">
-              <div className="flex items-center gap-2 text-[var(--color-gold)] font-medium text-sm uppercase tracking-wider">
-                <BarChart className="w-4 h-4" /> Reach Estimates
-              </div>
-            </div>
-            <div className="divide-y divide-[var(--color-border-strong)]">
-              {[
-                { label: 'Quick Boost', sub: '1–5 days · $2–10/day', range: '$10–$49' },
-                { label: 'Starter Reach', sub: '5–10 days · $5–15/day', range: '$50–$99' },
-                { label: 'Balanced Campaign', sub: '7–14 days · $10–25/day · Recommended', range: '$100–$299', highlight: true },
-                { label: 'Optimal Reach', sub: '14–30 days · $15–35+/day', range: '$300+' },
-              ].map(({ label, sub, range, highlight }) => (
-                <div key={label} className={`flex justify-between items-center px-6 py-4 transition-colors ${highlight ? 'bg-[var(--color-gold-muted)]/50' : 'hover:bg-white/[0.02]'}`}>
-                  <div>
-                    <div className={`text-sm font-semibold tracking-tight ${highlight ? 'text-[var(--color-gold)]' : 'text-[var(--color-text-primary)]'}`}>
-                      {label}
-                      {highlight && <span className="ml-2 text-[10px] bg-[var(--color-gold)]/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Recommended</span>}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+            {DIRECT_PACKAGES.map((pkg) => (
+              <button
+                key={pkg.id}
+                onClick={() => {
+                  setFormData(prev => ({ ...prev, custom_budget: pkg.amount }));
+                  setStep(3);
+                }}
+                className="group relative flex flex-col items-stretch p-8 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-blue-500/40 rounded-3xl transition-all duration-500 text-left overflow-hidden backdrop-blur-sm"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-xl font-serif text-[var(--color-text-primary)] group-hover:text-blue-400 transition-colors duration-300">{pkg.name}</h4>
+                      <p className="text-[var(--color-text-secondary)] text-xs mt-1 leading-relaxed">{pkg.sub}</p>
                     </div>
-                    <div className="text-[var(--color-text-tertiary)] text-xs mt-0.5">{sub}</div>
+                    <div className="text-2xl font-serif font-bold text-blue-400">${pkg.amount}</div>
                   </div>
-                  <span className={`text-xs font-mono font-medium ${highlight ? 'text-[var(--color-gold)]' : 'text-[var(--color-text-secondary)]'}`}>{range}</span>
+
+                  <div className="py-4 border-y border-[var(--color-border-strong)]/50">
+                    <div className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest">Planned Impact</div>
+                    <div className="text-sm text-[var(--color-text-secondary)] font-medium mt-1">{pkg.impressions} Impressions</div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--color-text-tertiary)]">
+                    <span>Direct Billing</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 group-hover:text-blue-400 transition-all" />
+                  </div>
                 </div>
-              ))}
-            </div>
+              </button>
+            ))}
+            
+            <button
+              onClick={handleCustomBudget}
+              className="group relative flex flex-col items-center justify-center p-8 bg-[var(--color-midnight)] border border-dashed border-[var(--color-border-strong)] hover:border-blue-500/40 rounded-3xl transition-all duration-500 space-y-4 min-h-[220px]"
+            >
+              <div className="w-12 h-12 rounded-full bg-[var(--color-slate)]/40 flex items-center justify-center border border-[var(--color-border-strong)] group-hover:border-blue-500/30 transition-all">
+                <Settings className="w-5 h-5 text-[var(--color-text-tertiary)] group-hover:text-blue-400 group-hover:rotate-90 transition-all duration-500" />
+              </div>
+              <div className="text-center space-y-1">
+                <h4 className="text-lg font-serif text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]">Custom Budget</h4>
+                <p className="text-[var(--color-text-tertiary)] text-xs">Specify your own planned spend</p>
+              </div>
+            </button>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">
-                Total Campaign Budget <span className="text-[var(--color-text-tertiary)]/60">(USD)</span>
-              </label>
-              <div className="relative group">
-                <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-gold)] font-serif text-2xl select-none">$</span>
-                <input
-                  type="number"
-                  min="10"
-                  step="1"
-                  value={formData.custom_budget || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, custom_budget: Number(e.target.value) || undefined }))}
-                  className={`w-full bg-[var(--color-slate)]/20 border rounded-2xl pl-12 pr-6 py-5 text-[var(--color-text-primary)] text-2xl font-serif focus:outline-none transition-all duration-300 ${
-                    formData.custom_budget && formData.custom_budget < 10 ? 'border-[var(--color-error)]' : 'border-[var(--color-border-strong)] focus:border-[var(--color-gold)]/50'
-                  }`}
-                  placeholder="0"
-                />
-              </div>
-              <p className="text-[10px] text-[var(--color-text-tertiary)] pl-1 leading-relaxed">
-                Minimum budget is $10. Your budget goes directly to Google Ads — SufiPulse does not charge you.
+          <div className="max-w-xl mx-auto space-y-4">
+            <div className="bg-blue-900/10 border border-blue-800/20 rounded-2xl px-6 py-5 text-center">
+              <p className="text-xs text-blue-300/70 leading-relaxed italic">
+                "You will pay Google directly from your own Google Ads account. SufiPulse does not collect your media budget for this path."
               </p>
             </div>
-
+            
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <label className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest pl-1">Target Regions</label>
@@ -1324,15 +1444,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
               </div>
             </div>
           </div>
-
-          <button
-            onClick={() => setStep(3)}
-            disabled={!formData.custom_budget || formData.custom_budget < 10}
-            className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
-          >
-            Continue to Sponsor Details
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
         </div>
       );
     }
@@ -1925,35 +2036,30 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-[var(--color-border-strong)]">
-          <label className="flex items-start gap-4 group cursor-pointer">
-            <div className="mt-1 relative flex items-center justify-center">
+        <div className="space-y-4 pt-4 border-t border-[var(--color-border-strong)]/30">
+          {[
+            { 
+              key: 'agree_to_terms', 
+              text: 'I agree to the SufiPulse Sponsorship Terms and Privacy Policy. I understand that all campaigns are subject to institutional review.' 
+            },
+            { 
+              key: 'agree_to_promotional_use', 
+              text: 'I agree to the respectful public mention of my sponsorship in accordance with my privacy settings chosen above.' 
+            }
+          ].map((item) => (
+            <label key={item.key} className="grid w-full grid-cols-[18px_1fr] gap-x-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-slate)]/5 p-5 cursor-pointer transition-colors hover:border-[var(--color-gold)]/40">
               <input
                 type="checkbox"
-                checked={formData.agree_to_terms || false}
-                onChange={(e) => setFormData(prev => ({ ...prev, agree_to_terms: e.target.checked }))}
-                className="w-5 h-5 rounded-lg border-[var(--color-border-strong)] bg-[var(--color-slate)]/40 text-[var(--color-gold)] focus:ring-[var(--color-gold)]/20 transition-all cursor-pointer"
+                checked={(formData as any)[item.key] || false}
+                onChange={(e) => setFormData(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                className="col-start-1 row-start-1 mt-1 h-4 w-4 accent-[var(--color-gold)]"
                 required
               />
-            </div>
-            <span className="text-xs text-[var(--color-text-secondary)] leading-relaxed group-hover:text-[var(--color-text-primary)] transition-colors">
-              I agree to the SufiPulse Sponsorship Terms and Privacy Policy. I understand that all campaigns are subject to institutional review.
-            </span>
-          </label>
-          <label className="flex items-start gap-4 group cursor-pointer">
-            <div className="mt-1 relative flex items-center justify-center">
-              <input
-                type="checkbox"
-                checked={formData.agree_to_promotional_use || false}
-                onChange={(e) => setFormData(prev => ({ ...prev, agree_to_promotional_use: e.target.checked }))}
-                className="w-5 h-5 rounded-lg border-[var(--color-border-strong)] bg-[var(--color-slate)]/40 text-[var(--color-gold)] focus:ring-[var(--color-gold)]/20 transition-all cursor-pointer"
-                required
-              />
-            </div>
-            <span className="text-xs text-[var(--color-text-secondary)] leading-relaxed group-hover:text-[var(--color-text-primary)] transition-colors">
-              I agree to the respectful public mention of my sponsorship in accordance with my privacy settings chosen above.
-            </span>
-          </label>
+              <span className="col-start-2 row-start-1 text-sm leading-7 text-[var(--color-text-secondary)]">
+                {item.text}
+              </span>
+            </label>
+          ))}
         </div>
       </div>
 
@@ -2070,20 +2176,25 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-blue-900/10 border border-blue-800/30 rounded-2xl p-6">
-              <label className="flex items-start gap-4 cursor-pointer group">
-                <div className="mt-1 relative flex items-center justify-center">
+            <div className="bg-blue-900/10 border border-blue-800/30 rounded-2xl p-6 space-y-4">
+              {[
+                "I understand I will pay Google directly from my own Google Ads account.",
+                "I authorise SufiPulse to prepare campaign structure, targeting recommendations, and launch-ready setup guidance for this release.",
+                "I understand final launch, billing, approval, and spend occur inside my Google Ads account.",
+                "I understand every campaign is reviewed by SufiPulse for sacred alignment before preparation."
+              ].map((clause, i) => (
+                <label key={i} className="grid w-full grid-cols-[18px_1fr] gap-x-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-slate)]/5 p-5 cursor-pointer transition-colors hover:border-[var(--color-gold)]/40">
                   <input
                     type="checkbox"
-                    checked={formData.billing_enabled || false}
-                    onChange={(e) => setFormData(prev => ({ ...prev, billing_enabled: e.target.checked }))}
-                    className="w-5 h-5 rounded-lg border-blue-800/50 bg-blue-900/20 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer"
+                    checked={!!(formData as any)[`clause_direct_${i}`]}
+                    onChange={(e) => setFormData(prev => ({ ...prev, [`clause_direct_${i}`]: e.target.checked }))}
+                    className="col-start-1 row-start-1 mt-1 h-4 w-4 accent-[var(--color-gold)]"
                   />
-                </div>
-                <span className="text-xs text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors leading-relaxed">
-                  I confirm this Google Ads account has active billing configured. SufiPulse will not charge me; Google will bill my account directly after campaign launch.
-                </span>
-              </label>
+                  <span className="col-start-2 row-start-1 text-sm leading-7 text-[var(--color-text-secondary)]">
+                    {clause}
+                  </span>
+                </label>
+              ))}
             </div>
 
             {submitError && (
@@ -2093,7 +2204,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
             )}
 
             <button
-              onClick={() => { setSubmitError(''); handlePayment(); }}
+              onClick={() => { 
+                const allChecked = [0,1,2,3].every(i => (formData as any)[`clause_direct_${i}`]);
+                if (!allChecked) { setSubmitError('Please accept all institutional clauses to continue.'); return; }
+                setSubmitError(''); handlePayment(); 
+              }}
               disabled={!canSubmit}
               className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
             >
@@ -2185,52 +2300,69 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
         )}
 
-        {showAuthWall ? (() => {
-          const returnUrl = new URL(window.location.href);
-          returnUrl.searchParams.set('adopt', '1');
-          if (adoption?.id) returnUrl.searchParams.set('adoptionId', adoption.id);
-          const returnTo = encodeURIComponent(returnUrl.pathname + returnUrl.search);
-          return (
-            <div className="bg-[var(--color-slate)]/40 border border-[var(--color-gold)]/20 rounded-3xl p-8 space-y-6 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-500">
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20 rounded-2xl flex items-center justify-center mb-2">
-                  <Lock className="w-8 h-8 text-[var(--color-gold)]" />
-                </div>
-                <h4 className="text-xl font-serif text-[var(--color-text-primary)]">Sign in to continue</h4>
-                <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-sm mx-auto">A SufiPulse account is required to adopt a song. Your sponsorship details have been safely saved.</p>
-              </div>
-              <div className="grid gap-3 pt-2">
-                <a href={`/login?returnTo=${returnTo}`} className="block w-full py-4 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] text-[var(--color-midnight)] text-center font-bold rounded-2xl transition-all shadow-lg shadow-[var(--color-gold)]/10">Sign In to Continue</a>
-                <a href={`/register?returnTo=${returnTo}`} className="block w-full py-4 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-[var(--color-border-strong)]/80 text-[var(--color-text-primary)] text-center font-bold rounded-2xl transition-all">Create Account</a>
-              </div>
+          <div className="space-y-6">
+            <div className="bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20 rounded-2xl p-6 space-y-4">
+              <div className="text-[10px] font-bold text-[var(--color-gold)] uppercase tracking-widest mb-2 px-1">Institutional Agreements</div>
+              {[
+                "I understand this sponsorship supports ethical campaign preparation, review, promotion, and reporting by SufiPulse.",
+                "I understand campaign performance may vary based on platform policies, audience behavior, geography, budget, ad cost, and approval status.",
+                "I understand payment does not guarantee automatic launch and every campaign requires SufiPulse review."
+              ].map((clause, i) => (
+                <label key={i} className="grid w-full grid-cols-[18px_1fr] gap-x-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-slate)]/5 p-5 cursor-pointer transition-colors hover:border-[var(--color-gold)]/40">
+                  <input
+                    type="checkbox"
+                    checked={!!(formData as any)[`clause_managed_${i}`]}
+                    onChange={(e) => setFormData(prev => ({ ...prev, [`clause_managed_${i}`]: e.target.checked }))}
+                    className="col-start-1 row-start-1 mt-1 h-4 w-4 accent-[var(--color-gold)]"
+                  />
+                  <span className="col-start-2 row-start-1 text-sm leading-7 text-[var(--color-text-secondary)]">
+                    {clause}
+                  </span>
+                </label>
+              ))}
             </div>
-          );
-        })() : (
-          <div className="space-y-4">
-            <button
-              onClick={() => { setSubmitError(''); handlePayment(); }}
-              disabled={isRedirectingToStripe || !stripeEnabled}
-              className="group w-full py-5 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-[var(--color-midnight)] font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-[var(--color-gold)]/10 flex items-center justify-center gap-3 active:scale-[0.99]"
-            >
-              {isRedirectingToStripe ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Preparing Payment…</>
-              ) : (
-                <>
-                  <CreditCard className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  Confirm & Pay with Card
-                </>
-              )}
-            </button>
-            <div className="flex items-center justify-center gap-4 text-[var(--color-text-tertiary)] text-[10px] uppercase tracking-widest font-bold">
-              <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> SSL Secure</span>
-              <span className="w-1 h-1 bg-[var(--color-border-strong)] rounded-full" />
-              <span>Powered by Stripe</span>
+
+            {!stripeEnabled && (
+              <div className="text-[10px] text-[var(--color-gold)] border border-[var(--color-gold)]/30 bg-[var(--color-gold)]/5 rounded-2xl px-5 py-4 text-center animate-in fade-in duration-500">
+                <div className="flex items-center justify-center gap-2 mb-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 opacity-80" />
+                  <span className="font-bold uppercase tracking-widest">Electronic Payment Unavailable</span>
+                </div>
+                <p className="opacity-80">You can still submit your request. Our team will contact you for manual payment coordination.</p>
+              </div>
+            )}
+            
+            <div className="space-y-4">
+              <button
+                onClick={() => { 
+                  const allChecked = [0,1,2].every(i => (formData as any)[`clause_managed_${i}`]);
+                  if (!allChecked) { setSubmitError('Please accept all institutional clauses to continue.'); return; }
+                  setSubmitError(''); handlePayment(); 
+                }}
+                disabled={isRedirectingToStripe || isSubmitting || !isFormComplete}
+                className="group w-full py-5 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-[var(--color-midnight)] font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-[var(--color-gold)]/10 flex items-center justify-center gap-3 active:scale-[0.99]"
+              >
+                {isRedirectingToStripe || isSubmitting ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> {stripeEnabled ? 'Connecting to Stripe…' : 'Submitting Request…'}</>
+                ) : (
+                  <>
+                    {stripeEnabled ? 'Confirm & Proceed to Payment' : 'Submit Request for Manual Review'}
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+
+              <button 
+                onClick={() => setStep(3)} 
+                className="w-full text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-xs uppercase tracking-widest font-bold py-2"
+              >
+                ← Back to details
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    );
-  };
+        </div>
+      );
+    };
 
   const renderSuccess = () => {
     const StatusDot = ({ done, active }: { done?: boolean; active?: boolean }) => (
@@ -2362,13 +2494,16 @@ export function AdoptTab({ release }: AdoptTabProps) {
             <Check className="w-10 h-10 text-green-500 -rotate-12" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-4xl font-serif text-[var(--color-text-primary)]">Sponsorship Complete</h3>
+            <h3 className="text-4xl font-serif text-[var(--color-text-primary)]">
+              {adoption?.paymentRoute === 'manual_coordination' ? 'Request Submitted' : 'Sponsorship Complete'}
+            </h3>
             <p className="text-[var(--color-text-secondary)] text-lg leading-relaxed max-w-md mx-auto font-light">
-              May your contribution bring ease and contemplation to every soul that discovers this sacred kalam.
+              {adoption?.paymentRoute === 'manual_coordination'
+                ? 'Your sponsorship request has been saved. Our team will contact you to coordinate the manual payment process.'
+                : 'May your contribution bring ease and contemplation to every soul that discovers this sacred kalam.'}
             </p>
           </div>
-        </div>
-
+          </div>
         <div className="grid md:grid-cols-2 gap-10">
           <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl p-8 space-y-6">
             <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)] border-b border-[var(--color-border-strong)] pb-4">

@@ -2,6 +2,8 @@
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
+import { validateRequestBody } from '@/app/lib/api-middleware';
+import { kalamSubmissionSchema } from '@/app/lib/validation-schemas';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -26,9 +28,11 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const validationResult = await validateRequestBody(request, kalamSubmissionSchema);
+  if (validationResult instanceof NextResponse) return validationResult;
+
   try {
-    const body = await request.json();
-    if (!body.title) return NextResponse.json({ error: 'title is required' }, { status: 400 });
+    const body = validationResult.data;
     const record = entityCreate('kalams', {
       ...body,
       user_id: authResult.id,

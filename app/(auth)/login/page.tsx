@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Layout } from '../../components/layout/Layout';
 import { Lock, Eye, EyeOff, Loader, ChevronDown, Zap } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import * as api from "../../api/auth";
+import * as api from "@/app/lib/api-client";
 import { ENV } from '../../config/env';
 import Link from 'next/link';
 import { loginSchema, validateSchema } from '../../lib/validation-schemas';

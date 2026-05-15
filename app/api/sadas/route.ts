@@ -2,6 +2,8 @@
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
+import { validateRequestBody } from '@/app/lib/api-middleware';
+import { sadaSubmissionSchema } from '@/app/lib/validation-schemas';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -26,9 +28,11 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const validationResult = await validateRequestBody(request, sadaSubmissionSchema);
+  if (validationResult instanceof NextResponse) return validationResult;
+
   try {
-    const body = await request.json();
-    if (!body.title) return NextResponse.json({ error: 'title is required' }, { status: 400 });
+    const body = validationResult.data;
     const record = entityCreate('sadas', {
       ...body,
       user_id: authResult.id,
@@ -37,7 +41,7 @@ export async function POST(request: NextRequest) {
     });
     notifyAdminNewSubmission(
       'sada submission',
-      body.vocalist_name || body.author_name || body.user_id || 'Unknown vocalist',
+      (body as any).vocalist_name || (body as any).author_name || authResult.id || 'Unknown vocalist',
       body.title
     ).catch((err) => console.error('[notify]', err?.message || err));
     return NextResponse.json(record, { status: 201 });

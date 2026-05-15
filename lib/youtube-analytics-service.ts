@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { analyticsStorage, type AnalyticsSnapshot, type GlobalReachPayload } from './analytics-storage';
 
 const CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ';
@@ -5,12 +6,16 @@ const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const ANALYTICS_BASE = 'https://youtubeanalytics.googleapis.com/v2/reports';
 
 async function getAccessToken(): Promise<string> {
-  const clientId = process.env.YOUTUBE_CLIENT_ID;
-  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
-  const refreshToken = process.env.YOUTUBE_REFRESH_TOKEN || process.env.YOUTUBE_OAUTH_REFRESH_TOKEN;
+  const clientId = process.env.YOUTUBE_CLIENT_ID || process.env.CLIENT_ID;
+  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET || process.env.CLIENT_SECRET;
+  const refreshToken = process.env.YOUTUBE_REFRESH_TOKEN || process.env.YOUTUBE_OAUTH_REFRESH_TOKEN || process.env.REFRESH_TOKEN;
   
   if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error('YouTube API credentials missing in environment (CLIENT_ID, CLIENT_SECRET, or REFRESH_TOKEN)');
+    const missing = [];
+    if (!clientId) missing.push('YOUTUBE_CLIENT_ID');
+    if (!clientSecret) missing.push('YOUTUBE_CLIENT_SECRET');
+    if (!refreshToken) missing.push('YOUTUBE_REFRESH_TOKEN');
+    throw new Error(`YouTube API credentials missing in environment: ${missing.join(', ')}`);
   }
 
   const res = await fetch(TOKEN_URL, {
@@ -46,6 +51,23 @@ async function analyticsQuery(token: string, extra: Record<string, string>) {
   
   if (!res.ok) {
     const errorText = await res.text();
+    const errorJson = JSON.parse(errorText);
+    
+    // If it's a metric error, try falling back to basic metrics
+    if (errorJson.error?.message?.includes('identifier')) {
+       console.warn(`[youtubeAnalyticsService] Metric error, falling back to basic views/watchTime. Original error: ${errorJson.error.message}`);
+       const fallbackParams = new URLSearchParams({
+         ids: `channel==${CHANNEL_ID}`,
+         startDate: '2006-01-01',
+         endDate,
+         metrics: 'views,estimatedMinutesWatched,averageViewDuration'
+       });
+       const fallbackRes = await fetch(`${ANALYTICS_BASE}?${fallbackParams}`, {
+         headers: { Authorization: `Bearer ${token}` }
+       });
+       if (fallbackRes.ok) return fallbackRes.json();
+    }
+    
     throw new Error(`YouTube Analytics API error (${res.status}): ${errorText}`);
   }
   
@@ -85,168 +107,101 @@ export const youtubeAnalyticsService = {
       return current;
     }
 
+    const nextFriday = analyticsStorage.getNextFriday3AM();
+    const lastCheck = new Date().toISOString();
+
     try {
-      console.log('[youtubeAnalyticsService] Refreshing lifetime analytics from YouTube...');
+      console.log('[youtubeAnalyticsService] Performing live API health check (Recent Window)...');
       const token = await getAccessToken();
 
-      const [discoveryRaw, trafficRaw, demographicsRaw, geoRaw] = await Promise.all([
+      // We query the last 365 days as a health check and to see recent growth
+      const endDate = new Date().toISOString().split('T')[0];
+      const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      const [basicRaw, trafficRaw] = await Promise.all([
         analyticsQuery(token, {
-          metrics: 'impressions,impressionClickThroughRate,views,estimatedMinutesWatched,averageViewDuration',
+          startDate,
+          endDate,
+          metrics: 'views,estimatedMinutesWatched,averageViewDuration',
         }),
         analyticsQuery(token, {
+          startDate,
+          endDate,
           dimensions: 'insightTrafficSourceType',
           metrics: 'views',
           sort: '-views',
-          maxResults: '50',
-        }),
-        analyticsQuery(token, {
-          dimensions: 'ageGroup,gender',
-          metrics: 'viewerPercentage',
-        }),
-        analyticsQuery(token, {
-          dimensions: 'country',
-          metrics: 'views',
-          maxResults: '200',
-          sort: '-views',
-        }),
+          maxResults: '25',
+        })
       ]);
 
-      console.log('[youtubeAnalyticsService] API Results Received:', {
-        discoveryRows: discoveryRaw.rows?.length ?? 0,
-        trafficRows: trafficRaw.rows?.length ?? 0,
-        demographicsRows: demographicsRaw.rows?.length ?? 0,
-        geoRows: geoRaw.rows?.length ?? 0
-      });
+      // Process Basic Metrics
+      const br = basicRaw.rows?.[0] ?? [0, 0, 0];
+      const recentViews = Number(br[0]) || 0;
+      const recentWatchTimeHours = br[1] ? Math.round(Number(br[1]) / 60) : 0;
+      const recentAvgDurationSecs = Number(br[2]) || 0;
 
-      // 1. Process Performance
-      const dr = discoveryRaw.rows?.[0] ?? [0, 0, 0, 0, 0];
-      const impressions = Number(dr[0]) || 0;
-      const ctrDecimal = Number(dr[1]) || 0;
-      const ctr = impressions > 0 ? Math.round(ctrDecimal * 1000) / 10 : 0;
-      const views = Number(dr[2]) || 0;
-      const avgDurationSecs = Number(dr[4]) || 0;
-      const avgViewDurationFormatted = avgDurationSecs > 0 ? fmtDuration(avgDurationSecs) : '0:00';
-      const watchTimeHours = dr[3] ? Math.round(Number(dr[3]) / 60) : 0;
+      // Process Traffic Sources
+      const topTrafficSources = (trafficRaw.rows ?? [])
+        .slice(0, 5)
+        .map(row => ({
+          source: String(row[0]),
+          views: Number(row[1])
+        }));
 
-      // 2. Process Recommendation Engine
-      let recViews = 0;
-      let totalTrafficViews = 0;
-      for (const row of (trafficRaw.rows ?? [])) {
-        const src = String(row[0]);
-        const v = Number(row[1]);
-        totalTrafficViews += v;
-        if (RECOMMENDATION_SOURCES.has(src)) recViews += v;
-      }
-      const viewsPercentage = totalTrafficViews > 0
-        ? Math.round((recViews / totalTrafficViews) * 1000) / 10
-        : null;
-
-      // 3. Process Demographics (Age & Gender)
-      const genderAcc: Record<string, number> = { female: 0, male: 0 };
-      const ageAcc: Record<string, number> = {};
-      
-      for (const row of (demographicsRaw.rows ?? [])) {
-        const ageKey = String(row[0]);
-        const genderKey = String(row[1]);
-        const pct = Number(row[2]);
-        
-        if (genderKey === 'female' || genderKey === 'male') {
-          genderAcc[genderKey] += pct;
-        }
-        if (AGE_LABEL_MAP[ageKey]) {
-          ageAcc[ageKey] = (ageAcc[ageKey] ?? 0) + pct;
-        }
-      }
-
-      const ageGroups = AGE_ORDER.map(key => ({
-        ageGroup: AGE_LABEL_MAP[key],
-        percentage: ageAcc[key] ? Math.round(ageAcc[key] * 10) / 10 : null
-      }));
-
-      const genderSplit = {
-        female: genderAcc.female ? Math.round(genderAcc.female * 10) / 10 : null,
-        male: genderAcc.male ? Math.round(genderAcc.male * 10) / 10 : null,
-      };
-
-      // 4. Process Geographies
-      const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
-      const countries = (geoRaw.rows ?? [])
-        .filter(r => Number(r[1]) > 0)
-        .map(r => {
-          const code = String(r[0]);
-          let name = code;
-          try { name = countryNames.of(code) || code; } catch { /* fallback to code */ }
-          return {
-            code,
-            name,
-            views: Number(r[1])
-          };
-        });
-
-      const nextFriday = analyticsStorage.getNextFriday3AM();
-
-      const snapshot: AnalyticsSnapshot = {
-        period: "lifetime",
-        title: "SufiPulse Global Reach",
-        subtitle: "Lifetime audience intelligence from the official SufiPulse SufiTube channel, updated from the latest verified YouTube Analytics snapshot.",
-        ageGender: {
-          gender: genderSplit,
-          ageGroups
-        },
-        performance: {
-          impressions,
-          views,
-          watchTimeHours,
-          clickThroughRate: ctr,
-          averageViewDurationSeconds: avgDurationSecs,
-          averageViewDurationFormatted: avgViewDurationFormatted
-        },
-        recommendationEngine: {
-          viewsPercentage,
-          label: "views driven by the recommendation engine"
-        },
-        geographies: {
-          totalCountries: countries.length,
-          countries
-        },
-        lastUpdated: new Date().toISOString(),
+      const updatedSnapshot: AnalyticsSnapshot = {
+        ...current,
+        status: 'active',
+        lastUpdated: current.lastUpdated, // Preserve original verified timestamp
         nextRefreshAt: nextFriday.toISOString(),
-        checkedAt: new Date().toISOString(),
-        scope: 'lifetime'
+        
+        // 1. Institutional Source of Truth (STRICTLY PRESERVED)
+        lifetimeSnapshot: current.lifetimeSnapshot || DEFAULT_PAYLOAD.lifetimeSnapshot,
+
+        // 2. Live API Telemetry (Recent growth)
+        recentAnalytics: {
+          lastQueryWindow: "Last 365 Days",
+          views: recentViews,
+          watchTimeHours: recentWatchTimeHours,
+          averageViewDurationSeconds: recentAvgDurationSecs,
+          topTrafficSources
+        },
+
+        // 3. Admin / System Metadata
+        apiStatus: {
+          connected: true,
+          lastCheck,
+          availableLiveMetrics: ["views", "watchTime", "averageDuration", "trafficSource"],
+          restrictedMetrics: ["impressions", "ctr", "demographics", "geography"]
+        }
       };
 
-      // Only save if we actually got real data (at least views should be > 0)
-      if (snapshot.performance.views && snapshot.performance.views > 0) {
-        snapshot.status = 'active';
-        snapshot.errorMessage = undefined;
-        analyticsStorage.saveSnapshot(snapshot);
-      } else {
-        console.warn('[youtubeAnalyticsService] Fetched data seems empty or invalid, skipping full save but updating check status.');
-        const currentSnapshot = analyticsStorage.getSnapshot();
-        analyticsStorage.saveSnapshot({
-          ...currentSnapshot,
-          checkedAt: new Date().toISOString(),
-          nextRefreshAt: nextFriday.toISOString(),
-          status: currentSnapshot.status === 'error' ? 'active' : currentSnapshot.status
-        });
-      }
-
-      return snapshot;
+      analyticsStorage.saveSnapshot(updatedSnapshot);
+      return updatedSnapshot;
 
     } catch (error: any) {
-      console.error('[youtubeAnalyticsService] Failed to fetch analytics:', error);
+      console.error('[youtubeAnalyticsService] API Health Check Failed:', error);
       
-      const current = analyticsStorage.getSnapshot();
+      const isMissingCreds = error.message?.includes('credentials missing');
+      
       const errorSnapshot: AnalyticsSnapshot = {
         ...current,
-        status: 'error',
-        errorMessage: error.message || 'Unknown refresh error',
-        checkedAt: new Date().toISOString()
+        status: isMissingCreds ? (current.status || 'active') : 'error',
+        errorMessage: isMissingCreds ? undefined : (error.message || 'Unknown refresh error'),
+        lastUpdated: current.lastUpdated,
+        
+        // Preserve verified baseline even on error
+        lifetimeSnapshot: current.lifetimeSnapshot || DEFAULT_PAYLOAD.lifetimeSnapshot,
+        
+        apiStatus: {
+          connected: false,
+          lastCheck,
+          availableLiveMetrics: [],
+          restrictedMetrics: ["impressions", "ctr", "demographics", "geography"],
+          lastError: error.message || 'Unknown refresh error'
+        }
       };
       
-      // Save the error state so admins know why it's failing
       analyticsStorage.saveSnapshot(errorSnapshot);
-      
       return errorSnapshot;
     }
   }

@@ -16,6 +16,7 @@ type EmailTemplate =
   | 'verification'
   | 'password-reset'
   | 'welcome'
+  | 'subscription-confirmed'
   | 'lyrics-request-confirmation'
   | 'lyrics-request-admin-notification';
 
@@ -197,6 +198,24 @@ const templates: Record<EmailTemplate, (data: Record<string, string>) => { subje
     `,
   }),
 
+  'subscription-confirmed': ({ token, email }: { token: string; email: string }) => ({
+    subject: 'SufiPulse — Release Alerts Confirmed',
+    html: `
+      <div style="background:#0F172A;color:#F8FAFC;font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;border-radius:12px;">
+        <img src="https://sufipulse.com/sufipulse-logo-v5.png" alt="SufiPulse" style="height:40px;margin-bottom:24px;" />
+        <h1 style="font-size:22px;font-weight:600;margin:0 0 16px;color:#F8FAFC;">You're on the list!</h1>
+        <p style="color:#94A3B8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+          Thank you for subscribing to SufiPulse release alerts. You will be the first to know when a new sacred kalam or literary work is published.
+        </p>
+        <p style="color:#C8A75E;font-size:14px;font-weight:600;">Expect to hear from us soon.</p>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:24px 0;" />
+        <p style="color:#475569;font-size:11px;margin:0;">
+          If you didn't subscribe, please <a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?email=${encodeURIComponent(email)}&token=${token}" style="color:#64748B;">unsubscribe here</a>.
+        </p>
+      </div>
+    `,
+  }),
+
   'lyrics-request-confirmation': ({ songTitle, language, name }) => ({
     subject: `Lyrics Translation Request Received: ${songTitle}`,
     html: `
@@ -271,6 +290,11 @@ export const sendPasswordResetEmail = async (to: string, name: string, code: str
 
 export const sendWelcomeEmail = async (to: string, name: string): Promise<void> => {
   const { subject, html } = templates.welcome({ name });
+  await sendEmail({ to, subject, html });
+};
+
+export const sendSubscriptionConfirmedEmail = async (to: string, token: string): Promise<void> => {
+  const { subject, html } = templates['subscription-confirmed']({ token, email: to });
   await sendEmail({ to, subject, html });
 };
 

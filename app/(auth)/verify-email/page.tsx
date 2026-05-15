@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import * as api from "../../api/auth";
+import * as api from "@/app/lib/api-client";
 import { Layout } from "../../components/layout/Layout";
 import { Loader, Lock } from "lucide-react";
 

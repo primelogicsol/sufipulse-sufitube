@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { validateRequestBody } from '@/app/lib/api-middleware';
+import { translationSchema } from '@/app/lib/validation-schemas';
 
 // Language code mapping: our internal codes → Google Translate codes
 const LANG_CODE_MAP: Record<string, string> = {
@@ -56,20 +58,12 @@ export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 
+  const validationResult = await validateRequestBody(req, translationSchema);
+  if (validationResult instanceof NextResponse) return validationResult;
+
+  const { texts, sourceLang, targetLang } = validationResult.data;
+
   try {
-    const body = await req.json() as {
-      texts: string[];
-      sourceLang: string;
-      targetLang: string;
-      // tone reserved for Phase 3 (LLM rewriting layer) — currently unused
-    };
-
-    const { texts, sourceLang, targetLang } = body;
-
-    if (!Array.isArray(texts) || !sourceLang || !targetLang) {
-      return NextResponse.json({ error: 'texts[], sourceLang, targetLang are required' }, { status: 400 });
-    }
-
     if (sourceLang === targetLang) {
       return NextResponse.json({ translations: texts });
     }

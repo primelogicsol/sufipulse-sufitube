@@ -421,49 +421,55 @@ export interface Notification {
  * YouTube Analytics Snapshot Schema
  */
 export interface YouTubeAnalyticsSnapshot {
-  id: string; // "lifetime" or unique ID
+  id: string; // "lifetime"
   channelId: string;
   scope: 'lifetime';
-  period: 'lifetime';
+  status: 'active' | 'stale' | 'error';
   title: string;
   subtitle: string;
-  
-  performance: {
-    impressions: number | null;
-    views: number | null;
-    watchTimeHours: number | null;
-    clickThroughRate: number | null;
-    averageViewDurationSeconds: number | null;
-    averageViewDurationFormatted: string | null;
-  };
-  
-  ageGender: {
-    gender: {
-      female: number | null;
-      male: number | null;
+
+  // 1. Institutional Source of Truth (Immutable verified totals)
+  lifetimeSnapshot: {
+    performance: {
+      impressions: number;
+      views: number;
+      watchTimeHours: number;
+      clickThroughRate: number;
+      averageViewDurationFormatted: string;
     };
-    ageGroups: { ageGroup: string; percentage: number | null }[];
+    ageGender: {
+      gender: { female: number; male: number };
+      ageGroups: { ageGroup: string; percentage: number }[];
+    };
+    recommendationEngine: {
+      viewsPercentage: number;
+    };
+    geographies: {
+      totalCountries: number;
+    };
   };
-  
-  recommendationEngine: {
-    viewsPercentage: number | null;
-    label: string;
+
+  // 2. Live API Telemetry (Recent growth and health checks)
+  recentAnalytics?: {
+    lastQueryWindow: string; // e.g. "Last 90 Days" or "Last Year"
+    views: number;
+    watchTimeHours: number;
+    averageViewDurationSeconds: number;
+    topTrafficSources: { source: string; views: number }[];
   };
-  
-  geographies: {
-    totalCountries: number;
-    countries: {
-      code: string;
-      name: string;
-      views?: number;
-    }[];
+
+  // 3. Admin / System Metadata
+  apiStatus: {
+    connected: boolean;
+    lastCheck: string;
+    availableLiveMetrics: string[];
+    restrictedMetrics: string[];
+    lastError?: string;
   };
 
   lastUpdated: string;
   nextRefreshAt: string;
-  checkedAt?: string;
-  errorMessage?: string;
-  status: 'active' | 'stale' | 'error';
+  errorMessage?: string; // Kept for backward compat with existing UI checks
 }
 
 /**

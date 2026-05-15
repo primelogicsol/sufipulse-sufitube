@@ -2,6 +2,9 @@
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { validateRequestBody } from '@/app/lib/api-middleware';
+import { partnershipSchema } from '@/app/lib/validation-schemas';
+import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -19,14 +22,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = await applyRateLimit(request, rateLimiters.strict);
+  if (limited) return limited;
+
+  const validationResult = await validateRequestBody(request, partnershipSchema);
+  if (validationResult instanceof NextResponse) return validationResult;
+
   try {
-    const body = await request.json();
-    if (!body.contact_name || !body.email || !body.organization_name) {
-      return NextResponse.json(
-        { error: 'Missing required fields: contact_name, email, organization_name' },
-        { status: 400 }
-      );
-    }
+    const body = validationResult.data;
     const record = entityCreate('partnerships', {
       ...body,
       status: 'pending',

@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { User, LogOut, LayoutDashboard, CircleUser as UserCircle, NotebookPen, Mic, KeyboardMusic, PenTool, FolderDot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import * as api from "../../api/auth"
+import * as api from "@/app/lib/api-client"
 import { hasRoleAccess } from '@/app/lib/role-access';
 
 export function AvatarMenu() {

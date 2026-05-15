@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { validateRequestBody } from '@/app/lib/api-middleware';
+import { notificationSchema } from '@/app/lib/validation-schemas';
 
 // Optional Nodemailer — only used when SMTP env vars are configured.
 // Install with:  npm install nodemailer @types/nodemailer
@@ -139,18 +141,10 @@ export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 
-  let body: any;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+  const validationResult = await validateRequestBody(req, notificationSchema);
+  if (validationResult instanceof NextResponse) return validationResult;
 
-  const { to, subject, name, role, event, message, action_url, reference } = body;
-
-  if (!to || !to.includes('@') || !subject || !message) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  }
+  const { to, subject, name, role, event, message, action_url, reference } = validationResult.data;
 
   const smtpHost = process.env.SMTP_HOST;
   const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);

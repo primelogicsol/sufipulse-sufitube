@@ -8,7 +8,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 function fmt(n: number | null | undefined): string {
   if (n === null || n === undefined) return "—";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
 
@@ -282,27 +282,8 @@ export default function GlobalReachStrip() {
               {refreshing ? 'Refreshing...' : 'Refresh Global Reach'}
             </button>
             {isError && errorMessage && (
-              <div className="flex flex-col items-end gap-1 mt-1 max-w-xs text-right">
-                <div className="flex items-center gap-1.5 text-rose-500 text-[10px] font-bold uppercase tracking-wider">
-                  <AlertCircle className="w-3 h-3" />
-                  API Error Detected
-                </div>
-                <p className="text-[9px] text-neutral-500 line-clamp-2 leading-relaxed">
-                  {errorMessage.includes("YouTube Analytics API has not been used") 
-                    ? "YouTube Analytics API is disabled in Google Console."
-                    : errorMessage}
-                </p>
-                {errorMessage.includes("https://console.developers.google.com") && (
-                  <a 
-                    href="https://console.developers.google.com/apis/api/youtubeanalytics.googleapis.com/overview" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[9px] text-amber-400 hover:underline font-bold"
-                  >
-                    Enable API Now →
-                  </a>
-                )}
-              </div>
+              /* Suppress detailed error UI to keep focus on objective results */
+              null
             )}
             {isStale && !isError && (
               <div className="flex items-center gap-1.5 text-amber-500 text-[10px] font-bold uppercase tracking-wider">
@@ -337,11 +318,6 @@ export default function GlobalReachStrip() {
             <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">
               Lifetime Analytics • Source: Official YouTube Analytics Snapshot
             </p>
-            {data?.lastUpdated && (
-              <p className="text-[9px] text-neutral-600">
-                Lifetime analytics, refreshed weekly. Latest snapshot: {new Date(data.lastUpdated).toLocaleDateString()}
-              </p>
-            )}
           </div>
         </>
       )}

@@ -12,6 +12,7 @@ export type AdoptionStatus =
   | 'draft'
   | 'submitted'
   | 'pending_review'
+  | 'paid_pending_review'
   | 'pending_google_ads_manual_review'
   | 'google_ads_verification_pending'
   | 'google_ads_verified'
@@ -68,11 +69,13 @@ export interface AdoptionRecord {
   // Payment
   amountDue: number;
   amountPaid: number;
+  expectedPaymentAmount?: number;
   currency: string;
   paymentStatus: PaymentStatus;
   paymentProvider?: string | null;
   paymentReference?: string | null;
   paymentRoute?: string | null;
+  paymentLinkTier?: string | null;
 
   // Google Ads
   oauthStatus: OAuthStatus;

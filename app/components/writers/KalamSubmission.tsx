@@ -5,7 +5,7 @@ import DOMPurify from "dompurify";
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Bell, FileText, Clock, CircleCheck as CheckCircle, Circle as XCircle, CircleAlert as AlertCircle, Eye, Loader } from 'lucide-react';
-import * as api from "../../api/auth"
+import * as api from "@/app/lib/api-client"
 // import { WriterFormData } from '@/app/components/writers/WriterCredentialsForm';
 import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';

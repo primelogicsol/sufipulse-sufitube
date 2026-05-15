@@ -14,6 +14,15 @@ interface TokenPayload {
   exp?: number;
 }
 
+// Robust base64url decoding with padding support for Edge Runtime
+function base64UrlDecode(str: string): string {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4 !== 0) {
+    base64 += '=';
+  }
+  return atob(base64);
+}
+
 // Verifies a HS256 JWT using the Web Crypto API (fully Edge-compatible, no jose import).
 // Returns the decoded payload on success, or null on failure.
 async function verifyToken(token: string): Promise<TokenPayload | null> {
@@ -33,7 +42,7 @@ async function verifyToken(token: string): Promise<TokenPayload | null> {
     );
 
     const sig = Uint8Array.from(
-      atob(sigB64.replace(/-/g, '+').replace(/_/g, '/')),
+      base64UrlDecode(sigB64),
       c => c.charCodeAt(0)
     );
 
@@ -45,9 +54,7 @@ async function verifyToken(token: string): Promise<TokenPayload | null> {
     );
     if (!valid) return null;
 
-    const payload: TokenPayload = JSON.parse(
-      atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
-    );
+    const payload: TokenPayload = JSON.parse(base64UrlDecode(payloadB64));
     if (payload.exp && payload.exp * 1000 < Date.now()) return null;
 
     return payload;
@@ -57,67 +64,90 @@ async function verifyToken(token: string): Promise<TokenPayload | null> {
 }
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-  const { pathname } = request.nextUrl;
+  try {
+    const { pathname } = request.nextUrl;
 
-  // Security headers on every response
-  addSecurityHeaders(response);
-  response.headers.set('X-Request-Id', crypto.randomUUID());
-
-  // Log sensitive path requests
-  if (pathname.startsWith('/api/auth') || pathname.startsWith('/admin')) {
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    middlewareLogger.info(`${request.method} ${pathname}`, {
-      ip,
-      userAgent: request.headers.get('user-agent'),
-    });
-  }
-
-  // Block access to internal files
-  if (
-    pathname.includes('/.git') ||
-    pathname.includes('/.env') ||
-    pathname.includes('/node_modules')
-  ) {
-    middlewareLogger.warn('Blocked access to sensitive path', { path: pathname });
-    return new NextResponse(null, { status: 404 });
-  }
-
-  const isAdminPath = pathname.startsWith('/admin');
-  const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
-  const isAuthRoute = AUTH_ONLY_PATHS.includes(pathname);
-
-  if (isProtected || isAuthRoute) {
-    const token = request.cookies.get('access_token')?.value;
-    const payload = token ? await verifyToken(token) : null;
-
-    // Unauthenticated → redirect to login
-    if (isProtected && !payload) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+    // Security headers on every response
+    const response = NextResponse.next();
+    addSecurityHeaders(response);
+    
+    try {
+      response.headers.set('X-Request-Id', crypto.randomUUID());
+    } catch {
+      response.headers.set('X-Request-Id', Math.random().toString(36).substring(7));
     }
 
-    // Authenticated but not admin → 403 for /admin routes
-    if (isAdminPath && payload && payload.role !== 'admin') {
-      return new NextResponse('Forbidden', { status: 403 });
+    // Log sensitive path requests
+    if (pathname.startsWith('/api/auth') || pathname.startsWith('/admin')) {
+      const ip = request.headers.get('x-forwarded-for') || 'unknown';
+      middlewareLogger.info(`${request.method} ${pathname}`, {
+        ip,
+        userAgent: request.headers.get('user-agent'),
+      });
     }
 
-    // Already authenticated → redirect away from login/register
-    if (isAuthRoute && payload) {
-      const role = payload.role;
-      const dest = role === 'admin' ? '/admin'
-        : role === 'writer' ? '/user/writer/dashboard'
-        : role === 'vocalist' ? '/user/vocalist/dashboard'
-        : role === 'producer' ? '/user/producer/dashboard'
-        : role === 'literary' ? '/user/literary-contributor/dashboard'
-        : role === 'studio' ? '/user/studio/dashboard'
-        : '/user/profile';
-      return NextResponse.redirect(new URL(dest, request.url));
+    // Block access to internal files
+    if (
+      pathname.includes('/.git') ||
+      pathname.includes('/.env') ||
+      pathname.includes('/node_modules')
+    ) {
+      middlewareLogger.warn('Blocked access to sensitive path', { path: pathname });
+      return new NextResponse(null, { status: 404 });
     }
+
+    const isAdminPath = pathname.startsWith('/admin');
+    const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
+    const isAuthRoute = AUTH_ONLY_PATHS.includes(pathname);
+
+    if (isProtected || isAuthRoute) {
+      const token = request.cookies.get('access_token')?.value;
+      const payload = token ? await verifyToken(token) : null;
+
+      // Unauthenticated → redirect to login
+      if (isProtected && !payload) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('returnTo', request.nextUrl.pathname + request.nextUrl.search);
+        const redirectRes = NextResponse.redirect(loginUrl);
+        addSecurityHeaders(redirectRes);
+        return redirectRes;
+      }
+
+      // Authenticated but not admin → 403 for /admin routes
+      if (isAdminPath && payload && payload.role !== 'admin') {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
+
+      // Already authenticated → redirect away from login/register
+      if (isAuthRoute && payload) {
+        // Respect returnTo if provided, otherwise role-based dashboard
+        const returnTo = request.nextUrl.searchParams.get('returnTo');
+        if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+          const redirectRes = NextResponse.redirect(new URL(returnTo, request.url));
+          addSecurityHeaders(redirectRes);
+          return redirectRes;
+        }
+
+        const role = payload.role;
+        const dest = role === 'admin' ? '/admin'
+          : role === 'writer' ? '/user/writer/dashboard'
+          : role === 'vocalist' ? '/user/vocalist/dashboard'
+          : role === 'producer' ? '/user/producer/dashboard'
+          : role === 'literary' ? '/user/literary-contributor/dashboard'
+          : role === 'studio' ? '/user/studio/dashboard'
+          : '/user/profile';
+        
+        const redirectRes = NextResponse.redirect(new URL(dest, request.url));
+        addSecurityHeaders(redirectRes);
+        return redirectRes;
+      }
+    }
+
+    return response;
+  } catch (err: any) {
+    console.error('Middleware critical error:', err);
+    return NextResponse.next();
   }
-
-  return response;
 }
 
 export const config = {

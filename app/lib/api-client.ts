@@ -1,191 +1,344 @@
-/**
- * API Response Types
- */
-export interface ApiSuccess<T = any> {
-  success: true;
-  data: T;
-  message?: string;
-}
+import { KalamUnderDraft } from "../user/writer/dashboard/page";
+import { VocalistProfileType } from "../types/vocalist.types";
+import { WriterFormData } from "../types/writer.types";
+import { ProducerProfileType } from "../types/producer.types";
+import { LiteraryProfileType } from "../types/literary.types";
+import { StudioProfileType } from "../types/studio.types";
+import { ENV } from "../config/env";
 
-export interface ApiError {
-  success: false;
-  error: {
-    message: string;
-    code?: string;
-    details?: any;
-    field?: string;
-  };
-}
+const API_URL = ENV.API_URL;
 
-export type ApiResponse<T = any> = ApiSuccess<T> | ApiError;
+let accessToken: string | null = null;
 
-/**
- * API Error Class
- */
-export class ApiErrorClass extends Error {
-  public statusCode: number;
-  public code?: string;
-  public details?: any;
-  public field?: string;
+const getToken = () => {
+    if (!accessToken && typeof window !== "undefined") {
+        accessToken = localStorage.getItem("accessToken") || null;
+    }
+    return accessToken;
+};
 
-  constructor(message: string, statusCode: number = 500, code?: string, details?: any, field?: string) {
-    super(message);
-    this.name = 'ApiError';
-    this.statusCode = statusCode;
-    this.code = code;
-    this.details = details;
-    this.field = field;
-  }
-}
+export const setAccessToken = (token: string) => {
+    accessToken = token;
+    if (typeof window !== "undefined") {
+        localStorage.setItem("accessToken", token);
+    }
+};
 
-/**
- * Handle API fetch with error handling
- */
-export async function fetchApi<T = any>(
-  url: string,
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const response = await fetch(url, {
-      headers: {
+const apiFetch = async (url: string, options: RequestInit = {}) => {
+    const token = getToken();
+    const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: {
-          message: data?.message || data?.error || 'Request failed',
-          code: data?.code,
-          details: data?.details,
-          field: data?.field,
-        },
-      };
-    }
-
-    return {
-      success: true,
-      data: data?.data || data,
-      message: data?.message,
+        ...options.headers as Record<string, string>,
     };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: {
-        message: error?.message || 'Network error occurred',
-      },
-    };
-  }
-}
 
-/**
- * Fetch with loading and error states
- */
-export async function fetchWithLoading<T = any>(
-  url: string,
-  setState: (state: { loading: boolean; error: string | null; data: T | null }) => void,
-  options: RequestInit = {}
-): Promise<T | null> {
-  setState({ loading: true, error: null, data: null });
-
-  try {
-    const response = await fetchApi<T>(url, options);
-
-    if (!response.success) {
-      setState({
-        loading: false,
-        error: response.error.message,
-        data: null,
-      });
-      return null;
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
     }
 
-    setState({
-      loading: false,
-      error: null,
-      data: response.data,
+    const response = await fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers,
     });
 
-    return response.data;
-  } catch (error: any) {
-    setState({
-      loading: false,
-      error: error?.message || 'An unexpected error occurred',
-      data: null,
-    });
-    return null;
-  }
-}
+    if (response.status === 401 && !(options.headers as Record<string, string>)?.['X-Retry']) {
+        try {
+            const refreshResponse = await fetch(`${API_URL}/auth/refresh-token`, {
+                method: 'POST',
+                credentials: 'include',
+            });
 
-/**
- * Mutate data with loading and error states
- */
-export async function mutateData<T = any>(
-  method: 'POST' | 'PUT' | 'DELETE' | 'PATCH',
-  url: string,
-  body?: any,
-  setState?: (state: { loading: boolean; error: string | null; success: boolean }) => void
-): Promise<ApiResponse<T>> {
-  if (setState) {
-    setState({ loading: true, error: null, success: false });
-  }
+            if (refreshResponse.ok) {
+                const data = await refreshResponse.json();
+                accessToken = data.accessToken;
+                if (accessToken) {
+                    localStorage.setItem("accessToken", accessToken);
+                }
 
-  try {
-    const response = await fetchApi<T>(url, {
-      method,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-
-    if (!response.success) {
-      if (setState) {
-        setState({ loading: false, error: response.error.message, success: false });
-      }
-      return response;
-    }
-
-    if (setState) {
-      setState({ loading: false, error: null, success: true });
+                return apiFetch(url, {
+                    ...options,
+                    headers: { ...options.headers, 'X-Retry': 'true' }
+                });
+            }
+        } catch (refreshErr) {
+            console.error("Refresh token expired", refreshErr);
+            localStorage.removeItem("accessToken");
+            if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+                window.location.href = "/login";
+            }
+            throw refreshErr;
+        }
     }
 
     return response;
-  } catch (error: any) {
-    const errorResponse: ApiError = {
-      success: false,
-      error: {
-        message: error?.message || 'Mutation failed',
-      },
-    };
+};
 
-    if (setState) {
-      setState({ loading: false, error: error.message, success: false });
-    }
+export const register = (full_name: string, email: string, password: string) => {
+    return apiFetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        body: JSON.stringify({ full_name, email, password })
+    });
+};
 
-    return errorResponse;
-  }
-}
+export const login = (email: string, password: string) => {
+    return apiFetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+    });
+};
 
-/**
- * Extract field error from API error response
- */
-export function getFieldError(error: string | null, fieldName: string): string | undefined {
-  if (!error) return undefined;
-  
-  try {
-    const parsed = JSON.parse(error);
-    return parsed?.fieldErrors?.[fieldName]?.[0] || parsed?.message;
-  } catch {
-    return error.includes(fieldName) ? error : undefined;
-  }
-}
+export const googleLogin = () => {
+    return apiFetch(`${API_URL}/auth/google`);
+};
 
-export default {
-  fetchApi,
-  fetchWithLoading,
-  mutateData,
-  getFieldError,
+export const verifyEmail = (email: string, otp: string) => {
+    return apiFetch(`${API_URL}/auth/verify-email`, {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+    });
+};
+
+export const resetPasswordSendOtp = (email: string) => {
+    return apiFetch(`${API_URL}/auth/reset-password-send-otp`, {
+        method: 'POST',
+        body: JSON.stringify({ email })
+    });
+};
+
+export const resetPasswordVerifyOtp = (email: string, otp: string) => {
+    return apiFetch(`${API_URL}/auth/reset-password-verify-otp`, {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+    });
+};
+
+export const resetPasswordViaOtp = (email: string, password: string, tempToken: string) => {
+    return apiFetch(`${API_URL}/auth/reset-password-via-otp`, {
+        method: 'POST',
+        body: JSON.stringify({ email, password, tempToken })
+    });
+};
+
+export const logout = () => {
+    return apiFetch(`${API_URL}/auth/logout`, { method: 'POST' });
+};
+
+export const refreshToken = () => {
+    return apiFetch(`${API_URL}/auth/refresh-token`, { method: 'POST' });
+};
+
+export const updatePassword = (currentPassword: string, newPassword: string) => {
+    return apiFetch(`${API_URL}/auth/update-password`, {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword })
+    });
+};
+
+export const createWriterProfile = (form: WriterFormData) => {
+    return apiFetch(`${API_URL}/writer/create-profile`, {
+        method: 'POST',
+        body: JSON.stringify(form)
+    });
+};
+
+export const readWriterProfile = () => {
+    return apiFetch(`${API_URL}/writer/read-profile`);
+};
+
+export const updateWriterProfile = (form: WriterFormData) => {
+    return apiFetch(`${API_URL}/writer/update-profile`, {
+        method: 'POST',
+        body: JSON.stringify(form)
+    });
+};
+
+export const updateWriterStatus = (id: string, status: string) => {
+    return apiFetch(`${API_URL}/writer/update-status/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+    });
+};
+
+export const deleteWriterProfile = () => {
+    return apiFetch(`${API_URL}/writer/delete-profile`, { method: 'DELETE' });
+};
+
+export const getAllWriter = () => {
+    return apiFetch(`${API_URL}/writer/get-all`);
+};
+
+export const createKalam = (kalam: KalamUnderDraft) => {
+    return apiFetch(`${API_URL}/kalam/create`, {
+        method: 'POST',
+        body: JSON.stringify(kalam)
+    });
+};
+
+export const getUserAllKalams = () => {
+    return apiFetch(`${API_URL}/kalam/get-all-user`);
+};
+
+export const getAllKalams = () => {
+    return apiFetch(`${API_URL}/kalam/get-all`);
+};
+
+export const updateKalam = (id: string, data: any) => {
+    return apiFetch(`${API_URL}/kalam/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+};
+
+export const deleteKalam = (id: string) => {
+    return apiFetch(`${API_URL}/kalam/${id}`, { method: 'DELETE' });
+};
+
+export const updateKalamStatus = (id: string, status: string, revision_notes: string | null) => {
+    return apiFetch(`${API_URL}/kalam/update-status/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, revision_notes })
+    });
+};
+
+export const createVocalistProfile = (form: VocalistProfileType) => {
+    return apiFetch(`${API_URL}/vocalist/create`, {
+        method: 'POST',
+        body: JSON.stringify(form)
+    });
+};
+
+export const readVocalistProfile = () => {
+    return apiFetch(`${API_URL}/vocalist/read`);
+};
+
+export const updateVocalistProfile = (form: VocalistProfileType) => {
+    return apiFetch(`${API_URL}/vocalist/update`, {
+        method: 'PATCH',
+        body: JSON.stringify(form)
+    });
+};
+
+export const updateVocalistStatus = (id: string, status: string) => {
+    return apiFetch(`${API_URL}/vocalist/update-status/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+    });
+};
+
+export const deleteVocalistProfile = () => {
+    return apiFetch(`${API_URL}/vocalist/delete`, { method: 'DELETE' });
+};
+
+export const getAllVocalists = () => {
+    return apiFetch(`${API_URL}/vocalist/all`);
+};
+
+export const createSada = (sada: any) => {
+    return apiFetch(`${API_URL}/sada/create`, {
+        method: 'POST',
+        body: JSON.stringify(sada)
+    });
+};
+
+export const getUserAllSadas = () => {
+    return apiFetch(`${API_URL}/sada/get-all-user`);
+};
+
+export const getAllSadas = () => {
+    return apiFetch(`${API_URL}/sada/get-all`);
+};
+
+export const updateSada = (id: string, data: any) => {
+    return apiFetch(`${API_URL}/sada/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+};
+
+export const deleteSada = (id: string) => {
+    return apiFetch(`${API_URL}/sada/${id}`, { method: 'DELETE' });
+};
+
+export const updateSadaStatus = (id: string, data: any) => {
+    return apiFetch(`${API_URL}/sada/update-status/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data)
+    });
+};
+
+export const createProducerProfile = (form: ProducerProfileType) => {
+    return apiFetch(`${API_URL}/producer/create`, {
+        method: 'POST',
+        body: JSON.stringify(form)
+    });
+};
+
+export const readProducerProfile = () => {
+    return apiFetch(`${API_URL}/producer/read`);
+};
+
+export const updateProducerProfile = (form: ProducerProfileType) => {
+    return apiFetch(`${API_URL}/producer/update`, {
+        method: 'PATCH',
+        body: JSON.stringify(form)
+    });
+};
+
+export const updateProducerStatus = (id: string, status: string) => {
+    return apiFetch(`${API_URL}/producer/update-status/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+    });
+};
+
+export const deleteProducerProfile = () => {
+    return apiFetch(`${API_URL}/producer/delete`, { method: 'DELETE' });
+};
+
+export const getAllProducers = () => {
+    return apiFetch(`${API_URL}/producer/all`);
+};
+
+export const createLiteraryProfile = (form: LiteraryProfileType) => {
+    return apiFetch(`${API_URL}/literary/create`, {
+        method: 'POST',
+        body: JSON.stringify(form)
+    });
+};
+
+export const readLiteraryProfile = () => {
+    return apiFetch(`${API_URL}/literary/read`);
+};
+
+export const updateLiteraryProfile = (form: LiteraryProfileType) => {
+    return apiFetch(`${API_URL}/literary/update`, {
+        method: 'PATCH',
+        body: JSON.stringify(form)
+    });
+};
+
+export const deleteLiteraryProfile = () => {
+    return apiFetch(`${API_URL}/literary/delete`, { method: 'DELETE' });
+};
+
+export const createStudioProfile = (form: StudioProfileType) => {
+    return apiFetch(`${API_URL}/studio/create`, {
+        method: 'POST',
+        body: JSON.stringify(form)
+    });
+};
+
+export const readStudioProfile = () => {
+    return apiFetch(`${API_URL}/studio/read`);
+};
+
+export const updateStudioProfile = (form: StudioProfileType) => {
+    return apiFetch(`${API_URL}/studio/update`, {
+        method: 'PATCH',
+        body: JSON.stringify(form)
+    });
+};
+
+export const deleteStudioProfile = () => {
+    return apiFetch(`${API_URL}/studio/delete`, { method: 'DELETE' });
 };

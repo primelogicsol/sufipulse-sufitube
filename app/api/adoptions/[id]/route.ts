@@ -108,6 +108,7 @@ export async function PATCH(
     'targetLanguages', 'googleAdsCustomerId', 'googleAdsVerificationStatus', 'oauthStatus',
     'publicDisplayMode', 'publicLocationMode', 'isAnonymous',
     'adoptionStatus', 'amountDue', 'currency', 'paymentRoute',
+    'expectedPaymentAmount', 'paymentLinkTier',
   ];
 
   // Admin-only fields

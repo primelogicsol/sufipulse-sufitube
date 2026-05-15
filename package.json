@@ -11,7 +11,7 @@
     "dev:stable": "node scripts/start-dev.js",
     "monitor": "node scripts/monitor-dev-server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "node .next/standalone/server.js",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next node_modules/.cache",
