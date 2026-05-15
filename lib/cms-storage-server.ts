@@ -6,25 +6,21 @@ import { getBestReleaseDate } from './release-utils';
 
 /**
  * Robust Data Directory Resolution
- * In Next.js standalone mode, process.cwd() can be nested.
- * We must find the persistent Docker volume at /app/.data
+ * We MUST use the absolute path /app/.data in production (Docker)
+ * to ensure data is written to the persistent volume.
  */
 const resolveDataDir = () => {
   // 1. Environment variable override
   if (process.env.DATA_DIR) return process.env.DATA_DIR;
   
   // 2. Explicit Docker persistent volume path (Highest priority in production)
-  if (fs.existsSync('/app/.data')) return '/app/.data';
-  
-  // 3. Handle standalone mode /app/.next/standalone -> /app/.data
-  const cwd = process.cwd();
-  if (cwd.includes('.next' + path.sep + 'standalone')) {
-    const parentDir = path.join(cwd, '..', '..', '.data');
-    if (fs.existsSync(parentDir)) return parentDir;
+  // We check /app/.data which is where the volume is mounted in docker-compose.yml
+  if (fs.existsSync('/app/.data')) {
+    return '/app/.data';
   }
   
-  // 4. Default fallback to local root
-  return path.join(cwd, '.data');
+  // 3. Fallback to local root
+  return path.join(process.cwd(), '.data');
 };
 
 const SERVER_DATA_DIR = resolveDataDir();
@@ -32,95 +28,70 @@ const SERVER_DATA_FILE = path.join(SERVER_DATA_DIR, 'cms-releases.json');
 const REQUESTS_DATA_FILE = path.join(SERVER_DATA_DIR, 'lyrics-requests.json');
 const SEED_FILE = path.join(process.cwd(), 'lib', 'cms-seed-releases.json');
 
-console.log(`[cms-storage-server] Initialized with SERVER_DATA_DIR: ${SERVER_DATA_DIR}`);
+console.log(`[CMS-SERVER] Data Directory: ${SERVER_DATA_DIR}`);
+console.log(`[CMS-SERVER] Data File: ${SERVER_DATA_FILE}`);
 
 let hydrated = false;
 let lastHydratedMtime = 0;
 
 const ensureHydrated = (force = false) => {
-  console.log(`[cms-storage-server] ensureHydrated(force=${force}) started. hydrated=${hydrated}`);
   let currentMtime = 0;
   try {
     if (fs.existsSync(SERVER_DATA_FILE)) {
       currentMtime = fs.statSync(SERVER_DATA_FILE).mtimeMs;
     }
-  } catch (e: any) {
-    console.warn(`[cms-storage-server] Failed to stat ${SERVER_DATA_FILE}:`, e.message);
-  }
+  } catch (e: any) {}
 
   const needsRehydration = force || !hydrated || (currentMtime > lastHydratedMtime);
 
-  if (!needsRehydration) {
-    console.log(`[cms-storage-server] No rehydration needed.`);
-    return;
-  }
+  if (!needsRehydration) return;
 
-  console.log(`[cms-storage-server] ${force ? 'FORCING' : 'Triggering'} re-hydration from disk... (File Mtime: ${currentMtime}, Last: ${lastHydratedMtime})`);
+  console.log(`[CMS-SERVER] Re-hydrating from disk... (Force: ${force}, File Mtime: ${currentMtime})`);
   try {
     if (fs.existsSync(SERVER_DATA_FILE)) {
-      console.log(`[cms-storage-server] Reading ${SERVER_DATA_FILE}...`);
       const raw = fs.readFileSync(SERVER_DATA_FILE, 'utf8');
-      const parsed = raw ? JSON.parse(raw) : [];
-      const releases = Array.isArray(parsed) ? (parsed as CMSRelease[]) : [];
-      console.log(`[cmsServerStorage] Hydrating releases from ${SERVER_DATA_FILE}: ${releases.length} records found.`);
+      const releases = JSON.parse(raw || '[]');
       cmsStorage.clearAll();
-      if (releases.length > 0) {
-        cmsStorage.importReleases(releases);
-      }
+      cmsStorage.importReleases(releases);
+      console.log(`[CMS-SERVER] Hydrated ${releases.length} releases.`);
     } else {
-      console.warn(`[cmsServerStorage] Data file NOT FOUND at ${SERVER_DATA_FILE}`);
+      console.warn(`[CMS-SERVER] Data file not found, seeking seed...`);
       if (fs.existsSync(SEED_FILE)) {
-        console.log(`[cmsServerStorage] Seeding from ${SEED_FILE}`);
-        const raw = fs.readFileSync(SEED_FILE, 'utf8');
-        const seed = raw ? JSON.parse(raw) : [];
-        const releases = Array.isArray(seed) ? (seed as CMSRelease[]) : [];
-        if (releases.length > 0) {
-          cmsStorage.clearAll();
-          cmsStorage.importReleases(releases);
-          persist();
-        }
-      } else {
-        console.warn(`[cmsServerStorage] Seed file also NOT FOUND at ${SEED_FILE}`);
+        const seed = JSON.parse(fs.readFileSync(SEED_FILE, 'utf8') || '[]');
+        cmsStorage.importReleases(seed);
+        persist();
       }
     }
 
     if (fs.existsSync(REQUESTS_DATA_FILE)) {
-      console.log(`[cms-storage-server] Reading ${REQUESTS_DATA_FILE}...`);
-      const raw = fs.readFileSync(REQUESTS_DATA_FILE, 'utf8');
-      const parsed = raw ? JSON.parse(raw) : [];
-      const requests = Array.isArray(parsed) ? (parsed as any[]) : [];
-      console.log(`[cmsServerStorage] Hydrating lyrics requests from ${REQUESTS_DATA_FILE}: ${requests.length} records found.`);
+      const requests = JSON.parse(fs.readFileSync(REQUESTS_DATA_FILE, 'utf8') || '[]');
       cmsStorage.importLyricsRequests(requests);
     }
 
     hydrated = true;
     lastHydratedMtime = currentMtime;
-    console.log(`[cms-storage-server] Hydration successful.`);
   } catch (error: any) {
-    console.error('[cms-storage-server] FATAL hydration error:', error);
-    // Mark as hydrated anyway to prevent infinite retry loops
-    hydrated = true;
+    console.error('[CMS-SERVER] Hydration Error:', error.message);
+    hydrated = true; // Prevent loops
   }
 };
 
-
 const persist = () => {
-  console.log(`[cms-storage-server] persist() started.`);
-  const data = cmsStorage.exportReleases();
-  const reqData = cmsStorage.exportLyricsRequests();
-  
   try {
     if (!fs.existsSync(SERVER_DATA_DIR)) {
-      console.log(`[cms-storage-server] Creating directory ${SERVER_DATA_DIR}...`);
       fs.mkdirSync(SERVER_DATA_DIR, { recursive: true });
     }
-    console.log(`[cms-storage-server] Writing to ${SERVER_DATA_FILE}...`);
+    const data = cmsStorage.exportReleases();
+    const reqData = cmsStorage.exportLyricsRequests();
+    
     fs.writeFileSync(SERVER_DATA_FILE, JSON.stringify(data, null, 2));
-    console.log(`[cms-storage-server] Writing to ${REQUESTS_DATA_FILE}...`);
     fs.writeFileSync(REQUESTS_DATA_FILE, JSON.stringify(reqData, null, 2));
-    console.log(`[cms-storage-server] Persistence successful.`);
+    
+    // Update mtime tracker immediately to avoid redundant re-hydration in this process
+    lastHydratedMtime = fs.statSync(SERVER_DATA_FILE).mtimeMs;
+    console.log(`[CMS-SERVER] Persisted ${data.length} releases to ${SERVER_DATA_FILE}`);
   } catch (error: any) {
-    console.error('[cms-storage-server] FATAL persistence error:', error);
+    console.error('[CMS-SERVER] Persistence Error:', error.message);
   }
 };
 
