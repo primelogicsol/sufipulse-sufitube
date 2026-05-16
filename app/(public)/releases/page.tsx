@@ -400,7 +400,7 @@ export default function Releases() {
             const res = await fetch('/api/releases/import-youtube', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videoIds: [], lookbackDays: 90 }) 
+                body: JSON.stringify({ videoIds: [], lookbackDays: 365 }) 
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
