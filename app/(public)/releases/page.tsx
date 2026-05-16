@@ -429,13 +429,13 @@ export default function Releases() {
                     let hiddenByDuration = false;
                     
                     if (durationFilter === 'default') {
-                        // Default = Standard and Long, no short
-                        if (seconds < 180 || d.format === 'short') hiddenByDuration = true;
+                        // Default = Standard and Long, no short. Assume missing duration (0) is standard.
+                        if ((seconds > 0 && seconds < 180) || d.format === 'short') hiddenByDuration = true;
                     } else if (durationFilter === 'short' && seconds >= 180) {
                         hiddenByDuration = true;
-                    } else if (durationFilter === 'standard' && (seconds < 180 || seconds > 480)) {
+                    } else if (durationFilter === 'standard' && (seconds < 180 || seconds > 480) && seconds !== 0) {
                         hiddenByDuration = true;
-                    } else if (durationFilter === 'long' && seconds <= 480) {
+                    } else if (durationFilter === 'long' && seconds <= 480 && seconds !== 0) {
                         hiddenByDuration = true;
                     }
                     

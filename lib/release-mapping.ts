@@ -31,8 +31,8 @@ export const buildUniqueSlug = (title: string, youtubeId: string, currentRelease
 };
 
 export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease => {
-  // Use youtubeId as canonical ID for YouTube releases to prevent duplicates
-  const id = existing?.id || video.id;
+  // Standardize ID: Use existing or create with prefix to match local convention
+  const id = existing?.id || `release_${Date.now()}_${video.id}`;
   const slug = existing?.slug || buildUniqueSlug(video.title || video.snippet?.title || 'Untitled', video.id, existing?.id);
   const now = new Date().toISOString();
   

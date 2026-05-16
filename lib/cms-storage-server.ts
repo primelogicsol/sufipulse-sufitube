@@ -76,6 +76,8 @@ const ensureHydrated = (force = false) => {
   }
 };
 
+let lastPersistenceError: string | null = null;
+
 const persist = () => {
   try {
     if (!fs.existsSync(SERVER_DATA_DIR)) {
@@ -84,18 +86,32 @@ const persist = () => {
     const data = cmsStorage.exportReleases();
     const reqData = cmsStorage.exportLyricsRequests();
     
-    fs.writeFileSync(SERVER_DATA_FILE, JSON.stringify(data, null, 2));
-    fs.writeFileSync(REQUESTS_DATA_FILE, JSON.stringify(reqData, null, 2));
+    // Atomic write for releases
+    const tempFile = `${SERVER_DATA_FILE}.tmp`;
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2));
+    fs.renameSync(tempFile, SERVER_DATA_FILE);
     
-    // Update mtime tracker immediately to avoid redundant re-hydration in this process
+    // Atomic write for requests
+    const tempReqFile = `${REQUESTS_DATA_FILE}.tmp`;
+    fs.writeFileSync(tempReqFile, JSON.stringify(reqData, null, 2));
+    fs.renameSync(tempReqFile, REQUESTS_DATA_FILE);
+    
+    // Update mtime tracker immediately
     lastHydratedMtime = fs.statSync(SERVER_DATA_FILE).mtimeMs;
-    console.log(`[CMS-SERVER] Persisted ${data.length} releases to ${SERVER_DATA_FILE}`);
+    lastPersistenceError = null;
+    console.log(`[CMS-SERVER] Successfully persisted ${data.length} releases.`);
   } catch (error: any) {
-    console.error('[CMS-SERVER] Persistence Error:', error.message);
+    lastPersistenceError = error.message;
+    console.error('[CMS-SERVER] Persistence FAILED:', error.message);
+    throw error; // Throw so the API can report it
   }
 };
 
 export const cmsServerStorage = {
+  getPersistenceError() {
+    return lastPersistenceError;
+  },
+  // ... rest of methods
   getInfo() {
     return {
       dataDir: SERVER_DATA_DIR,

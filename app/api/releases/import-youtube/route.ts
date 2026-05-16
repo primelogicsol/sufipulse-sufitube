@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // 1. Fetch latest videos from uploads playlist
-      const latestVideos = await youtubeService.getLatestVideos(100);
+      const latestVideos = await youtubeService.getLatestVideos(500);
       selected = [...latestVideos];
       
       // 2. Fetch latest completed live streams
@@ -184,13 +184,25 @@ export async function POST(request: NextRequest) {
       diagnostics.push(diag);
     }
 
-    const saved = cmsServerStorage.bulkSaveReleases(toSave);
-    cmsServerStorage.forceHydrate();
-    revalidatePath('/');
-    revalidatePath('/releases');
+    let saved: CMSRelease[] = [];
+    let persistenceError: string | null = null;
+    try {
+      console.log(`[Import] Attempting bulk save of ${toSave.length} releases...`);
+      saved = cmsServerStorage.bulkSaveReleases(toSave);
+      // Re-hydrate all processes to see the new data
+      cmsServerStorage.forceHydrate();
+      revalidatePath('/');
+      revalidatePath('/releases');
+    } catch (saveErr: any) {
+      console.error('[Import] Bulk save failed:', saveErr.message);
+      persistenceError = saveErr.message;
+    }
 
     const serverInfo = cmsServerStorage.getInfo();
-    const finalCount = cmsServerStorage.getAllReleases().length;
+    const allReleases = cmsServerStorage.getAllReleases();
+    const finalCount = allReleases.length;
+
+    console.log(`[Import] Post-save registry count: ${finalCount}`);
 
     // Diagnostic for latest video specifically
     const latestDiag = diagnostics.find(d => d.youtubeId === latestVideo.id);
@@ -206,7 +218,7 @@ export async function POST(request: NextRequest) {
           : 'none';
       } else {
         latestDiag.existsInDb = false;
-        latestDiag.reasonHiddenAfterSync = 'missing_from_db';
+        latestDiag.reasonHiddenAfterSync = 'missing_from_db_after_save';
       }
     }
 
@@ -218,17 +230,19 @@ export async function POST(request: NextRequest) {
       errorCount,
       checkedCount: selected.length,
       registryCount: finalCount,
+      persistenceError,
       serverInfo,
       isFallback,
       diagnostic: latestDiag,
-      diagnostics: diagnostics.slice(0, 50), // Return details for first 50 to avoid huge response
-      message: isFallback 
-        ? 'Sync completed using static fallback data (API key missing or quota exceeded).' 
-        : `Sync Registry Complete. Checked ${selected.length} uploads from last ${lookbackDays} days. ${newCount} new, ${updatedCount} updated, ${skippedCount} skipped. Final Registry Count: ${finalCount}`,
+      diagnostics: diagnostics.slice(0, 50),
+      message: persistenceError 
+        ? `Sync partially failed! Found ${newCount} new items but could not save them to disk: ${persistenceError}`
+        : `Sync Registry Complete. Checked ${selected.length} uploads. ${newCount} new, ${updatedCount} updated. Final Registry Count: ${finalCount}`,
       details: {
         lookbackDays,
         latestVideo: latestDiag,
-        serverInfo
+        serverInfo,
+        persistenceError
       }
     });
   } catch (error: any) {
