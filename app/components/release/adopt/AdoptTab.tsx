@@ -132,10 +132,21 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   // Check Stripe availability on mount
   useEffect(() => {
-    const hasPaymentLink = !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_SONG_PAYMENT_LINK;
+    const hasPaymentLink = !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_SONG_PAYMENT_LINK || 
+                          !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25;
+    
+    console.log('Stripe Config Debug:', {
+      hasAdopt25: !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25,
+      hasAdopt50: !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_50,
+      link25: process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25?.slice(0, 20) + '...',
+    });
+
     fetch('/api/payment/status')
       .then(res => res.json())
-      .then(data => setStripeEnabled(!!data.available || hasPaymentLink))
+      .then(data => {
+        console.log('Payment API Status:', data);
+        setStripeEnabled(!!data.available || hasPaymentLink);
+      })
       .catch(() => setStripeEnabled(!!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || hasPaymentLink));
   }, []);
 
