@@ -373,12 +373,10 @@ export default function AdminSongAdoptions() {
                                 <tr>
                                     <th>Sponsor</th>
                                     <th>Song</th>
-                                    <th>Method</th>
-                                    <th>Amount</th>
+                                    <th>Tier / Amount</th>
                                     <th>Status</th>
                                     <th>Payment</th>
-                                    <th>OAuth</th>
-                                    <th>Campaign</th>
+                                    <th>Country</th>
                                     <th>Date</th>
                                     <th>Actions</th>
                                 </tr>
@@ -398,33 +396,23 @@ export default function AdminSongAdoptions() {
                                             </div>
                                         </td>
                                         <td>
-                                            <span className="text-sm text-[var(--dash-text-secondary)] truncate max-w-[120px] block" title={adoption.releaseTitle}>
+                                            <div className="text-sm text-[var(--dash-text-secondary)] truncate max-w-[150px]" title={adoption.releaseTitle}>
                                                 {adoption.releaseTitle || '—'}
-                                            </span>
+                                            </div>
+                                            {adoption.youtubeId && (
+                                              <div className="text-[10px] font-mono text-[var(--dash-text-muted)] mt-0.5">{adoption.youtubeId}</div>
+                                            )}
                                         </td>
                                         <td>
-                                            <span className="text-sm text-[var(--dash-text-secondary)]">
-                                                {adoption.methodType === 'managed_sufitube' ? 'Managed' : 'My Google Ads'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="text-sm text-[var(--dash-text-secondary)]">${adoption.amountDue || 0}</span>
+                                            <div className="flex flex-col">
+                                                <Badge variant="neutral">{adoption.selectedTierLabel || adoption.paymentLinkTier || '—'}</Badge>
+                                                <span className="text-xs text-[var(--dash-text-secondary)] mt-1">${adoption.amountDue || 0}</span>
+                                            </div>
                                         </td>
                                         <td>{getStatusBadge(adoption.adoptionStatus)}</td>
                                         <td>{getPaymentBadge(adoption)}</td>
                                         <td>
-                                            {adoption.methodType === 'use_my_google_ads' ? (
-                                                adoption.oauthStatus === 'connected'
-                                                    ? <span className="text-xs text-green-400 flex items-center gap-1"><Check className="w-3 h-3" /> Yes</span>
-                                                    : <span className="text-xs text-red-400 flex items-center gap-1"><X className="w-3 h-3" /> No</span>
-                                            ) : <span className="text-xs text-neutral-600">—</span>}
-                                        </td>
-                                        <td>
-                                            {adoption.campaignResourceName ? (
-                                                <span className="text-xs font-mono text-blue-400 truncate max-w-[120px] block" title={adoption.campaignResourceName}>
-                                                    {adoption.campaignResourceName.split('/').pop()}
-                                                </span>
-                                            ) : <span className="text-xs text-neutral-600">—</span>}
+                                            <span className="text-sm text-[var(--dash-text-secondary)]">{adoption.sponsorCountry || '—'}</span>
                                         </td>
                                         <td>
                                             <span className="text-sm text-[var(--dash-text-secondary)]">

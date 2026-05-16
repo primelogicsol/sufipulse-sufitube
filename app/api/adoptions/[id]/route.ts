@@ -107,8 +107,10 @@ export async function PATCH(
     'adopterType', 'campaignIntention', 'dedicationMessage', 'targetRegions',
     'targetLanguages', 'googleAdsCustomerId', 'googleAdsVerificationStatus', 'oauthStatus',
     'publicDisplayMode', 'publicLocationMode', 'isAnonymous',
-    'adoptionStatus', 'amountDue', 'currency', 'paymentRoute',
-    'expectedPaymentAmount', 'paymentLinkTier',
+    'adoptionStatus', 'amountDue', 'currency', 'paymentRoute', 'paymentStatus',
+    'expectedPaymentAmount', 'paymentLinkTier', 'paymentLinkUrl',
+    'youtubeId', 'agreementAccepted', 'publicMentionAccepted', 'institutionalClausesAccepted',
+    'selectedTier', 'selectedTierLabel',
   ];
 
   // Admin-only fields

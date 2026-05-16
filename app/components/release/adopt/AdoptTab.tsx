@@ -1024,35 +1024,48 @@ export function AdoptTab({ release }: AdoptTabProps) {
     }
 
     // 1. Audit and Select Tier-Specific Payment Link
-    // We specifically avoid using the generic NEXT_PUBLIC_STRIPE_ADOPT_SONG_PAYMENT_LINK
-    // for these tiers if their specific links are missing, to avoid amount mismatches.
     let paymentLink = '';
     let tierLabel = '';
+    let selectedTierId = selectedPackage?.id || 'custom';
 
     if (budget === 25) {
       paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25 || '';
-      tierLabel = '25';
+      tierLabel = 'Blessing Support';
     } else if (budget === 50) {
       paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_50 || '';
-      tierLabel = '50';
+      tierLabel = 'Light Campaign';
     } else if (budget === 100) {
       paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_100 || '';
-      tierLabel = '100';
+      tierLabel = 'Noor Campaign';
     } else if (budget === 250) {
       paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_250 || '';
-      tierLabel = '250';
+      tierLabel = 'Sama Outreach';
     } else if (budget === 500) {
       paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_500 || '';
-      tierLabel = '500';
+      tierLabel = 'Global Support';
     } else if (budget > 0) {
       paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_CUSTOM || '';
-      tierLabel = 'custom';
+      tierLabel = 'Custom Budget';
     }
 
-    // Prioritise Tier-Specific Payment Link if configured
+    // Production Safety Checks
+    const isProduction = process.env.NODE_ENV === 'production';
+    const old5DollarLink = 'https://buy.stripe.com/5kAbJ3fdveLkav6000'; // Example old link pattern
+    
+    if (paymentLink.includes('test_') || (isProduction && paymentLink === old5DollarLink)) {
+      setSubmitError('Live payment link is not configured correctly for this sponsorship tier. Please contact support.');
+      return;
+    }
+
+    // Redirect to Stripe Payment Link if configured
     if (paymentLink) {
       setIsSubmitting(true);
       try {
+        // Append client_reference_id and prefilled_email for better reconciliation
+        const stripeUrl = new URL(paymentLink);
+        stripeUrl.searchParams.set('client_reference_id', adoption.id);
+        if (formData.email) stripeUrl.searchParams.set('prefilled_email', formData.email);
+
         const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -1063,11 +1076,21 @@ export function AdoptTab({ release }: AdoptTabProps) {
             adoptionStatus: 'pending_payment',
             amountDue: budget,
             expectedPaymentAmount: budget,
-            paymentLinkTier: tierLabel
+            paymentLinkTier: tierLabel,
+            paymentLinkUrl: stripeUrl.toString(),
+            selectedTier: selectedTierId,
+            selectedTierLabel: tierLabel,
+            youtubeId: release?.youtube_video_id || release?.youtubeId,
+            agreementAccepted: true,
+            publicMentionAccepted: true,
+            institutionalClausesAccepted: true
           }),
         });
         if (!patchRes.ok) throw new Error('Failed to initialise payment');
-        window.location.href = paymentLink;
+        
+        // Wait a small moment for persistence to settle
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = stripeUrl.toString();
       } catch (err: any) {
         setSubmitError(`Payment error: ${err.message}`);
         setIsSubmitting(false);
@@ -1075,67 +1098,46 @@ export function AdoptTab({ release }: AdoptTabProps) {
       return;
     }
 
-    // 2. Fallback to Option 2: Dynamic Checkout Session API
-    // We only try this if stripeEnabled is true (which could be from API config or legacy link)
-    if (stripeEnabled) {
-      setIsRedirectingToStripe(true);
+    // 2. Fallback to Manual Coordination for Custom Budget if no link exists
+    if (selectedTierId === 'custom' || !paymentLink) {
+      setIsSubmitting(true);
+      if (selectedTierId === 'custom') {
+        setSubmitError('Custom budget request submitted. Our team will review your request and contact you to coordinate payment.');
+      } else {
+        setSubmitError('Live payment link is not configured for this tier. Please contact support.');
+        setIsSubmitting(false);
+        return;
+      }
+      
       try {
-        const res = await fetch(`/api/adoptions/${adoption.id}/checkout/`, {
-          method: 'POST',
+        const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            amountUSD: budget,
-            releaseTitle: release?.release_title,
-            sponsorName: formData.full_name,
-            sponsorEmail: formData.email,
-            packageName: selectedPackage?.package_name,
+          body: JSON.stringify({ 
+            paymentStatus: 'pending', 
+            paymentRoute: 'manual_coordination',
+            adoptionStatus: 'pending_review',
+            amountDue: budget,
+            expectedPaymentAmount: budget,
+            selectedTier: selectedTierId,
+            selectedTierLabel: tierLabel,
+            youtubeId: release?.youtube_video_id || release?.youtubeId,
+            agreementAccepted: true,
+            publicMentionAccepted: true,
+            institutionalClausesAccepted: true
           }),
         });
+        if (!patchRes.ok) throw new Error('Failed to save manual submission');
         
-        if (res.ok) {
-          const body = await res.json();
-          window.location.href = body.url;
-          return;
-        }
-
-        if (res.status === 401) {
-          setShowAuthWall(true);
-          setIsRedirectingToStripe(false);
-          return;
-        }
-        
-        // If it failed with 503 (not configured) or other error, fall through to manual fallback
-        console.warn('Stripe Checkout API failed or not configured, falling back to manual review.');
-      } catch (err) {
-        console.error('Stripe Checkout API error:', err);
+        // Final success state for manual coordination
+        setStep(5);
+      } catch (err: any) {
+        setSubmitError(`Error: ${err.message}`);
+      } finally {
+        setIsSubmitting(false);
       }
-      setIsRedirectingToStripe(false);
-    }
-
-    // 3. Final Fallback: Manual Coordination (when no payment links or API are configured)
-    setIsSubmitting(true);
-    setSubmitError('Electronic payment for this tier is not configured yet. Your request can still be submitted for manual payment coordination.');
-    
-    try {
-      const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ 
-          paymentStatus: 'pending', 
-          paymentRoute: 'manual_coordination',
-          adoptionStatus: 'pending_review' 
-        }),
-      });
-      if (!patchRes.ok) throw new Error('Failed to save manual submission');
-      
-      // Final success state for manual coordination
-      setStep(5);
-    } catch (err: any) {
-      setSubmitError(`Error: ${err.message}`);
-    } finally {
-      setIsSubmitting(false);
+      return;
     }
   };
 
@@ -2333,8 +2335,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
             )}
             
             <div className="space-y-4">
-              <button
-                onClick={() => { 
+              <button 
+                onClick={() => {
                   const allChecked = [0,1,2].every(i => (formData as any)[`clause_managed_${i}`]);
                   if (!allChecked) { setSubmitError('Please accept all institutional clauses to continue.'); return; }
                   setSubmitError(''); handlePayment(); 
@@ -2343,15 +2345,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 className="group w-full py-5 bg-[var(--color-gold)] hover:bg-[var(--color-gold-hover)] disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-[var(--color-midnight)] font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-[var(--color-gold)]/10 flex items-center justify-center gap-3 active:scale-[0.99]"
               >
                 {isRedirectingToStripe || isSubmitting ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" /> {stripeEnabled ? 'Connecting to Stripe…' : 'Submitting Request…'}</>
+                  <><Loader2 className="w-5 h-5 animate-spin" /> {selectedPackage ? 'Redirecting to secure Stripe checkout…' : 'Saving request…'}</>
                 ) : (
                   <>
-                    {stripeEnabled ? 'Confirm & Proceed to Payment' : 'Submit Request for Manual Review'}
+                    {selectedPackage ? 'Confirm & Proceed to Payment' : 'Submit Custom Budget Request'}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
-
               <button 
                 onClick={() => setStep(3)} 
                 className="w-full text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-xs uppercase tracking-widest font-bold py-2"

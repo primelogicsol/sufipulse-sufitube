@@ -218,6 +218,7 @@ export const adoptionApiSchema = z.object({
   releaseId: z.string().min(1, 'releaseId is required'),
   releaseTitle: z.string().optional(),
   releaseSlug: z.string().optional(),
+  youtubeId: z.string().optional(),
   methodType: z.enum(['managed_sufitube', 'use_my_google_ads']),
   sponsorName: z.string().optional(),
   sponsorEmail: z.string().email('Invalid email').optional(),
@@ -236,6 +237,12 @@ export const adoptionApiSchema = z.object({
   publicLocationMode: z.string().optional(),
   isAnonymous: z.boolean().optional(),
   adoptionStatus: z.string().optional(),
+  agreementAccepted: z.boolean().optional(),
+  publicMentionAccepted: z.boolean().optional(),
+  institutionalClausesAccepted: z.boolean().optional(),
+  selectedTier: z.string().optional(),
+  selectedTierLabel: z.string().optional(),
+  paymentLinkUrl: z.string().optional(),
 });
 
 export const adoptionsQuerySchema = z.object({
