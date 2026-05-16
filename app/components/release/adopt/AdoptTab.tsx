@@ -2353,10 +2353,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
     // ── use_my_google_ads ─────────────────────────────────────────────────────
     if (selectedMethod === 'use_my_google_ads') {
       const budget = formData.custom_budget || adoption?.amountDue || 0;
-      const dur = getDuration(budget);
-      const regions = formData.target_regions?.length ? formData.target_regions : ['Global'];
-      const languages = formData.target_languages?.length ? formData.target_languages : ['All'];
-      const ytId = release?.youtube_video_id || release?.youtubeId || '';
       const displayCid = selectedGoogleCustomerId || enteredCustomerId || '—';
       const isViaOAuth = oauthConnected && !!verifiedCustomerId;
 
@@ -2364,92 +2360,151 @@ export function AdoptTab({ release }: AdoptTabProps) {
         { label: 'Request Submitted', done: true },
         { label: 'Google Account Linked', done: isViaOAuth || isManualReview },
         { label: 'Account Verification', done: !!verifiedCustomerId || isManualReview },
-        { label: 'Campaign Preparation', done: !!verifiedCustomerId, active: isManualReview },
-        { label: 'Awaiting User Approval', done: false, active: !!verifiedCustomerId },
-        { label: 'Campaign Launched', done: false },
+        { label: 'Campaign Structure Preparation', done: false, active: true },
+        { label: 'User Approval in Google Ads', done: false },
+        { label: 'Campaign Launch', done: false },
         { label: 'Performance Monitoring', done: false },
         { label: 'Campaign Complete', done: false },
         { label: 'Impact Report Ready', done: false },
       ];
 
       return (
-        <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in zoom-in-95 duration-700">
+        <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in zoom-in-95 duration-700">
           <div className="text-center space-y-6">
-            <div className={`w-24 h-24 mx-auto ${isManualReview ? 'bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20' : 'bg-green-500/5 border border-green-500/20'} rounded-3xl flex items-center justify-center rotate-12`}>
-              {isManualReview ? <Clock className="w-10 h-10 text-[var(--color-gold)] -rotate-12" /> : <Check className="w-10 h-10 text-green-500 -rotate-12" />}
+            <div className={`w-20 h-20 mx-auto ${isManualReview ? 'bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20' : 'bg-blue-500/5 border border-blue-500/20'} rounded-3xl flex items-center justify-center rotate-12`}>
+              {isManualReview ? <Clock className="w-10 h-10 text-[var(--color-gold)] -rotate-12" /> : <Check className="w-10 h-10 text-blue-500 -rotate-12" />}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h3 className="text-3xl font-serif text-[var(--color-text-primary)]">
-                {isManualReview ? 'Request Submitted for Review' : 'Campaign Draft Ready'}
+                {isManualReview ? 'Manual Verification Pending' : 'Account Linked & Request Submitted'}
               </h3>
-              <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-md mx-auto">
-                {isManualReview
-                  ? 'SufiPulse will verify your Google Ads account and prepare the campaign structure. You will be notified via email within 24 hours.'
-                  : 'SufiPulse has prepared the campaign structure inside your Google Ads account. Please sign in to your dashboard to review and approve the launch.'}
+              <p className="text-[var(--color-text-secondary)] text-base leading-relaxed max-w-2xl mx-auto font-light">
+                Your Google Ads Direct request has been submitted. Your account is linked, but the campaign is not live yet.
               </p>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-10">
+          <div className="grid lg:grid-cols-[1fr_350px] gap-8">
+            <div className="space-y-8">
+              {/* Guided Next Steps Panel */}
+              <div className="bg-blue-600/5 border border-blue-500/20 rounded-3xl p-8 space-y-6 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h4 className="text-xl font-serif text-[var(--color-text-primary)]">Next Step: Complete Google Ads Setup</h4>
+                </div>
+                
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed font-light">
+                  To move forward, please make sure your Google Ads account billing is active and your campaign budget is available. 
+                  SufiPulse will verify the connection, prepare the campaign structure, and notify you when your approval is required.
+                </p>
+
+                <div className="grid gap-3">
+                  {[
+                    { label: 'Google Ads account linked', done: true },
+                    { label: 'Google Ads Customer ID captured', done: true },
+                    { label: 'Billing active inside Google Ads', done: false },
+                    { label: 'Campaign budget available', done: false },
+                    { label: 'SufiPulse structure review', done: false },
+                    { label: 'User approval in Google Ads', done: false },
+                    { label: 'Campaign launch and monitoring', done: false },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-3 text-xs">
+                      {item.done ? (
+                        <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+                      ) : (
+                        <div className="w-3.5 h-3.5 rounded-full border border-blue-500/30 flex-shrink-0" />
+                      )}
+                      <span className={item.done ? 'text-[var(--color-text-secondary)] font-medium' : 'text-[var(--color-text-tertiary)] font-light'}>
+                        {item.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 grid sm:grid-cols-2 gap-4">
+                  <a 
+                    href="https://ads.google.com/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 py-4 bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-bold uppercase tracking-widest rounded-2xl transition-all shadow-lg"
+                  >
+                    Open Google Ads <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(displayCid);
+                      const btn = document.getElementById('copy-cid-btn');
+                      if (btn) {
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = 'Copied!';
+                        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+                      }
+                    }}
+                    id="copy-cid-btn"
+                    className="flex items-center justify-center gap-2 py-4 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-blue-500/40 text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-widest rounded-2xl transition-all"
+                  >
+                    Copy Customer ID
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-[var(--color-midnight)] border border-[var(--color-border-strong)] rounded-2xl p-6 space-y-4">
+                <h5 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Ownership & Billing Policy</h5>
+                <ul className="space-y-2">
+                  <li className="text-xs text-[var(--color-text-tertiary)] font-light flex items-start gap-2">
+                    <span className="text-blue-500/50">•</span> This path does not use Stripe. You pay Google directly.
+                  </li>
+                  <li className="text-xs text-[var(--color-text-tertiary)] font-light flex items-start gap-2">
+                    <span className="text-blue-500/50">•</span> SufiPulse can prepare/review only where account access allows.
+                  </li>
+                  <li className="text-xs text-[var(--color-text-tertiary)] font-light flex items-start gap-2">
+                    <span className="text-blue-500/50">•</span> Admin review is required before public adopter display.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <div className="space-y-6">
-              <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)] border-b border-[var(--color-border-strong)] pb-3">
+              <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl p-6 space-y-6">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)] border-b border-[var(--color-border-strong)] pb-4">
                   <span>Campaign Timeline</span>
-                  <span className="text-[var(--color-gold)]">Path Direct</span>
+                  <span className="text-blue-400">Direct</span>
                 </div>
                 <div className="space-y-3.5">
                   {pathBSteps.map(({ label, done, active }) => (
-                    <div key={label} className="flex items-center gap-3">
-                      <StatusDot done={done} active={active} />
-                      <span className={`text-[11px] font-bold uppercase tracking-wide ${done ? 'text-[var(--color-text-primary)]' : active ? 'text-[var(--color-gold)]' : 'text-[var(--color-text-tertiary)]'}`}>{label}</span>
+                    <div key={label} className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <StatusDot done={done} active={active} />
+                        <span className={`text-[11px] font-bold uppercase tracking-wide ${done ? 'text-[var(--color-text-primary)]' : active ? 'text-blue-400' : 'text-[var(--color-text-tertiary)]'}`}>{label}</span>
+                      </div>
+                      {label === 'User Approval in Google Ads' && (
+                        <p className="text-[9px] text-[var(--color-text-tertiary)] font-light ml-8 leading-tight">
+                          You may need to approve budget, billing, or launch actions directly inside Google Ads.
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-6">
-              <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-2xl overflow-hidden divide-y divide-[var(--color-border-strong)]">
-                <div className="p-5 flex justify-between items-center bg-[var(--color-slate)]/10">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">Reference ID</span>
-                  <span className="text-[10px] font-mono text-[var(--color-text-secondary)]">{adoption?.id?.slice(-12).toUpperCase()}</span>
-                </div>
-                <div className="p-5 space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-xs text-[var(--color-text-tertiary)]">Budget</span>
-                    <span className="text-xs font-bold text-[var(--color-text-primary)]">${budget}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-[var(--color-text-tertiary)]">Account ID</span>
-                    <span className="text-xs font-mono text-blue-400">{displayCid}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-[var(--color-text-tertiary)]">Status</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold)]">{isManualReview ? 'Manual Review' : 'Draft Prepared'}</span>
-                  </div>
-                </div>
-                <div className="p-5">
-                   <a href="/user/adoptions" className="flex items-center justify-between group">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-gold)]">View Dashboard</span>
-                    <ArrowRight className="w-4 h-4 text-[var(--color-gold)] group-hover:translate-x-1 transition-transform" />
-                   </a>
-                </div>
-              </div>
-              
-              <div className="bg-[var(--color-midnight)] border border-[var(--color-border-strong)] rounded-2xl p-5">
-                <p className="text-[11px] text-[var(--color-text-secondary)] leading-relaxed italic">
-                  {isManualReview 
-                    ? "Our team is manually verifying your account connection. This usually takes 2 to 6 hours during institutional business days."
-                    : "Your campaign is now waiting in your Google Ads account. No spend will occur until you explicitly click 'Launch' in your Google dashboard."}
-                </p>
+              <div className="grid gap-3">
+                <a 
+                  href={adoption ? `/adopt-song/request/${adoption.id}` : '#'} 
+                  className="flex items-center justify-between px-6 py-4 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-2xl transition-all group"
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">View Request Status</span>
+                  <ArrowRight className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-gold)] group-hover:translate-x-1 transition-all" />
+                </a>
+                <button 
+                  onClick={resetFlow}
+                  className="w-full py-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-[10px] font-bold uppercase tracking-widest"
+                >
+                  Finish and Close
+                </button>
               </div>
             </div>
-          </div>
-
-          <div className="pt-4 border-t border-[var(--color-border-strong)] flex justify-center">
-            <button onClick={resetFlow} className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
-              Finish and Close
-            </button>
           </div>
         </div>
       );
