@@ -240,6 +240,35 @@ export async function PUT(
       }).catch((err) => apiLogger.warn('Subscriber notification failed', { err: String(err) }));
     }
 
+    // --- LYRICS REQUEST NOTIFICATIONS ---
+    // Identify newly published languages for lyrics translation requests
+    const newlyPublishedLanguages: string[] = [];
+    if (body.subtitleLanguageStatuses) {
+      for (const [lang, status] of Object.entries(body.subtitleLanguageStatuses)) {
+        const isNowPublished = status === 'published';
+        const wasNotPublished = !existing?.subtitleLanguageStatuses || existing.subtitleLanguageStatuses[lang] !== 'published';
+        
+        if (isNowPublished && wasNotPublished) {
+          newlyPublishedLanguages.push(lang);
+        }
+      }
+    }
+
+    // Notify requesters for each newly published language
+    if (newlyPublishedLanguages.length > 0) {
+      const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      for (const langCode of newlyPublishedLanguages) {
+        fetch(`${base}/api/admin/notify-lyrics-requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', cookie: request.headers.get('cookie') || '' },
+          body: JSON.stringify({
+            releaseId: updated.id,
+            languageCode: langCode,
+          }),
+        }).catch((err) => apiLogger.warn(`Lyrics request notification failed for ${langCode}`, { err: String(err) }));
+      }
+    }
+
     return NextResponse.json(updated);
   } catch (error: any) {
     console.error(`[API /api/releases/${id}] PUT ERROR:`, error);

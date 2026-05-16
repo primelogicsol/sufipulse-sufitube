@@ -8,6 +8,7 @@ interface LyricsRequestModalProps {
   onClose: () => void;
   releaseId: string;
   releaseTitle: string;
+  youtubeId?: string;
   initialLanguageCode: string;
   initialLanguageName: string;
   languages: Array<{ key: string; label: string }>;
@@ -19,6 +20,7 @@ export function LyricsRequestModal({
   onClose,
   releaseId,
   releaseTitle,
+  youtubeId,
   initialLanguageCode,
   initialLanguageName,
   languages,
@@ -64,13 +66,16 @@ export function LyricsRequestModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           releaseId,
-          slug: window.location.pathname.split('/').pop(),
-          songTitle: releaseTitle,
-          language: languageName,
+          releaseSlug: window.location.pathname.split('/').pop(),
+          releaseTitle,
+          youtubeId,
+          targetLanguage: languageName,
           languageCode,
           requesterName: name,
           requesterEmail: email,
-          requestedMessage: note,
+          reason: note,
+          notifyWhenPublished,
+          source: 'public_release_detail',
           sourceUrl: window.location.href
         })
       });

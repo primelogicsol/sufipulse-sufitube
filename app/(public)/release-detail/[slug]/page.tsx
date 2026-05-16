@@ -5133,6 +5133,7 @@ function Release() {
         onClose={() => setIsLyricsRequestModalOpen(false)}
         releaseId={release.id}
         releaseTitle={release.release_title}
+        youtubeId={release.youtube_video_id}
         initialLanguageCode={selectedLyricsLanguage}
         initialLanguageName={getLanguageLabel(selectedLyricsLanguage)}
         languages={captionLanguageOptions as any}

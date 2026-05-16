@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Layout } from '@/app/components/layout/Layout';
 import { PageContainer } from '@/app/components/layout/PageContainer';
-import { User, Mail, Shield, LogOut, Banknote } from 'lucide-react';
+import { User, Mail, Shield, LogOut, Banknote, Languages } from 'lucide-react';
 import Link from 'next/link';
 
 const ROLE_PORTAL_MAP: Record<string, { label: string; href: string }> = {

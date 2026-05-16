@@ -15,7 +15,8 @@ import {
   MessageSquare,
   FileText,
   AlertCircle,
-  Inbox
+  Inbox,
+  Globe
 } from 'lucide-react';
 import Link from 'next/link';
 

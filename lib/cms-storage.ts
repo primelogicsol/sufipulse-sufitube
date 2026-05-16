@@ -262,6 +262,7 @@ export interface LyricsRequest {
   releaseId?: string;
   releaseSlug?: string;
   releaseTitle: string;
+  youtubeId?: string;
   languageCode?: string;
   languageName: string;
   requestType: string;
@@ -279,6 +280,8 @@ export interface LyricsRequest {
   sentToUser: boolean;
   sentToUserAt?: string;
   sentToUserEmail?: string;
+  notifyWhenPublished?: boolean;
+  notificationSentAt?: string;
   publishedToRelease: boolean;
   publishedAt?: string;
   sourceUrl?: string;

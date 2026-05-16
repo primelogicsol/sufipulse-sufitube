@@ -18,7 +18,8 @@ type EmailTemplate =
   | 'welcome'
   | 'subscription-confirmed'
   | 'lyrics-request-confirmation'
-  | 'lyrics-request-admin-notification';
+  | 'lyrics-request-admin-notification'
+  | 'lyrics-translation-published';
 
 interface SendEmailOptions {
   to: string;
@@ -269,6 +270,22 @@ const templates: Record<EmailTemplate, (data: Record<string, string>) => { subje
       </div>
     `,
   }),
+
+  'lyrics-translation-published': ({ songTitle, language, releaseUrl }) => ({
+    subject: `SufiPulse lyrics translation published: ${songTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+        <h2 style="color: #1a1a1a;">Translation Available</h2>
+        <p>Great news! The <strong>${language}</strong> lyrics translation you requested for <strong>"${songTitle}"</strong> is now available.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${releaseUrl}" style="background: #d97706; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Translation</a>
+        </div>
+        <p style="color: #666; font-size: 13px;">Thank you for your patience and for being part of the SufiPulse community.</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="color: #999; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} SufiPulse. All rights reserved.</p>
+      </div>
+    `,
+  }),
 };
 
 // Public API
@@ -305,6 +322,11 @@ export const sendLyricsRequestConfirmationEmail = async (to: string, data: { son
 
 export const sendLyricsRequestAdminNotificationEmail = async (to: string, data: { songTitle: string; language: string; requesterName?: string; requesterEmail?: string; note?: string }): Promise<void> => {
   const { subject, html } = templates['lyrics-request-admin-notification'](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendLyricsTranslationPublishedEmail = async (to: string, data: { songTitle: string; language: string; releaseUrl: string }): Promise<void> => {
+  const { subject, html } = templates['lyrics-translation-published'](data);
   await sendEmail({ to, subject, html });
 };
 

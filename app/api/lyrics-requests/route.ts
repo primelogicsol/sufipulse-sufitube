@@ -12,29 +12,32 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       releaseId, 
-      slug, 
-      songTitle, 
-      language, 
+      releaseSlug, 
+      releaseTitle, 
+      youtubeId,
+      targetLanguage, 
       languageCode, 
       requesterEmail, 
       requesterName, 
-      requestedMessage,
+      reason,
+      notifyWhenPublished = true,
+      source = 'public_release_detail',
       sourceUrl 
     } = body;
 
-    if (!songTitle || !language) {
-      return NextResponse.json({ error: 'Song title and language are required' }, { status: 400 });
+    if (!releaseTitle || !targetLanguage || !requesterEmail) {
+      return NextResponse.json({ error: 'Release title, target language, and email are required' }, { status: 400 });
     }
 
-    // Check for duplicate (same song, same language, same email in last 30 days)
+    // Check for duplicate (same release, same language, same email in last 30 days)
     const allRequests = cmsServerStorage.getAllLyricsRequests();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const isDuplicate = allRequests.some(r => 
-      (r.releaseId === releaseId || r.releaseSlug === slug) && 
-      r.languageName === language && 
-      r.requesterEmail === requesterEmail &&
+      (r.releaseId === releaseId || r.releaseSlug === releaseSlug || (youtubeId && r.youtubeId === youtubeId)) && 
+      (r.languageName === targetLanguage || r.languageCode === languageCode) && 
+      r.requesterEmail?.toLowerCase() === requesterEmail.toLowerCase() &&
       new Date(r.createdAt) > thirtyDaysAgo
     );
 
@@ -42,8 +45,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true,
         saved: true,
-        message: `You have already submitted a request for ${language} translation for this song. We will notify you when it is ready.` 
-      }, { status: 200 }); // Return 200 but indicate it was already saved
+        message: `You have already submitted a request for ${targetLanguage} translation for this song. We will notify you when it is ready.` 
+      }, { status: 200 });
     }
 
     const user = await getAuthUser(request);
@@ -51,17 +54,19 @@ export async function POST(request: NextRequest) {
     const newRequest: LyricsRequest = {
       id: `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       releaseId,
-      releaseSlug: slug,
-      releaseTitle: songTitle,
+      releaseSlug,
+      releaseTitle,
+      youtubeId,
       languageCode,
-      languageName: language,
+      languageName: targetLanguage,
       requestType: 'lyrics_translation',
       requesterName: requesterName || user?.name || '',
-      requesterEmail: requesterEmail || user?.email || '',
+      requesterEmail: requesterEmail.toLowerCase() || user?.email || '',
       userId: user?.id,
       status: 'pending',
       priority: 'normal',
-      requestedMessage: requestedMessage || '',
+      requestedMessage: reason || '',
+      notifyWhenPublished,
       sentToUser: false,
       publishedToRelease: false,
       sourceUrl,
@@ -74,26 +79,30 @@ export async function POST(request: NextRequest) {
     // --- Send Email Notifications ---
     let emailSent = false;
     try {
-      if (newRequest.requesterEmail) {
-        await sendLyricsRequestConfirmationEmail(newRequest.requesterEmail, {
-          songTitle: newRequest.releaseTitle,
-          language: newRequest.languageName,
-          name: newRequest.requesterName
+      if (saved.requesterEmail) {
+        await sendLyricsRequestConfirmationEmail(saved.requesterEmail, {
+          songTitle: saved.releaseTitle,
+          language: saved.languageName,
+          name: saved.requesterName
         });
         emailSent = true;
       }
 
       const adminEmail = process.env.ADMIN_EMAIL || 'fk.envcal@gmail.com';
       await sendLyricsRequestAdminNotificationEmail(adminEmail, {
-        songTitle: newRequest.releaseTitle,
-        language: newRequest.languageName,
-        requesterName: newRequest.requesterName,
-        requesterEmail: newRequest.requesterEmail,
-        note: newRequest.requestedMessage
+        songTitle: saved.releaseTitle,
+        language: saved.languageName,
+        requesterName: saved.requesterName,
+        requesterEmail: saved.requesterEmail,
+        note: saved.requestedMessage
       });
     } catch (emailError) {
       console.error('[Lyrics Request Email Error]', emailError);
     }
+
+    const successMessage = notifyWhenPublished
+      ? `Translation request received. We’ll notify you when ${targetLanguage} lyrics are published.`
+      : `Translation request received. Thank you for your feedback.`;
 
     return NextResponse.json({ 
       success: true, 
@@ -102,9 +111,7 @@ export async function POST(request: NextRequest) {
       requestId: saved.id,
       language: saved.languageName,
       status: saved.status,
-      message: emailSent 
-        ? `Thank you. Your lyrics request for ${language} has been received and a confirmation email has been sent.`
-        : `Thank you. Your lyrics request for ${language} has been received.`
+      message: successMessage
     }, { status: 201 });
 
   } catch (error: any) {

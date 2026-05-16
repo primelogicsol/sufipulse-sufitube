@@ -24,7 +24,8 @@ import {
   History,
   Trash2,
   X,
-  ArrowRight
+  ArrowRight,
+  Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import { type LyricsRequest } from '@/lib/cms-storage';
@@ -467,12 +468,22 @@ export default function AdminLyricsRequestsPage() {
                   </p>
                 </div>
                 <div className="space-y-1 text-right">
-                   <p className="text-[10px] uppercase tracking-wider text-[var(--dash-text-muted)] font-bold">User Link</p>
-                   {editForm.sourceUrl ? (
-                     <a href={editForm.sourceUrl} target="_blank" className="text-xs text-amber-400 hover:underline flex items-center justify-end gap-1">
-                       View Release <ExternalLink className="w-3 h-3" />
-                     </a>
-                   ) : <span className="text-xs text-neutral-600">None</span>}
+                  <p className="text-[10px] uppercase tracking-wider text-[var(--dash-text-muted)] font-bold">Notification Preference</p>
+                  <p className="text-sm">
+                    {editForm.notifyWhenPublished ? (
+                      editForm.notificationSentAt ? (
+                        <span className="text-emerald-500 font-medium inline-flex items-center gap-1 justify-end">
+                          <CheckCircle className="w-3.5 h-3.5" /> Sent
+                        </span>
+                      ) : (
+                        <span className="text-amber-500 font-medium inline-flex items-center gap-1 justify-end">
+                          <Bell className="w-3.5 h-3.5" /> Alert on Publish
+                        </span>
+                      )
+                    ) : (
+                      <span className="text-neutral-500">None</span>
+                    )}
+                  </p>
                 </div>
               </div>
 

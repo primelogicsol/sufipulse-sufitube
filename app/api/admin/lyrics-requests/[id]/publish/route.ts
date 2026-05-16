@@ -102,6 +102,18 @@ export async function POST(
 
     const savedRequest = cmsServerStorage.saveLyricsRequest(updatedRequest);
 
+    // --- TRIGGER NOTIFICATIONS ---
+    // Notify other requesters for the same language
+    const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    fetch(`${base}/api/admin/notify-lyrics-requests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie: request.headers.get('cookie') || '' },
+      body: JSON.stringify({
+        releaseId: targetReleaseId,
+        languageCode: languageCode,
+      }),
+    }).catch((err) => console.warn(`[API /api/admin/lyrics-requests/publish] Notification failed`, err));
+
     return NextResponse.json({ 
       success: true, 
       request: savedRequest,
