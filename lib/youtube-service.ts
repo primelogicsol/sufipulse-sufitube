@@ -322,7 +322,7 @@ class YouTubeService {
     }
 
     async getPlaylistVideos(playlistId: string, maxResults: number = 50): Promise<YouTubeVideo[]> {
-        const safeMax = Math.max(1, Math.min(maxResults, 50));
+        const safeMax = Math.max(1, Math.min(maxResults, 500));
         const cacheKey = `playlist_items_${playlistId}_${safeMax}`;
         const cached = this.getCache(cacheKey);
         if (cached) return cached;
@@ -330,14 +330,36 @@ class YouTubeService {
         if (!this.config.apiKey) return [];
 
         try {
-            const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${playlistId}&maxResults=${safeMax}&key=${this.config.apiKey}`;
-            const data = await this.makeRequest(url, this.config.maxRetries, true); // Use noCache for imports
-            const items = data.items || [];
+            console.log(`[YouTube] Fetching up to ${safeMax} videos from playlist ${playlistId}`);
+            let nextPageToken: string | null = null;
+            const allItems: any[] = [];
+            const pageSize = Math.min(50, safeMax);
 
-            if (!items.length) return [];
+            while (allItems.length < safeMax) {
+                const tokenParam = nextPageToken ? `&pageToken=${nextPageToken}` : '';
+                const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${playlistId}&maxResults=${pageSize}${tokenParam}&key=${this.config.apiKey}`;
+                const data = await this.makeRequest(url, this.config.maxRetries, true);
+                
+                const items = data.items || [];
+                if (!items.length) break;
+                
+                allItems.push(...items);
+                nextPageToken = data.nextPageToken || null;
+                if (!nextPageToken) break;
+            }
 
-            const ids = items.map((i: any) => i.contentDetails?.videoId).filter(Boolean);
-            const detailed = await this.getVideosByIds(ids);
+            const ids = allItems.map((i: any) => i.contentDetails?.videoId).filter(Boolean).slice(0, safeMax);
+            
+            // Fetch detailed metadata in chunks of 50
+            const chunks: string[][] = [];
+            for (let i = 0; i < ids.length; i += 50) {
+                chunks.push(ids.slice(i, i + 50));
+            }
+            
+            const detailedResults = await Promise.all(
+                chunks.map(chunk => this.getVideosByIds(chunk))
+            );
+            const detailed = detailedResults.flat();
 
             const result: YouTubeVideo[] = detailed.map((video: any) => {
                 const durationSecs = this.parseDuration(video.contentDetails?.duration || 'PT0S');
@@ -475,34 +497,47 @@ class YouTubeService {
         }
     }
 
-    /**
-     * Fetch completed live streams from the channel.
-     * Uses eventType=completed which returns videos that were live broadcasts.
-     * The videos.list response includes liveStreamingDetails so inferFormat()
-     * correctly assigns format='live' on import.
-     */
     async getCompletedLiveStreams(maxResults: number = 50): Promise<YouTubeVideo[]> {
         if (!this.config.apiKey) {
             console.warn('YouTube API key missing — cannot fetch live streams');
             return [];
         }
-        const safeMax = Math.max(1, Math.min(maxResults, 50));
+        const safeMax = Math.max(1, Math.min(maxResults, 500));
         const cacheKey = `live_completed_${this.config.channelId}_${safeMax}`;
         const cached = this.getCache(cacheKey);
         if (cached) return cached;
 
         try {
-            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${this.config.channelId}&maxResults=${safeMax}&type=video&eventType=completed&key=${this.config.apiKey}`;
-            const searchData = await this.makeRequest(searchUrl);
-            const items: any[] = searchData.items || [];
+            console.log(`[YouTube] Fetching up to ${safeMax} completed live streams`);
+            let nextPageToken: string | null = null;
+            const allItems: any[] = [];
+            const pageSize = Math.min(50, safeMax);
 
-            if (!items.length) {
-                this.setCache(cacheKey, []);
-                return [];
+            while (allItems.length < safeMax) {
+                const tokenParam = nextPageToken ? `&pageToken=${nextPageToken}` : '';
+                const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${this.config.channelId}&maxResults=${pageSize}&type=video&eventType=completed${tokenParam}&key=${this.config.apiKey}`;
+                const searchData = await this.makeRequest(searchUrl);
+                
+                const items = searchData.items || [];
+                if (!items.length) break;
+                
+                allItems.push(...items);
+                nextPageToken = searchData.nextPageToken || null;
+                if (!nextPageToken) break;
             }
 
-            const ids = items.map((i: any) => i?.id?.videoId).filter(Boolean);
-            const detailed = await this.getVideosByIds(ids);
+            const ids = allItems.map((i: any) => i?.id?.videoId).filter(Boolean).slice(0, safeMax);
+            
+            // Fetch detailed metadata in chunks of 50
+            const chunks: string[][] = [];
+            for (let i = 0; i < ids.length; i += 50) {
+                chunks.push(ids.slice(i, i + 50));
+            }
+
+            const detailedResults = await Promise.all(
+                chunks.map(chunk => this.getVideosByIds(chunk))
+            );
+            const detailed = detailedResults.flat();
 
             const result: YouTubeVideo[] = detailed.map((video: any) => {
                 const durationSecs = this.parseDuration(video.contentDetails?.duration || 'PT0S');
