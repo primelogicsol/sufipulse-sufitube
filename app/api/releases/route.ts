@@ -22,10 +22,16 @@ export async function GET(request: NextRequest) {
     const { status, type, search, key, slug, youtubeId, t, forceHydrate } = validationResult.data;
     
     // 0) Handle cache busting and re-hydration
-    if (forceHydrate || (t && Date.now() - Number(t) < 30000)) {
-      console.log(`[API /api/releases] Forcing disk re-hydration (t=${t})`);
+    // Unconditionally re-check disk if t or forceHydrate is present
+    if (forceHydrate || t) {
+      console.log(`[API /api/releases] Forcing disk re-hydration check (t=${t})`);
       cmsServerStorage.forceHydrate();
     }
+
+    const allReleases = cmsServerStorage.getAllReleases();
+    const headers = new Headers();
+    headers.set('X-Registry-Count', allReleases.length.toString());
+    headers.set('Cache-Control', 'no-store, must-revalidate');
     // This is used by the release-detail page for fast CMS lookup
     const lookupKey = key || slug || youtubeId;
     if (lookupKey) {
@@ -62,7 +68,10 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    return NextResponse.json(releases, { headers: cacheHeaders });
+    // Use dynamic headers if t is present, otherwise standard cache
+    const finalHeaders = t ? Object.fromEntries(headers.entries()) : cacheHeaders;
+    
+    return NextResponse.json(releases, { headers: finalHeaders });
   } catch (err: any) {
     console.error('[API /api/releases] GET ERROR:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
