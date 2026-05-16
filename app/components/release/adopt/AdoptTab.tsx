@@ -1760,84 +1760,76 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
     // ── Phase 1 (default): Choose how to connect ──
     return (
-      <div className="max-w-2xl mx-auto space-y-10 animate-in slide-in-from-right-12 duration-500">
-        <div className="text-center space-y-3">
+      <div className="max-w-2xl mx-auto space-y-12 animate-in slide-in-from-right-12 duration-500">
+        <div className="text-center space-y-4">
           <h3 className="text-3xl font-serif text-[var(--color-text-primary)] tracking-tight">Campaign Integration</h3>
           <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto">
-            Choose how you'd like to link your Google Ads account with SufiPulse.
+            Link your Google Ads account to proceed with institutional review and campaign preparation.
           </p>
         </div>
 
-        <div className="grid gap-6">
-          {/* Option A: Enter Customer ID manually */}
-          <button
-            type="button"
-            onClick={() => setShowManualFallback(true)}
-            className="group relative text-left p-8 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-blue-500/40 rounded-3xl transition-all duration-500 backdrop-blur-sm overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative flex items-start gap-6">
-              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-blue-400 font-mono font-bold text-lg">ID</span>
-              </div>
-              <div className="flex-1 space-y-2">
-                <h4 className="text-xl font-serif text-[var(--color-text-primary)] group-hover:text-blue-400 transition-colors">Manual Account Link</h4>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">Enter your Customer ID directly. Our team will verify and prepare your campaign structure within 24 hours. You maintain full billing control at Google.</p>
-              </div>
-              <ArrowRight className="w-5 h-5 text-[var(--color-text-tertiary)] group-hover:text-blue-400 mt-2 flex-shrink-0 transition-all group-hover:translate-x-1" />
-            </div>
-          </button>
+        <div className="bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] rounded-3xl p-8 space-y-6 backdrop-blur-sm shadow-xl">
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">
+              <Globe className="w-4 h-4" /> Ownership & Control
+            </h4>
+            <ul className="space-y-3">
+              {[
+                'You retain full ownership of your Google Ads account.',
+                'You pay Google directly for all advertising spend.',
+                'SufiPulse prepares and reviews your campaign structure.',
+                'SufiPulse monitors status only if authorized access is available.',
+                'Campaign remains under institutional review and alignment.'
+              ].map((item, idx) => (
+                <li key={idx} className="flex items-start gap-3 text-sm text-[var(--color-text-secondary)]">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-blue-400" />
+                  </div>
+                  <span className="font-light">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          {/* Option B: Switch to Managed */}
-          <button
-            type="button"
-            onClick={switchToManaged}
-            className="group relative text-left p-8 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-3xl transition-all duration-500 backdrop-blur-sm overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold)]/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative flex items-start gap-6">
-              <div className="w-14 h-14 rounded-2xl bg-[var(--color-gold-muted)] border border-[var(--color-gold)]/10 flex items-center justify-center flex-shrink-0 mt-1">
-                <Music className="w-6 h-6 text-[var(--color-gold)]" />
-              </div>
-              <div className="flex-1 space-y-2">
-                <h4 className="text-xl font-serif text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors">Managed by SufiPulse</h4>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">Let our team handle everything. No Google account required. Secure Stripe payment for ad spend, we manage the technical setup.</p>
-              </div>
-              <ArrowRight className="w-5 h-5 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-gold)] mt-2 flex-shrink-0 transition-all group-hover:translate-x-1" />
-            </div>
-          </button>
+          <div className="pt-6 border-t border-[var(--color-border-strong)]/50 space-y-6">
+            <button
+              type="button"
+              disabled={isConnectingOAuth}
+              onClick={startOAuth}
+              className="group w-full py-5 bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-900 font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-4 shadow-xl shadow-white/5 active:scale-[0.99]"
+            >
+              {isConnectingOAuth ? (
+                <><Loader2 className="w-5 h-5 animate-spin text-neutral-600" /> Connecting to Google…</>
+              ) : (
+                <>
+                  <svg width="24" height="24" viewBox="0 0 48 48" aria-hidden="true">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  </svg>
+                  Connect Google Ads Account
+                </>
+              )}
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => setShowManualFallback(true)}
+              className="w-full py-4 border border-[var(--color-border-strong)] hover:bg-[var(--color-border-strong)]/20 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-all"
+            >
+              or enter customer ID manually
+            </button>
+          </div>
         </div>
 
-        <div className="relative py-4">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[var(--color-border-strong)]" /></div>
-          <div className="relative flex justify-center"><span className="bg-[var(--color-midnight)] px-6 text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--color-text-tertiary)]">or link automatically</span></div>
-        </div>
-
-        <div className="space-y-6">
-          <button
-            type="button"
-            disabled={isConnectingOAuth}
-            onClick={startOAuth}
-            className="group w-full py-5 bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-900 font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-4 shadow-xl shadow-white/5 active:scale-[0.99]"
-          >
-            {isConnectingOAuth ? (
-              <><Loader2 className="w-5 h-5 animate-spin text-neutral-600" /> Connecting to Google…</>
-            ) : (
-              <>
-                <svg width="24" height="24" viewBox="0 0 48 48" aria-hidden="true">
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                </svg>
-                Sign in with Google Ads
-              </>
-            )}
-          </button>
-          <p className="text-[10px] text-center text-[var(--color-text-tertiary)] uppercase tracking-widest leading-relaxed px-12">
-            Secure OAuth 2.0 connection. SufiPulse will only request access to manage your Google Ads campaigns.
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={switchToManaged}
+          className="w-full py-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-xs uppercase tracking-widest font-bold"
+        >
+          ← Switch to Managed by SufiPulse
+        </button>
       </div>
     );
   };

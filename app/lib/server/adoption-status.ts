@@ -9,6 +9,9 @@ export const STATUS_RANK: Record<string, number> = {
   pending_payment: 1,
   pending_review: 1,
   paid_pending_review: 1,
+  google_ads_connection_pending: 1,
+  google_ads_connected_pending_review: 1,
+  google_ads_verified_adopter: 1,
   pending_google_ads_manual_review: 1,
   google_ads_verification_pending: 1,
   google_ads_verified: 1,
@@ -28,6 +31,8 @@ export const STATUS_RANK: Record<string, number> = {
   report_ready: 9,
   cancelled: -1,
   failed: -1,
+  reconnect_required: 1,
+  permission_denied: 1,
 };
 
 export function canAdvanceTo(current: string, target: string): boolean {
@@ -45,6 +50,8 @@ export const OWNER_SETTABLE_STATUSES = new Set<AdoptionStatus>([
   'pending_payment',
   'pending_review',
   'paid_pending_review',
+  'google_ads_connection_pending',
+  'google_ads_connected_pending_review',
   'pending_google_ads_manual_review',
   'google_ads_verification_pending',
   'google_ads_verified',

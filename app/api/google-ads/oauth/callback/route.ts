@@ -102,6 +102,18 @@ export async function GET(request: NextRequest) {
         googleEmail,
         accessibleCustomerIds,
       });
+
+      // 5. Update adoption record if applicable
+      if (state.adoptionId) {
+        const { updateAdoptionRecord } = await import('@/app/lib/server/adoption-store');
+        await updateAdoptionRecord(state.adoptionId, {
+          googleAdsAccountEmail: googleEmail,
+          oauthStatus: 'connected',
+          googleAdsTokenStatus: 'active',
+          googleAdsConnectionStatus: 'connected',
+          adoptionStatus: 'google_ads_connected_pending_review'
+        });
+      }
     }
 
     return fallbackRedirect('success');

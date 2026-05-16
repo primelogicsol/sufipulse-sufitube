@@ -14,6 +14,9 @@ export type AdoptionStatus =
   | 'pending_payment'
   | 'pending_review'
   | 'paid_pending_review'
+  | 'google_ads_connection_pending'
+  | 'google_ads_connected_pending_review'
+  | 'google_ads_verified_adopter'
   | 'pending_google_ads_manual_review'
   | 'google_ads_verification_pending'
   | 'google_ads_verified'
@@ -31,7 +34,9 @@ export type AdoptionStatus =
   | 'completed'
   | 'report_ready'
   | 'cancelled'
-  | 'failed';
+  | 'failed'
+  | 'reconnect_required'
+  | 'permission_denied';
 export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded' | 'not_required';
 export type OAuthStatus = 'not_connected' | 'connected' | 'expired' | 'revoked';
 export type CampaignStatus = 'not_created' | 'draft' | 'paused' | 'enabled' | 'removed' | 'failed';
@@ -42,6 +47,7 @@ export interface AdoptionRecord {
   releaseTitle?: string;
   releaseSlug?: string;
   youtubeId?: string;
+  thumbnailUrl?: string;
 
   // Owner
   userId?: string;
@@ -67,6 +73,7 @@ export interface AdoptionRecord {
   campaignObjective: string;
   targetRegions: string[];
   targetLanguages: string[];
+  preferredAudienceRegion?: string;
 
   // Tier and Budget
   selectedTier?: string;
@@ -86,8 +93,15 @@ export interface AdoptionRecord {
 
   // Google Ads
   oauthStatus: OAuthStatus;
+  googleAdsAccountEmail?: string | null;
   googleAdsCustomerId?: string | null;
+  googleAdsConnectionStatus?: string | null;
+  googleAdsAccessStatus?: string | null;
+  googleAdsTokenStatus?: string | null;
   googleAdsVerificationStatus?: 'verified' | 'failed' | 'manual_review_required' | null;
+  googleAdsCampaignId?: string | null;
+  googleAdsCampaignName?: string | null;
+  googleAdsCampaignStatus?: string | null;
   campaignStatus: CampaignStatus;
   campaignResourceName?: string | null;
 
@@ -105,6 +119,8 @@ export interface AdoptionRecord {
   // Admin
   adminNote?: string | null;
   reportUrl?: string | null;
+  adminAdopterApproved?: boolean;
+  publicAdopterEligible?: boolean;
 
   createdAt: string;
   updatedAt: string;
@@ -194,18 +210,17 @@ export function getAdoptionsByUser(userId: string): AdoptionRecord[] {
 
 export function getAdoptionsByRelease(releaseId: string): AdoptionRecord[] {
   const store = readStore();
-  // Allowed statuses for public display: paid_pending_review, live, completed, report_ready
-  // Also use_my_google_ads that are submitted (not draft)
-  const VISIBLE_STATUSES = ['paid_pending_review', 'live', 'completed', 'report_ready'];
+  // Allowed statuses for public display
+  const MANAGED_VISIBLE = ['paid_pending_review', 'approved', 'live', 'completed', 'report_ready'];
+  const DIRECT_VISIBLE = ['google_ads_verified_adopter', 'campaign_prepared', 'live', 'monitoring', 'completed', 'report_ready'];
 
   return Object.values(store.adoptions)
     .filter((r) => 
       r.releaseId === releaseId && 
       r.publicListingApproved && 
       (
-        r.paymentStatus === 'paid' || 
-        VISIBLE_STATUSES.includes(r.adoptionStatus) ||
-        (r.methodType === 'use_my_google_ads' && r.adoptionStatus !== 'draft')
+        (r.methodType === 'managed_sufitube' && (r.paymentStatus === 'paid' || MANAGED_VISIBLE.includes(r.adoptionStatus))) ||
+        (r.methodType === 'use_my_google_ads' && DIRECT_VISIBLE.includes(r.adoptionStatus))
       )
     )
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));

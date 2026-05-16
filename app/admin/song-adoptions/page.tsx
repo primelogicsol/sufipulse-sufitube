@@ -17,11 +17,14 @@ const LIFECYCLE_NEXT: Record<string, { status: string; label: string; icon: any;
     awaiting_user_approval:         { status: 'approved', label: 'Approve Campaign',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
     pending_google_ads_manual_review: { status: 'approved', label: 'Approve Manual',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
     google_ads_verified:            { status: 'approved', label: 'Approve Verified',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
+    google_ads_connected_pending_review: { status: 'google_ads_verified_adopter', label: 'Verify Adopter', icon: Check, color: 'text-green-400 hover:text-green-300' },
+    google_ads_verified_adopter:    { status: 'approved', label: 'Approve Campaign', icon: Check, color: 'text-green-400 hover:text-green-300' },
     approved:   { status: 'scheduled',   label: 'Mark Scheduled', icon: Rocket,   color: 'text-amber-400 hover:text-amber-300' },
     scheduled:  { status: 'live',        label: 'Mark Live',      icon: Play,     color: 'text-green-400 hover:text-green-300' },
     live:       { status: 'monitoring',  label: 'Mark Monitoring', icon: Activity, color: 'text-blue-400 hover:text-blue-300' },
     monitoring: { status: 'completed',   label: 'Mark Completed',  icon: Flag,     color: 'text-purple-400 hover:text-purple-300' },
     completed:  { status: 'report_ready',label: 'Report Ready',    icon: FileText, color: 'text-amber-400 hover:text-amber-300' },
+    reconnect_required: { status: 'google_ads_connection_pending', label: 'Request Reconnect', icon: RefreshCw, color: 'text-amber-400 hover:text-amber-300' },
 };
 
 interface LaunchState {
@@ -520,13 +523,20 @@ export default function AdminSongAdoptions() {
                                 {selectedAdoption.methodType === 'use_my_google_ads' && (
                                     <div>
                                         <h4 className="text-sm font-semibold text-neutral-300 mb-2 flex items-center gap-2"><Globe className="w-4 h-4" /> Google Ads</h4>
-                                        <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-2 text-sm">
+                                        <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                            <div><span className="text-neutral-500">Account Email</span><div className="text-neutral-200 truncate" title={selectedAdoption.googleAdsAccountEmail || ''}>{selectedAdoption.googleAdsAccountEmail || '—'}</div></div>
                                             <div><span className="text-neutral-500">Customer ID</span><div className="text-neutral-200 font-mono">{selectedAdoption.googleAdsCustomerId || '—'}</div></div>
                                             <div><span className="text-neutral-500">OAuth Status</span>
                                                 <div className={selectedAdoption.oauthStatus === 'connected' ? 'text-green-400' : 'text-neutral-500'}>
                                                     {selectedAdoption.oauthStatus || 'not_connected'}
                                                 </div>
                                             </div>
+                                            <div><span className="text-neutral-500">Token Status</span>
+                                                <div className={selectedAdoption.googleAdsTokenStatus === 'active' ? 'text-green-400' : 'text-amber-400'}>
+                                                    {selectedAdoption.googleAdsTokenStatus || '—'}
+                                                </div>
+                                            </div>
+                                            <div><span className="text-neutral-500">Access Status</span><div className="text-neutral-200">{selectedAdoption.googleAdsAccessStatus || '—'}</div></div>
                                             <div><span className="text-neutral-500">Verification</span>
                                                 <div className={
                                                     selectedAdoption.googleAdsVerificationStatus === 'verified' ? 'text-green-400' :
@@ -537,8 +547,9 @@ export default function AdminSongAdoptions() {
                                                     {selectedAdoption.googleAdsVerificationStatus || 'not_verified'}
                                                 </div>
                                             </div>
-                                            <div><span className="text-neutral-500">Campaign Resource</span>
-                                                <div className="text-neutral-400 font-mono text-xs truncate" title={selectedAdoption.campaignResourceName || ''}>
+                                            <div className="col-span-2 mt-1 pt-2 border-t border-neutral-700/50">
+                                                <span className="text-neutral-500">Campaign Resource</span>
+                                                <div className="text-neutral-400 font-mono text-xs truncate mt-0.5" title={selectedAdoption.campaignResourceName || ''}>
                                                     {selectedAdoption.campaignResourceName || '—'}
                                                 </div>
                                             </div>

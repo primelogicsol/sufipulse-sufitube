@@ -106,16 +106,18 @@ export async function PATCH(
     'sponsorName', 'sponsorEmail', 'sponsorCountry', 'sponsorCity',
     'adopterType', 'campaignIntention', 'dedicationMessage', 'targetRegions',
     'targetLanguages', 'googleAdsCustomerId', 'googleAdsVerificationStatus', 'oauthStatus',
+    'googleAdsAccountEmail', 'googleAdsConnectionStatus', 'googleAdsAccessStatus', 'googleAdsTokenStatus',
+    'googleAdsCampaignId', 'googleAdsCampaignName', 'googleAdsCampaignStatus',
     'publicDisplayMode', 'publicLocationMode', 'isAnonymous',
     'adoptionStatus', 'amountDue', 'currency', 'paymentRoute', 'paymentStatus',
     'expectedPaymentAmount', 'paymentLinkTier', 'paymentLinkUrl',
-    'youtubeId', 'agreementAccepted', 'publicMentionAccepted', 'institutionalClausesAccepted',
-    'selectedTier', 'selectedTierLabel',
+    'youtubeId', 'thumbnailUrl', 'agreementAccepted', 'publicMentionAccepted', 'institutionalClausesAccepted',
+    'selectedTier', 'selectedTierLabel', 'preferredAudienceRegion',
   ];
 
   // Admin-only fields
   const adminFields: (keyof typeof body)[] = [
-    'adminNote', 'reportUrl', 'publicListingApproved',
+    'adminNote', 'reportUrl', 'publicListingApproved', 'adminAdopterApproved', 'publicAdopterEligible',
     'campaignStatus', 'campaignResourceName', 'campaignObjective',
   ];
 
