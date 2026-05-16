@@ -33,16 +33,13 @@ const LANGUAGES = [
 ];
 
 const INTENTIONS = [
-  { value: 'spread_divine_love',    label: 'Spread Divine Love' },
-  { value: 'reach_seekers_truth',   label: 'Reach Seekers of Truth' },
-  { value: 'support_sacred_music',  label: 'Support Sacred Music' },
-  { value: 'share_sufi_wisdom',    label: 'Share Sufi Wisdom' },
-  { value: 'honor_loved_one',      label: 'Honor a Loved One' },
-  { value: 'dedicate_for_healing', label: 'Dedicate for Healing' },
-  { value: 'promote_peace',        label: 'Promote Peace' },
-  { value: 'support_artist',       label: 'Support the Artist' },
-  { value: 'preserve_poetry',      label: 'Preserve Spiritual Poetry' },
-  { value: 'global_sufi_outreach', label: 'Global Sufi Outreach' },
+  { value: 'awareness',             label: 'General Awareness' },
+  { value: 'devotional_reach',      label: 'Devotional Reach' },
+  { value: 'community_engagement',  label: 'Community Engagement' },
+  { value: 'event_support',         label: 'Event Support' },
+  { value: 'release_launch_support',label: 'Release Launch Support' },
+  { value: 'memorial_dedication',   label: 'Honor a Loved One' },
+  { value: 'global_sufi_seekers',   label: 'Global Sufi Outreach' },
 ];
 import { useFormSecurity } from '../../../hooks/useFormSecurity';
 import { adoptionSchema, validateSchema } from '../../../lib/validation-schemas';
@@ -751,37 +748,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
     if (!selectedMethod) return;
     setFieldErrors({});
 
-    // Auth gate: require a SufiPulse account before submitting the adoption form.
-    // For use_my_google_ads the draft was already created at the budget step so adoption.id
-    // is available for the return URL. For managed_sufitube we create a minimal draft here
-    // so the auth wall can pass adoptionId back after login for state restoration.
-    if (!user) {
-      if (!adoption?.id) {
-        try {
-          const res = await fetch('/api/adoptions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              releaseId: release.id,
-              releaseTitle: release.title || release.release_title,
-              releaseSlug: release.slug,
-              methodType: selectedMethod,
-              amountDue: selectedPackage?.amount || formData.custom_budget || 0,
-              currency: 'USD',
-              adoptionStatus: 'draft',
-            }),
-          });
-          if (res.ok) {
-            const draft = await res.json();
-            setAdoption(draft);
-          }
-        } catch { /* ignore — auth wall still shown without adoptionId */ }
-      }
-      setShowAuthWall(true);
-      return;
-    }
-
     if (!formData.agree_to_terms || !formData.agree_to_promotional_use) {
       setSubmitError('Please accept both consent checkboxes to continue.');
       return;
@@ -1014,12 +980,6 @@ export function AdoptTab({ release }: AdoptTabProps) {
         body: JSON.stringify({ paymentStatus: 'paid', adoptionStatus: 'campaign_preparation_requested' }),
       });
       setStep(5);
-      return;
-    }
-
-    // Require login before opening Stripe
-    if (!user) {
-      setShowAuthWall(true);
       return;
     }
 
@@ -2072,8 +2032,15 @@ export function AdoptTab({ release }: AdoptTabProps) {
       )}
 
       <button
-        onClick={() => { setSubmitError(''); handleFormSubmit(); }}
-        disabled={isSubmitting || !formData.agree_to_terms || !formData.agree_to_promotional_use}
+        onClick={() => { 
+          if (!formData.agree_to_terms || !formData.agree_to_promotional_use) {
+            setSubmitError('Please accept all consent checkboxes to continue.');
+            return;
+          }
+          setSubmitError(''); 
+          handleFormSubmit(); 
+        }}
+        disabled={isSubmitting}
         className={`group w-full py-5 font-bold rounded-2xl transition-all duration-500 shadow-xl flex items-center justify-center gap-3 active:scale-[0.99] ${
           selectedMethod === 'use_my_google_ads'
             ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/10'
