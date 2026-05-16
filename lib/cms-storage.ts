@@ -435,34 +435,26 @@ class CMSStorage {
   getAllReleases(filter?: { status?: string; category?: string }): CMSRelease[] {
     let releases = Array.from(this.releases.values());
     
-    if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
-      console.log(`[CMSStorage] getAllReleases: rawCount=${releases.length}, filter=${JSON.stringify(filter)}`);
-    }
+    // Normalize fields for consistent filtering/rendering
+    const normalized = releases.map(r => ({
+      ...r,
+      status: r.status || 'published',
+      visibility: r.visibility || 'public',
+      format: r.format || (r.durationSeconds <= 60 ? 'short' : 'video'),
+      releaseType: r.releaseType || 'studio-release',
+      publishedAt: r.publishedAt || r.releaseDate || r.createdAt || r.updatedAt || new Date().toISOString(),
+    }));
+
+    let filtered = normalized;
 
     if (filter?.status) {
-      const before = releases.length;
-      releases = releases.filter(r => r.status === filter.status);
-      if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
-        console.log(`[CMSStorage] Filtered by status '${filter.status}': ${before} -> ${releases.length}`);
-      }
+      filtered = filtered.filter(r => r.status === filter.status);
     }
     if (filter?.category) {
-      releases = releases.filter(r => r.category === filter.category);
+      filtered = filtered.filter(r => r.category === filter.category);
     }
 
-    const sorted = sortReleases(releases, 'all');
-    
-    if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
-      if (sorted.length > 0) {
-        console.log(`[CMSStorage] Returning ${sorted.length} releases. Top 3:`, 
-          sorted.slice(0, 3).map(r => `${r.title} (${r.status}) [${r.publishedAt || r.releaseDate}]`)
-        );
-      } else {
-        console.log(`[CMSStorage] Returning 0 releases.`);
-      }
-    }
-
-    return sorted;
+    return sortReleases(filtered, 'all');
   }
 
   getPublishedReleases(limit?: number): CMSRelease[] {
