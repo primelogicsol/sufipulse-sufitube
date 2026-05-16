@@ -6,6 +6,7 @@ import type { AdoptionStatus } from './adoption-store';
  */
 export const STATUS_RANK: Record<string, number> = {
   draft: 0,
+  pending_payment: 1,
   pending_review: 1,
   paid_pending_review: 1,
   pending_google_ads_manual_review: 1,
@@ -41,6 +42,7 @@ export function canAdvanceTo(current: string, target: string): boolean {
  */
 export const OWNER_SETTABLE_STATUSES = new Set<AdoptionStatus>([
   'draft',
+  'pending_payment',
   'pending_review',
   'paid_pending_review',
   'pending_google_ads_manual_review',

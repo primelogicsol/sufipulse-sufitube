@@ -11,6 +11,7 @@ export type PaymentOwner = 'sufipulse_gateway' | 'google_ads_billing' | 'not_req
 export type AdoptionStatus =
   | 'draft'
   | 'submitted'
+  | 'pending_payment'
   | 'pending_review'
   | 'paid_pending_review'
   | 'pending_google_ads_manual_review'
