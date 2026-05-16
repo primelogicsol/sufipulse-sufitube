@@ -999,23 +999,31 @@ export function AdoptTab({ release }: AdoptTabProps) {
     let tierLabel = '';
     let selectedTierId = selectedPackage?.id || 'custom';
 
+    const STRIPE_LINKS: Record<number, string> = {
+      25: 'https://buy.stripe.com/bJecN7c1jcDcfPqfnMcQU02',
+      50: 'https://buy.stripe.com/fZubJ3fdvgTsfPq5NccQU03',
+      100: 'https://buy.stripe.com/6oU8wRe9r46G32E2B0cQU04',
+      250: 'https://buy.stripe.com/dRm9AVe9rcDcdHigrQcQU05',
+      500: 'https://buy.stripe.com/cNi3cxfdveLkav6grQcQU06',
+    };
+
     if (budget === 25) {
-      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25 || '';
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25 || STRIPE_LINKS[25];
       tierLabel = 'Blessing Support';
     } else if (budget === 50) {
-      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_50 || '';
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_50 || STRIPE_LINKS[50];
       tierLabel = 'Light Campaign';
     } else if (budget === 100) {
-      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_100 || '';
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_100 || STRIPE_LINKS[100];
       tierLabel = 'Noor Campaign';
     } else if (budget === 250) {
-      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_250 || '';
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_250 || STRIPE_LINKS[250];
       tierLabel = 'Sama Outreach';
     } else if (budget === 500) {
-      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_500 || '';
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_500 || STRIPE_LINKS[500];
       tierLabel = 'Global Support';
     } else if (budget > 0) {
-      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_CUSTOM || '';
+      paymentLink = process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_CUSTOM || 'https://buy.stripe.com/cNi00l8P7dHgav6ejIcQU07';
       tierLabel = 'Custom Budget';
     }
 
