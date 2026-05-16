@@ -424,6 +424,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
         credentials: 'include',
         body: JSON.stringify({
           googleAdsCustomerId: formatted,
+          googleAdsAccountEmail: email,
+          googleAdsConnectionStatus: 'manual_submission',
+          googleAdsAccessStatus: 'unverified',
+          googleAdsTokenStatus: 'not_connected',
           googleAdsVerificationStatus: 'manual_review_required',
           adoptionStatus: 'pending_google_ads_manual_review',
           paymentRoute: 'google_direct',
@@ -2428,7 +2432,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                     href="https://ads.google.com/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 py-4 bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-bold uppercase tracking-widest rounded-2xl transition-all shadow-lg"
+                    className="flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest rounded-2xl transition-all shadow-lg"
                   >
                     Open Google Ads <ExternalLink className="w-3.5 h-3.5" />
                   </a>
@@ -2443,10 +2447,16 @@ export function AdoptTab({ release }: AdoptTabProps) {
                       }
                     }}
                     id="copy-cid-btn"
-                    className="flex items-center justify-center gap-2 py-4 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-blue-500/40 text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-widest rounded-2xl transition-all"
+                    className="flex items-center justify-center gap-2 py-4 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-blue-500/40 text-[var(--color-text-secondary)] hover:text-blue-400 text-xs font-bold uppercase tracking-widest rounded-2xl transition-all"
                   >
                     Copy Customer ID
                   </button>
+                  <a 
+                    href="/support"
+                    className="sm:col-span-2 flex items-center justify-center gap-2 py-4 bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-[var(--color-border-strong)]/80 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xs font-bold uppercase tracking-widest rounded-2xl transition-all"
+                  >
+                    Contact SufiPulse Support
+                  </a>
                 </div>
               </div>
 
@@ -2454,13 +2464,13 @@ export function AdoptTab({ release }: AdoptTabProps) {
                 <h5 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Ownership & Billing Policy</h5>
                 <ul className="space-y-2">
                   <li className="text-xs text-[var(--color-text-tertiary)] font-light flex items-start gap-2">
-                    <span className="text-blue-500/50">•</span> This path does not use Stripe. You pay Google directly.
+                    <span className="text-blue-500/50">•</span> This path does not use Stripe. You pay Google directly through your own Google Ads account.
                   </li>
                   <li className="text-xs text-[var(--color-text-tertiary)] font-light flex items-start gap-2">
-                    <span className="text-blue-500/50">•</span> SufiPulse can prepare/review only where account access allows.
+                    <span className="text-blue-500/50">•</span> SufiPulse does not control your Google billing, payment method, or final campaign spend.
                   </li>
                   <li className="text-xs text-[var(--color-text-tertiary)] font-light flex items-start gap-2">
-                    <span className="text-blue-500/50">•</span> Admin review is required before public adopter display.
+                    <span className="text-blue-500/50">•</span> Your campaign is not live until billing, budget, campaign settings, and any required approvals are completed inside Google Ads.
                   </li>
                 </ul>
               </div>
@@ -2501,7 +2511,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   onClick={resetFlow}
                   className="w-full py-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors text-[10px] font-bold uppercase tracking-widest"
                 >
-                  Finish and Close
+                  Return to Song Page
                 </button>
               </div>
             </div>

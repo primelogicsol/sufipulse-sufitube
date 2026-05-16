@@ -526,9 +526,12 @@ export default function AdminSongAdoptions() {
                                         <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                                             <div><span className="text-neutral-500">Account Email</span><div className="text-neutral-200 truncate" title={selectedAdoption.googleAdsAccountEmail || ''}>{selectedAdoption.googleAdsAccountEmail || '—'}</div></div>
                                             <div><span className="text-neutral-500">Customer ID</span><div className="text-neutral-200 font-mono">{selectedAdoption.googleAdsCustomerId || '—'}</div></div>
-                                            <div><span className="text-neutral-500">OAuth Status</span>
-                                                <div className={selectedAdoption.oauthStatus === 'connected' ? 'text-green-400' : 'text-neutral-500'}>
-                                                    {selectedAdoption.oauthStatus || 'not_connected'}
+                                            <div><span className="text-neutral-500">Connection</span>
+                                                <div className={
+                                                    selectedAdoption.googleAdsConnectionStatus === 'connected' ? 'text-green-400' : 
+                                                    selectedAdoption.googleAdsConnectionStatus === 'manual_submission' ? 'text-amber-400' : 'text-neutral-500'
+                                                }>
+                                                    {selectedAdoption.googleAdsConnectionStatus || selectedAdoption.oauthStatus || 'not_connected'}
                                                 </div>
                                             </div>
                                             <div><span className="text-neutral-500">Token Status</span>
@@ -536,7 +539,11 @@ export default function AdminSongAdoptions() {
                                                     {selectedAdoption.googleAdsTokenStatus || '—'}
                                                 </div>
                                             </div>
-                                            <div><span className="text-neutral-500">Access Status</span><div className="text-neutral-200">{selectedAdoption.googleAdsAccessStatus || '—'}</div></div>
+                                            <div><span className="text-neutral-500">Access Status</span>
+                                                <div className={selectedAdoption.googleAdsAccessStatus === 'unverified' ? 'text-amber-400' : 'text-neutral-200'}>
+                                                    {selectedAdoption.googleAdsAccessStatus || '—'}
+                                                </div>
+                                            </div>
                                             <div><span className="text-neutral-500">Verification</span>
                                                 <div className={
                                                     selectedAdoption.googleAdsVerificationStatus === 'verified' ? 'text-green-400' :
