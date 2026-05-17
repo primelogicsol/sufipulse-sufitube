@@ -361,14 +361,14 @@ export default function WriterCredentialsForm({
                 <span className="text-[10px] text-neutral-500 italic">Select all that apply</span>
               </div>
               
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600 group-focus-within:text-amber-400 transition-colors" />
+              <div className="relative w-full group">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within:text-amber-400 transition-colors pointer-events-none" />
                 <input 
                   type="text"
                   value={languageSearch}
                   onChange={e => setLanguageSearch(e.target.value)}
                   placeholder="Search taxonomy (Urdu, Persian, Kashmiri...)"
-                  className="elite-input w-full pl-12 h-14"
+                  className="w-full rounded-2xl bg-black/40 border border-amber-500/40 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                 />
               </div>
 
