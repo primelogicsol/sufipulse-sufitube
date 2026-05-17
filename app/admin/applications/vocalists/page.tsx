@@ -4,7 +4,7 @@ import DashboardLayout from '../../../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
 import { 
     CircleCheck as CheckCircle, 
-    Circle as XCircle, 
+    Circle as UncheckedCircle, 
     Clock, 
     Eye, 
     User, 
@@ -14,7 +14,7 @@ import {
     Mic,
     Search,
     Video,
-    XCircle as CloseIcon
+    XCircle
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { VocalistProfileType } from '@/app/types/vocalist.types';

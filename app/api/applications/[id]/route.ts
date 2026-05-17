@@ -24,6 +24,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (!application) {
+      // Find in producers (Ahl-e-Naghma applications)
+      const producers = entityGetAll<any>('producers');
+      application = producers.find((p: any) => p.referenceId === id || p.id === id);
+      type = 'Producer / Ahl-e-Naghma';
+    }
+
+    if (!application) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
 

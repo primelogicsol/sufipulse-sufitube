@@ -239,25 +239,12 @@ export default function Producers() {
                         </div>
 
                         <div className="flex flex-col items-center gap-8">
-                            <PrimaryButton 
-                                onClick={() => setShowCredentialsForm(!showCredentialsForm)}
-                                className="w-full md:w-auto min-w-[240px]"
-                            >
-                                {showCredentialsForm ? 'Hide Application Form' : 'Apply as Producer'}
-                            </PrimaryButton>
-
-                            {showCredentialsForm && (
-                                <Card className="w-full bg-[var(--color-slate)] border-[var(--color-border)] p-8">
-                                    <div className="mb-8 border-b border-[var(--color-border)] pb-6">
-                                        <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-                                            Producer Eligibility & Consideration
-                                        </h3>
-                                        <p className="text-[var(--color-gold)] font-medium">Ahl-e-Naghma</p>
-                                    </div>
-                                    <ProducerCredentialsForm />
-                                </Card>
-                            )}
-                        </div>
+              <Link href="/producers/apply" className="w-full md:w-auto">
+                <PrimaryButton className="w-full md:w-auto min-w-[240px]">
+                  Apply as Producer
+                </PrimaryButton>
+              </Link>
+            </div>
 
                         <div className="mt-16 pt-8 border-t border-[var(--color-text-tertiary)]/10 flex flex-col md:flex-row items-center justify-between gap-6">
                             <div className="flex items-center gap-3">
