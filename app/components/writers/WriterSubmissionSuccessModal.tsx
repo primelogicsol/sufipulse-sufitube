@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 interface WriterSubmissionSuccessModalProps {
   onClose: () => void;
   submissionId?: string;
+  trackingToken?: string;
 }
 
-export function WriterSubmissionSuccessModal({ onClose, submissionId }: WriterSubmissionSuccessModalProps) {
+export function WriterSubmissionSuccessModal({ onClose, submissionId, trackingToken }: WriterSubmissionSuccessModalProps) {
   const router = useRouter()
   const [copied, setCopied] = useState(false);
 
@@ -147,11 +148,11 @@ export function WriterSubmissionSuccessModal({ onClose, submissionId }: WriterSu
           </button>
           
           <button
-            onClick={() => {/* Route not ready placeholder */}}
+            onClick={() => router.push(`/applications/${submissionId}?token=${trackingToken}`)}
             className="flex-1 px-6 py-3.5 bg-white/5 text-[var(--color-text-primary)] font-bold rounded-lg hover:bg-white/10 transition-all duration-200 flex items-center justify-center gap-2 group text-sm uppercase tracking-wider border border-white/10"
           >
             <Clock className="w-4 h-4 text-[#D4AF37]" />
-            Track Submission
+            Track Progress
           </button>
         </div>
       </div>

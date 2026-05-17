@@ -110,17 +110,20 @@ export default function WriterCredentialsForm({
   onSuccess, 
   initialData 
 }: { 
-  onSuccess?: (submissionId: string) => void,
+  onSuccess?: (submissionId: string, token: string) => void,
   initialData?: any
 }) {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const ref = searchParams?.get('ref');
   const token = searchParams?.get('token');
+
   const [currentStep, setCurrentStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState('');
+  const [trackingToken, setTrackingToken] = useState('');
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
@@ -247,9 +250,11 @@ export default function WriterCredentialsForm({
       }
 
       const refId = data.referenceId || '';
+      const tkn = data.trackingToken || '';
       setSubmissionId(refId);
+      setTrackingToken(tkn);
       setSubmitted(true);
-      if (onSuccess) onSuccess(refId);
+      if (onSuccess) onSuccess(refId, tkn);
     } catch (err: any) {
       setError(err.message || 'An institutional error occurred during intake.');
     } finally {
@@ -258,7 +263,7 @@ export default function WriterCredentialsForm({
   };
 
   if (submitted) {
-    return <WriterSubmissionSuccessModal onClose={() => setSubmitted(false)} submissionId={submissionId} />;
+    return <WriterSubmissionSuccessModal onClose={() => setSubmitted(false)} submissionId={submissionId} trackingToken={trackingToken} />;
   }
 
   return (

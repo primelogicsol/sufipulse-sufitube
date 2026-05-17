@@ -13,6 +13,7 @@ import Link from 'next/link';
 function SubmittedContent() {
   const searchParams = useSearchParams();
   const referenceId = searchParams?.get('ref') || 'PENDING';
+  const token = searchParams?.get('token');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -63,7 +64,7 @@ function SubmittedContent() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <Link href={`/applications/${referenceId}`} className="w-full">
+            <Link href={`/applications/${referenceId}?token=${token}`} className="w-full">
               <PrimaryButton className="w-full py-4 flex items-center justify-center gap-2 group">
                 Track Application Status
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

@@ -96,19 +96,29 @@ function ApplicationStatusContent() {
   }
 
   if (error || !app) {
+    const isAccessDenied = error?.toLowerCase().includes('token') || error?.toLowerCase().includes('denied');
     return (
       <div className="py-32 text-center max-w-md mx-auto">
-        <AlertCircle className="w-16 h-16 text-red-500/50 mx-auto mb-6" />
-        <h1 className="text-2xl font-bold text-white mb-4">Registry Record Not Found</h1>
-        <p className="text-neutral-400 mb-8">The application reference provided does not match any current institutional intake record.</p>
+        {isAccessDenied ? (
+          <Shield className="w-16 h-16 text-amber-500/50 mx-auto mb-6" />
+        ) : (
+          <AlertCircle className="w-16 h-16 text-red-500/50 mx-auto mb-6" />
+        )}
+        <h1 className="text-2xl font-bold text-white mb-4">
+          {isAccessDenied ? 'Registry Access Denied' : 'Registry Record Not Found'}
+        </h1>
+        <p className="text-neutral-400 mb-8">
+          {error || "The application reference provided does not match any current institutional intake record."}
+        </p>
         <Link href="/writers">
           <button className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors border border-white/5 uppercase text-xs font-bold tracking-widest">
-            Return to Writers Portal
+            Return to Registry Portal
           </button>
         </Link>
       </div>
     );
   }
+
 
   const statusIdx = getStatusIndex(app.status);
   const isApproved = app.status === 'approved' || app.status === 'approved_as_writer';

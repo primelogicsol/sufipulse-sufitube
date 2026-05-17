@@ -5,10 +5,11 @@ import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { Badge } from '../../../components/primitives/Badge';
-import WriterCredentialsForm from '../../../components/writers/WriterCredentialsForm';
+import VocalistCredentialsForm from '../../../components/vocalists/VocalistCredentialsForm';
 import { Shield, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-function WriterApplyContent() {
+
+function VocalistApplyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ref = searchParams?.get('ref');
@@ -31,7 +32,7 @@ function WriterApplyContent() {
   }, [ref, token]);
 
   const handleSuccess = (submissionId: string, token: string) => {
-    router.push(`/writers/submitted?ref=${submissionId}&token=${token}`);
+    router.push(`/vocalists/submitted?ref=${submissionId}&token=${token}`);
   };
 
   if (loading) {
@@ -46,16 +47,16 @@ function WriterApplyContent() {
   return (
     <div className="w-full">
       <div className="max-w-4xl mx-auto text-center mb-16">
-        <Badge variant="gold" className="mb-6 px-4 py-1.5 text-[10px] font-black tracking-[0.3em]">Ahl-e-Qalam Intake</Badge>
+        <Badge variant="gold" className="mb-6 px-4 py-1.5 text-[10px] font-black tracking-[0.3em]">Ahl-e-Sada Intake</Badge>
         <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter">
-          Writer Eligibility & Consideration
+          Vocalist Eligibility & Consideration
         </h1>
         <p className="text-neutral-500 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-          Institutional editorial intake for writers seeking structured consideration within the SufiPulse literary and production framework.
+          Institutional performance intake for vocalists seeking structured consideration within the SufiPulse performance and production network.
         </p>
       </div>
 
-      <WriterCredentialsForm 
+      <VocalistCredentialsForm 
         onSuccess={handleSuccess} 
         initialData={initialData}
       />
@@ -63,7 +64,7 @@ function WriterApplyContent() {
   );
 }
 
-export default function WriterApply() {
+export default function VocalistApply() {
   return (
     <Layout>
       <Section background="midnight" spacing="spacious" className="min-h-screen">
@@ -74,7 +75,7 @@ export default function WriterApply() {
               <p className="text-neutral-500 font-bold uppercase tracking-[0.2em] text-xs">Initializing framework...</p>
             </div>
           }>
-            <WriterApplyContent />
+            <VocalistApplyContent />
           </Suspense>
 
           <div className="max-w-7xl mx-auto mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
