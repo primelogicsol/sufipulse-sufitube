@@ -372,7 +372,7 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
                     <button
                       key={style}
                       onClick={() => handleStyleToggle(style)}
-                      className={`flex items-center text-left p-3.5 rounded-xl border transition-all duration-500 group ${
+                      className={`flex items-center justify-start text-left px-6 py-5 rounded-xl border transition-all duration-500 group min-h-[72px] ${
                         isActive 
                           ? 'bg-amber-400/5 border-amber-400/30' 
                           : 'bg-neutral-900/40 border-white/5 hover:border-white/10'
@@ -383,7 +383,7 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
                       }`}>
                         {isActive && <Check size={12} className="text-black stroke-[4]" />}
                       </div>
-                      <span className={`ml-4 text-[11px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-400'}`}>
+                      <span className={`ml-5 text-[11px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-400'}`}>
                         {style}
                       </span>
                     </button>
