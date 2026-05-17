@@ -406,7 +406,7 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
                   value={languageSearch}
                   onChange={e => setLanguageSearch(e.target.value)}
                   placeholder="Search languages (Urdu, Arabic, Kashmiri...)"
-                  className="w-full rounded-2xl bg-black/40 border border-amber-500/40 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                  className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                 />
               </div>
 
@@ -491,7 +491,7 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
                   required
                   value={formData.sample_link}
                   onChange={e => setFormData({...formData, sample_link: e.target.value})}
-                  className="w-full rounded-2xl bg-black/40 border border-amber-500/40 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                  className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                   placeholder="https://youtube.com/..."
                 />
               </div>

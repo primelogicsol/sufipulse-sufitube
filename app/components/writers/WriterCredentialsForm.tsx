@@ -368,7 +368,7 @@ export default function WriterCredentialsForm({
                   value={languageSearch}
                   onChange={e => setLanguageSearch(e.target.value)}
                   placeholder="Search taxonomy (Urdu, Persian, Kashmiri...)"
-                  className="w-full rounded-2xl bg-black/40 border border-amber-500/40 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                  className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                 />
               </div>
 
