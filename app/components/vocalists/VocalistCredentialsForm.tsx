@@ -369,24 +369,24 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
                 {STYLES_TAXONOMY.map(style => {
                   const isActive = formData.performance_styles.includes(style);
                   return (
-                    <button
+                    <label
                       key={style}
-                      onClick={() => handleStyleToggle(style)}
-                      className={`flex items-center justify-start text-left px-6 py-5 rounded-xl border transition-all duration-500 group min-h-[72px] ${
+                      className={`flex w-full min-h-[72px] items-center justify-start gap-4 rounded-xl border px-6 py-5 cursor-pointer transition-all duration-500 ${
                         isActive 
-                          ? 'bg-amber-400/5 border-amber-400/30' 
-                          : 'bg-neutral-900/40 border-white/5 hover:border-white/10'
+                          ? 'bg-amber-400/10 border-amber-400/30' 
+                          : 'bg-black/30 border-white/10 hover:border-white/20'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 ${
-                        isActive ? 'bg-amber-400 border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : 'border-neutral-800 bg-[#0a0a0a]'
-                      }`}>
-                        {isActive && <Check size={12} className="text-black stroke-[4]" />}
-                      </div>
-                      <span className={`ml-5 text-[11px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-400'}`}>
+                      <input 
+                        type="checkbox"
+                        checked={isActive}
+                        onChange={() => handleStyleToggle(style)}
+                        className="h-5 w-5 shrink-0 accent-amber-400"
+                      />
+                      <span className={`text-left text-sm font-semibold uppercase tracking-[0.18em] transition-colors ${isActive ? 'text-amber-400' : 'text-white/75'}`}>
                         {style}
                       </span>
-                    </button>
+                    </label>
                   );
                 })}
               </div>
