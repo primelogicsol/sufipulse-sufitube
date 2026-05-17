@@ -34,6 +34,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFormSecurity } from '@/app/hooks/useFormSecurity';
 import { WriterSubmissionSuccessModal } from './WriterSubmissionSuccessModal';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // ─── Constants & Taxonomy ────────────────────────────────────────────────────
 
