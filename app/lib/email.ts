@@ -19,7 +19,21 @@ type EmailTemplate =
   | 'subscription-confirmed'
   | 'lyrics-request-confirmation'
   | 'lyrics-request-admin-notification'
-  | 'lyrics-translation-published';
+  | 'lyrics-translation-published'
+  | 'writer-submission-confirmation'
+  | 'writer-status-under-review'
+  | 'writer-status-revision-requested'
+  | 'writer-status-approved'
+  | 'writer-status-archived'
+  | 'kalam-status-under-review'
+  | 'kalam-status-revision-requested'
+  | 'kalam-status-approved'
+  | 'kalam-status-not-advanced'
+  | 'kalam-status-pre-allocated'
+  | 'kalam-status-production-consideration'
+  | 'payout-status-verified'
+  | 'payout-status-revision-requested'
+  | 'payout-status-rejected';
 
 interface SendEmailOptions {
   to: string;
@@ -156,7 +170,7 @@ const createProvider = (): EmailProvider => {
 };
 
 // Email templates
-const templates: Record<EmailTemplate, (data: Record<string, string>) => { subject: string; html: string }> = {
+const templates: Record<EmailTemplate, (data: any) => { subject: string; html: string }> = {
   verification: ({ code, name }) => ({
     subject: 'Verify Your SufiPulse Account',
     html: `
@@ -286,6 +300,308 @@ const templates: Record<EmailTemplate, (data: Record<string, string>) => { subje
       </div>
     `,
   }),
+
+  'writer-submission-confirmation': ({ name, referenceId, trackingToken }) => ({
+    subject: 'SufiPulse Writer Intake Submission Received',
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(200, 167, 94, 0.2);">
+        <div style="margin-bottom: 32px;">
+          <img src="https://sufipulse.com/sufipulse-logo-v5.png" alt="SufiPulse" style="height: 48px;" />
+        </div>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your writer profile and kalam submission have been formally received by the SufiPulse editorial board under the Ahl-e-Qalam intake framework.
+        </p>
+        <div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Submission Reference</p>
+            <p style="font-family: monospace; font-size: 18px; color: #C8A75E; margin: 0;">${referenceId}</p>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Current Status</p>
+            <p style="font-size: 16px; font-weight: 600; margin: 0;">Pending Editorial Review</p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 32px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/applications/${referenceId}?token=${trackingToken}" style="display: inline-block; background-color: #C8A75E; color: #0F172A; padding: 14px 32px; border-radius: 8px; font-weight: bold; text-decoration: none; text-transform: uppercase; font-size: 12px; letter-spacing: 0.1em;">
+            Track Application Progress
+          </a>
+        </div>
+
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          Please note that submission acknowledgment does not constitute editorial approval, production authorization, publication commitment, or release clearance.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'writer-status-under-review': ({ name, referenceId }) => ({
+    subject: `SufiPulse Submission Update: Under Editorial Screening [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your submission (Ref: ${referenceId}) has moved into the **Under Editorial Screening** phase.
+        </p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Our Majlis-e-Nazr (Editorial Council) is currently reviewing your profile and sample kalam for thematic and structural alignment with the SufiPulse institutional framework.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'writer-status-revision-requested': ({ name, referenceId, adminNote }) => ({
+    subject: `SufiPulse Submission Update: Revision Requested [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          The editorial board has requested revisions for your submission (Ref: ${referenceId}).
+        </p>
+        <div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <p style="font-size: 12px; color: #F59E0B; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Editorial Feedback</p>
+          <p style="font-size: 15px; line-height: 1.6; margin: 0;">${adminNote || 'Please log in to your dashboard to view specific revision requirements.'}</p>
+        </div>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Please log in to your dashboard to update your profile or sample work according to the feedback above.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'writer-status-approved': ({ name, referenceId }) => ({
+    subject: `SufiPulse Submission Approved: Welcome to Ahl-e-Qalam [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          We are pleased to inform you that your submission (Ref: ${referenceId}) has been **Approved**.
+        </p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          You are now formally recognized as an Ahl-e-Qalam within the SufiPulse institutional registry. Your dashboard access is now active.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          **Institutional Notice:** This approval confirms your eligibility within the SufiPulse ecosystem. It does not constitute kalam approval, production authorization, publication clearance, or registry lock for any specific work.
+        </p>
+        <div style="text-align: center; margin-top: 32px; margin-bottom: 32px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="background-color: #C8A75E; color: #0F172A; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Access Dashboard</a>
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'writer-status-archived': ({ name, referenceId }) => ({
+    subject: `SufiPulse Submission Update: Registry Status [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Thank you for your interest in the Ahl-e-Qalam framework.
+        </p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          After careful editorial review, we have decided not to move forward with your submission (Ref: ${referenceId}) at this time. Your profile has been archived within our registry.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'kalam-status-under-review': ({ name, title, referenceId }) => ({
+    subject: `Kalam Update: Under Editorial Review [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your kalam submission **"${title}"** (Ref: ${referenceId}) has moved into the **Under Editorial Review** phase.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          The Majlis-e-Nazr is currently evaluating the thematic and structural aspects of this work.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'kalam-status-revision-requested': ({ name, title, referenceId, adminNote }) => ({
+    subject: `Kalam Update: Revision Requested [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Revisions have been requested for your kalam **"${title}"** (Ref: ${referenceId}).
+        </p>
+        <div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <p style="font-size: 12px; color: #F59E0B; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Editorial Note</p>
+          <p style="font-size: 15px; line-height: 1.6; margin: 0;">${adminNote || 'Please check your dashboard for details.'}</p>
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'kalam-status-approved': ({ name, title, referenceId }) => ({
+    subject: `Kalam Approved: Editorial Clearance [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your kalam **"${title}"** (Ref: ${referenceId}) has received **Editorial Approval**.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          **Institutional Notice:** Editorial approval confirms literary acceptance only. It does not authorize vocalist assignment, production, recording, publication, or release.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'kalam-status-not-advanced': ({ name, title, referenceId }) => ({
+    subject: `Kalam Update: Registry Status [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Thank you for submitting **"${title}"** (Ref: ${referenceId}).
+        </p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          After review, we have decided not to advance this specific work into the SufiPulse production cycle at this time.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'kalam-status-pre-allocated': ({ name, title, referenceId }) => ({
+    subject: `Kalam Update: Registry Pre-Allocation [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your kalam **"${title}"** (Ref: ${referenceId}) has been **Registry Pre-Allocated**.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          This work is now reserved for potential future production assignment.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'kalam-status-production-consideration': ({ name, title, referenceId }) => ({
+    subject: `Kalam Update: Production Consideration [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your approved kalam **"${title}"** (Ref: ${referenceId}) has entered the **Production Consideration** phase.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          The production board will now evaluate this work for vocal suitability, musical form, and studio readiness.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'payout-status-verified': ({ name }) => ({
+    subject: 'SufiPulse Payout Account Verified',
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your payout account has been **Verified** for institutional disbursements.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          This confirmation ensures your registry entry is aligned for future royalty cycles. Actual disbursements will occur according to the institutional payout schedule.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Financial Governance</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'payout-status-revision-requested': ({ name, adminNote }) => ({
+    subject: 'Action Required: Payout Registry Revision',
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          The financial governance board has requested revisions for your payout registry entry.
+        </p>
+        <div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <p style="font-size: 12px; color: #F59E0B; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Governance Note</p>
+          <p style="font-size: 15px; line-height: 1.6; margin: 0;">${adminNote || 'Please log in to your dashboard to update your banking information.'}</p>
+        </div>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          Please update your financial details in the contributor hub to resume the verification process.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Financial Governance</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'payout-status-rejected': ({ name, adminNote }) => ({
+    subject: 'Payout Registry Update: Status Restricted',
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your payout registry submission has been **Rejected** for institutional disbursements.
+        </p>
+        <div style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <p style="font-size: 12px; color: #EF4444; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Reason for Rejection</p>
+          <p style="font-size: 15px; line-height: 1.6; margin: 0;">${adminNote || 'No specific reason provided.'}</p>
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Financial Governance</p>
+        </div>
+      </div>
+    `,
+  }),
 };
 
 // Public API
@@ -330,3 +646,84 @@ export const sendLyricsTranslationPublishedEmail = async (to: string, data: { so
   await sendEmail({ to, subject, html });
 };
 
+export const sendWriterSubmissionConfirmationEmail = async (to: string, data: { name: string; referenceId: string; trackingToken: string }): Promise<void> => {
+  const { subject, html } = templates['writer-submission-confirmation'](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendWriterStatusUpdateEmail = async (to: string, status: string, data: { name: string; referenceId: string; adminNote?: string }): Promise<void> => {
+  let templateKey: EmailTemplate;
+  switch (status) {
+    case 'under_review':
+    case 'under_editorial_screening':
+      templateKey = 'writer-status-under-review';
+      break;
+    case 'revision_requested':
+      templateKey = 'writer-status-revision-requested';
+      break;
+    case 'approved':
+    case 'approved_as_writer':
+      templateKey = 'writer-status-approved';
+      break;
+    case 'rejected':
+    case 'archived':
+    case 'archived_not_advanced':
+      templateKey = 'writer-status-archived';
+      break;
+    default:
+      return;
+  }
+  const { subject, html } = templates[templateKey](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendKalamStatusUpdateEmail = async (to: string, status: string, data: { name: string; title: string; referenceId: string; adminNote?: string }): Promise<void> => {
+  let templateKey: EmailTemplate;
+  switch (status) {
+    case 'under_review':
+    case 'under_editorial_review':
+      templateKey = 'kalam-status-under-review';
+      break;
+    case 'revision_requested':
+      templateKey = 'kalam-status-revision-requested';
+      break;
+    case 'approved':
+    case 'editorially_approved':
+      templateKey = 'kalam-status-approved';
+      break;
+    case 'not_advanced':
+    case 'rejected':
+      templateKey = 'kalam-status-not-advanced';
+      break;
+    case 'registry_pre_allocated':
+    case 'pre_allocated':
+      templateKey = 'kalam-status-pre-allocated';
+      break;
+    case 'production_consideration':
+      templateKey = 'kalam-status-production-consideration';
+      break;
+    default:
+      return;
+  }
+  const { subject, html } = templates[templateKey](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendPayoutStatusUpdateEmail = async (to: string, status: string, data: { name: string; adminNote?: string }): Promise<void> => {
+  let templateKey: EmailTemplate;
+  switch (status) {
+    case 'verified':
+      templateKey = 'payout-status-verified';
+      break;
+    case 'revision_requested':
+      templateKey = 'payout-status-revision-requested';
+      break;
+    case 'rejected':
+      templateKey = 'payout-status-rejected';
+      break;
+    default:
+      return;
+  }
+  const { subject, html } = templates[templateKey](data as any);
+  await sendEmail({ to, subject, html });
+};

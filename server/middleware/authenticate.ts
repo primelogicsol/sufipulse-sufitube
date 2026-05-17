@@ -12,9 +12,9 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken } from '@/server/services/auth';
-import { usersRepository } from '@/server/db/repositories/users';
-import type { User } from '@/server/types';
+import { verifyAccessToken } from '../services/auth';
+import { usersRepository } from '../db/repositories/users';
+import type { User } from '../types';
 
 type AuthUser = Omit<User, 'password_hash'>;
 
@@ -73,4 +73,4 @@ export async function requireRole(
 }
 
 /** Convenience — require admin role. */
-export const requireAdmin = (req: NextRequest) => requireRole(req, 'admin');
+export const requireAdmin = (req: NextRequest) => requireRole(req, 'admin', 'super_admin' as any, 'governance_admin' as any);

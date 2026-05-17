@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
+import { sendWriterSubmissionConfirmationEmail } from '@/app/lib/email';
 import { requireAuth } from '@/server/middleware/authenticate';
 import { validateRequestBody } from '@/app/lib/api-middleware';
 import { writerProfileSchema } from '@/app/lib/validation-schemas';
@@ -42,12 +43,32 @@ export async function POST(request: NextRequest) {
       profile_status: (body as any).profile_status || 'pending',
       submitted_at: new Date().toISOString(),
     });
+
+    // Logging: [Writer Submission] Submission saved
+    console.log(`[Writer Submission] Submission saved: ${record.id}`);
+
+    const referenceId = `SP-WRT-${new Date().getFullYear()}-${record.id.split('_')[1].slice(0, 8).toUpperCase()}`;
+
+    // Failsafe: Send confirmation email to writer
+    (async () => {
+      try {
+        console.log(`[Writer Submission] Confirmation email queued for: ${body.email || authResult.email}`);
+        await sendWriterSubmissionConfirmationEmail(body.email || authResult.email, {
+          name: body.full_name || body.pen_name || authResult.full_name || 'Writer',
+          referenceId: referenceId
+        });
+        console.log(`[Writer Submission] Confirmation email sent successfully to: ${body.email || authResult.email}`);
+      } catch (emailErr: any) {
+        console.error(`[Writer Submission] Email failure: ${emailErr.message || emailErr}`);
+      }
+    })();
+
     notifyAdminNewSubmission(
       'writer application',
       body.full_name || body.pen_name || body.email,
       body.pen_name || '—'
     ).catch((err) => console.error('[notify]', err?.message || err));
-    return NextResponse.json(record, { status: 201 });
+    return NextResponse.json({ ...record, referenceId }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

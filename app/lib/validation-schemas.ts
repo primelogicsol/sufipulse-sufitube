@@ -127,8 +127,12 @@ export const kalamSubmissionSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(255, 'Title is too long'),
   content: z.string().min(10, 'Content must be at least 10 characters'),
   language: z.string().min(2, 'Language is required').max(50),
-  themes: z.array(z.string()).min(1, 'At least one theme required'),
+  form_style: z.string().min(2, 'Form/style is required').max(100),
+  thematic_category: z.string().min(2, 'Thematic category is required').max(100),
   notes: z.string().max(1000).optional(),
+  originality_confirmed: z.boolean().refine(val => val === true, 'Must confirm originality'),
+  rights_confirmed: z.boolean().refine(val => val === true, 'Must confirm rights'),
+  governance_acknowledged: z.boolean().refine(val => val === true, 'Must acknowledge governance'),
 });
 
 export const sadaSubmissionSchema = z.object({

@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { Layout } from '@/app/components/layout/Layout';
-import { PageContainer } from '@/app/components/layout/PageContainer';
+import { useAuth } from '../../contexts/AuthContext';
+import { Layout } from '../../components/layout/Layout';
+import { PageContainer } from '../../components/layout/PageContainer';
 import { User, Mail, Shield, LogOut, Banknote, Languages } from 'lucide-react';
 import Link from 'next/link';
 
@@ -97,7 +97,7 @@ export default function MyAccountPage() {
           {/* Royalty Payouts — contributors only */}
           {isContributor && (
             <Link
-              href="/user/profile/royalties"
+              href="/user/royalties"
               className="flex items-center justify-between w-full px-5 py-4 rounded-xl border border-white/10 bg-white/[0.03] hover:border-[var(--color-gold)]/40 hover:bg-[var(--color-gold)]/5 transition-colors mb-3"
             >
               <div className="flex items-center gap-3">

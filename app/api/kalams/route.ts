@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
+import { entityGetAll, entityCreate, entityUpdate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
 import { validateRequestBody } from '@/app/lib/api-middleware';
@@ -37,15 +37,23 @@ export async function POST(request: NextRequest) {
       ...body,
       user_id: authResult.id,
       email: authResult.email,
+      full_name: authResult.full_name || 'Writer',
       status: 'submitted',
       submitted_at: new Date().toISOString(),
     });
+
+    const referenceId = `SP-KLM-${new Date().getFullYear()}-${record.id.split('_')[1].slice(0, 8).toUpperCase()}`;
+    const finalRecord = entityUpdate('kalams', record.id, { referenceId }); // Store as referenceId
+
+    console.log(`[Kalam Submission] Saved: ${record.id} | Ref: ${referenceId}`);
+
     notifyAdminNewSubmission(
       'kalam submission',
       authResult.full_name || authResult.email,
       body.title
     ).catch((err) => console.error('[notify]', err?.message || err));
-    return NextResponse.json(record, { status: 201 });
+
+    return NextResponse.json(finalRecord || { ...record, referenceId }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

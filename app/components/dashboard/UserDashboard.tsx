@@ -4,7 +4,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { getUserNotifications, markNotificationRead, markAllNotificationsRead } from '@/app/lib/notifications';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { LayoutDashboard, FileText, Settings, CircleCheck as CheckCircle, Search, Circle as XCircle, Eye, CircleAlert as AlertCircle, Clock, CirclePlus as PlusCircle, Shield, LogOut, Loader, User, Bell, DollarSign, TrendingUp, Info, CalendarClock } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, CircleCheck as CheckCircle, Search, Circle as XCircle, Eye, CircleAlert as AlertCircle, Clock, CirclePlus as PlusCircle, Shield, LogOut, Loader, User, Bell, DollarSign, TrendingUp, Info, CalendarClock, CreditCard, ArrowRight } from 'lucide-react';
 import Editor, { EditorProvider } from "react-simple-wysiwyg";
 import Link from 'next/link';
 
@@ -62,11 +62,6 @@ export default function UserDashboard({ role }: UserDashboardProps) {
 
     // Royalty states
     const [royalties, setRoyalties] = useState<any[]>([]);
-    const [bankInfo, setBankInfo] = useState<any>(null);
-    const [bankFormOpen, setBankFormOpen] = useState(false);
-    const [bankForm, setBankForm] = useState({
-        holder_name: '', bank_name: '', account_number: '', iban_routing: '', swift_bic: '', account_type: 'savings', country: ''
-    });
     const [bankMessage, setBankMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
@@ -175,7 +170,6 @@ export default function UserDashboard({ role }: UserDashboardProps) {
         loadData();
         loadNotifications();
         loadRoyalties();
-        loadBankInfo();
         const interval = setInterval(loadNotifications, 30000);
         return () => clearInterval(interval);
     }, [user]);
@@ -193,57 +187,6 @@ export default function UserDashboard({ role }: UserDashboardProps) {
             const data = await res.json();
             setRoyalties(Array.isArray(data) ? data : []);
         } catch { setRoyalties([]); }
-    };
-
-    const loadBankInfo = async () => {
-        if (!user) return;
-        try {
-            const res = await fetch('/api/user/payout-account');
-            if (!res.ok) { setBankInfo(null); return; }
-            const data = await res.json();
-            const account = data.account || null;
-            setBankInfo(account);
-            if (account) setBankForm({
-                holder_name: account.account_holder_name || '',
-                bank_name: account.bank_name || '',
-                account_number: account.account_last4 ? `****${account.account_last4}` : '',
-                iban_routing: account.routing_number || '',
-                swift_bic: account.swift_bic || '',
-                account_type: account.account_type || 'savings',
-                country: account.country || ''
-            });
-        } catch { setBankInfo(null); }
-    };
-
-    const handleBankSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user) return;
-        setBankMessage(null);
-        try {
-            const res = await fetch('/api/user/payout-account', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    account_holder_name: bankForm.holder_name,
-                    bank_name: bankForm.bank_name,
-                    account_number: bankForm.account_number,
-                    routing_number: bankForm.iban_routing,
-                    swift_bic: bankForm.swift_bic,
-                    account_type: bankForm.account_type,
-                    country: bankForm.country,
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                setBankMessage({ type: 'error', text: data.error || 'Failed to save. Please try again.' });
-                return;
-            }
-            setBankFormOpen(false);
-            await loadBankInfo();
-            setBankMessage({ type: 'success', text: 'Bank account saved. Admin will verify before first payout.' });
-        } catch {
-            setBankMessage({ type: 'error', text: 'Failed to save. Please try again.' });
-        }
     };
 
     useEffect(() => {
@@ -281,6 +224,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
 
             setStatus((profile as any)?.[config.profileFields.statusField] || 'pending');
             setProfileData({
+                id: (profile as any)?.id || '',
                 languages: (profile as any)?.[config.profileFields.languages] || [],
                 styles: (profile as any)?.[config.profileFields.styles] || [],
                 full_name: (profile as any)?.full_name || user.full_name || '',
@@ -1094,152 +1038,43 @@ export default function UserDashboard({ role }: UserDashboardProps) {
 
                             {/* Royalties Tab */}
                             {activeTab === 'royalties' && (
-                                <div className="space-y-6">
-
-                                    {/* Bank Account Section */}
-                                    {!bankInfo && !bankFormOpen && (
-                                        <div className="bg-[var(--dash-bg-secondary)] border border-red-400/30 rounded-xl p-5 flex items-start gap-4">
-                                            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                                            <div className="flex-1">
-                                                <p className="text-sm font-semibold text-red-400 mb-1">No Bank Account Linked</p>
-                                                <p className="text-xs text-[var(--dash-text-secondary)] leading-relaxed mb-3">
-                                                    You must link a bank account before any royalty payout can be processed. Payments will remain on hold until verified banking details are on file.
-                                                </p>
-                                                <button
-                                                    onClick={() => setBankFormOpen(true)}
-                                                    className="cursor-pointer px-4 py-2 bg-[var(--dash-accent)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
-                                                >
-                                                    + Link Bank Account
-                                                </button>
-                                            </div>
+                                <div className="space-y-8">
+                                    {/* Link to centralized payout configuration */}
+                                    <div className="bg-amber-400/5 border border-amber-400/10 rounded-2xl p-10 flex flex-col items-center text-center gap-6 shadow-2xl">
+                                        <div className="w-20 h-20 bg-amber-400/10 rounded-full flex items-center justify-center">
+                                            <DollarSign className="w-10 h-10 text-amber-400" />
                                         </div>
-                                    )}
-
-                                    {bankInfo && !bankFormOpen && (
-                                        <div className="bg-[var(--dash-bg-secondary)] border border-green-400/30 rounded-xl p-5">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 bg-green-400/10 rounded-lg flex items-center justify-center">
-                                                        <DollarSign className="w-4 h-4 text-green-400" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-[var(--dash-text-primary)]">Bank Account Linked</p>
-                                                        <p className="text-xs text-green-400 font-semibold">Pending admin verification</p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => setBankFormOpen(true)}
-                                                    className="cursor-pointer text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-accent)] transition-colors"
-                                                >
-                                                    Edit
-                                                </button>
-                                            </div>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                                                {[
-                                                    { label: 'Account Holder', value: bankInfo.holder_name },
-                                                    { label: 'Bank Name', value: bankInfo.bank_name },
-                                                    { label: 'Account Type', value: bankInfo.account_type },
-                                                    { label: 'Account No.', value: bankInfo.account_number ? `••••${bankInfo.account_number.slice(-4)}` : '—' },
-                                                    { label: 'IBAN / Routing', value: bankInfo.iban_routing ? `••••${bankInfo.iban_routing.slice(-6)}` : '—' },
-                                                    { label: 'Country', value: bankInfo.country || '—' },
-                                                ].map(f => (
-                                                    <div key={f.label} className="p-3 bg-[var(--dash-bg-primary)] rounded-lg border border-[var(--dash-border)]">
-                                                        <p className="text-[var(--dash-text-muted)] mb-1">{f.label}</p>
-                                                        <p className="font-semibold text-[var(--dash-text-primary)] capitalize">{f.value}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-white mb-2">Institutional Royalties Hub</h3>
+                                            <p className="text-sm text-neutral-400 max-w-md mx-auto leading-relaxed">
+                                                Financial governance, payout configuration, and institutional revenue tracking have been consolidated into a dedicated secure portal.
+                                            </p>
                                         </div>
-                                    )}
+                                        <Link 
+                                            href="/user/royalties"
+                                            className="px-10 py-4 bg-linear-to-r from-[#D4AF37] to-[#F4D03F] text-[#0A1628] font-black rounded-xl hover:shadow-lg hover:shadow-[#D4AF37]/20 transition-all duration-300 uppercase text-xs tracking-[0.2em] flex items-center gap-2"
+                                        >
+                                            Access Payout Portal
+                                            <ArrowRight className="w-4 h-4" />
+                                        </Link>
+                                    </div>
 
-                                    {bankFormOpen && (
-                                        <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
-                                            <div className="flex items-center justify-between mb-5">
-                                                <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider">
-                                                    {bankInfo ? 'Update Bank Account' : 'Link Bank Account'}
-                                                </h3>
-                                                <button onClick={() => setBankFormOpen(false)} className="cursor-pointer text-[var(--dash-text-muted)] hover:text-white transition-colors text-xs">Cancel</button>
-                                            </div>
-                                            <div className="bg-amber-400/10 border border-amber-400/20 rounded-lg p-3 mb-5 text-xs text-amber-300 leading-relaxed">
-                                                <strong>Security note:</strong> Banking details are stored locally and submitted to SufiPulse administration for manual verification before any payout. Never share your account credentials.
-                                            </div>
-                                            <form onSubmit={handleBankSave} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {[
-                                                    { key: 'holder_name', label: 'Account Holder Name', placeholder: 'Full legal name on account', required: true },
-                                                    { key: 'bank_name', label: 'Bank Name', placeholder: 'e.g. JPMorgan Chase, Bank of America', required: true },
-                                                    { key: 'account_number', label: 'Account Number', placeholder: 'Your account number', required: true },
-                                                    { key: 'iban_routing', label: 'IBAN / Routing Number', placeholder: 'IBAN (international) or routing number', required: false },
-                                                    { key: 'swift_bic', label: 'SWIFT / BIC Code', placeholder: 'e.g. CHASUS33', required: false },
-                                                    { key: 'country', label: 'Country', placeholder: 'e.g. United States, United Kingdom', required: true },
-                                                ].map(f => (
-                                                    <div key={f.key}>
-                                                        <label className="block text-xs font-semibold text-[var(--dash-text-secondary)] mb-1.5">
-                                                            {f.label} {f.required && <span className="text-red-400">*</span>}
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            required={f.required}
-                                                            placeholder={f.placeholder}
-                                                            value={(bankForm as any)[f.key]}
-                                                            onChange={ev => setBankForm(prev => ({ ...prev, [f.key]: ev.target.value }))}
-                                                            className="w-full px-3 py-2.5 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-text-primary)] placeholder:text-[var(--dash-text-muted)] focus:outline-none focus:border-[var(--dash-accent)] transition-colors"
-                                                        />
-                                                    </div>
-                                                ))}
-                                                <div>
-                                                    <label className="block text-xs font-semibold text-[var(--dash-text-secondary)] mb-1.5">Account Type</label>
-                                                    <select
-                                                        value={bankForm.account_type}
-                                                        onChange={ev => setBankForm(prev => ({ ...prev, account_type: ev.target.value }))}
-                                                        className="w-full px-3 py-2.5 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-text-primary)] focus:outline-none focus:border-[var(--dash-accent)] transition-colors"
-                                                    >
-                                                        <option value="savings">Savings</option>
-                                                        <option value="current">Current / Checking</option>
-                                                        <option value="business">Business</option>
-                                                    </select>
-                                                </div>
-                                                <div className="sm:col-span-2 flex gap-3 pt-2">
-                                                    <button
-                                                        type="submit"
-                                                        className="cursor-pointer flex-1 py-3 bg-[var(--dash-accent)] text-white font-bold rounded-xl hover:opacity-90 transition-opacity"
-                                                    >
-                                                        {bankInfo ? 'Update Account' : 'Save & Submit for Verification'}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setBankFormOpen(false)}
-                                                        className="cursor-pointer px-6 py-3 border border-[var(--dash-border)] text-[var(--dash-text-secondary)] font-bold rounded-xl hover:border-[var(--dash-accent)] transition-colors"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    )}
-
-                                    {bankMessage && (
-                                        <div className={`p-3 rounded-lg text-sm flex items-center justify-between gap-2 ${bankMessage.type === 'success' ? 'bg-green-500/10 border border-green-500/25 text-green-400' : 'bg-red-500/10 border border-red-500/25 text-red-400'}`}>
-                                            <span>{bankMessage.text}</span>
-                                            <button type="button" onClick={() => setBankMessage(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
-                                        </div>
-                                    )}
-
-                                    {/* Threshold & Status Banner */}
-                                    <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-5 flex items-start gap-4">
+                                    {/* Threshold notice */}
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex items-start gap-4">
                                         <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-semibold text-amber-400 mb-1">Royalty Activation Threshold</p>
-                                            <p className="text-xs text-[var(--dash-text-secondary)] leading-relaxed">
-                                                Royalties become payable once a release earns <strong className="text-[var(--dash-text-primary)]">USD 500</strong> in verified platform revenue.
-                                                Below this threshold, earnings accumulate in the Diwan-e-Amanat reserve pool and are disbursed in the next eligible cycle.
+                                            <p className="text-sm font-bold text-white mb-1">Royalty Activation Threshold</p>
+                                            <p className="text-xs text-neutral-400 leading-relaxed">
+                                                Royalties become payable once a release earns <strong className="text-white">USD 500</strong> in verified platform revenue. 
+                                                Below this threshold, earnings accumulate in the institutional reserve pool and are disbursed in the next eligible quarterly cycle.
                                             </p>
                                         </div>
                                     </div>
 
                                     {/* Split Model */}
-                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
-                                        <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider mb-5 flex items-center gap-2">
-                                            <TrendingUp className="w-4 h-4 text-[var(--dash-accent)]" /> Revenue Distribution Model
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+                                        <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-5 flex items-center gap-2">
+                                            <TrendingUp className="w-4 h-4 text-amber-400" /> Revenue Distribution Model
                                         </h3>
                                         <div className="space-y-3">
                                             {[
@@ -1250,131 +1085,56 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                 { label: 'Distributor / Publisher', desc: 'Platform distribution & licensing', pct: 10, color: '#06b6d4', highlight: false },
                                                 { label: 'Studio Engineer', desc: 'Recording & mixing', pct: 5, color: '#f43f5e', highlight: false },
                                             ].map(row => (
-                                                <div key={row.label} className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${row.highlight ? 'bg-amber-400/10 border border-amber-400/30' : 'hover:bg-[var(--dash-hover)]'}`}>
+                                                <div key={row.label} className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${row.highlight ? 'bg-amber-400/10 border border-amber-400/30' : 'hover:bg-neutral-800/50'}`}>
                                                     <div className="w-10 text-right shrink-0">
-                                                        <span className={`text-sm font-bold ${row.highlight ? 'text-amber-400' : 'text-[var(--dash-text-primary)]'}`}>{row.pct}%</span>
+                                                        <span className={`text-sm font-bold ${row.highlight ? 'text-amber-400' : 'text-white'}`}>{row.pct}%</span>
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-2 mb-1">
-                                                            <span className={`text-sm font-semibold ${row.highlight ? 'text-amber-400' : 'text-[var(--dash-text-primary)]'}`}>{row.label}</span>
+                                                            <span className={`text-sm font-semibold ${row.highlight ? 'text-amber-400' : 'text-white'}`}>{row.label}</span>
                                                             {row.highlight && <span className="text-[10px] bg-amber-400 text-black font-bold px-1.5 py-0.5 rounded-full">YOU</span>}
                                                         </div>
-                                                        <p className="text-xs text-[var(--dash-text-muted)]">{row.desc}</p>
+                                                        <p className="text-xs text-neutral-500">{row.desc}</p>
                                                     </div>
                                                     <div className="w-28 shrink-0">
-                                                        <div className="h-1.5 rounded-full bg-[var(--dash-border)]">
+                                                        <div className="h-1.5 rounded-full bg-neutral-800">
                                                             <div className="h-1.5 rounded-full transition-all" style={{ width: `${row.pct * 3.33}%`, backgroundColor: row.color }} />
                                                         </div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-[var(--dash-text-muted)] mt-4 pt-4 border-t border-[var(--dash-border)]">
-                                            Percentages apply to net platform revenue after applicable taxes and processing fees. Splits are fixed per the SufiPulse Royalty Policy and documented prior to each release.
-                                        </p>
-                                    </div>
-
-                                    {/* Earnings Simulator */}
-                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
-                                        <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider mb-4 flex items-center gap-2">
-                                            <DollarSign className="w-4 h-4 text-[var(--dash-accent)]" /> Earnings Estimator
-                                        </h3>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                            {[
-                                                { streams: '10K', revenue: 20, share: role === 'writer' ? 4 : 4 },
-                                                { streams: '50K', revenue: 100, share: role === 'writer' ? 20 : 20 },
-                                                { streams: '250K', revenue: 500, share: role === 'writer' ? 100 : 100 },
-                                                { streams: '1M+', revenue: 2000, share: role === 'writer' ? 400 : 400 },
-                                            ].map(est => {
-                                                const yourPct = role === 'writer' || role === 'vocalist' ? 20 : role === 'producer' ? 15 : 10;
-                                                const yourEarning = (est.revenue * yourPct / 100).toFixed(0);
-                                                const unlocked = est.revenue >= 500;
-                                                return (
-                                                    <div key={est.streams} className={`p-4 rounded-xl border text-center transition-colors ${unlocked ? 'border-amber-400/30 bg-amber-400/5' : 'border-[var(--dash-border)]'}`}>
-                                                        <p className="text-xs text-[var(--dash-text-muted)] mb-1">{est.streams} streams</p>
-                                                        <p className="text-lg font-bold text-[var(--dash-text-primary)]">${yourEarning}</p>
-                                                        <p className="text-[10px] text-[var(--dash-text-muted)] mt-0.5">your share</p>
-                                                        {unlocked
-                                                            ? <span className="text-[10px] text-amber-400 font-semibold mt-1 block">✓ Threshold met</span>
-                                                            : <span className="text-[10px] text-[var(--dash-text-muted)] mt-1 block">In reserve pool</span>
-                                                        }
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        <p className="text-xs text-[var(--dash-text-muted)] mt-3">Estimates based on ~$0.002/stream (streaming average). Actual rates vary by platform and region.</p>
-                                    </div>
-
-                                    {/* Personal Royalty Records */}
-                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-5">
-                                            <h3 className="text-sm font-bold text-[var(--dash-text-primary)] uppercase tracking-wider">My Royalty Payments</h3>
-                                            <button onClick={loadRoyalties} className="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-accent)] transition-colors cursor-pointer">Refresh</button>
-                                        </div>
-                                        {royalties.length === 0 ? (
-                                            <div className="text-center py-10 border border-dashed border-[var(--dash-border-hover)] rounded-xl">
-                                                <DollarSign className="w-10 h-10 text-[var(--dash-text-muted)] mx-auto mb-3 opacity-30" />
-                                                <p className="text-sm text-[var(--dash-text-muted)]">No royalty records yet</p>
-                                                <p className="text-xs text-[var(--dash-text-muted)] mt-1">Payments appear here once a release crosses the earnings threshold</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {royalties.map((r: any) => (
-                                                    <div key={r.id} className="flex items-center justify-between p-4 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-xl">
-                                                        <div>
-                                                            <p className="text-sm font-semibold text-[var(--dash-text-primary)]">{r.release_title || 'Release'}</p>
-                                                            <p className="text-xs text-[var(--dash-text-muted)] mt-0.5">{r.due_date ? new Date(r.due_date).toLocaleDateString() : 'Pending date'}</p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="text-base font-bold text-[var(--dash-accent)]">{r.currency || 'USD'} {Number(r.amount_due || 0).toLocaleString()}</p>
-                                                            <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
-                                                                r.payout_status === 'paid' ? 'bg-green-400/10 text-green-400' :
-                                                                r.payout_status === 'approved' ? 'bg-blue-400/10 text-blue-400' :
-                                                                r.payout_status === 'on_hold' ? 'bg-orange-400/10 text-orange-400' :
-                                                                'bg-neutral-400/10 text-neutral-400'
-                                                            }`}>{r.payout_status || 'pending'}</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                <div className="flex justify-between pt-3 border-t border-[var(--dash-border)] text-sm">
-                                                    <span className="text-[var(--dash-text-secondary)]">Total earned</span>
-                                                    <span className="font-bold text-[var(--dash-text-primary)]">
-                                                        USD {royalties.reduce((s: number, r: any) => s + Number(r.amount_due || 0), 0).toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             )}
 
                             {/* Studio Sessions Tab */}
                             {activeTab === 'sessions' && (
-                                <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6">
+                                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
                                     <div className="flex items-center justify-between mb-5">
-                                        <h2 className="text-base font-semibold text-[var(--dash-text-primary)]">Session Requests</h2>
+                                        <h2 className="text-base font-semibold text-white">Session Requests</h2>
                                         <Link
                                             href="/studio-sessions"
-                                            className="px-4 py-2 text-xs bg-[var(--dash-accent)] text-white font-bold rounded-lg hover:opacity-90 transition-opacity"
+                                            className="px-4 py-2 text-xs bg-amber-400 text-black font-bold rounded-lg hover:opacity-90 transition-opacity"
                                         >
                                             Submit a Request
                                         </Link>
                                     </div>
                                     {sessionRequests.length === 0 ? (
                                         <div className="text-center py-10 space-y-3">
-                                            <CalendarClock size={32} className="mx-auto text-[var(--dash-text-muted)] opacity-20" />
-                                            <p className="text-sm text-[var(--dash-text-muted)]">No session requests found.</p>
+                                            <CalendarClock size={32} className="mx-auto text-neutral-700 opacity-20" />
+                                            <p className="text-sm text-neutral-500">No session requests found.</p>
                                         </div>
                                     ) : (
-                                        <ul className="divide-y divide-[var(--dash-border)]">
+                                        <ul className="divide-y divide-neutral-800">
                                             {[...sessionRequests].reverse().map((req) => (
                                                 <li key={req.id} className="py-4 space-y-1">
                                                     <div className="flex items-start justify-between gap-4">
                                                         <div>
-                                                            <p className="text-sm font-medium text-[var(--dash-text-primary)]">
+                                                            <p className="text-sm font-medium text-white">
                                                                 {req.session_type || 'Session Request'}
                                                             </p>
-                                                            <p className="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                                                            <p className="text-xs text-neutral-500 mt-0.5">
                                                                 Ref: {req.approval_reference_code || '—'}
                                                                 {req.preferred_date_start ? ` · ${req.preferred_date_start}` : ''}
                                                             </p>
@@ -1384,9 +1144,9 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                         </span>
                                                     </div>
                                                     {req.additional_notes && (
-                                                        <p className="text-xs text-[var(--dash-text-secondary)] italic">{req.additional_notes}</p>
+                                                        <p className="text-xs text-neutral-400 italic">{req.additional_notes}</p>
                                                     )}
-                                                    <p className="text-[11px] text-[var(--dash-text-muted)] mt-1">
+                                                    <p className="text-[11px] text-neutral-600 mt-1">
                                                         Submitted {req.created_at ? new Date(req.created_at).toLocaleDateString() : ''}
                                                     </p>
                                                 </li>
@@ -1400,19 +1160,19 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                             {activeTab === 'settings' && (
                                 <div className="max-w-4xl space-y-8">
                                     {/* Profile Settings */}
-                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6 lg:p-8">
-                                        <h3 className="text-xl font-bold text-[var(--dash-text-primary)] mb-6 flex items-center gap-2">
-                                            <User className="w-5 h-5 text-[var(--dash-accent)]" /> Profile Settings
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 lg:p-8">
+                                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                            <User className="w-5 h-5 text-amber-400" /> Profile Settings
                                         </h3>
                                         <form onSubmit={handleProfileUpdate} className="space-y-6">
                                             <div className="flex flex-col sm:flex-row gap-8 items-start">
                                                 {/* Avatar Column */}
                                                 <div className="flex flex-col items-center gap-3 shrink-0">
-                                                    <div className="relative w-28 h-28 rounded-full bg-[var(--dash-bg-primary)] border-2 border-dashed border-[var(--dash-border-hover)] flex flex-col justify-center items-center overflow-hidden group">
-                                                        {profileForm.avatar ? (
-                                                            <img src={URL.createObjectURL(profileForm.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                                                    <div className="relative w-28 h-28 rounded-full bg-neutral-950 border-2 border-dashed border-neutral-800 flex flex-col justify-center items-center overflow-hidden group">
+                                                        {avatarUrl ? (
+                                                            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <User className="w-12 h-12 text-[var(--dash-text-muted)] group-hover:text-[var(--dash-accent)] transition-colors" />
+                                                            <User className="w-12 h-12 text-neutral-700 group-hover:text-amber-400 transition-colors" />
                                                         )}
                                                         <div className="absolute inset-0 bg-black/60 hidden group-hover:flex items-center justify-center transition-all cursor-pointer">
                                                             <span className="text-xs text-white font-medium tracking-wide">Change</span>
@@ -1428,19 +1188,19 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                             }}
                                                         />
                                                     </div>
-                                                    <span className="text-xs font-medium text-[var(--dash-text-muted)] uppercase tracking-wider">Profile Picture</span>
+                                                    <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Profile Picture</span>
                                                 </div>
 
                                                 {/* Form Column */}
                                                 <div className="flex-1 space-y-5 w-full">
                                                     <div>
-                                                        <label className="block text-sm font-semibold text-[var(--dash-text-primary)] mb-2">Display Name</label>
+                                                        <label className="block text-sm font-semibold text-white mb-2">Display Name</label>
                                                         <input
                                                             type="text"
                                                             required
                                                             value={profileForm.name}
                                                             onChange={e => setProfileForm({ ...profileForm, name: e.target.value })}
-                                                            className="w-full px-4 py-3 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-primary)] focus:border-[var(--dash-accent)] focus:ring-1 focus:ring-[var(--dash-accent)] outline-none transition-all"
+                                                            className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/20 outline-none transition-all"
                                                             placeholder="Enter your name"
                                                         />
                                                     </div>
@@ -1460,20 +1220,20 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                     </div>
 
                                     {/* Security Settings (Password) */}
-                                    <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-xl p-6 lg:p-8">
-                                        <h3 className="text-xl font-bold text-[var(--dash-text-primary)] mb-6 flex items-center gap-2">
-                                            <Shield className="w-5 h-5 text-[var(--dash-accent)]" /> Security Preferences
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 lg:p-8">
+                                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                            <Shield className="w-5 h-5 text-amber-400" /> Security Preferences
                                         </h3>
                                         <form onSubmit={handlePasswordUpdate} className="space-y-5 max-w-md">
                                             <div>
-                                                <label className="block text-sm font-semibold text-[var(--dash-text-primary)] mb-2">Current Password</label>
-                                                <input type="password" required value={passwordForm.currentPassword} onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} className="w-full px-4 py-3 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-primary)] focus:border-[var(--dash-accent)] focus:ring-1 focus:ring-[var(--dash-accent)] outline-none transition-all" placeholder="••••••••" />
+                                                <label className="block text-sm font-semibold text-white mb-2">Current Password</label>
+                                                <input type="password" required value={passwordForm.currentPassword} onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/20 outline-none transition-all" placeholder="••••••••" />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-semibold text-[var(--dash-text-primary)] mb-2">New Password</label>
-                                                <input type="password" required value={passwordForm.newPassword} onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className="w-full px-4 py-3 bg-[var(--dash-bg-primary)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-primary)] focus:border-[var(--dash-accent)] focus:ring-1 focus:ring-[var(--dash-accent)] outline-none transition-all" placeholder="••••••••" />
+                                                <label className="block text-sm font-semibold text-white mb-2">New Password</label>
+                                                <input type="password" required value={passwordForm.newPassword} onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-lg text-white focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/20 outline-none transition-all" placeholder="••••••••" />
                                             </div>
-                                            <button type="submit" disabled={passwordLoading} className="w-full cursor-pointer flex items-center justify-center bg-transparent border border-[var(--dash-border-hover)] text-[var(--dash-text-primary)] py-3 rounded-md font-bold hover:border-[var(--dash-accent)] hover:text-[var(--dash-accent)] mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300">
+                                            <button type="submit" disabled={passwordLoading} className="w-full cursor-pointer flex items-center justify-center bg-transparent border border-neutral-700 text-white py-3 rounded-md font-bold hover:border-amber-400 hover:text-amber-400 mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300">
                                                 {passwordLoading ? <Loader className='w-4 h-4 animate-spin' /> : "Update Password"}
                                             </button>
                                             {passwordMessage && (
@@ -1489,18 +1249,18 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                         </main>
                     </div>
 
-                            {/* View Modal */}
-            {contentModal && selectedItem && (
+                    {/* View Modal */}
+                    {contentModal && selectedItem && (
                         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-                            <div className="bg-[var(--dash-bg-secondary)] border border-[var(--dash-border)] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
-                                <div className="flex items-center justify-between p-6 border-b border-[var(--dash-border)]">
+                            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+                                <div className="flex items-center justify-between p-6 border-b border-neutral-800">
                                     <div>
-                                        <h2 className="text-xl font-bold text-[var(--dash-text-primary)]">
+                                        <h2 className="text-xl font-bold text-white">
                                             {selectedItem.status === 'revision requested' || selectedItem.status === 'revision_requested' ? 'Revision Request' : 'Item Review'}
                                         </h2>
                                         <span className={`text-xs font-semibold capitalize px-2 py-0.5 rounded-full border border-current ${getStatusColor(selectedItem.status)}`}>{getStatusLabel(selectedItem.status)}</span>
                                     </div>
-                                    <button onClick={() => { setContentModal(false); setSelectedItem(null); }} className="cursor-pointer text-[var(--dash-text-muted)] hover:text-white transition-colors">
+                                    <button onClick={() => { setContentModal(false); setSelectedItem(null); }} className="cursor-pointer text-neutral-500 hover:text-white transition-colors">
                                         <XCircle className="w-6 h-6" />
                                     </button>
                                 </div>
@@ -1511,32 +1271,32 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                                 <AlertCircle className="w-4 h-4 text-yellow-400" />
                                                 <label className="text-xs font-bold text-yellow-400 uppercase tracking-widest">Admin Revision Notes</label>
                                             </div>
-                                            <p className="text-[var(--dash-text-primary)] text-sm leading-relaxed">{selectedItem.revision_notes}</p>
+                                            <p className="text-white text-sm leading-relaxed">{selectedItem.revision_notes}</p>
                                         </div>
                                     )}
                                     <div>
-                                        <label className="block text-xs font-bold text-[var(--dash-text-secondary)] uppercase tracking-widest mb-2">Title</label>
-                                        <div className="bg-[var(--dash-bg-primary)] rounded-xl p-5 border border-[var(--dash-border)]">
-                                            <p className="text-[var(--dash-text-primary)] font-arabic text-lg">{selectedItem.title}</p>
+                                        <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Title</label>
+                                        <div className="bg-neutral-950 rounded-xl p-5 border border-neutral-800">
+                                            <p className="text-white font-arabic text-lg">{selectedItem.title}</p>
                                         </div>
                                     </div>
                                     {selectedItem.content ? (
                                         <div>
-                                            <label className="block text-xs font-bold text-[var(--dash-text-secondary)] uppercase tracking-widest mb-2">Content</label>
-                                            <div className="bg-[var(--dash-bg-primary)] rounded-xl p-5 border border-[var(--dash-border)] prose prose-invert max-w-none">
+                                            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Content</label>
+                                            <div className="bg-neutral-950 rounded-xl p-5 border border-neutral-800 prose prose-invert max-w-none">
                                                 <div dangerouslySetInnerHTML={{ __html: selectedItem.content }} />
                                             </div>
                                         </div>
                                     ) : selectedItem.link ? (
                                         <div>
-                                            <label className="block text-xs font-bold text-[var(--dash-text-secondary)] uppercase tracking-widest mb-2">Link</label>
-                                            <div className="bg-[var(--dash-bg-primary)] rounded-xl p-5 border border-[var(--dash-border)]">
+                                            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Link</label>
+                                            <div className="bg-neutral-950 rounded-xl p-5 border border-neutral-800">
                                                 <a href={selectedItem.link} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline break-all">{selectedItem.link}</a>
                                             </div>
                                         </div>
                                     ) : null}
                                 </div>
-                                <div className="p-6 border-t border-[var(--dash-border)] flex gap-4 bg-[var(--dash-bg-primary)] rounded-b-2xl">
+                                <div className="p-6 border-t border-neutral-800 flex gap-4 bg-neutral-950/50 rounded-b-2xl">
                                     {(selectedItem.status === 'revision requested' || selectedItem.status === 'revision_requested') ? (
                                         <>
                                             <button
@@ -1547,7 +1307,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                             </button>
                                             <button
                                                 onClick={() => { setContentModal(false); setSelectedItem(null); }}
-                                                className="cursor-pointer px-6 py-3 border border-[var(--dash-border)] text-[var(--dash-text-secondary)] font-bold rounded-xl hover:border-[var(--dash-accent)] transition-colors"
+                                                className="cursor-pointer px-6 py-3 border border-neutral-800 text-neutral-400 font-bold rounded-xl hover:border-amber-400 transition-colors"
                                             >
                                                 Close
                                             </button>
@@ -1557,7 +1317,7 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                             <button
                                                 disabled={selectedItem.status !== "draft"}
                                                 onClick={() => handleUpdateStatus(selectedItem, 'under review')}
-                                                className="cursor-pointer flex-1 py-3 bg-[var(--dash-status-approved)] text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity flex justify-center items-center gap-2"
+                                                className="cursor-pointer flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity flex justify-center items-center gap-2"
                                             >
                                                 {selectedItem.status === "draft" && <CheckCircle className="w-5 h-5" />}
                                                 {selectedItem.status === "draft" ? "Submit for Review" : "Already Submitted"}

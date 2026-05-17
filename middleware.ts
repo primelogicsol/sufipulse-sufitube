@@ -6,6 +6,7 @@ const middlewareLogger = logger.middleware;
 
 const PROTECTED_PREFIXES = ['/admin', '/user', '/dashboard'];
 const AUTH_ONLY_PATHS = ['/login', '/register', '/forgot-password'];
+const ADMIN_ROLES = ['admin', 'super_admin', 'governance_admin'];
 
 interface TokenPayload {
   userId?: string;
@@ -96,6 +97,12 @@ export async function middleware(request: NextRequest) {
       return new NextResponse(null, { status: 404 });
     }
 
+    // Redirect old royalties URL to new clean URL
+    if (pathname === '/user/profile/royalties') {
+      const url = new URL('/user/royalties', request.url);
+      return NextResponse.redirect(url);
+    }
+
     const isAdminPath = pathname.startsWith('/admin');
     const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
     const isAuthRoute = AUTH_ONLY_PATHS.includes(pathname);
@@ -113,8 +120,8 @@ export async function middleware(request: NextRequest) {
         return redirectRes;
       }
 
-      // Authenticated but not admin → 403 for /admin routes
-      if (isAdminPath && payload && payload.role !== 'admin') {
+      // Authenticated but not admin → 403 for /admin routes (excluding setup)
+      if (isAdminPath && !pathname.startsWith('/admin/setup') && payload && !ADMIN_ROLES.includes(payload.role || '')) {
         return new NextResponse('Forbidden', { status: 403 });
       }
 
@@ -129,7 +136,7 @@ export async function middleware(request: NextRequest) {
         }
 
         const role = payload.role;
-        const dest = role === 'admin' ? '/admin'
+        const dest = ADMIN_ROLES.includes(role || '') ? '/admin'
           : role === 'writer' ? '/user/writer/dashboard'
           : role === 'vocalist' ? '/user/vocalist/dashboard'
           : role === 'producer' ? '/user/producer/dashboard'
@@ -155,3 +162,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
   ],
 };
+

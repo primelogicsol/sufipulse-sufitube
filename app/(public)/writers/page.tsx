@@ -8,21 +8,11 @@ import { PrimaryButton } from '../../components/primitives/PrimaryButton';
 import { Card } from '../../components/primitives/Card';
 import { roleDisplayMap } from '../../components/lib/roleDisplayMap';
 import { useRef, useState, useEffect } from 'react';
-import { WriterCredentialsForm } from '../../components/writers/WriterCredentialsForm';
+import WriterCredentialsForm from '../../components/writers/WriterCredentialsForm';
 import Link from 'next/link';
 
 export default function Writers() {
   const workflowScrollRef = useRef<HTMLDivElement>(null);
-  const [showApplicationForm, setShowApplicationForm] = useState(false);
-
-  useEffect(() => {
-    if (window.location.hash === '#apply') {
-      setShowApplicationForm(true);
-      setTimeout(() => {
-        document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }
-  }, []);
 
   const scrollWorkflowLeft = () => {
     if (workflowScrollRef.current) {
@@ -123,7 +113,7 @@ export default function Writers() {
         <PageContainer>
           <div className="max-w-6xl mx-auto">
             <div className="mb-12 text-center">
-              <Badge variant="outline" className="mb-4">Institutional Workflow</Badge>
+              <Badge variant="neutral" className="mb-4">Institutional Workflow</Badge>
               <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)]">
                 Production Lifecycle Position
               </h2>
@@ -239,24 +229,11 @@ export default function Writers() {
             </div>
 
             <div className="flex flex-col items-center gap-8">
-              <PrimaryButton 
-                onClick={() => setShowApplicationForm(!showApplicationForm)}
-                className="w-full md:w-auto min-w-[240px]"
-              >
-                {showApplicationForm ? 'Hide Application Form' : 'Apply as Writer'}
-              </PrimaryButton>
-
-              {showApplicationForm && (
-                <Card className="w-full bg-[var(--color-slate)] border-[var(--color-border)] p-8">
-                  <div className="mb-8 border-b border-[var(--color-border)] pb-6">
-                    <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-                      Writer Eligibility & Consideration
-                    </h3>
-                    <p className="text-[var(--color-gold)] font-medium">Ahl-e-Qalam</p>
-                  </div>
-                  <WriterCredentialsForm />
-                </Card>
-              )}
+              <Link href="/writers/apply" className="w-full md:w-auto">
+                <PrimaryButton className="w-full md:w-auto min-w-[240px]">
+                  Apply as Writer
+                </PrimaryButton>
+              </Link>
             </div>
 
             <div className="mt-16 pt-8 border-t border-[var(--color-text-tertiary)]/10 flex flex-col md:flex-row items-center justify-between gap-6">

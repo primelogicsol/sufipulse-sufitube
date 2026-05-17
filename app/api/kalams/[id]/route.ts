@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityGetById, entityUpdate, entityDelete } from '@/lib/entity-storage-server';
+import { sendKalamStatusUpdateEmail } from '@/app/lib/email';
 import { notifySubmitterStatusChange } from '@/lib/send-notification';
 import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
 
@@ -55,21 +56,36 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ? [...(existing.revision_log || []), { note, requestedAt: new Date().toISOString(), requestedBy: authResult.email }]
       : (existing.revision_log || []);
 
-    const updated = entityUpdate('kalams', id, { ...body, reviewed_at: new Date().toISOString(), revision_log: revisionLog });
+    const updated = entityUpdate('kalams', id, { 
+      ...body, 
+      reviewed_at: new Date().toISOString(), 
+      reviewed_by: isAdmin ? authResult.id : undefined,
+      revision_log: revisionLog 
+    });
+
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    
+    const item = updated as any;
     const status = body.status;
-    if (status === 'approved' || status === 'rejected' || status === 'revision_requested') {
-      const item = updated as any;
-      if (item.email) {
-        notifySubmitterStatusChange({
-          to: item.email,
-          name: item.full_name || item.writer_id || item.email,
-          type: 'kalam submission',
-          status,
-          adminNote: note,
-        }).catch((err) => console.error('[notify]', err?.message || err));
-      }
+
+    // Send Status Email (Failsafe)
+    if (isAdmin && status && status !== existing.status) {
+      (async () => {
+        try {
+          console.log(`[Admin Workflow] Sending kalam status email to ${item.email} for status: ${status}`);
+          await sendKalamStatusUpdateEmail(item.email, status, {
+            name: item.full_name || 'Writer',
+            title: item.title,
+            referenceId: item.referenceId || id,
+            adminNote: note
+          });
+          console.log(`[Admin Workflow] Kalam status email sent successfully to ${item.email}`);
+        } catch (err: any) {
+          console.error(`[Admin Workflow] Kalam email failure: ${err.message || err}`);
+        }
+      })();
     }
+
     return NextResponse.json(updated);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

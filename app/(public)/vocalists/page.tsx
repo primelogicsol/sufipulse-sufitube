@@ -123,7 +123,7 @@ export default function Vocalists() {
         <PageContainer>
           <div className="max-w-6xl mx-auto">
             <div className="mb-12 text-center">
-              <Badge variant="outline" className="mb-4">Institutional Workflow</Badge>
+              <Badge variant="neutral" className="mb-4">Institutional Workflow</Badge>
               <h2 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)]">
                 Production Lifecycle Position
               </h2>

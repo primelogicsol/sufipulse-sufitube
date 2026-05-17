@@ -1,6 +1,6 @@
 {
   "name": "sufipulse",
-  "version": "0.1.0",
+  "version": "3.0.0-pro",
   "private": true,
   "engines": {
     "node": ">=20.0.0"

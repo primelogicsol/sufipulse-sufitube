@@ -35,15 +35,29 @@ export async function GET(request: NextRequest) {
     // This is used by the release-detail page for fast CMS lookup
     const lookupKey = key || slug || youtubeId;
     if (lookupKey) {
-      const release = cmsServerStorage.getRelease(lookupKey) || 
-                      cmsServerStorage.getReleaseBySlug(lookupKey) || 
-                      cmsServerStorage.getReleaseByYoutubeId(lookupKey);
-      
-      if (release) {
-        return NextResponse.json(release, { headers: cacheHeaders });
+      // PHASE 1: Contract Hardening - Resolution precedence
+      // 1. Explicit slug lookup
+      if (slug) {
+        const release = cmsServerStorage.getReleaseBySlug(slug);
+        if (release) return NextResponse.json({ ...release, resolution_source: 'cms_slug' }, { headers: cacheHeaders });
       }
-      // If a specific key was requested but not found, we return 404 to avoid 
-      // the client misinterpreting a fall-through list as the requested object.
+      
+      // 2. Explicit youtubeId lookup
+      if (youtubeId) {
+        const release = cmsServerStorage.getReleaseByYoutubeId(youtubeId);
+        if (release) return NextResponse.json({ ...release, resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
+      }
+
+      // 3. Fallback: try key as slug then youtubeId then ID
+      const releaseBySlug = cmsServerStorage.getReleaseBySlug(lookupKey);
+      if (releaseBySlug) return NextResponse.json({ ...releaseBySlug, resolution_source: 'cms_slug' }, { headers: cacheHeaders });
+
+      const releaseByYoutubeId = cmsServerStorage.getReleaseByYoutubeId(lookupKey);
+      if (releaseByYoutubeId) return NextResponse.json({ ...releaseByYoutubeId, resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
+
+      const releaseById = cmsServerStorage.getRelease(lookupKey);
+      if (releaseById) return NextResponse.json({ ...releaseById, resolution_source: 'cms_key' }, { headers: cacheHeaders });
+      
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
 
