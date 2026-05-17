@@ -46,7 +46,7 @@ const LANGUAGES_TAXONOMY = [
 ];
 
 const STYLES_TAXONOMY = [
-  'Classical devotional', 'Qawwali', 'Contemporary devotional', 'Traditional hymnal', 'Sufi melodic', 'World fusion', 'Ghazal singing', 'Hamd/Naat'
+  'Classical Devotional', 'Qawwali', 'Contemporary Devotional', 'Traditional Hymnal', 'Sufi Melodic', 'World Fusion', 'Ghazal Singing', 'Hamd / Naat'
 ];
 
 const VOCAL_RANGES = [
@@ -215,6 +215,11 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
 
       const refId = data.referenceId || '';
       const tkn = data.trackingToken || '';
+      
+      if (!tkn && !ref) {
+        console.warn('[Vocalist Intake] No tracking token returned from API');
+      }
+
       setSubmissionId(refId);
       setTrackingToken(tkn);
       setSubmitted(true);
@@ -354,29 +359,33 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
             </div>
 
             {/* Performance Styles Taxonomy */}
-            <div className="space-y-4">
-              <label className="text-[11px] font-black uppercase tracking-widest text-neutral-400">Performance Styles</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-6 pt-8 border-t border-white/5">
+              <div className="flex items-center gap-2 mb-2">
+                <Music size={16} className="text-amber-400" />
+                <label className="text-[11px] font-black uppercase tracking-widest text-neutral-400">Performance Styles</label>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {STYLES_TAXONOMY.map(style => {
                   const isActive = formData.performance_styles.includes(style);
                   return (
                     <button
                       key={style}
                       onClick={() => handleStyleToggle(style)}
-                      className={`flex items-start text-left p-4 rounded-xl border transition-all duration-300 ${
+                      className={`flex items-center text-left p-3.5 rounded-xl border transition-all duration-500 group ${
                         isActive 
                           ? 'bg-amber-400/5 border-amber-400/30' 
-                          : 'bg-neutral-950/50 border-white/5 hover:border-white/10'
+                          : 'bg-neutral-900/40 border-white/5 hover:border-white/10'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-md border mt-0.5 flex items-center justify-center transition-all shrink-0 ${
-                        isActive ? 'bg-amber-400 border-amber-400' : 'border-neutral-800'
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 ${
+                        isActive ? 'bg-amber-400 border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : 'border-neutral-800 bg-[#0a0a0a]'
                       }`}>
                         {isActive && <Check size={12} className="text-black stroke-[4]" />}
                       </div>
-                      <div className="ml-4">
-                        <p className={`text-xs font-bold uppercase tracking-widest ${isActive ? 'text-white' : 'text-neutral-500'}`}>{style}</p>
-                      </div>
+                      <span className={`ml-4 text-[11px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-400'}`}>
+                        {style}
+                      </span>
                     </button>
                   );
                 })}
