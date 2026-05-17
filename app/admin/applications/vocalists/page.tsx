@@ -2,7 +2,20 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 // import { supabase } from '../lib/supabase';
-import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, CircleAlert as AlertCircle, RefreshCw, FileText } from 'lucide-react';
+import { 
+    CircleCheck as CheckCircle, 
+    Circle as XCircle, 
+    Clock, 
+    Eye, 
+    User, 
+    CircleAlert as AlertCircle, 
+    RefreshCw, 
+    FileText,
+    Mic,
+    Search,
+    Video,
+    XCircle as CloseIcon
+} from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { VocalistProfileType } from '@/app/types/vocalist.types';
 
@@ -414,10 +427,6 @@ export default function AdminVocalistApplications() {
                         </div>
                     </div>
                 )}
-            </div>
-        </DashboardLayout>
-    );
-}
             </div>
         </DashboardLayout>
     );
