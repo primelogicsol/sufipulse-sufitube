@@ -32,7 +32,10 @@ function VocalistApplyContent() {
   }, [ref, token]);
 
   const handleSuccess = (submissionId: string, token: string) => {
-    router.push(`/vocalists/submitted?ref=${submissionId}&token=${token}`);
+    const url = token 
+      ? `/vocalists/submitted?ref=${submissionId}&token=${token}` 
+      : `/vocalists/submitted?ref=${submissionId}`;
+    router.push(url);
   };
 
   if (loading) {

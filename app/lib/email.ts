@@ -25,6 +25,11 @@ type EmailTemplate =
   | 'writer-status-revision-requested'
   | 'writer-status-approved'
   | 'writer-status-archived'
+  | 'vocalist-submission-confirmation'
+  | 'vocalist-status-under-review'
+  | 'vocalist-status-revision-requested'
+  | 'vocalist-status-approved'
+  | 'vocalist-status-archived'
   | 'kalam-status-under-review'
   | 'kalam-status-revision-requested'
   | 'kalam-status-approved'
@@ -407,20 +412,126 @@ const templates: Record<EmailTemplate, (data: any) => { subject: string; html: s
     `,
   }),
 
-  'writer-status-archived': ({ name, referenceId }) => ({
+  'vocalist-submission-confirmation': ({ name, referenceId, trackingToken }) => ({
+    subject: 'SufiPulse Vocalist Intake Submission Received',
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(200, 167, 94, 0.2);">
+        <div style="margin-bottom: 32px;">
+          <img src="https://sufipulse.com/sufipulse-logo-v5.png" alt="SufiPulse" style="height: 48px;" />
+        </div>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your vocalist profile and performance samples have been formally received by the SufiPulse editorial and production board under the Ahl-e-Sada intake framework.
+        </p>
+        <div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Submission Reference</p>
+            <p style="font-family: monospace; font-size: 18px; color: #C8A75E; margin: 0;">${referenceId}</p>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Current Status</p>
+            <p style="font-size: 16px; font-weight: 600; margin: 0;">Pending Performance Screening</p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 32px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/applications/${referenceId}?token=${trackingToken}" style="display: inline-block; background-color: #C8A75E; color: #0F172A; padding: 14px 32px; border-radius: 8px; font-weight: bold; text-decoration: none; text-transform: uppercase; font-size: 12px; letter-spacing: 0.1em;">
+            Track Application Progress
+          </a>
+        </div>
+
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          Please note that submission acknowledgment does not constitute vocal approval, kalam assignment, recording authorization, or release clearance.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Performance Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'vocalist-status-under-review': ({ name, referenceId }) => ({
+    subject: `SufiPulse Submission Update: Performance Screening [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your submission (Ref: ${referenceId}) has moved into the **Performance Screening** phase.
+        </p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Our production board is currently evaluating your vocal range and technical capability for alignment with the SufiPulse institutional framework.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Performance Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'vocalist-status-revision-requested': ({ name, referenceId, adminNote }) => ({
+    subject: `SufiPulse Submission Update: Revision Requested [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          The production board has requested revisions or additional samples for your submission (Ref: ${referenceId}).
+        </p>
+        <div style="background-color: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <p style="font-size: 12px; color: #F59E0B; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Technical Feedback</p>
+          <p style="font-size: 15px; line-height: 1.6; margin: 0;">${adminNote || 'Please log in to your dashboard to view specific revision requirements.'}</p>
+        </div>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Please log in to your dashboard to update your profile or provide additional samples according to the feedback above.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Performance Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'vocalist-status-approved': ({ name, referenceId }) => ({
+    subject: `SufiPulse Submission Approved: Welcome to Ahl-e-Sada [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          We are pleased to inform you that your submission (Ref: ${referenceId}) has been **Approved**.
+        </p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          You are now formally recognized as an Ahl-e-Sada within the SufiPulse institutional registry. Your dashboard access is now active.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          **Institutional Notice:** This approval confirms your eligibility for kalam assignment within the SufiPulse ecosystem. It does not constitute recording authorization or publication clearance for any specific work.
+        </p>
+        <div style="text-align: center; margin-top: 32px; margin-bottom: 32px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="background-color: #C8A75E; color: #0F172A; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Access Dashboard</a>
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Performance Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  'vocalist-status-archived': ({ name, referenceId }) => ({
     subject: `SufiPulse Submission Update: Registry Status [${referenceId}]`,
     html: `
       <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);">
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-          Thank you for your interest in the Ahl-e-Qalam framework.
+          Thank you for your interest in the Ahl-e-Sada framework.
         </p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-          After careful editorial review, we have decided not to move forward with your submission (Ref: ${referenceId}) at this time. Your profile has been archived within our registry.
+          After careful review, we have decided not to move forward with your submission (Ref: ${referenceId}) at this time. Your profile has been archived within our registry.
         </p>
         <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
           <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
-          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Performance Coordination</p>
         </div>
       </div>
     `,
@@ -669,6 +780,36 @@ export const sendWriterStatusUpdateEmail = async (to: string, status: string, da
     case 'archived':
     case 'archived_not_advanced':
       templateKey = 'writer-status-archived';
+      break;
+    default:
+      return;
+  }
+  const { subject, html } = templates[templateKey](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendVocalistSubmissionConfirmationEmail = async (to: string, data: { name: string; referenceId: string; trackingToken: string }): Promise<void> => {
+  const { subject, html } = templates['vocalist-submission-confirmation'](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendVocalistStatusUpdateEmail = async (to: string, status: string, data: { name: string; referenceId: string; adminNote?: string }): Promise<void> => {
+  let templateKey: EmailTemplate;
+  switch (status) {
+    case 'under_review':
+    case 'performance_screening':
+      templateKey = 'vocalist-status-under-review';
+      break;
+    case 'revision_requested':
+      templateKey = 'vocalist-status-revision-requested';
+      break;
+    case 'approved':
+    case 'approved_as_vocalist':
+      templateKey = 'vocalist-status-approved';
+      break;
+    case 'rejected':
+    case 'archived':
+      templateKey = 'vocalist-status-archived';
       break;
     default:
       return;

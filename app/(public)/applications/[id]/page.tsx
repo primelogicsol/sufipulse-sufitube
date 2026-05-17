@@ -26,7 +26,8 @@ function ApplicationStatusContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const id = params?.id as string;
-  const token = searchParams?.get('token');
+  const rawToken = searchParams?.get('token');
+  const token = rawToken === 'null' ? null : rawToken;
   const [app, setApp] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

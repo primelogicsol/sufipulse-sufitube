@@ -239,24 +239,11 @@ export default function Vocalists() {
             </div>
 
             <div className="flex flex-col items-center gap-8">
-              <PrimaryButton 
-                onClick={() => setShowApplicationForm(!showApplicationForm)}
-                className="w-full md:w-auto min-w-[240px]"
-              >
-                {showApplicationForm ? 'Hide Application Form' : 'Apply as Vocalist'}
-              </PrimaryButton>
-
-              {showApplicationForm && (
-                <Card className="w-full bg-[var(--color-slate)] border-[var(--color-border)] p-8">
-                  <div className="mb-8 border-b border-[var(--color-border)] pb-6">
-                    <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-                      Vocalist Eligibility & Consideration
-                    </h3>
-                    <p className="text-[var(--color-gold)] font-medium">Ahl-e-Sada</p>
-                  </div>
-                  <VocalistCredentialsForm />
-                </Card>
-              )}
+              <Link href="/vocalists/apply" className="w-full md:w-auto">
+                <PrimaryButton className="w-full md:w-auto min-w-[240px]">
+                  Apply as Vocalist
+                </PrimaryButton>
+              </Link>
             </div>
 
             <div className="mt-16 pt-8 border-t border-[var(--color-text-tertiary)]/10 flex flex-col md:flex-row items-center justify-between gap-6">

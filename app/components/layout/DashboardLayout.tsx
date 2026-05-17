@@ -128,7 +128,8 @@ const vocalistNavigation = [
     title: 'Ahl-e-Sada',
     links: [
       { path: '/user/vocalist/dashboard', label: 'Vocalist Dashboard', icon: LayoutDashboard },
-      { path: '/user/vocalist/dashboard?tab=submit', label: 'Submit Sada', icon: Mic },
+      { path: '/user/vocalist/dashboard?tab=assignments', label: 'My Assignments', icon: Music },
+      { path: '/user/vocalist/dashboard?tab=performances', label: 'Production History', icon: History },
     ],
   },
   {
@@ -249,23 +250,41 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [user]);
 
-  // Check writer approval status if user is a writer and not an admin
+  // General Contributor Approval Check
   useEffect(() => {
-    if (user && user.role === 'writer' && !ADMIN_ROLES.includes(user.role)) {
-      fetch('/api/writers')
-        .then(res => res.json())
-        .then(data => {
-          const profile = Array.isArray(data) ? data.find((p: any) => p.user_id === user.id) : null;
-          if (profile) {
-            setWriterApproved(profile.profile_status === 'approved' || profile.profile_status === 'approved_as_writer');
-          } else {
-            setWriterApproved(false);
-          }
-        })
-        .catch(() => setWriterApproved(false));
-    } else {
-      setWriterApproved(true); 
+    if (!user || ADMIN_ROLES.includes(user.role)) {
+      setProfileApproved(true);
+      return;
     }
+
+    const checkApproval = async () => {
+      try {
+        const endpoint = user.role === 'writer' ? '/api/writers' : 
+                         user.role === 'vocalist' ? '/api/vocalists' : null;
+        
+        if (!endpoint) {
+          setProfileApproved(true);
+          return;
+        }
+
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        const profile = Array.isArray(data) ? data.find((p: any) => p.user_id === user.id || p.email === user.email) : null;
+        
+        if (profile) {
+          const isApproved = profile.profile_status === 'approved' || 
+                            profile.profile_status === 'approved_as_writer' ||
+                            profile.profile_status === 'approved_as_vocalist';
+          setProfileApproved(isApproved);
+        } else {
+          setProfileApproved(false);
+        }
+      } catch {
+        setProfileApproved(false);
+      }
+    };
+
+    checkApproval();
   }, [user]);
 
   // Close dropdown when clicking outside
@@ -286,18 +305,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push('/');
   };
 
-  // Restricted view for unapproved writers
-  if (user && user.role === 'writer' && writerApproved === false && pathname?.startsWith('/user/writer/dashboard')) {
+  // Restricted view for unapproved contributors
+  const isContributorRoute = pathname?.startsWith('/user/writer/dashboard') || pathname?.startsWith('/user/vocalist/dashboard');
+  if (user && (user.role === 'writer' || user.role === 'vocalist') && profileApproved === false && isContributorRoute) {
+    const roleType = user.role === 'writer' ? 'Ahl-e-Qalam' : 'Ahl-e-Sada';
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-[#111] border border-amber-400/20 rounded-2xl p-8 text-center shadow-2xl">
           <div className="w-16 h-16 bg-amber-400/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <ShieldCheck className="w-8 h-8 text-amber-400" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-4">Editorial Approval Pending</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Registry Admission Pending</h2>
           <p className="text-neutral-400 text-sm leading-relaxed mb-8">
-            Your Ahl-e-Qalam profile is currently under editorial review. 
-            Full dashboard access activates automatically upon institutional authorization.
+            Your {roleType} profile is currently under institutional review. 
+            Full dashboard access activates automatically upon formal authorization.
           </p>
           <div className="space-y-3">
             <Link href="/" className="block w-full py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-lg transition-colors border border-white/10">

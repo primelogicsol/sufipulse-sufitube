@@ -31,7 +31,10 @@ function WriterApplyContent() {
   }, [ref, token]);
 
   const handleSuccess = (submissionId: string, token: string) => {
-    router.push(`/writers/submitted?ref=${submissionId}&token=${token}`);
+    const url = token 
+      ? `/writers/submitted?ref=${submissionId}&token=${token}` 
+      : `/writers/submitted?ref=${submissionId}`;
+    router.push(url);
   };
 
   if (loading) {
