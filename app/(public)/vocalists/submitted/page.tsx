@@ -35,7 +35,7 @@ function SubmittedContent() {
               <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-2">Registry Reference ID</p>
               <p className="text-2xl font-mono text-amber-400 font-bold tracking-widest">{ref || 'SP-VOC-2026-XXXX'}</p>
             </div>
-            <Link href={`/applications/${ref}?token=${token}`}>
+            <Link href={token ? `/applications/${ref}?token=${token}` : `/applications/${ref}`}>
               <button className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all border border-white/10 flex items-center gap-3 group uppercase text-[10px] font-black tracking-widest">
                 Access Tracking Portal
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />

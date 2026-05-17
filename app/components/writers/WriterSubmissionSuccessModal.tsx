@@ -148,7 +148,12 @@ export function WriterSubmissionSuccessModal({ onClose, submissionId, trackingTo
           </button>
           
           <button
-            onClick={() => router.push(`/applications/${submissionId}?token=${trackingToken}`)}
+            onClick={() => {
+              const url = trackingToken 
+                ? `/applications/${submissionId}?token=${trackingToken}` 
+                : `/applications/${submissionId}`;
+              router.push(url);
+            }}
             className="flex-1 px-6 py-3.5 bg-white/5 text-[var(--color-text-primary)] font-bold rounded-lg hover:bg-white/10 transition-all duration-200 flex items-center justify-center gap-2 group text-sm uppercase tracking-wider border border-white/10"
           >
             <Clock className="w-4 h-4 text-[#D4AF37]" />
