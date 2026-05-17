@@ -25,10 +25,11 @@ import {
   Youtube,
   ShieldCheck,
   Settings,
-  User,
+  User as UserIcon,
   History,
   PenTool,
-  MessageSquare
+  MessageSquare,
+  Music2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -40,6 +41,7 @@ import {
   markAdminNotificationRead,
   markAllAdminNotificationsRead,
 } from '../../lib/notifications';
+import { CONTRIBUTOR_ROLES } from '@/app/lib/role-access';
 
 
 interface DashboardLayoutProps {
@@ -117,7 +119,7 @@ const writerNavigation = [
   {
     title: 'Account',
     links: [
-      { path: '/user/profile', label: 'My Profile', icon: User },
+      { path: '/user/profile', label: 'My Profile', icon: UserIcon },
       { path: '/user/royalties', label: 'Royalties & Stats', icon: DollarSign },
     ],
   },
@@ -135,7 +137,7 @@ const vocalistNavigation = [
   {
     title: 'Account',
     links: [
-      { path: '/user/profile', label: 'My Profile', icon: User },
+      { path: '/user/profile', label: 'My Profile', icon: UserIcon },
       { path: '/user/royalties', label: 'Royalties & Stats', icon: DollarSign },
     ],
   },
@@ -146,12 +148,14 @@ const producerNavigation = [
     title: 'Ahl-e-Naghma',
     links: [
       { path: '/user/producer/dashboard', label: 'Producer Dashboard', icon: LayoutDashboard },
+      { path: '/user/producer/dashboard?tab=assignments', label: 'Curated Assignments', icon: Music2 },
+      { path: '/user/producer/dashboard?tab=performances', label: 'Production History', icon: History },
     ],
   },
   {
     title: 'Account',
     links: [
-      { path: '/user/profile', label: 'My Profile', icon: User },
+      { path: '/user/profile', label: 'My Profile', icon: UserIcon },
       { path: '/user/royalties', label: 'Royalties & Stats', icon: DollarSign },
     ],
   },
@@ -167,7 +171,7 @@ const literaryNavigation = [
   {
     title: 'Account',
     links: [
-      { path: '/user/profile', label: 'My Profile', icon: User },
+      { path: '/user/profile', label: 'My Profile', icon: UserIcon },
       { path: '/user/royalties', label: 'Royalties & Stats', icon: DollarSign },
     ],
   },
@@ -183,7 +187,7 @@ const studioNavigation = [
   {
     title: 'Account',
     links: [
-      { path: '/user/profile', label: 'My Profile', icon: User },
+      { path: '/user/profile', label: 'My Profile', icon: UserIcon },
       { path: '/user/royalties', label: 'Royalties & Stats', icon: DollarSign },
     ],
   },
@@ -203,7 +207,7 @@ const getNavigationForRole = (role: string) => {
     {
       title: 'Account',
       links: [
-        { path: '/user/profile', label: 'My Profile', icon: User },
+        { path: '/user/profile', label: 'My Profile', icon: UserIcon },
         { path: '/user/royalties', label: 'Royalties & Stats', icon: DollarSign },
       ],
     },
@@ -230,7 +234,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const [adminNotifications, setAdminNotifications] = useState<AdminNotification[]>([]);
   const [bellOpen, setBellOpen] = useState(false);
-  const [writerApproved, setWriterApproved] = useState<boolean | null>(null);
+  const [profileApproved, setProfileApproved] = useState<boolean | null>(null);
   const bellRef = useRef<HTMLDivElement>(null);
 
   const navigationSections = getNavigationForRole(user?.role || '');
@@ -260,7 +264,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const checkApproval = async () => {
       try {
         const endpoint = user.role === 'writer' ? '/api/writers' : 
-                         user.role === 'vocalist' ? '/api/vocalists' : null;
+                         user.role === 'vocalist' ? '/api/vocalists' :
+                         user.role === 'producer' ? '/api/producers' : null;
         
         if (!endpoint) {
           setProfileApproved(true);
@@ -274,7 +279,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         if (profile) {
           const isApproved = profile.profile_status === 'approved' || 
                             profile.profile_status === 'approved_as_writer' ||
-                            profile.profile_status === 'approved_as_vocalist';
+                            profile.profile_status === 'approved_as_vocalist' ||
+                            profile.profile_status === 'approved_as_producer';
           setProfileApproved(isApproved);
         } else {
           setProfileApproved(false);
@@ -306,9 +312,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   // Restricted view for unapproved contributors
-  const isContributorRoute = pathname?.startsWith('/user/writer/dashboard') || pathname?.startsWith('/user/vocalist/dashboard');
-  if (user && (user.role === 'writer' || user.role === 'vocalist') && profileApproved === false && isContributorRoute) {
-    const roleType = user.role === 'writer' ? 'Ahl-e-Qalam' : 'Ahl-e-Sada';
+  const isContributorRoute = pathname?.startsWith('/user/writer/dashboard') || 
+                            pathname?.startsWith('/user/vocalist/dashboard') ||
+                            pathname?.startsWith('/user/producer/dashboard');
+  
+  if (user && (CONTRIBUTOR_ROLES.includes(user.role as any)) && profileApproved === false && isContributorRoute) {
+    const roleType = user.role === 'writer' ? 'Ahl-e-Qalam' : 
+                     user.role === 'vocalist' ? 'Ahl-e-Sada' : 
+                     user.role === 'producer' ? 'Ahl-e-Naghma' :
+                     user.role === 'literary' ? 'Ahl-e-Tahreer' :
+                     user.role === 'studio' ? 'Karkhana-e-Sada' : 'Contributor';
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-[#111] border border-amber-400/20 rounded-2xl p-8 text-center shadow-2xl">
@@ -363,7 +376,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {ADMIN_ROLES.includes(user?.role || '') ? (
               <Shield className="w-4 h-4 text-[var(--dash-accent)]" />
             ) : (
-              <User className="w-4 h-4 text-[var(--dash-accent)]" />
+              <UserIcon className="w-4 h-4 text-[var(--dash-accent)]" />
             )}
             <div>
               <p className="text-xs font-semibold text-[var(--dash-text-primary)]">
