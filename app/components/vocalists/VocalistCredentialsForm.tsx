@@ -365,28 +365,29 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
                 <label className="text-[11px] font-black uppercase tracking-widest text-neutral-400">Performance Styles</label>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full" data-v="vocal-styles-v3">
                 {STYLES_TAXONOMY.map(style => {
                   const isActive = formData.performance_styles.includes(style);
                   return (
-                    <label
+                    <div
                       key={style}
-                      className={`flex w-full min-h-[72px] items-center justify-start gap-4 rounded-xl border px-6 py-5 cursor-pointer transition-all duration-500 ${
+                      onClick={() => handleStyleToggle(style)}
+                      className={`flex w-full min-h-[72px] items-center justify-start gap-4 rounded-xl border px-6 py-5 cursor-pointer transition-all duration-500 bg-black/30 border-white/10 hover:border-white/20 ${
                         isActive 
-                          ? 'bg-amber-400/10 border-amber-400/30' 
-                          : 'bg-black/30 border-white/10 hover:border-white/20'
+                          ? '!bg-amber-400/10 !border-amber-400/30' 
+                          : ''
                       }`}
                     >
                       <input 
                         type="checkbox"
                         checked={isActive}
-                        onChange={() => handleStyleToggle(style)}
-                        className="h-5 w-5 shrink-0 accent-amber-400"
+                        readOnly
+                        className="h-5 w-5 shrink-0 accent-amber-400 pointer-events-none"
                       />
-                      <span className={`text-left text-sm font-semibold uppercase tracking-[0.18em] transition-colors ${isActive ? 'text-amber-400' : 'text-white/75'}`}>
+                      <span className={`text-left text-sm font-semibold uppercase tracking-[0.18em] transition-colors pointer-events-none ${isActive ? 'text-amber-400' : 'text-white/75'}`}>
                         {style}
                       </span>
-                    </label>
+                    </div>
                   );
                 })}
               </div>
