@@ -1,4 +1,4 @@
-import { type CMSRelease } from './cms-storage';
+import { type CMSRelease, getDefaultDistribution } from './cms-storage';
 import { cmsServerStorage } from './cms-storage-server';
 
 export const slugify = (value: string): string => {
@@ -109,6 +109,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     enableSponsors: !!existing?.enableSponsors,
     enableAdoption: existing?.enableAdoption !== false,
     enableCredits: existing?.enableCredits !== false,
+    distribution: existing?.distribution || getDefaultDistribution(),
   } as CMSRelease;
 };
 
@@ -143,5 +144,6 @@ export const mapPlaylistToRelease = (playlist: any, existing?: CMSRelease | null
         enableSponsors: !!existing?.enableSponsors,
         enableAdoption: existing?.enableAdoption !== false,
         enableCredits: existing?.enableCredits !== false,
+        distribution: existing?.distribution || getDefaultDistribution(),
     } as CMSRelease;
 };

@@ -36,7 +36,8 @@ const Login = () => {
                 router.push(returnTo);
                 return;
             }
-            if (user.role === 'admin') {
+            const ADMIN_ROLES = ['admin', 'administrator', 'super_admin', 'governance_admin'];
+            if (ADMIN_ROLES.includes(user.role)) {
                 router.push('/admin');
             } else if (user.role === 'writer') {
                 router.push('/user/writer/dashboard');

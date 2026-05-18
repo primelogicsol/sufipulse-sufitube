@@ -3,17 +3,19 @@ import { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Mail, MapPin, Globe, Send, CheckCircle } from 'lucide-react';
+import { Mail, MapPin, Globe, Send, CheckCircle, User, MessageSquare, Info, Shield, HelpCircle, Loader as Loader2, ArrowRight, Tag } from 'lucide-react';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { contactFormSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeObject } from '../../lib/sanitize';
+import { IconInput } from '../../components/ui/IconInput';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
 export default function Contact() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         subject: '',
-        customSubject: '',
+        category: 'general_inquiry',
         message: ''
     });
 
@@ -23,17 +25,43 @@ export default function Contact() {
     const [fieldErrors, setFieldErrors] = useState<any>({});
     const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
 
-    const subjectOptions = [
-        'General Inquiry',
-        'Partnership Opportunity',
-        'Writer Application',
-        'Vocalist Application',
-        'Producer Application',
-        'Studio Application',
-        'Kalam Submission',
-        'Technical Support',
-        'Royalty Inquiry',
-        'Custom'
+    const categoryOptions = [
+        { value: 'general_inquiry', label: 'General Inquiry' },
+        { value: 'contributor_inquiry', label: 'Contributor Inquiry' },
+        { value: 'studio_coordination', label: 'Studio Coordination' },
+        { value: 'partnership', label: 'Partnership Opportunity' },
+        { value: 'technical_support', label: 'Technical Support' },
+        { value: 'governance', label: 'Governance / Charter' },
+        { value: 'media_press', label: 'Media / Press' },
+        { value: 'institutional_collaboration', label: 'Institutional Collaboration' },
+        { value: 'other', label: 'Other' }
+    ];
+
+    const specializedChannels = [
+        {
+            icon: Mail,
+            title: 'Editorial & Content',
+            description: 'Kalam submissions, thematic inquiries, and linguistic guidance.',
+            email: 'editorial@sufipulse.com'
+        },
+        {
+            icon: Mail,
+            title: 'Contributor Applications',
+            description: 'Writer, vocalist, producer, and studio credential applications.',
+            email: 'applications@sufipulse.com'
+        },
+        {
+            icon: Mail,
+            title: 'Production Support',
+            description: 'Studio coordination, session scheduling, and technical specs.',
+            email: 'production@sufipulse.com'
+        },
+        {
+            icon: Mail,
+            title: 'Economic & Registry',
+            description: 'Royalty inquiries, documentation, and payout verification.',
+            email: 'registry@sufipulse.com'
+        }
     ];
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -48,11 +76,11 @@ export default function Contact() {
             return;
         }
 
-        const finalSubject = formData.subject === 'Custom' ? formData.customSubject : formData.subject;
         const payloadToValidate = {
             name: formData.name,
             email: formData.email,
-            subject: finalSubject,
+            subject: formData.subject,
+            category: formData.category,
             message: formData.message
         };
 
@@ -73,6 +101,7 @@ export default function Contact() {
                 name: 'text',
                 email: 'email',
                 subject: 'text',
+                category: 'text',
                 message: 'text'
             });
 
@@ -83,10 +112,10 @@ export default function Contact() {
             });
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'Failed to send message.');
+                throw new Error(errData.error || 'Failed to transmit inquiry.');
             }
             setSubmitted(true);
-            setFormData({ name: '', email: '', subject: '', customSubject: '', message: '' });
+            setFormData({ name: '', email: '', subject: '', category: 'general_inquiry', message: '' });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.');
         } finally {
@@ -96,447 +125,340 @@ export default function Contact() {
 
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
+            <StudioHero 
+                badge="Communication"
+                title="Contact"
+                mysticalName="Institutional Communication Channels"
+                description="SufiPulse operates through structured communication protocols aligned with institutional governance and charter authority."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Contact
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            Institutional Communication Channels
+                    <div className="max-w-4xl mx-auto text-center mb-16">
+                        <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">Institutional Message Intake</h2>
+                        <p className="text-neutral-400 text-lg leading-relaxed font-light">
+                            All formal correspondence is logged and processed according to the SufiPulse Standard Response Protocol.
                         </p>
-
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                SufiPulse operates through structured communication protocols aligned with institutional governance and charter authority.
-                            </p>
-                        </div>
                     </div>
-                </PageContainer>
-            </Section>
 
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Send Us a Message
-                        </h2>
+                    <div className="max-w-5xl mx-auto">
+                        <div className="elite-card overflow-hidden shadow-2xl">
+                            <div className="border-b border-white/5 px-8 py-8 bg-white/[0.02]">
+                                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Inquiry Submission</h3>
+                                <p className="text-[10px] text-amber-400 font-black uppercase tracking-[0.3em]">Institutional Service Pipeline</p>
+                            </div>
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
                             {submitted ? (
-                                <div className="text-center py-8">
-                                    <div className="flex justify-center mb-4">
-                                        <div className="w-16 h-16 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                                            <CheckCircle className="w-8 h-8 text-amber-400" strokeWidth={1.5} />
-                                        </div>
+                                <div className="p-16 text-center animate-in fade-in zoom-in duration-700">
+                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(16,185,129,0.1)]">
+                                        <CheckCircle className="w-10 h-10 text-emerald-500 stroke-[2.5]" />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-white mb-2">Message Sent Successfully</h3>
-                                    <p className="text-neutral-300 text-sm mb-2 max-w-md mx-auto">
-                                        Your message has been received. Our institutional team will respond within the Standard Response Protocol timeframe.
+                                    <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">Inquiry Submitted</h3>
+                                    <p className="text-amber-400/80 text-[10px] font-black uppercase tracking-[0.3em] mb-6">Institutional Service Pipeline</p>
+                                    <p className="text-neutral-400 text-base leading-relaxed mb-10 max-w-lg mx-auto font-light">
+                                        Your inquiry has been received and entered into the institutional response workflow. Relevant teams may review, classify, and coordinate responses based on the nature of the request.
                                     </p>
-                                    <p className="text-neutral-400 text-xs mb-6">General inquiries: 3–5 business days</p>
                                     <button
                                         onClick={() => setSubmitted(false)}
-                                        className="text-amber-400 hover:text-amber-300 text-sm underline transition-colors"
+                                        className="px-10 py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
                                     >
-                                        Send another message
+                                        Send Another Message
                                     </button>
                                 </div>
                             ) : (
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <input
-                                    type="text"
-                                    name="_bot_check"
-                                    value={botCheck}
-                                    onChange={(e) => setBotCheck(e.target.value)}
-                                    style={{ display: 'none' }}
-                                    tabIndex={-1}
-                                    autoComplete="off"
-                                />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
-                                            Your Name <span className="text-amber-400">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="name"
-                                            required
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            placeholder="Enter your full name"
-                                            className={`w-full px-4 py-3 bg-neutral-950/50 border ${fieldErrors.name ? 'border-red-500' : 'border-neutral-700'} rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors`}
-                                        />
-                                        {fieldErrors.name && <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>}
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
-                                            Email Address <span className="text-amber-400">*</span>
-                                        </label>
-                                        <input
-                                            type="email"
-                                            id="email"
-                                            required
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            placeholder="your.email@example.com"
-                                            className={`w-full px-4 py-3 bg-neutral-950/50 border ${fieldErrors.email ? 'border-red-500' : 'border-neutral-700'} rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors`}
-                                        />
-                                        {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="subject" className="block text-sm font-medium text-white mb-2">
-                                        Subject <span className="text-amber-400">*</span>
-                                    </label>
-                                    <select
-                                        id="subject"
-                                        required
-                                        value={formData.subject}
-                                        onChange={(e) => setFormData({ ...formData, subject: e.target.value, customSubject: '' })}
-                                        className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-amber-400/50 transition-colors appearance-none cursor-pointer [&>option]:bg-neutral-900 [&>option]:text-white [&>option:checked]:bg-amber-400/20"
-                                        style={{
-                                            colorScheme: 'dark'
-                                        }}
-                                    >
-                                        <option value="" disabled className="text-neutral-400">Select a subject</option>
-                                        {subjectOptions.map((option) => (
-                                            <option key={option} value={option} className="bg-neutral-900 text-white hover:bg-neutral-800">
-                                                {option}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {fieldErrors.subject && <p className="text-red-500 text-xs mt-1">{fieldErrors.subject}</p>}
-                                </div>
-
-                                {formData.subject === 'Custom' && (
-                                    <div>
-                                        <label htmlFor="customSubject" className="block text-sm font-medium text-white mb-2">
-                                            Custom Subject <span className="text-amber-400">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="customSubject"
-                                            required
-                                            value={formData.customSubject}
-                                            onChange={(e) => setFormData({ ...formData, customSubject: e.target.value })}
-                                            placeholder="What is your inquiry about?"
-                                            className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-700 rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors"
-                                        />
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
-                                        Message <span className="text-amber-400">*</span>
-                                    </label>
-                                    <textarea
-                                        id="message"
-                                        required
-                                        value={formData.message}
-                                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                        placeholder="Please share your message, questions, or how we can assist you..."
-                                        rows={6}
-                                        className={`w-full px-4 py-3 bg-neutral-950/50 border ${fieldErrors.message ? 'border-red-500' : 'border-neutral-700'} rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber-400/50 transition-colors resize-y`}
+                                <form onSubmit={handleSubmit} className="p-10 md:p-16 space-y-12">
+                                    <input
+                                        type="text"
+                                        name="_bot_check"
+                                        value={botCheck}
+                                        onChange={(e) => setBotCheck(e.target.value)}
+                                        style={{ display: 'none' }}
+                                        tabIndex={-1}
+                                        autoComplete="off"
                                     />
-                                    {fieldErrors.message && <p className="text-red-500 text-xs mt-1">{fieldErrors.message}</p>}
-                                </div>
 
-                                <div className="flex justify-end">
-                                    <button
-                                        type="submit"
-                                        disabled={submitting}
-                                        className="flex items-center gap-2 px-8 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <Send size={18} />
-                                        {submitting ? 'Sending…' : 'Send Message'}
-                                    </button>
-                                </div>
+                                    <div className="grid md:grid-cols-2 gap-8">
+                                        <IconInput icon={User} label="Your Name" error={fieldErrors.name}>
+                                            <input
+                                                type="text"
+                                                id="name"
+                                                required
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                placeholder="Enter your full name"
+                                                className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                            />
+                                        </IconInput>
 
-                                {error && (
-                                    <div className="bg-red-950/30 border border-red-800/50 text-red-400 px-4 py-3 rounded text-sm">
-                                        {error}
+                                        <IconInput icon={Mail} label="Email Address" error={fieldErrors.email}>
+                                            <input
+                                                type="email"
+                                                id="email"
+                                                required
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                placeholder="your.email@example.com"
+                                                className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                            />
+                                        </IconInput>
                                     </div>
-                                )}
-                            </form>
+
+                                    <div className="space-y-8">
+                                        <div className="grid md:grid-cols-2 gap-8">
+                                            <IconInput icon={Tag} label="Inquiry Category" error={fieldErrors.category} rightIcon>
+                                                <select
+                                                    id="category"
+                                                    required
+                                                    value={formData.category}
+                                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                                    className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
+                                                >
+                                                    {categoryOptions.map((option) => (
+                                                        <option key={option.value} value={option.value} className="bg-neutral-900">{option.label}</option>
+                                                    ))}
+                                                </select>
+                                            </IconInput>
+
+                                            <IconInput icon={Info} label="Subject" error={fieldErrors.subject}>
+                                                <input
+                                                    type="text"
+                                                    id="subject"
+                                                    required
+                                                    value={formData.subject}
+                                                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                                    placeholder="Brief description"
+                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                />
+                                            </IconInput>
+                                        </div>
+
+                                        <div className="space-y-2 group">
+                                            <label htmlFor="message" className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">
+                                                Detailed Message <span className="text-amber-400">*</span>
+                                            </label>
+                                            <textarea
+                                                id="message"
+                                                required
+                                                value={formData.message}
+                                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                                placeholder="Please share your message, questions, or how we can assist you..."
+                                                rows={6}
+                                                className={`w-full h-48 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none ${fieldErrors.message ? 'border-red-500' : ''}`}
+                                            />
+                                            {fieldErrors.message && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1 ml-1">{fieldErrors.message}</p>}
+                                        </div>
+                                    </div>
+
+                                    {error && (
+                                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6 text-red-400 text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
+                                            {error}
+                                        </div>
+                                    )}
+
+                                    <div className="pt-6">
+                                        <button
+                                            type="submit"
+                                            disabled={submitting}
+                                            className="w-full py-8 bg-linear-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
+                                        >
+                                            {submitting ? <Loader2 className="w-6 h-6 animate-spin text-black" /> : <Send size={24} className="group-hover:scale-110 transition-transform" />}
+                                            {submitting ? 'Transmitting Message...' : 'Send Message'}
+                                        </button>
+                                    </div>
+                                </form>
                             )}
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Direct Contact
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Direct Correspondence"
+                            subtitle="Primary contact points for general and institutional inquiries"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="mt-1">
-                                        <Mail className="text-amber-400/70" size={20} />
+                        <div className="elite-card p-10 md:p-12 mb-12 shadow-2xl relative overflow-hidden group">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                                <div className="flex items-start gap-6">
+                                    <div className="p-4 bg-amber-400/5 rounded-2xl border border-amber-400/10 group-hover:border-amber-400/30 transition-all">
+                                        <Mail className="w-8 h-8 text-amber-400" />
                                     </div>
                                     <div>
-                                        <p className="text-white font-medium text-sm mb-1">
-                                            Primary Contact
-                                        </p>
-                                        <a
-                                            href="mailto:info@sufipulse.com"
-                                            className="text-amber-400/90 text-sm hover:text-amber-400 transition-colors"
-                                        >
-                                            info@sufipulse.com
-                                        </a>
-                                        <p className="text-neutral-400 text-xs mt-2">
-                                            General questions, partnership inquiries, and institutional correspondence
-                                        </p>
+                                        <p className="text-white font-bold text-2xl tracking-tight mb-2">info@sufipulse.com</p>
+                                        <p className="text-neutral-400 text-base leading-relaxed font-light">General questions, partnership inquiries, and institutional correspondence.</p>
                                     </div>
                                 </div>
+                                <a 
+                                    href="mailto:info@sufipulse.com"
+                                    className="px-10 py-5 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
+                                >
+                                    Initiate Email
+                                </a>
                             </div>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Specialized Communication Channels
-                        </h2>
-                        <p className="text-amber-400/70 text-sm mb-6">
-                            Role-Specific Contact Points
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Specialized Communication Channels"
+                            subtitle="Dedicated contact points for specific institutional roles and technical needs"
+                        />
 
-                        <div className="space-y-6">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <p className="text-white font-medium text-sm mb-3">
-                                    Editorial & Content Review
-                                </p>
-                                <div className="flex items-start gap-4">
-                                    <div className="mt-1">
-                                        <Mail className="text-amber-400/70" size={18} />
+                        <StudioCardGrid cols={2}>
+                            {specializedChannels.map((channel, idx) => (
+                                <div key={idx} className="elite-card p-10 flex flex-col h-full group hover:border-amber-400/30 transition-all shadow-2xl">
+                                    <div className="flex-1 space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-white/[0.03] rounded-xl border border-white/10 group-hover:border-amber-400/20 transition-colors">
+                                                <channel.icon className="w-6 h-6 text-neutral-400 group-hover:text-amber-400" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-white tracking-tight">{channel.title}</h3>
+                                        </div>
+                                        <p className="text-neutral-400 text-sm leading-relaxed mb-6">{channel.description}</p>
                                     </div>
-                                    <div>
-                                        <a
-                                            href="mailto:editorial@sufipulse.com"
-                                            className="text-amber-400/90 text-sm hover:text-amber-400 transition-colors"
-                                        >
-                                            editorial@sufipulse.com
-                                        </a>
-                                        <p className="text-neutral-400 text-xs mt-2">
-                                            Kalam submissions, thematic inquiries, editorial guidance
-                                        </p>
+                                    <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                                        <a href={`mailto:${channel.email}`} className="text-amber-400 font-bold text-sm hover:underline">{channel.email}</a>
+                                        <ArrowRight size={14} className="text-neutral-700 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <p className="text-white font-medium text-sm mb-3">
-                                    Contributor Applications
-                                </p>
-                                <div className="flex items-start gap-4">
-                                    <div className="mt-1">
-                                        <Mail className="text-amber-400/70" size={18} />
-                                    </div>
-                                    <div>
-                                        <a
-                                            href="mailto:applications@sufipulse.com"
-                                            className="text-amber-400/90 text-sm hover:text-amber-400 transition-colors"
-                                        >
-                                            applications@sufipulse.com
-                                        </a>
-                                        <p className="text-neutral-400 text-xs mt-2">
-                                            Writer, vocalist, producer, and studio credential applications
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <p className="text-white font-medium text-sm mb-3">
-                                    Technical & Production Support
-                                </p>
-                                <div className="flex items-start gap-4">
-                                    <div className="mt-1">
-                                        <Mail className="text-amber-400/70" size={18} />
-                                    </div>
-                                    <div>
-                                        <a
-                                            href="mailto:production@sufipulse.com"
-                                            className="text-amber-400/90 text-sm hover:text-amber-400 transition-colors"
-                                        >
-                                            production@sufipulse.com
-                                        </a>
-                                        <p className="text-neutral-400 text-xs mt-2">
-                                            Studio coordination, session scheduling, technical specifications
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <p className="text-white font-medium text-sm mb-3">
-                                    Economic Transparency & Registry
-                                </p>
-                                <div className="flex items-start gap-4">
-                                    <div className="mt-1">
-                                        <Mail className="text-amber-400/70" size={18} />
-                                    </div>
-                                    <div>
-                                        <a
-                                            href="mailto:registry@sufipulse.com"
-                                            className="text-amber-400/90 text-sm hover:text-amber-400 transition-colors"
-                                        >
-                                            registry@sufipulse.com
-                                        </a>
-                                        <p className="text-neutral-400 text-xs mt-2">
-                                            Royalty inquiries, economic documentation, payout verification
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Institutional Headquarters
-                        </h2>
-                        <p className="text-amber-400/70 text-sm mb-6">
-                            Central Authority Location
-                        </p>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="flex items-start gap-4">
-                                <div className="mt-1">
-                                    <MapPin className="text-amber-400/70" size={20} />
+                    <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12">
+                        <div>
+                            <StudioSectionHeader 
+                                title="Institutional Headquarters"
+                                subtitle="SufiPulse Central Authority Location"
+                            />
+                            <div className="elite-card p-10 flex items-start gap-6">
+                                <div className="p-4 bg-amber-400/5 rounded-2xl border border-amber-400/10">
+                                    <MapPin className="w-8 h-8 text-amber-400" />
                                 </div>
                                 <div>
-                                    <p className="text-white font-medium text-sm mb-1">
-                                        Central Studio & Governance
-                                    </p>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Virginia, United States
-                                    </p>
-                                    <p className="text-neutral-400 text-xs mt-2">
-                                        All institutional governance, final validation, and registry operations centralized at headquarters
+                                    <p className="text-white font-bold text-xl mb-2">Central Studio & Governance</p>
+                                    <p className="text-amber-400 font-black uppercase tracking-widest text-xs mb-4">Virginia, United States</p>
+                                    <p className="text-neutral-400 text-sm leading-relaxed">
+                                        All institutional governance, final validation, and registry operations centralized at headquarters.
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <StudioSectionHeader 
+                                title="Communication Protocol"
+                                subtitle="Standard Response Protocol timeframe and adherence"
+                            />
+                            <div className="elite-card p-10 space-y-6">
+                                {[
+                                    { l: 'General Inquiries', v: '3–5 Business Days' },
+                                    { l: 'Applications', v: 'Per Application Cycle' },
+                                    { l: 'Editorial Submissions', v: 'Per Editorial Calendar' },
+                                    { l: 'Technical Support', v: 'Priority-Based Response' }
+                                ].map((item, idx) => (
+                                    <div key={idx} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                                        <span className="text-neutral-400 text-[10px] font-black uppercase tracking-widest">{item.l}</span>
+                                        <span className="text-amber-400 font-bold text-xs uppercase tracking-wider">{item.v}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Related Institutional Extensions
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Institutional Extensions"
+                            subtitle="Related entities for research and global outreach"
+                        />
 
-                        <div className="space-y-6">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className="mt-1">
-                                        <Globe className="text-amber-400/70" size={20} />
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="elite-card p-10 group hover:border-amber-400/30 transition-all shadow-2xl">
+                                <div className="flex items-start gap-6 mb-6">
+                                    <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/10 group-hover:border-amber-400/20 transition-colors">
+                                        <Globe className="w-8 h-8 text-neutral-400 group-hover:text-amber-400" />
                                     </div>
                                     <div>
-                                        <p className="text-white font-medium text-sm mb-1">
-                                            Sufi Science Center
-                                        </p>
-                                        <p className="text-neutral-400 text-xs">
-                                            Interdisciplinary research and cultural preservation
-                                        </p>
+                                        <h3 className="text-xl font-bold text-white tracking-tight mb-1">Sufi Science Center</h3>
+                                        <p className="text-neutral-500 text-xs font-black uppercase tracking-widest">Research & Preservation</p>
                                     </div>
                                 </div>
-                                <div className="pl-9">
-                                    <a
-                                        href="https://sufisciencecenter.info/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-amber-400/90 text-sm hover:text-amber-400 transition-colors"
-                                    >
-                                        sufisciencecenter.info
-                                    </a>
-                                    <p className="text-neutral-400 text-xs mt-1">
-                                        For scholarly collaboration and archival inquiries
-                                    </p>
-                                </div>
+                                <p className="text-neutral-400 text-sm leading-relaxed mb-8">For scholarly collaboration, interdisciplinary research, and cultural archive inquiries.</p>
+                                <a href="https://sufisciencecenter.info/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-amber-400 font-bold text-sm hover:underline">
+                                    sufisciencecenter.info <ArrowRight size={14} />
+                                </a>
                             </div>
 
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className="mt-1">
-                                        <Globe className="text-amber-400/70" size={20} />
+                            <div className="elite-card p-10 group hover:border-amber-400/30 transition-all shadow-2xl">
+                                <div className="flex items-start gap-6 mb-6">
+                                    <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/10 group-hover:border-amber-400/20 transition-colors">
+                                        <Globe className="w-8 h-8 text-neutral-400 group-hover:text-amber-400" />
                                     </div>
                                     <div>
-                                        <p className="text-white font-medium text-sm mb-1">
-                                            Dr. Kumar Foundation USA
-                                        </p>
-                                        <p className="text-neutral-400 text-xs">
-                                            International extension and global outreach
-                                        </p>
+                                        <h3 className="text-xl font-bold text-white tracking-tight mb-1">Dr. Kumar Foundation USA</h3>
+                                        <p className="text-neutral-500 text-xs font-black uppercase tracking-widest">Global Outreach</p>
                                     </div>
                                 </div>
-                                <div className="pl-9">
-                                    <a
-                                        href="https://dkf.sufisciencecenter.info/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-amber-400/90 text-sm hover:text-amber-400 transition-colors"
-                                    >
-                                        dkf.sufisciencecenter.info
-                                    </a>
-                                    <p className="text-neutral-400 text-xs mt-1">
-                                        For foundation programs and fellowship opportunities
-                                    </p>
-                                </div>
+                                <p className="text-neutral-400 text-sm leading-relaxed mb-8">For foundation programs, fellowship opportunities, and international extension projects.</p>
+                                <a href="https://dkf.sufisciencecenter.info/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-amber-400 font-bold text-sm hover:underline">
+                                    dkf.sufisciencecenter.info <ArrowRight size={14} />
+                                </a>
                             </div>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Communication Protocol
-                        </h2>
+            <StudioGovernancePanel 
+                title="Governed Communication"
+                description="SufiPulse does not engage through non-official social media platforms. All authentic communication occurs through documented email channels or official institutional websites."
+                primaryCTA={{ label: "View Governance Framework", href: "/governance" }}
+                shieldText="Governed Communication Protocol"
+                background="midnight"
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    All communication channels operate under institutional governance framework.
-                                </p>
-
-                                <p className="font-medium text-white">Standard Response Protocol:</p>
-                                <ul className="list-disc list-inside space-y-2 pl-4">
-                                    <li>General inquiries: 3-5 business days</li>
-                                    <li>Contributor applications: Under review according to application cycle</li>
-                                    <li>Editorial submissions: Reviewed per editorial calendar</li>
-                                    <li>Technical support: Priority-based response</li>
-                                </ul>
-
-                                <div className="pt-4 border-t border-neutral-800 mt-6">
-                                    <p className="text-neutral-400 text-xs">
-                                        SufiPulse does not engage through social media platforms. All authentic communication occurs through documented email channels listed above or through official institutional websites.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <style jsx global>{`
+                .elite-input {
+                    background: rgba(10, 10, 10, 0.8);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 16px;
+                    padding: 16px 20px;
+                    color: white;
+                    font-size: 14px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    outline: none;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+                }
+                .elite-input:focus {
+                    border-color: rgba(212, 175, 55, 0.4);
+                    background: rgba(15, 15, 15, 1);
+                    box-shadow: 0 0 30px rgba(212, 175, 55, 0.05), inset 0 2px 4px rgba(0,0,0,0.2);
+                }
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

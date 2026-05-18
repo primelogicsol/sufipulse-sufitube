@@ -1,88 +1,118 @@
+"use client";
+
 import type { Metadata } from 'next';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 import { Layout } from '../../../components/layout/Layout';
-
-export const metadata: Metadata = {
-  title: "Our Founder",
-  description: "Meet the founder of SufiPulse — a visionary dedicated to preserving and promoting authentic Sufi music, sacred poetry, and the rich literary heritage of Kashmir and the Indian Subcontinent.",
-  openGraph: {
-    title: "Our Founder | SufiPulse",
-    description: "Meet the founder of SufiPulse — dedicated to preserving authentic Sufi music and the literary heritage of Kashmir.",
-    images: [{ url: "/dr-fayaz-photo.jpg", width: 800, height: 800, alt: "SufiPulse Founder" }],
-  },
-};
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Award, Music, Shield, BookOpen, Globe, Heart, Leaf, Zap, GraduationCap, Scale, Search } from 'lucide-react';
 import Image from 'next/image';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function Founder() {
+    const teachingDomains = [
+        {
+            icon: Heart,
+            title: 'Divine Healing',
+            description: 'Wholeness in healing that addresses body, mind, and spirit as integrated realities.'
+        },
+        {
+            icon: Leaf,
+            title: 'Environmental Stewardship',
+            description: 'Reverence for the natural world as spiritually significant sacred responsibility.'
+        },
+        {
+            icon: Search,
+            title: 'Rigorous Inquiry',
+            description: 'Synthesis of contemplative insight with rational exploration and scientific methodology.'
+        },
+        {
+            icon: GraduationCap,
+            title: 'Education as Awakening',
+            description: 'Education as a pathway to expanded consciousness, not merely information transfer.'
+        },
+        {
+            icon: Zap,
+            title: 'Mindful Presence',
+            description: 'Cultivating awareness and inner peace through disciplined meditative silence.'
+        },
+        {
+            icon: Scale,
+            title: 'Transcendent Truth',
+            description: 'Universal spiritual principles that transcend sectarian boundaries and cultural limitations.'
+        }
+    ];
+
+    const legacyInitiatives = [
+        {
+            title: 'Sufi Science Center',
+            subtitle: 'Institutional Extension',
+            description: 'Interdisciplinary platform preserving Kashmiri Sufi wisdom through research and digital archiving.',
+            url: 'https://sufisciencecenter.info/',
+            tags: ['Research', 'Digital Preservation', 'Archives']
+        },
+        {
+            title: 'Dr. Kumar Foundation USA',
+            subtitle: 'International Extension',
+            description: 'Global impact extender focusing on consciousness research and environmental preservation.',
+            url: 'https://dkf.sufisciencecenter.info/',
+            tags: ['Global Outreach', 'Scholarship', 'Kashmir Projects']
+        }
+    ];
+
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
+            <StudioHero 
+                badge="Founding Vision"
+                title="Founder"
+                mysticalName={roleDisplayMap.founder.mystical}
+                description="SufiPulse stands upon the founding vision of Dr. Ghulam Mohammad Kumar — a spiritual guide whose life bridged medicine, mysticism, and structured institutional awakening."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Founder
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.founder.mystical}
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Bani — The Originator"
+                            subtitle="Representative stewardship and institutional development are guided by Dr. Zarf-e-Noori under the framework of Mithaq."
+                        />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                SufiPulse stands upon the founding vision of Dr. Ghulam Mohammad Kumar — a spiritual guide whose life bridged medicine, mysticism, and structured institutional awakening.
-                            </p>
-                            <p className="text-neutral-300 leading-relaxed mt-4">
-                                Representative stewardship and institutional development are guided by Dr. Fayaz Ahmad Khan under the framework of Mithaq.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Early Life & Formative Influences
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 items-start">
-                                <div className="flex-shrink-0">
-                                    <div className="w-48 h-56 mx-auto sm:mx-0 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
+                        <div className="elite-card p-10 md:p-16 mb-12 shadow-2xl overflow-hidden relative group">
+                            <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Award size={200} className="text-amber-400" />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10">
+                                <div className="lg:col-span-4">
+                                    <div className="aspect-[4/5] rounded-[32px] overflow-hidden border-2 border-amber-400/20 shadow-[0_0_50px_rgba(212,175,55,0.15)] group-hover:border-amber-400/40 transition-all duration-700">
                                         <Image
                                             src="/dr-kumar-photo.png"
                                             alt="Dr. Ghulam Mohammad Kumar"
-                                            width={192}
-                                            height={224}
-                                            className="w-full h-full object-cover object-top"
+                                            width={400}
+                                            height={500}
+                                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-100 transition-transform duration-1000"
                                         />
                                     </div>
+                                    <div className="mt-8 text-center lg:text-left">
+                                        <p className="text-white font-bold text-2xl tracking-tight">Dr. Ghulam Mohammad Kumar</p>
+                                        <p className="text-amber-400 font-black uppercase tracking-[0.3em] text-xs mt-1">Founder — Bani</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-white font-medium text-lg mb-1">
-                                        Dr. Ghulam Mohammad Kumar
+                                
+                                <div className="lg:col-span-8 space-y-8">
+                                    <p className="text-white text-xl leading-relaxed font-medium tracking-tight">
+                                        Spiritual guide, physician, and Sufi master whose life bridged medicine, mysticism, and structured institutional awakening.
                                     </p>
-                                    <p className="text-amber-400/70 text-sm mb-4">
-                                        Founder — Bani
-                                    </p>
-                                    <p className="text-neutral-400 text-sm leading-relaxed">
-                                        Spiritual guide, physician, and Sufi master whose life bridged medicine, mysticism, and structured institutional awakening. Fourteen years of contemplative retreat in Ganderbal shaped a vision that transcends individual legacy.
-                                    </p>
-
-                                    <div className="mt-8 space-y-4 text-neutral-300 text-sm leading-relaxed">
+                                    
+                                    <div className="space-y-6 text-neutral-400 text-lg leading-relaxed font-light">
                                         <p>
                                             Dr. Ghulam Mohammad Kumar's journey began within a Kashmiri heritage grounded in scholarly and spiritual traditions. Born in 1957 into a family rooted in learning and healing, he demonstrated exceptional contemplative nature and profound inner sensitivity from his earliest years.
                                         </p>
-
                                         <p>
                                             He trained in modern medicine at Government Medical College Srinagar and practiced as a Medical Officer. Yet instinctively drawn deeper into inner inquiry, he transitioned from clinical practice toward a life devoted to spiritual depth and the pursuit of universal truth.
                                         </p>
-
                                         <p>
-                                            His formative years in Kashmir's rich spiritual landscape shaped a disposition that would ultimately bridge conventional medical training with the ancient wisdom traditions of Kashmiri Sufism.
+                                            His formative years in Kashmir's rich spiritual landscape shaped a disposition that would ultimately bridge conventional medical training with the ancient wisdom traditions of Kashmiri Sufism. Fourteen years of contemplative retreat in the forests of Ganderbal shaped a vision that transcends individual legacy.
                                         </p>
                                     </div>
                                 </div>
@@ -92,300 +122,182 @@ export default function Founder() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Spiritual Transformation & Teaching Genesis
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Spiritual Transformation"
+                            subtitle="Detachment, realization, and the emergence of institutional vision"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    His path reflects the classical Sufi journey of detachment and inner realization. After withdrawing from public life, Dr. Kumar spent fourteen years in contemplative retreat in the forests of Ganderbal — a period marked by silence, muraqaba (meditation), and profound spiritual discipline.
-                                </p>
-
-                                <p>
-                                    Through years of contemplative discipline and reflective silence in Kashmir's landscapes, he embodied a transformative practice rooted in the Sufi philosophy of Fana (annihilation of self) and the Qalandari path toward enlightenment.
-                                </p>
-
-                                <p>
-                                    This transformation shaped his emergence as a spiritual guide — one rooted in truth rather than title, in presence rather than proclamation.
-                                </p>
-
-                                <p>
-                                    His teaching methodology emphasized inner transformation through silence and conscious presence. As he observed: "Silence is not the absence of sound, but the presence of the Divine." Healing, in his framework, emerges from within rather than through external intervention.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Core Teaching Domains
-                        </h2>
-                        <p className="text-amber-400/70 text-sm mb-6">
-                            Structured Philosophical Framework
-                        </p>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    Dr. Kumar's work synthesizes classical Kashmiri Sufi insight with a structured framework of inner transformation and holistic engagement with the world. His integrated approach encompasses six interconnected domains:
-                                </p>
-
-                                <div className="mt-6 space-y-3">
-                                    <div className="border-l-2 border-amber-500/30 pl-4">
-                                        <p className="font-medium text-white mb-1">Divine Healing & Holistic Wellbeing</p>
-                                        <p className="text-neutral-400 text-xs">Wholeness in healing that addresses body, mind, and spirit as integrated realities.</p>
-                                    </div>
-
-                                    <div className="border-l-2 border-amber-500/30 pl-4">
-                                        <p className="font-medium text-white mb-1">Environmental Stewardship as Sacred Responsibility</p>
-                                        <p className="text-neutral-400 text-xs">Reverence for the natural world as spiritually significant, including water conservation and ecological consciousness.</p>
-                                    </div>
-
-                                    <div className="border-l-2 border-amber-500/30 pl-4">
-                                        <p className="font-medium text-white mb-1">Bridging Spiritual Wisdom with Rigorous Inquiry</p>
-                                        <p className="text-neutral-400 text-xs">Synthesis of contemplative insight with rational exploration and scientific methodology.</p>
-                                    </div>
-
-                                    <div className="border-l-2 border-amber-500/30 pl-4">
-                                        <p className="font-medium text-white mb-1">Education as Awakening & Consciousness Expansion</p>
-                                        <p className="text-neutral-400 text-xs">Education as a pathway to expanded consciousness, not merely information transfer.</p>
-                                    </div>
-
-                                    <div className="border-l-2 border-amber-500/30 pl-4">
-                                        <p className="font-medium text-white mb-1">Inner Peace Through Mindfulness</p>
-                                        <p className="text-neutral-400 text-xs">Cultivating presence and awareness as foundations for sustainable inner peace.</p>
-                                    </div>
-
-                                    <div className="border-l-2 border-amber-500/30 pl-4">
-                                        <p className="font-medium text-white mb-1">Transcendent Truth Beyond Religious Divisions</p>
-                                        <p className="text-neutral-400 text-xs">Universal spiritual principles that transcend sectarian boundaries and cultural limitations.</p>
-                                    </div>
-                                </div>
-
-                                <p className="mt-6">
-                                    This positions his teachings not as charismatic pronouncements but as sustained philosophical contributions with structured depth and institutional continuity.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Founding Vision for SufiPulse
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    The founding vision established a structured devotional institution integrating editorial authority, production discipline, and registry validation under a unified charter. SufiPulse emerged from the recognition that devotional expression requires institutional governance to preserve thematic coherence, maintain technical excellence, and ensure continuity beyond individual contributions.
-                                </p>
-
-                                <p>
-                                    The foundational philosophy centers on constitutional order: creative energy operates within documented frameworks, editorial oversight ensures spiritual alignment, and registry documentation maintains perpetual accountability.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Banday Bagh
-                        </h2>
-                        <p className="text-amber-400/70 text-sm mb-6">
-                            Spiritual Station
-                        </p>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    Banday Bagh in Ganderbal, Kashmir, serves as a spiritual center for seekers. It functions as:
-                                </p>
-
-                                <ul className="list-disc list-inside space-y-2 pl-4">
-                                    <li>A meditation space for Zikr and reflection</li>
-                                    <li>A Langar offering unconditional hospitality</li>
-                                    <li>Lodging for spiritual travelers</li>
-                                    <li>A place of direct guidance and transmission</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Legacy & Stewardship Structures
-                        </h2>
-                        <p className="text-amber-400/70 text-sm mb-6">
-                            Institutional Extensions
-                        </p>
-
-                        <div className="space-y-6">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <div className="mb-4">
-                                    <h3 className="text-xl font-bold text-white mb-2">
-                                        Sufi Science Center
-                                    </h3>
-                                    <p className="text-amber-400/70 text-xs">
-                                        Institutional Extension
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            <div className="space-y-8">
+                                <div className="bg-black/20 border-l-4 border-amber-400 p-10 rounded-r-3xl shadow-xl">
+                                    <p className="text-white text-2xl leading-relaxed italic font-light tracking-tight">
+                                        "Silence is not the absence of sound, but the presence of the Divine."
                                     </p>
                                 </div>
-
-                                <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
+                                <div className="space-y-6 text-neutral-400 text-lg leading-relaxed font-light">
                                     <p>
-                                        Dr. Kumar's legacy is institutional, not individualistic. The Sufi Science Center (SSC) serves as an interdisciplinary platform preserving and evolving Kashmiri Sufi wisdom through research, digital preservation, and curated educational pathways.
+                                        His path reflects the classical Sufi journey of detachment and inner realization. Withdrawal from public life led to fourteen years in contemplative retreat — a period marked by muraqaba (meditation) and profound spiritual discipline.
                                     </p>
-
                                     <p>
-                                        To preserve and systematize foundational teachings, SSC operates as an institution integrating spirituality, scholarship, and contemporary inquiry.
+                                        This transformation shaped his emergence as a spiritual guide — one rooted in truth rather than title, in presence rather than proclamation. Healing, in his framework, emerges from within rather than through external intervention.
                                     </p>
-
-                                    <p className="font-medium text-white">Core Initiatives:</p>
-                                    <ul className="list-disc list-inside space-y-2 pl-4">
-                                        <li>Kashmiri Sufi archives and digital preservation</li>
-                                        <li>Interdisciplinary research in consciousness and healing</li>
-                                        <li>Youth engagement and spiritual guidance programs</li>
-                                        <li>Global scholarly collaboration</li>
-                                        <li>Traditional Kashmiri craft preservation</li>
-                                    </ul>
-
-                                    <div className="pt-6 mt-6 border-t border-neutral-800">
-                                        <a
-                                            href="https://sufisciencecenter.info/"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/50 transition-all duration-200 font-medium"
-                                        >
-                                            Visit Official SSC Website
-                                            <ExternalLink size={16} />
-                                        </a>
-                                        <p className="text-xs text-neutral-500 mt-2">
-                                            sufisciencecenter.info
-                                        </p>
-                                        <p className="text-xs text-neutral-500">
-                                            Opens in new tab
-                                        </p>
-                                    </div>
                                 </div>
                             </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <div className="mb-4">
-                                    <h3 className="text-xl font-bold text-white mb-2">
-                                        Dr. Kumar Foundation USA
-                                    </h3>
-                                    <p className="text-amber-400/70 text-xs">
-                                        International Extension
-                                    </p>
-                                </div>
-
-                                <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                    <p>
-                                        Established by students and supporters in the United States, the Dr. Kumar Foundation anchors global impact, extending spiritual, cultural, and scholarly engagement across borders.
-                                    </p>
-
-                                    <p>
-                                        The Foundation continues his work merging spiritual wisdom with scientific research, focusing on consciousness, healing methodologies, and environmental preservation.
-                                    </p>
-
-                                    <p className="font-medium text-white">Supported Initiatives:</p>
-                                    <ul className="list-disc list-inside space-y-2 pl-4">
-                                        <li>Spiritual outreach and healing workshops</li>
-                                        <li>Research fellowships in consciousness studies</li>
-                                        <li>Educational programs and spiritual retreats</li>
-                                        <li>Water conservation initiatives in Kashmir</li>
-                                        <li>Cross-cultural dialogue and scholarly collaboration</li>
-                                    </ul>
-
-                                    <div className="pt-6 mt-6 border-t border-neutral-800">
-                                        <a
-                                            href="https://dkf.sufisciencecenter.info/"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/50 transition-all duration-200 font-medium"
-                                        >
-                                            Visit Official Foundation Website
-                                            <ExternalLink size={16} />
-                                        </a>
-                                        <p className="text-xs text-neutral-500 mt-2">
-                                            dkf.sufisciencecenter.info
-                                        </p>
-                                        <p className="text-xs text-neutral-500">
-                                            Opens in new tab
-                                        </p>
-                                    </div>
-                                </div>
+                            <div className="elite-card p-10 bg-linear-to-br from-amber-400/5 to-transparent flex flex-col items-center justify-center text-center py-20">
+                                <Shield size={80} className="text-amber-400/20 mb-8" />
+                                <h3 className="text-white font-bold text-xl mb-4">Constitutional Order</h3>
+                                <p className="text-neutral-500 text-sm leading-relaxed uppercase tracking-widest font-black max-w-xs mx-auto">
+                                    Translating vision into operational systems and institutional permanence.
+                                </p>
                             </div>
-                        </div>
-
-                        <div className="mt-6 p-6 bg-amber-500/5 border border-amber-500/20 rounded-lg">
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Framing legacy in this way aligns it with organizational continuance rather than personal legend. His global influence reached approximately 14,000 seekers following the spiritual path he embodied.
-                            </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Representative Stewardship
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Core Teaching Domains"
+                            subtitle="A structured philosophical framework synthesizing classical insight with contemporary inquiry"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-8 items-start">
-                                <div className="flex-shrink-0">
-                                    <div className="w-48 h-56 mx-auto sm:mx-0 rounded-xl overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/10">
+                        <StudioCardGrid cols={3}>
+                            {teachingDomains.map((domain, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={domain.icon}
+                                    title={domain.title}
+                                    description={domain.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="grid md:grid-cols-2 gap-12">
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Founding Vision for SufiPulse"
+                                    subtitle="Structural focus beyond individual expression"
+                                />
+                                <div className="space-y-6 text-neutral-400 text-lg leading-relaxed font-light">
+                                    <p>
+                                        The founding vision established a structured devotional institution integrating editorial authority, production discipline, and registry validation under a unified charter.
+                                    </p>
+                                    <p>
+                                        The foundational philosophy centers on constitutional order: creative energy operates within documented frameworks, editorial oversight ensures spiritual alignment, and registry documentation maintains perpetual accountability.
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Banday Bagh"
+                                    subtitle="Spiritual Station in Ganderbal, Kashmir"
+                                />
+                                <div className="elite-card p-8 space-y-6">
+                                    {[
+                                        'Meditation space for Zikr and reflection',
+                                        'Langar offering unconditional hospitality',
+                                        'Lodging for spiritual travelers',
+                                        'Station for direct guidance and transmission'
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex items-center gap-4 group">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400/60 group-hover:bg-amber-400 transition-colors" />
+                                            <p className="text-neutral-300 text-xs font-bold uppercase tracking-widest">{item}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Legacy & Stewardship Structures"
+                            subtitle="Dr. Kumar's legacy is institutional, not individualistic. It is anchored in global research and outreach."
+                        />
+
+                        <div className="grid md:grid-cols-2 gap-8">
+                            {legacyInitiatives.map((item, idx) => (
+                                <div key={idx} className="elite-card p-10 flex flex-col h-full group hover:border-amber-400/30 transition-all shadow-2xl">
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-2xl font-bold text-white tracking-tight">{item.title}</h3>
+                                            <div className="p-3 bg-amber-400/5 rounded-2xl border border-amber-400/10 group-hover:bg-amber-400/10 transition-colors">
+                                                <Globe className="w-5 h-5 text-amber-400" />
+                                            </div>
+                                        </div>
+                                        <p className="text-amber-400/80 text-[10px] font-black uppercase tracking-[0.2em] mb-4">{item.subtitle}</p>
+                                        <p className="text-neutral-400 text-base leading-relaxed mb-10">{item.description}</p>
+                                        <div className="flex flex-wrap gap-2 mb-10">
+                                            {item.tags.map((tag, tIdx) => (
+                                                <span key={tIdx} className="text-[9px] font-black uppercase tracking-widest text-neutral-600 bg-black/40 px-3 py-1 rounded-full border border-white/5">{tag}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <a 
+                                        href={item.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="w-full py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
+                                    >
+                                        Visit Official Site <ExternalLink size={14} />
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Representative Stewardship"
+                            subtitle="Guiding institutional development under the constitutional framework of Mithaq"
+                        />
+
+                        <div className="elite-card p-10 md:p-16 shadow-2xl overflow-hidden relative group">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10">
+                                <div className="lg:col-span-4">
+                                    <div className="aspect-[4/5] rounded-[32px] overflow-hidden border-2 border-amber-400/20 shadow-2xl group-hover:border-amber-400/40 transition-all duration-700">
                                         <Image
                                             src="/dr-fayaz-photo.jpg"
-                                            alt="Dr. Fayaz Ahmad Khan"
-                                            width={192}
-                                            height={224}
-                                            className="w-full h-full object-cover object-top"
+                                            alt="Dr. Zarf-e-Noori"
+                                            width={400}
+                                            height={500}
+                                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-100 transition-transform duration-1000"
                                         />
                                     </div>
+                                    <div className="mt-8 text-center lg:text-left">
+                                        <p className="text-white font-bold text-2xl tracking-tight">Dr. Zarf-e-Noori</p>
+                                        <p className="text-amber-400 font-black uppercase tracking-[0.3em] text-xs mt-1">Representative Founder</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-white font-medium text-lg mb-1">
-                                        Dr. Fayaz Ahmad Khan
+                                
+                                <div className="lg:col-span-8 space-y-8">
+                                    <p className="text-white text-xl leading-relaxed font-medium tracking-tight">
+                                        Overseeing structural development, institutional governance integration, and digital expansion aligned with the founding charter.
                                     </p>
-                                    <p className="text-amber-400/70 text-sm mb-4">
-                                        Representative Founder
-                                    </p>
-                                    <p className="text-neutral-400 text-sm leading-relaxed">
-                                        Representative stewardship and institutional development guided under the constitutional framework of Mithaq — translating founding vision into operational systems, governance structures, and digital infrastructure.
-                                    </p>
-
-                                    <div className="mt-8 space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                        <p>
-                                            Representative stewardship oversees structural development, institutional governance integration, and digital expansion aligned with the founding charter.
-                                        </p>
-
+                                    
+                                    <div className="space-y-6 text-neutral-400 text-lg leading-relaxed font-light">
                                         <p>
                                             The representative role focuses on architectural design: translating constitutional principles into operational systems, integrating editorial processes with production workflows, and establishing technological infrastructure that serves institutional permanence.
                                         </p>
-
                                         <p>
                                             Structural development includes the construction of multi-layered governance systems, role-based participation frameworks, registry documentation protocols, and economic transparency mechanisms that reinforce charter authority.
                                         </p>
@@ -397,43 +309,25 @@ export default function Founder() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Institutional Continuity
-                        </h2>
+            <StudioGovernancePanel 
+                title="Institutional Continuity"
+                description="Founding and representative leadership operate within the framework of Mithaq. The institution transcends its founders, ensuring perpetual operation through documented standards and governed protocols."
+                primaryCTA={{ label: "View Governance Charter", href: "/governance/mithaq" }}
+                shieldText="Governed Institutional Continuity"
+                background="slate"
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    Founding and representative leadership operate within the constitutional framework of Mithaq. Institutional authority remains charter-governed rather than personality-driven.
-                                </p>
-
-                                <p>
-                                    Leadership functions as structural stewardship, not personal authority. Decisions flow from documented principles, editorial review processes, and governance protocols rather than individual discretion.
-                                </p>
-
-                                <p>
-                                    The separation of founding vision from operational execution creates institutional resilience. Continuity derives from constitutional design, not individual presence.
-                                </p>
-
-                                <p>
-                                    SufiPulse's structural integrity depends on this distinction: the institution transcends its founders. Governance mechanisms, editorial standards, production protocols, and registry validation operate independently of individual tenure.
-                                </p>
-
-                                <p>
-                                    This ensures perpetual operation. The framework survives leadership transitions because authority resides in documented charter, not personal charisma.
-                                </p>
-
-                                <p>
-                                    Institutional permanence exceeds individual roles. The structure endures.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

@@ -1,258 +1,191 @@
-import { FileCheck, ArrowRight, Shield, Database } from 'lucide-react';
+"use client";
+import { FileCheck, ArrowRight, Shield, Database, ShieldCheck, History, Archive, Lock } from 'lucide-react';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function DiwanEAmanat() {
     const mandatePoints = [
-        'Contributor credits are confirmed',
-        'Royalty allocations are documented',
-        'Metadata is locked prior to release',
-        'Publication authorization follows structured verification'
+        {
+            icon: ShieldCheck,
+            title: 'Credit Confirmation',
+            description: 'Permanent documentation and verification of all contributor credits prior to release.'
+        },
+        {
+            icon: Database,
+            title: 'Royalty Documentation',
+            description: 'Formal recording of economic allocation structures within the institutional registry.'
+        },
+        {
+            icon: Lock,
+            title: 'Metadata Locking',
+            description: 'Ensuring all technical and creative metadata is immutably locked before publication.'
+        },
+        {
+            icon: Shield,
+            title: 'Structured Verification',
+            description: 'Authorized validation sequence that must be traversed for every release record.'
+        }
     ];
 
     const responsibilityAreas = [
         {
-            label: 'Final master confirmation',
-            description: 'Validation that production output meets registry standards'
+            label: 'Master Confirmation',
+            description: 'Final validation that production output meets institutional registry standards.'
         },
         {
-            label: 'Contributor identity verification',
-            description: 'Documented confirmation of all participating contributors'
+            label: 'Identity Verification',
+            description: 'Documented confirmation of all participating writers, vocalists, and producers.'
         },
         {
-            label: 'Rights and royalty documentation',
-            description: 'Formalized allocation structures and agreement records'
+            label: 'Rights Documentation',
+            description: 'Formalization of allocation structures and agreement records for all stakeholders.'
         },
         {
-            label: 'Release record creation',
-            description: 'Institutional archive entry and metadata lock'
-        },
-        {
-            label: 'Institutional archival continuity',
-            description: 'Long-term preservation of release documentation'
+            label: 'Institutional Archive',
+            description: 'Permanent record entry ensuring long-term preservation of release documentation.'
         }
     ];
 
     const finalizationSteps = [
-        { label: 'Master Confirmation', icon: FileCheck },
-        { label: 'Credit Verification', icon: Shield },
-        { label: 'Royalty Allocation Documentation', icon: Database },
-        { label: 'Metadata Lock', icon: Shield },
-        { label: 'Publication Authorization', icon: FileCheck }
+        { id: 1, title: 'Master Confirm', icon: FileCheck, desc: 'Production validation' },
+        { id: 2, title: 'Credit Verify', icon: Shield, desc: 'Identity documentation' },
+        { id: 3, title: 'Royalty Logic', icon: Database, desc: 'Economic recording' },
+        { id: 4, title: 'Metadata Lock', icon: Lock, desc: 'Immutable record entry' },
+        { id: 5, title: 'Release Clear', icon: FileCheck, desc: 'Publication authorized' }
     ];
 
     const authorityBoundaries = [
         {
-            action: 'Does not evaluate creative content',
+            action: 'No Creative Evaluation',
             clarification: 'Thematic and artistic decisions remain with editorial authority'
         },
         {
-            action: 'Does not manage studio sessions',
+            action: 'No Studio Management',
             clarification: 'Production execution is governed by Production Oversight'
         },
         {
-            action: 'Does not modify approved kalam',
-            clarification: 'Content authority resides with Majlis-e-Nazr'
+            action: 'No Content Modification',
+            clarification: 'Authority over approved kalam resides with Majlis-e-Nazr'
         },
         {
-            action: 'Does not override charter provisions',
+            action: 'No Charter Overriding',
             clarification: 'All authority derives from and remains bound by Mithaq'
         }
     ];
 
-    const recordPrinciples = [
-        'Is documented within registry records',
-        'Contains confirmed contributor attribution',
-        'Maintains archived metadata',
-        'Remains traceable across institutional continuity'
-    ];
-
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Diwan-e-Amanat
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.diwan_e_amanat.mystical}
-                        </p>
+            <StudioHero 
+                badge="Registry Authority"
+                title="Diwan-e-Amanat"
+                mysticalName={roleDisplayMap.diwan_e_amanat.mystical}
+                description="The Registry Authority governs final validation, contributor documentation, and release authorization. No work is published under SufiPulse without registry confirmation."
+            />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                The Registry Authority governs final validation, contributor documentation, and release authorization.
-                                No work is published under SufiPulse without registry confirmation.
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Mandate & Validation Authority"
+                            subtitle="Transforming production output into institutional record through immutable documentation"
+                        />
+
+                        <StudioCardGrid cols={4}>
+                            {mandatePoints.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={item.icon}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Scope of Responsibility"
+                            subtitle="Supervising the transition from production to permanent archive"
+                        />
+
+                        <StudioCardGrid cols={2}>
+                            {responsibilityAreas.map((area, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={Archive}
+                                    title={area.label}
+                                    description={area.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+
+                        <div className="mt-12 bg-[var(--color-midnight)]/30 border border-[var(--color-gold)]/20 rounded-xl p-8 text-center max-w-3xl mx-auto shadow-2xl">
+                            <p className="text-[var(--text-sm)] text-neutral-400 leading-relaxed font-medium">
+                                "Registry formalizes what production completes. It serves as the final seal of institutional approval."
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <StudioWorkflowRoadmap 
+                title="Finalization Sequence"
+                badge="Registry Pipeline"
+                steps={finalizationSteps}
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Mandate & Validation Authority
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Authority Boundaries"
+                            subtitle="Defined limitations to ensure registry independence and procedural integrity"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Diwan-e-Amanat ensures:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {mandatePoints.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Registry formalizes what production completes.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Scope of Responsibility
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Registry Authority oversees:
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-6 mb-8">
-                                {responsibilityAreas.map((area, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                        <p className="text-white font-medium text-sm">{area.label}</p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {area.description}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                This transforms production output into institutional record.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Finalization Sequence
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8 overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-neutral-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-neutral-600">
-                            <div className="flex items-center gap-4 min-w-max pb-2">
-                                {finalizationSteps.map((step, idx) => (
-                                    <div key={idx} className="flex items-center gap-4">
-                                        <div className="flex flex-col items-center gap-3 min-w-[140px]">
-                                            <div className="w-12 h-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-                                                <step.icon className="w-5 h-5 text-amber-400" />
-                                            </div>
-                                            <p className="text-neutral-300 text-sm text-center font-medium">
-                                                {step.label}
-                                            </p>
-                                        </div>
-                                        {idx < finalizationSteps.length - 1 && (
-                                            <ArrowRight className="w-5 h-5 text-neutral-600 flex-shrink-0" />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Authority Boundaries
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Diwan-e-Amanat:
-                            </p>
-
-                            <div className="space-y-6 mb-6">
+                        <div className="elite-card p-10 md:p-12">
+                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
                                 {authorityBoundaries.map((boundary, idx) => (
-                                    <div key={idx}>
-                                        <p className="text-white text-sm font-medium mb-1">
-                                            {boundary.action}
-                                        </p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {boundary.clarification}
-                                        </p>
+                                    <div key={idx} className="space-y-1">
+                                        <p className="text-white text-sm font-bold uppercase tracking-wider">{boundary.action}</p>
+                                        <p className="text-neutral-500 text-[11px] leading-relaxed font-medium uppercase tracking-widest">{boundary.clarification}</p>
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Its authority begins after production confirmation and concludes at publication authorization.
+                            <p className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-12 pt-6 border-t border-white/5 text-center italic">
+                                Authority begins after production confirmation and concludes at publication authorization.
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Institutional Record
-                        </h2>
+            <StudioGovernancePanel 
+                title="Institutional Record"
+                description="Release is not a technical toggle; it is a recorded institutional act. Every authorized release contains confirmed contributor attribution and archived metadata traceable across institutional continuity."
+                primaryCTA={{ label: "Release Protocol", href: "/governance/release-protocol" }}
+                secondaryCTA={{ label: "Royalty Framework", href: "/governance/royalty-transparency" }}
+                shieldText="Governed Registry Authority"
+                background="midnight"
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                                Every authorized release:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {recordPrinciples.map((principle, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{principle}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                Release is not a toggle.
-                            </p>
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                It is a recorded institutional act.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

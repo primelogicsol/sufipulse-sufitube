@@ -1,10 +1,11 @@
 "use client";
 import { useState } from 'react';
-import { ArrowDown, Shield, FileCheck, Building2, Archive, Scale, Users, BookOpen, Lock, CircleCheck as CheckCircle, ScrollText, ChevronDown } from 'lucide-react';
+import { ArrowDown, Shield, FileCheck, Building2, Archive, Scale, Users, BookOpen, Lock, CircleCheck as CheckCircle, ScrollText, ChevronDown, ArrowRight } from 'lucide-react';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 interface ExpandableSection {
     title: string;
@@ -15,24 +16,27 @@ function ExpandableContent({ title, content }: ExpandableSection) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="border border-neutral-800 rounded-lg overflow-hidden">
+        <div className="elite-card overflow-hidden transition-all duration-500">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-6 bg-neutral-900/30 hover:bg-neutral-900/50 transition-colors"
+                className="w-full flex items-center justify-between gap-6 px-8 py-7 text-left bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
             >
-                <h3 className="text-lg font-semibold text-white text-left">{title}</h3>
-                <ChevronDown
-                    className={`w-5 h-5 text-amber-400 transition-transform ${isOpen ? 'rotate-180' : ''
-                        }`}
-                />
+                <h3 className="flex-1 text-lg md:text-xl font-bold text-white text-left tracking-tight leading-relaxed">
+                    {title}
+                </h3>
+                <div className={`shrink-0 p-2 rounded-full bg-amber-400/5 border border-amber-400/10 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                    <ChevronDown className="w-5 h-5 text-amber-400" />
+                </div>
             </button>
             {isOpen && (
-                <div className="p-6 bg-neutral-900/20 space-y-4">
-                    {content.map((paragraph, idx) => (
-                        <p key={idx} className="text-neutral-300 leading-relaxed">
-                            {paragraph}
-                        </p>
-                    ))}
+                <div className="px-8 pb-10 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="pl-6 md:pl-10 border-l-2 border-amber-400/20 space-y-6">
+                        {content.map((paragraph, idx) => (
+                            <p key={idx} className="text-neutral-400 leading-relaxed text-base md:text-lg font-light">
+                                {paragraph}
+                            </p>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
@@ -40,27 +44,6 @@ function ExpandableContent({ title, content }: ExpandableSection) {
 }
 
 export default function Mithaq() {
-    const foundationalPrinciples = [
-        'Institutional purpose',
-        'Structural sequencing',
-        'Governance hierarchy',
-        'Continuity across generations'
-    ];
-
-    const authorityBoundaries = [
-        'No creative function bypasses editorial authorization.',
-        'No production function bypasses structured workflow.',
-        'No release occurs without registry confirmation.',
-        'Authority is sequential.'
-    ];
-
-    const governanceScope = [
-        'All creative modules',
-        'All production infrastructure',
-        'All registry documentation',
-        'All future network expansion'
-    ];
-
     const constitutionalPillars = [
         {
             icon: Scale,
@@ -84,19 +67,11 @@ export default function Mithaq() {
         }
     ];
 
-    const editorialPrinciples = [
-        {
-            title: 'Orthodoxy as Foundation',
-            content: 'All content must align with traditional Islamic scholarship and Sufi teachings from recognized orders.'
-        },
-        {
-            title: 'Scholarly Verification',
-            content: 'Majlis-e-Nazr validates theological accuracy before any content enters production workflows.'
-        },
-        {
-            title: 'No Commercial Compromise',
-            content: 'Market demand does not override editorial standards. Quality and authenticity precede popularity.'
-        }
+    const hierarchyLayers = [
+        { icon: Shield, title: 'Mithaq', desc: 'Constitutional Foundation' },
+        { icon: FileCheck, title: 'Majlis-e-Nazr', desc: 'Editorial Authorization' },
+        { icon: Building2, title: 'Production Oversight', desc: 'Execution Governance' },
+        { icon: Archive, title: 'Diwan-e-Amanat', desc: 'Registry Validation' }
     ];
 
     const accountabilityMechanisms = [
@@ -183,35 +158,21 @@ export default function Mithaq() {
 
     return (
         <Layout>
-            <Section className="pt-24 pb-8">
-                <PageContainer>
-                    <div className="max-w-6xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Mithaq
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-6 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.institutional_framework.mystical}
-                        </p>
+            <StudioHero 
+                badge="Governance Framework"
+                title="Mithaq"
+                mysticalName={roleDisplayMap.institutional_framework.mystical}
+                description="Mithaq establishes the governing principles, authority boundaries, and structural continuity of SufiPulse. All institutional functions derive legitimacy from this charter."
+            />
 
-                        <div className="mt-8 max-w-3xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                Mithaq establishes the governing principles, authority boundaries, and structural continuity of SufiPulse. All institutional functions derive legitimacy from this charter.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-6xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Essential Context: Why This Matters
-                        </h2>
-                        <p className="text-neutral-300 leading-relaxed mb-6">
-                            To understand Mithaq's role, it's important to understand the broader context of Sufi Kalam, the challenges it faces in the modern era, and why institutional governance is necessary for its preservation.
-                        </p>
-                        <div className="space-y-4">
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Essential Context"
+                            subtitle="To understand Mithaq's role, it's important to understand the broader context of Sufi Kalam and why institutional governance is necessary for its preservation."
+                        />
+                        <div className="space-y-6">
                             {contextualSections.map((section, idx) => (
                                 <ExpandableContent key={idx} title={section.title} content={section.content} />
                             ))}
@@ -220,189 +181,95 @@ export default function Mithaq() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-6xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Foundational Authority
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Foundational Authority"
+                            subtitle="Mithaq defines foundational principles and governance hierarchy. It does not operate daily workflows; it defines who has the authority to operate them."
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 leading-relaxed mb-6">
-                                Mithaq defines:
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-x-8 gap-y-3">
-                                {foundationalPrinciples.map((principle, idx) => (
-                                    <div key={idx} className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">{principle}</p>
+                        <div className="elite-card p-10 md:p-12 mb-12">
+                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+                                {[
+                                    'Institutional purpose',
+                                    'Structural sequencing',
+                                    'Governance hierarchy',
+                                    'Continuity across generations'
+                                ].map((principle, idx) => (
+                                    <div key={idx} className="flex items-center gap-4 group">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:shadow-[0_0_10px_rgba(212,175,55,0.5)] transition-all" />
+                                        <p className="text-neutral-200 text-sm font-bold uppercase tracking-widest">{principle}</p>
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 leading-relaxed text-sm">
-                                It does not operate daily workflows. It defines who has the authority to operate them.
-                            </p>
                         </div>
+
+                        <StudioSectionHeader 
+                            title="Institutional Hierarchy"
+                            subtitle="Authority flows vertically through defined institutional layers"
+                        />
+
+                        <StudioCardGrid cols={4}>
+                            {hierarchyLayers.map((layer, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={layer.icon}
+                                    title={layer.title}
+                                    description={layer.desc}
+                                />
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-6xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Institutional Hierarchy
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Constitutional Pillars"
+                            subtitle="The core architectural principles that ensure institutional integrity and contributor protection"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 leading-relaxed mb-8">
-                                Authority flows vertically through defined institutional layers:
-                            </p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6 flex flex-col items-center text-center">
-                                    <Shield className="w-8 h-8 text-amber-400 mb-3" />
-                                    <h3 className="text-white font-semibold text-base mb-1">Mithaq</h3>
-                                    <p className="text-neutral-400 text-xs">Constitutional Foundation</p>
-                                </div>
-
-                                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6 flex flex-col items-center text-center">
-                                    <FileCheck className="w-8 h-8 text-amber-400 mb-3" />
-                                    <h3 className="text-white font-semibold text-base mb-1">Majlis-e-Nazr</h3>
-                                    <p className="text-neutral-400 text-xs">Editorial Authorization</p>
-                                </div>
-
-                                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6 flex flex-col items-center text-center">
-                                    <Building2 className="w-8 h-8 text-amber-400 mb-3" />
-                                    <h3 className="text-white font-semibold text-base mb-1">Production Oversight</h3>
-                                    <p className="text-neutral-400 text-xs">Execution Governance</p>
-                                </div>
-
-                                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6 flex flex-col items-center text-center">
-                                    <Archive className="w-8 h-8 text-amber-400 mb-3" />
-                                    <h3 className="text-white font-semibold text-base mb-1">Diwan-e-Amanat</h3>
-                                    <p className="text-neutral-400 text-xs">Registry Validation</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Authority Boundaries
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4">
-                                {authorityBoundaries.map((boundary, idx) => (
-                                    <p key={idx} className="text-neutral-300 leading-relaxed">
-                                        {boundary}
-                                    </p>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Continuity & Amendment
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 leading-relaxed mb-4">
-                                Mithaq may only be amended through documented institutional review. Amendments require recorded approval across governing bodies.
-                            </p>
-                            <p className="text-neutral-300 leading-relaxed">
-                                This makes the charter real.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-6xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Constitutional Pillars
-                        </h2>
-
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <StudioCardGrid cols={2}>
                             {constitutionalPillars.map((pillar, idx) => (
-                                <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-4 mb-3">
-                                        <pillar.icon className="w-6 h-6 text-amber-400 flex-shrink-0" />
-                                        <h3 className="text-white font-semibold">{pillar.title}</h3>
-                                    </div>
-                                    <p className="text-neutral-400 text-sm leading-relaxed">
-                                        {pillar.description}
-                                    </p>
-                                </div>
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={pillar.icon}
+                                    title={pillar.title}
+                                    description={pillar.description}
+                                />
                             ))}
-                        </div>
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Editorial Principles
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Accountability Mechanisms"
+                            subtitle="Documented distribution of authority and cross-layer validation"
+                        />
 
-                        <div className="space-y-4">
-                            {editorialPrinciples.map((principle, idx) => (
-                                <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-2">
-                                        <CheckCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                                        <h3 className="text-white font-semibold">{principle.title}</h3>
-                                    </div>
-                                    <p className="text-neutral-400 text-sm leading-relaxed pl-8">
-                                        {principle.content}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-6xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Accountability Mechanisms
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg overflow-hidden">
+                        <div className="elite-card overflow-hidden shadow-2xl">
                             <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-neutral-900/50 border-b border-neutral-800">
+                                <table className="w-full text-left">
+                                    <thead className="bg-white/[0.03] border-b border-white/5">
                                         <tr>
-                                            <th className="text-left px-6 py-4 text-amber-400 font-semibold text-sm">Layer</th>
-                                            <th className="text-left px-6 py-4 text-amber-400 font-semibold text-sm">Governing Body</th>
-                                            <th className="text-left px-6 py-4 text-amber-400 font-semibold text-sm">Accountability</th>
+                                            <th className="px-8 py-6 text-amber-400 text-[10px] font-black uppercase tracking-[0.3em]">Layer</th>
+                                            <th className="px-8 py-6 text-amber-400 text-[10px] font-black uppercase tracking-[0.3em]">Governing Body</th>
+                                            <th className="px-8 py-6 text-amber-400 text-[10px] font-black uppercase tracking-[0.3em]">Accountability</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {accountabilityMechanisms.map((mechanism, idx) => (
-                                            <tr key={idx} className="border-b border-neutral-800 last:border-0">
-                                                <td className="px-6 py-4 text-white font-medium text-sm">{mechanism.layer}</td>
-                                                <td className="px-6 py-4 text-neutral-300 text-sm">{mechanism.body}</td>
-                                                <td className="px-6 py-4 text-neutral-400 text-sm leading-relaxed">{mechanism.accountability}</td>
+                                    <tbody className="divide-y divide-white/5">
+                                        {accountabilityMechanisms.map((m, idx) => (
+                                            <tr key={idx} className="hover:bg-white/[0.01] transition-colors">
+                                                <td className="px-8 py-6 text-white text-xs font-black uppercase tracking-widest">{m.layer}</td>
+                                                <td className="px-8 py-6 text-amber-400/90 text-sm font-bold">{m.body}</td>
+                                                <td className="px-8 py-6 text-neutral-400 text-sm leading-relaxed font-light">{m.accountability}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -413,82 +280,83 @@ export default function Mithaq() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-6xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Constitutional Protection
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="flex items-start gap-4 mb-6">
-                                <ScrollText className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
-                                <div>
-                                    <h3 className="text-white font-semibold mb-2">Amendment Process</h3>
-                                    <p className="text-neutral-300 leading-relaxed text-sm mb-4">
-                                        Mithaq may only be amended through documented institutional review requiring:
-                                    </p>
-                                    <ul className="space-y-2 text-neutral-400 text-sm">
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-amber-400 mt-1">•</span>
-                                            <span>Written proposal submitted to all governing bodies</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-amber-400 mt-1">•</span>
-                                            <span>Unanimous approval from Majlis-e-Nazr</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-amber-400 mt-1">•</span>
-                                            <span>Production oversight verification</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-amber-400 mt-1">•</span>
-                                            <span>Permanent record in Diwan-e-Amanat with rationale</span>
-                                        </li>
-                                    </ul>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="grid lg:grid-cols-2 gap-12">
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Authority Boundaries"
+                                    subtitle="Non-negotiable constraints to prevent procedural bypass"
+                                />
+                                <div className="space-y-4">
+                                    {[
+                                        'No creative function bypasses editorial authorization.',
+                                        'No production function bypasses structured workflow.',
+                                        'No release occurs without registry confirmation.',
+                                        'Authority is sequential.'
+                                    ].map((b, i) => (
+                                        <div key={i} className="flex items-center gap-4 p-5 elite-card border-none bg-white/[0.02]">
+                                            <Shield className="w-4 h-4 text-amber-400/50 shrink-0" />
+                                            <p className="text-neutral-300 text-sm font-medium">{b}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 leading-relaxed text-sm italic">
-                                This deliberate friction prevents arbitrary changes and ensures constitutional stability across leadership transitions.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12 pb-24">
-                <PageContainer>
-                    <div className="max-w-6xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Institutional Permanence
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 leading-relaxed mb-6">
-                                Mithaq governs:
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-x-8 gap-y-3 mb-6">
-                                {governanceScope.map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Constitutional Protection"
+                                    subtitle="Structural friction to ensure continuity and prevent arbitrary drift"
+                                />
+                                <div className="elite-card p-8 bg-linear-to-br from-amber-400/5 to-transparent">
+                                    <div className="flex items-start gap-4 mb-6">
+                                        <ScrollText className="w-6 h-6 text-amber-400 shrink-0 mt-1" />
+                                        <div>
+                                            <p className="text-white font-bold text-lg mb-4 tracking-tight">Amendment Process</p>
+                                            <ul className="space-y-4">
+                                                {[
+                                                    'Written proposal to all governing bodies',
+                                                    'Unanimous approval from Majlis-e-Nazr',
+                                                    'Production oversight verification',
+                                                    'Permanent record in Diwan-e-Amanat'
+                                                ].map((item, i) => (
+                                                    <li key={i} className="flex items-center gap-3">
+                                                        <div className="w-1 h-1 rounded-full bg-amber-400/60" />
+                                                        <span className="text-neutral-400 text-xs font-bold uppercase tracking-widest">{item}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     </div>
-                                ))}
+                                    <p className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-8 pt-6 border-t border-white/5 text-center italic">
+                                        Friction is a governance feature, not a technical limitation.
+                                    </p>
+                                </div>
                             </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 leading-relaxed">
-                                This charter outlasts individuals. It survives leadership changes, technological shifts, and market fluctuations. Expansion does not dilute governance—it extends institutional authority into new domains under the same constitutional framework.
-                            </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
+
+            <StudioGovernancePanel 
+                title="Institutional Permanence"
+                description="Expansion does not dilute governance—it extends institutional authority into new domains under the same constitutional framework. Mithaq outlasts individuals and market shifts."
+                shieldText="Governed Institutional Charter"
+                background="midnight"
+            />
+
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

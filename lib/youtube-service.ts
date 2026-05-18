@@ -315,8 +315,8 @@ class YouTubeService {
 
             // Fallback to search if playlist fails
             return await this.searchVideos('', count, 'date');
-        } catch (error) {
-            console.error('[YouTubeService] getLatestVideos failed:', error.message);
+        } catch (error: any) {
+            console.error('[YouTubeService] getLatestVideos failed:', error.message || error);
             throw error;
         }
     }

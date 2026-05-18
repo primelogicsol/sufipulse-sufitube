@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '../../../components/layout/DashboardLayout';
+import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { 
     CircleCheck as CheckCircle, 
     Circle as UncheckedCircle, 
@@ -16,7 +16,9 @@ import {
     XCircle,
     Layers,
     Cpu,
-    Globe
+    Globe,
+    X,
+    ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -260,7 +262,7 @@ export default function AdminProducerApplications() {
                                     onClick={() => setSelectedApp(null)}
                                     className="p-2 hover:bg-white/5 rounded-xl text-neutral-500 hover:text-white transition-all"
                                 >
-                                    <CloseIcon size={24} />
+                                    <X size={24} />
                                 </button>
                             </div>
 

@@ -7,24 +7,20 @@ import {
     Search, Eye, Check, X, User, Music, DollarSign,
     AlertCircle, BarChart3, Users, Target, TrendingUp, Rocket,
     Loader2, Globe, ExternalLink, RefreshCw, Play, Activity,
-    Flag, FileText,
+    Flag, FileText, CheckCircle
 } from 'lucide-react';
+import Link from 'next/link';
 
-// Lifecycle transitions available per current status.
-// Only forward moves are allowed; never backward.
+/**
+ * Institutional Lifecycle Transitions
+ */
 const LIFECYCLE_NEXT: Record<string, { status: string; label: string; icon: any; color: string }> = {
-    campaign_preparation_requested: { status: 'approved', label: 'Approve Campaign',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
-    awaiting_user_approval:         { status: 'approved', label: 'Approve Campaign',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
-    pending_google_ads_manual_review: { status: 'approved', label: 'Approve Manual',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
-    google_ads_verified:            { status: 'approved', label: 'Approve Verified',  icon: Check,    color: 'text-green-400 hover:text-green-300' },
-    google_ads_connected_pending_review: { status: 'google_ads_verified_adopter', label: 'Verify Adopter', icon: Check, color: 'text-green-400 hover:text-green-300' },
-    google_ads_verified_adopter:    { status: 'approved', label: 'Approve Campaign', icon: Check, color: 'text-green-400 hover:text-green-300' },
-    approved:   { status: 'scheduled',   label: 'Mark Scheduled', icon: Rocket,   color: 'text-amber-400 hover:text-amber-300' },
-    scheduled:  { status: 'live',        label: 'Mark Live',      icon: Play,     color: 'text-green-400 hover:text-green-300' },
-    live:       { status: 'monitoring',  label: 'Mark Monitoring', icon: Activity, color: 'text-blue-400 hover:text-blue-300' },
-    monitoring: { status: 'completed',   label: 'Mark Completed',  icon: Flag,     color: 'text-purple-400 hover:text-purple-300' },
-    completed:  { status: 'report_ready',label: 'Report Ready',    icon: FileText, color: 'text-amber-400 hover:text-amber-300' },
-    reconnect_required: { status: 'google_ads_connection_pending', label: 'Request Reconnect', icon: RefreshCw, color: 'text-amber-400 hover:text-amber-300' },
+    submitted:         { status: 'under_review',     label: 'Mark Under Review', icon: Search,     color: 'text-amber-400 hover:text-amber-300' },
+    payment_pending:   { status: 'payment_received', label: 'Confirm Payment',   icon: DollarSign,   color: 'text-green-400 hover:text-green-300' },
+    payment_received:  { status: 'under_review',     label: 'Mark Under Review', icon: Search,     color: 'text-amber-400 hover:text-amber-300' },
+    under_review:      { status: 'approved',         label: 'Approve Adoption',  icon: Check,      color: 'text-green-400 hover:text-green-300' },
+    approved:          { status: 'live',             label: 'Mark Live',         icon: Play,       color: 'text-emerald-400 hover:text-emerald-300' },
+    live:              { status: 'completed',        label: 'Mark Completed',    icon: Flag,       color: 'text-blue-400 hover:text-blue-300' },
 };
 
 interface LaunchState {
@@ -112,12 +108,17 @@ export default function AdminSongAdoptions() {
     };
 
     const patchAdoption = async (id: string, patch: Record<string, any>) => {
-        await fetch(`/api/adoptions/${id}`, {
+        const res = await fetch(`/api/adoptions/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(patch),
         });
+        if (res.ok) {
+            const updated = await res.json();
+            setAdoptions(prev => prev.map(a => a.id === id ? updated : a));
+            if (selectedAdoption?.id === id) setSelectedAdoption(updated);
+        }
     };
 
     const updateAdoptionStatus = async (adoptionId: string, status: string) => {
@@ -131,12 +132,12 @@ export default function AdminSongAdoptions() {
     };
 
     const canLaunch = (adoption: any) => {
-        const paymentOk = adoption.paymentStatus === 'paid' || adoption.methodType === 'use_my_google_ads';
-        return adoption.adoptionStatus === 'approved' && paymentOk;
+        const paymentOk = adoption.paymentStatus === 'paid' || adoption.methodType === 'use_my_google_ads' || adoption.adoptionStatus === 'payment_received';
+        return (adoption.adoptionStatus === 'approved' || adoption.adoptionStatus === 'live') && paymentOk;
     };
 
     const openLaunchPanel = (adoption: any) => {
-        setLaunchState({ ...defaultLaunch(), step: 'input' });
+        setLaunchState({ ...defaultLaunch(), step: 'input', youtubeId: adoption.youtubeId || '' });
         setSelectedAdoption(adoption);
     };
 
@@ -148,20 +149,11 @@ export default function AdminSongAdoptions() {
             setLaunchState(prev => ({ ...prev, error: 'YouTube Video ID is required.' }));
             return;
         }
-        if (!adoption.releaseId) {
-            setLaunchState(prev => ({ ...prev, error: 'Release ID missing from adoption record.' }));
-            return;
-        }
 
         setLaunchState(prev => ({ ...prev, step: 'launching', error: '' }));
 
         try {
-            let releaseTitle = `Release ${adoption.releaseId}`;
-            try {
-                const relRes = await fetch(`/api/releases/${adoption.releaseId}`);
-                if (relRes.ok) { const rel = await relRes.json(); releaseTitle = rel.title || releaseTitle; }
-            } catch {}
-
+            let releaseTitle = adoption.releaseTitle || `Release ${adoption.releaseId}`;
             const body: Record<string, any> = {
                 adoption_id: adoption.id,
                 method_type: adoption.methodType,
@@ -185,7 +177,7 @@ export default function AdminSongAdoptions() {
             if (!res.ok) throw new Error(data.error || 'Campaign creation failed');
 
             await patchAdoption(adoption.id, {
-                adoptionStatus: 'scheduled',
+                adoptionStatus: 'live',
                 campaignResourceName: data.campaign_resource_name,
             });
 
@@ -202,8 +194,10 @@ export default function AdminSongAdoptions() {
 
     const filteredAdoptions = adoptions.filter((a) => {
         const matchesSearch = !searchTerm ||
-            a.sponsorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            a.sponsorEmail?.toLowerCase().includes(searchTerm.toLowerCase());
+            (a.sponsorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (a.sponsorEmail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (a.releaseTitle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (a.id || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || a.adoptionStatus === statusFilter;
         const matchesMethod = methodFilter === 'all' || a.methodType === methodFilter;
         return matchesSearch && matchesStatus && matchesMethod;
@@ -211,30 +205,23 @@ export default function AdminSongAdoptions() {
 
     const getEffectivePaymentStatus = (a: any) => {
         if (a.methodType === 'use_my_google_ads') return 'not_required';
+        if (a.adoptionStatus === 'payment_received') return 'paid';
         return a.paymentStatus || 'unpaid';
     };
 
     const getStatusBadge = (status: string) => {
         const cfg: Record<string, { variant: any; label: string }> = {
-            draft:                               { variant: 'neutral', label: 'Draft' },
             submitted:                           { variant: 'neutral', label: 'Submitted' },
-            pending_review:                      { variant: 'neutral', label: 'Pending Review' },
-            pending_google_ads_manual_review:    { variant: 'gold',   label: 'Ads Manual Review' },
-            google_ads_verification_pending:     { variant: 'gold',   label: 'Ads Verification…' },
-            google_ads_verified:                 { variant: 'success', label: 'Ads Verified' },
-            google_ads_verification_failed:      { variant: 'error',  label: 'Ads Verify Failed' },
-            campaign_preparation_requested:      { variant: 'gold',   label: 'Campaign Prep Req.' },
-            admin_review:                        { variant: 'gold',    label: 'Admin Review' },
+            payment_pending:                     { variant: 'gold',    label: 'Payment Pending' },
+            payment_received:                    { variant: 'success', label: 'Payment Received' },
             under_review:                        { variant: 'gold',    label: 'Under Review' },
             approved:                            { variant: 'success', label: 'Approved' },
-            prepared:                            { variant: 'success', label: 'Prepared' },
-            scheduled:                           { variant: 'gold',    label: 'Scheduled' },
             live:                                { variant: 'success', label: 'Live' },
-            monitoring:                          { variant: 'success', label: 'Monitoring' },
             completed:                           { variant: 'success', label: 'Completed' },
-            report_ready:                        { variant: 'success', label: 'Report Ready' },
+            hidden:                              { variant: 'neutral', label: 'Hidden' },
+            rejected:                            { variant: 'error',   label: 'Rejected' },
+            archived:                            { variant: 'neutral', label: 'Archived' },
             cancelled:                           { variant: 'error',   label: 'Cancelled' },
-            failed:                              { variant: 'error',   label: 'Failed' },
         };
         const c = cfg[status] || { variant: 'neutral', label: status.replace(/_/g, ' ') };
         return <Badge variant={c.variant}>{c.label}</Badge>;
@@ -255,7 +242,7 @@ export default function AdminSongAdoptions() {
     };
 
     const totalCampaigns = adoptions.length;
-    const paidCampaigns = adoptions.filter((a) => a.paymentStatus === 'paid' || a.methodType === 'use_my_google_ads').length;
+    const paidCampaigns = adoptions.filter((a) => a.paymentStatus === 'paid' || a.methodType === 'use_my_google_ads' || a.adoptionStatus === 'payment_received').length;
     const totalBudget = adoptions.reduce((s, a) => s + Number(a.amountDue || 0), 0);
     const totalAdopters = new Set(adoptions.map((a) => a.sponsorEmail || a.userId).filter(Boolean)).size;
     const intentionCounts = adoptions.reduce<Record<string, number>>((acc, a) => {
@@ -341,26 +328,21 @@ export default function AdminSongAdoptions() {
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
-                        <input type="text" placeholder="Search by sponsor name or email…" value={searchTerm}
+                        <input type="text" placeholder="Search by sponsor name, email, or release title…" value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)} className="dashboard-input has-icon" />
                     </div>
                     <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="dashboard-input max-w-48">
                         <option value="all">All Statuses</option>
-                        <option value="draft">Draft</option>
-                        <option value="pending_review">Pending Review</option>
-                        <option value="campaign_preparation_requested">Campaign Prep Req.</option>
-                        <option value="pending_google_ads_manual_review">Ads Manual Review</option>
-                        <option value="google_ads_verification_failed">Ads Verify Failed</option>
-                        <option value="google_ads_verified">Ads Verified</option>
-                        <option value="awaiting_user_approval">Awaiting User Approval</option>
-                        <option value="admin_review">Admin Review</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="payment_pending">Payment Pending</option>
+                        <option value="payment_received">Payment Received</option>
+                        <option value="under_review">Under Review</option>
                         <option value="approved">Approved</option>
-                        <option value="scheduled">Scheduled</option>
                         <option value="live">Live</option>
-                        <option value="monitoring">Monitoring</option>
                         <option value="completed">Completed</option>
-                        <option value="report_ready">Report Ready</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="hidden">Hidden</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="archived">Archived</option>
                     </select>
                     <select value={methodFilter} onChange={(e) => setMethodFilter(e.target.value)} className="dashboard-input max-w-56">
                         <option value="all">All Methods</option>
@@ -427,12 +409,6 @@ export default function AdminSongAdoptions() {
                                                 <button onClick={() => { setSelectedAdoption(adoption); setLaunchState(defaultLaunch()); }} className="p-1 text-neutral-400 hover:text-neutral-200" title="View Details">
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                {(['pending_review', 'admin_review', 'campaign_preparation_requested', 'awaiting_user_approval', 'pending_google_ads_manual_review', 'google_ads_verified', 'google_ads_verification_failed'].includes(adoption.adoptionStatus)) && (
-                                                    <>
-                                                        <button onClick={() => updateAdoptionStatus(adoption.id, 'approved')} className="p-1 text-green-400 hover:text-green-300" title="Approve"><Check className="w-4 h-4" /></button>
-                                                        <button onClick={() => updateAdoptionStatus(adoption.id, 'cancelled')} className="p-1 text-red-400 hover:text-red-300" title="Reject"><X className="w-4 h-4" /></button>
-                                                    </>
-                                                )}
                                                 {LIFECYCLE_NEXT[adoption.adoptionStatus] && (() => {
                                                     const next = LIFECYCLE_NEXT[adoption.adoptionStatus];
                                                     const Icon = next.icon;
@@ -477,203 +453,181 @@ export default function AdminSongAdoptions() {
                 {selectedAdoption && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
                         onClick={() => { setSelectedAdoption(null); setLaunchState(defaultLaunch()); }}>
-                        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+                        <div className="bg-[#0a0a0a] border border-white/10 rounded-[32px] p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl"
                             onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-medium text-neutral-100">Adoption Details</h3>
-                                <button onClick={() => { setSelectedAdoption(null); setLaunchState(defaultLaunch()); }} className="text-neutral-400 hover:text-neutral-200">
-                                    <X className="w-5 h-5" />
+                            <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
+                                <div>
+                                    <h3 className="text-xl font-bold text-white tracking-tight">Institutional Adoption Detail</h3>
+                                    <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest mt-1">Ref: {selectedAdoption.id.slice(0,8).toUpperCase()}</p>
+                                </div>
+                                <button onClick={() => { setSelectedAdoption(null); setLaunchState(defaultLaunch()); }} className="text-neutral-400 hover:text-white transition-colors">
+                                    <X className="w-6 h-6" />
                                 </button>
                             </div>
 
-                            <div className="space-y-5">
+                            <div className="space-y-8">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs text-neutral-500 mb-1.5">Status</label>
-                                        {getStatusBadge(selectedAdoption.adoptionStatus)}
+                                        <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-2">Process Status</label>
+                                        <div className="flex items-center gap-2">
+                                            {getStatusBadge(selectedAdoption.adoptionStatus)}
+                                            <select 
+                                                value={selectedAdoption.adoptionStatus}
+                                                onChange={(e) => updateAdoptionStatus(selectedAdoption.id, e.target.value)}
+                                                className="bg-black border border-white/5 rounded-lg px-2 py-1 text-[10px] text-neutral-400 outline-none focus:border-amber-400"
+                                            >
+                                                <option value="submitted">Submitted</option>
+                                                <option value="payment_pending">Payment Pending</option>
+                                                <option value="payment_received">Payment Received</option>
+                                                <option value="under_review">Under Review</option>
+                                                <option value="approved">Approved</option>
+                                                <option value="live">Live</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="hidden">Hidden</option>
+                                                <option value="rejected">Rejected</option>
+                                                <option value="archived">Archived</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-neutral-500 mb-1.5">Payment</label>
+                                        <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-2">Payment</label>
                                         {getPaymentBadge(selectedAdoption)}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-sm font-semibold text-neutral-300 mb-2 flex items-center gap-2"><User className="w-4 h-4" /> Sponsor</h4>
-                                    <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-2 text-sm">
-                                        <div><span className="text-neutral-500">Name</span><div className="text-neutral-200">{selectedAdoption.sponsorName || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Email</span><div className="text-neutral-200">{selectedAdoption.sponsorEmail || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Type</span><div className="text-neutral-200 capitalize">{selectedAdoption.adopterType || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Location</span><div className="text-neutral-200">{selectedAdoption.sponsorCity ? `${selectedAdoption.sponsorCity}, ` : ''}{selectedAdoption.sponsorCountry || '—'}</div></div>
+                                    <h4 className="text-[11px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                        <User className="w-3.5 h-3.5" /> Sponsor Identity & Visibility
+                                    </h4>
+                                    <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 space-y-6">
+                                        <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                                            <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Legal Name</span><div className="text-neutral-200 font-medium">{selectedAdoption.sponsorName || '—'}</div></div>
+                                            <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Institutional Email</span><div className="text-neutral-200">{selectedAdoption.sponsorEmail || '—'}</div></div>
+                                            <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Adopter Type</span><div className="text-neutral-200 capitalize font-medium">{selectedAdoption.adopterType || '—'}</div></div>
+                                            <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Location</span><div className="text-neutral-200">{selectedAdoption.sponsorCity ? `${selectedAdoption.sponsorCity}, ` : ''}{selectedAdoption.sponsorCountry || '—'}</div></div>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-white/5 space-y-5">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-xs font-bold text-white block">Public Listing Approved</span>
+                                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest">Controls appearance in 'Recent Adopters'</span>
+                                                </div>
+                                                <button 
+                                                    onClick={() => approvePublicListing(selectedAdoption.id, !selectedAdoption.publicListingApproved)}
+                                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${selectedAdoption.publicListingApproved ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-neutral-500/10 text-neutral-500 border-neutral-500/30'}`}
+                                                >
+                                                    {selectedAdoption.publicListingApproved ? 'Authorized' : 'Suppressed'}
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-xs font-bold text-white block">Anonymous Sponsorship</span>
+                                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest">Overrides name with 'Anonymous' publicly</span>
+                                                </div>
+                                                <button 
+                                                    onClick={() => { patchAdoption(selectedAdoption.id, { isAnonymous: !selectedAdoption.isAnonymous }).then(() => loadAdoptions()); }}
+                                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${selectedAdoption.isAnonymous ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' : 'bg-neutral-500/10 text-neutral-500 border-neutral-500/30'}`}
+                                                >
+                                                    {selectedAdoption.isAnonymous ? 'Anonymous' : 'Named'}
+                                                </button>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-600 uppercase tracking-widest block ml-1">Public Display Name (Override)</label>
+                                                <input 
+                                                    type="text"
+                                                    defaultValue={selectedAdoption.sponsorName}
+                                                    onBlur={(e) => patchAdoption(selectedAdoption.id, { sponsorName: e.target.value })}
+                                                    placeholder="Enter name as it should appear publicly..."
+                                                    className="w-full bg-black border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-400 outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-sm font-semibold text-neutral-300 mb-2 flex items-center gap-2"><Music className="w-4 h-4" /> Campaign Details</h4>
-                                    <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-2 text-sm">
-                                        <div><span className="text-neutral-500">Song</span><div className="text-neutral-200">{selectedAdoption.releaseTitle || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Method</span><div className="text-neutral-200">{selectedAdoption.methodType === 'managed_sufitube' ? 'Managed by SufiPulse' : 'My Google Ads'}</div></div>
-                                        <div><span className="text-neutral-500">Amount</span><div className="text-neutral-200">${selectedAdoption.amountDue || 0}</div></div>
-                                        <div><span className="text-neutral-500">Intention</span><div className="text-neutral-200">{INTENTION_LABELS[selectedAdoption.campaignIntention] || selectedAdoption.campaignIntention || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Regions</span><div className="text-neutral-200">{selectedAdoption.targetRegions?.join(', ') || '—'}</div></div>
-                                        <div><span className="text-neutral-500">Reference</span><div className="text-neutral-400 font-mono text-xs">{selectedAdoption.id}</div></div>
+                                    <h4 className="text-[11px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                        <Music className="w-3.5 h-3.5" /> Campaign Context
+                                    </h4>
+                                    <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
+                                        <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Target Release</span><div className="text-neutral-200 font-bold tracking-tight">{selectedAdoption.releaseTitle || '—'}</div></div>
+                                        <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Methodology</span><div className="text-neutral-200 font-medium">{selectedAdoption.methodType === 'managed_sufitube' ? 'SufiPulse Managed' : 'Google Ads Direct'}</div></div>
+                                        <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Sponsorship Amount</span><div className="text-amber-400 font-bold">${selectedAdoption.amountDue || 0}</div></div>
+                                        <div><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Stated Intention</span><div className="text-neutral-200 font-medium">{INTENTION_LABELS[selectedAdoption.campaignIntention] || selectedAdoption.campaignIntention || '—'}</div></div>
+                                        <div className="col-span-2"><span className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Target Regions</span><div className="text-neutral-400 text-xs">{selectedAdoption.targetRegions?.join(', ') || '—'}</div></div>
                                     </div>
                                 </div>
-
-                                {selectedAdoption.methodType === 'use_my_google_ads' && (
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-neutral-300 mb-2 flex items-center gap-2"><Globe className="w-4 h-4" /> Google Ads</h4>
-                                        <div className="bg-neutral-800 rounded-lg p-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                            <div><span className="text-neutral-500">Account Email</span><div className="text-neutral-200 truncate" title={selectedAdoption.googleAdsAccountEmail || ''}>{selectedAdoption.googleAdsAccountEmail || '—'}</div></div>
-                                            <div><span className="text-neutral-500">Customer ID</span><div className="text-neutral-200 font-mono">{selectedAdoption.googleAdsCustomerId || '—'}</div></div>
-                                            <div><span className="text-neutral-500">Connection</span>
-                                                <div className={
-                                                    selectedAdoption.googleAdsConnectionStatus === 'connected' ? 'text-green-400' : 
-                                                    selectedAdoption.googleAdsConnectionStatus === 'manual_submission' ? 'text-amber-400' : 'text-neutral-500'
-                                                }>
-                                                    {selectedAdoption.googleAdsConnectionStatus || selectedAdoption.oauthStatus || 'not_connected'}
-                                                </div>
-                                            </div>
-                                            <div><span className="text-neutral-500">Token Status</span>
-                                                <div className={selectedAdoption.googleAdsTokenStatus === 'active' ? 'text-green-400' : 'text-amber-400'}>
-                                                    {selectedAdoption.googleAdsTokenStatus || '—'}
-                                                </div>
-                                            </div>
-                                            <div><span className="text-neutral-500">Access Status</span>
-                                                <div className={selectedAdoption.googleAdsAccessStatus === 'unverified' ? 'text-amber-400' : 'text-neutral-200'}>
-                                                    {selectedAdoption.googleAdsAccessStatus || '—'}
-                                                </div>
-                                            </div>
-                                            <div><span className="text-neutral-500">Verification</span>
-                                                <div className={
-                                                    selectedAdoption.googleAdsVerificationStatus === 'verified' ? 'text-green-400' :
-                                                    selectedAdoption.googleAdsVerificationStatus === 'failed' ? 'text-red-400' :
-                                                    selectedAdoption.googleAdsVerificationStatus === 'manual_review_required' ? 'text-amber-400' :
-                                                    'text-neutral-500'
-                                                }>
-                                                    {selectedAdoption.googleAdsVerificationStatus || 'not_verified'}
-                                                </div>
-                                            </div>
-                                            <div className="col-span-2 mt-1 pt-2 border-t border-neutral-700/50">
-                                                <span className="text-neutral-500">Campaign Resource</span>
-                                                <div className="text-neutral-400 font-mono text-xs truncate mt-0.5" title={selectedAdoption.campaignResourceName || ''}>
-                                                    {selectedAdoption.campaignResourceName || '—'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* Manual review alert */}
-                                        {(selectedAdoption.adoptionStatus === 'pending_google_ads_manual_review' ||
-                                          selectedAdoption.googleAdsVerificationStatus === 'manual_review_required' ||
-                                          selectedAdoption.googleAdsVerificationStatus === 'failed') && (
-                                            <div className="mt-2 border border-amber-700/40 bg-amber-900/10 rounded-lg px-3 py-2 text-xs text-amber-400">
-                                                Sponsor submitted for manual review — API verification was skipped or failed. Verify the Customer ID manually before launching a campaign.
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
 
                                 {selectedAdoption.dedicationMessage && (
-                                    <div className="bg-neutral-800 rounded-lg p-4">
-                                        <p className="text-xs text-neutral-500 mb-1">Dedication</p>
-                                        <p className="text-neutral-300 italic text-sm">"{selectedAdoption.dedicationMessage}"</p>
-                                    </div>
-                                )}
-
-                                {/* Admin note field */}
-                                <div>
-                                    <label className="block text-xs text-neutral-500 mb-1.5">Admin Note</label>
-                                    <textarea
-                                        defaultValue={selectedAdoption.adminNote || ''}
-                                        onBlur={async (e) => {
-                                            await patchAdoption(selectedAdoption.id, { adminNote: e.target.value });
-                                        }}
-                                        placeholder="Add an internal note…"
-                                        rows={2}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-500 resize-none"
-                                    />
-                                </div>
-
-                                {/* Report URL field */}
-                                <div>
-                                    <label className="block text-xs text-neutral-500 mb-1.5">Report URL</label>
-                                    <input
-                                        type="url"
-                                        defaultValue={selectedAdoption.reportUrl || ''}
-                                        onBlur={async (e) => {
-                                            if (e.target.value !== (selectedAdoption.reportUrl || '')) {
-                                                await patchAdoption(selectedAdoption.id, { reportUrl: e.target.value || null });
-                                            }
-                                        }}
-                                        placeholder="https://…"
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-500"
-                                    />
-                                </div>
-
-                                {(['pending_review', 'admin_review', 'campaign_preparation_requested', 'awaiting_user_approval', 'pending_google_ads_manual_review', 'google_ads_verification_failed', 'google_ads_verified'].includes(selectedAdoption.adoptionStatus)) && launchState.step === 'idle' && (
-                                    <div className="space-y-2">
-                                        {(selectedAdoption.adoptionStatus === 'pending_google_ads_manual_review' || selectedAdoption.adoptionStatus === 'google_ads_verification_failed') && (
-                                            <p className="text-xs text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2">
-                                                Google Ads manual review — verify the Customer ID in the panel above before approving.
-                                            </p>
-                                        )}
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'approved'); setSelectedAdoption((prev: any) => prev ? { ...prev, adoptionStatus: 'approved' } : prev); }}
-                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
-                                            >Approve</button>
-                                            <button
-                                                onClick={() => { updateAdoptionStatus(selectedAdoption.id, 'cancelled'); setSelectedAdoption(null); }}
-                                                className="px-4 py-2 border border-red-600 text-red-400 hover:bg-red-600/10 rounded-lg transition-colors text-sm"
-                                            >Reject</button>
+                                    <div>
+                                        <h4 className="text-[11px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-3">Sponsor Dedication</h4>
+                                        <div className="bg-amber-400/[0.02] border border-amber-400/10 rounded-2xl p-6">
+                                            <p className="text-neutral-300 italic text-base leading-relaxed">"{selectedAdoption.dedicationMessage}"</p>
                                         </div>
                                     </div>
                                 )}
 
-                                {LIFECYCLE_NEXT[selectedAdoption.adoptionStatus] && launchState.step === 'idle' && (() => {
-                                    const next = LIFECYCLE_NEXT[selectedAdoption.adoptionStatus];
-                                    const Icon = next.icon;
-                                    return (
-                                        <button
-                                            onClick={() => {
-                                                updateAdoptionStatus(selectedAdoption.id, next.status);
-                                                setSelectedAdoption((prev: any) => prev ? { ...prev, adoptionStatus: next.status } : prev);
-                                            }}
-                                            className="w-full px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 rounded-lg transition-colors text-sm flex items-center justify-center gap-2"
-                                        >
-                                            <Icon className="w-4 h-4" /> {next.label}
-                                        </button>
-                                    );
-                                })()}
+                                {/* Admin Management */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[11px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4">Institutional Oversight</h4>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1">Internal Coordination Notes</label>
+                                            <textarea
+                                                defaultValue={selectedAdoption.adminNote || ''}
+                                                onBlur={async (e) => {
+                                                    await patchAdoption(selectedAdoption.id, { adminNote: e.target.value });
+                                                }}
+                                                placeholder="Add internal notes for governance team..."
+                                                rows={3}
+                                                className="w-full bg-black border border-white/5 rounded-xl px-4 py-3 text-xs text-neutral-300 placeholder-neutral-700 focus:border-amber-400 outline-none resize-none transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1">Official Report URL</label>
+                                            <div className="relative">
+                                                <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+                                                <input
+                                                    type="url"
+                                                    defaultValue={selectedAdoption.reportUrl || ''}
+                                                    onBlur={async (e) => {
+                                                        if (e.target.value !== (selectedAdoption.reportUrl || '')) {
+                                                            await patchAdoption(selectedAdoption.id, { reportUrl: e.target.value || null });
+                                                        }
+                                                    }}
+                                                    placeholder="https://analytics.sufipulse.com/..."
+                                                    className="w-full bg-black border border-white/5 rounded-xl pl-12 pr-4 py-3 text-xs text-blue-400 placeholder-neutral-700 focus:border-amber-400 outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {canLaunch(selectedAdoption) && launchState.step !== 'done' && (
-                                    <div className="border border-amber-600/30 bg-amber-900/10 rounded-xl p-5 space-y-4">
-                                        <div className="flex items-center gap-2">
-                                            <Rocket className="w-5 h-5 text-amber-400" />
-                                            <h4 className="text-sm font-semibold text-amber-300">Launch Google Ads Campaign</h4>
+                                    <div className="border border-amber-400/20 bg-amber-400/[0.02] rounded-3xl p-8 space-y-6 shadow-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <Rocket className="w-6 h-6 text-amber-400" />
+                                            <h4 className="text-base font-bold text-white tracking-tight">Activate Ad Campaign</h4>
                                         </div>
                                         <p className="text-xs text-neutral-400 leading-relaxed">
-                                            Campaign will be created in <strong className="text-amber-300">PAUSED</strong> state. Activate manually in Google Ads Manager after review.
+                                            Proceed to generate a PAUSED campaign in Google Ads. Institutional team must activate manually after creative review.
                                         </p>
 
-                                        <div>
-                                            <label className="block text-xs text-neutral-400 mb-1.5">YouTube Video ID *</label>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1">Validated YouTube Video ID</label>
                                             <input
                                                 type="text"
                                                 value={launchState.youtubeId}
                                                 onChange={(e) => setLaunchState(prev => ({ ...prev, youtubeId: e.target.value, error: '' }))}
-                                                placeholder="e.g. dQw4w9WgXcQ"
-                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                                                placeholder="e.g. q58mRXIsi-Y"
+                                                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-700 focus:border-amber-400 outline-none"
                                             />
-                                            {launchState.youtubeId && (
-                                                <a href={`https://www.youtube.com/watch?v=${launchState.youtubeId}`} target="_blank" rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-1">
-                                                    <ExternalLink className="w-3 h-3" /> Preview on YouTube
-                                                </a>
-                                            )}
                                         </div>
 
                                         {launchState.error && (
-                                            <div className="text-xs text-red-400 border border-red-700/40 bg-red-900/20 rounded-lg px-3 py-2">
+                                            <div className="text-xs font-bold uppercase tracking-wider text-red-400 border border-red-500/20 bg-red-500/5 rounded-xl px-4 py-3">
                                                 {launchState.error}
                                             </div>
                                         )}
@@ -681,29 +635,28 @@ export default function AdminSongAdoptions() {
                                         <button
                                             onClick={executeLaunch}
                                             disabled={launchState.step === 'launching' || !launchState.youtubeId.trim()}
-                                            className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                            className="w-full py-4 bg-amber-400 hover:bg-amber-500 disabled:opacity-30 disabled:cursor-not-allowed text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-xl transition-all flex items-center justify-center gap-3 shadow-xl"
                                         >
                                             {launchState.step === 'launching'
-                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating campaign…</>
-                                                : <><Rocket className="w-4 h-4" /> Create Campaign (PAUSED)</>}
+                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Authenticating Protocol…</>
+                                                : <><Rocket className="w-4 h-4" /> Create Institutional Campaign</>}
                                         </button>
                                     </div>
                                 )}
 
                                 {launchState.step === 'done' && (
-                                    <div className="border border-green-600/30 bg-green-900/10 rounded-xl p-5 space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <Check className="w-5 h-5 text-green-400" />
-                                            <h4 className="text-sm font-semibold text-green-300">Campaign Created (PAUSED)</h4>
+                                    <div className="border border-emerald-500/20 bg-emerald-500/[0.02] rounded-3xl p-8 space-y-4 shadow-2xl animate-in fade-in zoom-in">
+                                        <div className="flex items-center gap-3">
+                                            <CheckCircle className="w-6 h-6 text-emerald-500" />
+                                            <h4 className="text-base font-bold text-white tracking-tight">Campaign Logged</h4>
                                         </div>
-                                        <div className="text-sm space-y-1">
-                                            <div><span className="text-neutral-500">Campaign:</span> <span className="font-mono text-xs text-neutral-300">{launchState.campaignResource}</span></div>
-                                            <div><span className="text-neutral-500">Customer:</span> <span className="font-mono text-xs text-neutral-300">{launchState.customerId}</span></div>
+                                        <div className="space-y-3 pt-2">
+                                            <div><p className="text-[9px] text-neutral-600 font-black uppercase tracking-widest">Resource Path</p><p className="font-mono text-[10px] text-neutral-300 truncate">{launchState.campaignResource}</p></div>
+                                            <div><p className="text-[9px] text-neutral-600 font-black uppercase tracking-widest">Customer ID</p><p className="font-mono text-[10px] text-neutral-300">{launchState.customerId}</p></div>
                                         </div>
-                                        <p className="text-xs text-neutral-400">Activate the campaign in Google Ads Manager when ready to go live.</p>
                                         <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300">
-                                            <ExternalLink className="w-3 h-3" /> Open Google Ads Manager
+                                            className="w-full py-3 bg-white/[0.03] hover:bg-white/5 border border-white/10 text-neutral-400 hover:text-white text-[9px] font-black uppercase tracking-[0.3em] rounded-xl transition-all flex items-center justify-center gap-2 mt-4">
+                                            Open Ads Manager <ExternalLink size={12} />
                                         </a>
                                     </div>
                                 )}

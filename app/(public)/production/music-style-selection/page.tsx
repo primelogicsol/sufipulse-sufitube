@@ -5,6 +5,7 @@ import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { useState } from 'react';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function MusicStyleSelection() {
     const [activeTab, setActiveTab] = useState('fundamentals');
@@ -181,220 +182,90 @@ export default function MusicStyleSelection() {
     ];
 
     const renderContent = () => {
-        switch (activeTab) {
-            case 'fundamentals':
-                return (
-                    <div className="space-y-8">
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-2xl font-bold text-white mb-4">Overview</h3>
-                            <p className="text-neutral-300 leading-relaxed">
-                                {sacredFundamentals.overview}
-                            </p>
-                        </div>
+        const contentMap: Record<string, any> = {
+            fundamentals: sacredFundamentals,
+            maqam: maqamSystem,
+            rhythms: sacredRhythms,
+            acoustics: sacredAcoustics
+        };
 
-                        <div>
-                            <h3 className="text-2xl font-bold text-white mb-6">Core Principles</h3>
-                            <div className="space-y-6">
-                                {sacredFundamentals.corePrinciples.map((principle, idx) => (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                            <div>
-                                                <h4 className="text-white font-semibold mb-1">{principle.title}</h4>
-                                                <p className="text-amber-400/80 text-sm mb-3 italic">{principle.description}</p>
-                                                <p className="text-neutral-300 text-sm leading-relaxed">{principle.detail}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+        const data = contentMap[activeTab];
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-xl font-bold text-white mb-4">Practical Applications</h3>
-                            <div className="space-y-3">
-                                {sacredFundamentals.practicalApplications.map((app, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm leading-relaxed">{app}</p>
+        if (!data) return null;
+
+        return (
+            <div className="space-y-8 animate-in fade-in duration-500">
+                <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-10 shadow-2xl">
+                    <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">Overview</h3>
+                    <p className="text-neutral-300 text-lg leading-relaxed font-light">
+                        {data.overview}
+                    </p>
+                </div>
+
+                <div>
+                    <h3 className="text-[10px] font-black text-amber-400 uppercase tracking-[0.4em] mb-8 text-center md:text-left">Core Principles</h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {data.corePrinciples.map((principle: any, idx: number) => (
+                            <div key={idx} className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8 hover:border-amber-400/30 transition-all group">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-1 h-12 bg-amber-400/20 group-hover:bg-amber-400 transition-colors rounded-full flex-shrink-0" />
+                                    <div>
+                                        <h4 className="text-white font-bold text-lg mb-1">{principle.title}</h4>
+                                        <p className="text-amber-400/80 text-xs font-black uppercase tracking-widest mb-4">{principle.description}</p>
+                                        <p className="text-neutral-400 text-sm leading-relaxed">{principle.detail}</p>
                                     </div>
-                                ))}
+                                </div>
                             </div>
-                        </div>
+                        ))}
                     </div>
-                );
+                </div>
 
-            case 'maqam':
-                return (
-                    <div className="space-y-8">
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-2xl font-bold text-white mb-4">Overview</h3>
-                            <p className="text-neutral-300 leading-relaxed">
-                                {maqamSystem.overview}
-                            </p>
-                        </div>
-
-                        <div>
-                            <h3 className="text-2xl font-bold text-white mb-6">Core Principles</h3>
-                            <div className="space-y-6">
-                                {maqamSystem.corePrinciples.map((principle, idx) => (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                            <div>
-                                                <h4 className="text-white font-semibold mb-1">{principle.title}</h4>
-                                                <p className="text-amber-400/80 text-sm mb-3 italic">{principle.description}</p>
-                                                <p className="text-neutral-300 text-sm leading-relaxed">{principle.detail}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                <div className="bg-black/20 border border-white/5 rounded-xl p-10">
+                    <h3 className="text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-3">
+                        <Sparkles className="w-5 h-5 text-amber-400" /> Practical Applications
+                    </h3>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        {data.practicalApplications.map((app: string, idx: number) => (
+                            <div key={idx} className="flex items-start gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                                <p className="text-neutral-300 text-sm font-medium leading-relaxed">{app}</p>
                             </div>
-                        </div>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-xl font-bold text-white mb-4">Practical Applications</h3>
-                            <div className="space-y-3">
-                                {maqamSystem.practicalApplications.map((app, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm leading-relaxed">{app}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        ))}
                     </div>
-                );
-
-            case 'rhythms':
-                return (
-                    <div className="space-y-8">
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-2xl font-bold text-white mb-4">Overview</h3>
-                            <p className="text-neutral-300 leading-relaxed">
-                                {sacredRhythms.overview}
-                            </p>
-                        </div>
-
-                        <div>
-                            <h3 className="text-2xl font-bold text-white mb-6">Core Principles</h3>
-                            <div className="space-y-6">
-                                {sacredRhythms.corePrinciples.map((principle, idx) => (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                            <div>
-                                                <h4 className="text-white font-semibold mb-1">{principle.title}</h4>
-                                                <p className="text-amber-400/80 text-sm mb-3 italic">{principle.description}</p>
-                                                <p className="text-neutral-300 text-sm leading-relaxed">{principle.detail}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-xl font-bold text-white mb-4">Practical Applications</h3>
-                            <div className="space-y-3">
-                                {sacredRhythms.practicalApplications.map((app, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm leading-relaxed">{app}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            case 'acoustics':
-                return (
-                    <div className="space-y-8">
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-2xl font-bold text-white mb-4">Overview</h3>
-                            <p className="text-neutral-300 leading-relaxed">
-                                {sacredAcoustics.overview}
-                            </p>
-                        </div>
-
-                        <div>
-                            <h3 className="text-2xl font-bold text-white mb-6">Core Principles</h3>
-                            <div className="space-y-6">
-                                {sacredAcoustics.corePrinciples.map((principle, idx) => (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                            <div>
-                                                <h4 className="text-white font-semibold mb-1">{principle.title}</h4>
-                                                <p className="text-amber-400/80 text-sm mb-3 italic">{principle.description}</p>
-                                                <p className="text-neutral-300 text-sm leading-relaxed">{principle.detail}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <h3 className="text-xl font-bold text-white mb-4">Practical Applications</h3>
-                            <div className="space-y-3">
-                                {sacredAcoustics.practicalApplications.map((app, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm leading-relaxed">{app}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            default:
-                return null;
-        }
+                </div>
+            </div>
+        );
     };
 
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Sacred Music Theory Framework
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.music_style_selection.mystical}
-                        </p>
+            <StudioHero 
+                badge="Production Framework"
+                title="Sacred Music Theory"
+                mysticalName={roleDisplayMap.music_style_selection.mystical}
+                description="Comprehensive exploration of the principles that guide spiritual musical expression within SufiPulse productions."
+            />
 
-                        <div className="max-w-3xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                Comprehensive exploration of the principles that guide spiritual musical expression within SufiPulse productions.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg overflow-hidden mb-8">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="bg-[var(--color-midnight)]/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden mb-12 shadow-2xl">
                             <div className="grid grid-cols-2 md:grid-cols-4">
                                 {tabs.map((tab) => {
                                     const Icon = tab.icon;
+                                    const isActive = activeTab === tab.id;
                                     return (
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`p-4 text-center border-b-2 transition-all ${activeTab === tab.id
+                                            className={`p-6 text-center border-b-2 transition-all group ${isActive
                                                 ? 'border-amber-400 bg-amber-400/5'
-                                                : 'border-transparent hover:bg-neutral-800/30'
+                                                : 'border-transparent hover:bg-white/[0.02]'
                                                 }`}
                                         >
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Icon className={`w-5 h-5 ${activeTab === tab.id ? 'text-amber-400' : 'text-neutral-400'}`} />
-                                                <span className={`text-xs font-medium ${activeTab === tab.id ? 'text-white' : 'text-neutral-400'}`}>
+                                            <div className="flex flex-col items-center gap-3">
+                                                <Icon className={`w-6 h-6 transition-colors ${isActive ? 'text-amber-400' : 'text-neutral-600 group-hover:text-neutral-400'}`} />
+                                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${isActive ? 'text-white' : 'text-neutral-500'}`}>
                                                     {tab.label}
                                                 </span>
                                             </div>
@@ -409,64 +280,56 @@ export default function MusicStyleSelection() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 bg-neutral-950/50">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Practical Applications
-                        </h2>
-                        <p className="text-neutral-400 text-sm mb-8">
-                            How sacred music theory translates into real-world spiritual practice
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Cross-Role Implementation"
+                            subtitle="How sacred music theory translates into real-world spiritual practice across different contributor roles"
+                            centered
+                        />
 
-                        <div className="space-y-6">
-                            {roleApplications.map((roleApp, idx) => {
-                                const Icon = roleApp.icon;
-                                return (
-                                    <div key={idx} className="bg-neutral-900/40 border border-neutral-800 rounded-lg p-8">
-                                        <div className="flex items-start gap-4 mb-6">
-                                            <div className="p-3 bg-amber-400/10 rounded-lg border border-amber-400/30 flex-shrink-0">
-                                                <Icon className="w-6 h-6 text-amber-400" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xl font-bold text-white mb-2">{roleApp.role}</h3>
-                                                <p className="text-neutral-300 text-sm">{roleApp.description}</p>
-                                            </div>
+                        <div className="space-y-12">
+                            {roleApplications.map((roleApp, idx) => (
+                                <div key={idx} className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-10 hover:border-amber-400/20 transition-all shadow-xl">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8 border-b border-white/5 pb-8">
+                                        <div className="p-4 bg-amber-400/5 rounded-2xl border border-amber-400/10">
+                                            <roleApp.icon className="w-8 h-8 text-amber-400" />
                                         </div>
-
-                                        <div className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-6">
-                                            <div className="space-y-3">
-                                                {roleApp.practices.map((practice, pIdx) => (
-                                                    <div key={pIdx} className="flex items-start gap-3">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                                        <p className="text-neutral-300 text-sm leading-relaxed">{practice}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-white tracking-tight">{roleApp.role}</h3>
+                                            <p className="text-amber-400/80 text-[10px] font-black uppercase tracking-[0.2em] mt-1">{roleApp.description}</p>
                                         </div>
                                     </div>
-                                );
-                            })}
+
+                                    <div className="grid md:grid-cols-2 gap-8 items-center">
+                                        <div className="space-y-4">
+                                            {roleApp.practices.map((practice, pIdx) => (
+                                                <div key={pIdx} className="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5 hover:bg-black/40 transition-all group">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40 group-hover:bg-amber-400 mt-1.5 flex-shrink-0" />
+                                                    <p className="text-neutral-300 text-sm font-medium leading-relaxed">{practice}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="hidden md:block opacity-20 hover:opacity-40 transition-opacity p-8">
+                                            <roleApp.icon className="w-full h-auto text-amber-400 stroke-[0.5]" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <div className="bg-gradient-to-r from-amber-400/5 to-transparent border-l-2 border-amber-400/50 pl-6 py-6">
-                            <p className="text-white font-medium mb-3">Guiding Philosophy</p>
-                            <p className="text-neutral-300 text-sm leading-relaxed italic mb-4">
-                                "We do not monetize the sacred. We serve it."
-                            </p>
-                            <p className="text-neutral-400 text-xs leading-relaxed">
-                                Sacred music theory at SufiPulse is not academic exercise—it is lived spiritual practice. Every technical choice, every artistic decision, every production element serves the ultimate purpose of facilitating divine connection and spiritual transformation.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <StudioGovernancePanel 
+                title="Guiding Philosophy"
+                description="Sacred music theory at SufiPulse is not academic exercise—it is lived spiritual practice. Every technical choice serves the ultimate purpose of divine connection."
+                primaryCTA={{ label: "Production Overview", href: "/production" }}
+                shieldText="Spiritual Integrity Mandatory"
+                background="slate"
+            />
         </Layout>
     );
 }
+

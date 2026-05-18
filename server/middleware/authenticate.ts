@@ -73,4 +73,4 @@ export async function requireRole(
 }
 
 /** Convenience — require admin role. */
-export const requireAdmin = (req: NextRequest) => requireRole(req, 'admin', 'super_admin' as any, 'governance_admin' as any);
+export const requireAdmin = (req: NextRequest) => requireRole(req, 'admin', 'administrator' as any, 'super_admin' as any, 'governance_admin' as any);

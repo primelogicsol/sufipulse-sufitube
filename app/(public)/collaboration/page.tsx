@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Globe, BookOpen, Video, Shield } from 'lucide-react';
+import { Globe, BookOpen, Video, Shield, User, Mail, Building2, Briefcase, Link as LinkIcon, FileText, Calendar, Target, CheckCircle, ArrowRight, Loader as Loader2, Sparkles } from 'lucide-react';
+import { IconInput } from '../../components/ui/IconInput';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
 export default function InstitutionalCollaboration() {
     const [formData, setFormData] = useState({
@@ -23,6 +25,29 @@ export default function InstitutionalCollaboration() {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const collaborationMandates = [
+        {
+            icon: Globe,
+            title: 'Cultural Exchange',
+            description: 'Structured dialogue and responsible transmission of sacred knowledge across regional traditions.'
+        },
+        {
+            icon: BookOpen,
+            title: 'Research Integration',
+            description: 'Scholarly collaboration and interdisciplinary inquiry between spiritual and academic domains.'
+        },
+        {
+            icon: Video,
+            title: 'Media Alignment',
+            description: 'Content amplification and platform cooperation under institutional governance and non-commercial principles.'
+        },
+        {
+            icon: Shield,
+            title: 'Charter Integrity',
+            description: 'All partnerships operate within the Mithaq and preserve editorial and spiritual independence.'
+        }
+    ];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData(prev => ({
@@ -101,477 +126,358 @@ export default function InstitutionalCollaboration() {
 
     return (
         <Layout>
-            <Section className="pt-24 pb-8">
+            <StudioHero 
+                badge="Institutional Engagement"
+                title="Institutional Collaboration"
+                mysticalName="Sacred Partnership Proposal"
+                description="SufiPulse engages with institutions aligned in spiritual, cultural, educational, interfaith, and research service. All proposals are evaluated within our non-commercial charter."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Institutional Collaboration
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-6 border-b border-amber-400/20 pb-4 inline-block">
-                            Sacred Partnership Proposal
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Collaboration Mandate & Scope"
+                            subtitle="Institutional collaboration operates within defined structural boundaries, ensuring alignment with spiritual integrity and custodial stewardship."
+                        />
+
+                        <StudioCardGrid cols={4}>
+                            {collaborationMandates.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={item.icon}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="grid md:grid-cols-2 gap-12">
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Institutional Discipline"
+                                    subtitle="Governing the collaborative process"
+                                />
+                                <div className="space-y-4">
+                                    {[
+                                        'Proposals undergo structured internal review',
+                                        'Alignment with Mithaq (Charter) is mandatory',
+                                        'Governance oversight precedes formalization',
+                                        'Non-commercial integrity must be preserved'
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex items-center gap-4 group">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:shadow-[0_0_10px_rgba(212,175,55,0.6)] transition-all" />
+                                            <p className="text-neutral-300 text-sm font-bold uppercase tracking-widest">{item}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Collaborative Process"
+                                    subtitle="The sequence of engagement"
+                                />
+                                <div className="elite-card p-10 space-y-6">
+                                    {[
+                                        'Proposal submission',
+                                        'Internal review',
+                                        'Governance clearance',
+                                        'Formalization agreement'
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex items-center gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                                            <span className="text-amber-400 font-black text-xs">0{i+1}</span>
+                                            <p className="text-neutral-400 text-[10px] font-black uppercase tracking-widest">{item}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-12 bg-white/[0.02] border border-white/5 rounded-xl p-8 text-center max-w-3xl mx-auto shadow-xl">
+                            <p className="text-neutral-500 text-sm leading-relaxed italic">
+                                "Institutional collaboration does not alter governance authority or editorial independence."
+                            </p>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-4xl mx-auto text-center mb-16">
+                        <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">Sacred Alignment</h2>
+                        <p className="text-neutral-400 text-lg leading-relaxed font-light">
+                            SufiPulse collaborations are guided by a commitment to serving the sacred without commercialization. We seek partnerships that honor spiritual values, promote unity, and amplify divine voice while preserving institutional integrity.
                         </p>
-
-                        <div className="mt-8 max-w-3xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                SufiPulse engages with institutions aligned in spiritual, cultural, educational, interfaith, and research service. All proposals are evaluated within our non-commercial charter and governance framework.
-                            </p>
-                        </div>
                     </div>
-                </PageContainer>
-            </Section>
 
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Collaboration Mandate & Scope
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 leading-relaxed mb-8">
-                                Institutional collaboration operates within defined structural boundaries. Partnerships are evaluated for alignment with spiritual integrity, cultural stewardship, and long-term institutional vision.
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Globe className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Global Cultural & Interfaith Exchange
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Structured dialogue, heritage preservation, and responsible transmission of sacred knowledge across regions and traditions.
-                                    </p>
-                                </div>
-
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <BookOpen className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Educational & Research Integration
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Scholarly collaboration, academic dialogue, interdisciplinary inquiry, and structured knowledge initiatives.
-                                    </p>
-                                </div>
-
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Video className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Media & Distribution Alignment
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Content amplification and platform cooperation under institutional governance and non-commercial principles.
-                                    </p>
-                                </div>
-
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Shield className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Charter-Based Integrity
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        All partnerships operate within the Mithaq (Constitutional Charter) and preserve editorial and spiritual independence.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Operational Framework
-                        </h2>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <p className="text-white font-semibold mb-4">Institutional Discipline</p>
-
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Proposals undergo structured internal review</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Alignment with Mithaq (Charter) is mandatory</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Governance oversight precedes formalization</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Non-commercial integrity must be preserved</p>
-                                    </div>
-                                </div>
+                    <div className="max-w-5xl mx-auto">
+                        <div className="elite-card overflow-hidden shadow-2xl">
+                            <div className="border-b border-white/5 px-8 py-8 bg-white/[0.02]">
+                                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Partnership Proposal</h3>
+                                <p className="text-[10px] text-amber-400 font-black uppercase tracking-[0.3em]">Institutional Intake Pathway</p>
                             </div>
 
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <p className="text-white font-semibold mb-4">Collaborative Process</p>
-
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Proposal submission</p>
+                            {submitted ? (
+                                <div className="p-16 text-center animate-in fade-in zoom-in duration-700">
+                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(16,185,129,0.1)]">
+                                        <CheckCircle className="w-10 h-10 text-emerald-500 stroke-[2.5]" />
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Internal review</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Governance clearance</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Formalization agreement</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                        <p className="text-neutral-300 text-sm">Public acknowledgment (if applicable)</p>
-                                    </div>
+                                    <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">Proposal Submitted Successfully</h3>
+                                    <p className="text-neutral-400 text-base leading-relaxed mb-10 max-w-md mx-auto">
+                                        Thank you for your partnership proposal. Our governance team will review your submission and respond within the institutional review cycle (10–14 business days).
+                                    </p>
+                                    <button
+                                        onClick={() => setSubmitted(false)}
+                                        className="px-10 py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
+                                    >
+                                        Submit Another Proposal
+                                    </button>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                            <p className="text-neutral-300 text-sm leading-relaxed italic">
-                                Institutional collaboration does not alter governance authority or editorial independence.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Sacred Alignment
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                SufiPulse collaborations are guided by a commitment to serving the sacred without commercialization. We seek partnerships that honor spiritual values, promote unity, and amplify divine voice while preserving institutional integrity.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Partnership Proposal Submission
-                        </h2>
-
-                        {submitted ? (
-                            <div className="bg-gradient-to-br from-amber-950/30 to-amber-900/20 border border-amber-800/50 p-8 rounded-lg text-center">
-                                <h3 className="text-2xl font-semibold text-amber-400 mb-4">
-                                    Proposal Submitted Successfully
-                                </h3>
-                                <p className="text-neutral-300 mb-6">
-                                    Thank you for your partnership proposal. Our governance team will review your submission and respond within 10-14 business days.
-                                </p>
-                                <button
-                                    onClick={() => setSubmitted(false)}
-                                    className="text-amber-400 hover:text-amber-300 underline transition-colors"
-                                >
-                                    Submit Another Proposal
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <h3 className="text-2xl font-bold text-white mb-2">
-                                    Partnership Proposal Submission
-                                </h3>
-                                <p className="text-lg text-amber-400 mb-6">Institutional Engagement</p>
-                                <p className="text-neutral-300 text-sm leading-relaxed mb-8">
-                                    Institutions may submit partnership proposals for consideration within the SufiPulse governance structure.<br />
-                                    All submissions are reviewed for alignment with our non-commercial charter and institutional mission.
-                                </p>
-
-                                <form onSubmit={handleSubmit} className="space-y-8">
-                                    <div>
-                                        <h4 className="text-lg font-semibold text-white mb-4">
-                                            Contact Information
-                                        </h4>
-
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Your Name <span className="text-red-500">*</span>
-                                                </label>
+                            ) : (
+                                <form onSubmit={handleSubmit} className="p-10 md:p-16 space-y-12">
+                                    <div className="space-y-8">
+                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-4 border-b border-white/5 pb-4">01 — Contact Identity</p>
+                                        <div className="grid md:grid-cols-2 gap-8">
+                                            <IconInput icon={User} label="Your Name">
                                                 <input
                                                     type="text"
                                                     name="contact_name"
                                                     value={formData.contact_name}
                                                     onChange={handleChange}
-                                                    placeholder="Enter your full name"
                                                     required
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600"
+                                                    placeholder="Enter your full name"
+                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
-                                            </div>
+                                            </IconInput>
 
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Email Address <span className="text-red-500">*</span>
-                                                </label>
+                                            <IconInput icon={Mail} label="Email Address">
                                                 <input
                                                     type="email"
                                                     name="email"
                                                     value={formData.email}
                                                     onChange={handleChange}
-                                                    placeholder="your.email@example.com"
                                                     required
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600"
+                                                    placeholder="your.email@example.com"
+                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
-                                            </div>
+                                            </IconInput>
 
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Organization Name <span className="text-red-500">*</span>
-                                                </label>
+                                            <IconInput icon={Building2} label="Organization Name">
                                                 <input
                                                     type="text"
                                                     name="organization_name"
                                                     value={formData.organization_name}
                                                     onChange={handleChange}
-                                                    placeholder="Name of your organization"
                                                     required
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600"
+                                                    placeholder="Full institutional name"
+                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
-                                            </div>
+                                            </IconInput>
 
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Your Role / Title <span className="text-red-500">*</span>
-                                                </label>
+                                            <IconInput icon={Briefcase} label="Your Role / Title">
                                                 <input
                                                     type="text"
                                                     name="role_title"
                                                     value={formData.role_title}
                                                     onChange={handleChange}
-                                                    placeholder="Your position in the organization"
                                                     required
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600"
+                                                    placeholder="Lead, Director, etc."
+                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
-                                            </div>
+                                            </IconInput>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <h4 className="text-lg font-semibold text-white mb-4">
-                                            Organization Details
-                                        </h4>
-
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Organization Type <span className="text-red-500">*</span>
-                                                </label>
+                                    <div className="space-y-8">
+                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-4 border-b border-white/5 pb-4">02 — Organization Profile</p>
+                                        <div className="grid md:grid-cols-2 gap-8">
+                                            <IconInput icon={Target} label="Organization Type" rightIcon>
                                                 <select
                                                     name="organization_type"
                                                     value={formData.organization_type}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors"
+                                                    className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
                                                 >
-                                                    <option value="">Select organization type</option>
+                                                    <option value="">Select type</option>
                                                     {organizationTypes.map(type => (
-                                                        <option key={type} value={type}>{type}</option>
+                                                        <option key={type} value={type} className="bg-neutral-900">{type}</option>
                                                     ))}
                                                 </select>
-                                            </div>
+                                            </IconInput>
 
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Partnership Type <span className="text-red-500">*</span>
-                                                </label>
+                                            <IconInput icon={Shield} label="Partnership Type" rightIcon>
                                                 <select
                                                     name="partnership_type"
                                                     value={formData.partnership_type}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors"
+                                                    className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
                                                 >
-                                                    <option value="">Select partnership type</option>
+                                                    <option value="">Select pathway</option>
                                                     {partnershipTypes.map(type => (
-                                                        <option key={type} value={type}>{type}</option>
+                                                        <option key={type} value={type} className="bg-neutral-900">{type}</option>
                                                     ))}
                                                 </select>
-                                            </div>
+                                            </IconInput>
 
                                             <div className="md:col-span-2">
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Organization Website / Social Media
-                                                </label>
-                                                <input
-                                                    type="url"
-                                                    name="organization_website"
-                                                    value={formData.organization_website}
-                                                    onChange={handleChange}
-                                                    placeholder="https://your-organization.com"
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600"
-                                                />
+                                                <IconInput icon={LinkIcon} label="Organization Website / Social Media">
+                                                    <input
+                                                        type="url"
+                                                        name="organization_website"
+                                                        value={formData.organization_website}
+                                                        onChange={handleChange}
+                                                        placeholder="https://official-site.org"
+                                                        className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                    />
+                                                </IconInput>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <h4 className="text-lg font-semibold text-white mb-4">
-                                            Proposal Details
-                                        </h4>
-
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Collaboration Proposal <span className="text-red-500">*</span>
-                                                </label>
+                                    <div className="space-y-8">
+                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-4 border-b border-white/5 pb-4">03 — Proposal Specifics</p>
+                                        <div className="space-y-8">
+                                            <div className="space-y-2 group">
+                                                <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Collaboration Proposal</label>
                                                 <textarea
                                                     name="proposal_description"
                                                     value={formData.proposal_description}
                                                     onChange={handleChange}
-                                                    placeholder="Describe your partnership vision, goals, and alignment with SufiPulse's institutional mission."
+                                                    placeholder="Describe your partnership vision, goals, and alignment with SufiPulse's institutional mission..."
                                                     required
                                                     rows={6}
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600 resize-none"
+                                                    className="w-full h-48 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
                                                 />
                                             </div>
 
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Proposed Timeline
-                                                </label>
+                                            <IconInput icon={Calendar} label="Proposed Timeline">
                                                 <input
                                                     type="text"
                                                     name="proposed_timeline"
                                                     value={formData.proposed_timeline}
                                                     onChange={handleChange}
-                                                    placeholder="Example: 6 months, ongoing collaboration, specific dates."
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600"
+                                                    placeholder="6 months, ongoing, specific dates, etc."
+                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
-                                            </div>
+                                            </IconInput>
 
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Resources You Can Provide
-                                                </label>
+                                            <div className="space-y-2 group">
+                                                <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Resources & Capacities</label>
                                                 <textarea
                                                     name="resources_offered"
                                                     value={formData.resources_offered}
                                                     onChange={handleChange}
-                                                    placeholder="Expertise, research contribution, platform access, institutional network, infrastructure support, etc."
+                                                    placeholder="Expertise, platform access, institutional network, infrastructure, etc."
                                                     rows={4}
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600 resize-none"
+                                                    className="w-full h-32 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
                                                 />
                                             </div>
 
-                                            <div>
-                                                <label className="block text-xs text-neutral-400 mb-2 uppercase tracking-wider">
-                                                    Partnership Goals
-                                                </label>
+                                            <div className="space-y-2 group">
+                                                <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Partnership Goals</label>
                                                 <textarea
                                                     name="partnership_goals"
                                                     value={formData.partnership_goals}
                                                     onChange={handleChange}
                                                     placeholder="What do you seek to achieve through this collaboration?"
                                                     rows={4}
-                                                    className="w-full bg-neutral-900/50 border border-neutral-800 text-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-neutral-700 transition-colors placeholder:text-neutral-600 resize-none"
+                                                    className="w-full h-32 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
                                     {error && (
-                                        <div className="bg-red-950/30 border border-red-800/50 text-red-400 px-4 py-3 rounded">
+                                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6 text-red-400 text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
                                             {error}
                                         </div>
                                     )}
 
-                                    <div className="pt-2">
+                                    <div className="pt-6">
                                         <button
                                             type="submit"
                                             disabled={submitting}
-                                            className="w-full bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white font-semibold py-3 px-8 text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full py-8 bg-linear-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
                                         >
-                                            {submitting ? 'Submitting...' : 'Submit Partnership Proposal'}
+                                            {submitting ? <Loader2 className="w-6 h-6 animate-spin text-black" /> : <Sparkles size={24} className="group-hover:scale-110 transition-transform" />}
+                                            {submitting ? 'Authenticating Proposal...' : 'Submit Partnership Proposal'}
                                         </button>
                                     </div>
                                 </form>
-                            </div>
-                        )}
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12 pb-20">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Structural Boundaries
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                            <div className="grid md:grid-cols-2 gap-4 mb-6">
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Non-commercial alignment required</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Governance review mandatory</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Editorial independence preserved</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">No financial dependency structure</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">No brand dilution</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Charter compliance enforced</p>
-                                </div>
-                            </div>
-
-                            <div className="border border-neutral-800/50 rounded-lg p-4 mb-4">
-                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                    Partnership consideration does not imply endorsement. Final approval remains under institutional governance.
-                                </p>
-                            </div>
-
-                            <div className="mt-6">
-                                <a
-                                    href="/governance/mithaq"
-                                    className="inline-flex items-center gap-2 text-neutral-300 hover:text-amber-400 transition-colors text-xs"
-                                >
-                                    <Shield className="w-3.5 h-3.5" />
-                                    View Constitutional Charter
-                                </a>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </PageContainer>
             </Section>
+
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-4xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Structural Boundaries"
+                            subtitle="Non-negotiable constraints to preserve institutional and editorial integrity"
+                            centered
+                        />
+
+                        <div className="elite-card p-10 md:p-12 mb-12">
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+                                {[
+                                    { t: 'Alignment Required', d: 'Non-commercial spiritual alignment mandatory' },
+                                    { t: 'Review Process', d: 'Structured governance review for all proposals' },
+                                    { t: 'Independence', d: 'Editorial and spiritual independence preserved' },
+                                    { t: 'No Dependency', d: 'No financial or operational dependency structure' },
+                                    { t: 'Brand Integrity', d: 'No brand dilution or unauthorized co-branding' },
+                                    { t: 'Charter Focus', d: 'Strict adherence to institutional Mithaq provisions' }
+                                ].map((item, idx) => (
+                                    <div key={idx} className="space-y-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                            <p className="text-white text-xs font-black uppercase tracking-widest">{item.t}</p>
+                                        </div>
+                                        <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest ml-4">{item.d}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="mt-8 p-8 bg-amber-400/5 border border-amber-400/10 rounded-2xl text-center shadow-xl">
+                            <p className="text-neutral-500 text-[11px] font-black uppercase tracking-[0.3em] leading-relaxed">
+                                Partnership consideration does not imply endorsement. Final approval remains under institutional governance authority.
+                            </p>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <StudioGovernancePanel 
+                title="Institutional Permanence"
+                description="SufiPulse collaborations extend our capacity without diluting our mission. We build structures that outlast individual partnerships, anchored in constitutional authority."
+                primaryCTA={{ label: "View Governance Charter", href: "/governance/mithaq" }}
+                shieldText="Governed Partnership Framework"
+                background="slate"
+            />
+
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

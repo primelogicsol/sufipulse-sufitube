@@ -41,8 +41,16 @@ export async function generateAccessToken(user: {
   id: string;
   email: string;
   role: string;
+  assigned_roles?: string[];
 }): Promise<string> {
-  return new SignJWT({ userId: user.id, email: user.email, role: user.role } as JWTPayload)
+  // Ensure primary role in JWT is 'admin' if any admin role is assigned
+  const ADMIN_ROLES = ['admin', 'administrator', 'super_admin', 'governance_admin'];
+  const hasAdminRole = ADMIN_ROLES.includes(user.role) || 
+                       (user.assigned_roles && user.assigned_roles.some(r => ADMIN_ROLES.includes(r)));
+  
+  const tokenRole = hasAdminRole ? 'admin' : user.role;
+
+  return new SignJWT({ userId: user.id, email: user.email, role: tokenRole } as JWTPayload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(config.auth.accessTokenExpiry)

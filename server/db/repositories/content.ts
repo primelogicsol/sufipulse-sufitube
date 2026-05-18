@@ -15,7 +15,7 @@ import type {
   Kalam,
   Sada,
   Article,
-  ContactMessage,
+  InstitutionalInquiry,
   PartnershipProposal,
   Notification,
 } from '@/server/types';
@@ -123,26 +123,26 @@ export const articlesRepository = {
   delete: (id: string) => articlesTable().delete(id),
 };
 
-// ─── Contact messages ─────────────────────────────────────────────────────────
+// ─── Institutional Inquiries ──────────────────────────────────────────────────
 
-const contactTable = () => db.table<ContactMessage>('contact_messages');
+const inquiryTable = () => db.table<InstitutionalInquiry>('inquiries');
 
-export const contactRepository = {
-  findById: (id: string) => contactTable().findById(id),
-  listAll: () => contactTable().getAll(),
-  listByStatus: (status: ContactMessage['status']) => contactTable().find({ status }),
-  count: () => contactTable().count(),
+export const inquiryRepository = {
+  findById: (id: string) => inquiryTable().findById(id),
+  listAll: () => inquiryTable().getAll(),
+  listByStatus: (status: InstitutionalInquiry['status']) => inquiryTable().find({ status }),
+  count: () => inquiryTable().count(),
 
-  create(data: Omit<ContactMessage, 'id' | 'created_at' | 'updated_at'>): ContactMessage {
+  create(data: Omit<InstitutionalInquiry, 'id' | 'created_at' | 'updated_at'>): InstitutionalInquiry {
     const ts = now();
-    return contactTable().insert({ ...data, id: generateId(), created_at: ts, updated_at: ts });
+    return inquiryTable().insert({ ...data, id: generateId(), created_at: ts, updated_at: ts });
   },
 
-  update(id: string, data: Partial<Omit<ContactMessage, 'id' | 'created_at'>>): ContactMessage | null {
-    return contactTable().update(id, { ...data, updated_at: now() });
+  update(id: string, data: Partial<Omit<InstitutionalInquiry, 'id' | 'created_at'>>): InstitutionalInquiry | null {
+    return inquiryTable().update(id, { ...data, updated_at: now() });
   },
 
-  delete: (id: string) => contactTable().delete(id),
+  delete: (id: string) => inquiryTable().delete(id),
 };
 
 // ─── Partnership proposals ────────────────────────────────────────────────────

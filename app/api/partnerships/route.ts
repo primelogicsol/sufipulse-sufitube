@@ -1,10 +1,9 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
-import { validateRequestBody } from '@/app/lib/api-middleware';
 import { partnershipSchema } from '@/app/lib/validation-schemas';
-import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
+import { validatePublicSubmission } from '@/app/lib/security';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -22,14 +21,23 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const limited = await applyRateLimit(request, rateLimiters.strict);
-  if (limited) return limited;
+  const validation = await validatePublicSubmission(request, partnershipSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      organization_name: 'text',
+      contact_name: 'text',
+      email: 'email',
+      phone: 'text',
+      website: 'url',
+      partnership_type: 'text',
+      proposal_details: 'text'
+    }
+  });
 
-  const validationResult = await validateRequestBody(request, partnershipSchema);
-  if (validationResult instanceof NextResponse) return validationResult;
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
 
   try {
-    const body = validationResult.data;
     const record = entityCreate('partnerships', {
       ...body,
       status: 'pending',

@@ -1,8 +1,10 @@
-import { Settings, FileSliders as Sliders, CircleCheck as CheckCircle2, Calendar, Mic as Mic2, Radio, Globe as Globe2, Sparkles, Award, Music } from 'lucide-react';
+"use client";
+import { Settings, FileSliders as Sliders, CircleCheck as CheckCircle2, Calendar, Mic as Mic2, Radio, Globe as Globe2, Sparkles, Award, Music, Shield } from 'lucide-react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
 export default function StudioEngineers() {
     const engineeringExpertise = [
@@ -110,6 +112,7 @@ export default function StudioEngineers() {
             languages: ['English', 'Urdu', 'Hindi', 'Arabic']
         }
     ];
+
     const engineeringRoles = [
         {
             icon: Settings,
@@ -137,29 +140,6 @@ export default function StudioEngineers() {
         }
     ];
 
-    const technicalCapabilities = [
-        {
-            icon: Mic2,
-            title: 'Sacred Vocal Capture',
-            description: 'Precision recording of spiritual voices across 25+ languages with specialized microphone techniques and acoustic treatment.'
-        },
-        {
-            icon: Radio,
-            title: 'Multi-Cultural Production',
-            description: 'Expert coordination of diverse musical traditions, from whisper kalam to fusion arrangements, preserving cultural authenticity.'
-        },
-        {
-            icon: Globe2,
-            title: 'Global Session Management',
-            description: 'Seamless coordination of international recording sessions with remote collaboration infrastructure and real-time technical support.'
-        },
-        {
-            icon: Sparkles,
-            title: 'Spiritual Sound Design',
-            description: 'Custom effects processing and mystical audio engineering creating space for sacred expression through frequency architecture.'
-        }
-    ];
-
     const teamStats = [
         { value: '300+', label: 'Sacred Collaborations' },
         { value: '25+', label: 'Languages Supported' },
@@ -169,43 +149,25 @@ export default function StudioEngineers() {
 
     return (
         <Layout>
-            <Section className="pt-24 pb-8">
+            <StudioHero 
+                badge="Production Infrastructure"
+                title="Studio Engineers"
+                mysticalName={roleDisplayMap.studio_engineer.mystical}
+                description="Studio Engineers operate within the defined production authority of Karkhana-e-Sada. Their role is technical fidelity, master integrity, and execution discipline."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Studio Engineers
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-6 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.studio_engineer.mystical}
-                        </p>
-
-                        <div className="mt-8 max-w-3xl">
-                            <p className="text-neutral-300 leading-relaxed mb-6">
-                                Studio Engineers operate within the defined production authority of Karkhana-e-Sada. Their role is technical fidelity, master integrity, and execution discipline.
-                            </p>
-
-                            <div className="bg-gradient-to-r from-amber-400/5 to-transparent border-l-2 border-amber-400/50 pl-6 py-4 italic">
-                                <p className="text-neutral-200 text-sm leading-relaxed">
-                                    "Every sacred recording is a prayer in frequencies, a bridge between the human voice and divine resonance. Engineering is not about technical prowess—it is about sacred custody of sound."
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12 bg-neutral-950/50">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-8">
-                            Engineering Excellence by Numbers
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Engineering Excellence by Numbers"
+                        />
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             {teamStats.map((stat, idx) => (
-                                <div key={idx} className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6 text-center">
-                                    <div className="text-3xl font-bold text-amber-400 mb-2">{stat.value}</div>
-                                    <div className="text-neutral-400 text-sm">{stat.label}</div>
+                                <div key={idx} className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8 text-center">
+                                    <div className="text-4xl font-bold text-amber-400 mb-2">{stat.value}</div>
+                                    <div className="text-neutral-400 text-xs font-black uppercase tracking-widest">{stat.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -213,113 +175,103 @@ export default function StudioEngineers() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Our Expertise
-                        </h2>
-                        <p className="text-neutral-400 text-sm mb-8">
-                            Specialized skills that make SufiPulse productions world-class
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Our Expertise"
+                            subtitle="Specialized skills that make SufiPulse productions world-class"
+                        />
 
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {engineeringExpertise.map((expertise, idx) => {
-                                const Icon = expertise.icon;
-                                return (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-start gap-4">
-                                            <div className="p-3 bg-amber-400/10 rounded-lg border border-amber-400/30 flex-shrink-0">
-                                                <Icon className="w-6 h-6 text-amber-400" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-white font-semibold mb-2">{expertise.title}</h3>
-                                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                                    {expertise.description}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        <StudioCardGrid cols={2}>
+                            {engineeringExpertise.map((expertise, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={expertise.icon}
+                                    title={expertise.title}
+                                    description={expertise.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 bg-neutral-950/50">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Our Engineering Team
-                        </h2>
-                        <p className="text-neutral-400 text-sm mb-8">
-                            The masters behind every sacred production
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Our Engineering Team"
+                            subtitle="The masters behind every sacred production"
+                        />
 
                         <div className="space-y-8">
                             {engineeringTeam.map((engineer, idx) => (
-                                <div key={idx} className="bg-neutral-900/40 border border-neutral-800 rounded-lg p-8 hover:border-amber-400/30 transition-colors">
-                                    <div className="flex items-start justify-between mb-4">
+                                <div key={idx} className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-10 hover:border-amber-400/30 transition-colors shadow-2xl backdrop-blur-xl">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/5 pb-6">
                                         <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-xl font-bold text-white">{engineer.name}</h3>
-                                                <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded">
+                                            <div className="flex items-center gap-4 mb-2">
+                                                <h3 className="text-2xl font-bold text-white tracking-tight">{engineer.name}</h3>
+                                                <span className="text-[10px] font-black text-amber-400 bg-amber-400/5 border border-amber-400/10 px-3 py-1 rounded-full uppercase tracking-widest">
                                                     {engineer.experience}
                                                 </span>
                                             </div>
-                                            <p className="text-amber-400 font-medium mb-1">{engineer.role}</p>
-                                            <p className="text-neutral-400 text-sm italic">{engineer.specialty}</p>
+                                            <p className="text-amber-400 text-sm font-bold uppercase tracking-[0.2em]">{engineer.role}</p>
                                         </div>
+                                        <p className="text-neutral-500 text-xs font-black uppercase tracking-widest">{engineer.specialty}</p>
                                     </div>
 
-                                    <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                                        {engineer.description}
-                                    </p>
-
-                                    <div className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-4 mb-6">
-                                        <p className="text-white font-medium text-sm mb-2">Philosophy</p>
-                                        <p className="text-neutral-300 text-sm leading-relaxed italic">
-                                            "{engineer.philosophy}"
-                                        </p>
-                                    </div>
-
-                                    <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                        <div>
-                                            <p className="text-white font-medium text-sm mb-3 flex items-center gap-2">
-                                                <Award className="w-4 h-4 text-amber-400" />
-                                                Key Achievements
+                                    <div className="grid lg:grid-cols-12 gap-10">
+                                        <div className="lg:col-span-7 space-y-8">
+                                            <p className="text-neutral-300 text-lg leading-relaxed font-light">
+                                                {engineer.description}
                                             </p>
-                                            <div className="space-y-2">
-                                                {engineer.achievements.map((achievement, aIdx) => (
-                                                    <div key={aIdx} className="flex items-start gap-2">
-                                                        <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                                        <p className="text-neutral-300 text-xs">{achievement}</p>
-                                                    </div>
-                                                ))}
+
+                                            <div className="bg-black/20 border-l-4 border-amber-400 p-6 rounded-r-2xl">
+                                                <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-3">Custodial Philosophy</p>
+                                                <p className="text-white text-lg leading-relaxed italic font-medium">
+                                                    "{engineer.philosophy}"
+                                                </p>
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <p className="text-white font-medium text-sm mb-3 flex items-center gap-2">
-                                                <Music className="w-4 h-4 text-amber-400" />
-                                                Notable Projects
-                                            </p>
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                {engineer.notableProjects.map((project, pIdx) => (
-                                                    <span key={pIdx} className="text-xs text-amber-400/80 bg-amber-400/5 px-3 py-1.5 rounded border border-amber-400/20">
-                                                        {project}
-                                                    </span>
-                                                ))}
+                                        <div className="lg:col-span-5 space-y-8">
+                                            <div>
+                                                <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    <Award className="w-4 h-4 text-amber-400" /> Key Achievements
+                                                </p>
+                                                <div className="space-y-3">
+                                                    {engineer.achievements.map((achievement, aIdx) => (
+                                                        <div key={aIdx} className="flex items-start gap-3">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                                                            <p className="text-neutral-300 text-xs font-bold uppercase tracking-wider">{achievement}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
 
-                                            <p className="text-white font-medium text-sm mb-2 mt-4">Languages</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {engineer.languages.map((lang, lIdx) => (
-                                                    <span key={lIdx} className="text-xs text-neutral-400 bg-neutral-900/50 px-2 py-1 rounded">
-                                                        {lang}
-                                                    </span>
-                                                ))}
+                                            <div>
+                                                <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    <Music className="w-4 h-4 text-amber-400" /> Notable Projects
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {engineer.notableProjects.map((project, pIdx) => (
+                                                        <span key={pIdx} className="text-[10px] text-amber-400/80 bg-amber-400/5 px-3 py-1 rounded border border-amber-400/10 uppercase font-black tracking-tighter">
+                                                            {project}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mb-4">Linguistic Capabilities</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {engineer.languages.map((lang, lIdx) => (
+                                                        <span key={lIdx} className="text-[10px] text-neutral-400 bg-neutral-900 border border-white/5 px-3 py-1 rounded uppercase font-black tracking-widest">
+                                                            {lang}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -330,192 +282,71 @@ export default function StudioEngineers() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Engineering Role in Production
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Functional Roles"
+                            subtitle="The distinct technical specializations within the engineering council"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-white font-medium mb-4">Engineers are responsible for:</p>
-
-                            <div className="space-y-3 mb-6">
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Recording capture precision</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Mix balance and sonic clarity</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Master-grade validation</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">File conformity prior to registry submission</p>
-                                </div>
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <div className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-5">
-                                <p className="text-white font-medium text-sm mb-3">Engineers do not determine:</p>
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-600 mt-2 flex-shrink-0" />
-                                        <p className="text-neutral-400 text-sm">Editorial approval</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-600 mt-2 flex-shrink-0" />
-                                        <p className="text-neutral-400 text-sm">Royalty allocation</p>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-600 mt-2 flex-shrink-0" />
-                                        <p className="text-neutral-400 text-sm">Registry authority</p>
-                                    </div>
-                                </div>
-                                <p className="text-neutral-400 text-xs mt-4 leading-relaxed">
-                                    This preserves governance hierarchy.
-                                </p>
-                            </div>
-                        </div>
+                        <StudioCardGrid cols={2}>
+                            {engineeringRoles.map((role, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={role.icon}
+                                    title={role.title}
+                                    description={role.description}
+                                    subtitle={role.detail}
+                                />
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Functional Roles
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Engineering Role in Production"
+                        />
 
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {engineeringRoles.map((role, idx) => {
-                                const Icon = role.icon;
-                                return (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-start gap-3 mb-3">
-                                            <div className="p-2 bg-amber-400/10 rounded-lg flex-shrink-0">
-                                                <Icon className="w-5 h-5 text-amber-400" />
+                        <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-10">
+                            <div className="grid md:grid-cols-2 gap-12">
+                                <div>
+                                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-6">Custodial Responsibilities</p>
+                                    <div className="space-y-4">
+                                        {[
+                                            'Recording capture precision',
+                                            'Mix balance and sonic clarity',
+                                            'Master-grade validation',
+                                            'File conformity prior to registry submission'
+                                        ].map((resp, i) => (
+                                            <div key={i} className="flex items-center gap-4">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                                <p className="text-neutral-300 text-sm font-bold uppercase tracking-widest">{resp}</p>
                                             </div>
-                                            <div>
-                                                <p className="text-white font-medium text-sm mb-2">{role.title}</p>
-                                                <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                                    {role.description}
-                                                </p>
-                                                <p className="text-neutral-400 text-xs leading-relaxed border-t border-neutral-800 pt-3">
-                                                    {role.detail}
-                                                </p>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mb-6">Structural Restrictions</p>
+                                    <div className="space-y-4">
+                                        {[
+                                            'Editorial approval',
+                                            'Royalty allocation',
+                                            'Registry authority'
+                                        ].map((rest, i) => (
+                                            <div key={i} className="flex items-center gap-4 group">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-neutral-700" />
+                                                <p className="text-neutral-500 text-sm font-bold uppercase tracking-widest group-hover:text-neutral-400 transition-colors">{rest}</p>
                                             </div>
-                                        </div>
+                                        ))}
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12 bg-neutral-950/50">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Technical Capabilities
-                        </h2>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {technicalCapabilities.map((capability, idx) => {
-                                const Icon = capability.icon;
-                                return (
-                                    <div key={idx} className="bg-neutral-900/40 border border-neutral-800 rounded-lg p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="p-3 bg-amber-400/5 rounded-lg border border-amber-400/20 flex-shrink-0">
-                                                <Icon className="w-6 h-6 text-amber-400" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-white font-semibold mb-2">{capability.title}</h3>
-                                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                                    {capability.description}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Engineering Philosophy
-                        </h2>
-
-                        <div className="space-y-6">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                    <div>
-                                        <p className="text-white font-medium mb-2">Sacred Frequency Architecture</p>
-                                        <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                            "Mixing is the art of creating space for the Divine to breathe within the track. Every frequency adjustment is an act of devotion, ensuring clarity serves the sacred message."
-                                        </p>
-                                        <p className="text-neutral-400 text-xs">
-                                            Engineering approach to spiritual sound design and immersive soundscapes
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                    <div>
-                                        <p className="text-white font-medium mb-2">Vocal Essence Preservation</p>
-                                        <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                            "The human voice is the most sacred instrument—our job is to capture it without ego, without color, with absolute transparency and reverence."
-                                        </p>
-                                        <p className="text-neutral-400 text-xs">
-                                            Multi-language vocal recording expertise and whisper kalam pioneering techniques
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                    <div>
-                                        <p className="text-white font-medium mb-2">Final Prayer in Mastering</p>
-                                        <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                            "Mastering is the final prayer—ensuring every frequency serves the sacred purpose, every dynamic choice honors the spiritual intent of the work."
-                                        </p>
-                                        <p className="text-neutral-400 text-xs">
-                                            Distribution-ready validation and mystical effects design for publication standards
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-1 h-full bg-amber-400/30 rounded-full flex-shrink-0" />
-                                    <div>
-                                        <p className="text-white font-medium mb-2">Sacred Gathering Coordination</p>
-                                        <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                            "Every session is a sacred gathering—coordination is the art of honoring each contributor's time, culture, and spiritual offering with precision and respect."
-                                        </p>
-                                        <p className="text-neutral-400 text-xs">
-                                            Global time zone management and cultural sensitivity in production workflows
-                                        </p>
-                                    </div>
+                                    <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-8 pt-4 border-t border-white/5">
+                                        This hierarchy preserves institutional governance.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -523,39 +354,14 @@ export default function StudioEngineers() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Structural Principle
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-white font-medium mb-4">Technical Stewardship</p>
-
-                            <div className="space-y-4">
-                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                    Engineering within SufiPulse is custodial, not expressive.
-                                </p>
-                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                    The purpose is preservation of clarity, not artistic authorship.
-                                </p>
-                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                    Authority flows from Governance → Studio → Engineering.
-                                </p>
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <div className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-5">
-                                <p className="text-neutral-400 text-xs leading-relaxed">
-                                    Engineers execute within a defined chain of authority. Technical decisions support institutional standards rather than individual creative expression. The team combines Grammy-nominated excellence with sacred audio technology innovation, serving over 300 collaborations across 25+ languages with unwavering technical fidelity.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <StudioGovernancePanel 
+                title="Technical Stewardship"
+                description="Engineering within SufiPulse is custodial, not expressive. Decisions support institutional standards rather than individual creative expression."
+                primaryCTA={{ label: "Studio Overview", href: "/studio" }}
+                shieldText="Technical Fidelity Mandatory"
+                background="midnight"
+            />
         </Layout>
     );
 }
+

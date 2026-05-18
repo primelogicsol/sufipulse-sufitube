@@ -8,9 +8,25 @@ const STORE_PATH = path.join(DATA_DIR, 'adoptions.json');
 export type MethodType = 'managed_sufitube' | 'use_my_google_ads';
 export type AdAccountOwner = 'sufipulse' | 'user';
 export type PaymentOwner = 'sufipulse_gateway' | 'google_ads_billing' | 'not_required';
+
+/**
+ * Adoption Status Lifecycle
+ * Unified union of institutional visibility statuses and technical operational states.
+ */
 export type AdoptionStatus =
-  | 'draft'
   | 'submitted'
+  | 'payment_pending'
+  | 'payment_received'
+  | 'under_review'
+  | 'approved'
+  | 'live'
+  | 'completed'
+  | 'hidden'
+  | 'rejected'
+  | 'archived'
+  | 'cancelled'
+  | 'failed'
+  | 'draft'
   | 'pending_payment'
   | 'pending_review'
   | 'paid_pending_review'
@@ -23,20 +39,15 @@ export type AdoptionStatus =
   | 'google_ads_verification_failed'
   | 'campaign_preparation_requested'
   | 'admin_review'
-  | 'approved'
   | 'campaign_prepared'
   | 'awaiting_user_approval'
-  | 'under_review'
   | 'prepared'
   | 'scheduled'
-  | 'live'
   | 'monitoring'
-  | 'completed'
   | 'report_ready'
-  | 'cancelled'
-  | 'failed'
   | 'reconnect_required'
   | 'permission_denied';
+
 export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded' | 'not_required';
 export type OAuthStatus = 'not_connected' | 'connected' | 'expired' | 'revoked';
 export type CampaignStatus = 'not_created' | 'draft' | 'paused' | 'enabled' | 'removed' | 'failed';
@@ -208,20 +219,25 @@ export function getAdoptionsByUser(userId: string): AdoptionRecord[] {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/**
+ * Public Visibility Logic
+ * Only approved, non-hidden, and validated adoptions appear in public listings while respecting anonymity.
+ */
 export function getAdoptionsByRelease(releaseId: string): AdoptionRecord[] {
   const store = readStore();
-  // Allowed statuses for public display
-  const MANAGED_VISIBLE = ['paid_pending_review', 'approved', 'live', 'completed', 'report_ready'];
-  const DIRECT_VISIBLE = ['google_ads_verified_adopter', 'campaign_prepared', 'live', 'monitoring', 'completed', 'report_ready'];
+  
+  // Allowed statuses for public display: approved, live, or completed.
+  const PUBLIC_VISIBLE_STATUSES: string[] = ['approved', 'live', 'completed'];
 
   return Object.values(store.adoptions)
     .filter((r) => 
       r.releaseId === releaseId && 
       r.publicListingApproved && 
-      (
-        (r.methodType === 'managed_sufitube' && (r.paymentStatus === 'paid' || MANAGED_VISIBLE.includes(r.adoptionStatus))) ||
-        (r.methodType === 'use_my_google_ads' && DIRECT_VISIBLE.includes(r.adoptionStatus))
-      )
+      !r.isAnonymous &&
+      r.adoptionStatus !== 'hidden' &&
+      r.adoptionStatus !== 'rejected' &&
+      r.adoptionStatus !== 'archived' &&
+      PUBLIC_VISIBLE_STATUSES.includes(r.adoptionStatus)
     )
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

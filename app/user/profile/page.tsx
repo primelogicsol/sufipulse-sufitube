@@ -7,6 +7,7 @@ import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { User, Mail, Shield, LogOut, Banknote, Languages } from 'lucide-react';
 import Link from 'next/link';
+import { canAccessAdmin, getAssignedRoles } from '../../lib/role-access';
 
 const ROLE_PORTAL_MAP: Record<string, { label: string; href: string }> = {
   writer: { label: 'Ahl-e-Qalam Portal', href: '/user/writer/dashboard' },
@@ -43,10 +44,7 @@ export default function MyAccountPage() {
     return 'SP';
   })();
 
-  const assignedRoles: string[] = Array.isArray(user.assigned_roles)
-    ? user.assigned_roles
-    : user.role ? [user.role] : [];
-
+  const assignedRoles = getAssignedRoles(user);
   const CONTRIBUTOR_ROLE_SET = new Set(['writer', 'vocalist', 'producer', 'studio', 'literary']);
   const isContributor = assignedRoles.some(r => CONTRIBUTOR_ROLE_SET.has(r));
 
@@ -54,7 +52,7 @@ export default function MyAccountPage() {
     .filter(r => r !== 'admin' && ROLE_PORTAL_MAP[r])
     .map(r => ROLE_PORTAL_MAP[r]);
 
-  const isAdmin = assignedRoles.includes('admin') || user.role === 'admin';
+  const isAdmin = canAccessAdmin(user);
 
   return (
     <Layout>

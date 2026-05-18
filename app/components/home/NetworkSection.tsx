@@ -10,7 +10,7 @@ export function NetworkSection() {
     { icon: Pen, label: 'Writers', mystical: 'Ahl-e-Qalam', href: '/writers' },
     { icon: Mic, label: 'Vocalists', mystical: 'Ahl-e-Sada', href: '/vocalists' },
     { icon: Disc3, label: 'Producers', mystical: 'Ahl-e-Naghma', href: '/producers' },
-    { icon: Feather, label: 'Journalists', mystical: 'Ahl-e-Tahreer', href: '/literary-contributors' }
+    { icon: Feather, label: 'Literary', mystical: 'Ahl-e-Tahreer', href: '/literary-contributors' }
   ];
 
   return (
@@ -25,7 +25,7 @@ export function NetworkSection() {
               Verified Contributors
             </h2>
             <p className="text-[var(--text-base)] md:text-[var(--text-lg)] text-[var(--color-text-secondary)] max-w-3xl md:mx-auto leading-[var(--leading-relaxed)]">
-              Join a community of vocalists, writers, and producers creating sacred content under institutional oversight.
+              Join a community of writers, vocalists, producers, and literary contributors creating sacred content under institutional oversight.
             </p>
           </div>
 

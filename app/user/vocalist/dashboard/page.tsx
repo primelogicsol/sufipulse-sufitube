@@ -25,28 +25,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { DashboardLayout } from '@/app/components/layout/DashboardLayout';
-
-type PerformanceStatus = 
-    | 'assigned' 
-    | 'pre-production' 
-    | 'recording' 
-    | 'raw_vocals_received' 
-    | 'mixing' 
-    | 'mastering' 
-    | 'published';
-
-export interface PerformanceAssignment {
-    id: string;
-    referenceId: string;
-    kalam_id: string;
-    kalam_title: string;
-    kalam_content: string;
-    status: PerformanceStatus;
-    assigned_at: string;
-    producer_notes?: string;
-    technical_guidelines?: string;
-}
+import DashboardLayout from '@/app/components/layout/DashboardLayout';
+import { PerformanceStatus, PerformanceAssignment } from '@/app/types/contributor.types';
 
 function VocalistDashboardInner() {
     const { user, loading: authLoading } = useAuth();

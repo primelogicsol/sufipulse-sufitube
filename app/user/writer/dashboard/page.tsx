@@ -22,7 +22,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { DashboardLayout } from '@/app/components/layout/DashboardLayout';
+import DashboardLayout from '@/app/components/layout/DashboardLayout';
+import { KalamUnderDraft, WriterProfileType } from '@/app/types/contributor.types';
+import { Badge } from '@/app/components/primitives/Badge';
+import { PrimaryButton } from '@/app/components/primitives/PrimaryButton';
+import { Card } from '@/app/components/primitives/Card';
 
 type KalamStatus = 
     | 'submitted' 
@@ -32,14 +36,6 @@ type KalamStatus =
     | 'not_advanced' 
     | 'registry_pre_allocated' 
     | 'production_consideration';
-
-export interface KalamUnderDraft {
-    title: string;
-    language: string;
-    form_style: string;
-    thematic_category: string;
-    content: string;
-}
 
 export interface KalamSubmission {
     id: string;

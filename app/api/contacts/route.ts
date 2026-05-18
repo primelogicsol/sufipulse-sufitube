@@ -1,17 +1,17 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
+import { sendInquiryConfirmationEmail } from '@/app/lib/email';
 import { requireAdmin } from '@/server/middleware/authenticate';
-import { validateRequestBody } from '@/app/lib/api-middleware';
 import { contactFormSchema } from '@/app/lib/validation-schemas';
-import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
+import { validatePublicSubmission } from '@/app/lib/security';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const items = entityGetAll('contacts');
+    const items = entityGetAll('inquiries');
     const sorted = items.sort(
       (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
     );
@@ -22,20 +22,43 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const limited = await applyRateLimit(request, rateLimiters.strict);
-  if (limited) return limited;
+  const validation = await validatePublicSubmission(request, contactFormSchema, {
+    rateLimit: 'strict',
+    sanitizationRules: {
+      name: 'text',
+      email: 'email',
+      subject: 'text',
+      category: 'text',
+      message: 'text'
+    }
+  });
 
-  const validationResult = await validateRequestBody(request, contactFormSchema);
-  if (validationResult instanceof NextResponse) return validationResult;
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
 
   try {
-    const body = validationResult.data;
-    const record = entityCreate('contacts', {
+    // Generate institutional tracking ID
+    const timestamp = Date.now().toString().slice(-4);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const inquiryId = `SP-INQ-${timestamp}${random}`;
+
+    const record = entityCreate('inquiries', {
       ...body,
-      status: 'unread',
+      inquiryId,
+      status: 'submitted',
+      priority: 'medium',
+      submittedAt: new Date().toISOString(),
     });
 
-    notifyAdminNewSubmission('contact message', body.name, body.subject || 'General Inquiry').catch((err) => console.error('[notify]', err?.message || err));
+    // Notify admin
+    notifyAdminNewSubmission('institutional inquiry', body.name, body.subject || body.category).catch((err) => console.error('[notify]', err?.message || err));
+
+    // Send confirmation email to user
+    sendInquiryConfirmationEmail(body.email, {
+      name: body.name,
+      referenceId: inquiryId,
+      category: body.category
+    }).catch((err) => console.error('[email]', err?.message || err));
 
     return NextResponse.json(record, { status: 201 });
   } catch (e: any) {

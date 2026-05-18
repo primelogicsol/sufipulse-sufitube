@@ -1283,8 +1283,10 @@ export default function UserDashboard({ role }: UserDashboardProps) {
                                     {selectedItem.content ? (
                                         <div>
                                             <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Content</label>
-                                            <div className="bg-neutral-950 rounded-xl p-5 border border-neutral-800 prose prose-invert max-w-none">
-                                                <div dangerouslySetInnerHTML={{ __html: selectedItem.content }} />
+                                            <div className="bg-neutral-950 rounded-xl p-6 border border-neutral-800 prose prose-invert max-w-none">
+                                                <div className="text-white text-base leading-relaxed whitespace-pre-wrap font-arabic">
+                                                    {selectedItem.content}
+                                                </div>
                                             </div>
                                         </div>
                                     ) : selectedItem.link ? (

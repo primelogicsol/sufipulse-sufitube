@@ -170,7 +170,7 @@ export function ProducerCredentialsForm({
     setFormData(prev => ({
       ...prev,
       primary_production_focus: prev.primary_production_focus.includes(focus)
-        ? prev.primary_production_focus.filter(f => f !== focus)
+        ? prev.primary_production_focus.filter((f: string) => f !== focus)
         : [...prev.primary_production_focus, focus]
     }));
   };

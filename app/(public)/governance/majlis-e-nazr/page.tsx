@@ -1,272 +1,200 @@
+"use client";
 import { FileCheck, ArrowRight, Shield, CircleCheck as CheckCircle, CircleAlert as AlertCircle } from 'lucide-react';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function MajlisENazr() {
   const responsibilities = [
-    'Reviewing submitted kalam',
-    'Evaluating theological and thematic consistency',
-    'Confirming alignment with institutional purpose',
-    'Authorizing progression into structured production'
+    {
+      icon: FileCheck,
+      title: 'Theological Review',
+      description: 'Reviewing submitted kalam for theological and thematic consistency with traditional Sufi thought.'
+    },
+    {
+      icon: Shield,
+      title: 'Institutional Alignment',
+      description: 'Confirming that all content aligns with the core purpose and values defined in Mithaq.'
+    },
+    {
+      icon: CheckCircle,
+      title: 'Production Authorization',
+      description: 'Formal clearance of approved work to enter the structured production and recording workflow.'
+    },
+    {
+      icon: AlertCircle,
+      title: 'Revision Stewardship',
+      description: 'Providing authoritative guidance for thematic or linguistic refinements when required.'
+    }
   ];
 
   const reviewCriteria = [
     {
-      label: 'Thematic clarity',
-      description: 'Content purpose and devotional focus are coherent'
+      title: 'Thematic Clarity',
+      description: 'Content purpose and devotional focus are coherent and technically sound.'
     },
     {
-      label: 'Devotional integrity',
-      description: 'Alignment with traditional Islamic and Sufi principles'
+      title: 'Devotional Integrity',
+      description: 'Alignment with traditional Islamic principles and Sufi teachings from recognized orders.'
     },
     {
-      label: 'Linguistic coherence',
-      description: 'Language quality and structural readability'
+      title: 'Linguistic Coherence',
+      description: 'Language quality, structural readability, and semantic precision of the text.'
     },
     {
-      label: 'Structural readiness',
-      description: 'Suitability for musical adaptation and production'
+      title: 'Structural Readiness',
+      description: 'Suitability for musical adaptation, recording, and institutional distribution.'
     }
   ];
 
   const reviewSteps = [
-    { label: 'Submission', icon: FileCheck },
-    { label: 'Editorial Review', icon: Shield },
-    { label: 'Approval or Revision', icon: AlertCircle },
-    { label: 'Production Authorization', icon: CheckCircle }
+    { id: 1, title: 'Submission', icon: FileCheck, desc: 'Contributor record entry' },
+    { id: 2, title: 'Editorial Review', icon: Shield, desc: 'Thematic screening' },
+    { id: 3, title: 'Determination', icon: AlertCircle, desc: 'Approval or Revision' },
+    { id: 4, title: 'Production Clear', icon: CheckCircle, desc: 'Final authorization' }
   ];
 
   const authorityBoundaries = [
     {
-      action: 'Does not manage studio execution',
+      action: 'No Studio Execution',
       clarification: 'Production scheduling falls under Production Oversight'
     },
     {
-      action: 'Does not assign royalties',
+      action: 'No Royalty Assignment',
       clarification: 'Economic distribution is handled by the royalty framework'
     },
     {
-      action: 'Does not lock metadata',
+      action: 'No Metadata Locking',
       clarification: 'Registry validation is performed by Diwan-e-Amanat'
     },
     {
-      action: 'Does not authorize publication',
+      action: 'No Publication Authority',
       clarification: 'Release activation requires registry confirmation'
     }
   ];
 
-  const integrityPrinciples = [
-    'Content enters production intentionally.',
-    'Thematic direction remains coherent.',
-    'Institutional continuity is preserved.'
-  ];
-
   return (
     <Layout>
-      <Section className="pt-24 pb-12">
-        <PageContainer>
-          <div className="max-w-4xl">
-            <h1 className="text-5xl font-bold text-white mb-2">
-              Majlis-e-Nazr
-            </h1>
-            <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-              {roleDisplayMap.editor.mystical}
-            </p>
+      <StudioHero 
+        badge="Editorial Authority"
+        title="Majlis-e-Nazr"
+        mysticalName={roleDisplayMap.editor.mystical}
+        description="The Editorial Council governs content authorization within SufiPulse. No kalam enters production without formal review and approval under institutional standards."
+      />
 
-            <div className="max-w-2xl">
-              <p className="text-neutral-300 leading-relaxed">
-                The Editorial Council governs content authorization within SufiPulse.
-                No kalam enters production without formal review and approval.
-              </p>
-            </div>
+      <Section background="slate" spacing="normal">
+        <PageContainer>
+          <div className="max-w-6xl mx-auto">
+            <StudioSectionHeader 
+                title="Mandate & Review Authority"
+                subtitle="Majlis-e-Nazr safeguards thematic coherence and institutional alignment. The Council does not modify creative content; it authorizes its progression."
+            />
+
+            <StudioCardGrid cols={4}>
+              {responsibilities.map((item, idx) => (
+                <StudioLinkCard 
+                    key={idx}
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                />
+              ))}
+            </StudioCardGrid>
           </div>
         </PageContainer>
       </Section>
 
-      <Section className="py-12">
+      <Section background="midnight" spacing="normal">
         <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Mandate & Review Authority
-            </h2>
+          <div className="max-w-6xl mx-auto">
+            <StudioSectionHeader 
+                title="Scope of Review"
+                subtitle="Editorial evaluation assesses fundamental pillars of integrity and readiness"
+            />
 
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-              <p className="text-neutral-300 leading-relaxed mb-6">
-                Majlis-e-Nazr safeguards thematic coherence and institutional alignment.
-              </p>
+            <StudioCardGrid cols={2}>
+              {reviewCriteria.map((criterion, idx) => (
+                <StudioLinkCard 
+                    key={idx}
+                    icon={FileCheck}
+                    title={criterion.title}
+                    description={criterion.description}
+                />
+              ))}
+            </StudioCardGrid>
 
-              <p className="text-neutral-300 text-sm font-medium mb-4">
-                Its responsibilities include:
-              </p>
-
-              <div className="space-y-3 mb-6">
-                {responsibilities.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                    <p className="text-neutral-300 text-sm">{item}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-              <p className="text-neutral-300 leading-relaxed text-sm">
-                The Council does not modify creative content.
-                <br />
-                It authorizes progression.
-              </p>
-            </div>
-          </div>
-        </PageContainer>
-      </Section>
-
-      <Section className="py-12">
-        <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Scope of Review
-            </h2>
-
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-              <p className="text-neutral-300 text-sm font-medium mb-6">
-                Editorial evaluation assesses:
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                {reviewCriteria.map((criterion, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <p className="text-white font-medium text-sm">{criterion.label}</p>
-                    <p className="text-neutral-400 text-xs leading-relaxed">
-                      {criterion.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-              <p className="text-neutral-300 text-sm font-medium mb-4">
-                Submission outcomes:
-              </p>
-
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-white text-sm font-medium">Approved</p>
-                    <p className="text-neutral-400 text-xs">Moves to production assignment</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-white text-sm font-medium">Returned</p>
-                    <p className="text-neutral-400 text-xs">May be revised and resubmitted</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </PageContainer>
-      </Section>
-
-      <Section className="py-12">
-        <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Review Sequence
-            </h2>
-
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                {reviewSteps.map((step, idx) => (
-                  <div key={idx} className="flex items-center gap-4 flex-1">
-                    <div className="flex flex-col items-center gap-3 flex-1">
-                      <div className="w-12 h-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-                        <step.icon className="w-5 h-5 text-amber-400" />
-                      </div>
-                      <p className="text-neutral-300 text-sm text-center font-medium">
-                        {step.label}
-                      </p>
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div className="elite-card p-8 border-emerald-500/20 bg-emerald-500/5">
+                    <div className="flex items-center gap-4 mb-4">
+                        <CheckCircle className="text-emerald-500 w-6 h-6" />
+                        <h4 className="text-white font-bold uppercase tracking-widest text-sm">Outcome: Approved</h4>
                     </div>
-                    {idx < reviewSteps.length - 1 && (
-                      <ArrowRight className="hidden md:block w-5 h-5 text-neutral-600 flex-shrink-0" />
-                    )}
-                  </div>
-                ))}
-              </div>
+                    <p className="text-neutral-400 text-sm leading-relaxed">Authorized entry into production assignment and vocalist coordination.</p>
+                </div>
+                <div className="elite-card p-8 border-amber-500/20 bg-amber-500/5">
+                    <div className="flex items-center gap-4 mb-4">
+                        <AlertCircle className="text-amber-500 w-6 h-6" />
+                        <h4 className="text-white font-bold uppercase tracking-widest text-sm">Outcome: Returned</h4>
+                    </div>
+                    <p className="text-neutral-400 text-sm leading-relaxed">Requires thematic or linguistic revision prior to further consideration.</p>
+                </div>
             </div>
           </div>
         </PageContainer>
       </Section>
 
-      <Section className="py-12">
+      <StudioWorkflowRoadmap 
+        title="Review Sequence"
+        badge="Editorial Pipeline"
+        steps={reviewSteps}
+      />
+
+      <Section background="slate" spacing="normal">
         <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Authority Boundaries
-            </h2>
+          <div className="max-w-6xl mx-auto">
+            <StudioSectionHeader 
+                title="Authority Boundaries"
+                subtitle="Defined limitations to ensure cross-layer checks and balances"
+            />
 
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-              <p className="text-neutral-300 text-sm font-medium mb-6">
-                Majlis-e-Nazr:
-              </p>
-
-              <div className="space-y-6">
+            <div className="elite-card p-10 md:p-12">
+              <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
                 {authorityBoundaries.map((boundary, idx) => (
-                  <div key={idx}>
-                    <p className="text-white text-sm font-medium mb-1">
-                      {boundary.action}
-                    </p>
-                    <p className="text-neutral-400 text-xs leading-relaxed">
-                      {boundary.clarification}
-                    </p>
+                  <div key={idx} className="space-y-1">
+                    <p className="text-white text-sm font-bold uppercase tracking-wider">{boundary.action}</p>
+                    <p className="text-neutral-500 text-[11px] leading-relaxed font-medium uppercase tracking-widest">{boundary.clarification}</p>
                   </div>
                 ))}
               </div>
-
-              <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-              <p className="text-neutral-300 text-sm leading-relaxed">
-                Its authority concludes at production authorization.
+              <p className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-12 pt-6 border-t border-white/5 text-center italic">
+                Authority concludes at production authorization.
               </p>
             </div>
           </div>
         </PageContainer>
       </Section>
 
-      <Section className="py-12">
-        <PageContainer>
-          <div className="max-w-4xl">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Institutional Integrity
-            </h2>
+      <StudioGovernancePanel 
+        title="Institutional Integrity"
+        description="Review protects mission before momentum. Editorial council decisions are documented to preserve institutional continuity and thematic coherence across all releases."
+        primaryCTA={{ label: "Constitutional Mithaq", href: "/governance/mithaq" }}
+        shieldText="Governed Editorial Review"
+        background="midnight"
+      />
 
-            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-              <p className="text-neutral-300 text-sm font-medium mb-6">
-                Editorial review ensures:
-              </p>
-
-              <div className="space-y-3 mb-6">
-                {integrityPrinciples.map((principle, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                    <p className="text-neutral-300 text-sm">{principle}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-              <p className="text-neutral-300 text-sm leading-relaxed">
-                Review protects mission before momentum.
-              </p>
-            </div>
-          </div>
-        </PageContainer>
-      </Section>
+      <style jsx global>{`
+          .elite-card {
+              background: rgba(18, 18, 18, 0.4);
+              backdrop-filter: blur(12px);
+              border: 1px solid rgba(255, 255, 255, 0.04);
+              border-radius: 32px;
+              box-shadow: 
+                  0 20px 40px rgba(0,0,0,0.4),
+                  inset 0 1px 1px rgba(255,255,255,0.02);
+          }
+      `}</style>
     </Layout>
   );
 }

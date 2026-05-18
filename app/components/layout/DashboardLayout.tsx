@@ -41,14 +41,13 @@ import {
   markAdminNotificationRead,
   markAllAdminNotificationsRead,
 } from '../../lib/notifications';
-import { CONTRIBUTOR_ROLES } from '@/app/lib/role-access';
-
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'governance_admin'];
+const CONTRIBUTOR_ROLES = ['writer', 'vocalist', 'producer', 'literary', 'studio'];
 
 // ─── Navigation Definitions ───────────────────────────────────────────────────
 
@@ -273,6 +272,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
 
         const res = await fetch(endpoint);
+        if (!res.ok) {
+          setProfileApproved(false);
+          return;
+        }
         const data = await res.json();
         const profile = Array.isArray(data) ? data.find((p: any) => p.user_id === user.id || p.email === user.email) : null;
         
@@ -285,7 +288,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         } else {
           setProfileApproved(false);
         }
-      } catch {
+      } catch (err) {
+        console.error('Approval check error:', err);
         setProfileApproved(false);
       }
     };

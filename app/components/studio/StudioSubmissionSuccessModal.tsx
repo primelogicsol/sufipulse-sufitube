@@ -1,186 +1,129 @@
-import { useEffect, useState } from 'react';
-import { CircleCheck as CheckCircle, FileCheck, Clock, Mail, Hop as Home, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+"use client";
 
-interface StudioSubmissionSuccessModalProps {
+import { 
+  CheckCircle2, 
+  X, 
+  ArrowRight, 
+  Settings, 
+  ShieldCheck, 
+  Clock, 
+  HardDrive,
+  Activity
+} from 'lucide-react';
+import Link from 'next/link';
+
+interface SuccessModalProps {
   onClose: () => void;
-  submissionId?: string;
+  submissionId: string;
 }
 
-export function StudioSubmissionSuccessModal({ onClose, submissionId }: StudioSubmissionSuccessModalProps) {
-  const router = useRouter();
-  const [countdown, setCountdown] = useState(10);
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
-
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      router.push('/');
-    }
-  }, [countdown, router]);
-
-  const handleReturnHome = () => {
-    document.body.style.overflow = '';
-    router.push('/');
-  };
-
+export function StudioSubmissionSuccessModal({ 
+  onClose, 
+  submissionId 
+}: SuccessModalProps) {
   return (
-    <div className="modal-overlay">
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors rounded-lg hover:bg-white/5"
-          aria-label="Close modal"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 mb-6 mx-auto shadow-lg shadow-[#D4AF37]/10">
-            <CheckCircle className="w-10 h-10 text-[#D4AF37]" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 overflow-y-auto py-10">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity"
+        onClick={onClose}
+      />
+      
+      {/* Modal Container */}
+      <div className="relative w-full max-w-2xl bg-[#0a0a0a] border border-amber-400/20 rounded-[32px] shadow-[0_0_100px_rgba(251,191,36,0.1)] overflow-hidden animate-in fade-in zoom-in duration-500">
+        
+        {/* Success Header */}
+        <div className="relative h-48 flex items-center justify-center bg-linear-to-b from-amber-400/10 to-transparent">
+          <div className="absolute top-6 right-8">
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
           </div>
-
-          <h2 className="text-3xl font-semibold text-[var(--color-text-primary)] mb-2 tracking-tight">
-            Studio Credentials Submitted
-          </h2>
-
-          <p className="text-[#D4AF37] text-sm font-medium tracking-wider uppercase mb-6">
-            Karkhana-e-Sada — Network Review Queue
-          </p>
-
-          {submissionId && (
-            <div className="inline-block px-4 py-2 bg-[#0B1B33] border border-[#D4AF37]/20 rounded-lg mb-6">
-              <p className="text-xs text-[var(--color-text-tertiary)] mb-1">Submission Reference</p>
-              <p className="text-sm font-mono text-[#D4AF37] tracking-wide">{submissionId}</p>
+          
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 rounded-full bg-amber-400 flex items-center justify-center mb-4 shadow-[0_0_40px_rgba(251,191,36,0.4)]">
+              <CheckCircle2 size={40} className="text-black stroke-[2.5]" />
             </div>
-          )}
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400">Technical Intake Authorized</p>
+          </div>
         </div>
 
-        <div className="space-y-4 mb-8">
-          <div className="p-5 bg-white/[0.02] border border-white/10 rounded-xl">
-            <p className="text-[var(--color-text-secondary)] leading-relaxed">
-              Your studio credentials have been formally received by the SufiPulse production board for network onboarding review.
+        {/* Content */}
+        <div className="px-10 pb-12">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">Studio Credentials Submitted</h2>
+            <p className="text-neutral-400 text-sm leading-relaxed max-w-md mx-auto">
+              Your technical facility record has been received for technical audit under Karkhana-e-Sada. Registry authorization is mandatory for session hosting.
             </p>
           </div>
 
-          <div className="p-5 bg-white/[0.02] border border-white/10 rounded-xl">
-            <p className="text-[var(--color-text-secondary)] leading-relaxed">
-              All studio applications undergo institutional review for technical capacity, acoustic standards, and governance alignment before network access is granted.
-            </p>
-          </div>
-
-          <div className="p-5 bg-linear-to-r from-[#D4AF37]/10 to-transparent border border-[#D4AF37]/20 rounded-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-[#D4AF37]" />
-              <p className="text-sm font-semibold text-[#D4AF37]">Estimated Review Window</p>
+          {/* Reference ID Card */}
+          <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-1">Registry Reference ID</p>
+              <p className="text-xl font-mono font-bold text-white tracking-wider uppercase">{submissionId}</p>
             </div>
-            <p className="text-[var(--color-text-primary)] font-medium">7–10 Working Days</p>
+            <div className="h-px w-full md:h-12 md:w-px bg-white/5" />
+            <div className="text-right md:text-right w-full md:w-auto">
+              <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-1">Audit Status</p>
+              <div className="flex items-center justify-center md:justify-end gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">Pending Review</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-[#D4AF37]" />
-            What Happens Next
-          </h3>
-          <ul className="space-y-3 text-sm text-[var(--color-text-secondary)]">
-            <li className="flex items-start gap-3">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-semibold shrink-0 mt-0.5">1</span>
-              <span>Technical capability and equipment review begins</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-semibold shrink-0 mt-0.5">2</span>
-              <span>You may be asked to provide a short sample recording for acoustic assessment</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-semibold shrink-0 mt-0.5">3</span>
-              <span>Upon approval, session scheduling access and network credentials will be issued</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-semibold shrink-0 mt-0.5">4</span>
-              <span className="flex items-center gap-2">
-                Email notification will be sent to your registered address
-                <Mail className="w-3.5 h-3.5 text-[#D4AF37]" />
-              </span>
-            </li>
-          </ul>
-        </div>
+          {/* Next Steps Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+            <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.01]">
+              <div className="flex items-center gap-3 mb-3">
+                <HardDrive size={16} className="text-amber-400" />
+                <h4 className="text-[11px] font-black text-white uppercase tracking-widest leading-none mt-0.5">Facility Audit</h4>
+              </div>
+              <p className="text-[10px] text-neutral-500 leading-relaxed uppercase tracking-wider">
+                Technical review of your acoustic environment and recording chain specifications.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.01]">
+              <div className="flex items-center gap-3 mb-3">
+                <Activity size={16} className="text-amber-400" />
+                <h4 className="text-[11px] font-black text-white uppercase tracking-widest leading-none mt-0.5">Validation Path</h4>
+              </div>
+              <p className="text-[10px] text-neutral-500 leading-relaxed uppercase tracking-wider">
+                Approved studios enter the SufiPulse regional coordination registry for sessions.
+              </p>
+            </div>
+          </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handleReturnHome}
-            className="flex-1 px-6 py-3.5 bg-linear-to-r from-[#D4AF37] to-[#F4D03F] text-[#0A1628] font-semibold rounded-lg hover:shadow-lg hover:shadow-[#D4AF37]/25 transition-all duration-200 flex items-center justify-center gap-2 group"
-          >
-            <Home className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            Return to Home
-          </button>
-        </div>
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-4">
+            <Link 
+              href="/studio"
+              className="w-full py-4 bg-amber-400 text-black font-black rounded-xl hover:bg-amber-500 transition-all uppercase text-[11px] tracking-[0.2em] flex items-center justify-center gap-3 group shadow-[0_20px_40px_rgba(251,191,36,0.1)]"
+            >
+              Explore Network Infrastructure
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+            
+            <button 
+              onClick={onClose}
+              className="w-full py-4 bg-white/5 text-neutral-400 font-bold rounded-xl hover:bg-white/10 hover:text-white transition-all uppercase text-[10px] tracking-[0.2em]"
+            >
+              Return to Registry Overview
+            </button>
+          </div>
 
-        <div className="mt-6 pt-6 border-t border-white/10">
-          <p className="text-xs text-center text-[var(--color-text-tertiary)]">
-            Redirecting to home in <span className="text-[#D4AF37] font-semibold">{countdown}</span> seconds
-          </p>
+          <div className="mt-8 pt-8 border-t border-white/5 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <ShieldCheck size={14} className="text-neutral-700" />
+              <p className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">SufiPulse Institutional Governance</p>
+            </div>
+          </div>
         </div>
       </div>
-
-      <style>{`
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(10, 18, 35, 0.85);
-          backdrop-filter: blur(12px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 1rem;
-          animation: fadeIn 0.2s ease-out;
-        }
-
-        .modal-card {
-          position: relative;
-          width: 100%;
-          max-width: 560px;
-          padding: 2rem;
-          border-radius: 18px;
-          background: linear-gradient(180deg, #0B1B33 0%, #091426 100%);
-          border: 1px solid rgba(212, 175, 55, 0.35);
-          box-shadow:
-            0 0 80px rgba(0, 0, 0, 0.7),
-            0 0 40px rgba(212, 175, 55, 0.15);
-          animation: fadeScale 0.3s ease-out;
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes fadeScale {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-
-        @media (max-width: 640px) {
-          .modal-card {
-            padding: 1.5rem;
-          }
-        }
-      `}</style>
     </div>
   );
 }

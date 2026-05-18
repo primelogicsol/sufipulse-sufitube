@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < texts.length; i += BATCH_SIZE) {
       const batch = texts.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.all(
-        batch.map((text) =>
+        batch.map((text: string) =>
           text.trim()
             ? translateText(text, sourceLang, targetLang)
             : Promise.resolve('')

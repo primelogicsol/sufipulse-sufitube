@@ -1,15 +1,33 @@
-import { Users, ArrowRight, FileText, Lock, Database } from 'lucide-react';
+"use client";
+import { Users, ArrowRight, FileText, Lock, Database, ShieldCheck, Scale, DollarSign } from 'lucide-react';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function RoyaltyTransparency() {
     const allocationPrinciples = [
-        'Contributor roles are formally recorded',
-        'Allocation percentages are confirmed before release',
-        'Distribution structures are agreed prior to publication',
-        'Registry records reflect final economic structure'
+        {
+            icon: Users,
+            title: 'Role Recording',
+            description: 'Contributor roles are formally recorded and validated prior to any economic discussion.'
+        },
+        {
+            icon: Scale,
+            title: 'Pre-Release Lock',
+            description: 'Allocation percentages are confirmed and locked before the release enters the registry.'
+        },
+        {
+            icon: Lock,
+            title: 'Agreed Distribution',
+            description: 'Distribution structures are agreed upon prior to publication through documented institutional protocols.'
+        },
+        {
+            icon: Database,
+            title: 'Registry Alignment',
+            description: 'Final economic structures are immutably reflected within the Diwan-e-Amanat registry records.'
+        }
     ];
 
     const eligibleRoles = [
@@ -28,236 +46,180 @@ export default function RoyaltyTransparency() {
     ];
 
     const documentationSteps = [
-        { label: 'Contributor Confirmation', icon: Users },
-        { label: 'Allocation Agreement', icon: FileText },
-        { label: 'Registry Recording', icon: Database },
-        { label: 'Metadata Lock', icon: Lock },
-        { label: 'Release Authorization', icon: FileText }
+        { id: 1, title: 'Contributor Confirm', icon: Users, desc: 'Identity verification' },
+        { id: 2, title: 'Allocation Agreement', icon: FileText, desc: 'Economic structuring' },
+        { id: 3, title: 'Registry Recording', icon: Database, desc: 'Immutable lock' },
+        { id: 4, title: 'Registry Lock', icon: Lock, desc: 'Technical validation' },
+        { id: 5, title: 'Release Auth', icon: FileText, desc: 'Publication clear' }
     ];
 
     const recordPrinciples = [
         {
-            principle: 'Is recorded prior to publication',
-            detail: 'Economic structure defined before release'
+            title: 'Pre-Publication Record',
+            description: 'The economic structure of every release is defined and recorded before publication occurs.'
         },
         {
-            principle: 'Remains traceable through institutional registry',
-            detail: 'Documentation permanently accessible'
+            title: 'Registry Traceability',
+            description: 'Documentation remains permanently accessible through the institutional contributor registry.'
         },
         {
-            principle: 'Aligns with documented agreements',
-            detail: 'Registry reflects confirmed allocations'
+            title: 'Confirmed Allocations',
+            description: 'The registry reflects final, confirmed allocations aligned with documented institutional agreements.'
         },
         {
-            principle: 'Cannot be altered post-publication without formal review',
-            detail: 'Changes require documented authorization'
+            title: 'Immutable Status',
+            description: 'Allocations cannot be altered post-publication without a formal, documented institutional review.'
         }
     ];
 
     const authorityBoundaries = [
         {
-            action: 'Does not assign creative approval',
-            clarification: 'Editorial authority remains with Majlis-e-Nazr'
+            action: 'No Creative Approval',
+            clarification: 'Editorial authority remains strictly with Majlis-e-Nazr'
         },
         {
-            action: 'Does not manage studio execution',
-            clarification: 'Production oversight governs technical workflow'
+            action: 'No Studio Management',
+            clarification: 'Production oversight governs technical and studio workflows'
         },
         {
-            action: 'Does not override registry confirmation',
-            clarification: 'Documentation follows institutional validation'
+            action: 'No Registry Overriding',
+            clarification: 'Economic documentation follows institutional registry validation'
         }
     ];
 
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Royalty Transparency
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.royalty_transparency.mystical}
-                        </p>
+            <StudioHero 
+                badge="Economic Framework"
+                title="Royalty Transparency"
+                mysticalName={roleDisplayMap.royalty_transparency.mystical}
+                description="Royalty allocation within SufiPulse follows documented institutional protocol. All economic distributions are confirmed prior to publication and recorded through registry validation."
+            />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed mb-4">
-                                Royalty allocation within SufiPulse follows documented institutional protocol.
-                                All economic distributions are confirmed prior to publication and recorded through registry validation.
-                            </p>
-                            <p className="text-neutral-300 leading-relaxed">
-                                Clear. Controlled.
-                            </p>
-                        </div>
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Allocation Principles"
+                            subtitle="Governing economic clarity and institutional fairness through documented protocol"
+                        />
+
+                        <StudioCardGrid cols={4}>
+                            {allocationPrinciples.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={item.icon}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Allocation Principles
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Eligible Roles"
+                            subtitle="SufiPulse contributors eligible for royalty consideration within the institutional framework"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Royalty documentation ensures:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {allocationPrinciples.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {eligibleRoles.map((item, idx) => (
+                                <div key={idx} className="elite-card p-10 text-center hover:border-amber-400/30 transition-all">
+                                    <div className="w-16 h-16 rounded-3xl bg-amber-400/5 border border-amber-400/10 flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                                        <Users className="text-amber-400 w-8 h-8" />
                                     </div>
-                                ))}
-                            </div>
+                                    <h3 className="text-white font-bold text-lg mb-2">{item.role}</h3>
+                                    <p className="text-amber-400/80 text-[10px] font-black uppercase tracking-[0.2em]">{item.mystical}</p>
+                                </div>
+                            ))}
+                        </div>
 
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                No allocation is determined after release.
+                        <div className="mt-12 bg-black/20 border border-white/5 rounded-xl p-8 text-center max-w-3xl mx-auto">
+                            <p className="text-[var(--text-sm)] text-neutral-500 leading-relaxed italic">
+                                "Studio infrastructure operates under service governance unless otherwise contractually defined."
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <StudioWorkflowRoadmap 
+                title="Documentation Sequence"
+                badge="Economic Pipeline"
+                steps={documentationSteps}
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Eligible Roles
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Transparency & Record"
+                            subtitle="Immutable documentation of economic rights and institutional commitments"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Royalty consideration may apply to:
-                            </p>
-
-                            <div className="space-y-4 mb-6">
-                                {eligibleRoles.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <div>
-                                            <span className="text-neutral-300 text-sm">{item.role}</span>
-                                            <span className="text-amber-400/70 text-sm"> ({item.mystical})</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Studio infrastructure operates under service governance unless otherwise contractually defined.
-                            </p>
-                        </div>
+                        <StudioCardGrid cols={2}>
+                            {recordPrinciples.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={FileText}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Documentation Sequence
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Authority Boundaries"
+                            subtitle="Defined limitations to ensure economic independence and procedural separation"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8 overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-neutral-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-neutral-600">
-                            <div className="flex items-center gap-4 min-w-max pb-2">
-                                {documentationSteps.map((step, idx) => (
-                                    <div key={idx} className="flex items-center gap-4">
-                                        <div className="flex flex-col items-center gap-3 min-w-[140px]">
-                                            <div className="w-12 h-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-                                                <step.icon className="w-5 h-5 text-amber-400" />
-                                            </div>
-                                            <p className="text-neutral-300 text-sm text-center font-medium">
-                                                {step.label}
-                                            </p>
-                                        </div>
-                                        {idx < documentationSteps.length - 1 && (
-                                            <ArrowRight className="w-5 h-5 text-neutral-600 flex-shrink-0" />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Transparency & Record
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Royalty documentation:
-                            </p>
-
-                            <div className="space-y-6 mb-6">
-                                {recordPrinciples.map((item, idx) => (
-                                    <div key={idx}>
-                                        <p className="text-white text-sm font-medium mb-1">
-                                            {item.principle}
-                                        </p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {item.detail}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Transparency protects contributors and institution equally.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Authority Boundaries
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Royalty Transparency:
-                            </p>
-
-                            <div className="space-y-6 mb-6">
+                        <div className="elite-card p-10 md:p-12">
+                            <div className="grid md:grid-cols-3 gap-12">
                                 {authorityBoundaries.map((boundary, idx) => (
-                                    <div key={idx}>
-                                        <p className="text-white text-sm font-medium mb-1">
-                                            {boundary.action}
-                                        </p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {boundary.clarification}
-                                        </p>
+                                    <div key={idx} className="space-y-1">
+                                        <p className="text-white text-sm font-bold uppercase tracking-wider">{boundary.action}</p>
+                                        <p className="text-neutral-500 text-[11px] leading-relaxed font-medium uppercase tracking-widest">{boundary.clarification}</p>
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                It governs economic clarity prior to release.
+                            <p className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-12 pt-6 border-t border-white/5 text-center italic">
+                                Framework governs economic clarity prior to release activation.
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
+
+            <StudioGovernancePanel 
+                title="Economic Justice"
+                description="Transparency protects contributors and the institution equally. By locking allocation structures in the registry, SufiPulse ensures that spiritual art remains untainted by commercial disputes."
+                primaryCTA={{ label: "Registry Authority", href: "/governance/diwan-e-amanat" }}
+                secondaryCTA={{ label: "Constitutional Mithaq", href: "/governance/mithaq" }}
+                shieldText="Governed Royalty Framework"
+                background="slate"
+            />
+
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

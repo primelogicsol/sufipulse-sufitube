@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine safe target status — never downgrade beyond what already happened.
-    const targetAdoptionStatus = 'campaign_preparation_requested';
+    const targetAdoptionStatus = 'payment_received';
     const current = getAdoptionRecord(adoptionId);
     const safeAdoptionStatus = current && !canAdvanceTo(current.adoptionStatus, targetAdoptionStatus)
       ? current.adoptionStatus

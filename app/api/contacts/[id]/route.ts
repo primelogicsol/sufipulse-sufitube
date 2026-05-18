@@ -7,7 +7,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (auth instanceof NextResponse) return auth;
 
   const { id } = await params;
-  const item = entityGetById('contacts', id);
+  const item = entityGetById('inquiries', id);
   if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(item);
 }
@@ -19,10 +19,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const { id } = await params;
     const body = await request.json();
-    const patch: Record<string, any> = { ...body };
-    if (body.status === 'replied') patch.replied_at = new Date().toISOString();
-    const updated = entityUpdate('contacts', id, patch);
-    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const patch: Record<string, any> = { 
+      ...body,
+      updated_at: new Date().toISOString()
+    };
+    
+    const updated = entityUpdate('inquiries', id, patch);
+    if (!updated) return NextResponse.json({ error: 'Inquiry not found' }, { status: 404 });
     return NextResponse.json(updated);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

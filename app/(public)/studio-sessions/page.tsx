@@ -1,17 +1,19 @@
 "use client"
 import { useState } from 'react';
-import { Building2, Radio, FileCheck, UserCheck, Settings, Database, ArrowRight, KeyRound, ChevronDown, ChevronUp } from 'lucide-react';
+import { Building2, Radio, FileCheck, UserCheck, Settings, Database, ArrowRight, KeyRound, ChevronDown, ChevronUp, ShieldCheck, Shield } from 'lucide-react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
+import { Badge } from '../../components/primitives/Badge';
 import { SessionRequestForm } from '../../components/studio/SessionRequestForm';
 import { StudioAccessCodeRequestForm } from '../../components/studio/StudioAccessCodeRequestForm';
+import { StudioHero, StudioSectionHeader, StudioWorkflowRoadmap, StudioGovernancePanel, StudioCardGrid, StudioLinkCard } from '../../components/studio/StudioLayoutComponents';
 import Link from 'next/link';
-import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 
 export default function StudioSessions() {
     const [activeForm, setActiveForm] = useState<'in_person' | 'remote' | null>(null);
     const [showCodeRequest, setShowCodeRequest] = useState(false);
+    
     const sessionAccessRequirements = [
         'Approved Writers (Ahl-e-Qalam)',
         'Approved Vocalists (Ahl-e-Sada)',
@@ -37,223 +39,182 @@ export default function StudioSessions() {
     ];
 
     const coordinationSteps = [
-        { label: 'Approved Kalam Confirmation', icon: FileCheck },
-        { label: 'Vocalist Assignment', icon: UserCheck },
-        { label: 'Production Framework Finalized', icon: Settings },
-        { label: 'Studio Session Scheduled', icon: Building2 },
-        { label: 'Master Validation', icon: Settings },
-        { label: 'Registry Documentation', icon: Database }
+        { id: 1, title: 'Approved Kalam Confirmation', desc: 'Editorial council authorization' },
+        { id: 2, title: 'Contributor Assignment', icon: UserCheck, desc: 'Matching voice to sacred text' },
+        { id: 3, title: 'Production Framework Finalized', icon: Settings, desc: 'Thematic musical structuring' },
+        { id: 4, title: 'Session Authorization Confirmed', icon: ShieldCheck, desc: 'Institutional clearance' },
+        { id: 5, title: 'Studio Session Scheduled', icon: Building2, desc: 'Master-grade capture' },
+        { id: 6, title: 'Master Validation', icon: Settings, desc: 'Technical quality check' },
+        { id: 7, title: 'Registry Documentation', icon: Database, desc: 'Final institutional lock' }
     ];
 
     const schedulingPrinciples = [
-        'Coordinated, not booked instantly',
-        'Aligned with production workflow',
-        'Subject to availability and governance review'
+        { restriction: 'Coordinated, not booked instantly', clarification: 'Sessions are coordinated through institutional review and production authorization, not instant public booking.' },
+        { restriction: 'Aligned with production workflow', clarification: 'Scheduling follows the finalized production framework and contributor availability.' },
+        { restriction: 'Subject to availability and governance review', clarification: 'Registry authorization is mandatory for all network studio sessions.' }
     ];
 
     const structuralBoundaries = [
         {
             restriction: 'No external commercial rentals',
-            clarification: 'Studio access is reserved exclusively for institutional productions'
+            clarification: 'Studio access is reserved for institutional productions'
         },
         {
             restriction: 'No independent recording under SufiPulse branding',
-            clarification: 'All recordings must follow centralized governance protocols'
+            clarification: 'All recordings follow centralized production protocols'
         },
         {
-            restriction: 'No bypassing editorial review',
-            clarification: 'Session authorization requires formal approval pathway'
+            restriction: 'No bypassing review',
+            clarification: 'No bypassing editorial, production, or governance review'
         },
         {
-            restriction: 'No session authorization without formal approval',
-            clarification: 'Access follows institutional validation sequence'
+            restriction: 'No unauthorized scheduling',
+            clarification: 'No session scheduling without Studio Authorization Reference'
         }
     ];
 
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
+            <StudioHero 
+                badge="Production Infrastructure"
+                title="Studio Sessions"
+                mysticalName="Majalis-e-Sabt"
+                description="SufiPulse Studio – USA operates under centralized governance. Recording sessions are available exclusively to approved contributors operating within institutionally authorized production frameworks."
+                disclaimer="No public booking authorized."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Studio Sessions
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.studio_sessions.mystical}
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Session Access Governance"
+                            subtitle="Studio session coordination is available only to approved contributors operating within institutionally authorized production frameworks."
+                        />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed mb-4">
-                                SufiPulse Studio – USA operates under centralized governance. Recording sessions are available exclusively to approved contributors within the institutional framework.
-                            </p>
-                            <p className="text-neutral-300 leading-relaxed">
-                                No public booking.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Session Access Mandate
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Recording access is limited to:
-                            </p>
-
-                            <div className="space-y-3 mb-8">
-                                {sessionAccessRequirements.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
+                        <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-10">
+                            <div className="grid md:grid-cols-2 gap-12">
+                                <div>
+                                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-6">Access Requirements</p>
+                                    <div className="space-y-4">
+                                        {sessionAccessRequirements.map((item, idx) => (
+                                            <div key={idx} className="flex items-center gap-4">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                                <p className="text-neutral-300 text-sm font-bold uppercase tracking-widest">{item}</p>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Sessions are authorized only after:
-                            </p>
-
-                            <div className="space-y-3 mb-8">
-                                {authorizationConditions.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="bg-neutral-950/50 border border-neutral-700 rounded-lg p-6">
-                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                    Studio access does not operate as an open commercial service.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Recording Modalities
-                        </h2>
-
-                        <div className="bg-neutral-950/30 border border-amber-400/30 rounded-lg p-6 mb-6">
-                            <p className="text-amber-400/90 text-sm leading-relaxed">
-                                <span className="font-semibold">Approval Required:</span> Session coordination requires a valid approval reference code. This code is issued to approved contributors after credential review. Submit your credentials through the appropriate contributor page to receive your reference code before requesting session access.
-                            </p>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-3 bg-amber-400/10 rounded-lg border border-amber-400/30">
-                                        <Building2 className="w-6 h-6 text-amber-400" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-white">
-                                        SufiPulse Studio – USA
-                                    </h3>
                                 </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mb-6">Authorization Path</p>
+                                    <div className="space-y-4">
+                                        {authorizationConditions.map((item, idx) => (
+                                            <div key={idx} className="flex items-center gap-4 group">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-neutral-700" />
+                                                <p className="text-neutral-500 text-sm font-bold uppercase tracking-widest group-hover:text-neutral-400 transition-colors">{item}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
 
-                                <p className="text-sm text-neutral-400 mb-6">
-                                    (In-Person)
-                                </p>
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Recording Modalities"
+                            subtitle="Select the appropriate coordination path for your authorized production"
+                            centered
+                        />
 
-                                <p className="text-neutral-300 text-sm leading-relaxed mb-6">
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="elite-card p-10 md:p-12 group hover:ring-1 hover:ring-amber-400/20 transition-all flex flex-col h-full">
+                                <div className="flex items-center gap-5 mb-8">
+                                    <div className="p-4 bg-amber-400/5 rounded-2xl border border-amber-400/10 group-hover:bg-amber-400/10 group-hover:border-amber-400/30 transition-all">
+                                        <Building2 className="w-8 h-8 text-amber-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-white tracking-tight">USA Studio</h3>
+                                        <p className="text-[10px] text-amber-400 font-black uppercase tracking-[0.2em] mt-1">In-Person Coordination</p>
+                                    </div>
+                                </div>
+                                <p className="text-neutral-400 leading-relaxed mb-8 flex-1">
                                     Experience recording within the centralized studio under full technical oversight and governance supervision.
                                 </p>
-
-                                <div className="space-y-3 mb-8">
-                                    {inPersonFeatures.map((feature, idx) => (
-                                        <div key={idx} className="flex items-start gap-3">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                            <p className="text-neutral-300 text-sm">{feature}</p>
+                                <div className="space-y-3 mb-10">
+                                    {inPersonFeatures.map((f, i) => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="w-1 h-1 rounded-full bg-amber-400" />
+                                            <p className="text-[10px] text-neutral-300 font-black uppercase tracking-widest">{f}</p>
                                         </div>
                                     ))}
                                 </div>
-
                                 <button
                                     onClick={() => setActiveForm(activeForm === 'in_person' ? null : 'in_person')}
-                                    className="w-full px-6 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 hover:border-amber-400/50 text-amber-400 rounded-lg text-sm font-medium transition-all"
+                                    className="w-full py-5 bg-amber-400/5 hover:bg-amber-400 text-amber-400 hover:text-black border border-amber-400/20 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all"
                                 >
-                                    {activeForm === 'in_person' ? 'Hide Form' : 'Request Session Coordination'}
+                                    {activeForm === 'in_person' ? 'Cancel Request' : 'Request Studio Session Access'}
                                 </button>
                             </div>
 
-                            <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-3 bg-amber-400/10 rounded-lg border border-amber-400/30">
-                                        <Radio className="w-6 h-6 text-amber-400" />
+                            <div className="elite-card p-10 md:p-12 group hover:ring-1 hover:ring-amber-400/20 transition-all flex flex-col h-full">
+                                <div className="flex items-center gap-5 mb-8">
+                                    <div className="p-4 bg-amber-400/5 rounded-2xl border border-amber-400/10 group-hover:bg-amber-400/10 group-hover:border-amber-400/30 transition-all">
+                                        <Radio className="w-8 h-8 text-amber-400" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white">
-                                        Remote Recording Support
-                                    </h3>
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-white tracking-tight">Remote Network</h3>
+                                        <p className="text-[10px] text-amber-400 font-black uppercase tracking-[0.2em] mt-1">Distributed Coordination</p>
+                                    </div>
                                 </div>
-
-                                <p className="text-sm text-neutral-400 mb-6">
-                                    Network Coordination
+                                <p className="text-neutral-400 leading-relaxed mb-8 flex-1">
+                                    Approved vocalists may record from authorized network locations under centralized coordination and master validation.
                                 </p>
-
-                                <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                                    Approved vocalists may record from authorized network locations under centralized coordination.
-                                </p>
-
-                                <div className="space-y-3 mb-8">
-                                    {remoteFeatures.map((feature, idx) => (
-                                        <div key={idx} className="flex items-start gap-3">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                            <p className="text-neutral-300 text-sm">{feature}</p>
+                                <div className="space-y-3 mb-10">
+                                    {remoteFeatures.map((f, i) => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="w-1 h-1 rounded-full bg-amber-400" />
+                                            <p className="text-[10px] text-neutral-300 font-black uppercase tracking-widest">{f}</p>
                                         </div>
                                     ))}
                                 </div>
-
                                 <button
                                     onClick={() => setActiveForm(activeForm === 'remote' ? null : 'remote')}
-                                    className="w-full px-6 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 hover:border-amber-400/50 text-amber-400 rounded-lg text-sm font-medium transition-all"
+                                    className="w-full py-5 bg-amber-400/5 hover:bg-amber-400 text-amber-400 hover:text-black border border-amber-400/20 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all"
                                 >
-                                    {activeForm === 'remote' ? 'Hide Form' : 'Initiate Remote Coordination'}
+                                    {activeForm === 'remote' ? 'Cancel Request' : 'Request Studio Session Access'}
                                 </button>
                             </div>
                         </div>
 
-                        {/* ── Request Access Code ── */}
-                        <div className="mt-8">
+                        <div className="mt-12">
                           <button
                             onClick={() => setShowCodeRequest(!showCodeRequest)}
-                            className="w-full flex items-center justify-between px-5 py-4 bg-neutral-900/40 border border-neutral-700 hover:border-amber-400/40 rounded-lg transition-colors group"
+                            className="w-full flex items-center justify-between px-8 py-6 bg-black/40 border border-white/5 hover:border-amber-400/30 rounded-[24px] transition-all group shadow-xl"
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="p-1.5 bg-amber-400/10 rounded border border-amber-400/20 group-hover:border-amber-400/40 transition-colors">
-                                <KeyRound className="w-4 h-4 text-amber-400" />
+                            <div className="flex items-center gap-5">
+                              <div className="p-3 bg-amber-400/5 rounded-xl border border-amber-400/10 group-hover:border-amber-400/40 transition-colors">
+                                <KeyRound className="w-6 h-6 text-amber-400" />
                               </div>
                               <div className="text-left">
-                                <p className="text-sm font-medium text-white">Request an Access Code</p>
-                                <p className="text-xs text-neutral-400">For approved contributors who need a Studio Session reference code</p>
+                                <p className="text-sm font-black text-white uppercase tracking-[0.2em]">Request Authorization Reference</p>
+                                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-1 opacity-60">For approved contributors awaiting coordination</p>
                               </div>
                             </div>
-                            {showCodeRequest
-                              ? <ChevronUp className="w-4 h-4 text-neutral-400" />
-                              : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                            {showCodeRequest ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                           </button>
-
                           {showCodeRequest && (
-                            <div className="mt-4">
+                            <div className="mt-8 animate-in fade-in slide-in-from-top-4 duration-700">
                               <StudioAccessCodeRequestForm />
                             </div>
                           )}
                         </div>
 
                         {activeForm && (
-                            <div className="mt-8">
+                            <div className="mt-12 animate-in fade-in slide-in-from-top-6 duration-700">
                                 <SessionRequestForm
                                     sessionType={activeForm}
                                     onClose={() => setActiveForm(null)}
@@ -264,123 +225,62 @@ export default function StudioSessions() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Session Coordination Process
-                        </h2>
+            <StudioWorkflowRoadmap 
+                title="Session Coordination Process"
+                badge="Production Lifecycle"
+                steps={coordinationSteps}
+                description="Technical compliance and registry adherence is mandatory for all production steps."
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8 overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-neutral-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-neutral-600">
-                            <div className="flex items-center gap-4 min-w-max pb-2">
-                                {coordinationSteps.map((step, idx) => (
-                                    <div key={idx} className="flex items-center gap-4">
-                                        <div className="flex flex-col items-center gap-3 min-w-[160px]">
-                                            <div className="w-12 h-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-                                                <step.icon className="w-5 h-5 text-amber-400" />
-                                            </div>
-                                            <p className="text-neutral-300 text-sm text-center font-medium">
-                                                {step.label}
-                                            </p>
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="grid md:grid-cols-2 gap-12">
+                            <div>
+                                <h2 className="text-3xl font-bold text-white mb-8 tracking-tight">Scheduling Discipline</h2>
+                                <div className="space-y-10">
+                                    {schedulingPrinciples.map((p, i) => (
+                                        <div key={i} className="group relative pl-8">
+                                            <div className="absolute left-0 top-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+                                            <p className="text-white text-xs font-black uppercase tracking-[0.2em] mb-2">{p.restriction}</p>
+                                            <p className="text-neutral-500 text-[11px] leading-relaxed font-medium group-hover:text-neutral-400 transition-colors">{p.clarification}</p>
                                         </div>
-                                        {idx < coordinationSteps.length - 1 && (
-                                            <ArrowRight className="w-5 h-5 text-neutral-600 flex-shrink-0" />
-                                        )}
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-bold text-white mb-8 tracking-tight">Structural Boundaries</h2>
+                                <div className="elite-card p-10 space-y-8">
+                                    {structuralBoundaries.map((b, i) => (
+                                        <div key={i} className="space-y-2 border-b border-white/5 pb-6 last:border-0 last:pb-0">
+                                            <p className="text-white text-xs font-black uppercase tracking-[0.2em]">{b.restriction}</p>
+                                            <p className="text-neutral-500 text-[10px] leading-relaxed font-bold uppercase tracking-widest">{b.clarification}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-
-                        <div className="mt-6 bg-neutral-950/50 border border-neutral-700 rounded-lg p-6">
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                No step is optional.
-                            </p>
-                        </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Scheduling Discipline
-                        </h2>
+            <StudioGovernancePanel 
+                title="Institutional Mandate"
+                description="SufiPulse Studio Sessions operate as centralized institutional production infrastructure for governed recording, technical validation, archival documentation, and contributor coordination under Majalis-e-Sabt."
+                primaryCTA={{ label: "Contributor Policy", href: "/contributor-policy" }}
+                shieldText="Governed Production Infrastructure"
+                background="midnight"
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Sessions are:
-                            </p>
-
-                            <div className="space-y-3">
-                                {schedulingPrinciples.map((principle, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{principle}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                This prevents it from feeling like a booking system.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Structural Boundaries
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-6 mb-6">
-                                {structuralBoundaries.map((boundary, idx) => (
-                                    <div key={idx}>
-                                        <p className="text-white text-sm font-medium mb-1">
-                                            {boundary.restriction}
-                                        </p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {boundary.clarification}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <Link
-                                href="/contributor-policy"
-                                className="text-amber-400 text-sm hover:text-amber-300 transition-colors inline-flex items-center gap-2"
-                            >
-                                View Contributor Policy
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12 pb-20">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <div className="bg-gradient-to-r from-amber-400/5 to-transparent border-l-2 border-amber-400/50 pl-6 py-6">
-                            <p className="text-white font-medium mb-3">Institutional Mandate</p>
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-4">
-                                Without this framework, studio access appears as a commercial service.
-                            </p>
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                With this framework, it operates as institutional production infrastructure under centralized governance.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

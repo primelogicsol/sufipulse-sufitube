@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { Shield, User, Check, Minus, Users, ExternalLink } from 'lucide-react';
-import { ALL_ROLES, type AppRole } from '@/app/lib/role-access';
+import { ALL_ROLES, type AppRole, ADMIN_ROLES } from '@/app/lib/role-access';
 
 /* ─── Role metadata ─── */
 type RoleMeta = {
@@ -18,11 +18,32 @@ type RoleMeta = {
 
 const ROLE_META: Record<AppRole, RoleMeta> = {
   admin: {
-    label: 'Administrator',
+    label: 'Primary Administrator',
     bgVar: 'var(--dash-accent-muted)',
     fgVar: 'var(--dash-accent)',
     description: 'Full platform governance — all workflow stages, CMS, users, royalties, finance.',
     workflowSummary: 'All Stages',
+  },
+  administrator: {
+    label: 'Institutional Administrator',
+    bgVar: 'var(--dash-accent-muted)',
+    fgVar: 'var(--dash-accent)',
+    description: 'Canonical administrative role for institutional oversight and management.',
+    workflowSummary: 'All Stages',
+  },
+  super_admin: {
+    label: 'Super Administrator',
+    bgVar: 'var(--dash-accent-muted)',
+    fgVar: 'var(--dash-accent)',
+    description: 'Elevated administrative access for system configuration and root governance.',
+    workflowSummary: 'All Stages (Elevated)',
+  },
+  governance_admin: {
+    label: 'Governance Admin',
+    bgVar: 'var(--dash-accent-muted)',
+    fgVar: 'var(--dash-accent)',
+    description: 'Specialized administrative role focused on charter compliance and operational ethics.',
+    workflowSummary: 'Governance & Mithaq',
   },
   writer: {
     label: 'Writer (Ahl-e-Qalam)',
@@ -59,6 +80,13 @@ const ROLE_META: Record<AppRole, RoleMeta> = {
     description: 'Studio session management and production-floor operations.',
     workflowSummary: 'Stage 3 — Studio',
   },
+  user: {
+    label: 'Network Member',
+    bgVar: 'rgba(255,255,255,0.05)',
+    fgVar: '#ffffff',
+    description: 'Standard access for registered network participants and seekers.',
+    workflowSummary: 'Public Participation',
+  },
 };
 
 /* ─── Permission matrix ─── */
@@ -66,27 +94,31 @@ type PermRow = {
   stage: string;
   resource: string;
   admin: boolean;
+  administrator: boolean;
+  super_admin: boolean;
+  governance_admin: boolean;
   writer: boolean;
   vocalist: boolean;
   producer: boolean;
   literary: boolean;
   studio: boolean;
+  user: boolean;
 };
 
 const WORKFLOW_PERMISSIONS: PermRow[] = [
-  { stage: 'Stage 1 — Onboarding',  resource: 'Applications Review',    admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
-  { stage: 'Stage 1 — Onboarding',  resource: 'User Management',         admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
-  { stage: 'Stage 2 — Content',     resource: 'Kalams',                  admin: true,  writer: true,  vocalist: false, producer: false, literary: true,  studio: false },
-  { stage: 'Stage 2 — Content',     resource: 'Articles',                admin: true,  writer: true,  vocalist: false, producer: false, literary: true,  studio: false },
-  { stage: 'Stage 2 — Content',     resource: 'Performance Assignments', admin: true,  writer: false, vocalist: true,  producer: true,  literary: false, studio: false },
-  { stage: 'Stage 3 — Production',  resource: 'Production Workflow',     admin: true,  writer: false, vocalist: false, producer: true,  literary: false, studio: true  },
-  { stage: 'Stage 3 — Production',  resource: 'Studio Sessions',         admin: true,  writer: false, vocalist: true,  producer: true,  literary: false, studio: true  },
-  { stage: 'Stage 3 — Production',  resource: 'Release Workflow',        admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
-  { stage: 'Stage 3 — Production',  resource: 'CMS Releases',            admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
-  { stage: 'Stage 4 — Outreach',    resource: 'Song Adoptions',          admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
-  { stage: 'Stage 4 — Outreach',    resource: 'Partnerships',            admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
-  { stage: 'Stage 4 — Outreach',    resource: 'Session Requests',        admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
-  { stage: 'Stage 4 — Finance',     resource: 'Royalty Management',      admin: true,  writer: false, vocalist: false, producer: false, literary: false, studio: false },
+  { stage: 'Stage 1 — Onboarding',  resource: 'Applications Review',    admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
+  { stage: 'Stage 1 — Onboarding',  resource: 'User Management',         admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
+  { stage: 'Stage 2 — Content',     resource: 'Kalams',                  admin: true, administrator: true, super_admin: true, governance_admin: true, writer: true,  vocalist: false, producer: false, literary: true,  studio: false, user: false },
+  { stage: 'Stage 2 — Content',     resource: 'Articles',                admin: true, administrator: true, super_admin: true, governance_admin: true, writer: true,  vocalist: false, producer: false, literary: true,  studio: false, user: false },
+  { stage: 'Stage 2 — Content',     resource: 'Performance Assignments', admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: true,  producer: true,  literary: false, studio: false, user: false },
+  { stage: 'Stage 3 — Production',  resource: 'Production Workflow',     admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: true,  literary: false, studio: true,  user: false },
+  { stage: 'Stage 3 — Production',  resource: 'Studio Sessions',         admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: true,  producer: true,  literary: false, studio: true,  user: false },
+  { stage: 'Stage 3 — Production',  resource: 'Release Workflow',        admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
+  { stage: 'Stage 3 — Production',  resource: 'CMS Releases',            admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
+  { stage: 'Stage 4 — Outreach',    resource: 'Song Adoptions',          admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
+  { stage: 'Stage 4 — Outreach',    resource: 'Partnerships',            admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
+  { stage: 'Stage 4 — Outreach',    resource: 'Session Requests',        admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
+  { stage: 'Stage 4 — Finance',     resource: 'Royalty Management',      admin: true, administrator: true, super_admin: true, governance_admin: true, writer: false, vocalist: false, producer: false, literary: false, studio: false, user: false },
 ];
 
 const USERS_KEY = 'sufipulse_users';
@@ -118,7 +150,7 @@ export default function RolesPage() {
   const roleDef = ROLE_META[selectedRole];
   const usersWithRole = users.filter((u) =>
     (u.assigned_roles || []).includes(selectedRole) ||
-    (selectedRole === 'admin' && u.role === 'admin')
+    (u.role === selectedRole)
   );
 
   const stages = Array.from(new Set(WORKFLOW_PERMISSIONS.map((p) => p.stage)));
@@ -159,9 +191,11 @@ export default function RolesPage() {
               const count = users.filter(
                 (u) =>
                   (u.assigned_roles || []).includes(role) ||
-                  (role === 'admin' && u.role === 'admin')
+                  (u.role === role)
               ).length;
               const active = role === selectedRole;
+              const isAdminRole = ADMIN_ROLES.includes(role);
+
               return (
                 <button
                   key={role}
@@ -176,7 +210,7 @@ export default function RolesPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {role === 'admin'
+                      {isAdminRole
                         ? <Shield className="w-4 h-4 shrink-0" style={{ color: meta.fgVar }} />
                         : <User className="w-4 h-4 shrink-0" style={{ color: meta.fgVar }} />}
                       <span className="text-sm font-medium" style={{ color: active ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)' }}>
@@ -210,7 +244,7 @@ export default function RolesPage() {
                   className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
                   style={{ backgroundColor: roleDef.bgVar }}
                 >
-                  {selectedRole === 'admin'
+                  {ADMIN_ROLES.includes(selectedRole)
                     ? <Shield className="w-5 h-5" style={{ color: roleDef.fgVar }} />
                     : <User className="w-5 h-5" style={{ color: roleDef.fgVar }} />}
                 </div>

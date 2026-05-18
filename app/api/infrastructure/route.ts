@@ -1,7 +1,9 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { infrastructureSchema } from '@/app/lib/validation-schemas';
+import { validatePublicSubmission } from '@/app/lib/security';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -19,14 +21,26 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    if (!body.contact_name || !body.email || !body.organization_name || !body.proposal_type) {
-      return NextResponse.json(
-        { error: 'Missing required fields: contact_name, email, organization_name, proposal_type' },
-        { status: 400 }
-      );
+  const validation = await validatePublicSubmission(request, infrastructureSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      contact_name: 'text',
+      email: 'email',
+      organization_name: 'text',
+      role_title: 'text',
+      proposal_type: 'text',
+      website: 'url',
+      technical_description: 'text',
+      integration_scope: 'text',
+      compliance_notes: 'text',
+      timeline: 'text'
     }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
+
+  try {
     const record = entityCreate('infrastructure', {
       ...body,
       status: 'pending',

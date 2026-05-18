@@ -168,7 +168,7 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
     setFormData(prev => ({
       ...prev,
       primary_languages: prev.primary_languages.includes(lang)
-        ? prev.primary_languages.filter(l => l !== lang)
+        ? prev.primary_languages.filter((l: string) => l !== lang)
         : [...prev.primary_languages, lang]
     }));
   };
@@ -177,7 +177,7 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
     setFormData(prev => ({
       ...prev,
       performance_styles: prev.performance_styles.includes(style)
-        ? prev.performance_styles.filter(s => s !== style)
+        ? prev.performance_styles.filter((s: string) => s !== style)
         : [...prev.performance_styles, style]
     }));
   };
@@ -369,25 +369,24 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
                 {STYLES_TAXONOMY.map(style => {
                   const isActive = formData.performance_styles.includes(style);
                   return (
-                    <div
+                    <label
                       key={style}
-                      onClick={() => handleStyleToggle(style)}
                       className={`flex w-full min-h-[72px] items-center justify-start gap-4 rounded-xl border px-6 py-5 cursor-pointer transition-all duration-500 bg-black/30 border-white/10 hover:border-white/20 ${
                         isActive 
-                          ? '!bg-amber-400/10 !border-amber-400/30' 
-                          : ''
+                          ? '!bg-amber-400/10 !border-amber-400/30 text-white' 
+                          : 'text-neutral-500'
                       }`}
                     >
                       <input 
                         type="checkbox"
+                        className="h-5 w-5 shrink-0 accent-amber-400"
                         checked={isActive}
-                        readOnly
-                        className="h-5 w-5 shrink-0 accent-amber-400 pointer-events-none"
+                        onChange={() => handleStyleToggle(style)}
                       />
-                      <span className={`text-left text-sm font-semibold uppercase tracking-[0.18em] transition-colors pointer-events-none ${isActive ? 'text-amber-400' : 'text-white/75'}`}>
+                      <span className="text-left text-sm font-semibold uppercase tracking-[0.18em] leading-relaxed">
                         {style}
                       </span>
-                    </div>
+                    </label>
                   );
                 })}
               </div>
@@ -411,7 +410,7 @@ export default function VocalistCredentialsForm({ onSuccess, initialData }: { on
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {formData.primary_languages.map(lang => (
+                {formData.primary_languages.map((lang: string) => (
                   <button 
                     key={lang} 
                     onClick={() => handleLanguageToggle(lang)}

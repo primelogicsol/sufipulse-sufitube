@@ -1,255 +1,194 @@
-import { Settings, ArrowRight, Mic, Network, Headphones, FileCheck, Database } from 'lucide-react';
+"use client";
+import { Settings, ArrowRight, Mic, Network, Headphones, FileCheck, Database, ShieldCheck } from 'lucide-react';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function ProductionOversight() {
     const mandatePoints = [
-        'Approved kalam enters structured production',
-        'Studio workflow follows defined sequencing',
-        'Technical standards are consistently applied',
-        'Documentation supports registry validation'
+        {
+            icon: FileCheck,
+            title: 'Structured Entry',
+            description: 'Ensuring only approved kalam from the Majlis-e-Nazr enters the production pipeline.'
+        },
+        {
+            icon: Settings,
+            title: 'Workflow Sequencing',
+            description: 'Maintaining strict adherence to the documented studio and production sequence.'
+        },
+        {
+            icon: ShieldCheck,
+            title: 'Technical Standards',
+            description: 'Consistent application of high-fidelity audio standards across the global network.'
+        },
+        {
+            icon: Database,
+            title: 'Registry Handoff',
+            description: 'Validating technical documentation and master quality prior to registry entry.'
+        }
     ];
 
     const supervisionAreas = [
         {
-            label: 'Vocal recording sessions',
-            description: 'Vocalist performance capture and quality verification'
+            label: 'Recording Sessions',
+            description: 'Vocalist performance capture and quality verification in regional studios.'
         },
         {
-            label: 'Network studio coordination',
-            description: 'Distributed execution within centralized standards'
+            label: 'Network Coordination',
+            description: 'Managing distributed studio execution within centralized institutional standards.'
         },
         {
-            label: 'Mixing and mastering alignment',
-            description: 'Technical processing and sonic consistency'
+            label: 'Sonic Alignment',
+            description: 'Supervising mixing and mastering to ensure thematic and technical consistency.'
         },
         {
-            label: 'Metadata preparation',
-            description: 'Documentation readiness for registry handoff'
+            label: 'Metadata Readiness',
+            description: 'Confirming technical documentation is complete for final registry Handover.'
         }
     ];
 
     const executionSteps = [
-        { label: 'Approved Kalam', icon: FileCheck },
-        { label: 'Vocalist Assignment', icon: Mic },
-        { label: 'Network Allocation', icon: Network },
-        { label: 'Recording', icon: Headphones },
-        { label: 'Central Review', icon: Settings },
-        { label: 'Master Confirmation', icon: FileCheck },
-        { label: 'Registry Handoff', icon: Database }
+        { id: 1, title: 'Approved Kalam', icon: FileCheck, desc: 'Editorial council authorization' },
+        { id: 2, title: 'Talent Assignment', icon: Mic, desc: 'Vocalist and producer matching' },
+        { id: 3, title: 'Network Allocation', icon: Network, desc: 'Studio resource scheduling' },
+        { id: 4, title: 'Recording', icon: Headphones, desc: 'Master-grade capture' },
+        { id: 5, title: 'Central Review', icon: Settings, desc: 'Technical and thematic audit' },
+        { id: 6, title: 'Master Confirmation', icon: FileCheck, desc: 'Final production lock' },
+        { id: 7, title: 'Registry Handoff', icon: Database, desc: 'Institutional record entry' }
     ];
 
     const authorityBoundaries = [
         {
-            action: 'Does not authorize publication',
-            clarification: 'Release activation requires registry confirmation'
+            action: 'No Publication Authority',
+            clarification: 'Release activation requires registry confirmation by Diwan-e-Amanat'
         },
         {
-            action: 'Does not define thematic approval',
-            clarification: 'Editorial authority remains with Majlis-e-Nazr'
+            action: 'No Thematic Approval',
+            clarification: 'Editorial authority remains strictly with Majlis-e-Nazr'
         },
         {
-            action: 'Does not alter royalty allocation',
-            clarification: 'Economic distribution follows constitutional framework'
+            action: 'No Royalty Modification',
+            clarification: 'Economic distribution follows the constitutional framework'
         },
         {
-            action: 'Does not override charter provisions',
+            action: 'No Charter Alteration',
             clarification: 'All authority derives from and remains bound by Mithaq'
         }
     ];
 
-    const validationPrinciples = [
-        'Final review remains centralized',
-        'Master validation occurs under defined authority',
-        'Technical compliance is documented before release'
-    ];
-
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Production Oversight
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.production_oversight.mystical}
-                        </p>
+            <StudioHero 
+                badge="Execution Governance"
+                title="Production Oversight"
+                mysticalName={roleDisplayMap.production_oversight.mystical}
+                description="Production Oversight governs the structured execution of approved works, ensuring that recording, mixing, and technical preparation follow documented institutional standards."
+            />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                Production Oversight governs the structured execution of approved works.
-                                It ensures that recording, mixing, mastering, and technical preparation follow documented institutional standards.
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Mandate & Operational Control"
+                            subtitle="Governing process integrity and technical fidelity throughout the production lifecycle"
+                        />
+
+                        <StudioCardGrid cols={4}>
+                            {mandatePoints.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={item.icon}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Scope of Oversight"
+                            subtitle="Supervisory authority across regional and centralized production nodes"
+                        />
+
+                        <StudioCardGrid cols={2}>
+                            {supervisionAreas.map((area, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={Settings}
+                                    title={area.label}
+                                    description={area.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+
+                        <div className="mt-12 bg-[var(--color-midnight)]/30 border border-[var(--color-gold)]/20 rounded-xl p-8 text-center max-w-3xl mx-auto shadow-2xl">
+                            <p className="text-[var(--text-sm)] text-neutral-400 leading-relaxed font-medium">
+                                "Execution remains centralized through defined authority. Regional network participation does not alter or dilute institutional standards."
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <StudioWorkflowRoadmap 
+                title="Execution Flow"
+                badge="Production Sequence"
+                steps={executionSteps}
+                description="No step is optional. Technical compliance and registry adherence is mandatory."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Mandate & Operational Control
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Authority Boundaries"
+                            subtitle="Defined limitations to ensure procedural integrity and separation of powers"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Production Oversight ensures:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {mandatePoints.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                It governs process integrity, not artistic expression.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Scope of Oversight
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Production Oversight supervises:
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-6 mb-8">
-                                {supervisionAreas.map((area, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                        <p className="text-white font-medium text-sm">{area.label}</p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {area.description}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                Execution remains centralized through defined authority.
-                            </p>
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Network participation does not dilute standards.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Execution Flow
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8 overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-neutral-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-neutral-600">
-                            <div className="flex items-center gap-4 min-w-max pb-2">
-                                {executionSteps.map((step, idx) => (
-                                    <div key={idx} className="flex items-center gap-4">
-                                        <div className="flex flex-col items-center gap-3 min-w-[140px]">
-                                            <div className="w-12 h-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-                                                <step.icon className="w-5 h-5 text-amber-400" />
-                                            </div>
-                                            <p className="text-neutral-300 text-sm text-center font-medium">
-                                                {step.label}
-                                            </p>
-                                        </div>
-                                        {idx < executionSteps.length - 1 && (
-                                            <ArrowRight className="w-5 h-5 text-neutral-600 flex-shrink-0" />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Authority Boundaries
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Production Oversight:
-                            </p>
-
-                            <div className="space-y-6 mb-6">
+                        <div className="elite-card p-10 md:p-12">
+                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
                                 {authorityBoundaries.map((boundary, idx) => (
-                                    <div key={idx}>
-                                        <p className="text-white text-sm font-medium mb-1">
-                                            {boundary.action}
-                                        </p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {boundary.clarification}
-                                        </p>
+                                    <div key={idx} className="space-y-1">
+                                        <p className="text-white text-sm font-bold uppercase tracking-wider">{boundary.action}</p>
+                                        <p className="text-neutral-500 text-[11px] leading-relaxed font-medium uppercase tracking-widest">{boundary.clarification}</p>
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Its authority concludes at registry handoff.
+                            <p className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-12 pt-6 border-t border-white/5 text-center italic">
+                                Authority concludes at registry handoff.
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Centralized Validation Principle
-                        </h2>
+            <StudioGovernancePanel 
+                title="Centralized Validation Principle"
+                description="Distributed execution operates within centralized governance. All recording sessions and masters are subject to final technical validation by the SufiPulse Central Studio."
+                primaryCTA={{ label: "Studio Network", href: "/studio" }}
+                secondaryCTA={{ label: "Majlis-e-Nazr", href: "/governance/majlis-e-nazr" }}
+                shieldText="Governed Production Oversight"
+                background="midnight"
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                                Even when recording occurs across distributed studios:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {validationPrinciples.map((principle, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{principle}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Distributed execution operates within centralized governance.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

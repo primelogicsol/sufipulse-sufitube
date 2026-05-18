@@ -1,7 +1,9 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { studioAccessCodeRequestSchema } from '@/app/lib/validation-schemas';
+import { validatePublicSubmission } from '@/app/lib/security';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -20,23 +22,33 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const validation = await validatePublicSubmission(request, studioAccessCodeRequestSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      name: 'text',
+      email: 'email',
+      profile_reference: 'text',
+      reason: 'text'
+    }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
+
   try {
-    const body = await request.json();
-    if (!body.email) return NextResponse.json({ error: 'email is required' }, { status: 400 });
     const record = entityCreate('studio-access-codes', {
       ...body,
-      status: body.status || 'pending',
-      issued_code: body.issued_code ?? null,
-      issued_at: body.issued_at ?? null,
+      status: 'pending',
+      issued_code: null,
+      issued_at: null,
     });
-    // Only notify admin for contributor-submitted requests, not admin-created codes
-    if (!body._admin_created) {
-      notifyAdminNewSubmission(
-        'studio access code request',
-        body.name || body.email,
-        body.role || 'â€”'
-      ).catch((err) => console.error('[notify]', err?.message || err));
-    }
+    
+    notifyAdminNewSubmission(
+      'studio access code request',
+      body.name || body.email,
+      body.role || '—'
+    ).catch((err) => console.error('[notify]', err?.message || err));
+
     return NextResponse.json(record, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

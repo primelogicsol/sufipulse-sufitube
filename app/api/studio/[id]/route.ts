@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { entityGetById, entityUpdate } from '@/lib/entity-storage-server';
-import { notifySubmitterStatusChange } from '@/lib/send-notification';
+import { sendStudioStatusUpdateEmail } from '@/app/lib/email';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { usersRepository } from '@/server/db/repositories/users';
 import { auditLog } from '@/app/lib/audit-log';
@@ -24,30 +24,51 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = await request.json();
     const updated = entityUpdate('studio', id, { ...body, reviewed_at: new Date().toISOString() });
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    
+    const item = updated as any;
     const status = body.profile_status || body.status;
-    if (status === 'approved' || status === 'rejected') {
-      const item = updated as any;
-      if (status === 'approved' && item.user_id) {
+    
+    // Role activation logic
+    if (status === 'approved' || status === 'authorized') {
+      if (item.user_id) {
         const u = usersRepository.findById(item.user_id);
         if (u) {
           const existing = u.assigned_roles ?? [];
           usersRepository.setRoles(item.user_id, 'studio', [...new Set([...existing, 'studio'])]);
-          auditLog({ userId: authResult.id, userEmail: authResult.email, action: 'role_assigned', resourceType: 'user', resourceId: item.user_id, details: { role: 'studio', profileId: id, adminNote: body.admin_note } });
+          auditLog({ 
+            userId: authResult.id, 
+            userEmail: authResult.email, 
+            action: 'role_assigned', 
+            resourceType: 'user', 
+            resourceId: item.user_id, 
+            details: { role: 'studio', profileId: id, adminNote: body.admin_note } 
+          });
         }
       }
-      auditLog({ userId: authResult.id, userEmail: authResult.email, action: status === 'approved' ? 'profile_approved' : 'profile_rejected', resourceType: 'studio', resourceId: id, details: { adminNote: body.admin_note } });
-      if (item.email) {
-        notifySubmitterStatusChange({
-          to: item.email,
-          name: item.studio_name || item.primary_contact_name || item.email,
-          type: 'studio partner application',
-          status,
-          adminNote: body.admin_note,
-        }).catch((err) => console.error('[notify]', err?.message || err));
-      }
     }
+
+    // Audit Logging
+    auditLog({ 
+      userId: authResult.id, 
+      userEmail: authResult.email, 
+      action: `profile_${status}` as any, 
+      resourceType: 'studio', 
+      resourceId: id, 
+      details: { adminNote: body.admin_note } 
+    });
+
+    // Notify Submitter
+    if (item.email) {
+      sendStudioStatusUpdateEmail(item.email, status, {
+        name: item.studio_name || item.primary_contact_name || 'Studio Partner',
+        referenceId: item.referenceId || id,
+        adminNote: body.admin_note,
+      }).catch((err) => console.error('[notify]', err?.message || err));
+    }
+    
     return NextResponse.json(updated);
   } catch (e: any) {
+    console.error('[Studio PATCH ERROR]:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

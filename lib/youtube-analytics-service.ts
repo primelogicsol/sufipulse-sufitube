@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { analyticsStorage, type AnalyticsSnapshot, type GlobalReachPayload } from './analytics-storage';
+import { analyticsStorage, type AnalyticsSnapshot, type GlobalReachPayload, DEFAULT_PAYLOAD } from './analytics-storage';
 
 const CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -143,7 +143,7 @@ export const youtubeAnalyticsService = {
       // Process Traffic Sources
       const topTrafficSources = (trafficRaw.rows ?? [])
         .slice(0, 5)
-        .map(row => ({
+        .map((row: any[]) => ({
           source: String(row[0]),
           views: Number(row[1])
         }));

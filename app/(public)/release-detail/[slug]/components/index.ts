@@ -9,3 +9,5 @@ export { SideBySideComparison } from './SideBySideComparison';
 export { SubtitlePasteEditor } from './SubtitlePasteEditor';
 
 export { LyricsRequestModal } from './LyricsRequestModal';
+
+export { ShareModal } from './ShareModal';

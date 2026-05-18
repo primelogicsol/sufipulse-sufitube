@@ -1,8 +1,9 @@
-export type AppRole = 'admin' | 'writer' | 'vocalist' | 'producer' | 'literary' | 'studio';
+export type AppRole = 'admin' | 'administrator' | 'super_admin' | 'governance_admin' | 'writer' | 'vocalist' | 'producer' | 'literary' | 'studio' | 'user';
 
+export const ADMIN_ROLES: AppRole[] = ['admin', 'administrator', 'super_admin', 'governance_admin'];
 export const CONTRIBUTOR_ROLES: AppRole[] = ['writer', 'vocalist', 'producer', 'literary', 'studio'];
 
-export const ALL_ROLES: AppRole[] = ['admin', ...CONTRIBUTOR_ROLES];
+export const ALL_ROLES: AppRole[] = [...ADMIN_ROLES, ...CONTRIBUTOR_ROLES, 'user'];
 
 type UserLike = {
   role?: string;
@@ -16,25 +17,34 @@ export function getAssignedRoles(user: UserLike): AppRole[] {
     ? user.assigned_roles.filter((role): role is AppRole => ALL_ROLES.includes(role as AppRole))
     : [];
 
-  if (mapped.length > 0) return mapped;
-
-  if (String(user.role || '').toLowerCase() === 'admin') {
-    return ['admin', ...CONTRIBUTOR_ROLES];
+  // If they have any admin roles in assigned_roles, they are an admin
+  if (mapped.some(r => ADMIN_ROLES.includes(r))) {
+    return mapped;
   }
 
+  // Check primary role
   const primaryRole = String(user.role || '').toLowerCase() as AppRole;
-  if (CONTRIBUTOR_ROLES.includes(primaryRole)) {
-    return [primaryRole];
+  if (ADMIN_ROLES.includes(primaryRole)) {
+    return [primaryRole, ...CONTRIBUTOR_ROLES];
   }
 
-  return [];
+  if (CONTRIBUTOR_ROLES.includes(primaryRole)) {
+    return mapped.length > 0 ? mapped : [primaryRole];
+  }
+
+  return mapped;
 }
 
 export function hasRoleAccess(user: UserLike, role: AppRole): boolean {
   const roles = getAssignedRoles(user);
-  return roles.includes('admin') || roles.includes(role);
+  const isAdmin = roles.some(r => ADMIN_ROLES.includes(r));
+  return isAdmin || roles.includes(role);
 }
 
 export function canAccessAdmin(user: UserLike): boolean {
-  return hasRoleAccess(user, 'admin');
+  if (!user) return false;
+  const roles = getAssignedRoles(user);
+  const primaryRole = String(user.role || '').toLowerCase() as AppRole;
+  
+  return ADMIN_ROLES.includes(primaryRole) || roles.some(r => ADMIN_ROLES.includes(r));
 }

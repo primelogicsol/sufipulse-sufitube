@@ -184,6 +184,18 @@ export const cmsServerStorage = {
     return saved;
   },
 
+  getLyricsRequest(id: string) {
+    ensureHydrated();
+    return cmsStorage.getLyricsRequest(id);
+  },
+
+  deleteLyricsRequest(id: string): boolean {
+    ensureHydrated();
+    const deleted = cmsStorage.deleteLyricsRequest(id);
+    if (deleted) persist();
+    return deleted;
+  },
+
   getAllLyricsRequests() {
     ensureHydrated();
     return cmsStorage.getAllLyricsRequests();

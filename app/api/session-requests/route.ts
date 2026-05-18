@@ -1,7 +1,9 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAuth } from '@/server/middleware/authenticate';
+import { sessionRequestSchema } from '@/app/lib/validation-schemas';
+import { validatePublicSubmission } from '@/app/lib/security';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -23,19 +25,30 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    if (!body.email && !body.requester_name) {
-      return NextResponse.json({ error: 'email or requester_name is required' }, { status: 400 });
+  const validation = await validatePublicSubmission(request, sessionRequestSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      requester_name: 'text',
+      email: 'email',
+      approval_reference_code: 'text',
+      production_reference: 'text',
+      reason_for_access: 'text',
+      additional_notes: 'text'
     }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
+
+  try {
     const record = entityCreate('session-requests', {
       ...body,
-      status: body.status || 'pending',
+      status: 'pending',
     });
     notifyAdminNewSubmission(
       'studio session request',
-      body.requester_name || body.contact_name || body.email,
-      body.session_type || 'â€”'
+      body.requester_name || body.email,
+      body.role_type || '—'
     ).catch((err) => console.error('[notify]', err?.message || err));
     return NextResponse.json(record, { status: 201 });
   } catch (e: any) {

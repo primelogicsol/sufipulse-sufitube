@@ -2,8 +2,33 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
-import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Eye, User, CircleAlert as AlertCircle, RefreshCw, FileText } from 'lucide-react';
-import { LiteraryProfileType } from '@/app/types/literary.types';
+import { 
+    CircleCheck as CheckCircle, 
+    Circle as UncheckedCircle, 
+    Clock, 
+    Eye, 
+    User, 
+    CircleAlert as AlertCircle, 
+    RefreshCw, 
+    FileText,
+    Music,
+    Search,
+    Video,
+    XCircle,
+    Layers,
+    Cpu,
+    Globe,
+    X,
+    ShieldCheck,
+    PenTool,
+    BookOpen,
+    Languages,
+    Library,
+    History as HistoryIcon,
+    Sparkles,
+    ArrowRight
+} from 'lucide-react';
+import { LiteraryProfileType, LiteraryStatus } from '@/app/types/literary.types';
 import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function AdminLiteraryApplications() {
@@ -11,10 +36,11 @@ export default function AdminLiteraryApplications() {
     const [applications, setApplications] = useState<LiteraryProfileType[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedApp, setSelectedApp] = useState<LiteraryProfileType | null>(null);
-    const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'under_review' | 'revision_requested'>('pending');
+    const [filter, setFilter] = useState<LiteraryStatus | 'all'>('submitted');
     const [processingAction, setProcessingAction] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [actionError, setActionError] = useState<string | null>(null);
+    const [adminNote, setAdminNote] = useState('');
 
     useEffect(() => {
         if (!authLoading) {
@@ -29,7 +55,7 @@ export default function AdminLiteraryApplications() {
             const data = await res.json();
             setApplications(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error('[AdminLiteraryApplications] Error loading:', error);
+            console.error('[AdminLiteraryApplications] Error loading applications:', error);
             setApplications([]);
         } finally {
             setLoading(false);
@@ -38,39 +64,31 @@ export default function AdminLiteraryApplications() {
 
     const filteredApplications = applications.filter((app) => {
         const matchesSearch =
-            (app.professional_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (app.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (app.pen_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (app.email || '').toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = filter === 'all' || (app.profile_status || 'pending') === filter;
+        const matchesFilter = filter === 'all' || (app.profile_status || 'submitted') === filter;
         return matchesSearch && matchesFilter;
     });
 
     const statusCounts = {
         all: applications.length,
-        pending: applications.filter((a) => (a.profile_status || 'pending') === 'pending').length,
+        submitted: applications.filter((a) => (a.profile_status || 'submitted') === 'submitted').length,
         under_review: applications.filter((a) => a.profile_status === 'under_review').length,
         revision_requested: applications.filter((a) => a.profile_status === 'revision_requested').length,
-        approved: applications.filter((a) => a.profile_status === 'approved').length,
+        approved_for_journal: applications.filter((a) => a.profile_status === 'approved_for_journal').length,
         rejected: applications.filter((a) => a.profile_status === 'rejected').length,
     };
 
     function getStatusBadgeClass(status: string) {
         switch (status) {
-            case 'approved': return 'dashboard-badge-success';
+            case 'approved_for_journal': return 'dashboard-badge-success';
+            case 'published_in_journal': return 'dashboard-badge-success';
             case 'rejected': return 'dashboard-badge-danger';
-            case 'pending': return 'dashboard-badge-pending';
+            case 'submitted': return 'dashboard-badge-pending';
+            case 'under_review': return 'dashboard-badge-pending';
             case 'revision_requested': return 'dashboard-badge-draft';
             default: return 'dashboard-badge-draft';
-        }
-    }
-
-    function getStatusIcon(status: string) {
-        switch (status) {
-            case 'approved': return <CheckCircle className="w-3 h-3" />;
-            case 'rejected': return <XCircle className="w-3 h-3" />;
-            case 'pending': return <Clock className="w-3 h-3" />;
-            case 'revision_requested': return <RefreshCw className="w-3 h-3" />;
-            default: return <Clock className="w-3 h-3" />;
         }
     }
 
@@ -81,10 +99,11 @@ export default function AdminLiteraryApplications() {
             const res = await fetch(`/api/literary/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profile_status: status }),
+                body: JSON.stringify({ profile_status: status, admin_note: adminNote }),
             });
             if (!res.ok) throw new Error('Failed to update status');
             setSelectedApp(null);
+            setAdminNote('');
             loadApplications();
         } catch (err: any) {
             setActionError(err?.message || 'Failed to update status');
@@ -96,294 +115,382 @@ export default function AdminLiteraryApplications() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                            <BookOpen className="text-amber-400" />
+                            Ahl-e-Tahreer Registry
+                        </h1>
+                        <p className="text-neutral-500 text-sm mt-1">Literary Contributor / Editorial Review Queue</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={loadApplications}
+                            className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-neutral-400 hover:text-white transition-all"
+                            title="Refresh registry"
+                        >
+                            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                        </button>
+                    </div>
+                </div>
+
                 {actionError && (
-                    <div className="p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
-                        <span>{actionError}</span>
-                        <button type="button" onClick={() => setActionError(null)} className="shrink-0 opacity-50 hover:opacity-100 text-lg leading-none">×</button>
+                    <div className="p-4 rounded-xl text-sm flex items-center justify-between gap-3 bg-red-500/10 border border-red-500/20 text-red-400 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center gap-3">
+                            <AlertCircle size={18} />
+                            <span className="font-medium">{actionError}</span>
+                        </div>
+                        <button type="button" onClick={() => setActionError(null)} className="p-1 hover:bg-white/5 rounded-md">
+                            <X size={18} />
+                        </button>
                     </div>
                 )}
-                <div className="dashboard-card">
-                    <div className="flex flex-col gap-4 mb-6">
-                        <div className="relative flex-1">
-                            <Eye className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
-                            <input
-                                type="text"
-                                placeholder="Search by name, email, or professional name..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="dashboard-input has-icon"
-                            />
-                        </div>
 
-                        <div className="dashboard-tabs">
-                            <button onClick={() => setFilter('pending')} className={`dashboard-tab ${filter === 'pending' ? 'active' : ''}`}>
-                                Pending ({statusCounts.pending})
-                            </button>
-                            <button onClick={() => setFilter('under_review')} className={`dashboard-tab ${filter === 'under_review' ? 'active' : ''}`}>
-                                Under Review ({statusCounts.under_review})
-                            </button>
-                            <button onClick={() => setFilter('revision_requested')} className={`dashboard-tab ${filter === 'revision_requested' ? 'active' : ''}`}>
-                                Revision ({statusCounts.revision_requested})
-                            </button>
-                            <button onClick={() => setFilter('approved')} className={`dashboard-tab ${filter === 'approved' ? 'active' : ''}`}>
-                                Approved ({statusCounts.approved})
-                            </button>
-                            <button onClick={() => setFilter('rejected')} className={`dashboard-tab ${filter === 'rejected' ? 'active' : ''}`}>
-                                Rejected ({statusCounts.rejected})
-                            </button>
-                            <button onClick={() => setFilter('all')} className={`dashboard-tab ${filter === 'all' ? 'active' : ''}`}>
-                                All ({statusCounts.all})
-                            </button>
+                <div className="dashboard-card border-none bg-neutral-900/40 backdrop-blur-xl">
+                    <div className="flex flex-col gap-6 mb-8">
+                        {/* Search & Filter */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <div className="lg:col-span-4 relative group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600 group-focus-within:text-amber-400 transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Search registry (Name, Pen Name, Email)..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/5 rounded-xl pl-12 pr-4 py-3 text-sm text-white placeholder:text-neutral-600 focus:border-amber-400/50 focus:outline-none transition-all"
+                                />
+                            </div>
+
+                            <div className="lg:col-span-8 overflow-x-auto">
+                                <div className="flex p-1 bg-black/20 rounded-xl border border-white/5 min-w-max">
+                                    {(['submitted', 'under_review', 'revision_requested', 'approved_for_journal', 'all'] as const).map((s) => (
+                                        <button 
+                                            key={s}
+                                            onClick={() => setFilter(s)} 
+                                            className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                                                filter === s 
+                                                ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/10' 
+                                                : 'text-neutral-500 hover:text-neutral-300'
+                                            }`}
+                                        >
+                                            {s.replace(/_/g, ' ')} 
+                                            <span className={`ml-2 px-1.5 py-0.5 rounded-md ${filter === s ? 'bg-black/10' : 'bg-white/5'}`}>
+                                                {statusCounts[s as keyof typeof statusCounts] ?? statusCounts.all}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {loading ? (
-                        <div className="dashboard-loading"><p>Loading literary applications...</p></div>
+                        <div className="py-24 text-center">
+                            <RefreshCw className="w-10 h-10 text-amber-400/20 animate-spin mx-auto mb-4" />
+                            <p className="text-neutral-600 font-bold uppercase tracking-widest text-xs">Accessing Contributor Registry...</p>
+                        </div>
                     ) : (
-                        <>
-                            <div className="dashboard-table-container">
-                                <table className="dashboard-table">
-                                    <thead>
+                        <div className="dashboard-table-container">
+                            <table className="dashboard-table">
+                                <thead>
+                                    <tr>
+                                        <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Contributor Identity</th>
+                                        <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Linguistic Profile</th>
+                                        <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Experience</th>
+                                        <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Submission Date</th>
+                                        <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Status</th>
+                                        <th className="text-right text-[10px] font-black uppercase tracking-widest text-neutral-500">Governance</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/[0.03]">
+                                    {filteredApplications.length === 0 ? (
                                         <tr>
-                                            <th>Professional Name</th>
-                                            <th>Contributor</th>
-                                            <th>Experience</th>
-                                            <th>Country</th>
-                                            <th>Languages</th>
-                                            <th>Status</th>
-                                            <th className="text-right">Actions</th>
+                                            <td colSpan={6} className="text-center py-20">
+                                                <div className="flex flex-col items-center">
+                                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                                                        <FileText className="w-8 h-8 text-neutral-800" />
+                                                    </div>
+                                                    <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs">
+                                                        {searchQuery ? 'No matching registry records' : 'Intake queue is empty'}
+                                                    </p>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredApplications.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={7} className="text-center py-12 text-[var(--dash-text-muted)]">
-                                                    {searchQuery ? 'No applications match your search' : 'No applications found'}
+                                    ) : (
+                                        filteredApplications.map((app) => (
+                                            <tr key={(app as any).id} className="hover:bg-white/[0.01] transition-colors group">
+                                                <td>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-amber-400/20 to-transparent flex items-center justify-center border border-amber-400/10">
+                                                            <User className="w-5 h-5 text-amber-400" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-bold text-white text-sm">
+                                                                {app.full_name}
+                                                                {app.pen_name && <span className="ml-2 text-neutral-500 font-normal">({app.pen_name})</span>}
+                                                            </div>
+                                                            <div className="text-[10px] text-neutral-600 font-black uppercase tracking-widest">
+                                                                {app.city}, {app.country}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {app.primary_languages.slice(0, 2).map(lang => (
+                                                            <span key={lang} className="px-2 py-0.5 bg-white/5 rounded text-[10px] text-neutral-400 font-bold uppercase tracking-tighter border border-white/5">
+                                                                {lang}
+                                                            </span>
+                                                        ))}
+                                                        {app.primary_languages.length > 2 && (
+                                                            <span className="text-[10px] text-neutral-600 font-bold">+{app.primary_languages.length - 2}</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
+                                                        {app.years_experience} Years
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">
+                                                        {(app as any).submitted_at ? new Date((app as any).submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className={`flex items-center gap-1.5 w-fit px-3 py-1 rounded-lg border ${getStatusBadgeClass(app.profile_status || 'submitted')} text-[9px] font-black uppercase tracking-widest`}>
+                                                        <div className="w-1 h-1 rounded-full bg-current" />
+                                                        {(app.profile_status || 'submitted').replace(/_/g, ' ')}
+                                                    </div>
+                                                </td>
+                                                <td className="text-right">
+                                                    <button
+                                                        onClick={() => setSelectedApp(app)}
+                                                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:bg-amber-400 hover:text-black hover:border-amber-400 transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        Review Application
+                                                    </button>
                                                 </td>
                                             </tr>
-                                        ) : (
-                                            filteredApplications.map((app) => (
-                                                <tr key={(app as any).id}>
-                                                    <td>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-full bg-[var(--dash-bg-secondary)] flex items-center justify-center">
-                                                                <FileText className="w-5 h-5 text-[var(--dash-accent)]" />
-                                                            </div>
-                                                            <div>
-                                                                <div className="font-medium text-[var(--dash-text-primary)]">
-                                                                    {app.professional_name || app.full_name || '—'}
-                                                                </div>
-                                                                <div className="text-xs text-[var(--dash-text-muted)]">
-                                                                    {app.city ? `${app.city}, ` : ''}{app.country || ''}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div className="flex items-center gap-2 text-[var(--dash-text-secondary)]">
-                                                            <User className="w-4 h-4 text-[var(--dash-text-muted)]" />
-                                                            <div>
-                                                                <div>{app.full_name || '—'}</div>
-                                                                <div className="text-xs text-[var(--dash-text-muted)]">{app.email}</div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="text-[var(--dash-text-secondary)]">
-                                                        {app.years_experience ? `${app.years_experience} yrs` : '—'}
-                                                    </td>
-                                                    <td className="text-[var(--dash-text-secondary)]">
-                                                        {app.country || '—'}
-                                                    </td>
-                                                    <td className="text-[var(--dash-text-secondary)]">
-                                                        {Array.isArray(app.languages)
-                                                            ? app.languages.join(', ')
-                                                            : app.languages || '—'}
-                                                    </td>
-                                                    <td>
-                                                        <span className={`${getStatusBadgeClass(app.profile_status || 'pending')} flex items-center gap-1 w-fit px-2 py-1 rounded-lg text-xs`}>
-                                                            {getStatusIcon(app.profile_status || 'pending')}
-                                                            {(app.profile_status || 'pending').replace(/_/g, ' ')}
-                                                        </span>
-                                                    </td>
-                                                    <td className="text-right">
-                                                        <button
-                                                            onClick={() => setSelectedApp(app)}
-                                                            className="dashboard-btn-primary text-sm flex items-center gap-2 ml-auto"
-                                                            disabled={processingAction}
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                            Review
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="mt-6 text-sm text-[var(--dash-text-muted)]">
-                                Showing {filteredApplications.length} of {applications.length} applications
-                            </div>
-                        </>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
 
-                {selectedApp && (selectedApp as any).id && (
-                    <div className="dashboard-modal-overlay" onClick={() => !processingAction && setSelectedApp(null)}>
-                        <div className="dashboard-modal max-w-4xl relative" onClick={(e) => e.stopPropagation()}>
-                            <div className="dashboard-modal-header">
-                                <div className="flex items-center gap-3">
-                                    <FileText className="w-6 h-6 text-[var(--dash-accent)]" />
+                {selectedApp && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => !processingAction && setSelectedApp(null)} />
+                        
+                        <div className="relative w-full max-w-4xl bg-neutral-900 border border-white/10 rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                            {/* Modal Header */}
+                            <div className="px-10 py-8 bg-black/20 border-b border-white/5 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-amber-400/10 rounded-2xl border border-amber-400/20 text-amber-400">
+                                        <BookOpen size={24} />
+                                    </div>
                                     <div>
-                                        <h2 className="text-xl! mb-0! font-bold text-[var(--dash-text-primary)]">
-                                            Literary Contributor Application Review
-                                        </h2>
-                                        <p className="text-sm text-[var(--dash-text-secondary)]">
-                                            {selectedApp.professional_name || selectedApp.full_name} • {selectedApp.email}
-                                        </p>
+                                        <h2 className="text-2xl font-bold text-white tracking-tight">Literary Contributor Application</h2>
+                                        <p className="text-neutral-500 text-sm font-medium uppercase tracking-widest">Registry ID: {(selectedApp as any).id?.slice(-8).toUpperCase()}</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => { if (!processingAction) setSelectedApp(null); }}
-                                    className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-primary)]"
-                                    disabled={processingAction}
+                                <button 
+                                    onClick={() => setSelectedApp(null)}
+                                    className="p-2 hover:bg-white/5 rounded-xl text-neutral-500 hover:text-white transition-all"
                                 >
-                                    <XCircle className="w-6 h-6 absolute right-4 top-4" />
+                                    <X size={24} />
                                 </button>
                             </div>
 
-                            <div className="dashboard-modal-body max-h-[60vh] overflow-y-auto">
-                                <div className="space-y-6">
-                                    {/* Identity */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="dashboard-label">Full Name</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.full_name || '—'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="dashboard-label">Professional Name</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.professional_name || '—'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="dashboard-label">Email</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.email}</p>
-                                        </div>
-                                        <div>
-                                            <label className="dashboard-label">Location</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.city ? `${selectedApp.city}, ` : ''}{selectedApp.country || '—'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="dashboard-label">Experience</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.years_experience ? `${selectedApp.years_experience} years` : '—'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="dashboard-label">Languages</label>
-                                            <p className="text-[var(--dash-text-primary)]">
-                                                {Array.isArray(selectedApp.languages)
-                                                    ? selectedApp.languages.join(', ')
-                                                    : selectedApp.languages || '—'}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <label className="dashboard-label">Worked with Editorial Process</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.worked_editorial_process === true ? 'Yes' : selectedApp.worked_editorial_process === false ? 'No' : '—'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="dashboard-label">Willing to Review Process</label>
-                                            <p className="text-[var(--dash-text-primary)]">{selectedApp.willing_review_process === true ? 'Yes' : '—'}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Writing Focus */}
-                                    {Array.isArray(selectedApp.writing_focus) && selectedApp.writing_focus.length > 0 && (
-                                        <div>
-                                            <label className="dashboard-label">Primary Writing Focus</label>
-                                            <div className="flex flex-wrap gap-2 mt-1">
-                                                {selectedApp.writing_focus.map((f: string) => (
-                                                    <span key={f} className="dashboard-badge dashboard-badge-pending text-xs">{f}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Background */}
-                                    {selectedApp.background && (
-                                        <div>
-                                            <label className="dashboard-label">Academic or Literary Background</label>
-                                            <div className="bg-[var(--dash-bg-secondary)] rounded-lg p-4 border border-[var(--dash-border)]">
-                                                <p className="text-[var(--dash-text-secondary)] whitespace-pre-wrap text-sm">{selectedApp.background}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Portfolio */}
-                                    {selectedApp.portfolio_link && (
-                                        <div>
-                                            <label className="dashboard-label">Portfolio / Published Work</label>
-                                            <a href={selectedApp.portfolio_link} target="_blank" rel="noopener noreferrer" className="text-[var(--dash-accent)] text-sm underline break-all">
-                                                {selectedApp.portfolio_link}
-                                            </a>
-                                        </div>
-                                    )}
-
-                                    {/* Submission date */}
-                                    {(selectedApp as any).submitted_at && (
-                                        <div>
-                                            <label className="dashboard-label">Submitted</label>
-                                            <p className="text-[var(--dash-text-secondary)] text-sm">{new Date((selectedApp as any).submitted_at).toLocaleString()}</p>
-                                        </div>
-                                    )}
-
-                                    {selectedApp.profile_status === 'approved' && (
-                                        <div className="bg-[var(--dash-status-approved)]/10 border border-[var(--dash-status-approved)] rounded-lg p-4">
-                                            <div className="flex items-start gap-3">
-                                                <AlertCircle className="w-5 h-5 text-[var(--dash-status-approved)] flex-shrink-0 mt-0.5" />
+                            {/* Modal Body */}
+                            <div className="p-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                                    {/* Column 1: Identity & Profile */}
+                                    <div className="md:col-span-1 space-y-8">
+                                        <section>
+                                            <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                <User size={14} /> Contributor Identity
+                                            </h3>
+                                            <div className="space-y-4">
                                                 <div>
-                                                    <p className="font-medium text-[var(--dash-status-approved)] mb-1">Application Approved</p>
-                                                    <p className="text-sm text-[var(--dash-text-secondary)]">
-                                                        This contributor has been approved and their literary contributor role has been activated.
-                                                    </p>
+                                                    <p className="text-[9px] text-neutral-700 uppercase font-black tracking-widest">Full Name</p>
+                                                    <p className="text-white font-bold text-sm">{selectedApp.full_name}</p>
+                                                </div>
+                                                {selectedApp.pen_name && (
+                                                    <div>
+                                                        <p className="text-[9px] text-neutral-700 uppercase font-black tracking-widest">Pen Name</p>
+                                                        <p className="text-amber-400 font-bold text-sm">{selectedApp.pen_name}</p>
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <p className="text-[9px] text-neutral-700 uppercase font-black tracking-widest">Email Address</p>
+                                                    <p className="text-white font-medium text-xs truncate">{selectedApp.email}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] text-neutral-700 uppercase font-black tracking-widest">Location</p>
+                                                    <p className="text-white font-bold text-xs">{selectedApp.city}, {selectedApp.country}</p>
                                                 </div>
                                             </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                <Languages size={14} /> Linguistic Base
+                                            </h3>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {selectedApp.primary_languages.map(lang => (
+                                                    <span key={lang} className="px-2 py-1 bg-white/5 border border-white/5 rounded text-[10px] font-black text-neutral-400 uppercase tracking-wider italic">
+                                                        {lang}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                <HistoryIcon size={14} /> Registry Status
+                                            </h3>
+                                            <div className={`px-4 py-2 rounded-xl border ${getStatusBadgeClass(selectedApp.profile_status || 'submitted')} inline-block text-[10px] font-black uppercase tracking-[0.2em]`}>
+                                                {(selectedApp.profile_status || 'submitted').replace(/_/g, ' ')}
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    {/* Column 2 & 3: Competence & Intent */}
+                                    <div className="md:col-span-2 space-y-10">
+                                        <div className="grid grid-cols-2 gap-8">
+                                            <section>
+                                                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                    <Library size={14} /> Writing Forms
+                                                </h3>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {selectedApp.writing_forms?.map(form => (
+                                                        <span key={form} className="px-2 py-1 bg-amber-400/10 border border-amber-400/20 rounded text-[10px] font-black text-amber-400 uppercase tracking-widest">
+                                                            {form}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </section>
+                                            <section>
+                                                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                    <Clock size={14} /> Experience
+                                                </h3>
+                                                <p className="text-white font-bold text-sm">{selectedApp.years_experience} Years in Editorial/Literary Field</p>
+                                            </section>
                                         </div>
-                                    )}
+
+                                        <section>
+                                            <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                <PenTool size={14} /> Contributor Biography
+                                            </h3>
+                                            <div className="p-6 bg-black/40 border border-white/5 rounded-2xl">
+                                                <p className="text-neutral-400 text-sm leading-relaxed italic">{selectedApp.short_bio}</p>
+                                            </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                <Sparkles size={14} /> Publication Intent
+                                            </h3>
+                                            <div className="p-6 bg-black/40 border border-white/5 rounded-2xl">
+                                                <p className="text-neutral-400 text-sm leading-relaxed font-medium">{selectedApp.publication_intent}</p>
+                                            </div>
+                                        </section>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <section>
+                                                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                    <Search size={14} /> Areas of Interest
+                                                </h3>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {selectedApp.areas_of_interest?.map(area => (
+                                                        <span key={area} className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                                                            {area}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </section>
+                                            <section>
+                                                <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                    <Globe size={14} /> Literary Sample
+                                                </h3>
+                                                {selectedApp.writing_sample_link ? (
+                                                    <a 
+                                                        href={selectedApp.writing_sample_link} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-2 px-4 py-2 bg-amber-400 text-black font-black text-[10px] uppercase tracking-widest rounded-lg hover:bg-amber-500 transition-colors"
+                                                    >
+                                                        View Sample Record <ArrowRight size={12} />
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-neutral-700 text-[10px] font-black uppercase tracking-widest">No sample record provided</span>
+                                                )}
+                                            </section>
+                                        </div>
+
+                                        <section className="pt-6 border-t border-white/5">
+                                            <h3 className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                <ShieldCheck size={14} /> Governance Acknowledgments
+                                            </h3>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-3 text-emerald-500/80">
+                                                    <CheckCircle size={14} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">Editorial Control Acknowledged</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-emerald-500/80">
+                                                    <CheckCircle size={14} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">Institutional Framework Accepted</span>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="dashboard-modal-footer">
-                                <div className="grid grid-cols-4 gap-3 w-full">
+                            {/* Modal Footer (Actions) */}
+                            <div className="p-8 bg-black/40 border-t border-white/5 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-neutral-600 uppercase tracking-widest ml-1">Editorial Action Note (Sent in status update email)</label>
+                                    <textarea 
+                                        value={adminNote}
+                                        onChange={e => setAdminNote(e.target.value)}
+                                        className="w-full bg-black/60 border border-white/5 rounded-xl p-4 text-sm text-white placeholder:text-neutral-700 focus:border-amber-400/30 focus:outline-none transition-all h-20"
+                                        placeholder="Add context for approval, rejection, or revision request..."
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <button
-                                        onClick={() => handleUpdateStatus((selectedApp as any).id, 'approved')}
-                                        disabled={processingAction || selectedApp.profile_status === 'approved'}
-                                        className="dashboard-btn-primary bg-[var(--dash-status-approved)] hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => handleUpdateStatus((selectedApp as any).id, 'approved_for_journal')}
+                                        disabled={processingAction}
+                                        className="py-4 bg-emerald-500 text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-emerald-400 transition-all flex items-center justify-center gap-2"
                                     >
-                                        <CheckCircle className="w-4 h-4" />
-                                        Approve
+                                        <CheckCircle size={16} /> Approve for Journal
                                     </button>
                                     <button
                                         onClick={() => handleUpdateStatus((selectedApp as any).id, 'under_review')}
                                         disabled={processingAction}
-                                        className="dashboard-btn-secondary flex items-center justify-center gap-2"
+                                        className="py-4 bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                                     >
-                                        <Clock className="w-4 h-4" />
-                                        Under Review
+                                        <Clock size={16} /> Mark Under Review
                                     </button>
                                     <button
                                         onClick={() => handleUpdateStatus((selectedApp as any).id, 'revision_requested')}
                                         disabled={processingAction}
-                                        className="dashboard-btn-secondary flex items-center justify-center gap-2"
+                                        className="py-4 bg-amber-400/10 border border-amber-400/30 text-amber-400 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-amber-400/20 transition-all flex items-center justify-center gap-2"
                                     >
-                                        <RefreshCw className="w-4 h-4" />
-                                        Revision
+                                        <RefreshCw size={16} /> Request Revision
                                     </button>
                                     <button
                                         onClick={() => handleUpdateStatus((selectedApp as any).id, 'rejected')}
-                                        disabled={processingAction || selectedApp.profile_status === 'rejected'}
-                                        className="dashboard-btn-secondary flex items-center justify-center gap-2 text-[var(--dash-status-rejected)] hover:bg-[var(--dash-status-rejected)]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={processingAction}
+                                        className="py-4 bg-red-500/10 border border-red-500/30 text-red-500 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
                                     >
-                                        <XCircle className="w-4 h-4" />
-                                        Reject
+                                        <XCircle size={16} /> Reject Intake
                                     </button>
                                 </div>
                             </div>
@@ -391,6 +498,22 @@ export default function AdminLiteraryApplications() {
                     </div>
                 )}
             </div>
+
+            <style jsx global>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.1);
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(212, 175, 55, 0.1);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(212, 175, 55, 0.3);
+                }
+            `}</style>
         </DashboardLayout>
     );
 }

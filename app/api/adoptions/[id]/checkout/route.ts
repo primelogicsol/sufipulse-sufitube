@@ -99,7 +99,7 @@ export async function POST(
       paymentProvider: 'stripe',
       paymentRoute: 'stripe_sufipulse',
       amountDue: amountUSD,
-      adoptionStatus: 'pending_review',
+      adoptionStatus: 'payment_pending',
     });
 
     await upsertAdoptionPaymentRecord(id, { userId: authResult!.id, paymentStatus: 'pending' });

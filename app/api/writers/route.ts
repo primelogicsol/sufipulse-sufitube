@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
         console.log(`[Writer Submission] Confirmation email queued for: ${body.email || authResult.email}`);
         await sendWriterSubmissionConfirmationEmail(body.email || authResult.email, {
           name: body.full_name || body.pen_name || authResult.full_name || 'Writer',
-          referenceId: referenceId
+          referenceId: referenceId,
+          trackingToken: record.id
         });
         console.log(`[Writer Submission] Confirmation email sent successfully to: ${body.email || authResult.email}`);
       } catch (emailErr: any) {

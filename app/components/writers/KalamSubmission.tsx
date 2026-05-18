@@ -185,7 +185,7 @@ export default function UserDashboard() {
         alert("Kalam updated!");
         setEditingKalam(null);
       } else {
-        await api.createKalam(kalamUnderDraft);
+        await api.createKalam(kalamUnderDraft as any);
         alert("Kalam submitted!");
       }
 

@@ -15,7 +15,7 @@ import RichTextEditor from "../../components/ui/RichTextEditor"
 import Editor, {
   EditorProvider,
 } from "react-simple-wysiwyg";
-import { KalamUnderDraft } from '@/app/user/writer/dashboard/page';
+import { KalamUnderDraft } from '@/app/types/contributor.types';
 
 export interface SadaUnderDraft {
   title: string,
@@ -46,7 +46,7 @@ export default function SadaSubmission() {
   const [status, setStatus] = useState("")
   const [editingKalam, setEditingKalam] = useState<Kalam | null>(null);
   const [kalam, setKalam] = useState<Kalam | null>(null);
-  const [kalamUnderDraft, setkalamUnderDraft] = useState<KalamUnderDraft>({
+  const [kalamUnderDraft, setkalamUnderDraft] = useState<SadaUnderDraft>({
     title: "",
     language: "",
     writing_style: "",
@@ -147,7 +147,7 @@ export default function SadaSubmission() {
         alert("Kalam updated!");
         setEditingKalam(null);
       } else {
-        await api.createKalam(kalamUnderDraft);
+        await api.createKalam(kalamUnderDraft as any);
         alert("Kalam submitted!");
       }
 

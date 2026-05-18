@@ -79,12 +79,22 @@ function ApplicationStatusContent() {
 
   const getStatusIndex = (status: string) => {
     const s = status.toLowerCase();
-    if (s === 'approved' || s === 'approved_as_writer') return 5;
+    if (s === 'approved' || s === 'approved_as_writer' || s === 'approved_for_journal' || s === 'authorized') return 5;
     if (s === 'rejected' || s === 'archived') return 5;
-    if (s === 'under_editorial_review') return 3;
+    if (s === 'under_editorial_review' || s === 'under_editorial_screening' || s === 'under_review' || s === 'under_audit') return 3;
     if (s === 'revision_requested') return 3;
-    if (s === 'pending_review') return 1;
+    if (s === 'pending_review' || s === 'submitted' || s === 'pending') return 1;
     return 0;
+  };
+
+  const getApplyLink = () => {
+    const t = app.type.toLowerCase();
+    if (t.includes('writer')) return `/writers/apply?ref=${app.id}&token=${token}`;
+    if (t.includes('vocalist')) return `/vocalists/apply?ref=${app.id}&token=${token}`;
+    if (t.includes('producer')) return `/producers/apply?ref=${app.id}&token=${token}`;
+    if (t.includes('literary')) return `/literary-contributors/apply?ref=${app.id}&token=${token}`;
+    if (t.includes('studio')) return `/studio/apply?ref=${app.id}&token=${token}`;
+    return `/writers/apply?ref=${app.id}&token=${token}`;
   };
 
   if (loading) {

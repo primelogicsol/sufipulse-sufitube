@@ -27,14 +27,14 @@ export async function GET(request: NextRequest) {
       lastRefreshError: snapshot.errorMessage || null,
       
       // Data availability checks
-      overviewAvailable: !!(snapshot.performance.views && snapshot.performance.views > 0),
-      demographicsAvailable: !!(snapshot.ageGender.ageGroups.length > 0),
-      geographiesAvailable: !!(snapshot.geographies.totalCountries > 0),
-      trafficSourceAvailable: !!(snapshot.recommendationEngine.viewsPercentage !== null),
+      overviewAvailable: !!(snapshot.lifetimeSnapshot.performance.views && snapshot.lifetimeSnapshot.performance.views > 0),
+      demographicsAvailable: !!(snapshot.lifetimeSnapshot.ageGender.ageGroups.length > 0),
+      geographiesAvailable: !!(snapshot.lifetimeSnapshot.geographies.totalCountries > 0),
+      trafficSourceAvailable: !!(snapshot.lifetimeSnapshot.recommendationEngine.viewsPercentage !== null),
       
       // Scope info
       scope: 'lifetime',
-      period: snapshot.period
+      period: 'lifetime'
     });
   } catch (error: any) {
     console.error('[API /api/admin/youtube-analytics/global-reach/status] ERROR:', error);

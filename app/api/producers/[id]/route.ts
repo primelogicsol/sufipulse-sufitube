@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     auditLog({ 
       userId: authResult.id, 
       userEmail: authResult.email, 
-      action: `profile_${status}`, 
+      action: `profile_${status}` as any, 
       resourceType: 'producer', 
       resourceId: id, 
       details: { adminNote } 

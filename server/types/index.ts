@@ -22,7 +22,7 @@ export type {
   PartnershipProposal,
   CMSRelease,
   SongAdoption,
-  ContactMessage,
+  InstitutionalInquiry,
   SessionRequest,
   StudioAccessCode,
   PerformanceAssignment,

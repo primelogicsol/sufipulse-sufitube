@@ -157,7 +157,7 @@ export default function WriterCredentialsForm({
     
     const words = text.split(/\s+/).length;
     // Basic stanza detection (double newlines)
-    const stanzas = text.split(/\n\s*\n/).filter(s => s.trim().length > 0).length;
+    const stanzas = text.split(/\n\s*\n/).filter((s: string) => s.trim().length > 0).length;
     const readingTime = Math.ceil(words / 150); // ~150 words per minute for poetry
 
     return { words, stanzas, readingTime };
@@ -195,7 +195,7 @@ export default function WriterCredentialsForm({
     setFormData(prev => ({
       ...prev,
       primary_languages: prev.primary_languages.includes(lang)
-        ? prev.primary_languages.filter(l => l !== lang)
+        ? prev.primary_languages.filter((l: string) => l !== lang)
         : [...prev.primary_languages, lang]
     }));
   };
@@ -204,7 +204,7 @@ export default function WriterCredentialsForm({
     setFormData(prev => ({
       ...prev,
       writing_styles: prev.writing_styles.includes(form)
-        ? prev.writing_styles.filter(f => f !== form)
+        ? prev.writing_styles.filter((f: string) => f !== form)
         : [...prev.writing_styles, form]
     }));
   };
@@ -213,7 +213,7 @@ export default function WriterCredentialsForm({
     setFormData(prev => ({
       ...prev,
       selected_themes: prev.selected_themes.includes(themeId)
-        ? prev.selected_themes.filter(t => t !== themeId)
+        ? prev.selected_themes.filter((t: string) => t !== themeId)
         : [...prev.selected_themes, themeId]
     }));
   };
@@ -373,7 +373,7 @@ export default function WriterCredentialsForm({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {formData.primary_languages.map(lang => (
+                {formData.primary_languages.map((lang: string) => (
                   <button 
                     key={lang} 
                     onClick={() => handleLanguageToggle(lang)}
@@ -410,23 +410,28 @@ export default function WriterCredentialsForm({
             {/* Expandable Taxonomy Selector for Forms */}
             <div className="space-y-4">
               <label className="text-[11px] font-black uppercase tracking-widest text-neutral-400">Literary Forms & Styles</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {FORMS_TAXONOMY.map(form => {
                   const isActive = formData.writing_styles.includes(form);
                   return (
-                    <button
+                    <label
                       key={form}
-                      onClick={() => handleFormToggle(form)}
-                      className={`relative flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 group ${
+                      className={`flex w-full min-h-[72px] items-center justify-start gap-4 rounded-xl border px-6 py-5 cursor-pointer transition-all duration-300 group ${
                         isActive 
                           ? 'bg-amber-400/10 border-amber-400/50 text-amber-400' 
                           : 'bg-neutral-900 border-white/5 text-neutral-500 hover:border-white/20'
                       }`}
                     >
-                      {isActive && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                      <Feather size={16} className={`mb-2 ${isActive ? 'text-amber-400' : 'text-neutral-700 group-hover:text-neutral-500'}`} />
-                      <span className="text-[11px] font-bold uppercase tracking-widest">{form}</span>
-                    </button>
+                      <input 
+                        type="checkbox"
+                        className="h-5 w-5 shrink-0 accent-amber-400"
+                        checked={isActive}
+                        onChange={() => handleFormToggle(form)}
+                      />
+                      <span className="text-left text-sm font-semibold uppercase tracking-[0.18em] leading-relaxed">
+                        {form}
+                      </span>
+                    </label>
                   );
                 })}
               </div>

@@ -1,145 +1,189 @@
+"use client";
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
+import { MapPin, Globe, Shield, Settings, Mic, Network, Users, Activity } from 'lucide-react';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function OurNetwork() {
+    const centralAuthorityPoints = [
+        {
+            icon: Shield,
+            title: 'Technical Hub',
+            description: 'The Central Studio operates as the primary technical and validation hub for all regional outputs.'
+        },
+        {
+            icon: Settings,
+            title: 'Oversight Authority',
+            description: 'Final master confirmation and institutional production oversight remain strictly centralized.'
+        },
+        {
+            icon: Activity,
+            title: 'Validation Standard',
+            description: 'Distributed recording does not alter or dilute centralized validation and quality standards.'
+        }
+    ];
+
+    const remoteLocations = [
+        {
+            title: 'Canada — Ottawa',
+            description: 'Regional recording node supporting North American contributors under centralized coordination.',
+            tags: ['Vocal Tracking', 'Acoustic Environment', 'Regional Support']
+        },
+        {
+            title: 'UAE — Dubai',
+            description: 'Middle Eastern production station aligning regional talent with SufiPulse technical protocols.',
+            tags: ['Multilingual Support', 'Session Management', 'Network Node']
+        },
+        {
+            title: 'India — Mumbai',
+            description: 'South Asian production hub coordinating localized vocalist sessions and technical handoffs.',
+            tags: ['Traditional Capture', 'Regional Coordination', 'Technical Hub']
+        }
+    ];
+
+    const collaborationNodes = [
+        {
+            icon: Users,
+            title: 'Creative Contributors',
+            description: 'Approved writers, vocalists, and producers integrated into the global production queue.'
+        },
+        {
+            icon: Globe,
+            title: 'Institutional Partners',
+            description: 'Select organizations and research affiliates aligned with the founding mission.'
+        },
+        {
+            icon: Mic,
+            title: 'Technical Partners',
+            description: 'Collaborators providing specialized recording, archival, or distribution infrastructure.'
+        },
+        {
+            icon: Network,
+            title: 'Advisory Council',
+            description: 'Scholarly and spiritual guidance providing thematic alignment for global projects.'
+        }
+    ];
+
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
+            <StudioHero 
+                badge="Global Infrastructure"
+                title="Our Network"
+                mysticalName={roleDisplayMap.our_network.mystical}
+                description="SufiPulse operates through a centralized governance framework supported by distributed studio and collaborative networks across regions."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Our Network
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.our_network.mystical}
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Central Authority"
+                            subtitle="United States — Virginia"
+                        />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                SufiPulse operates through a centralized governance framework supported by distributed studio and collaborative networks across regions.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Central Authority
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="mb-6">
-                                <p className="text-white font-medium text-lg mb-1">
-                                    Central Studio
-                                </p>
-                                <p className="text-amber-400/70 text-sm">
-                                    United States — Virginia
-                                </p>
+                        <div className="elite-card p-10 md:p-12 mb-12 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Shield size={160} className="text-amber-400" />
                             </div>
-
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    The Central Studio operates as the primary technical and validation hub.
-                                </p>
-                                <p>
-                                    Final master confirmation and institutional production oversight remain centralized.
-                                </p>
-                                <p>
-                                    Distributed recording does not alter centralized validation.
-                                </p>
+                            <div className="relative z-10 grid md:grid-cols-3 gap-8">
+                                {centralAuthorityPoints.map((point, idx) => (
+                                    <div key={idx} className="space-y-4">
+                                        <div className="w-12 h-12 rounded-xl bg-amber-400/5 border border-amber-400/10 flex items-center justify-center text-amber-400 group-hover:border-amber-400/30 transition-all">
+                                            <point.icon size={24} />
+                                        </div>
+                                        <h3 className="text-white font-bold text-lg tracking-tight">{point.title}</h3>
+                                        <p className="text-neutral-400 text-sm leading-relaxed">{point.description}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Distributed Studio Network
-                        </h2>
-                        <p className="text-amber-400/70 text-sm mb-6">
-                            Remote Studio Locations
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Distributed Studio Network"
+                            subtitle="Remote recording nodes ensuring global accessibility without compromising technical fidelity"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-3 mb-6">
-                                <p className="text-neutral-300 text-sm">Canada — Ottawa</p>
-                                <p className="text-neutral-300 text-sm">United Arab Emirates — Dubai</p>
-                                <p className="text-neutral-300 text-sm">India — Mumbai</p>
-                            </div>
+                        <StudioCardGrid cols={3}>
+                            {remoteLocations.map((loc, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={MapPin}
+                                    title={loc.title}
+                                    description={loc.description}
+                                    footerTags={loc.tags}
+                                />
+                            ))}
+                        </StudioCardGrid>
 
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    These locations support structured vocal recording under centralized coordination.
-                                </p>
-
-                                <p className="font-medium text-white">Network studios:</p>
-                                <ul className="list-disc list-inside space-y-2 pl-4">
-                                    <li>Operate within defined production protocol</li>
-                                    <li>Deliver session files under documented standards</li>
-                                    <li>Remain subject to centralized review</li>
-                                </ul>
+                        <div className="mt-12 elite-card p-10 bg-linear-to-br from-amber-400/5 to-transparent border-none">
+                            <h4 className="text-[10px] font-black text-amber-400 uppercase tracking-[0.4em] mb-6 text-center">Network Protocol</h4>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                {[
+                                    'Operate within defined production protocol',
+                                    'Deliver session files under documented standards',
+                                    'Remain subject to centralized review'
+                                ].map((item, idx) => (
+                                    <div key={idx} className="flex items-start gap-4">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                                        <p className="text-neutral-300 text-[11px] font-bold uppercase tracking-widest">{item}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Global Collaboration
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Global Collaboration"
+                            subtitle="Engaging contributors and institutional affiliates across regional boundaries"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    SufiPulse engages with contributors and collaborators across regions through:
-                                </p>
-
-                                <ul className="list-disc list-inside space-y-2 pl-4">
-                                    <li>Approved creative contributors</li>
-                                    <li>Institutional partners</li>
-                                    <li>Technical collaborators</li>
-                                    <li>Advisory engagement (where applicable)</li>
-                                </ul>
-                            </div>
-                        </div>
+                        <StudioCardGrid cols={2}>
+                            {collaborationNodes.map((node, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={node.icon}
+                                    title={node.title}
+                                    description={node.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Structural Principle
-                        </h2>
+            <StudioGovernancePanel 
+                title="Structural Principle"
+                description="Distributed execution. Centralized governance. Network expansion operates strictly within charter-defined authority to ensure the preservation of sacred art."
+                primaryCTA={{ label: "Studio Overview", href: "/studio" }}
+                secondaryCTA={{ label: "Constitutional Mithaq", href: "/governance/mithaq" }}
+                shieldText="Governed Network Framework"
+                background="midnight"
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="space-y-4 text-neutral-300 text-sm leading-relaxed">
-                                <p>
-                                    Distributed execution.<br />
-                                    Centralized governance.
-                                </p>
-                                <p>
-                                    Network expansion operates within charter-defined authority.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

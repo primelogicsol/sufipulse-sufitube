@@ -2,22 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { entityCreate, entityUpdate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { sendVocalistSubmissionConfirmationEmail } from '@/app/lib/email';
-import { validateRequestBody } from '@/app/lib/api-middleware';
 import { vocalistProfileSchema } from '@/app/lib/validation-schemas';
+import { validatePublicSubmission } from '@/app/lib/security';
 import crypto from 'node:crypto';
 
 export async function POST(request: NextRequest) {
-  const validationResult = await validateRequestBody(request, vocalistProfileSchema);
-  if (validationResult instanceof NextResponse) return validationResult;
+  const validation = await validatePublicSubmission(request, vocalistProfileSchema, {
+    rateLimit: 'strict',
+    sanitizationRules: {
+      full_name: 'text',
+      performance_name: 'text',
+      country: 'text',
+      city: 'text',
+      email: 'email',
+      vocal_range: 'text',
+      musical_training: 'text',
+      sample_link: 'url'
+    }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
 
   try {
-    const body = validationResult.data;
     const trackingToken = crypto.randomBytes(32).toString('hex');
     
     // Create base record
     const record = entityCreate('vocalists', {
       ...body,
-      email: body.email, // Use provided email for public intake
+      email: body.email, 
       profile_status: 'pending_review',
       status: 'pending_review',
       submitted_at: new Date().toISOString(),
@@ -29,18 +42,14 @@ export async function POST(request: NextRequest) {
     // Update with referenceId
     const finalRecord = entityUpdate('vocalists', record.id, { referenceId } as any);
 
-    console.log(`[Vocalist Intake] Application saved: ${record.id} | Ref: ${referenceId}`);
-
     // Failsafe: Send confirmation email to vocalist
     (async () => {
       try {
-        console.log(`[Vocalist Intake] Confirmation email queued for: ${body.email}`);
         await sendVocalistSubmissionConfirmationEmail(body.email, {
           name: body.performance_name || body.full_name || 'Vocalist',
           referenceId: referenceId,
           trackingToken: trackingToken
         });
-        console.log(`[Vocalist Intake] Confirmation email sent successfully`);
       } catch (emailErr: any) {
         console.error(`[Vocalist Intake] Email failure: ${emailErr.message || emailErr}`);
       }

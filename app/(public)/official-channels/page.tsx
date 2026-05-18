@@ -1,9 +1,35 @@
+"use client";
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Video, Headphones, Globe, Shield, ExternalLink, Radio, Youtube, Music2, Music, Instagram, Twitter, Facebook } from 'lucide-react';
+import { Video, Headphones, Globe, Shield, ExternalLink, Radio, Youtube, Music2, Music, Instagram, Twitter, Facebook, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
 export default function OfficialChannels() {
+    const digitalMandates = [
+        {
+            icon: Video,
+            title: 'Video Archive',
+            description: 'Official release publications and visual documentation across verified visual platforms.'
+        },
+        {
+            icon: Headphones,
+            title: 'Audio Distribution',
+            description: 'Structured streaming access and high-fidelity audio presence across global networks.'
+        },
+        {
+            icon: Globe,
+            title: 'Global Outreach',
+            description: 'Cross-regional accessibility and public engagement through authorized digital channels.'
+        },
+        {
+            icon: Shield,
+            title: 'Institutional Verification',
+            description: 'All official channels are maintained under centralized governance and archival oversight.'
+        }
+    ];
+
     const platforms = [
         {
             name: 'YouTube',
@@ -57,265 +83,168 @@ export default function OfficialChannels() {
 
     return (
         <Layout>
-            <Section className="pt-24 pb-12 ">
+            <StudioHero 
+                badge="Digital Distribution"
+                title="SufiTube"
+                mysticalName="Official Channels & Verified Presence"
+                description="SufiPulse maintains verified digital channels for distribution, publication, and institutional communication. These platforms serve as structured extensions of our archival and production framework."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-5xl mx-auto text-center">
-                        <div className="mb-6">
-                            <span className="inline-block px-4 py-2 bg-amber-400/10 border border-amber-400/30 rounded-full text-sm text-amber-400 uppercase tracking-wider font-medium">
-                                Digital Distribution
-                            </span>
-                        </div>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Digital Mandate & Distribution Scope"
+                            subtitle="Digital platforms function as distribution endpoints. They do not replace institutional governance or archival authority."
+                        />
 
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">
-                            SufiTube
-                        </h1>
-                        <p className="text-2xl md:text-3xl text-amber-400/90 mb-8 font-light">
-                            Official Channels & Verified Presence
-                        </p>
-
-                        <div className="max-w-3xl mx-auto">
-                            <p className="text-lg text-neutral-300 leading-relaxed">
-                                SufiPulse maintains verified digital channels for distribution, publication, and institutional communication. These platforms serve as structured extensions of our archival and production framework.
-                            </p>
-                        </div>
+                        <StudioCardGrid cols={4}>
+                            {digitalMandates.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={item.icon}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 border-t border-neutral-800 bg-neutral-900/50">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl mx-auto">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Digital Mandate & Distribution Scope
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Verified Distribution Platforms"
+                            subtitle="Owned and authorized channels for SufiPulse content"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 leading-relaxed mb-8">
-                                Digital platforms function as distribution endpoints. They do not replace institutional governance or archival authority.
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Video className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Video Archive
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Official release publications and visual documentation.
-                                    </p>
-                                </div>
-
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Headphones className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Audio Distribution
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Structured streaming access across global platforms.
-                                    </p>
-                                </div>
-
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Globe className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Global Outreach
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        Cross-regional accessibility and public engagement.
-                                    </p>
-                                </div>
-
-                                <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Shield className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                                        <h3 className="text-white font-semibold">
-                                            Institutional Verification
-                                        </h3>
-                                    </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed">
-                                        All official channels are maintained under governance oversight.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12 bg-neutral-900">
-                <PageContainer>
-                    <div className="max-w-4xl mx-auto">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Verified Distribution Platforms
-                        </h2>
-
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             {/* ── SufiPulse Radio — Owned Layer ───────────────────────────────── */}
-                            <div className="relative rounded-lg p-6 border border-amber-500/30 bg-gradient-to-br from-amber-950/30 via-neutral-900/60 to-neutral-900/30 overflow-hidden">
-                                {/* subtle corner accent */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full pointer-events-none" />
-
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Radio className="w-5 h-5 text-amber-400" strokeWidth={1.5} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="text-xl font-semibold text-white">SufiPulse Radio</h3>
-                                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 tracking-wide">Owned Channel</span>
-                                        </div>
-                                        <p className="text-neutral-400 text-sm mb-3">
-                                            Official continuous audio broadcast environment
-                                        </p>
-                                        <div className="bg-neutral-900/60 border border-amber-500/10 rounded p-3">
-                                            <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1.5">Purpose</p>
-                                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                                Owned broadcast presence across the SufiPulse ecosystem
-                                            </p>
-                                        </div>
-                                    </div>
+                            <div className="elite-card p-10 md:p-12 border-amber-400/20 bg-linear-to-br from-amber-400/5 to-transparent relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Radio size={160} className="text-amber-400" />
                                 </div>
-
-                                <div className="flex items-center justify-end">
-                                    <a
-                                        href="/releases"
-                                        className="inline-flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 text-amber-300 hover:text-amber-200 px-4 py-2 text-sm rounded transition-all group"
-                                    >
-                                        Access Broadcast
-                                        <ExternalLink className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
-                                    </a>
+                                
+                                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+                                    <div className="flex-1 space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-4 bg-amber-400/10 rounded-2xl border border-amber-400/20">
+                                                <Radio className="w-8 h-8 text-amber-400" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-3xl font-bold text-white tracking-tight">SufiPulse Radio</h3>
+                                                <span className="text-[10px] font-black text-amber-400 bg-amber-400/5 border border-amber-400/10 px-3 py-1 rounded-full uppercase tracking-widest mt-2 inline-block">Owned Channel</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-neutral-400 text-lg leading-relaxed font-light">
+                                            Official continuous audio broadcast environment featuring authorized releases and curated spiritual soundscapes.
+                                        </p>
+                                        <div className="p-6 bg-black/40 border border-white/5 rounded-2xl">
+                                            <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-2">Institutional Purpose</p>
+                                            <p className="text-neutral-300 text-sm font-medium">Owned broadcast presence across the SufiPulse ecosystem, serving as the primary real-time audio endpoint.</p>
+                                        </div>
+                                    </div>
+                                    <div className="shrink-0">
+                                        <Link 
+                                            href="/releases" 
+                                            className="px-10 py-5 bg-amber-400 text-black font-black uppercase text-[11px] tracking-[0.3em] rounded-xl hover:bg-amber-500 transition-all flex items-center justify-center gap-3 shadow-2xl"
+                                        >
+                                            Access Broadcast <ArrowRight size={14} />
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* ── Third-party verified platforms ────────────────────────────── */}
-                            {platforms.map((platform) => {
-                                const PlatformIcon = platform.icon;
-                                return (
-                                <div
-                                    key={platform.name}
-                                    className="relative rounded-lg p-6 border border-neutral-700/50 bg-gradient-to-br from-neutral-900/60 via-neutral-900/40 to-neutral-900/30 overflow-hidden hover:border-neutral-600/70 transition-colors"
-                                >
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-neutral-700/5 rounded-bl-full pointer-events-none" />
-
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className="w-10 h-10 rounded-full bg-neutral-700/30 border border-neutral-600/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <PlatformIcon className="w-5 h-5 text-neutral-300" strokeWidth={1.5} />
-                                        </div>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                {platforms.map((platform) => (
+                                    <div key={platform.name} className="elite-card p-10 flex flex-col h-full group hover:border-amber-400/30 transition-all shadow-2xl">
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="text-xl font-semibold text-white">{platform.name}</h3>
-                                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-neutral-700/40 border border-neutral-600/30 text-neutral-400 tracking-wide">Verified</span>
+                                            <div className="flex items-center justify-between mb-8">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="p-3 bg-white/[0.03] rounded-xl border border-white/10 group-hover:border-amber-400/20 transition-colors">
+                                                        <platform.icon className="w-6 h-6 text-neutral-400 group-hover:text-amber-400" />
+                                                    </div>
+                                                    <h3 className="text-xl font-bold text-white tracking-tight">{platform.name}</h3>
+                                                </div>
+                                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/10">Verified</span>
                                             </div>
-                                            <p className="text-neutral-400 text-sm mb-3">
-                                                {platform.description}
-                                            </p>
-                                            <div className="bg-neutral-900/60 border border-neutral-700/20 rounded p-3">
-                                                <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1.5">Purpose</p>
-                                                <p className="text-neutral-300 text-sm leading-relaxed">
-                                                    {platform.purpose}
-                                                </p>
+                                            <p className="text-neutral-400 text-base leading-relaxed mb-8">{platform.description}</p>
+                                            <div className="p-6 bg-black/20 border border-white/5 rounded-2xl mb-10">
+                                                <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-2">Distribution Purpose</p>
+                                                <p className="text-neutral-300 text-xs font-medium leading-relaxed uppercase tracking-wider">{platform.purpose}</p>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-end">
-                                        <a
-                                            href={platform.url}
-                                            target="_blank"
+                                        <a 
+                                            href={platform.url} 
+                                            target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 bg-neutral-700/20 hover:bg-neutral-700/40 border border-neutral-600/40 hover:border-neutral-500/60 text-neutral-300 hover:text-white px-4 py-2 text-sm rounded transition-all group"
+                                            className="w-full py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all"
                                         >
-                                            {platform.buttonText}
-                                            <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
+                                            {platform.buttonText} <ExternalLink size={12} />
                                         </a>
                                     </div>
-                                </div>
-                                );
-                            })}
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 bg-neutral-900/50">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl mx-auto">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Operational Clarity
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Operational Clarity"
+                            subtitle="Defining the relationship between institutional authority and digital endpoints"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <div className="grid md:grid-cols-2 gap-x-8 gap-y-3 mb-6">
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Digital channels are distribution extensions</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Governance remains centralized</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Content integrity precedes publication</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">Public presence does not override institutional process</p>
-                                </div>
+                        <div className="elite-card p-10 md:p-12 mb-12">
+                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+                                {[
+                                    'Digital channels are distribution extensions',
+                                    'Governance remains strictly centralized',
+                                    'Content integrity precedes publication',
+                                    'Public presence does not override institutional process'
+                                ].map((item, idx) => (
+                                    <div key={idx} className="flex items-center gap-4 group">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:shadow-[0_0_10px_rgba(212,175,55,0.6)] transition-all" />
+                                        <p className="text-neutral-300 text-[11px] font-bold uppercase tracking-widest">{item}</p>
+                                    </div>
+                                ))}
                             </div>
+                        </div>
 
-                            <div className="border border-neutral-800/50 rounded-lg p-4">
-                                <p className="text-neutral-300 text-sm leading-relaxed italic">
-                                    Digital publication does not replace archival authority or registry validation.
-                                </p>
-                            </div>
+                        <div className="bg-black/20 border border-white/5 rounded-xl p-8 text-center max-w-3xl mx-auto shadow-xl">
+                            <p className="text-neutral-500 text-sm leading-relaxed italic">
+                                "Digital publication does not replace archival authority or registry validation. Authentic presence is anchored in governance."
+                            </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20 bg-neutral-900">
-                <PageContainer>
-                    <div className="max-w-4xl mx-auto">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Structural Boundaries
-                        </h2>
+            <StudioGovernancePanel 
+                title="Structural Boundaries"
+                description="Official channels follow institutional protocols. No commercial brand partnerships or independent publications occur outside the documented governance workflow."
+                primaryCTA={{ label: "View Governance Charter", href: "/governance/mithaq" }}
+                shieldText="Governed Digital Presence"
+                background="midnight"
+            />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                            <div className="space-y-2 mb-6">
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">No commercial brand partnerships through social platforms</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">No independent publication outside governance workflow</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                    <p className="text-neutral-300 text-sm">All content subject to institutional standards</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-6">
-                                <a
-                                    href="/governance/mithaq"
-                                    className="inline-flex items-center gap-2 text-neutral-300 hover:text-amber-400 transition-colors text-xs"
-                                >
-                                    <Shield className="w-3.5 h-3.5" />
-                                    View Governance Framework
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

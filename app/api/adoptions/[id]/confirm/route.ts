@@ -70,7 +70,7 @@ export async function POST(
     }
 
     // Payment confirmed — update both stores
-    const targetStatus = 'paid_pending_review';
+    const targetStatus = 'payment_received';
     const paidRecord = await upsertAdoptionPaymentRecord(id, {
       userId: authResult.id,
       paymentStatus: 'paid',

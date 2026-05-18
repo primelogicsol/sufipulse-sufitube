@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Building2, CheckCircle2, Clock, XCircle, AlertCircle, DollarSign, ArrowRight, History, CreditCard, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 

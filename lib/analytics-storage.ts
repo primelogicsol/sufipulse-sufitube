@@ -19,7 +19,7 @@ export interface PublicGlobalReachPayload {
 }
 
 // Initial default data: Verified Institutional Baseline
-const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
+export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
   id: "lifetime",
   channelId: 'UCraDr3i5A3k0j7typ6tOOsQ',
   scope: 'lifetime',

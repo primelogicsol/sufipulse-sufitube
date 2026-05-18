@@ -72,6 +72,19 @@ export default function Home() {
     // Latest publications
     const fetchLatestPublications = async () => {
       try {
+        // Institutional Filter: Exclude Shorts, vertical teasers, and content under 90s from homepage
+        const isOfficialLongForm = (r: any) => {
+          if (r.format === 'short') return false;
+          const duration = r.durationSeconds || (r.youtubeStats?.durationSeconds) || 0;
+          if (duration > 0 && duration < 90) return false;
+          
+          const title = (r.title || '').toLowerCase();
+          if (title.includes('teaser') || title.includes('teaser 2')) return false;
+          if (title.includes('youtube short') || title.includes('short-form')) return false;
+          
+          return true;
+        };
+
         const toPublication = (r: any): Publication => {
           const videoId = r.youtubeId || r.youtube_video_id || r.videoId || '';
           return {
@@ -86,34 +99,34 @@ export default function Home() {
           };
         };
 
-        const [rankedRes, recentRes] = await Promise.all([
-          fetch('/api/releases?status=published&sort=ranked&limit=8'),
-          fetch('/api/releases?status=published&limit=100'),
-        ]);
-
-        let rankedMusic: Publication[] = [];
-        if (rankedRes.ok) {
-          const json = await rankedRes.json();
+        // Fetch a substantial pool to ensure high-quality filtering
+        const res = await fetch('/api/releases?status=published&limit=100&t=' + Date.now());
+        
+        if (res.ok) {
+          const json = await res.json();
           const data = Array.isArray(json) ? json : json.items || [];
-          if (Array.isArray(data)) rankedMusic = data.filter((r: any) => r.youtubeId).map(toPublication);
-        }
-
-        let recentMusic: Publication[] = [];
-        if (recentRes.ok) {
-          const json = await recentRes.json();
-          const data = Array.isArray(json) ? json : json.items || [];
+          
           if (Array.isArray(data)) {
-            recentMusic = data.filter((r: any) => r.youtube_video_id || r.youtubeId).map(toPublication);
+            // 1. Filter for institutional long-form content
+            // 2. Sort strictly by date descending
+            const allMusic = data
+              .filter((r: any) => (r.youtubeId || r.youtube_video_id) && isOfficialLongForm(r));
+            
+            const sortedMusic = sortReleases(allMusic, 'newest').map(toPublication);
+
+            if (sortedMusic.length > 0) {
+              // Featured Carousel: Top 5 absolute newest releases
+              setLatestPublications(sortedMusic.slice(0, 5));
+              
+              // Recent Entries Grid: Next 8 releases
+              // We use an offset if possible, or just the same pool if small
+              const recent = sortedMusic.length > 5 ? sortedMusic.slice(0, 8) : sortedMusic;
+              setRecentReleases(recent);
+              
+              setPubsLoading(false);
+              return;
+            }
           }
-        }
-
-        const sortedRecent = sortReleases(recentMusic, 'all').slice(0, 8);
-
-        if (rankedMusic.length > 0 || sortedRecent.length > 0) {
-          setLatestPublications(rankedMusic.length > 0 ? rankedMusic : sortedRecent);
-          setRecentReleases(sortedRecent);
-          setPubsLoading(false);
-          return;
         }
       } catch (err) {
         console.error('Error fetching latest music releases:', err);

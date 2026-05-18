@@ -27,27 +27,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { DashboardLayout } from '@/app/components/layout/DashboardLayout';
-
-type ProductionStatus = 
-    | 'assigned' 
-    | 'pre-production' 
-    | 'recording' 
-    | 'mixing' 
-    | 'mastering' 
-    | 'technical_review'
-    | 'published';
-
-export interface ProductionAssignment {
-    id: string;
-    referenceId: string;
-    kalam_title: string;
-    vocalist_name: string;
-    status: ProductionStatus;
-    assigned_at: string;
-    editorial_notes?: string;
-    technical_specs?: string;
-}
+import DashboardLayout from '@/app/components/layout/DashboardLayout';
+import { PerformanceStatus as ProductionStatus, PerformanceAssignment as ProductionAssignment } from '@/app/types/contributor.types';
 
 function ProducerDashboardInner() {
     const { user, loading: authLoading } = useAuth();

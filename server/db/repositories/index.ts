@@ -17,7 +17,7 @@ export {
   kalamsRepository,
   sadasRepository,
   articlesRepository,
-  contactRepository,
+  inquiryRepository,
   partnershipRepository,
   notificationsRepository,
 } from './content';

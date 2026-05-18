@@ -91,6 +91,8 @@ export const rateLimiters = {
   default: createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 100 }),
   auth:    createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 10 }),
   strict:  createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 20 }),
+  standard: createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 50 }),
+  relaxed: createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 200 }),
 };
 
 /** Convenience — returns a 429 response with rate-limit headers if exceeded. */

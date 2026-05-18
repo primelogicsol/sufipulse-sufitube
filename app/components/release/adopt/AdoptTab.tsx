@@ -302,7 +302,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         if (user?.id) params.set('userId', user.id);
         const res = await fetch(`/api/google-ads/status?${params}`);
         const payload = await res.json();
-        setOauthConfigured(Boolean(payload?.configured));
+        setGoogleAdsConfigured(Boolean(payload?.configured));
         setOauthConnected(Boolean(payload?.connected));
         if (payload?.google_email) setGoogleEmail(payload.google_email);
         if (Array.isArray(payload?.accessible_customer_ids) && payload.accessible_customer_ids.length > 0) {
@@ -318,7 +318,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
           setCampaignResourceName(payload.campaign.campaign_resource_name);
         }
       } catch {
-        setOauthConfigured(false);
+        setGoogleAdsConfigured(false);
         setOauthConnected(false);
       } finally {
         setOauthChecked(true);
@@ -498,7 +498,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const resetFlow = () => {
     setStep(0); setSelectedMethod(null); setSelectedPackage(null);
     setAdoption(null); setOauthConnected(false); setOauthChecked(false);
-    setOauthConfigured(false); setAccessibleCustomerIds([]); setSelectedGoogleCustomerId('');
+    setGoogleAdsConfigured(false); setAccessibleCustomerIds([]); setSelectedGoogleCustomerId('');
     setVerifiedCustomerId(null); setIsVerifying(false); setVerifyError(null);
     setOauthLastVerified(null); setSubmitError(''); setShowAuthWall(false);
     setCampaignResourceName(null); setIsConnectingOAuth(false);
@@ -541,7 +541,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
     setAdoption(null); // Decouple from the use_my_google_ads draft (it stays in DB as abandoned draft)
     setOauthConnected(false);
     setOauthChecked(false);
-    setOauthConfigured(false);
+    setGoogleAdsConfigured(false);
     setAccessibleCustomerIds([]);
     setSelectedGoogleCustomerId('');
     setVerifiedCustomerId(null);
@@ -632,7 +632,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       if (user?.id) params.set('userId', user.id);
       const res = await fetch(`/api/google-ads/status?${params}`);
       const payload = await res.json();
-      setOauthConfigured(Boolean(payload?.configured));
+      setGoogleAdsConfigured(Boolean(payload?.configured));
       setOauthConnected(Boolean(payload?.connected));
       if (payload?.google_email) setGoogleEmail(payload.google_email);
       if (Array.isArray(payload?.accessible_customer_ids) && payload.accessible_customer_ids.length > 0) {

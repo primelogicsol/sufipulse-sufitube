@@ -76,6 +76,7 @@ import {
   getLanguageLabel,
   LANGUAGE_OPTIONS as PAGE_LANGUAGE_OPTIONS,
   LyricsRequestModal,
+  ShareModal,
 } from "./components";
 import type { SubtitleStatus } from "./components";
 import {
@@ -4935,198 +4936,17 @@ function Release() {
         </div>
 
         {/* Copy Link Modal */}
-        {showCopyModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowCopyModal(false)}
-          >
-            <div
-              className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-medium text-neutral-100">
-                  Copy Link
-                </h3>
-                <button
-                  onClick={() => setShowCopyModal(false)}
-                  className="text-neutral-500 hover:text-neutral-300 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-4 mb-6">
-                <p className="text-sm text-neutral-400 break-all">
-                  {window.location.href}
-                </p>
-              </div>
-              <button
-                onClick={handleCopyLink}
-                disabled={copySuccess}
-                className={`w-full py-3 rounded-lg font-medium transition-all ${
-                  copySuccess
-                    ? "bg-green-900/30 border border-green-800 text-green-400"
-                    : "bg-neutral-800 hover:bg-neutral-700 text-neutral-100"
-                }`}
-              >
-                {copySuccess ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Check className="w-5 h-5" />
-                    Copied to Clipboard
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <Copy className="w-5 h-5" />
-                    Copy to Clipboard
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Share Modal */}
-        {showShareModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowShareModal(false)}
-          >
-            <div
-              className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <img
-                  src="/sufitube-logo-v5.png"
-                  alt="SufiTube Share"
-                  className="h-10 object-contain"
-                />
-                <button
-                  onClick={() => setShowShareModal(false)}
-                  className="text-neutral-500 hover:text-neutral-300 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              {/* YouTube promotion note */}
-              <p className="text-xs text-amber-400/70 text-center mb-1">
-                Social shares use the YouTube link — helping this reach more
-                listeners
-              </p>
-              <div className="space-y-3">
-                {/* Share this moment */}
-                {resolvedVideoId && currentTime > 5 && (
-                  <button
-                    onClick={() => {
-                      handleShareMoment();
-                      setShowShareModal(false);
-                    }}
-                    className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-amber-900/30 border border-amber-700/40 hover:bg-amber-900/50 rounded-lg transition-colors text-left"
-                  >
-                    <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-amber-200 font-medium">
-                        Share this moment
-                      </div>
-                      <div className="text-sm text-amber-400/60">
-                        YouTube link at{" "}
-                        {formatDuration(Math.floor(currentTime))}
-                      </div>
-                    </div>
-                  </button>
-                )}
-                <button
-                  onClick={() => handleCopyLink()}
-                  className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                    <Copy className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-neutral-100 font-medium">
-                      Copy Page Link
-                    </div>
-                    <div className="text-sm text-neutral-500">
-                      sufipulse.com link to clipboard
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleShare("facebook")}
-                  className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                    <Facebook className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-neutral-100 font-medium">Facebook</div>
-                    <div className="text-sm text-neutral-500">
-                      Share on Facebook
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleShare("twitter")}
-                  className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center">
-                    <Twitter className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-neutral-100 font-medium">Twitter</div>
-                    <div className="text-sm text-neutral-500">
-                      Share on Twitter
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleShare("whatsapp")}
-                  className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-neutral-100 font-medium">WhatsApp</div>
-                    <div className="text-sm text-neutral-500">
-                      Share on WhatsApp
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleShare("linkedin")}
-                  className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                    <Linkedin className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-neutral-100 font-medium">LinkedIn</div>
-                    <div className="text-sm text-neutral-500">
-                      Share on LinkedIn
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleShare("telegram")}
-                  className="w-full flex items-center justify-start gap-4 px-6 py-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center">
-                    <Send className="w-5 h-5 text-white -ml-0.5 mt-0.5" />
-                  </div>
-                  <div>
-                    <div className="text-neutral-100 font-medium">Telegram</div>
-                    <div className="text-sm text-neutral-500">
-                      Share on Telegram
-                    </div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          resolvedVideoId={resolvedVideoId}
+          currentTime={currentTime}
+          formatDuration={formatDuration}
+          handleShareMoment={handleShareMoment}
+          handleCopyLink={handleCopyLink}
+          handleShare={handleShare}
+        />
       </PageContainer>
       <LyricsRequestModal
         isOpen={isLyricsRequestModalOpen}

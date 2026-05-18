@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ...analytics,
       adminInfo: {
-        checkedAt: analytics.checkedAt,
+        checkedAt: analytics.apiStatus.lastCheck,
         nextRefreshAt: analytics.nextRefreshAt,
         status: 'cached'
       }

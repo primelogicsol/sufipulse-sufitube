@@ -6,7 +6,7 @@ const middlewareLogger = logger.middleware;
 
 const PROTECTED_PREFIXES = ['/admin', '/user', '/dashboard'];
 const AUTH_ONLY_PATHS = ['/login', '/register', '/forgot-password'];
-const ADMIN_ROLES = ['admin', 'super_admin', 'governance_admin'];
+const ADMIN_ROLES = ['admin', 'administrator', 'super_admin', 'governance_admin'];
 
 interface TokenPayload {
   userId?: string;

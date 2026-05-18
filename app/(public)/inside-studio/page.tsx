@@ -1,9 +1,10 @@
+"use client";
 import { Mic as Mic2, Radio, Music2, HardDrive, Headphones, Waves, Volume2, Zap, Shield, ArrowRight } from 'lucide-react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 import Link from 'next/link';
-// import { Link } from 'react-router-dom';
 
 export default function InsideStudio() {
     const studioSpaces = [
@@ -153,36 +154,22 @@ export default function InsideStudio() {
 
     return (
         <Layout>
-            <Section className="pt-24 pb-8">
+            <StudioHero 
+                badge="Production Infrastructure"
+                title="Inside Studio"
+                mysticalName="Karkhana-e-Sada"
+                description="A glimpse into the physical spaces, technical capabilities, and creative philosophy that power SufiPulse's sacred music production."
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Inside Studio
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-6 border-b border-amber-400/20 pb-4 inline-block">
-                            Karkhana-e-Sada
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title={missionStatement.title}
+                            subtitle={`"${missionStatement.quote}"`}
+                        />
 
-                        <div className="mt-8 max-w-3xl">
-                            <p className="text-neutral-300 leading-relaxed mb-4">
-                                A glimpse into the physical spaces, technical capabilities, and creative philosophy that power SufiPulse's sacred music production.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-3">
-                            {missionStatement.title}
-                        </h2>
-                        <p className="text-xl text-amber-400/80 italic mb-6">
-                            "{missionStatement.quote}"
-                        </p>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8 mb-8">
+                        <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8 mb-8">
                             <p className="text-neutral-300 leading-relaxed mb-8">
                                 {missionStatement.description}
                             </p>
@@ -193,7 +180,7 @@ export default function InsideStudio() {
                                         <div className="text-3xl font-bold text-amber-400 mb-1">
                                             {stat.value}
                                         </div>
-                                        <div className="text-neutral-400 text-sm">
+                                        <div className="text-neutral-400 text-sm font-bold uppercase tracking-widest">
                                             {stat.label}
                                         </div>
                                     </div>
@@ -204,198 +191,113 @@ export default function InsideStudio() {
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Studio Spaces
-                        </h2>
-                        <p className="text-neutral-400 text-sm mb-8">
-                            Professional recording environments designed for optimal spiritual audio production
-                        </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Studio Spaces"
+                            subtitle="Professional recording environments designed for optimal spiritual audio production"
+                        />
 
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {studioSpaces.map((studio, idx) => {
-                                const Icon = studio.icon;
-                                return (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="w-12 h-12 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center mb-4">
-                                            <Icon className="w-6 h-6 text-amber-400" />
-                                        </div>
-                                        <h3 className="text-lg font-bold text-white mb-1">
-                                            {studio.name}
-                                        </h3>
-                                        <p className="text-amber-400 text-sm mb-3">
-                                            {studio.subtitle}
-                                        </p>
-                                        <p className="text-neutral-400 text-sm italic mb-4 leading-relaxed border-b border-neutral-800 pb-4">
-                                            SufiPulse Studio – USA, {studio.atmosphere.toLowerCase()}
-                                        </p>
-
-                                        <div className="space-y-2">
-                                            {studio.features.map((feature, fIdx) => (
-                                                <div key={fIdx} className="flex items-start gap-2">
-                                                    <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                                    <p className="text-neutral-300 text-sm">{feature}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12 bg-neutral-950/50">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Professional Equipment
-                        </h2>
-                        <p className="text-neutral-400 text-sm mb-8">
-                            State-of-the-art recording and production equipment ensuring the highest quality capture and reproduction of sacred performances
-                        </p>
-
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {professionalEquipment.map((section, idx) => {
-                                const Icon = section.icon;
-                                return (
-                                    <div key={idx} className="bg-neutral-900/40 border border-neutral-800 rounded-lg p-5 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <Icon className="w-5 h-5 text-amber-400" />
-                                            <p className="text-amber-400 text-sm font-semibold">
-                                                {section.category}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {section.items.map((item, iIdx) => (
-                                                <div key={iIdx} className="flex items-start gap-2">
-                                                    <div className="w-1 h-1 rounded-full bg-neutral-600 mt-1.5 flex-shrink-0" />
-                                                    <p className="text-neutral-300 text-xs">{item}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Our Services
-                        </h2>
-                        <p className="text-neutral-400 text-sm mb-8">
-                            Comprehensive production services designed to bring your sacred kalam to life with technical excellence and spiritual authenticity
-                        </p>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {serviceOfferings.map((service, idx) => {
-                                const Icon = service.icon;
-                                return (
-                                    <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6 hover:border-amber-400/30 transition-colors">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                                                <Icon className="w-5 h-5 text-amber-400" />
-                                            </div>
-                                            <h3 className="text-lg font-semibold text-white">
-                                                {service.title}
-                                            </h3>
-                                        </div>
-
-                                        <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                            {service.description}
-                                        </p>
-
-                                        <div className="flex flex-wrap gap-2 pt-3 border-t border-neutral-800">
-                                            {service.subtitle.split(', ').map((tag, tIdx) => (
-                                                <span key={tIdx} className="text-xs text-amber-400/70 bg-amber-400/5 px-2 py-1 rounded">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Recording Options
-                        </h2>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {recordingOptions.map((option, idx) => (
-                                <div key={idx} className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-6">
-                                    <h3 className="text-lg font-semibold text-white mb-2">
-                                        {option.title}
-                                    </h3>
-                                    <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
-                                        {option.description}
-                                    </p>
-                                    <div className="space-y-2">
-                                        {option.benefits.map((benefit, bIdx) => (
-                                            <div key={bIdx} className="flex items-start gap-2">
-                                                <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                                                <p className="text-neutral-300 text-sm">{benefit}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                        <StudioCardGrid cols={3}>
+                            {studioSpaces.map((studio, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={studio.icon}
+                                    title={studio.name}
+                                    subtitle={studio.subtitle}
+                                    description={`SufiPulse Studio – USA, ${studio.atmosphere.toLowerCase()}`}
+                                    footerTags={studio.features}
+                                />
                             ))}
-                        </div>
-
-                        <div className="mt-6 bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-5">
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                All recording sessions operate under centralized oversight and follow documented production protocol. Sessions are scheduled based on approved kalam queue and vocalist assignments.
-                            </p>
-                        </div>
+                        </StudioCardGrid>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12 pb-20">
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <div className="bg-gradient-to-br from-amber-400/10 to-amber-600/5 border border-amber-400/20 rounded-lg p-8">
-                            <h2 className="text-2xl font-bold text-white mb-3">
-                                Technical Excellence, Spiritual Purpose
-                            </h2>
-                            <p className="text-neutral-300 leading-relaxed mb-6">
-                                The studio infrastructure exists to serve the mission: amplifying sacred Sufi expression through professional production standards while maintaining complete artistic integrity and non-commercial principles.
-                            </p>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Professional Equipment"
+                            subtitle="State-of-the-art recording and production equipment ensuring the highest quality capture and reproduction of sacred performances"
+                        />
 
-                            <div className="flex flex-wrap gap-3">
-                                <Link
-                                    href="/studio"
-                                    className="inline-flex items-center gap-2 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-                                >
-                                    Studio Overview
-                                    <ArrowRight className="w-4 h-4" />
-                                </Link>
-                                <Link
-                                    href="/studio-engineers"
-                                    className="inline-flex items-center gap-2 bg-neutral-900/50 hover:bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-                                >
-                                    Studio Engineers
-                                    <ArrowRight className="w-4 h-4" />
-                                </Link>
-                            </div>
+                        <StudioCardGrid cols={3}>
+                            {professionalEquipment.map((section, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={section.icon}
+                                    title={section.category}
+                                    description=""
+                                    footerTags={section.items}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Our Services"
+                            subtitle="Comprehensive production services designed to bring your sacred kalam to life with technical excellence and spiritual authenticity"
+                        />
+
+                        <StudioCardGrid cols={2}>
+                            {serviceOfferings.map((service, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={service.icon}
+                                    title={service.title}
+                                    description={service.description}
+                                    footerTags={service.subtitle.split(', ')}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
+
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Recording Options"
+                        />
+
+                        <StudioCardGrid cols={2}>
+                            {recordingOptions.map((option, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={Mic2}
+                                    title={option.title}
+                                    description={option.description}
+                                    footerTags={option.benefits}
+                                />
+                            ))}
+                        </StudioCardGrid>
+
+                        <div className="mt-8 bg-[var(--color-midnight)] p-6 rounded-lg border border-[var(--color-gold)]/20 text-center max-w-3xl mx-auto">
+                            <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed italic">
+                                "All recording sessions operate under centralized oversight and follow documented production protocol. Sessions are scheduled based on approved kalam queue and vocalist assignments."
+                            </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
+
+            <StudioGovernancePanel 
+                title="Technical Excellence, Spiritual Purpose"
+                description="The studio infrastructure exists to serve the mission: amplifying sacred Sufi expression through professional production standards while maintaining complete artistic integrity and non-commercial principles."
+                primaryCTA={{ label: "Studio Overview", href: "/studio" }}
+                secondaryCTA={{ label: "Studio Engineers", href: "/studio-engineers" }}
+                shieldText="Production Standards Mandatory"
+                background="midnight"
+            />
         </Layout>
     );
 }
+

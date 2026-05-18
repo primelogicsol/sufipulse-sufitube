@@ -131,8 +131,8 @@ export const env = createEnv({
       ].join("\n")
     );
 
-    // DO NOT EXIT - let the app try to run, features will fail if they need these vars
-    // process.exit(1);
+    // THROW - this satisfies the 'never' return type required by some versions of @t3-oss/env-nextjs
+    throw new Error("Environment validation failed. See above logs for details.");
   },
 });
 

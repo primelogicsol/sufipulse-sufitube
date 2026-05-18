@@ -26,12 +26,12 @@ export function Footer() {
         `.trim()}
       >
         {/* Mobile Accordion / Desktop Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-8 md:gap-12">
           <FooterSection title="Creative Contributors">
             <FooterLink href="/writers">Writers (Ahl-e-Qalam)</FooterLink>
             <FooterLink href="/vocalists">Vocalists (Ahl-e-Sada)</FooterLink>
             <FooterLink href="/producers">Producers (Ahl-e-Naghma)</FooterLink>
-            <FooterLink href="/literary-contributors">Literary Writers (Ahl-e-Taḥreer)</FooterLink>
+            <FooterLink href="/literary-contributors">Literary Contributors (Ahl-e-Tahreer)</FooterLink>
           </FooterSection>
 
           <FooterSection title="Production Infrastructure">

@@ -2,22 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { entityCreate, entityUpdate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { sendProducerSubmissionConfirmationEmail } from '@/app/lib/email';
-import { validateRequestBody } from '@/app/lib/api-middleware';
 import { producerProfileSchema } from '@/app/lib/validation-schemas';
+import { validatePublicSubmission } from '@/app/lib/security';
 import crypto from 'node:crypto';
 
 export async function POST(request: NextRequest) {
-  const validationResult = await validateRequestBody(request, producerProfileSchema);
-  if (validationResult instanceof NextResponse) return validationResult;
+  const validation = await validatePublicSubmission(request, producerProfileSchema, {
+    rateLimit: 'strict',
+    sanitizationRules: {
+      full_name: 'text',
+      professional_name: 'text',
+      email: 'email',
+      country: 'text',
+      city: 'text',
+      years_experience: 'text',
+      primary_tools: 'text',
+      musical_background: 'text',
+      portfolio_link: 'url'
+    }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
 
   try {
-    const body = validationResult.data;
     const trackingToken = crypto.randomBytes(32).toString('hex');
     
     // Create base record
     const record = entityCreate('producers', {
       ...body,
-      email: body.email, // Use provided email for public intake
+      email: body.email, 
       profile_status: 'pending_review',
       status: 'pending_review',
       submitted_at: new Date().toISOString(),
@@ -29,18 +43,14 @@ export async function POST(request: NextRequest) {
     // Update with referenceId
     const finalRecord = entityUpdate('producers', record.id, { referenceId } as any);
 
-    console.log(`[Producer Intake] Application saved: ${record.id} | Ref: ${referenceId}`);
-
     // Failsafe: Send confirmation email to producer
     (async () => {
       try {
-        console.log(`[Producer Intake] Confirmation email queued for: ${body.email}`);
         await sendProducerSubmissionConfirmationEmail(body.email, {
           name: body.professional_name || body.full_name || 'Producer',
           referenceId: referenceId,
           trackingToken: trackingToken
         });
-        console.log(`[Producer Intake] Confirmation email sent successfully`);
       } catch (emailErr: any) {
         console.error(`[Producer Intake] Email failure: ${emailErr.message || emailErr}`);
       }

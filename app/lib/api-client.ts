@@ -1,4 +1,4 @@
-import { KalamUnderDraft } from "../user/writer/dashboard/page";
+import { KalamUnderDraft } from "../types/contributor.types";
 import { VocalistProfileType } from "../types/vocalist.types";
 import { WriterFormData } from "../types/writer.types";
 import { ProducerProfileType } from "../types/producer.types";

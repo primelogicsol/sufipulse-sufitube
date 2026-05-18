@@ -41,6 +41,8 @@ import { ReleaseCreditsSection } from './release-credits-section';
 import { SubtitleBulkControlsSection } from './subtitle-bulk-controls-section';
 import { WorkflowAssistantSection } from './workflow-assistant-section';
 import { SocialShareKitSection } from './social-share-kit-section';
+import { ReleaseStreamingSection } from './release-streaming-section';
+import { getDefaultDistribution, type PlatformDistribution } from '@/lib/cms-storage';
 import { useReleaseForm, SAMPLE_PREVIEW_DURATION_SECONDS } from './use-release-form';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 export default function EditReleasePage() {
@@ -193,6 +195,23 @@ export default function EditReleasePage() {
     const code = normalizeLanguageCode(customLangCode);
     const ok = addCustomLanguage(code, customLangLabel.trim());
     if (ok) { setCustomLangCode(''); setCustomLangLabel(''); }
+  };
+
+  const updateDistribution = (platformId: string, patch: Partial<PlatformDistribution>) => {
+    setForm((prev) => {
+      const dist = prev.distribution || getDefaultDistribution();
+      return {
+        ...prev,
+        distribution: {
+          ...dist,
+          [platformId]: {
+            ...dist[platformId],
+            ...patch,
+            updatedAt: new Date().toISOString()
+          }
+        }
+      };
+    });
   };
 
   // ── Import Captions modal state ───────────────────────────────────────────
@@ -866,112 +885,10 @@ export default function EditReleasePage() {
           </div>
 
           {/* Streaming Platforms */}
-          <div id="streaming-platforms-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Streaming Platforms</h2>
-              <button 
-                type="button" 
-                onClick={() => {
-                  const updated = [...(form.streamingPlatforms || []), { platform: '', status: 'Distribution Pending', url: '' }];
-                  setForm({...form, streamingPlatforms: updated});
-                }} 
-                className="dashboard-btn-secondary px-3 py-1 text-sm"
-              >
-                Add Platform
-              </button>
-            </div>
-            <div className="space-y-3">
-              {(form.streamingPlatforms || []).map((platform, index) => (
-                <div key={index} className="p-4 rounded-lg" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Platform Name</label>
-                      <input
-                        type="text"
-                        value={platform.platform}
-                        onChange={(e) => {
-                          const updated = [...(form.streamingPlatforms || [])];
-                          updated[index] = { ...updated[index], platform: e.target.value };
-                          setForm({ ...form, streamingPlatforms: updated });
-                        }}
-                        placeholder="e.g., Spotify, Apple Music"
-                        className="form-input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Status</label>
-                      <select
-                        value={platform.status}
-                        onChange={(e) => {
-                          const updated = [...(form.streamingPlatforms || [])];
-                          updated[index] = { ...updated[index], status: e.target.value };
-                          setForm({ ...form, streamingPlatforms: updated });
-                        }}
-                        className="form-input w-full"
-                      >
-                        <option value="Distribution Pending">Distribution Pending</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Available">Available</option>
-                        <option value="Not Planned">Not Planned</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">URL (Optional)</label>
-                      <div className="flex items-center gap-2">
-                         <input
-                           type="text"
-                           value={platform.url || ''}
-                           onChange={(e) => {
-                             const updated = [...(form.streamingPlatforms || [])];
-                             updated[index] = { ...updated[index], url: e.target.value };
-                             setForm({ ...form, streamingPlatforms: updated });
-                           }}
-                           placeholder="https://..."
-                           className="form-input w-full"
-                         />
-                         <button
-                           type="button"
-                           onClick={() => {
-                             const updated = [...(form.streamingPlatforms || [])];
-                             updated.splice(index, 1);
-                             setForm({ ...form, streamingPlatforms: updated });
-                           }}
-                           className="text-red-500 hover:text-red-400 p-2 font-bold text-lg"
-                           title="Remove Platform"
-                         >
-                           &times;
-                         </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {(!form.streamingPlatforms || form.streamingPlatforms.length === 0) && (
-                <div className="text-center py-4">
-                  <p className="text-sm text-neutral-500 italic mb-3">No platforms defined.</p>
-                  <button 
-                    type="button" 
-                    className="dashboard-btn-secondary px-4 py-2 text-sm" 
-                    onClick={() => {
-                      const defaults = [
-                        { platform: 'SufiPulse Radio', status: 'Distribution Pending', url: '' },
-                        { platform: 'YouTube', status: 'Distribution Pending', url: '' },
-                        { platform: 'Spotify', status: 'Distribution Pending', url: '' },
-                        { platform: 'Apple Music', status: 'Distribution Pending', url: '' },
-                        { platform: 'Instagram', status: 'Distribution Pending', url: '' },
-                        { platform: 'X', status: 'Distribution Pending', url: '' },
-                        { platform: 'Facebook', status: 'Distribution Pending', url: '' },
-                      ];
-                      setForm({ ...form, streamingPlatforms: defaults });
-                    }}
-                  >
-                    Auto-Fill Verified Platforms
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          <ReleaseStreamingSection
+            form={form}
+            onUpdateDistribution={updateDistribution}
+          />
 
           {/* Features */}
           <div id="features-section">

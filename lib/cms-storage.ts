@@ -6,6 +6,28 @@
 
 import { sortReleases } from './release-utils';
 
+export type DistributionStatus =
+  | 'not_started'
+  | 'pending'
+  | 'scheduled'
+  | 'processing'
+  | 'published'
+  | 'partially_live'
+  | 'unavailable'
+  | 'failed'
+  | 'archived';
+
+export interface PlatformDistribution {
+  platform: 'sufipulse_radio' | 'youtube' | 'spotify' | 'apple_music' | 'instagram' | 'x' | 'facebook';
+  status: DistributionStatus;
+  url?: string;
+  publishedAt?: string;
+  lastCheckedAt?: string;
+  notes?: string;
+  isVerified: boolean;
+  isVisible: boolean;
+}
+
 export interface CMSRelease {
   id: string;
   title: string;
@@ -34,12 +56,8 @@ export interface CMSRelease {
   source?: string;
   visibility?: 'public' | 'private' | 'unlisted';
 
-  // Streaming platforms
-  streamingPlatforms?: Array<{
-    platform: string;
-    url?: string;
-    status: string;
-  }>;
+  // Distribution state per platform
+  distribution?: Record<string, PlatformDistribution>;
   
   // Credits
   writer?: { name: string; nameUrdu?: string };
@@ -259,17 +277,17 @@ export interface CMSRelease {
 
 export interface LyricsRequest {
   id: string;
-  releaseId?: string;
-  releaseSlug?: string;
+  releaseId: string;
+  releaseSlug: string;
   releaseTitle: string;
   youtubeId?: string;
-  languageCode?: string;
+  languageCode: string;
   languageName: string;
-  requestType: string;
+  requestType: 'lyrics_translation';
   requesterName?: string;
   requesterEmail?: string;
   userId?: string;
-  status: 'pending' | 'in_review' | 'assigned' | 'in_translation' | 'completed' | 'sent_to_user' | 'published' | 'rejected' | 'closed';
+  status: 'submitted' | 'under_review' | 'approved' | 'in_translation' | 'published' | 'rejected' | 'archived';
   priority: 'normal' | 'high' | 'urgent';
   requestedMessage?: string;
   adminNotes?: string;
@@ -279,7 +297,6 @@ export interface LyricsRequest {
   completedAt?: string;
   sentToUser: boolean;
   sentToUserAt?: string;
-  sentToUserEmail?: string;
   notifyWhenPublished?: boolean;
   notificationSentAt?: string;
   publishedToRelease: boolean;
@@ -287,6 +304,29 @@ export interface LyricsRequest {
   sourceUrl?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export const PLATFORMS = [
+  { id: 'sufipulse_radio', label: 'SufiPulse Radio' },
+  { id: 'youtube', label: 'YouTube' },
+  { id: 'spotify', label: 'Spotify' },
+  { id: 'apple_music', label: 'Apple Music' },
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'x', label: 'X' },
+  { id: 'facebook', label: 'Facebook' },
+] as const;
+
+export function getDefaultDistribution(): Record<string, PlatformDistribution> {
+  const dist: Record<string, PlatformDistribution> = {};
+  PLATFORMS.forEach(p => {
+    dist[p.id] = {
+      platform: p.id as any,
+      status: 'not_started',
+      isVerified: false,
+      isVisible: true,
+    };
+  });
+  return dist;
 }
 
 const STORAGE_KEY = 'sufipulse_cms_releases';
@@ -400,8 +440,29 @@ class CMSStorage {
   // Create or Update
   saveRelease(release: CMSRelease): CMSRelease {
     const now = new Date().toISOString();
+    
+    // Enforcement: Official published releases MUST have a youtubeId
+    if (release.status === 'published' && !release.youtubeId) {
+      throw new Error('A YouTube ID is required for official published releases. Non-official media must remain in draft or unpublished status.');
+    }
+
+    // Ensure distribution is initialized
+    const distribution = release.distribution || getDefaultDistribution();
+    
+    // Sync YouTube if it's new or was legacy
+    if (release.youtubeId && distribution.youtube && distribution.youtube.status === 'not_started') {
+      distribution.youtube = {
+        ...distribution.youtube,
+        status: 'published',
+        url: release.youtubeUrl || `https://www.youtube.com/watch?v=${release.youtubeId}`,
+        publishedAt: release.publishedAt || release.releaseDate,
+        isVerified: true
+      };
+    }
+
     const releaseData: CMSRelease = {
       ...release,
+      distribution,
       updatedAt: now,
       createdAt: release.createdAt || now,
       ...(release.status === 'published' && { publishedAt: release.publishedAt || now })
@@ -513,6 +574,11 @@ class CMSStorage {
   publishRelease(id: string): CMSRelease | null {
     const release = this.releases.get(id);
     if (!release) return null;
+
+    // Enforcement: Official governed releases MUST have a youtubeId to be published
+    if (!release.youtubeId) {
+      throw new Error('Cannot publish an official governed release without a valid YouTube ID.');
+    }
 
     const published: CMSRelease = {
       ...release,

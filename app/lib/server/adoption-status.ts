@@ -6,31 +6,36 @@ import type { AdoptionStatus } from './adoption-store';
  */
 export const STATUS_RANK: Record<string, number> = {
   draft: 0,
-  pending_payment: 1,
-  pending_review: 1,
-  paid_pending_review: 1,
-  google_ads_connection_pending: 1,
-  google_ads_connected_pending_review: 1,
-  google_ads_verified_adopter: 1,
-  pending_google_ads_manual_review: 1,
-  google_ads_verification_pending: 1,
-  google_ads_verified: 1,
-  google_ads_verification_failed: 1,
   submitted: 1,
-  campaign_preparation_requested: 2,
-  admin_review: 2,
-  awaiting_user_approval: 2,
-  under_review: 2,
-  approved: 3,
-  campaign_prepared: 4,
-  prepared: 4,
-  scheduled: 5,
-  live: 6,
-  monitoring: 7,
-  completed: 8,
-  report_ready: 9,
+  payment_pending: 1,
+  pending_payment: 1, // alias
+  payment_received: 2,
+  paid_pending_review: 2, // alias
+  pending_review: 2, // alias
+  google_ads_connection_pending: 1,
+  google_ads_connected_pending_review: 2,
+  google_ads_verified_adopter: 2,
+  pending_google_ads_manual_review: 2,
+  google_ads_verification_pending: 2,
+  google_ads_verified: 2,
+  google_ads_verification_failed: 2,
+  campaign_preparation_requested: 3,
+  admin_review: 3,
+  awaiting_user_approval: 3,
+  under_review: 3,
+  approved: 4,
+  campaign_prepared: 5,
+  prepared: 5,
+  scheduled: 6,
+  live: 7,
+  monitoring: 8,
+  completed: 9,
+  report_ready: 10,
   cancelled: -1,
   failed: -1,
+  hidden: -2,
+  rejected: -1,
+  archived: -3,
   reconnect_required: 1,
   permission_denied: 1,
 };
@@ -38,6 +43,8 @@ export const STATUS_RANK: Record<string, number> = {
 export function canAdvanceTo(current: string, target: string): boolean {
   const cur = STATUS_RANK[current] ?? -1;
   const tgt = STATUS_RANK[target] ?? -1;
+  // Special case: allowed to archive/hide/reject from many states
+  if (target === 'archived' || target === 'hidden' || target === 'rejected' || target === 'cancelled') return true;
   return tgt > cur;
 }
 

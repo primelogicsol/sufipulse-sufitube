@@ -298,16 +298,20 @@ export interface SongAdoption {
 }
 
 /**
- * Contact Message Schema
+ * Institutional Inquiry Schema
  */
-export interface ContactMessage {
+export interface InstitutionalInquiry {
   id: string;
+  inquiryId: string; // SP-INQ-XXXX
   name: string;
   email: string;
   subject: string;
   message: string;
-  status: 'new' | 'read' | 'replied' | 'archived';
-  admin_reply?: string;
+  category: 'general_inquiry' | 'contributor_inquiry' | 'studio_coordination' | 'partnership' | 'technical_support' | 'governance' | 'media_press' | 'institutional_collaboration' | 'other';
+  status: 'submitted' | 'under_review' | 'assigned' | 'awaiting_response' | 'resolved' | 'archived';
+  assignedTo?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  admin_notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -488,7 +492,7 @@ export type DatabaseSchema = {
   partnership_proposals: PartnershipProposal;
   cms_releases: CMSRelease;
   song_adoptions: SongAdoption;
-  contact_messages: ContactMessage;
+  inquiries: InstitutionalInquiry;
   session_requests: SessionRequest;
   studio_access_codes: StudioAccessCode;
   performance_assignments: PerformanceAssignment;

@@ -69,11 +69,11 @@ export function LyricsRequestModal({
           releaseSlug: window.location.pathname.split('/').pop(),
           releaseTitle,
           youtubeId,
-          targetLanguage: languageName,
+          languageName,
           languageCode,
           requesterName: name,
           requesterEmail: email,
-          reason: note,
+          note,
           notifyWhenPublished,
           source: 'public_release_detail',
           sourceUrl: window.location.href

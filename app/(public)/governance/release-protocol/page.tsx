@@ -1,241 +1,205 @@
-import { FileCheck, ArrowRight, Mic, Shield, Database, Lock } from 'lucide-react';
+"use client";
+import { FileCheck, ArrowRight, Mic, Shield, Database, Lock, ShieldCheck } from 'lucide-react';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function ReleaseProtocol() {
     const purposePoints = [
-        'Sequential authority is respected',
-        'Production outputs are validated',
-        'Registry documentation is complete',
-        'Institutional integrity is preserved'
+        {
+            icon: ShieldCheck,
+            title: 'Sequential Respect',
+            description: 'Ensuring all levels of institutional authority are respected prior to publication.'
+        },
+        {
+            icon: FileCheck,
+            title: 'Output Validation',
+            description: 'Confirming that all production outputs meet documented technical and spiritual standards.'
+        },
+        {
+            icon: Database,
+            title: 'Registry Integrity',
+            description: 'Ensuring registry documentation is 100% complete and verified before release.'
+        },
+        {
+            icon: Shield,
+            title: 'Mission Preservation',
+            description: 'Maintaining the long-term institutional integrity of the SufiPulse platform.'
+        }
     ];
 
     const sequentialSteps = [
-        { label: 'Editorial Authorization', icon: FileCheck },
-        { label: 'Production Completion', icon: Mic },
-        { label: 'Master Confirmation', icon: Shield },
-        { label: 'Registry Verification', icon: Database },
-        { label: 'Royalty Documentation', icon: FileCheck },
-        { label: 'Metadata Lock', icon: Lock },
-        { label: 'Publication Authorization', icon: FileCheck }
+        { id: 1, title: 'Editorial Auth', icon: FileCheck, desc: 'Majlis-e-Nazr approval' },
+        { id: 2, title: 'Production Clear', icon: Mic, desc: 'Technical execution lock' },
+        { id: 3, title: 'Master Confirm', icon: Shield, desc: 'Central studio validation' },
+        { id: 4, title: 'Registry Verify', icon: Database, desc: 'Diwan-e-Amanat audit' },
+        { id: 5, title: 'Royalty Logic', icon: FileCheck, desc: 'Economic allocation lock' },
+        { id: 6, title: 'Metadata Lock', icon: Lock, desc: 'Immutable record entry' },
+        { id: 7, title: 'Publication Clear', icon: FileCheck, desc: 'Final release activation' }
     ];
 
     const nonBypassRequirements = [
-        'Without editorial approval',
-        'Without structured production',
-        'Without registry confirmation',
-        'Without documented royalty allocation'
+        { title: 'Editorial Gate', desc: 'No release occurs without formal theological and thematic approval.' },
+        { title: 'Production Gate', desc: 'No release occurs without traversing the structured production workflow.' },
+        { title: 'Registry Gate', desc: 'No release occurs without immutable confirmation of all registry data.' },
+        { title: 'Economic Gate', desc: 'No release occurs without documented and agreed royalty allocation.' }
     ];
 
     const irreversibilityPrinciples = [
-        'Credits are locked',
-        'Metadata is recorded',
-        'Registry entry becomes permanent',
-        'Economic allocation is fixed'
+        { title: 'Locked Credits', desc: 'Attribution data cannot be altered after registry finalization.' },
+        { title: 'Immutable Metadata', desc: 'Technical specifications are permanently recorded in the archive.' },
+        { title: 'Registry Finality', desc: 'Entry becomes a permanent part of the institutional record.' },
+        { title: 'Fixed Allocation', desc: 'Economic distribution structures are set prior to publication.' }
     ];
 
     const authorityBoundaries = [
         {
-            action: 'Does not evaluate creative content',
-            clarification: 'Thematic and artistic decisions remain with editorial authority'
+            action: 'No Creative Evaluation',
+            clarification: 'Thematic and artistic decisions remain strictly with editorial authority'
         },
         {
-            action: 'Does not perform studio production',
-            clarification: 'Production execution is governed by Production Oversight'
+            action: 'No Studio Execution',
+            clarification: 'Production execution is governed strictly by Production Oversight'
         },
         {
-            action: 'Does not redefine charter provisions',
+            action: 'No Charter Redefinition',
             clarification: 'All authority derives from and remains bound by Mithaq'
         }
     ];
 
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Release Protocol
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.release_protocol.mystical}
-                        </p>
+            <StudioHero 
+                badge="Publication Sequence"
+                title="Release Protocol"
+                mysticalName={roleDisplayMap.release_protocol.mystical}
+                description="The Release Protocol defines the formal sequence required before any work is published under SufiPulse. Publication is a governed institutional act, not a technical upload."
+            />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed">
-                                The Release Protocol defines the formal sequence required before any work is published under SufiPulse.
-                                Publication is a governed institutional act, not a technical upload.
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Purpose"
+                            subtitle="Safeguarding institutional standards through rigorous pre-publication verification"
+                        />
+
+                        <StudioCardGrid cols={4}>
+                            {purposePoints.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={item.icon}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+
+                        <div className="mt-12 bg-[var(--color-midnight)]/30 border border-[var(--color-gold)]/20 rounded-xl p-8 text-center max-w-3xl mx-auto shadow-2xl">
+                            <p className="text-[var(--text-sm)] text-neutral-400 leading-relaxed font-medium">
+                                "Release follows authorization; it does not initiate it. No parallel shortcuts or procedural bypasses are permitted."
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <StudioWorkflowRoadmap 
+                title="Sequential Requirements"
+                badge="Verification Pipeline"
+                steps={sequentialSteps}
+            />
+
+            <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Purpose
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                The Release Protocol ensures:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {purposePoints.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                Release follows authorization.
-                            </p>
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                It does not initiate it.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Sequential Requirements
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8 overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-neutral-800/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-neutral-600">
-                            <div className="flex items-center gap-4 min-w-max pb-2">
-                                {sequentialSteps.map((step, idx) => (
-                                    <div key={idx} className="flex items-center gap-4">
-                                        <div className="flex flex-col items-center gap-3 min-w-[140px]">
-                                            <div className="w-12 h-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-                                                <step.icon className="w-5 h-5 text-amber-400" />
+                    <div className="max-w-6xl mx-auto">
+                        <div className="grid lg:grid-cols-2 gap-12">
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Non-Bypass Principle"
+                                    subtitle="Structural gates that prevent unverified publication"
+                                />
+                                <div className="space-y-4">
+                                    {nonBypassRequirements.map((item, i) => (
+                                        <div key={i} className="flex items-start gap-4 p-6 elite-card border-none bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-red-500/50 mt-1.5 shrink-0" />
+                                            <div>
+                                                <p className="text-white font-bold uppercase tracking-widest text-xs mb-1">{item.title}</p>
+                                                <p className="text-neutral-500 text-xs leading-relaxed">{item.desc}</p>
                                             </div>
-                                            <p className="text-neutral-300 text-sm text-center font-medium">
-                                                {step.label}
-                                            </p>
                                         </div>
-                                        {idx < sequentialSteps.length - 1 && (
-                                            <ArrowRight className="w-5 h-5 text-neutral-600 flex-shrink-0" />
-                                        )}
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <StudioSectionHeader 
+                                    title="Irreversibility Principle"
+                                    subtitle="The finality of authorized publication records"
+                                />
+                                <div className="space-y-4">
+                                    {irreversibilityPrinciples.map((item, i) => (
+                                        <div key={i} className="flex items-start gap-4 p-6 elite-card border-none bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400/50 mt-1.5 shrink-0" />
+                                            <div>
+                                                <p className="text-white font-bold uppercase tracking-widest text-xs mb-1">{item.title}</p>
+                                                <p className="text-neutral-500 text-xs leading-relaxed">{item.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Non-Bypass Principle
-                        </h2>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Authority Boundaries"
+                            subtitle="Defined limitations to ensure cross-layer accountability"
+                        />
 
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                No release occurs:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {nonBypassRequirements.map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{item}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                No parallel shortcuts.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Irreversibility Principle
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-6">
-                                Once publication is authorized:
-                            </p>
-
-                            <div className="space-y-3 mb-6">
-                                {irreversibilityPrinciples.map((principle, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
-                                        <p className="text-neutral-300 text-sm">{principle}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed mb-3">
-                                Release is a recorded institutional moment.
-                            </p>
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                Not a reversible toggle.
-                            </p>
-                        </div>
-                    </div>
-                </PageContainer>
-            </Section>
-
-            <Section className="py-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h2 className="text-3xl font-bold text-white mb-6">
-                            Authority Boundaries
-                        </h2>
-
-                        <div className="bg-neutral-900/30 border border-neutral-800 rounded-lg p-8">
-                            <p className="text-neutral-300 text-sm font-medium mb-6">
-                                Release Protocol:
-                            </p>
-
-                            <div className="space-y-6 mb-6">
+                        <div className="elite-card p-10 md:p-12">
+                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
                                 {authorityBoundaries.map((boundary, idx) => (
-                                    <div key={idx}>
-                                        <p className="text-white text-sm font-medium mb-1">
-                                            {boundary.action}
-                                        </p>
-                                        <p className="text-neutral-400 text-xs leading-relaxed">
-                                            {boundary.clarification}
-                                        </p>
+                                    <div key={idx} className="space-y-1">
+                                        <p className="text-white text-sm font-bold uppercase tracking-wider">{boundary.action}</p>
+                                        <p className="text-neutral-500 text-[11px] leading-relaxed font-medium uppercase tracking-widest">{boundary.clarification}</p>
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent my-6" />
-
-                            <p className="text-neutral-300 text-sm leading-relaxed">
-                                It governs the act of publication.
+                            <p className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-12 pt-6 border-t border-white/5 text-center italic">
+                                Protocol governs the formal act of publication.
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
+
+            <StudioGovernancePanel 
+                title="Institutional Permanence"
+                description="Authorized release is a recorded institutional moment, not a technical toggle. Once verified, the release record enters the Diwan-e-Amanat registry as a permanent documentation of sacred art."
+                primaryCTA={{ label: "Registry Authority", href: "/governance/diwan-e-amanat" }}
+                shieldText="Governed Release Protocol"
+                background="slate"
+            />
+
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

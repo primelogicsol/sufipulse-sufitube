@@ -1,8 +1,8 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { entityGetAll, entityCreate, entityUpdate } from '@/lib/entity-storage-server';
 import { notifyAdminNewSubmission } from '@/lib/send-notification';
 import { requireAdmin, requireAuth } from '@/server/middleware/authenticate';
-import { validateRequestBody } from '@/app/lib/api-middleware';
+import { validatePublicSubmission, logSecurityEvent } from '@/app/lib/security';
 import { kalamSubmissionSchema } from '@/app/lib/validation-schemas';
 
 export async function GET(request: NextRequest) {
@@ -28,11 +28,22 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
-  const validationResult = await validateRequestBody(request, kalamSubmissionSchema);
-  if (validationResult instanceof NextResponse) return validationResult;
+  const validation = await validatePublicSubmission(request, kalamSubmissionSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      title: 'text',
+      content: 'rich_text',
+      language: 'text',
+      form_style: 'text',
+      thematic_category: 'text',
+      notes: 'text'
+    }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
 
   try {
-    const body = validationResult.data;
     const record = entityCreate('kalams', {
       ...body,
       user_id: authResult.id,

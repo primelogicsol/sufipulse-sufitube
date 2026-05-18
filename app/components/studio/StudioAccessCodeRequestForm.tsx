@@ -1,189 +1,112 @@
+"use client";
+
 import { useState } from 'react';
-import { CircleCheck as CheckCircle, KeyRound, Copy, Check } from 'lucide-react';
+import { CircleCheck as CheckCircle, KeyRound, Copy, Check, User, Mail, Loader as Loader2, ShieldCheck } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { studioAccessCodeRequestSchema, validateSchema } from '../../lib/validation-schemas';
-import { sanitizeObject } from '../../lib/sanitize';
-
-const ROLE_PREFIX: Record<string, string> = {
-  writer: 'WRT',
-  vocalist: 'VCL',
-  producer: 'PRD',
-};
-
-function generateAccessCode(role: string): string {
-  const prefix = ROLE_PREFIX[role] ?? 'CNT';
-  const year = new Date().getFullYear();
-  const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
-  return `REF-${prefix}-${year}-${rand}`;
-}
-
-type RequestRole = 'writer' | 'vocalist' | 'producer';
-
-const ROLE_OPTIONS: { value: RequestRole; label: string }[] = [
-  { value: 'writer',    label: 'Writer — Ahl-e-Qalam' },
-  { value: 'vocalist',  label: 'Vocalist — Ahl-e-Sada' },
-  { value: 'producer',  label: 'Producer — Ahl-e-Naghma' },
-];
+import { IconInput } from '../ui/IconInput';
 
 export function StudioAccessCodeRequestForm() {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: 'vocalist' as RequestRole,
+    name: user?.full_name || '',
+    email: user?.email || '',
+    role: 'vocalist' as 'writer' | 'vocalist' | 'producer',
     profile_reference: '',
     reason: '',
   });
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [issuedCode, setIssuedCode] = useState('');
-  const [existingCode, setExistingCode] = useState('');
-  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<any>({});
+  const [issuedCode, setIssuedCode] = useState<string | null>(null);
+  const [isRetrieved, setIsRetrieved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  
   const { botCheck, setBotCheck, verifySecurity } = useFormSecurity();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setFieldErrors({});
 
     if (!verifySecurity()) {
-      setSubmitted(true);
       setLoading(false);
       return;
     }
 
-    const { success, data, errors } = validateSchema(studioAccessCodeRequestSchema, formData);
-
-    if (!success && errors) {
-      const formattedErrors: any = {};
-      errors.issues.forEach((issue: any) => {
-          formattedErrors[issue.path[0]] = issue.message;
-      });
-      setFieldErrors(formattedErrors);
-      setError('Please correct the highlighted fields.');
+    const { success: isValid, data, errors } = validateSchema(studioAccessCodeRequestSchema, formData);
+    if (!isValid && errors) {
+      setError(errors.issues[0].message);
       setLoading(false);
-
-      const firstErrorField = errors.issues[0]?.path[0] as string;
-      if (firstErrorField) {
-        setTimeout(() => {
-          const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
-          if (element) {
-            element.focus();
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
-      }
       return;
     }
-
-    const cleanData = sanitizeObject(data as any, {
-      name: 'text',
-      email: 'email',
-      profile_reference: 'text',
-      reason: 'text'
-    });
 
     try {
-      // Prevent duplicate pending requests from same email
-      const existing = await fetch('/api/studio-access-codes').then(r => r.ok ? r.json() : []).catch(() => []);
-      const activeRecord = existing.find(
-        (r: any) =>
-          (r.email?.toLowerCase() === formData.email.toLowerCase() ||
-            (user?.id && r.user_id === user.id)) &&
-          (r.status === 'pending' || r.status === 'issued')
-      );
-      if (activeRecord) {
-        if (activeRecord.issued_code &&
-            (activeRecord.user_id === user?.id || activeRecord.email?.toLowerCase() === formData.email.toLowerCase())) {
-          setExistingCode(activeRecord.issued_code);
-          setSubmitted(true);
-        } else {
-          setError('A request from this email is already under review. You will be notified when your code is issued. Contact admin if you need assistance.');
-        }
-        setLoading(false);
-        return;
-      }
-
-      const code = generateAccessCode(formData.role);
       const res = await fetch('/api/studio-access-codes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...cleanData,
-          role: formData.role,
-          profile_reference: formData.profile_reference,
-          user_id: user?.id ?? null,
-          issued_code: code,
-          status: 'issued',
-          issued_at: new Date().toISOString(),
-        }),
+        body: JSON.stringify(data),
       });
+
+      const result = await res.json();
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Submission failed. Please try again.');
+        throw new Error(result.error || 'Failed to request authorization reference');
       }
 
-      setIssuedCode(code);
-      setSubmitted(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit request. Please try again.');
+      setIssuedCode(result.issued_code);
+      setIsRetrieved(!!result.retrieved);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(issuedCode || existingCode).then(() => {
+    if (issuedCode) {
+      navigator.clipboard.writeText(issuedCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }
   };
 
-  const displayCode = issuedCode || existingCode;
-  const isRetrieved = !issuedCode && !!existingCode;
-
-  if (submitted) {
+  if (issuedCode) {
+    const displayCode = issuedCode.toUpperCase();
     return (
-      <div className="bg-neutral-900/40 border border-amber-400/20 rounded-lg p-8 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-400/10 border border-amber-400/30 shrink-0">
-            <CheckCircle className="w-5 h-5 text-amber-400" />
+      <div className="elite-card p-10 md:p-16 space-y-10 animate-in fade-in zoom-in duration-500 border-amber-400/20 shadow-2xl">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+            <CheckCircle size={36} />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-white">
-              {isRetrieved ? 'Your Access Code' : 'Access Code Issued'}
+            <h3 className="text-2xl font-bold text-white tracking-tight">
+              {isRetrieved ? 'Authorization Reference Verified' : 'Authorization Reference Issued'}
             </h3>
-            <p className="text-xs text-neutral-400 mt-0.5">
-              {isRetrieved
-                ? 'A code was already issued for this account'
-                : 'Your studio session reference code is ready'}
+            <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.3em] mt-1">
+              Registry Authorization Confirmed
             </p>
           </div>
         </div>
 
-        <div className="bg-neutral-950/60 border border-amber-400/30 rounded-lg p-5">
-          <p className="text-xs text-neutral-400 mb-2 uppercase tracking-widest font-medium">Your Access Code</p>
-          <div className="flex items-center gap-3">
-            <p className="font-mono text-xl font-bold text-amber-400 tracking-widest flex-1 select-all">{displayCode}</p>
+        <div className="bg-black/40 border border-white/5 rounded-[40px] p-12 space-y-4 shadow-inner">
+          <p className="text-[10px] text-neutral-500 uppercase tracking-[0.4em] font-black text-center mb-8">Your Studio Authorization Reference</p>
+          <div className="flex flex-col items-center gap-10">
+            <p className="font-mono text-4xl md:text-5xl font-bold text-amber-400 tracking-[0.4em] select-all drop-shadow-[0_0_30px_rgba(212,175,55,0.3)] uppercase">{displayCode}</p>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-400 rounded text-xs font-medium transition-all"
+              className="flex items-center gap-4 px-10 py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-full text-[11px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
             >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copied' : 'Copy'}
+              {copied ? <Check size={16} className="text-emerald-500 stroke-[3]" /> : <Copy size={16} />}
+              {copied ? 'Copied to Registry' : 'Copy Reference'}
             </button>
           </div>
         </div>
 
-        <div className="bg-amber-400/5 border border-amber-400/20 rounded-lg p-4 space-y-1.5">
-          {!isRetrieved && <p className="text-amber-400/90 text-xs font-semibold">Save this code — it will not be shown again.</p>}
-          <p className="text-neutral-400 text-xs">
-            Enter this code in the <strong className="text-neutral-300">Approval Reference Code</strong> field when submitting your session request below.
+        <div className="bg-amber-400/5 border border-amber-400/10 rounded-[32px] p-10 space-y-4">
+          {!isRetrieved && <p className="text-amber-400 text-xs font-black uppercase tracking-[0.4em]">⚠️ Critical Security Note</p>}
+          <p className="text-neutral-400 text-sm leading-relaxed font-medium">
+            Save this reference — it is mandatory for session coordination. Enter this code in the <strong className="text-white">Studio Authorization Reference</strong> field when submitting your request below.
           </p>
         </div>
       </div>
@@ -191,20 +114,20 @@ export function StudioAccessCodeRequestForm() {
   }
 
   return (
-    <div className="bg-neutral-900/40 border border-neutral-800 rounded-lg">
-      <div className="border-b border-neutral-800 px-6 py-5 flex items-center gap-3">
-        <div className="p-2 bg-amber-400/10 rounded-lg border border-amber-400/20">
-          <KeyRound className="w-5 h-5 text-amber-400" />
-        </div>
-        <div>
-          <h3 className="text-base font-semibold text-white">Request an Access Code</h3>
-          <p className="text-xs text-neutral-400 mt-0.5">
-            For approved contributors who need a Studio Session reference code
-          </p>
+    <div className="elite-card overflow-hidden shadow-2xl" id="reference-request-form">
+      <div className="border-b border-white/5 px-8 py-8 bg-white/[0.02]">
+        <div className="flex items-center gap-5">
+            <div className="p-4 bg-amber-400/5 rounded-2xl border border-amber-400/10 text-amber-400">
+                <KeyRound size={24} />
+            </div>
+            <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Authorization Reference</h3>
+                <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.3em]">Credential Validation Pathway</p>
+            </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-10">
         <input
           type="text"
           name="_bot_check"
@@ -214,105 +137,125 @@ export function StudioAccessCodeRequestForm() {
           tabIndex={-1}
           autoComplete="off"
         />
+
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6 animate-in fade-in slide-in-from-top-2">
+            <p className="text-red-400 text-xs font-black uppercase tracking-[0.2em]">{error}</p>
           </div>
         )}
 
-        <div className="bg-amber-400/5 border border-amber-400/20 rounded-lg p-4">
-          <p className="text-amber-400/90 text-xs leading-relaxed">
-            This form is for <strong>already-approved contributors</strong> only. Your application to the network must be approved before a studio access code can be issued. If you have not yet applied, please apply through the appropriate contributor page first.
-          </p>
+        <div className="bg-amber-400/5 border border-amber-400/10 rounded-3xl p-8">
+            <p className="text-amber-400/80 text-xs leading-relaxed font-bold uppercase tracking-[0.2em] text-center">
+                Studio session access requests are available only to approved contributors operating within authorized production workflows. Contributor approval must be completed before session coordination can be initiated.
+            </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-1.5">Full Name</label>
-            <input
-              type="text"
-              name="name"
-              required
-              placeholder="Your registered name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: DOMPurify.sanitize(e.target.value) })}
-              className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 text-sm ${fieldErrors.name ? 'border border-red-500' : ''}`}
+        <div className="grid md:grid-cols-2 gap-8">
+            <IconInput icon={User} label="Full Name">
+              <input
+                  type="text"
+                  name="name"
+                  required
+                  placeholder="Your registered name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: DOMPurify.sanitize(e.target.value) })}
+                  className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+              />
+            </IconInput>
+
+            <IconInput icon={Mail} label="Secure Email">
+              <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="Your registered email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })}
+                  className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+              />
+            </IconInput>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+            <IconInput icon={User} label="Contributor Role" rightIcon>
+              <select
+                  name="role"
+                  required
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all"
+              >
+                  <option value="writer">Writer (Ahl-e-Qalam)</option>
+                  <option value="vocalist">Vocalist (Ahl-e-Sada)</option>
+                  <option value="producer">Producer (Ahl-e-Naghma)</option>
+              </select>
+            </IconInput>
+
+            <IconInput icon={ShieldCheck} label="Profile Reference">
+              <input
+                  type="text"
+                  name="profile_reference"
+                  required
+                  placeholder="Reference ID (e.g. SP-VOC-...)"
+                  value={formData.profile_reference}
+                  onChange={(e) => setFormData({ ...formData, profile_reference: DOMPurify.sanitize(e.target.value) })}
+                  className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all font-mono tracking-widest uppercase"
+              />
+            </IconInput>
+        </div>
+
+        <div className="space-y-2">
+            <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Reason for Session Access</label>
+            <textarea
+                name="reason"
+                rows={4}
+                required
+                placeholder="Briefly describe the production context requiring studio access…"
+                value={formData.reason}
+                onChange={(e) => setFormData({ ...formData, reason: DOMPurify.sanitize(e.target.value) })}
+                className="w-full rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all h-40 resize-none"
             />
-            {fieldErrors.name && <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-1.5">Email Address</label>
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="Your registered email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })}
-              className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 text-sm ${fieldErrors.email ? 'border border-red-500' : ''}`}
-            />
-            {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
-          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-neutral-300 mb-1.5">Your Role</label>
-          <select
-            name="role"
-            required
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value as RequestRole })}
-            className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white text-sm ${fieldErrors.role ? 'border border-red-500' : ''}`}
-          >
-            {ROLE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+        <div className="pt-8">
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-8 bg-linear-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
+            >
+                {loading ? <Loader2 className="w-6 h-6 animate-spin text-black" /> : <ShieldCheck size={24} className="group-hover:scale-110 transition-transform" />}
+                {loading ? 'Processing Registry Audit...' : 'Request Authorization Reference'}
+            </button>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-neutral-300 mb-1.5">
-            Profile / Application Reference
-          </label>
-          <input
-            type="text"
-            name="profile_reference"
-            required
-            placeholder="Reference ID from your approved application"
-            value={formData.profile_reference}
-            onChange={(e) => setFormData({ ...formData, profile_reference: DOMPurify.sanitize(e.target.value) })}
-            className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 font-mono text-sm ${fieldErrors.profile_reference ? 'border border-red-500' : ''}`}
-          />
-          {fieldErrors.profile_reference && <p className="text-red-500 text-xs mt-1">{fieldErrors.profile_reference}</p>}
-          <p className="text-xs text-neutral-500 mt-1">
-            Found in your approval notification or contributor dashboard
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-neutral-300 mb-1.5">
-            Reason for Session Access
-          </label>
-          <textarea
-            name="reason"
-            rows={3}
-            required
-            placeholder="Briefly describe the production context requiring studio access…"
-            value={formData.reason}
-            onChange={(e) => setFormData({ ...formData, reason: DOMPurify.sanitize(e.target.value) })}
-            className={`form-input w-full px-4 py-2.5 bg-neutral-950/50 rounded-lg text-white placeholder-neutral-500 resize-none text-sm ${fieldErrors.reason ? 'border border-red-500' : ''}`}
-          />
-          {fieldErrors.reason && <p className="text-red-500 text-xs mt-1">{fieldErrors.reason}</p>}
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full px-6 py-3 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 hover:border-amber-400/50 text-amber-400 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Submitting…' : 'Submit Access Code Request'}
-        </button>
       </form>
+
+      <style jsx global>{`
+        .elite-input {
+          background: rgba(10, 10, 10, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 16px 20px;
+          color: white;
+          font-size: 14px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          outline: none;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .elite-input:focus {
+          border-color: rgba(212, 175, 55, 0.4);
+          background: rgba(15, 15, 15, 1);
+          box-shadow: 0 0 30px rgba(212, 175, 55, 0.05), inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .elite-card {
+          background: rgba(18, 18, 18, 0.4);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          border-radius: 40px;
+          box-shadow: 
+            0 40px 80px rgba(0,0,0,0.6),
+            inset 0 1px 1px rgba(255,255,255,0.02);
+        }
+      `}</style>
     </div>
   );
 }

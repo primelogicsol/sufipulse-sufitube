@@ -3,6 +3,27 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
+type DiskAuditStats = {
+  docker: {
+    path: string;
+    exists: boolean;
+    size: number;
+    mtime: Date | null;
+  };
+  local: {
+    path: string;
+    exists: boolean;
+    size: number;
+    mtime: Date | null;
+  };
+  process: {
+    pid: number;
+    cwd: string;
+  };
+  actualCount?: number;
+  error?: string;
+};
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -10,7 +31,7 @@ export async function GET(request: NextRequest) {
   const dataFile = '/app/.data/cms-releases.json';
   const localFile = path.join(process.cwd(), '.data', 'cms-releases.json');
   
-  const stats = {
+  const stats: DiskAuditStats = {
     docker: {
       path: dataFile,
       exists: fs.existsSync(dataFile),
@@ -35,11 +56,11 @@ export async function GET(request: NextRequest) {
     if (fs.existsSync(activePath)) {
       const content = fs.readFileSync(activePath, 'utf8');
       const data = JSON.parse(content);
-      sample = data.slice(0, 5).map(r => ({ id: r.id, title: r.title }));
+      sample = data.slice(0, 5).map((r: any) => ({ id: r.id, title: r.title }));
       stats.actualCount = data.length;
     }
-  } catch (err) {
-    stats.error = err.message;
+  } catch (err: any) {
+    stats.error = err?.message || 'Unknown error during disk audit';
   }
 
   return NextResponse.json({

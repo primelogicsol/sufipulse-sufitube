@@ -3,29 +3,41 @@ import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { getAuthUser } from '@/server/middleware/authenticate';
 import { sendLyricsRequestConfirmationEmail, sendLyricsRequestAdminNotificationEmail } from '@/app/lib/email';
 import { type LyricsRequest } from '@/lib/cms-storage';
+import { validatePublicSubmission } from '@/app/lib/security';
+import { lyricsRequestSchema } from '@/app/lib/validation-schemas';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/lyrics-requests
 export async function POST(request: NextRequest) {
+  const validation = await validatePublicSubmission(request, lyricsRequestSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      requesterName: 'text',
+      requesterEmail: 'email',
+      note: 'text'
+    }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
+
   try {
-    const body = await request.json();
     const { 
       releaseId, 
       releaseSlug, 
       releaseTitle, 
       youtubeId,
-      targetLanguage, 
+      languageName, 
       languageCode, 
       requesterEmail, 
       requesterName, 
-      reason,
+      note,
       notifyWhenPublished = true,
-      source = 'public_release_detail',
       sourceUrl 
-    } = body;
+    } = body as any; // Cast for custom fields not in strict schema if any, but better use body directly
 
-    if (!releaseTitle || !targetLanguage || !requesterEmail) {
+    if (!releaseTitle || !languageName || !requesterEmail) {
       return NextResponse.json({ error: 'Release title, target language, and email are required' }, { status: 400 });
     }
 
@@ -36,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     const isDuplicate = allRequests.some(r => 
       (r.releaseId === releaseId || r.releaseSlug === releaseSlug || (youtubeId && r.youtubeId === youtubeId)) && 
-      (r.languageName === targetLanguage || r.languageCode === languageCode) && 
+      (r.languageName === languageName || r.languageCode === languageCode) && 
       r.requesterEmail?.toLowerCase() === requesterEmail.toLowerCase() &&
       new Date(r.createdAt) > thirtyDaysAgo
     );
@@ -45,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true,
         saved: true,
-        message: `You have already submitted a request for ${targetLanguage} translation for this song. We will notify you when it is ready.` 
+        message: `You have already submitted a request for ${languageName} translation for this song. We will notify you when it is ready.` 
       }, { status: 200 });
     }
 
@@ -58,15 +70,15 @@ export async function POST(request: NextRequest) {
       releaseTitle,
       youtubeId,
       languageCode,
-      languageName: targetLanguage,
+      languageName,
       requestType: 'lyrics_translation',
-      requesterName: requesterName || user?.name || '',
+      requesterName: requesterName || user?.full_name || '',
       requesterEmail: requesterEmail.toLowerCase() || user?.email || '',
       userId: user?.id,
-      status: 'pending',
+      status: 'submitted',
       priority: 'normal',
-      requestedMessage: reason || '',
-      notifyWhenPublished,
+      requestedMessage: note || '',
+      notifyWhenPublished: !!notifyWhenPublished,
       sentToUser: false,
       publishedToRelease: false,
       sourceUrl,
@@ -101,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
 
     const successMessage = notifyWhenPublished
-      ? `Translation request received. We’ll notify you when ${targetLanguage} lyrics are published.`
+      ? `Translation request received. We’ll notify you when ${languageName} lyrics are published.`
       : `Translation request received. Thank you for your feedback.`;
 
     return NextResponse.json({ 

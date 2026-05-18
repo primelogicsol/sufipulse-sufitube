@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { type CMSRelease } from '@/lib/cms-storage';
 import { auditLog } from '@/app/lib/audit-log';
 import { logger } from '@/app/lib/logger';
 import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
@@ -165,12 +166,22 @@ export async function PUT(
       }
     }
 
-    const merged = { 
+    const merged: CMSRelease = {
       ...(existing || {
         id,
+        title: body.title || 'Untitled',
+        slug: nextSlug,
+        youtubeId: nextYoutubeId,
+        description: body.description || '',
+        releaseDate: body.releaseDate || now,
+        durationSeconds: body.durationSeconds || 0,
+        durationFormatted: body.durationFormatted || '0:00',
+        viewCount: body.viewCount || 0,
+        likeCount: body.likeCount || 0,
         status: 'published',
-        source: 'cms',
+        source: 'youtube_import',
         createdAt: now,
+        updatedAt: now,
         availableLanguages: ['en', 'ur'],
         defaultLanguage: 'en',
         enableLyrics: true,
@@ -178,7 +189,7 @@ export async function PUT(
         enableSponsors: false,
         enableAdoption: true,
         enableCredits: true,
-      }), 
+      }) as CMSRelease, 
       ...body, 
       id: existing?.id || id, // Always enforce the correct ID
       slug: nextSlug, 

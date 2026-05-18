@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { getAuthUser } from '@/server/middleware/authenticate';
 import { sendLyricsRequestConfirmationEmail, sendLyricsRequestAdminNotificationEmail } from '@/app/lib/email';
+import { validatePublicSubmission } from '@/app/lib/security';
+import { lyricsRequestSchema } from '@/app/lib/validation-schemas';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,22 +13,25 @@ export async function POST(
 ) {
   const { id: releaseIdOrSlug } = await params;
 
+  const validation = await validatePublicSubmission(request, lyricsRequestSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      requesterName: 'text',
+      requesterEmail: 'email',
+      note: 'text'
+    }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
+
   try {
     const release = cmsServerStorage.getRelease(releaseIdOrSlug) || cmsServerStorage.getReleaseBySlug(releaseIdOrSlug);
     if (!release) {
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
 
-    const body = await request.json();
     const { languageCode, languageName, requesterName, requesterEmail, note, notifyWhenPublished } = body;
-
-    if (!languageCode || !languageName) {
-      return NextResponse.json({ error: 'Language is required' }, { status: 400 });
-    }
-
-    if (notifyWhenPublished && !requesterEmail) {
-      return NextResponse.json({ error: 'Email is required for notifications' }, { status: 400 });
-    }
 
     // Check for duplicate
     const allRequests = cmsServerStorage.getAllLyricsRequests();
@@ -49,17 +54,19 @@ export async function POST(
       releaseId: release.id,
       releaseSlug: release.slug,
       releaseTitle: release.title,
+      youtubeId: release.youtubeId,
       languageCode,
       languageName,
-      requestType: 'lyrics_translation',
-      requesterName: requesterName || user?.name || '',
+      requestType: 'lyrics_translation' as const,
+      requesterName: requesterName || user?.full_name || '',
       requesterEmail: requesterEmail || user?.email || '',
       userId: user?.id,
-      status: 'pending' as const,
+      status: 'submitted' as const,
       priority: 'normal' as const,
       requestedMessage: note || '',
       sentToUser: false,
       publishedToRelease: false,
+      notifyWhenPublished: !!notifyWhenPublished,
       sourceUrl: request.headers.get('referer') || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -89,13 +96,12 @@ export async function POST(
         language: languageName,
         requesterName: newRequest.requesterName,
         requesterEmail: newRequest.requesterEmail,
-        note: newRequest.note
+        note: newRequest.requestedMessage
       });
       adminNotified = true;
 
     } catch (emailError) {
       console.error('[Lyrics Request Email Error]', emailError);
-      // We don't fail the request if email fails, but we log it
     }
 
     return NextResponse.json({ 

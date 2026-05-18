@@ -1,6 +1,28 @@
 // lib/cms-types.ts
 // CMS Type Definitions - Used by both frontend and backend
 
+export type DistributionStatus =
+  | 'not_started'
+  | 'pending'
+  | 'scheduled'
+  | 'processing'
+  | 'published'
+  | 'partially_live'
+  | 'unavailable'
+  | 'failed'
+  | 'archived';
+
+export interface PlatformDistribution {
+  platform: 'sufipulse_radio' | 'youtube' | 'spotify' | 'apple_music' | 'instagram' | 'x' | 'facebook';
+  status: DistributionStatus;
+  url?: string;
+  publishedAt?: string;
+  lastCheckedAt?: string;
+  notes?: string;
+  isVerified: boolean;
+  isVisible: boolean;
+}
+
 export interface Release {
   id: string;
   title: string;
@@ -36,6 +58,10 @@ export interface Release {
   enable_sponsors: boolean;
   enable_adoption: boolean;
   enable_credits: boolean;
+  
+  // Distribution state per platform
+  distribution?: Record<string, PlatformDistribution>;
+
   // Subtitle timeline and multilingual cue text
   subtitle_cues?: SubtitleCue[];
   subtitle_translations?: Record<string, Record<string, string>>;

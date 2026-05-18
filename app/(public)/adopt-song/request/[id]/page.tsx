@@ -27,7 +27,7 @@ const TIMELINE_STEPS_DIRECT = [
   { key: 'report_ready',     label: 'Impact Report Ready',          detail: 'Final insights are ready.' },
 ] as const;
 
-type TimelineKey = typeof TIMELINE_STEPS_MANAGED[number]['key'];
+type TimelineKey = typeof TIMELINE_STEPS_MANAGED[number]['key'] | typeof TIMELINE_STEPS_DIRECT[number]['key'];
 
 function resolveTimelineStep(adoption: any): TimelineKey {
   const status: string = adoption?.adoptionStatus || 'draft';

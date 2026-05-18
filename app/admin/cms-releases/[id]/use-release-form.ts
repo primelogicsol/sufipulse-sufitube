@@ -719,10 +719,14 @@ export function useReleaseForm({
     const newFieldErrors: Record<string, string> = {};
     if (!form.title?.trim()) newFieldErrors.title = 'Title is required';
     if (!form.slug?.trim()) newFieldErrors.slug = 'Slug is required';
-    if (!form.youtubeId?.trim()) newFieldErrors.youtubeId = 'YouTube ID is required. Paste a YouTube URL or video ID.';
+    
+    // Enforcement: Official governed releases MUST have a youtubeId to be published
+    if (form.status === 'published' && !form.youtubeId?.trim()) {
+      newFieldErrors.youtubeId = 'A YouTube ID is required for official published releases. Non-official media must remain in draft or unpublished status.';
+    }
     
     // Senior Logic: If duration is missing, it's usually because metadata hasn't fetched yet
-    if (!form.durationSeconds || form.durationSeconds <= 0) {
+    if (form.status === 'published' && (!form.durationSeconds || form.durationSeconds <= 0)) {
       if (youtubeChannelLookupLoading) {
         setErrorMessage('Still fetching YouTube metadata... please wait a moment.');
         return;

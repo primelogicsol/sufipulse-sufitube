@@ -43,7 +43,18 @@ type EmailTemplate =
   | 'kalam-status-production-consideration'
   | 'payout-status-verified'
   | 'payout-status-revision-requested'
-  | 'payout-status-rejected';
+  | 'payout-status-rejected'
+  | 'literary-submission-confirmation'
+  | 'literary-status-under-review'
+  | 'literary-status-revision-requested'
+  | 'literary-status-approved'
+  | 'literary-status-archived'
+  | 'studio-submission-confirmation'
+  | 'studio-status-under-review'
+  | 'studio-status-revision-requested'
+  | 'studio-status-approved'
+  | 'studio-status-archived'
+  | 'inquiry-confirmation';
 
 interface SendEmailOptions {
   to: string;
@@ -242,20 +253,30 @@ const templates: Record<EmailTemplate, (data: any) => { subject: string; html: s
   }),
 
   'lyrics-request-confirmation': ({ songTitle, language, name }) => ({
-    subject: `Lyrics Translation Request Received: ${songTitle}`,
+    subject: 'Translation Request Received',
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-        <h2 style="color: #1a1a1a;">Request Received</h2>
-        <p>Hi ${name || 'there'},</p>
-        <p>Thank you for your interest in SufiPulse. Your request for <strong>${language}</strong> lyrics translation for <strong>"${songTitle}"</strong> has been received.</p>
-        <p>Our team will review and prioritize translation requests based on audience demand.</p>
-        <div style="background: #fafafa; padding: 15px; border-radius: 4px; margin: 20px 0;">
-          <p style="margin: 0; font-size: 14px;"><strong>Requested Language:</strong> ${language}</p>
-          <p style="margin: 5px 0 0; font-size: 14px;"><strong>Status:</strong> Pending Review</p>
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(200, 167, 94, 0.2);">
+        <div style="margin-bottom: 32px;">
+          <img src="https://sufipulse.com/sufipulse-logo-v5.png" alt="SufiPulse" style="height: 48px;" />
         </div>
-        <p style="color: #666; font-size: 13px;">We will notify you via this email address as soon as the translation is published.</p>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-        <p style="color: #999; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} SufiPulse. All rights reserved.</p>
+        <h2 style="color: #F8FAFC; margin-bottom: 24px;">Request Received</h2>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name || 'Seeker'},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your request for <strong>${language}</strong> lyrics translation for <strong>"${songTitle}"</strong> has been received and logged in the institutional workflow.
+        </p>
+        <div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Song Title</p>
+          <p style="font-size: 16px; font-weight: 600; margin: 0 0 16px 0;">${songTitle}</p>
+          <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Requested Language</p>
+          <p style="font-size: 16px; font-weight: 600; margin: 0;">${language}</p>
+        </div>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          Our team reviews and prioritizes translation requests based on institutional capacity and audience alignment. You will be notified as soon as the translation is published.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
       </div>
     `,
   }),
@@ -289,24 +310,36 @@ const templates: Record<EmailTemplate, (data: any) => { subject: string; html: s
           </tr>
         </table>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/lyrics-requests" style="background: #d97706; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Admin Dashboard</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/translation-requests" style="background: #d97706; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Admin Dashboard</a>
         </div>
       </div>
     `,
   }),
 
-  'lyrics-translation-published': ({ songTitle, language, releaseUrl }) => ({
-    subject: `SufiPulse lyrics translation published: ${songTitle}`,
+  'lyrics-translation-published': ({ songTitle, language, releaseUrl, name }) => ({
+    subject: 'Requested Lyrics Translation Published',
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-        <h2 style="color: #1a1a1a;">Translation Available</h2>
-        <p>Great news! The <strong>${language}</strong> lyrics translation you requested for <strong>"${songTitle}"</strong> is now available.</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${releaseUrl}" style="background: #d97706; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Translation</a>
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+        <div style="margin-bottom: 32px;">
+          <img src="https://sufipulse.com/sufipulse-logo-v5.png" alt="SufiPulse" style="height: 48px;" />
         </div>
-        <p style="color: #666; font-size: 13px;">Thank you for your patience and for being part of the SufiPulse community.</p>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-        <p style="color: #999; font-size: 12px; text-align: center;">© ${new Date().getFullYear()} SufiPulse. All rights reserved.</p>
+        <h2 style="color: #F8FAFC; margin-bottom: 24px;">Translation Available</h2>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name || 'Seeker'},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Great news! The <strong>${language}</strong> lyrics translation you requested for <strong>"${songTitle}"</strong> is now available and formally published.
+        </p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${releaseUrl}" style="display: inline-block; background-color: #C8A75E; color: #0F172A; padding: 14px 32px; border-radius: 8px; font-weight: bold; text-decoration: none; text-transform: uppercase; font-size: 12px; letter-spacing: 0.1em;">
+            View Translation
+          </a>
+        </div>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          Thank you for your interest and for being part of the SufiPulse institutional community.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
+        </div>
       </div>
     `,
   }),
@@ -413,6 +446,16 @@ const templates: Record<EmailTemplate, (data: any) => { subject: string; html: s
           <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
           <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Editorial Coordination</p>
         </div>
+      </div>
+    `,
+  }),
+
+  'writer-status-archived': ({ name, referenceId }) => ({
+    subject: `SufiPulse Submission Update: Registry Status [${referenceId}]`,
+    html: `
+      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px;">
+        <p>Dear ${name},</p>
+        <p>Your writer profile has been archived. Reference: ${referenceId}</p>
       </div>
     `,
   }),
@@ -843,6 +886,121 @@ const templates: Record<EmailTemplate, (data: any) => { subject: string; html: s
       </div>
     `,
   }),
+  'literary-submission-confirmation': ({ name, referenceId, trackingToken }: any) => ({
+    subject: 'Ahl-e-Tahreer Application Received',
+    html: `
+      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
+        <h2 style="color: #D4AF37;">Ahl-e-Tahreer Application Received</h2>
+        <p>Dear ${name || 'Contributor'},</p>
+        <p>Your Literary Contributor application has been received for editorial review under Ahl-e-Tahreer.</p>
+        <p><strong>Reference ID:</strong> ${referenceId}</p>
+        <div style="background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="font-size: 14px; margin: 0;">Institutional Workflow Notes:</p>
+          <ul style="font-size: 13px; color: #94A3B8;">
+            <li>Submission received and logged in the registry.</li>
+            <li>Editorial review by the Majlis-e-Nazr is required.</li>
+            <li>Approval does not guarantee publication in the Literary Journal.</li>
+            <li>Approved work may be considered for /literary-journal.</li>
+            <li>This pathway is independent of /releases and musical production.</li>
+          </ul>
+        </div>
+        <p>You can monitor your application status using the link provided in your dashboard when activated.</p>
+      </div>
+    `,
+  }),
+
+  'literary-status-under-review': ({ name, referenceId }: any) => ({
+    subject: `Ahl-e-Tahreer Status Update: [${referenceId}]`,
+    html: `<p>Dear ${name}, your Literary Contributor application is now under editorial screening. Ref: ${referenceId}</p>`,
+  }),
+
+  'literary-status-revision-requested': ({ name, referenceId, adminNote }: any) => ({
+    subject: `Ahl-e-Tahreer Status Update: Revision Requested [${referenceId}]`,
+    html: `<p>Dear ${name}, revisions are requested for your literary profile. Note: ${adminNote}</p>`,
+  }),
+
+  'literary-status-approved': ({ name, referenceId }: any) => ({
+    subject: `Ahl-e-Tahreer Status Update: Approved [${referenceId}]`,
+    html: `<p>Dear ${name}, your Literary Contributor profile has been approved for the SufiPulse Literary Journal registry. Ref: ${referenceId}</p>`,
+  }),
+
+  'literary-status-archived': ({ name, referenceId }: any) => ({
+    subject: `Ahl-e-Tahreer Status Update: Archived [${referenceId}]`,
+    html: `<p>Dear ${name}, your literary profile has been archived. Ref: ${referenceId}</p>`,
+  }),
+
+  'studio-submission-confirmation': ({ name, referenceId }: any) => ({
+    subject: 'Karkhana-e-Sada Technical Intake Received',
+    html: `
+      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
+        <h2 style="color: #D4AF37;">Karkhana-e-Sada Intake Received</h2>
+        <p>Dear ${name || 'Studio Partner'},</p>
+        <p>Your Studio Credentials have been received for technical audit under Karkhana-e-Sada.</p>
+        <p><strong>Reference ID:</strong> ${referenceId}</p>
+        <div style="background-color: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="font-size: 14px; margin: 0;">Audit Workflow Notes:</p>
+          <ul style="font-size: 13px; color: #94A3B8;">
+            <li>Credentials logged in the technical registry.</li>
+            <li>Technical audit of facility and equipment is required.</li>
+            <li>Approval allows regional session hosting for SufiPulse.</li>
+            <li>This pathway is restricted to authorized network partners.</li>
+          </ul>
+        </div>
+      </div>
+    `,
+  }),
+
+  'studio-status-under-review': ({ name, referenceId }: any) => ({
+    subject: `Karkhana-e-Sada Status Update: [${referenceId}]`,
+    html: `<p>Dear ${name}, your studio facility is now under technical audit. Ref: ${referenceId}</p>`,
+  }),
+
+  'studio-status-revision-requested': ({ name, referenceId, adminNote }: any) => ({
+    subject: `Karkhana-e-Sada Status Update: Revision Requested [${referenceId}]`,
+    html: `<p>Dear ${name}, technical revisions or clarifications are requested for your studio profile. Note: ${adminNote}</p>`,
+  }),
+
+  'studio-status-approved': ({ name, referenceId }: any) => ({
+    subject: `Karkhana-e-Sada Status Update: Authorized [${referenceId}]`,
+    html: `<p>Dear ${name}, your studio facility has been authorized for inclusion within the SufiPulse production network. Ref: ${referenceId}</p>`,
+  }),
+
+  'studio-status-archived': ({ name, referenceId }: any) => ({
+    subject: `Karkhana-e-Sada Status Update: Archived [${referenceId}]`,
+    html: `<p>Dear ${name}, your studio profile has been archived. Ref: ${referenceId}</p>`,
+  }),
+
+  'inquiry-confirmation': ({ name, referenceId, category }: any) => ({
+    subject: 'SufiPulse Inquiry Received',
+    html: `
+      <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(200, 167, 94, 0.2);">
+        <div style="margin-bottom: 32px;">
+          <img src="https://sufipulse.com/sufipulse-logo-v5.png" alt="SufiPulse" style="height: 48px;" />
+        </div>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Your inquiry has been successfully received and entered into the SufiPulse institutional response workflow.
+        </p>
+        <div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Reference ID</p>
+            <p style="font-family: monospace; font-size: 18px; color: #C8A75E; margin: 0;">${referenceId}</p>
+          </div>
+          <div>
+            <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Classification</p>
+            <p style="font-size: 16px; font-weight: 600; margin: 0;">${category.replace('_', ' ').toUpperCase()}</p>
+          </div>
+        </div>
+        <p style="font-size: 14px; line-height: 1.6; color: #94A3B8; margin-bottom: 24px;">
+          Our relevant teams will review and coordinate a response based on the nature of your request. Expected response window for institutional inquiries is 3–5 business days.
+        </p>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px;">
+          <p style="font-size: 14px; margin: 0; color: #64748B;">Sincerely,</p>
+          <p style="font-size: 14px; font-weight: 600; margin: 4px 0 0 0; color: #F8FAFC;">SufiPulse Institutional Coordination</p>
+        </div>
+      </div>
+    `,
+  }),
 };
 
 // Public API
@@ -882,7 +1040,7 @@ export const sendLyricsRequestAdminNotificationEmail = async (to: string, data: 
   await sendEmail({ to, subject, html });
 };
 
-export const sendLyricsTranslationPublishedEmail = async (to: string, data: { songTitle: string; language: string; releaseUrl: string }): Promise<void> => {
+export const sendLyricsTranslationPublishedEmail = async (to: string, data: { songTitle: string; language: string; releaseUrl: string; name?: string }): Promise<void> => {
   const { subject, html } = templates['lyrics-translation-published'](data);
   await sendEmail({ to, subject, html });
 };
@@ -910,6 +1068,66 @@ export const sendWriterStatusUpdateEmail = async (to: string, status: string, da
     case 'archived':
     case 'archived_not_advanced':
       templateKey = 'writer-status-archived';
+      break;
+    default:
+      return;
+  }
+  const { subject, html } = templates[templateKey](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendStudioSubmissionConfirmationEmail = async (to: string, data: { name: string; referenceId: string }): Promise<void> => {
+  const { subject, html } = templates['studio-submission-confirmation'](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendStudioStatusUpdateEmail = async (to: string, status: string, data: { name: string; referenceId: string; adminNote?: string }): Promise<void> => {
+  let templateKey: EmailTemplate;
+  switch (status) {
+    case 'under_review':
+    case 'under_audit':
+      templateKey = 'studio-status-under-review';
+      break;
+    case 'revision_requested':
+      templateKey = 'studio-status-revision-requested';
+      break;
+    case 'approved':
+    case 'authorized':
+      templateKey = 'studio-status-approved';
+      break;
+    case 'rejected':
+    case 'archived':
+      templateKey = 'studio-status-archived';
+      break;
+    default:
+      return;
+  }
+  const { subject, html } = templates[templateKey](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendLiterarySubmissionConfirmationEmail = async (to: string, data: { name: string; referenceId: string; trackingToken: string }): Promise<void> => {
+  const { subject, html } = templates['literary-submission-confirmation'](data);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendLiteraryStatusUpdateEmail = async (to: string, status: string, data: { name: string; referenceId: string; adminNote?: string }): Promise<void> => {
+  let templateKey: EmailTemplate;
+  switch (status) {
+    case 'under_review':
+    case 'under_editorial_screening':
+      templateKey = 'literary-status-under-review';
+      break;
+    case 'revision_requested':
+      templateKey = 'literary-status-revision-requested';
+      break;
+    case 'approved_for_journal':
+    case 'approved':
+      templateKey = 'literary-status-approved';
+      break;
+    case 'rejected':
+    case 'archived':
+      templateKey = 'literary-status-archived';
       break;
     default:
       return;
@@ -1026,5 +1244,10 @@ export const sendPayoutStatusUpdateEmail = async (to: string, status: string, da
       return;
   }
   const { subject, html } = templates[templateKey](data as any);
+  await sendEmail({ to, subject, html });
+};
+
+export const sendInquiryConfirmationEmail = async (to: string, data: { name: string; referenceId: string; category: string }): Promise<void> => {
+  const { subject, html } = templates['inquiry-confirmation'](data);
   await sendEmail({ to, subject, html });
 };

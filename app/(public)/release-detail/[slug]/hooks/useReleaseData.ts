@@ -113,7 +113,7 @@ export function useReleaseData(slug: string) {
           return;
         }
 
-        const { youtubeService } = await import("../../../../lib/youtube-service");
+        const { youtubeService } = await import("../../../../../lib/youtube-service");
         const videos = await youtubeService.getVideosByIds(slug);
 
         if (!videos || videos.length === 0) {

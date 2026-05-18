@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { X, User, Shield, LogOut, Settings, LayoutDashboard } from 'lucide-react';
 import { CONTRIBUTORS_ITEMS, PRODUCTION_ITEMS, GOVERNANCE_ITEMS, ABOUT_ITEMS } from './constants';
 import { useAuth } from '../../../contexts/AuthContext';
+import { canAccessAdmin } from '../../../lib/role-access';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -23,6 +24,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   }, [user]);
 
   if (!isOpen) return null;
+
+  const isAdmin = canAccessAdmin(user);
 
   return (
     <>
@@ -71,24 +74,24 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             <div className="flex items-center gap-3 bg-[var(--color-midnight)]/40 p-3 rounded-lg border border-white/5">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-slate)] border border-white/10 flex items-center justify-center shrink-0">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={user.name || 'User'} className="w-full h-full object-cover" />
+                  <img src={avatarUrl} alt={user.full_name || 'User'} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-[var(--color-gold)] font-bold text-base">
-                    {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                    {(user.full_name || user.email || 'U').charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-[var(--color-text-primary)] truncate">
-                    {user.name || 'User'}
+                    {user.full_name || 'User'}
                   </span>
-                  {user.role === 'admin' && (
+                  {isAdmin && (
                     <span className="text-[8px] uppercase tracking-widest font-bold text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded leading-none">
                       ADMIN
                     </span>
                   )}
-                  {user.role === 'studio' && (
+                  {user.role === 'studio' && !isAdmin && (
                     <span className="text-[8px] uppercase tracking-widest font-bold text-blue-400 bg-blue-500/10 px-1 py-0.5 rounded leading-none">
                       STUDIO
                     </span>
@@ -99,7 +102,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 </span>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[10px] font-bold uppercase tracking-wider">
                   <Link 
-                    href={user.role === 'admin' ? "/admin" : `/user/${user.role || 'profile'}/dashboard`} 
+                    href={isAdmin ? "/admin" : `/user/${user.role || 'profile'}/dashboard`} 
                     onClick={onClose} 
                     className="text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors"
                   >
@@ -113,7 +116,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   >
                     Profile
                   </Link>
-                  {user.role === 'admin' && (
+                  {isAdmin && (
                     <>
                       <span className="text-white/10">|</span>
                       <Link 

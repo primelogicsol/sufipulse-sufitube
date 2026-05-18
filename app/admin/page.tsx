@@ -26,6 +26,7 @@ interface DashboardStats {
   draftReleases: number;
   pendingAccessCodeRequests: number;
   pendingContactMessages: number;
+  pendingTranslations: number;
 }
 
 interface RecentActivity {
@@ -57,7 +58,6 @@ function DeployBadge() {
 }
 
 export default function AdminDashboard() {
-  //   const { user, loading } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     writerApplications: 0,
@@ -78,6 +78,7 @@ export default function AdminDashboard() {
     draftReleases: 0,
     pendingAccessCodeRequests: 0,
     pendingContactMessages: 0,
+    pendingTranslations: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const router = useRouter()
@@ -104,7 +105,7 @@ export default function AdminDashboard() {
       const [
         writers, vocalists, producers, literary, studio,
         kalams, sadas, articles, partnerships,
-        sessionRequests, adoptions, accessCodes, contacts, releases, users,
+        sessionRequests, adoptions, accessCodes, contacts, translationReqs, releases, users,
       ] = await Promise.all([
         safeGet('/api/writers'),
         safeGet('/api/vocalists'),
@@ -119,6 +120,7 @@ export default function AdminDashboard() {
         safeGet('/api/adoptions'),
         safeGet('/api/studio-access-codes'),
         safeGet('/api/contacts'),
+        safeGet('/api/translation-requests'),
         safeGet('/api/releases?status=all'),
         safeGet('/api/admin/users'),
       ]);
@@ -129,7 +131,15 @@ export default function AdminDashboard() {
       }).length;
 
       const draftReleases = releases.filter(r => String(r?.status || '').toLowerCase() === 'draft').length;
-      const pendingContacts = contacts.filter(m => String(m?.status || 'unread').toLowerCase() === 'unread').length;
+      const pendingContacts = contacts.filter(m => {
+        const s = String(m?.status || '').toLowerCase();
+        return s === 'unread' || s === 'submitted' || s === 'under_review';
+      }).length;
+
+      const pendingTranslationsCount = translationReqs.filter(t => {
+        const s = String(t?.status || '').toLowerCase();
+        return s === 'submitted' || s === 'under_review' || s === 'in_translation';
+      }).length;
 
       const revisionKalams = kalams.filter(k => String(k?.status || '').toLowerCase() === 'revision_requested').length;
       const revisionSadas = sadas.filter(k => String(k?.status || '').toLowerCase() === 'revision_requested').length;
@@ -164,6 +174,7 @@ export default function AdminDashboard() {
         draftReleases,
         pendingAccessCodeRequests: accessCodes.filter(r => String(r?.status || '').toLowerCase() === 'pending').length,
         pendingContactMessages: pendingContacts,
+        pendingTranslations: pendingTranslationsCount,
       });
 
       // Build recent activity feed — last 12 acted items across all content types
@@ -171,25 +182,26 @@ export default function AdminDashboard() {
       const addActed = (items: any[], type: string, labelFn: (i: any) => string) => {
         items.forEach(i => {
           const s = String(i?.status || i?.profile_status || '').toLowerCase();
-          if (s === 'approved' || s === 'rejected' || s === 'revision_requested') {
+          if (s === 'approved' || s === 'rejected' || s === 'revision_requested' || s === 'published') {
             acted.push({
               id: i.id,
               label: labelFn(i),
               type,
-              status: s as RecentActivity['status'],
-              reviewedAt: i.reviewed_at || i.updated_at || i.created_at || '',
+              status: s === 'published' ? 'approved' : s as RecentActivity['status'],
+              reviewedAt: i.reviewed_at || i.updated_at || i.created_at || i.updatedAt || i.createdAt || '',
             });
           }
         });
       };
-      addActed(kalams,    'Kalam',    i => i.title || 'Untitled');
-      addActed(sadas,     'Sada',     i => i.title || 'Untitled');
-      addActed(articles,  'Article',  i => i.title || 'Untitled');
-      addActed(writers,   'Writer',   i => i.pen_name || i.full_name || i.email || 'Unknown');
-      addActed(vocalists, 'Vocalist', i => i.performance_name || i.full_name || i.email || 'Unknown');
-      addActed(producers, 'Producer', i => i.professional_name || i.full_name || i.email || 'Unknown');
-      addActed(literary,  'Literary', i => i.professional_name || i.full_name || i.email || 'Unknown');
-      addActed(studio,    'Studio',   i => i.studio_name || i.primary_contact_name || i.email || 'Unknown');
+      addActed(kalams,          'Kalam',       i => i.title || 'Untitled');
+      addActed(sadas,           'Sada',        i => i.title || 'Untitled');
+      addActed(articles,        'Article',     i => i.title || 'Untitled');
+      addActed(writers,         'Writer',      i => i.pen_name || i.full_name || i.email || 'Unknown');
+      addActed(vocalists,       'Vocalist',    i => i.performance_name || i.full_name || i.email || 'Unknown');
+      addActed(producers,       'Producer',    i => i.professional_name || i.full_name || i.email || 'Unknown');
+      addActed(literary,        'Literary',    i => i.professional_name || i.full_name || i.email || 'Unknown');
+      addActed(studio,          'Studio',      i => i.studio_name || i.primary_contact_name || i.email || 'Unknown');
+      addActed(translationReqs, 'Translation', i => `${i.languageName} for ${i.releaseTitle}`);
 
       acted.sort((a, b) => new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime());
       setRecentActivity(acted.slice(0, 12));
@@ -350,12 +362,20 @@ export default function AdminDashboard() {
       alert: stats.draftReleases > 0,
     },
     {
-      label: 'Contact Messages',
+      label: 'Institutional Inquiries',
       value: stats.pendingContactMessages,
-      meta: 'Unread messages',
+      meta: 'Pending review',
       icon: Mail,
-      link: '/admin/contact-messages',
+      link: '/admin/inquiries',
       alert: stats.pendingContactMessages > 0,
+    },
+    {
+      label: 'Translation Requests',
+      value: stats.pendingTranslations,
+      meta: 'Awaiting review',
+      icon: Globe,
+      link: '/admin/translation-requests',
+      alert: stats.pendingTranslations > 0,
     },
   ];
 
@@ -383,7 +403,8 @@ export default function AdminDashboard() {
     stats.pendingSessionRequests +
     stats.pendingAdoptions +
     stats.draftReleases +
-    stats.pendingContactMessages;
+    stats.pendingContactMessages +
+    stats.pendingTranslations;
 
   const stageCards = [
     {
@@ -411,12 +432,13 @@ export default function AdminDashboard() {
       stage: 'Stage 2',
       title: 'Content & Assignment',
       description: 'Review kalams, articles, and allocate contributors to active works.',
-      pending: stats.pendingKalams + stats.pendingSadas + stats.pendingArticles + stats.revisionRequested,
+      pending: stats.pendingKalams + stats.pendingSadas + stats.pendingArticles + stats.revisionRequested + stats.pendingTranslations,
       icon: Activity,
       links: [
         { label: 'Kalams', href: '/admin/kalams' },
         { label: 'Sadas', href: '/admin/sadas' },
         { label: 'Articles', href: '/admin/articles' },
+        { label: 'Translations', href: '/admin/translation-requests' },
         { label: 'Assignments', href: '/admin/performance-assignments' },
       ],
     },
@@ -440,11 +462,13 @@ export default function AdminDashboard() {
       description: 'Coordinate engagement channels and close financial obligations.',
       pending:
         stats.pendingPartnerships +
-        stats.pendingAdoptions,
+        stats.pendingAdoptions +
+        stats.pendingContactMessages,
       icon: DollarSign,
       links: [
         { label: 'Adoptions', href: '/admin/song-adoptions' },
         { label: 'Partnerships', href: '/admin/partnerships' },
+        { label: 'Inquiries', href: '/admin/inquiries' },
         { label: 'Royalties', href: '/admin/royalties' },
       ],
     },
@@ -591,17 +615,17 @@ export default function AdminDashboard() {
               Institutional Relations
             </h3>
             <p className="text-sm text-[var(--dash-text-secondary)] mb-4">
-              Review partnership proposals and coordinate sessions
+              Manage inquiries, partnership proposals, and session coordination
             </p>
             <div className="flex gap-3">
+              <Link href="/admin/inquiries" className="dashboard-btn-secondary text-sm">
+                Inquiries
+              </Link>
               <Link href="/admin/partnerships" className="dashboard-btn-secondary text-sm">
                 Partnerships
               </Link>
-              <Link href="/admin/session-requests" className="dashboard-btn-secondary text-sm">
-                Sessions
-              </Link>
-              <Link href="/admin/song-adoptions" className="dashboard-btn-secondary text-sm">
-                Adoptions
+              <Link href="/admin/translation-requests" className="dashboard-btn-secondary text-sm">
+                Translations
               </Link>
             </div>
           </div>

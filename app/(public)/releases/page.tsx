@@ -45,6 +45,7 @@ interface SyncResult {
     skippedCount: number;
     errorCount: number;
     checkedCount: number;
+    registryCount?: number;
     isFallback?: boolean;
     diagnostic?: {
         youtubeId: string;
@@ -66,6 +67,9 @@ interface SyncResult {
     };
     details?: {
         lookbackDays: number;
+        serverInfo?: {
+            dataFile: string;
+        };
     };
 }
 

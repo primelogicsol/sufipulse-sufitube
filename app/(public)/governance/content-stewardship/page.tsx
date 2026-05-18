@@ -1,8 +1,10 @@
+"use client";
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
-import { FileText, Globe, Shield, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle } from 'lucide-react';
+import { FileText, Globe, Shield, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Languages, Search, Sparkles, BookOpen } from 'lucide-react';
+import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 import Link from 'next/link';
 
 export default function ContentStewardship() {
@@ -12,334 +14,219 @@ export default function ContentStewardship() {
         'Russian', 'Bengali', 'Chinese', 'Japanese', 'English'
     ];
 
+    const stewardshipMandates = [
+        {
+            icon: Globe,
+            title: '17-Language Discipline',
+            description: 'Standardized multilingual distribution with native-script preservation across all releases.'
+        },
+        {
+            icon: Shield,
+            title: 'Source Integrity',
+            description: 'Original linguistic nuance protected through authorized translation and scholarly review.'
+        },
+        {
+            icon: FileText,
+            title: 'Thematic Coherence',
+            description: 'Unified interpretive framework maintained across all global translations and variants.'
+        },
+        {
+            icon: CheckCircle,
+            title: 'Doctrinal Alignment',
+            description: 'Interpretation verified against institutional doctrine and traditional sacred literature.'
+        }
+    ];
+
+    const subtitlePrinciples = [
+        { title: 'RTL Positioning', desc: 'Arabic, Urdu, and Persian scripts maintain directional integrity.' },
+        { title: 'Native-Script Preservation', desc: 'No romanization of non-Latin scripts unless mandated.' },
+        { title: 'Pronunciation Integrity', desc: 'Transliteration follows scholarly conventions, not phonetic convenience.' },
+        { title: 'Conceptual Precision', desc: 'Technical terms retain doctrinal meaning across all target languages.' }
+    ];
+
+    const interpretivePrinciples = [
+        { title: 'Doctrinal Clarity', desc: 'Alignment with institutional understanding of text and tradition.' },
+        { title: 'Theological Neutrality', desc: 'Avoiding sectarian bias or doctrinal deviation in framing.' },
+        { title: 'Non-Commercial Tone', desc: 'Avoiding sensationalism or entertainment-driven narratives.' },
+        { title: 'Cultural Nuance', desc: 'Respecting linguistic context without compromising core meaning.' }
+    ];
+
+    const reviewSteps = [
+        { id: 1, title: 'Language Approval', icon: Languages, desc: 'Source text accuracy check' },
+        { id: 2, title: 'Alignment Review', icon: Search, desc: 'Semantic consistency verify' },
+        { id: 3, title: 'Thematic Documentation', icon: BookOpen, desc: 'Interpretive guidance lock' },
+        { id: 4, title: 'Technical Verification', icon: FileText, desc: 'Subtitle timing and RTL check' },
+        { id: 5, title: 'Clearance Issued', icon: CheckCircle, desc: 'Final publication authorization' }
+    ];
+
+    const structuralBoundaries = [
+        {
+            action: 'No External Editing',
+            clarification: 'Translation modifications require formal institutional review'
+        },
+        {
+            action: 'No Post-Release Alteration',
+            clarification: 'Interpretive framing remains immutable after registry lock'
+        },
+        {
+            action: 'No Unauthorized Additions',
+            clarification: 'The 17-language framework is standardized globally'
+        },
+        {
+            action: 'Charter Compliance',
+            clarification: 'All decisions must conform to institutional Mithaq provisions'
+        }
+    ];
+
     return (
         <Layout>
-            <Section className="pt-24 pb-12">
-                <PageContainer>
-                    <div className="max-w-4xl">
-                        <h1 className="text-5xl font-bold text-white mb-2">
-                            Content Stewardship
-                        </h1>
-                        <p className="text-xl text-amber-400/90 mb-8 border-b border-amber-400/20 pb-4 inline-block">
-                            {roleDisplayMap.content_stewardship.mystical}
-                        </p>
+            <StudioHero 
+                badge="Linguistic & Thematic Alignment"
+                title="Content Stewardship"
+                mysticalName={roleDisplayMap.content_stewardship.mystical}
+                description="All releases undergo structured linguistic review, thematic alignment, and subtitle standardization prior to publication to ensure doctrinal integrity."
+            />
 
-                        <div className="max-w-2xl">
-                            <p className="text-neutral-300 leading-relaxed mb-4">
-                                All releases undergo structured linguistic review, thematic alignment, and subtitle standardization prior to publication.
-                            </p>
-                            <p className="text-neutral-300 leading-relaxed">
-                                Clear. Controlled.
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Stewardship Mandate"
+                            subtitle="Safeguarding the sacredness of sound and meaning through disciplined linguistic oversight"
+                        />
+
+                        <StudioCardGrid cols={4}>
+                            {stewardshipMandates.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={item.icon}
+                                    title={item.title}
+                                    description={item.description}
+                                />
+                            ))}
+                        </StudioCardGrid>
+
+                        <div className="mt-12 bg-neutral-950/50 border border-red-500/20 rounded-xl p-8 text-center max-w-3xl mx-auto shadow-2xl">
+                            <div className="flex items-center justify-center gap-4 text-amber-500 mb-2">
+                                <AlertTriangle size={20} />
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em]">Critical Responsibility</p>
+                            </div>
+                            <p className="text-neutral-300 text-sm font-medium">
+                                "Translation is not localization. It is doctrinal responsibility. We preserve the essence, not just the word."
                             </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
 
-            <Section className="py-12">
+            <Section background="midnight" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl space-y-20">
-                        <div>
-                            <h2 className="text-3xl font-bold text-white mb-6">
-                                Stewardship Mandate
-                            </h2>
-                            <div className="space-y-6">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="flex items-start gap-4">
-                                        <Globe className="w-5 h-5 text-neutral-500 mt-1 flex-shrink-0" />
-                                        <div>
-                                            <h3 className="text-lg font-medium text-neutral-200 mb-2">17-Language Subtitle Discipline</h3>
-                                            <p className="text-neutral-400">
-                                                Standardized multilingual distribution with native-script preservation
-                                            </p>
-                                        </div>
-                                    </div>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Global Subtitle Framework"
+                            subtitle="SufiPulse operates under a standardized 17-language subtitle sequence with RTL alignment protocols and linguistic integrity rules."
+                        />
 
-                                    <div className="flex items-start gap-4">
-                                        <Shield className="w-5 h-5 text-neutral-500 mt-1 flex-shrink-0" />
-                                        <div>
-                                            <h3 className="text-lg font-medium text-neutral-200 mb-2">Source-Language Integrity</h3>
-                                            <p className="text-neutral-400">
-                                                Original linguistic nuance protected through translation
-                                            </p>
-                                        </div>
+                        <div className="elite-card p-10 md:p-12 mb-12 shadow-inner">
+                            <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] text-center mb-10">Supported Institutional Languages</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-4">
+                                {languages.map((lang, idx) => (
+                                    <div key={idx} className="flex items-center gap-3 group">
+                                        <div className="w-1 h-1 rounded-full bg-amber-400/40 group-hover:bg-amber-400 transition-colors" />
+                                        <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest group-hover:text-white transition-colors">{lang}</span>
                                     </div>
-
-                                    <div className="flex items-start gap-4">
-                                        <FileText className="w-5 h-5 text-neutral-500 mt-1 flex-shrink-0" />
-                                        <div>
-                                            <h3 className="text-lg font-medium text-neutral-200 mb-2">Thematic Coherence</h3>
-                                            <p className="text-neutral-400">
-                                                Unified interpretive framework across all translations
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-4">
-                                        <CheckCircle className="w-5 h-5 text-neutral-500 mt-1 flex-shrink-0" />
-                                        <div>
-                                            <h3 className="text-lg font-medium text-neutral-200 mb-2">Doctrinal Alignment</h3>
-                                            <p className="text-neutral-400">
-                                                Interpretation verified against institutional doctrine
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-6 mt-8">
-                                    <div className="flex items-start gap-3">
-                                        <AlertTriangle className="w-5 h-5 text-neutral-500 mt-0.5 flex-shrink-0" />
-                                        <p className="text-neutral-400 leading-relaxed">
-                                            <span className="font-medium text-neutral-300">Translation is not localization.</span> It is doctrinal responsibility.
-                                        </p>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
 
-                        <div className="mt-20">
-                            <h2 className="text-3xl font-bold text-white mb-6">
-                                Global Subtitle Framework
-                            </h2>
-                            <div className="space-y-8">
-                                <p className="text-neutral-300 leading-relaxed">
-                                    SufiPulse operates under a standardized 17-language subtitle sequence with RTL alignment protocols and linguistic integrity rules.
-                                </p>
+                        <StudioCardGrid cols={2}>
+                            {subtitlePrinciples.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={Globe}
+                                    title={item.title}
+                                    description={item.desc}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
 
-                                <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-8">
-                                    <h3 className="text-lg font-medium text-neutral-200 mb-6">Supported Languages</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {languages.map((lang, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center gap-2 text-neutral-400"
-                                            >
-                                                <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full"></div>
-                                                <span className="text-sm">{lang}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Interpretive Integrity"
+                            subtitle="Thematic framing must preserve doctrinal clarity and avoid theological distortion"
+                        />
 
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                                        <h3 className="text-base font-medium text-neutral-200 mb-3">RTL Positioning Discipline</h3>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            Arabic, Urdu, Persian, and other right-to-left scripts maintain directional integrity across all platforms
-                                        </p>
-                                    </div>
+                        <StudioCardGrid cols={2}>
+                            {interpretivePrinciples.map((item, idx) => (
+                                <StudioLinkCard 
+                                    key={idx}
+                                    icon={Shield}
+                                    title={item.title}
+                                    description={item.desc}
+                                />
+                            ))}
+                        </StudioCardGrid>
+                    </div>
+                </PageContainer>
+            </Section>
 
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                                        <h3 className="text-base font-medium text-neutral-200 mb-3">Native-Script Preservation</h3>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            No romanization of non-Latin scripts except where linguistically mandated
-                                        </p>
-                                    </div>
+            <StudioWorkflowRoadmap 
+                title="Editorial Review Sequence"
+                badge="Linguistic Pipeline"
+                steps={reviewSteps}
+                description="Linguistic precision and thematic consistency verification."
+            />
 
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                                        <h3 className="text-base font-medium text-neutral-200 mb-3">Pronunciation Integrity</h3>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            Transliteration follows scholarly conventions, not phonetic convenience
-                                        </p>
-                                    </div>
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <StudioSectionHeader 
+                            title="Structural Boundaries"
+                            subtitle="Non-negotiable constraints to preserve institutional content integrity"
+                        />
 
-                                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-                                        <h3 className="text-base font-medium text-neutral-200 mb-3">No Conceptual Dilution</h3>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            Technical terms retain doctrinal precision across all target languages
-                                        </p>
+                        <div className="elite-card p-10 md:p-12">
+                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
+                                {structuralBoundaries.map((boundary, idx) => (
+                                    <div key={idx} className="space-y-1">
+                                        <p className="text-white text-sm font-bold uppercase tracking-wider">{boundary.action}</p>
+                                        <p className="text-neutral-500 text-[11px] leading-relaxed font-medium uppercase tracking-widest">{boundary.clarification}</p>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                        </div>
-
-                        <div className="mt-20">
-                            <h2 className="text-3xl font-bold text-white mb-6">
-                                Interpretive Integrity
-                            </h2>
-                            <div className="space-y-8">
-                                <p className="text-neutral-300 leading-relaxed">
-                                    Song themes are documented prior to release. Interpretive framing must preserve doctrinal clarity, avoid theological distortion, maintain non-commercial tone, and respect cross-cultural nuance.
-                                </p>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 bg-neutral-800 rounded-full flex items-center justify-center">
-                                                <Shield className="w-4 h-4 text-neutral-400" />
-                                            </div>
-                                            <h3 className="text-base font-medium text-neutral-200">Doctrinal Clarity</h3>
-                                        </div>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            Thematic interpretation aligns with institutional understanding of text and tradition
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 bg-neutral-800 rounded-full flex items-center justify-center">
-                                                <AlertTriangle className="w-4 h-4 text-neutral-400" />
-                                            </div>
-                                            <h3 className="text-base font-medium text-neutral-200">No Theological Distortion</h3>
-                                        </div>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            Interpretation does not introduce sectarian bias or doctrinal deviation
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 bg-neutral-800 rounded-full flex items-center justify-center">
-                                                <FileText className="w-4 h-4 text-neutral-400" />
-                                            </div>
-                                            <h3 className="text-base font-medium text-neutral-200">Non-Commercial Tone</h3>
-                                        </div>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            Thematic framing avoids sensationalism, clickbait, or entertainment-driven narratives
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 bg-neutral-800 rounded-full flex items-center justify-center">
-                                                <Globe className="w-4 h-4 text-neutral-400" />
-                                            </div>
-                                            <h3 className="text-base font-medium text-neutral-200">Cross-Cultural Nuance</h3>
-                                        </div>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">
-                                            Interpretation respects linguistic and cultural context without compromising meaning
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-20">
-                            <h2 className="text-3xl font-bold text-white mb-6">
-                                Editorial Review Sequence
-                            </h2>
-                            <div className="space-y-6">
-                                <p className="text-neutral-300 leading-relaxed mb-8">
-                                    All content passes through a structured review process ensuring linguistic precision and thematic consistency.
-                                </p>
-
-                                <div className="relative">
-                                    <div className="absolute left-6 top-12 bottom-12 w-px bg-neutral-800"></div>
-
-                                    <div className="space-y-8">
-                                        <div className="flex items-start gap-6 relative">
-                                            <div className="w-12 h-12 bg-neutral-900 border-2 border-neutral-700 rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
-                                                <span className="text-neutral-400 font-medium">1</span>
-                                            </div>
-                                            <div className="pt-2 flex-1">
-                                                <h3 className="text-lg font-medium text-neutral-200 mb-2">Primary Language Approval</h3>
-                                                <p className="text-neutral-400">Source text reviewed for linguistic accuracy and doctrinal alignment</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-start gap-6 relative">
-                                            <div className="w-12 h-12 bg-neutral-900 border-2 border-neutral-700 rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
-                                                <span className="text-neutral-400 font-medium">2</span>
-                                            </div>
-                                            <div className="pt-2 flex-1">
-                                                <h3 className="text-lg font-medium text-neutral-200 mb-2">Translation Alignment Review</h3>
-                                                <p className="text-neutral-400">All 17 language variants verified for semantic consistency</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-start gap-6 relative">
-                                            <div className="w-12 h-12 bg-neutral-900 border-2 border-neutral-700 rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
-                                                <span className="text-neutral-400 font-medium">3</span>
-                                            </div>
-                                            <div className="pt-2 flex-1">
-                                                <h3 className="text-lg font-medium text-neutral-200 mb-2">Thematic Documentation</h3>
-                                                <p className="text-neutral-400">Song theme, interpretive notes, and contextual guidance finalized</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-start gap-6 relative">
-                                            <div className="w-12 h-12 bg-neutral-900 border-2 border-neutral-700 rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
-                                                <span className="text-neutral-400 font-medium">4</span>
-                                            </div>
-                                            <div className="pt-2 flex-1">
-                                                <h3 className="text-lg font-medium text-neutral-200 mb-2">Subtitle Technical Verification</h3>
-                                                <p className="text-neutral-400">RTL positioning, timing accuracy, and platform compatibility confirmed</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-start gap-6 relative">
-                                            <div className="w-12 h-12 bg-neutral-900 border-2 border-neutral-700 rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
-                                                <span className="text-neutral-400 font-medium">5</span>
-                                            </div>
-                                            <div className="pt-2 flex-1">
-                                                <h3 className="text-lg font-medium text-neutral-200 mb-2">Publication Clearance</h3>
-                                                <p className="text-neutral-400">Final approval issued by designated stewardship authority</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-20">
-                            <h2 className="text-3xl font-bold text-white mb-6">
-                                Structural Boundaries
-                            </h2>
-                            <div className="space-y-6">
-                                <p className="text-neutral-300 leading-relaxed mb-8">
-                                    Content stewardship operates under non-negotiable constraints to preserve institutional integrity.
-                                </p>
-
-                                <div className="grid gap-4">
-                                    <div className="flex items-start gap-4 p-6 bg-neutral-900/30 border border-neutral-800 rounded-lg">
-                                        <div className="w-2 h-2 bg-neutral-600 rounded-full mt-2 flex-shrink-0"></div>
-                                        <div>
-                                            <h3 className="text-base font-medium text-neutral-200 mb-1">No External Subtitle Editing</h3>
-                                            <p className="text-sm text-neutral-400">Translation modifications require institutional review and approval</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-4 p-6 bg-neutral-900/30 border border-neutral-800 rounded-lg">
-                                        <div className="w-2 h-2 bg-neutral-600 rounded-full mt-2 flex-shrink-0"></div>
-                                        <div>
-                                            <h3 className="text-base font-medium text-neutral-200 mb-1">No Post-Release Theme Alteration</h3>
-                                            <p className="text-sm text-neutral-400">Interpretive framing is finalized prior to publication and remains immutable</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-4 p-6 bg-neutral-900/30 border border-neutral-800 rounded-lg">
-                                        <div className="w-2 h-2 bg-neutral-600 rounded-full mt-2 flex-shrink-0"></div>
-                                        <div>
-                                            <h3 className="text-base font-medium text-neutral-200 mb-1">No Unauthorized Language Additions</h3>
-                                            <p className="text-sm text-neutral-400">The 17-language framework is standardized across all releases</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-4 p-6 bg-neutral-900/30 border border-neutral-800 rounded-lg">
-                                        <div className="w-2 h-2 bg-neutral-600 rounded-full mt-2 flex-shrink-0"></div>
-                                        <div>
-                                            <h3 className="text-base font-medium text-neutral-200 mb-1">Charter Alignment Mandatory</h3>
-                                            <p className="text-sm text-neutral-400">All stewardship decisions must conform to institutional charter provisions</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-8 pt-8 border-t border-neutral-800">
-                                    <Link
-                                        href="/governance/majlis-e-nazr"
-                                        className="inline-flex items-center gap-2 text-neutral-400 hover:text-neutral-300 transition-colors"
-                                    >
-                                        <span>View Editorial Council</span>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </Link>
-                                </div>
-                            </div>
+                            <p className="text-[10px] text-neutral-600 font-black uppercase tracking-[0.2em] mt-12 pt-6 border-t border-white/5 text-center italic">
+                                Stewardship ensures clarity serves the sacred message.
+                            </p>
                         </div>
                     </div>
                 </PageContainer>
             </Section>
+
+            <StudioGovernancePanel 
+                title="Linguistic Stewardship"
+                description="Content stewardship at SufiPulse is custodial, not creative. All translations and interpretive framing must align with the institutional charter to ensure that spiritual art transcends linguistic barriers without losing its doctrinal essence."
+                primaryCTA={{ label: "Editorial Council", href: "/governance/majlis-e-nazr" }}
+                secondaryCTA={{ label: "Constitutional Mithaq", href: "/governance/mithaq" }}
+                shieldText="Governed Content Stewardship"
+                background="midnight"
+            />
+
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }

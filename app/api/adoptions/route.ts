@@ -7,7 +7,8 @@ import {
   getAdoptionsByRelease,
 } from '@/app/lib/server/adoption-store';
 import { getAuthUser, requireAdmin } from '@/server/middleware/authenticate';
-import { validateRequestBody, validateQueryParams } from '@/app/lib/api-middleware';
+import { validatePublicSubmission } from '@/app/lib/security';
+import { validateQueryParams } from '@/app/lib/api-middleware';
 import { adoptionApiSchema, adoptionsQuerySchema } from '@/app/lib/validation-schemas';
 
 /**
@@ -18,11 +19,22 @@ import { adoptionApiSchema, adoptionsQuerySchema } from '@/app/lib/validation-sc
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
 
-  const validationResult = await validateRequestBody(request, adoptionApiSchema);
-  if (validationResult instanceof NextResponse) return validationResult;
+  const validation = await validatePublicSubmission(request, adoptionApiSchema, {
+    rateLimit: 'standard',
+    sanitizationRules: {
+      releaseTitle: 'text',
+      sponsorName: 'text',
+      sponsorEmail: 'email',
+      sponsorCountry: 'text',
+      sponsorCity: 'text',
+      dedicationMessage: 'text',
+    }
+  });
+
+  if (validation instanceof NextResponse) return validation;
+  const body = validation.data;
 
   try {
-    const body = validationResult.data;
     const {
       releaseId,
       releaseTitle,

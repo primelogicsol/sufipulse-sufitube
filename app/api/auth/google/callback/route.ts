@@ -54,8 +54,9 @@ export async function GET(request: NextRequest) {
 
     // Role-based redirect
     const role = result.user.role;
+    const ADMIN_ROLES = ['admin', 'administrator', 'super_admin', 'governance_admin'];
     let destination = '/user/profile';
-    if (role === 'admin') destination = '/admin';
+    if (ADMIN_ROLES.includes(role)) destination = '/admin';
     else if (role === 'writer') destination = '/user/writer/dashboard';
     else if (role === 'vocalist') destination = '/user/vocalist/dashboard';
     else if (role === 'producer') destination = '/user/producer/dashboard';

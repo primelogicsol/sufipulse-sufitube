@@ -82,6 +82,10 @@ async function syncVideo(youtubeId: string) {
 
     const ytVideo = items[0];
     const snippet = ytVideo.snippet;
+    if (!snippet) {
+      console.warn(`No snippet for video ${youtubeId}`);
+      return;
+    }
 
     // 2. Compare metadata and prepare update
     const updatePayload: any = {};
@@ -103,7 +107,7 @@ async function syncVideo(youtubeId: string) {
 
     // Compare tags (YouTube API returns tags, CMS might not have a dedicated field)
     // For this example, we'll assume release.tags is an array of strings.
-    const cmsTags = release.tags || [];
+    const cmsTags = (release as any).tags || [];
     const ytTags = snippet.tags || [];
     if (JSON.stringify(cmsTags.sort()) !== JSON.stringify(ytTags.sort())) {
       console.log(`Tags differ.`);

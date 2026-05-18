@@ -13,6 +13,8 @@ interface AdopterDisplay {
   location?: string;
   adopterType: string;
   createdAt: string;
+  amount?: number;
+  dedicationMessage?: string;
 }
 
 export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdoptersProps) {
@@ -53,8 +55,9 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
             displayName,
             location,
             adopterType: a.adopterType || 'individual',
-            methodType: a.methodType || 'managed_sufitube',
             createdAt: a.createdAt,
+            amount: a.amountDue,
+            dedicationMessage: a.dedicationMessage,
           };
         });
 
@@ -154,7 +157,7 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
         {adopters.slice(0, showAll ? adopters.length : 3).map((adopter) => (
           <div
             key={adopter.id}
-            className="group relative bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-2xl p-6 transition-all duration-500 backdrop-blur-sm overflow-hidden"
+            className="group relative bg-[var(--color-slate)]/20 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-2xl p-6 transition-all duration-500 backdrop-blur-sm overflow-hidden flex flex-col justify-between"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold)]/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -164,21 +167,33 @@ export function RecentAdopters({ releaseId, limit = 6, onAdoptClick }: RecentAdo
                   <div className="w-8 h-8 rounded-lg bg-[var(--color-gold-muted)] flex items-center justify-center border border-[var(--color-gold)]/10 text-[var(--color-gold)]">
                     {getAdopterIcon(adopter.adopterType)}
                   </div>
-                  <span className="text-[var(--color-text-primary)] font-serif group-hover:text-[var(--color-gold)] transition-colors duration-300">
-                    {adopter.displayName}
-                  </span>
+                  <div className="min-w-0">
+                    <span className="text-[var(--color-text-primary)] font-serif group-hover:text-[var(--color-gold)] transition-colors duration-300 block truncate">
+                      {adopter.displayName}
+                    </span>
+                    {adopter.location && (
+                      <div className="flex items-center gap-1 text-[var(--color-text-tertiary)] text-[10px] mt-0.5">
+                        <MapPin className="w-2.5 h-2.5 text-[var(--color-gold)]/40" />
+                        <span className="font-light tracking-wide truncate">{adopter.location}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {getAdopterTypeLabel(adopter.adopterType) && (
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 px-2 py-0.5 rounded-full border border-[var(--color-gold)]/10">
-                    {getAdopterTypeLabel(adopter.adopterType)}
-                  </span>
-                )}
+                <div className="text-right flex flex-col items-end">
+                   <span className="text-[10px] font-bold text-[var(--color-gold)] mb-1">${adopter.amount?.toLocaleString()}</span>
+                   {getAdopterTypeLabel(adopter.adopterType) && (
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[var(--color-gold)]/40 bg-[var(--color-gold)]/5 px-1.5 py-0.5 rounded border border-[var(--color-gold)]/10">
+                      {getAdopterTypeLabel(adopter.adopterType)}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {adopter.location && (
-                <div className="flex items-center gap-2 text-[var(--color-text-tertiary)] text-xs">
-                  <MapPin className="w-3 h-3 text-[var(--color-gold)]/40" />
-                  <span className="font-light tracking-wide">{adopter.location}</span>
+              {adopter.dedicationMessage && (
+                <div className="pt-3 border-t border-[var(--color-border-strong)]/30">
+                   <p className="text-[11px] text-[var(--color-text-secondary)] italic leading-relaxed line-clamp-2">
+                     "{adopter.dedicationMessage}"
+                   </p>
                 </div>
               )}
             </div>

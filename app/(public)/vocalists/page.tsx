@@ -8,7 +8,7 @@ import { PrimaryButton } from '../../components/primitives/PrimaryButton';
 import { Card } from '../../components/primitives/Card';
 import { roleDisplayMap } from '../../components/lib/roleDisplayMap';
 import { useRef, useState, useEffect } from 'react';
-import { VocalistCredentialsForm } from '../../components/vocalists/VocalistCredentialsForm';
+import VocalistCredentialsForm from '../../components/vocalists/VocalistCredentialsForm';
 import Link from 'next/link';
 
 export default function Vocalists() {

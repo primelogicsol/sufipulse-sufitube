@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const siteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com'}/release-detail/${release.slug}`;
-    const languageName = languageCode.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const languageName = languageCode.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
 
     let sent = 0;
     const errors: string[] = [];

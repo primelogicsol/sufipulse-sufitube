@@ -31,6 +31,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (!application) {
+      // Find in literary (Ahl-e-Tahreer applications)
+      const literary = entityGetAll<any>('literary');
+      application = literary.find((l: any) => l.referenceId === id || l.id === id);
+      type = 'Literary / Ahl-e-Tahreer';
+    }
+
+    if (!application) {
+      // Find in studio (Karkhana-e-Sada applications)
+      const studios = entityGetAll<any>('studio');
+      application = studios.find((s: any) => s.referenceId === id || s.id === id);
+      type = 'Studio / Karkhana-e-Sada';
+    }
+
+    if (!application) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
 
