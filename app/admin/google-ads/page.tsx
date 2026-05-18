@@ -7,7 +7,7 @@ import {
   Search, Check, X, RefreshCw, Loader2, AlertCircle,
   DollarSign, Target, ExternalLink, Clock, CheckCircle2,
   MessageSquare, Rocket, ChevronDown, ChevronUp, User, Link2, Unlink,
-  ShieldCheck, Activity, Database, AlertTriangle, Fingerprint
+  ShieldCheck, Activity, Database, AlertTriangle, Fingerprint, List
 } from 'lucide-react';
 import type { GoogleAdsCampaignRequest, CampaignRequestStatus } from '../../lib/server/google-ads-campaign-request-store';
 
@@ -79,12 +79,14 @@ export default function AdminGoogleAdsPage() {
   const [statusFilter, setStatusFilter] = useState<CampaignRequestStatus | 'all'>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [adminNote, setAdminNote] = useState<Record<string, string>>({});
-  const [createForm, setCreateForm] = useState<Record<string, { youtubeId: string; customerId: string; budget: string }>>({});
+  const [createForm, setCreateForm] = useState<Record<string, { youtubeId: string; customerId: string; budget: string; dryRun: boolean }>>({});
   const [actionResult, setActionResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
   const [studioStatus, setStudioStatus] = useState<StudioStatus | null>(null);
   const [connectingStudio, setConnectingStudio] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
   const [refreshingDiagnostics, setRefreshingDiagnostics] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   // Load persistence on mount
   useEffect(() => {
@@ -142,7 +144,19 @@ export default function AdminGoogleAdsPage() {
     }
   }, []);
 
-  useEffect(() => { loadRequests(); loadStudioStatus(); }, [loadRequests, loadStudioStatus]);
+  const loadLogs = useCallback(async () => {
+    setLoadingLogs(true);
+    try {
+      const res = await fetch('/api/admin/google-ads/logs', { credentials: 'include' });
+      if (!res.ok) return;
+      setLogs(await res.json());
+    } catch {
+    } finally {
+      setLoadingLogs(false);
+    }
+  }, []);
+
+  useEffect(() => { loadRequests(); loadStudioStatus(); loadLogs(); }, [loadRequests, loadStudioStatus, loadLogs]);
 
   const handleConnectStudio = async () => {
     setConnectingStudio(true);
@@ -183,6 +197,7 @@ export default function AdminGoogleAdsPage() {
       if (!res.ok) throw new Error(data.error || 'Action failed');
       setActionResult((prev) => ({ ...prev, [adoptionId]: { ok: true, msg: 'Done.' } }));
       await loadRequests();
+      await loadLogs();
     } catch (e: any) {
       setActionResult((prev) => ({ ...prev, [adoptionId]: { ok: false, msg: e.message } }));
     } finally {
@@ -218,6 +233,7 @@ export default function AdminGoogleAdsPage() {
           </div>
         )}
 
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-neutral-100">Google Ads Operations</h1>
@@ -243,7 +259,7 @@ export default function AdminGoogleAdsPage() {
           </div>
         </div>
 
-        {/* Operations Console */}
+        {/* Operations Console (Infrastructure Health) */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
           <div className="p-5 border-b border-neutral-800 bg-neutral-800/20 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -262,6 +278,7 @@ export default function AdminGoogleAdsPage() {
           </div>
           
           <div className="grid lg:grid-cols-3 gap-0 divide-x divide-neutral-800">
+            {/* Managed Account Status */}
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-xl ${studioStatus?.connected ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
@@ -302,6 +319,7 @@ export default function AdminGoogleAdsPage() {
               </button>
             </div>
 
+            {/* Verification Matrix Details */}
             <div className="p-6 lg:col-span-2 space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
@@ -417,7 +435,7 @@ export default function AdminGoogleAdsPage() {
           <div className="space-y-3">
             {filtered.map((req) => {
               const isExpanded = expanded === req.adoptionId;
-              const form = createForm[req.adoptionId] ?? { youtubeId: req.youtubeVideoId ?? '', customerId: req.googleAdsCustomerId ?? '', budget: String(req.budgetAmount) };
+              const form = createForm[req.adoptionId] ?? { youtubeId: req.youtubeVideoId ?? '', customerId: req.googleAdsCustomerId ?? '', budget: String(req.budgetAmount), dryRun: true };
               const result = actionResult[req.adoptionId];
               const isActing = actionLoading?.adoptionId === req.adoptionId;
 
@@ -426,6 +444,7 @@ export default function AdminGoogleAdsPage() {
                   key={req.adoptionId}
                   className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-sm"
                 >
+                  {/* Row header */}
                   <div
                     className="flex items-start gap-4 p-5 cursor-pointer hover:bg-neutral-800/30 transition-colors"
                     onClick={() => setExpanded(isExpanded ? null : req.adoptionId)}
@@ -436,6 +455,11 @@ export default function AdminGoogleAdsPage() {
                           {req.releaseTitle || req.releaseId}
                         </span>
                         <StatusBadge status={req.status} />
+                        {req.oauthConnected && (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
+                            <Check className="w-3 h-3" /> OAuth Connected
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-neutral-500">
                         <span className="flex items-center gap-1">
@@ -447,14 +471,32 @@ export default function AdminGoogleAdsPage() {
                           ${req.budgetAmount}
                         </span>
                         <span className="flex items-center gap-1">
+                          <Target className="w-3.5 h-3.5" />
+                          {req.campaignObjective}
+                        </span>
+                        <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
                           {new Date(req.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
+                    <div className="flex-shrink-0 flex items-center gap-2">
+                      {req.releaseSlug && (
+                        <a
+                          href={`/release-detail/${req.releaseSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1.5 text-neutral-500 hover:text-neutral-300 transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
+                    </div>
                   </div>
 
+                  {/* Expanded detail */}
                   {isExpanded && (
                     <div className="border-t border-neutral-800 p-5 space-y-5">
                       <div className="grid sm:grid-cols-2 gap-4 text-sm">
@@ -470,86 +512,150 @@ export default function AdminGoogleAdsPage() {
                         </div>
                         {req.methodType !== 'managed_sufitube' && (
                           <div>
-                            <p className="text-neutral-500 mb-0.5">Customer ID</p>
-                            <span className="text-neutral-300 font-mono">{req.googleAdsCustomerId || '—'}</span>
+                            <p className="text-neutral-500 mb-0.5">Google Ads Customer ID</p>
+                            <span className="text-neutral-300">{req.googleAdsCustomerId || '—'}</span>
                           </div>
                         )}
                         <div>
-                          <p className="text-neutral-500 mb-0.5">Video ID</p>
+                          <p className="text-neutral-500 mb-0.5">Target Regions</p>
+                          <span className="text-neutral-300">{req.targetRegions.join(', ')}</span>
+                        </div>
+                        <div>
+                          <p className="text-neutral-500 mb-0.5">Target Languages</p>
+                          <span className="text-neutral-300">{req.targetLanguages.join(', ')}</span>
+                        </div>
+                        <div>
+                          <p className="text-neutral-500 mb-0.5">YouTube Video ID</p>
                           <span className="text-neutral-300 font-mono">{req.youtubeVideoId || '—'}</span>
                         </div>
                       </div>
 
+                      {/* Admin note */}
+                      {req.adminNote && (
+                        <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-lg px-4 py-3">
+                          <p className="text-xs text-neutral-500 mb-1">Admin note</p>
+                          <p className="text-sm text-neutral-300">{req.adminNote}</p>
+                        </div>
+                      )}
+
+                      {/* Action result */}
                       {result?.msg && (
                         <div className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm ${
-                          result.ok ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
+                          result.ok
+                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                            : 'bg-red-500/10 border-red-500/30 text-red-400'
                         }`}>
                           {result.ok ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                           {result.msg}
                         </div>
                       )}
 
-                      <div className="flex flex-wrap gap-2">
-                        {req.status !== 'approved' && req.status !== 'campaign_created' && (
+                      {/* Quick actions */}
+                      {req.status !== 'campaign_created' && (
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-800/50">
+                          {req.status !== 'approved' && (
+                            <button
+                              disabled={isActing}
+                              onClick={() => doAction(req.adoptionId, 'approve')}
+                              className="flex items-center gap-1.5 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 text-sm rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              Approve
+                            </button>
+                          )}
+                          {req.status !== 'rejected' && (
+                            <button
+                              disabled={isActing}
+                              onClick={() => doAction(req.adoptionId, 'reject')}
+                              className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-sm rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              Reject
+                            </button>
+                          )}
                           <button
                             disabled={isActing}
-                            onClick={() => doAction(req.adoptionId, 'approve')}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 text-sm rounded-lg transition-colors disabled:opacity-50"
+                            onClick={() => doAction(req.adoptionId, 'request_changes')}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm rounded-lg transition-colors disabled:opacity-50"
                           >
-                            <Check className="w-3.5 h-3.5" /> Approve
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            Request Changes
                           </button>
-                        )}
-                        {req.status !== 'rejected' && req.status !== 'campaign_created' && (
-                          <button
-                            disabled={isActing}
-                            onClick={() => doAction(req.adoptionId, 'reject')}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-sm rounded-lg transition-colors disabled:opacity-50"
-                          >
-                            <X className="w-3.5 h-3.5" /> Reject
-                          </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
+                      {/* Create Campaign panel */}
                       {(req.status === 'approved' || req.status === 'campaign_failed') && (
-                        <div className="bg-neutral-800/40 border border-neutral-700/50 rounded-xl p-4 space-y-4">
-                          <p className="text-sm font-semibold text-neutral-300">
-                            <Rocket className="w-4 h-4 inline-block mr-1.5 text-blue-400" />
-                            Launch Campaign
-                          </p>
-                          <div className="grid sm:grid-cols-3 gap-3">
-                            <input
-                              value={form.youtubeId}
-                              onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, youtubeId: e.target.value } }))}
-                              placeholder="YouTube ID"
-                              className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200"
-                            />
-                            {req.methodType !== 'managed_sufitube' && (
-                              <input
-                                value={form.customerId}
-                                onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, customerId: e.target.value } }))}
-                                placeholder="Customer ID"
-                                className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200"
-                              />
-                            )}
-                            <input
-                              type="number"
-                              value={form.budget}
-                              onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, budget: e.target.value } }))}
-                              placeholder="Budget"
-                              className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200"
-                            />
+                        <div className="bg-neutral-800/40 border border-neutral-700/50 rounded-xl p-4 space-y-4 shadow-inner">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-neutral-300">
+                              <Rocket className="w-4 h-4 inline-block mr-1.5 text-blue-400" />
+                              Launch Google Ads Campaign
+                            </p>
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                              <div className="relative">
+                                <input
+                                  type="checkbox"
+                                  className="sr-only peer"
+                                  checked={form.dryRun}
+                                  onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, dryRun: e.target.checked } }))}
+                                />
+                                <div className="w-8 h-4 bg-neutral-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                              </div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 group-hover:text-neutral-400 transition-colors">Dry Run</span>
+                            </label>
                           </div>
+
+                          <div className="grid sm:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-xs text-neutral-500 mb-1">YouTube Video ID</label>
+                              <input
+                                value={form.youtubeId}
+                                onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, youtubeId: e.target.value } }))}
+                                placeholder="e.g. dQw4w9WgXcQ"
+                                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 focus:outline-none"
+                              />
+                            </div>
+                            {req.methodType !== 'managed_sufitube' && (
+                              <div>
+                                <label className="block text-xs text-neutral-500 mb-1">Customer ID</label>
+                                <input
+                                  value={form.customerId}
+                                  onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, customerId: e.target.value } }))}
+                                  placeholder="123-456-7890"
+                                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 focus:outline-none"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <label className="block text-xs text-neutral-500 mb-1">Budget (USD)</label>
+                              <input
+                                type="number"
+                                value={form.budget}
+                                onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, budget: e.target.value } }))}
+                                placeholder="50"
+                                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
                           <button
-                            disabled={isActing}
-                            onClick={() => doAction(req.adoptionId, 'create_campaign', {
-                              youtubeVideoId: form.youtubeId,
-                              selectedCustomerId: req.methodType === 'managed_sufitube' ? undefined : form.customerId,
-                              budgetAmount: Number(form.budget),
-                            })}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                            disabled={isActing || !form.youtubeId || (req.methodType !== 'managed_sufitube' && !form.customerId)}
+                            onClick={() =>
+                              doAction(req.adoptionId, 'create_campaign', {
+                                youtubeVideoId: form.youtubeId,
+                                selectedCustomerId: req.methodType === 'managed_sufitube' ? undefined : form.customerId,
+                                budgetAmount: Number(form.budget),
+                                dry_run: form.dryRun
+                              })
+                            }
+                            className={`flex items-center gap-2 px-4 py-2.5 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 ${form.dryRun ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-blue-600 hover:bg-blue-500'}`}
                           >
-                            <Rocket className="w-4 h-4" /> 
-                            {isActing ? 'Launching…' : 'Launch in Google Ads'}
+                            {isActing && actionLoading?.action === 'create_campaign' ? (
+                              <><Loader2 className="w-4 h-4 animate-spin" /> {form.dryRun ? 'Validating…' : 'Creating…'}</>
+                            ) : (
+                              <>{form.dryRun ? <ShieldCheck className="w-4 h-4" /> : <Rocket className="w-4 h-4" />} {form.dryRun ? 'Run Campaign Validation (Dry Run)' : 'Create Campaign in Google Ads'}</>
+                            )}
                           </button>
                         </div>
                       )}
@@ -560,6 +666,57 @@ export default function AdminGoogleAdsPage() {
             })}
           </div>
         )}
+
+        {/* Operational Logs Section */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-neutral-800 bg-neutral-800/20 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <List className="w-5 h-5 text-neutral-400" />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-300">Operational Logs</h2>
+            </div>
+            <button
+              onClick={loadLogs}
+              disabled={loadingLogs}
+              className="p-1.5 hover:bg-neutral-800 rounded-lg text-neutral-500 hover:text-neutral-300 transition-all disabled:opacity-50"
+              title="Refresh Logs"
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingLogs ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+          
+          <div className="max-h-[400px] overflow-y-auto bg-black/20 font-mono text-[11px] leading-relaxed">
+            {logs.length === 0 ? (
+              <div className="p-10 text-center text-neutral-700 italic">No operational logs found.</div>
+            ) : (
+              <div className="divide-y divide-neutral-800/50">
+                {logs.map((log, idx) => (
+                  <div key={idx} className="p-3 hover:bg-neutral-800/30 transition-colors flex gap-4">
+                    <span className="text-neutral-600 whitespace-nowrap">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                          log.type.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                          log.type.includes('success') ? 'bg-green-500/20 text-green-400' : 'bg-neutral-800 text-neutral-400'
+                        }`}>
+                          {log.type.replace(/_/g, ' ')}
+                        </span>
+                        {log.isDryRun && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-500/20 text-blue-400 border border-blue-500/30">Dry Run</span>
+                        )}
+                        {log.step && <span className="text-neutral-500">Step: <span className="text-neutral-300">{log.step}</span></span>}
+                      </div>
+                      <div className="text-neutral-400 break-all">
+                        {log.error ? <span className="text-red-400">{log.error}</span> : 
+                         log.resourceName ? <span className="text-blue-400">{log.resourceName}</span> : 
+                         log.adoption_id ? <span className="text-neutral-500">Adoption: {log.adoption_id}</span> : null}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
