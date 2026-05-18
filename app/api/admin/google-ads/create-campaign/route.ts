@@ -183,31 +183,42 @@ export async function POST(request: NextRequest) {
   try {
     if ((method_type as string) === 'managed_sufitube') {
       if (!studioDevToken || !studioCustomerId) {
-        throw new Error('SufiTube Google Ads credentials not configured.');
+        const msg = 'SufiTube Google Ads credentials are not configured for this environment (missing Developer Token or Studio Customer ID).';
+        await logOperation({ type: 'config_error', error: msg, adoption_id, isDryRun });
+        return NextResponse.json({ error: msg }, { status: 503 });
       }
       const studioToken = await getValidStudioAccessToken();
       if (!studioToken) {
-        throw new Error('SufiTube managed account is not connected.');
+        const msg = 'SufiTube managed account is not connected. Complete OAuth setup at /admin/google-ads.';
+        await logOperation({ type: 'config_error', error: msg, adoption_id, isDryRun });
+        return NextResponse.json({ error: msg }, { status: 503 });
       }
       accessToken = studioToken;
       developerToken = studioDevToken;
       loginCustomerId = studioLoginCid;
       customerId = studioCustomerId;
     } else {
-      if (!sponsor_customer_id) throw new Error("Sponsor's Google Ads customer ID is required.");
-      if (!studioDevToken) throw new Error('GOOGLE_ADS_DEVELOPER_TOKEN is required.');
+      if (!sponsor_customer_id) return NextResponse.json({ error: "Sponsor's Google Ads customer ID is required." }, { status: 400 });
+      if (!studioDevToken) {
+        const msg = 'GOOGLE_ADS_DEVELOPER_TOKEN is required even for sponsor-managed campaigns.';
+        await logOperation({ type: 'config_error', error: msg, adoption_id, isDryRun });
+        return NextResponse.json({ error: msg }, { status: 503 });
+      }
 
       const oauthRecord = await getAdoptionGoogleOAuthRecord(adoption_id);
       if (!oauthRecord?.accessToken && !sponsor_access_token) {
-        throw new Error('Sponsor Google OAuth token not found.');
+        return NextResponse.json({ error: 'Sponsor Google OAuth token not found. Complete the Google OAuth connection step first.' }, { status: 400 });
       }
 
       if (oauthRecord?.accessibleCustomerIds?.length) {
         const normalized = sponsor_customer_id.replace(/-/g, '');
         const allowed = oauthRecord.accessibleCustomerIds.some((cid) => cid.replace(/-/g, '') === normalized);
-        if (!allowed) throw new Error(`Customer ID (${sponsor_customer_id}) is not authorized.`);
+        if (!allowed) {
+          return NextResponse.json({ error: `The provided customer ID (${sponsor_customer_id}) is not in the authorized Google Ads accounts for this adoption OAuth connection.` }, { status: 400 });
+        }
       }
 
+      // Refresh token if it is expiring soon
       accessToken = oauthRecord ? await getValidAccessToken(adoption_id, oauthRecord) : sponsor_access_token!;
       developerToken = studioDevToken;
       customerId = sponsor_customer_id;
