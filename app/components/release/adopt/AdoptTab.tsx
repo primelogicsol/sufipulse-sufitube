@@ -1047,9 +1047,9 @@ export function AdoptTab({ release }: AdoptTabProps) {
     const isProduction = process.env.NODE_ENV === 'production';
     const old5DollarLink = 'https://buy.stripe.com/5kAbJ3fdveLkav6000'; // Example old link pattern
     
-    if (paymentLink.includes('test_') || (isProduction && paymentLink === old5DollarLink)) {
-      setSubmitError('Live payment link is not configured correctly for this sponsorship tier. Please contact support.');
-      return;
+    // In production, block test links or old deprecated links. In dev, allow test links.
+    if (isProduction && (paymentLink.includes('test_') || paymentLink === old5DollarLink)) {
+      paymentLink = ''; // Clear to trigger manual fallback
     }
 
     // Redirect to Stripe Payment Link if configured
@@ -1093,16 +1093,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
       return;
     }
 
-    // 2. Fallback to Manual Coordination for Custom Budget if no link exists
-    if (selectedTierId === 'custom' || !paymentLink) {
+    // 2. Fallback to Manual Coordination if no link exists or was invalidated
+    if (!paymentLink) {
       setIsSubmitting(true);
-      if (selectedTierId === 'custom') {
-        setSubmitError('Custom budget request submitted. Our team will review your request and contact you to coordinate payment.');
-      } else {
-        setSubmitError('Live payment link is not configured for this tier. Please contact support.');
-        setIsSubmitting(false);
-        return;
-      }
+      const manualMessage = selectedTierId === 'custom'
+        ? 'Custom budget request submitted. Our team will review your request and contact you to coordinate payment.'
+        : 'Sponsorship request submitted. Our team will contact you to coordinate the contribution manually as the automated payment link for this tier is being verified.';
+      
+      setSubmitError(manualMessage);
       
       try {
         const patchRes = await fetch(`/api/adoptions/${adoption.id}`, {
@@ -2641,8 +2639,11 @@ export function AdoptTab({ release }: AdoptTabProps) {
               </div>
             </div>
             
-            <a href="/user/adoptions" className="block w-full py-4 border border-[var(--color-gold)]/20 hover:border-[var(--color-gold)]/50 text-[var(--color-gold)] text-center text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl transition-all">
-              Return to Your Adoptions
+            <a 
+              href={adoption ? `/adopt-song/request/${adoption.id}?token=${adoption.trackingToken}` : '/user/adoptions'} 
+              className="block w-full py-4 border border-[var(--color-gold)]/20 hover:border-[var(--color-gold)]/50 text-[var(--color-gold)] text-center text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl transition-all"
+            >
+              Track Your Sponsorship
             </a>
           </div>
         </div>
