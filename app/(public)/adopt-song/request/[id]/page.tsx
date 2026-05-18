@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Check, Clock, Loader2, AlertCircle, Music, ArrowLeft, ExternalLink, Copy } from 'lucide-react';
+import { Check, Clock, Loader2, AlertCircle, Music, ArrowLeft, ExternalLink, Copy, Lock } from 'lucide-react';
 
 const TIMELINE_STEPS_MANAGED = [
   { key: 'submitted',        label: 'Submitted',        detail: 'Your sponsorship request has been received.' },
@@ -82,13 +82,31 @@ export default function AdoptionTrackingPage() {
   const { id } = useParams<{ id: string }>();
   const [adoption, setAdoption] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
-    fetch(`/api/adoptions/${id}`)
-      .then((res) => res.ok ? res.json() : null)
-      .then((record) => { setAdoption(record || null); setLoading(false); })
-      .catch(() => setLoading(false));
+    
+    // Get token from URL search params
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get('token');
+
+    fetch(`/api/adoptions/${id}${token ? `?token=${token}` : ''}`)
+      .then((res) => {
+        if (res.status === 403) {
+          throw new Error('UNAUTHORIZED');
+        }
+        return res.ok ? res.json() : null;
+      })
+      .then((record) => { 
+        if (!record) throw new Error('NOT_FOUND');
+        setAdoption(record); 
+        setLoading(false); 
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
   }, [id]);
 
   if (loading) {
@@ -99,7 +117,33 @@ export default function AdoptionTrackingPage() {
     );
   }
 
-  if (!adoption) {
+  if (error === 'UNAUTHORIZED') {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+        <div className="text-center space-y-6 max-w-md px-6">
+          <div className="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-3xl flex items-center justify-center mx-auto rotate-12">
+            <Lock className="w-10 h-10 text-red-500 -rotate-12" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-serif text-neutral-100">Access Denied</h2>
+            <p className="text-neutral-500 text-sm leading-relaxed">
+              This tracking page requires a secure access token. Please use the original link sent to your email or provided during submission.
+            </p>
+          </div>
+          <div className="pt-4">
+            <Link href="/">
+              <button className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+                Return to SufiPulse
+              </button>
+            </Link>
+          </div>
+          <p className="text-[10px] text-neutral-700 uppercase tracking-widest">Security ID: {id?.slice(-8)}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!adoption || error === 'NOT_FOUND') {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
         <div className="text-center space-y-4 max-w-md px-4">
