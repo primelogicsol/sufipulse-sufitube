@@ -12,17 +12,28 @@ import { sendAdoptionStatusEmail } from '@/server/services/email';
 /**
  * GET /api/adoptions/[id]
  * Public by ID — merges adoption record + payment + campaign request status.
- * No auth required (ID is a UUID and serves as access token for tracking).
+ * Requires token query parameter for secure access.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { searchParams } = new URL(request.url);
+  const token = searchParams.get('token');
 
   const adoption = getAdoptionRecord(id);
   if (!adoption) {
     return NextResponse.json({ error: 'Adoption not found' }, { status: 404 });
+  }
+
+  // Security: If the record has a trackingToken, it MUST match the provided token.
+  if (adoption.trackingToken && adoption.trackingToken !== token) {
+    // Check if it's an admin
+    const user = await getAuthUser(request);
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized access to tracking page' }, { status: 403 });
+    }
   }
 
   const payment = await getAdoptionPaymentRecord(id);

@@ -133,6 +133,9 @@ export interface AdoptionRecord {
   adminAdopterApproved?: boolean;
   publicAdopterEligible?: boolean;
 
+  // Security
+  trackingToken?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -186,6 +189,7 @@ export function createAdoptionRecord(
     ...ownership,
     ...data,
     id: randomUUID(),
+    trackingToken: randomUUID().replace(/-/g, '').slice(0, 16),
     createdAt: now,
     updatedAt: now,
   };

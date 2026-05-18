@@ -1623,18 +1623,31 @@ export function AdoptTab({ release }: AdoptTabProps) {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest ml-1">Google Ads Customer ID</label>
-                  <input
-                    type="text"
-                    value={enteredCustomerId}
-                    onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
-                    placeholder="xxx-xxx-xxxx"
-                    className="w-full bg-[var(--color-midnight)]/30 border border-[var(--color-border-strong)] focus:border-blue-500/50 rounded-2xl px-6 py-4 text-[var(--color-text-primary)] font-mono text-lg font-bold tracking-widest focus:outline-none transition-all"
-                  />
-                  <p className="text-[10px] text-[var(--color-text-tertiary)] leading-relaxed ml-1">
-                    Enter the 10-digit ID found in the top-right corner of your Google Ads dashboard.
-                  </p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest ml-1">Google Ads Customer ID</label>
+                    <input
+                      type="text"
+                      value={enteredCustomerId}
+                      onChange={e => setEnteredCustomerId(formatCustomerId(e.target.value))}
+                      placeholder="xxx-xxx-xxxx"
+                      className="w-full bg-[var(--color-midnight)]/30 border border-[var(--color-border-strong)] focus:border-blue-500/50 rounded-2xl px-6 py-4 text-[var(--color-text-primary)] font-mono text-lg font-bold tracking-widest focus:outline-none transition-all"
+                    />
+                  </div>
+                  
+                  <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Globe className="w-3 h-3 text-blue-400" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-[var(--color-text-secondary)] font-medium">Where to find your ID?</p>
+                        <p className="text-[10px] text-[var(--color-text-tertiary)] leading-relaxed">
+                          Your 10-digit Customer ID is located in the top-right corner of your Google Ads dashboard, next to your account name or email.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -1653,16 +1666,24 @@ export function AdoptTab({ release }: AdoptTabProps) {
           </div>
 
           <div className="space-y-4">
-            <button
-              type="button"
-              disabled={isVerifying || !targetValid}
-              onClick={() => handleVerifyAndContinue(enteredCustomerId || (accountsToShow[0] ?? ''))}
-              className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
-            >
-              {isVerifying
-                ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying Account…</>
-                : <><Check className="w-5 h-5 group-hover:scale-110 transition-transform" /> Verify & Continue</>}
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                disabled={isVerifying || !targetValid}
+                onClick={() => handleVerifyAndContinue(enteredCustomerId || (accountsToShow[0] ?? ''))}
+                className="group w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--color-border-strong)] disabled:text-[var(--color-text-tertiary)] disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-blue-500/10 flex items-center justify-center gap-3 active:scale-[0.99]"
+              >
+                {isVerifying
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying Account…</>
+                  : <><Check className="w-5 h-5 group-hover:scale-110 transition-transform" /> Verify & Continue</>}
+              </button>
+              
+              {!targetValid && enteredCustomerId.replace(/-/g, '').length > 0 && (
+                <p className="text-[10px] text-center text-[var(--color-error)]/70 animate-in fade-in slide-in-from-top-1">
+                  Please enter a valid 10-digit Google Ads Customer ID
+                </p>
+              )}
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <button
@@ -2501,7 +2522,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
               <div className="grid gap-3">
                 <a 
-                  href={adoption ? `/adopt-song/request/${adoption.id}` : '#'} 
+                  href={adoption ? `/adopt-song/request/${adoption.id}?token=${adoption.trackingToken}` : '#'} 
                   className="flex items-center justify-between px-6 py-4 bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/40 rounded-2xl transition-all group"
                 >
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">View Request Status</span>
