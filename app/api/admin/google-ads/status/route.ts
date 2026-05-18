@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { getGoogleAdsAvailability } from '@/lib/google-ads/config';
 import { getGoogleAdsUserOAuth } from '@/app/lib/server/google-ads-oauth-store';
+import { runInternalVerification } from '@/lib/google-ads/verification-matrix';
 
 /**
  * GET /api/admin/google-ads/status
@@ -14,9 +15,13 @@ export async function GET(request: NextRequest) {
   const availability = getGoogleAdsAvailability(true);
   
   // Check "Studio" account (used for managed_sufitube)
-  // In this project, the Studio account is often the same as an admin's account 
-  // or a specific fixed userId. Let's check for a common admin record.
   const studioRecord = await getGoogleAdsUserOAuth('admin') || await getGoogleAdsUserOAuth(auth.id);
+
+  // Run full internal verification matrix for the studio account
+  const verification = studioRecord ? await runInternalVerification({
+    userId: studioRecord.userId,
+    targetCustomerId: studioRecord.verifiedCustomerId || undefined
+  }) : null;
 
   return NextResponse.json({
     ...availability,
@@ -26,8 +31,11 @@ export async function GET(request: NextRequest) {
       customerId: studioRecord.verifiedCustomerId,
       expiresAt: studioRecord.expiresAt,
       updatedAt: studioRecord.updatedAt,
+      verification: verification,
     } : { connected: false },
     tokenRefreshWorking: !!studioRecord?.refreshToken,
     accessibleCustomersTestAvailable: !!studioRecord?.accessToken,
+    infrastructureStatus: verification?.oauth.valid ? 'HEALTHY' : 'DEGRADED',
+    lastCheck: new Date().toISOString(),
   });
 }
