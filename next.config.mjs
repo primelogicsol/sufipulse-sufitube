@@ -108,3 +108,4 @@ const sentryWebpackPluginOptions = {
 };
 
 export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+ 
