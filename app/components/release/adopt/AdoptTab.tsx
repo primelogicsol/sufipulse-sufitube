@@ -1264,7 +1264,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
             ) : isEligibleForDirect && googleAdsConfigured === false ? (
               <div className="bg-[var(--color-midnight)]/50 border border-[var(--color-border-strong)] rounded-2xl px-4 py-4 text-center">
                 <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
-                  Google Ads integration is temporarily unavailable.
+                  Google Ads Direct is undergoing infrastructure enhancement and will return after operational verification.
                 </p>
               </div>
             ) : (
