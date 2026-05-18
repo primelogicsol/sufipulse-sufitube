@@ -128,6 +128,12 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [customModalAmount, setCustomModalAmount] = useState('');
   const [customModalError, setCustomModalError] = useState('');
 
+  // Phase 2A: Google Ads Direct Feature Flag
+  const ENABLE_GOOGLE_ADS_DIRECT = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ADS_DIRECT === 'true';
+  const isAdmin = user?.role === 'admin';
+  const isDev = process.env.NODE_ENV === 'development';
+  const showGoogleAdsDirect = ENABLE_GOOGLE_ADS_DIRECT || isAdmin || isDev;
+
   // ── Effects ───────────────────────────────────────────────────────────────
 
   // Check Stripe availability on mount
@@ -1195,14 +1201,14 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
         {/* ── RIGHT CARD: Use My Google Ads ── */}
         <div
-          onClick={() => googleAdsConfigured !== false ? handleMethodSelect('use_my_google_ads') : undefined}
+          onClick={() => (showGoogleAdsDirect && googleAdsConfigured !== false) ? handleMethodSelect('use_my_google_ads') : undefined}
           className={`group relative flex flex-col bg-[var(--color-slate)]/40 border rounded-3xl transition-all duration-500 overflow-hidden backdrop-blur-sm ${
-            googleAdsConfigured !== false
+            (showGoogleAdsDirect && googleAdsConfigured !== false)
               ? 'border-[var(--color-border-strong)] hover:border-blue-500/40 cursor-pointer'
               : 'border-[var(--color-border-strong)]/50 opacity-60 cursor-default'
           }`}
         >
-          {googleAdsConfigured !== false && (
+          {(showGoogleAdsDirect && googleAdsConfigured !== false) && (
             <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           )}
 
@@ -1218,7 +1224,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
             <div className="space-y-4">
               <h4 className={`text-2xl font-serif transition-colors duration-300 ${
-                googleAdsConfigured !== false ? 'text-[var(--color-text-primary)] group-hover:text-blue-400' : 'text-[var(--color-text-tertiary)]'
+                (showGoogleAdsDirect && googleAdsConfigured !== false) ? 'text-[var(--color-text-primary)] group-hover:text-blue-400' : 'text-[var(--color-text-tertiary)]'
               }`}>
                 Google Ads Direct
               </h4>
@@ -1243,16 +1249,28 @@ export function AdoptTab({ release }: AdoptTabProps) {
               ))}
             </ul>
 
-            {googleAdsConfigured !== false ? (
-              <button
-                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-blue-500/10 active:scale-[0.98]"
-              >
-                Connect Google Ads Account
-              </button>
+            {showGoogleAdsDirect ? (
+              googleAdsConfigured !== false ? (
+                <button
+                  className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-blue-500/10 active:scale-[0.98]"
+                >
+                  Connect Google Ads Account
+                </button>
+              ) : (
+                <div className="bg-[var(--color-midnight)]/50 border border-[var(--color-border-strong)] rounded-2xl px-4 py-4 text-center">
+                  <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
+                    Google Ads integration is temporarily unavailable.
+                  </p>
+                </div>
+              )
             ) : (
-              <div className="bg-[var(--color-midnight)]/50 border border-[var(--color-border-strong)] rounded-2xl px-4 py-4 text-center">
-                <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
-                  Google Ads integration is temporarily unavailable.
+              <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl px-4 py-5 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2 text-blue-400">
+                  <Settings className="w-3.5 h-3.5 animate-spin-slow" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Under Enhancement</span>
+                </div>
+                <p className="text-[10px] text-[var(--color-text-tertiary)] leading-relaxed italic">
+                  Google Ads Direct is currently undergoing infrastructure enhancement and will return after operational verification.
                 </p>
               </div>
             )}
