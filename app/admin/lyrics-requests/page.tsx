@@ -281,7 +281,7 @@ function RequestModal({ item, onClose, onUpdate }: {
   );
 }
 
-export default function TranslationRequestsPage() {
+export default function LyricsRequestsPage() {
   const [items, setItems] = useState<LyricsRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -291,7 +291,7 @@ export default function TranslationRequestsPage() {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/translation-requests');
+      const res = await fetch('/api/lyrics-requests');
       const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
     } finally {
@@ -304,7 +304,7 @@ export default function TranslationRequestsPage() {
   }, []);
 
   const updateRequest = async (id: string, patch: any) => {
-    await fetch(`/api/translation-requests`, {
+    await fetch(`/api/lyrics-requests`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, ...patch }),
@@ -336,7 +336,7 @@ export default function TranslationRequestsPage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              Translation Request Management
+              Lyrics Request Management
               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             </h1>
             <p className="text-neutral-500 text-sm mt-1 uppercase tracking-[0.1em]">Editorial Pipeline Oversight</p>

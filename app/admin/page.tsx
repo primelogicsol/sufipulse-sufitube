@@ -120,7 +120,7 @@ export default function AdminDashboard() {
         safeGet('/api/adoptions'),
         safeGet('/api/studio-access-codes'),
         safeGet('/api/contacts'),
-        safeGet('/api/translation-requests'),
+        safeGet('/api/lyrics-requests'),
         safeGet('/api/releases?status=all'),
         fetch('/api/admin/users').then(r => r.ok ? r.json() : { data: [] }),
       ]);
@@ -371,11 +371,11 @@ export default function AdminDashboard() {
       alert: stats.pendingContactMessages > 0,
     },
     {
-      label: 'Translation Requests',
+      label: 'Lyrics Requests',
       value: stats.pendingTranslations,
       meta: 'Awaiting review',
       icon: Globe,
-      link: '/admin/translation-requests',
+      link: '/admin/lyrics-requests',
       alert: stats.pendingTranslations > 0,
     },
   ];
@@ -439,7 +439,7 @@ export default function AdminDashboard() {
         { label: 'Kalams', href: '/admin/kalams' },
         { label: 'Sadas', href: '/admin/sadas' },
         { label: 'Articles', href: '/admin/articles' },
-        { label: 'Translations', href: '/admin/translation-requests' },
+        { label: 'Lyrics Requests', href: '/admin/lyrics-requests' },
         { label: 'Assignments', href: '/admin/performance-assignments' },
       ],
     },
@@ -625,8 +625,8 @@ export default function AdminDashboard() {
               <Link href="/admin/partnerships" className="dashboard-btn-secondary text-sm">
                 Partnerships
               </Link>
-              <Link href="/admin/translation-requests" className="dashboard-btn-secondary text-sm">
-                Translations
+              <Link href="/admin/lyrics-requests" className="dashboard-btn-secondary text-sm">
+                Lyrics Requests
               </Link>
             </div>
           </div>

@@ -310,7 +310,7 @@ const templates: Record<EmailTemplate, (data: any) => { subject: string; html: s
           </tr>
         </table>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/translation-requests" style="background: #d97706; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Admin Dashboard</a>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/lyrics-requests" style="background: #d97706; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Admin Dashboard</a>
         </div>
       </div>
     `,
