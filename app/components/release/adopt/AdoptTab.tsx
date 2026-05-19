@@ -2694,12 +2694,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   return (
     <>
-      <div style={{ position: 'fixed', top: 10, left: 10, background: 'rgba(255,0,0,0.8)', color: 'white', zIndex: 9999, padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>
-        SP-DEBUG: Local={String(isLocalTesting)} | Active={String(showGoogleAdsActive)} | Conf={String(googleAdsConfigured)}
-      </div>
-
-      {/* ── Custom Budget Modal ── */}
-      {showCustomModal && (
+      {/* ── Custom Budget Modal ── */}      {showCustomModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
