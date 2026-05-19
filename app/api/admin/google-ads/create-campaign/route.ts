@@ -5,11 +5,12 @@ import { requireAdmin } from '@/server/middleware/authenticate';
 import { promises as fs } from 'fs';
 import path from 'path';
 
+import { ADS_API_VERSION } from '@/lib/google-ads/config';
+
 /**
  * POST /api/admin/google-ads/create-campaign
  */
 
-const ADS_API_VERSION = 'v22';
 const CREATE_MODE = (process.env.GOOGLE_ADS_CREATE_MODE || 'manual_review') as 'draft' | 'manual_review' | 'live';
 const LOG_FILE = path.join(process.cwd(), '.data', 'google-ads-operation-logs.json');
 
@@ -135,6 +136,22 @@ async function adsRequest(
   return json;
 }
 
+function classifyError(error: any): string {
+  const msg = (error?.message || '').toUpperCase();
+  const details = JSON.stringify(error?.details || '').toUpperCase();
+  const full = msg + ' ' + details;
+
+  if (full.includes('USER_PERMISSION_DENIED')) return 'USER_PERMISSION_DENIED';
+  if (full.includes('INVALID_CUSTOMER_ID')) return 'INVALID_CUSTOMER_ID';
+  if (full.includes('DEVELOPER_TOKEN')) return 'DEVELOPER_TOKEN';
+  if (full.includes('BILLING')) return 'BILLING';
+  if (full.includes('QUOTA_EXCEEDED')) return 'DEVELOPER_TOKEN';
+  if (full.includes('REFRESH') || full.includes('TOKEN')) return 'TOKEN_REFRESH_FAILED';
+  if (full.includes('SCHEMA') || full.includes('VALIDATE_ONLY')) return 'PAYLOAD_SCHEMA';
+  
+  return 'UNKNOWN_ERROR';
+}
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -153,7 +170,7 @@ export async function POST(request: NextRequest) {
     campaign_objective = 'awareness',
     sponsor_customer_id,
     sponsor_access_token,
-    dry_run = false,
+    dry_run = true,
   } = body;
 
   const isDryRun = dry_run || CREATE_MODE === 'draft';
@@ -185,36 +202,36 @@ export async function POST(request: NextRequest) {
       if (!studioDevToken || !studioCustomerId) {
         const msg = 'SufiTube Google Ads credentials are not configured for this environment (missing Developer Token or Studio Customer ID).';
         await logOperation({ type: 'config_error', error: msg, adoption_id, isDryRun });
-        return NextResponse.json({ error: msg }, { status: 503 });
+        return NextResponse.json({ error: msg, classification: 'DEVELOPER_TOKEN' }, { status: 503 });
       }
       const studioToken = await getValidStudioAccessToken();
       if (!studioToken) {
         const msg = 'SufiTube managed account is not connected. Complete OAuth setup at /admin/google-ads.';
         await logOperation({ type: 'config_error', error: msg, adoption_id, isDryRun });
-        return NextResponse.json({ error: msg }, { status: 503 });
+        return NextResponse.json({ error: msg, classification: 'TOKEN_REFRESH_FAILED' }, { status: 503 });
       }
       accessToken = studioToken;
       developerToken = studioDevToken;
       loginCustomerId = studioLoginCid;
       customerId = studioCustomerId;
     } else {
-      if (!sponsor_customer_id) return NextResponse.json({ error: "Sponsor's Google Ads customer ID is required." }, { status: 400 });
+      if (!sponsor_customer_id) return NextResponse.json({ error: "Sponsor's Google Ads customer ID is required.", classification: 'INVALID_CUSTOMER_ID' }, { status: 400 });
       if (!studioDevToken) {
         const msg = 'GOOGLE_ADS_DEVELOPER_TOKEN is required even for sponsor-managed campaigns.';
         await logOperation({ type: 'config_error', error: msg, adoption_id, isDryRun });
-        return NextResponse.json({ error: msg }, { status: 503 });
+        return NextResponse.json({ error: msg, classification: 'DEVELOPER_TOKEN' }, { status: 503 });
       }
 
       const oauthRecord = await getAdoptionGoogleOAuthRecord(adoption_id);
       if (!oauthRecord?.accessToken && !sponsor_access_token) {
-        return NextResponse.json({ error: 'Sponsor Google OAuth token not found. Complete the Google OAuth connection step first.' }, { status: 400 });
+        return NextResponse.json({ error: 'Sponsor Google OAuth token not found. Complete the Google OAuth connection step first.', classification: 'TOKEN_REFRESH_FAILED' }, { status: 400 });
       }
 
       if (oauthRecord?.accessibleCustomerIds?.length) {
         const normalized = sponsor_customer_id.replace(/-/g, '');
         const allowed = oauthRecord.accessibleCustomerIds.some((cid) => cid.replace(/-/g, '') === normalized);
         if (!allowed) {
-          return NextResponse.json({ error: `The provided customer ID (${sponsor_customer_id}) is not in the authorized Google Ads accounts for this adoption OAuth connection.` }, { status: 400 });
+          return NextResponse.json({ error: `The provided customer ID (${sponsor_customer_id}) is not in the authorized Google Ads accounts for this adoption OAuth connection.`, classification: 'USER_PERMISSION_DENIED' }, { status: 400 });
         }
       }
 
@@ -352,6 +369,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Google Ads campaign creation failed:', error);
-    return NextResponse.json({ error: error?.message || 'Campaign creation failed' }, { status: 500 });
+    const classification = classifyError(error);
+    return NextResponse.json({ 
+      error: error?.message || 'Campaign creation failed',
+      classification,
+      details: error?.details
+    }, { status: 500 });
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthUser } from '@/server/middleware/authenticate';
+import { getAuthUser, checkIsAdmin } from '@/server/middleware/authenticate';
 import {
   getGoogleAdsUserOAuth,
 } from '@/app/lib/server/google-ads-oauth-store';
@@ -12,7 +12,7 @@ import { getGoogleAdsAvailability } from '@/lib/google-ads/config';
  */
 export async function GET(request: NextRequest) {
   const auth = await getAuthUser(request);
-  const isAdmin = auth?.role === 'admin';
+  const isAdmin = checkIsAdmin(auth);
   const availability = getGoogleAdsAvailability(isAdmin);
 
   if (!auth) {

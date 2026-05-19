@@ -1,6 +1,8 @@
 // lib/google-ads/config.ts
 import 'server-only';
 
+export const ADS_API_VERSION = 'v22';
+
 export type GoogleAdsConfig = {
   clientId: string;
   clientSecret: string;
@@ -32,7 +34,12 @@ export function getGoogleAdsConfig(): GoogleAdsConfig {
 
 export function getGoogleAdsAvailability(isAdmin: boolean = false): GoogleAdsAvailability {
   const config = getGoogleAdsConfig();
+  const isDev = process.env.NODE_ENV === 'development';
+  const isLocalhost = isDev || process.env.NEXT_PUBLIC_APP_URL?.includes('localhost');
   
+  // Feature flag for public exposure (default false)
+  const ENABLE_PUBLIC_DIRECT = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ADS_DIRECT === 'true';
+
   const REQUIRED_VARS = [
     'GOOGLE_ADS_CLIENT_ID',
     'GOOGLE_ADS_CLIENT_SECRET',
@@ -41,21 +48,26 @@ export function getGoogleAdsAvailability(isAdmin: boolean = false): GoogleAdsAva
   ];
   
   const missing = REQUIRED_VARS.filter(v => !process.env[v]);
-  const available = missing.length === 0;
-  const oauthReady = available && !!process.env.GOOGLE_ADS_CLIENT_SECRET;
+  const configComplete = missing.length === 0;
+
+  // QUARANTINE LOGIC:
+  // 1. If public exposure flag is on, it's available for everyone if config is complete.
+  // 2. If flag is off, it is ONLY available for admins in development/localhost.
+  // 3. Otherwise, it's unavailable (Under Enhancement).
+  
+  const available = !!(configComplete && (ENABLE_PUBLIC_DIRECT || (isAdmin && (isDev || isLocalhost))));
 
   const result: GoogleAdsAvailability = {
     available,
-    oauthReady,
+    oauthReady: configComplete,
     mode: config.createMode,
     message: available 
-      ? 'Google Ads Direct is available.' 
-      : 'Google Ads integration is temporarily unavailable.',
+      ? 'Google Ads Direct is available for testing.' 
+      : 'Google Ads Direct is under infrastructure enhancement. Managed by SufiPulse is available.',
   };
 
   if (isAdmin && missing.length > 0) {
     result.missing = missing;
-    result.redirectUri = config.redirectUri || '/api/google-ads/oauth/callback';
   }
 
   return result;

@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
 
   // Run full internal verification matrix for the studio account
   const verification = studioRecord ? await runInternalVerification({
-    targetCustomerId: process.env.STUDIO_GOOGLE_ADS_CUSTOMER_ID || undefined
+    targetCustomerId: process.env.STUDIO_GOOGLE_ADS_CUSTOMER_ID || undefined,
+    studio: true
   }) : null;
 
   // Manual signal extraction for the dashboard
@@ -29,7 +30,8 @@ export async function GET(request: NextRequest) {
     tokenExpiring: false,
     mccAccessible: !!verification?.account.accessible && !!verification?.account.viaMcc,
     accountSuspended: !!verification?.suspension?.isSuspended,
-    infrastructureHealthy: !!verification?.oauth.valid && !!verification?.account.accessible,
+    hierarchyAligned: !!verification?.hierarchy?.foundInList,
+    infrastructureHealthy: !!verification?.oauth.valid && !!verification?.account.accessible && (!!verification?.hierarchy?.foundInList || !process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID),
   };
 
   // Check if token expires in less than 1 hour

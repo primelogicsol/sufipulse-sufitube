@@ -12,8 +12,8 @@ import {
 import type { GoogleAdsCampaignRequest, CampaignRequestStatus } from '../../lib/server/google-ads-campaign-request-store';
 
 type VerificationResult = {
-  oauth: { connected: boolean; valid: boolean; tokenExpired: boolean; hasRefreshToken: boolean; googleEmail: string | null };
-  account: { customerId: string | null; exists: boolean; accessible: boolean; viaMcc: boolean };
+  oauth: { connected: boolean; valid: boolean; tokenExpired: boolean; hasRefreshToken: boolean; googleEmail: string | null; error?: string | null };
+  account: { customerId: string | null; exists: boolean; accessible: boolean; viaMcc: boolean; error?: string | null };
   suspension?: { isSuspended: boolean; reason?: string | null };
   timestamp: string;
 };
@@ -357,9 +357,16 @@ export default function AdminGoogleAdsPage() {
 
             {/* Verification Matrix Details */}
             <div className="p-6 lg:col-span-2 space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <ShieldCheck className="w-4 h-4 text-blue-400" />
-                <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Verification Matrix</h3>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-blue-400" />
+                  <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Verification Matrix</h3>
+                </div>
+                {studioStatus?.verification?.account.error && (
+                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] animate-pulse">
+                    Error: {studioStatus.verification.account.error}
+                  </Badge>
+                )}
               </div>
               
               {!studioStatus?.verification ? (
@@ -384,6 +391,9 @@ export default function AdminGoogleAdsPage() {
                         <span className="text-neutral-300 truncate max-w-[120px]">{studioStatus.verification.oauth.googleEmail || '—'}</span>
                       </div>
                     </div>
+                    {studioStatus.verification.oauth.error && (
+                      <p className="text-[10px] text-red-400 italic">Error: {studioStatus.verification.oauth.error}</p>
+                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -402,6 +412,17 @@ export default function AdminGoogleAdsPage() {
                         {studioStatus.verification.account.viaMcc ? <Check className="w-3.5 h-3.5 text-green-400" /> : <X className="w-3.5 h-3.5 text-red-400" />}
                       </div>
                     </div>
+                    {studioStatus.verification.account.error && (
+                      <div className="p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider mb-1">Classification</p>
+                        <p className="text-[10px] text-neutral-300 font-mono">
+                          {studioStatus.verification.account.error === 'USER_PERMISSION_DENIED' ? 'Hierarchy Mismatch (Google-side Permission)' :
+                           studioStatus.verification.account.error === 'INVALID_CUSTOMER_ID' ? 'Target Account ID Invalid' :
+                           studioStatus.verification.account.error === 'SERVICE_DISABLED' ? 'Google Ads API Disabled' :
+                           studioStatus.verification.account.error}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

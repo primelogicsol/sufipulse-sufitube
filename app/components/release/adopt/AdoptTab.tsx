@@ -130,15 +130,32 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   // Phase 2A: Google Ads Direct Feature Flag
   const ENABLE_GOOGLE_ADS_DIRECT = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ADS_DIRECT === 'true';
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = ['admin', 'administrator', 'super_admin', 'governance_admin'].includes(user?.role || '');
   const isDev = process.env.NODE_ENV === 'development';
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '3000');
   
+  // FORCED BYPASS FOR LOCALHOST TESTING
+  const isLocalTesting = isDev || isLocalhost;
+
   // Eligibility: Is the user allowed to see the "Direct" option at all?
-  // We stay in "quarantine" mode until auth is resolved for admins.
-  const isEligibleForDirect = ENABLE_GOOGLE_ADS_DIRECT || (!authLoading && (isAdmin || isDev));
+  const isEligibleForDirect = isLocalTesting || ENABLE_GOOGLE_ADS_DIRECT || (!authLoading && isAdmin);
   
   // Active status: Only show the active CTA when eligibility is confirmed AND Google Ads is confirmed available.
-  const showGoogleAdsActive = isEligibleForDirect && googleAdsConfigured === true;
+  const showGoogleAdsActive = isLocalTesting || (isEligibleForDirect && googleAdsConfigured === true && (ENABLE_GOOGLE_ADS_DIRECT || isAdmin));
+
+  // Debug Quarantine State
+  useEffect(() => {
+    console.log('--- Google Ads Direct UI Debug ---');
+    console.log('isDev:', isDev);
+    console.log('isLocalhost:', isLocalhost);
+    console.log('isLocalTesting:', isLocalTesting);
+    console.log('showGoogleAdsActive:', showGoogleAdsActive);
+    console.log('googleAdsConfigured:', googleAdsConfigured);
+    console.log('isAdmin:', isAdmin);
+    console.log('authLoading:', authLoading);
+    console.log('---------------------------------');
+  }, [authLoading, isAdmin, isDev, isLocalhost, isLocalTesting, googleAdsConfigured, showGoogleAdsActive]);
 
   // ── Effects ───────────────────────────────────────────────────────────────
 
@@ -162,7 +179,8 @@ export function AdoptTab({ release }: AdoptTabProps) {
       .catch(() => setStripeEnabled(!!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || hasPaymentLink));
   }, []);
 
-  // Check at mount whether Google Ads is configured on this server.
+  // Check whether Google Ads is configured on this server.
+  // We re-fetch when user changes to ensure we catch the transition from guest to admin.
   useEffect(() => {
     (async () => {
       try {
@@ -182,7 +200,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
         setGoogleAdsMissingVars([]);
       }
     })();
-  }, []);
+  }, [user?.id]);
 
   // Restore state after Google OAuth callback redirect
   // Handles both legacy (?adoption_oauth=success) and new (?step=google_ads_connected) URLs
@@ -1255,6 +1273,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
             {showGoogleAdsActive ? (
               <button
+                onClick={() => handleMethodSelect('use_my_google_ads')}
                 className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-blue-500/10 active:scale-[0.98]"
               >
                 Connect Google Ads Account
@@ -2675,6 +2694,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
 
   return (
     <>
+      <div style={{ position: 'fixed', top: 10, left: 10, background: 'rgba(255,0,0,0.8)', color: 'white', zIndex: 9999, padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>
+        SP-DEBUG: Local={String(isLocalTesting)} | Active={String(showGoogleAdsActive)} | Conf={String(googleAdsConfigured)}
+      </div>
+
       {/* ── Custom Budget Modal ── */}
       {showCustomModal && (
         <div

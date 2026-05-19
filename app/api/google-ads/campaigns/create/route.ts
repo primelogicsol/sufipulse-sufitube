@@ -13,20 +13,6 @@ import { requireAuth } from '@/server/middleware/authenticate';
 
 /**
  * POST /api/google-ads/campaigns/create
- *
- * Creates a Google Ads campaign. Handles both methods:
- *
- *   managed_sufitube   — uses the SufiTube studio account (server-side OAuth token
- *                        from .data/google-ads-studio-oauth.json). Customer ID from
- *                        STUDIO_GOOGLE_ADS_CUSTOMER_ID env var only — never NEXT_PUBLIC_.
- *
- *   use_my_google_ads  — uses the sponsor's own account (sponsor OAuth token stored
- *                        per-user or per-adoption). Unchanged from before.
- *
- * Controlled by GOOGLE_ADS_CREATE_MODE:
- *   draft         → save intent, no API call
- *   manual_review → create campaign in PAUSED state (VPS default)
- *   live          → create campaign in ENABLED state immediately
  */
 
 const ADS_API_VERSION = 'v22';
@@ -48,12 +34,12 @@ interface CreateCampaignBody {
   targetLanguages?: string[];
   campaignObjective?: string;
   durationDays?: number;
+  dry_run?: boolean;
 }
 
-// Full region name → Google Ads geo target constant IDs (from UI chip values)
 const REGION_GEO_MAP: Record<string, number[]> = {
-  'global':         [],                                              // no restriction
-  'south asia':     [2586, 2356, 2050, 2144, 2524, 2004],           // PK IN BD LK NP AF
+  'global':         [],
+  'south asia':     [2586, 2356, 2050, 2144, 2524, 2004],
   'india':          [2356],
   'pakistan':       [2586],
   'united kingdom': [2826],
@@ -65,12 +51,13 @@ const REGION_GEO_MAP: Record<string, number[]> = {
   'east africa':    [2404, 2834, 2800, 2231, 2646],
   'southeast asia': [2458, 2360, 2702, 2608, 2764, 2704],
 };
-// 2-letter country code fallback (legacy / managed_sufitube)
+
 const GEO_IDS: Record<string, number> = {
   US: 2840, GB: 2826, CA: 2124, AU: 2036, PK: 2586, IN: 2356,
   AE: 2784, SA: 2682, DE: 2276, FR: 2250, NL: 2528, SE: 2752,
   BD: 2050, NG: 2566, ZA: 2710, MY: 2458, ID: 2360, TR: 2792,
 };
+
 function resolveGeoIds(regions: string[]): number[] {
   const ids = new Set<number>();
   for (const region of regions) {
@@ -84,12 +71,12 @@ function resolveGeoIds(regions: string[]): number[] {
   return Array.from(ids);
 }
 
-// Google Ads language criterion IDs
 const LANGUAGE_IDS: Record<string, number> = {
   'english': 1000, 'urdu': 1031, 'hindi': 1023, 'arabic': 1019,
   'punjabi': 1102, 'kashmiri': 1038, 'persian': 1065, 'bengali': 1056,
   'turkish': 1037,
 };
+
 function resolveLanguageIds(languages: string[]): number[] {
   const ids: number[] = [];
   for (const lang of languages) {
@@ -135,12 +122,18 @@ function buildHeaders(
 async function adsRequest(
   customerId: string,
   resourcePath: string,
-  body: unknown,
-  headers: Record<string, string>
+  body: any,
+  headers: Record<string, string>,
+  validateOnly: boolean = false
 ) {
   const cid = customerId.replace(/-/g, '');
+  const requestBody = { ...body };
+  if (validateOnly) {
+    requestBody.validate_only = true;
+  }
+  
   const url = `https://googleads.googleapis.com/${ADS_API_VERSION}/customers/${cid}/${resourcePath}`;
-  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(requestBody) });
   const json = await res.json();
   if (!res.ok) {
     throw new Error(
@@ -150,6 +143,22 @@ async function adsRequest(
     );
   }
   return json;
+}
+
+function classifyError(error: any): string {
+  const msg = (error?.message || '').toUpperCase();
+  const details = JSON.stringify(error?.details || '').toUpperCase();
+  const full = msg + ' ' + details;
+
+  if (full.includes('USER_PERMISSION_DENIED')) return 'USER_PERMISSION_DENIED';
+  if (full.includes('INVALID_CUSTOMER_ID')) return 'INVALID_CUSTOMER_ID';
+  if (full.includes('DEVELOPER_TOKEN')) return 'DEVELOPER_TOKEN';
+  if (full.includes('BILLING')) return 'BILLING';
+  if (full.includes('QUOTA_EXCEEDED')) return 'DEVELOPER_TOKEN';
+  if (full.includes('REFRESH') || full.includes('TOKEN')) return 'TOKEN_REFRESH_FAILED';
+  if (full.includes('SCHEMA') || full.includes('VALIDATE_ONLY')) return 'PAYLOAD_SCHEMA';
+  
+  return 'UNKNOWN_ERROR';
 }
 
 async function resolveUserAccessToken(
@@ -223,8 +232,10 @@ export async function POST(request: NextRequest) {
     targetLanguages = ['en', 'ur'],
     campaignObjective = 'awareness',
     durationDays,
+    dry_run = true,
   } = body;
 
+  const isDryRun = dry_run || CREATE_MODE === 'draft';
   const resolvedDuration = durationDays && durationDays > 0
     ? durationDays
     : budgetToDurationDays(budgetAmount);
@@ -245,7 +256,7 @@ export async function POST(request: NextRequest) {
   const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
   if (!developerToken) {
     return NextResponse.json(
-      { error: 'GOOGLE_ADS_DEVELOPER_TOKEN is not configured on this server.' },
+      { error: 'GOOGLE_ADS_DEVELOPER_TOKEN is not configured on this server.', classification: 'DEVELOPER_TOKEN' },
       { status: 503 }
     );
   }
@@ -280,7 +291,7 @@ export async function POST(request: NextRequest) {
     const studioCustomerId = process.env.STUDIO_GOOGLE_ADS_CUSTOMER_ID;
     if (!studioCustomerId) {
       return NextResponse.json(
-        { error: 'STUDIO_GOOGLE_ADS_CUSTOMER_ID is not configured.' },
+        { error: 'STUDIO_GOOGLE_ADS_CUSTOMER_ID is not configured.', classification: 'DEVELOPER_TOKEN' },
         { status: 503 }
       );
     }
@@ -288,7 +299,7 @@ export async function POST(request: NextRequest) {
     const token = await getValidStudioAccessToken();
     if (!token) {
       return NextResponse.json(
-        { error: 'SufiTube managed account is not connected. An admin must complete the OAuth setup at /admin/google-ads.' },
+        { error: 'SufiTube managed account is not connected. An admin must complete the OAuth setup at /admin/google-ads.', classification: 'TOKEN_REFRESH_FAILED' },
         { status: 503 }
       );
     }
@@ -300,7 +311,7 @@ export async function POST(request: NextRequest) {
     // use_my_google_ads — sponsor's own account
     if (!selectedCustomerId) {
       return NextResponse.json(
-        { error: 'selectedCustomerId is required for use_my_google_ads.' },
+        { error: 'selectedCustomerId is required for use_my_google_ads.', classification: 'INVALID_CUSTOMER_ID' },
         { status: 400 }
       );
     }
@@ -308,7 +319,7 @@ export async function POST(request: NextRequest) {
     const token = await resolveUserAccessToken(userId, adoptionId);
     if (!token) {
       return NextResponse.json(
-        { error: 'Google OAuth token not found. Complete the Google Ads connection step first.' },
+        { error: 'Google OAuth token not found. Complete the Google Ads connection step first.', classification: 'TOKEN_REFRESH_FAILED' },
         { status: 400 }
       );
     }
@@ -331,8 +342,8 @@ export async function POST(request: NextRequest) {
           amountMicros: budgetMicros,
         },
       }],
-    }, headers);
-    const budgetResourceName: string = budgetResult.results[0].resourceName;
+    }, headers, isDryRun);
+    const budgetResourceName: string = budgetResult.results?.[0]?.resourceName;
 
     // ── Step 2: Campaign ──────────────────────────────────────────────────────
     const startDate = new Date();
@@ -345,7 +356,7 @@ export async function POST(request: NextRequest) {
           name: `SufiPulse – ${releaseTitle.slice(0, 40)} [${adoptionId.slice(-6)}]`,
           advertisingChannelType: 'VIDEO',
           biddingStrategyType: 'TARGET_CPM',
-          campaignBudget: budgetResourceName,
+          campaignBudget: budgetResourceName || 'dummy_budget',
           status: campaignStatus,
           startDate: fmt(startDate),
           endDate: fmt(endDate),
@@ -355,28 +366,28 @@ export async function POST(request: NextRequest) {
           },
         },
       }],
-    }, headers);
-    const campaignResourceName: string = campaignResult.results[0].resourceName;
+    }, headers, isDryRun);
+    const campaignResourceName: string = campaignResult.results?.[0]?.resourceName;
 
     // ── Step 3: Ad Group ──────────────────────────────────────────────────────
     const adGroupResult = await adsRequest(customerId, 'adGroups:mutate', {
       operations: [{
         create: {
           name: `${releaseTitle.slice(0, 40)} – AdGroup`,
-          campaign: campaignResourceName,
+          campaign: campaignResourceName || 'dummy_campaign',
           status: 'ENABLED',
           adGroupType: 'VIDEO_TRUE_VIEW_IN_STREAM',
         },
       }],
-    }, headers);
-    const adGroupResourceName: string = adGroupResult.results[0].resourceName;
+    }, headers, isDryRun);
+    const adGroupResourceName: string = adGroupResult.results?.[0]?.resourceName;
 
     // ── Step 4: Video Ad ──────────────────────────────────────────────────────
     const cta = CTA_MAP[campaignObjective] || 'Watch now';
     await adsRequest(customerId, 'adGroupAds:mutate', {
       operations: [{
         create: {
-          adGroup: adGroupResourceName,
+          adGroup: adGroupResourceName || 'dummy_adgroup',
           status: 'ENABLED',
           ad: {
             finalUrls: [`https://www.youtube.com/watch?v=${youtubeVideoId}`],
@@ -390,11 +401,11 @@ export async function POST(request: NextRequest) {
           },
         },
       }],
-    }, headers);
+    }, headers, isDryRun);
 
     // ── Step 5: Geo Targeting ─────────────────────────────────────────────────
     const geoIds = resolveGeoIds(targetRegions);
-    if (geoIds.length > 0) {
+    if (geoIds.length > 0 && campaignResourceName) {
       await adsRequest(customerId, 'campaignCriteria:mutate', {
         operations: geoIds.map((geoId) => ({
           create: {
@@ -402,12 +413,12 @@ export async function POST(request: NextRequest) {
             location: { geoTargetConstant: `geoTargetConstants/${geoId}` },
           },
         })),
-      }, headers);
+      }, headers, isDryRun);
     }
 
     // ── Step 6: Language Targeting ────────────────────────────────────────────
     const langIds = resolveLanguageIds(targetLanguages);
-    if (langIds.length > 0) {
+    if (langIds.length > 0 && campaignResourceName) {
       await adsRequest(customerId, 'campaignCriteria:mutate', {
         operations: langIds.map((langId) => ({
           create: {
@@ -415,7 +426,7 @@ export async function POST(request: NextRequest) {
             language: { languageConstant: `languageConstants/${langId}` },
           },
         })),
-      }, headers);
+      }, headers, isDryRun);
     }
 
     // ── Persist campaign record ───────────────────────────────────────────────
@@ -426,10 +437,10 @@ export async function POST(request: NextRequest) {
       selectedCustomerId: customerId,
       youtubeVideoId,
       budgetAmount,
-      campaignResourceName,
-      budgetResourceName,
-      adGroupResourceName,
-      campaignStatus: campaignStatus as 'PAUSED' | 'ENABLED',
+      campaignResourceName: campaignResourceName || 'dry_run_no_resource',
+      budgetResourceName: budgetResourceName || 'dry_run_no_resource',
+      adGroupResourceName: adGroupResourceName || 'dry_run_no_resource',
+      campaignStatus: isDryRun ? 'PAUSED' : (campaignStatus as 'PAUSED' | 'ENABLED'),
     });
 
     return NextResponse.json({
@@ -437,17 +448,18 @@ export async function POST(request: NextRequest) {
       campaign_resource_name: campaignResourceName,
       budget_resource_name: budgetResourceName,
       ad_group_resource_name: adGroupResourceName,
-      campaign_status: campaignStatus,
+      campaign_status: isDryRun ? 'dry_run_passed' : campaignStatus,
       customer_id: customerId,
       adoption_id: adoptionId,
       release_id: releaseId,
       method_type: methodType,
-      note: campaignStatus === 'PAUSED'
-        ? 'Campaign created in PAUSED state. It will be reviewed before activation.'
-        : 'Campaign created in ENABLED state and is now live.',
+      note: isDryRun 
+        ? 'Dry run completed successfully. No real resources were created.' 
+        : (campaignStatus === 'PAUSED' ? 'Campaign created in PAUSED state.' : 'Campaign is LIVE.'),
       campaign: campaignRecord,
     });
   } catch (error: any) {
+    const classification = classifyError(error);
     await upsertGoogleAdsCampaign({
       adoptionId,
       releaseId,
@@ -459,7 +471,11 @@ export async function POST(request: NextRequest) {
     });
     console.error('[google-ads/campaigns/create] API error:', error);
     return NextResponse.json(
-      { error: error?.message || 'Google Ads campaign creation failed.' },
+      { 
+        error: error?.message || 'Google Ads campaign creation failed.',
+        classification,
+        details: error?.details
+      },
       { status: 500 }
     );
   }

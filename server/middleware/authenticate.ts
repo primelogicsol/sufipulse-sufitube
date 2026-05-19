@@ -24,6 +24,13 @@ function extractToken(req: NextRequest): string | null {
   return req.cookies.get('access_token')?.value ?? null;
 }
 
+/** Returns true if the user has an admin-level role. */
+export function checkIsAdmin(user: AuthUser | null | undefined): boolean {
+  if (!user) return false;
+  const adminRoles = ['admin', 'administrator', 'super_admin', 'governance_admin'];
+  return adminRoles.includes(user.role);
+}
+
 /** Returns the authenticated user or null (no side effects). */
 export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
   const token = extractToken(req);

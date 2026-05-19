@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { getValidStudioAccessToken } from '@/app/lib/server/google-ads-studio-oauth-store';
+import { ADS_API_VERSION } from '@/lib/google-ads/config';
 
 /**
  * GET /api/admin/google-ads/hierarchy
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     // DEBUG: Try specific customer fetch
     const studioCid = process.env.STUDIO_GOOGLE_ADS_CUSTOMER_ID?.replace(/-/g, '');
-    const debugUrl = `https://googleads.googleapis.com/v17/customers/${studioCid}`;
+    const debugUrl = `https://googleads.googleapis.com/${ADS_API_VERSION}/customers/${studioCid}`;
     
     console.log('[hierarchy-diagnostics] Debug fetch from:', debugUrl);
     const debugRes = await fetch(debugUrl, {
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     console.log(`[hierarchy-diagnostics] Debug response snippet: ${debugText.slice(0, 500)}`);
 
     // Call Google Ads API to list accessible customers
-    const url = 'https://googleads.googleapis.com/v22/customers:listAccessibleCustomers';
+    const url = `https://googleads.googleapis.com/${ADS_API_VERSION}/customers:listAccessibleCustomers`;
     
     console.log('[hierarchy-diagnostics] Fetching from:', url);
     const res = await fetch(url, {
