@@ -107,7 +107,7 @@ export default function MyAccountPage() {
           )}
 
           {/* Admin link */}
-          {isAdmin && (
+          {isAdmin ? (
             <Link
               href="/admin"
               className="flex items-center justify-between w-full px-5 py-4 rounded-xl border border-white/10 bg-white/[0.03] hover:border-[var(--color-gold)]/40 hover:bg-[var(--color-gold)]/5 transition-colors mb-3"
@@ -115,6 +115,15 @@ export default function MyAccountPage() {
               <span className="text-sm font-medium text-[var(--color-text-primary)]">Admin Dashboard</span>
               <span className="text-[var(--color-gold)] text-xs">→</span>
             </Link>
+          ) : (
+            <div className="w-full px-5 py-3 rounded-xl border border-white/5 bg-white/[0.01] mb-3">
+              <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] font-bold">
+                Access Level
+              </span>
+              <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">
+                You do not have administrator access.
+              </p>
+            </div>
           )}
 
           {/* My Lyrics Requests — all logged-in users */}

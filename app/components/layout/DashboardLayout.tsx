@@ -46,7 +46,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const ADMIN_ROLES = ['admin', 'super_admin', 'governance_admin'];
+const ADMIN_ROLES = ['admin', 'administrator', 'super_admin', 'governance_admin'];
 const CONTRIBUTOR_ROLES = ['writer', 'vocalist', 'producer', 'literary', 'studio'];
 
 // ─── Navigation Definitions ───────────────────────────────────────────────────
@@ -214,7 +214,7 @@ const getNavigationForRole = (role: string) => {
 };
 
 const getRoleLabel = (role: string) => {
-  if (role === 'admin') return 'Administrator';
+  if (role === 'admin' || role === 'administrator') return 'Administrator';
   if (role === 'super_admin') return 'Super Admin';
   if (role === 'governance_admin') return 'Governance Admin';
   if (role === 'writer') return 'Ahl-e-Qalam (Writer)';

@@ -105,7 +105,7 @@ export default function AdminDashboard() {
       const [
         writers, vocalists, producers, literary, studio,
         kalams, sadas, articles, partnerships,
-        sessionRequests, adoptions, accessCodes, contacts, translationReqs, releases, users,
+        sessionRequests, adoptions, accessCodes, contacts, translationReqs, releases, usersData,
       ] = await Promise.all([
         safeGet('/api/writers'),
         safeGet('/api/vocalists'),
@@ -122,9 +122,10 @@ export default function AdminDashboard() {
         safeGet('/api/contacts'),
         safeGet('/api/translation-requests'),
         safeGet('/api/releases?status=all'),
-        safeGet('/api/admin/users'),
+        fetch('/api/admin/users').then(r => r.ok ? r.json() : { data: [] }),
       ]);
 
+      const users = Array.isArray(usersData?.data) ? usersData.data : [];
       const pendingAdoptions = adoptions.filter(a => {
         const s = String(a?.adoption_status || a?.status || '').toLowerCase();
         return s === 'pending_review' || s === 'pending' || s === 'under_review';
