@@ -7,7 +7,7 @@ import {
   Search, Check, X, RefreshCw, Loader2, AlertCircle,
   DollarSign, Target, ExternalLink, Clock, CheckCircle2,
   MessageSquare, Rocket, ChevronDown, ChevronUp, User, Link2, Unlink,
-  ShieldCheck, Activity, Database, AlertTriangle, Fingerprint, List
+  ShieldCheck, Activity, Database, AlertTriangle, Fingerprint, List, Network
 } from 'lucide-react';
 import type { GoogleAdsCampaignRequest, CampaignRequestStatus } from '../../lib/server/google-ads-campaign-request-store';
 
@@ -15,6 +15,23 @@ type VerificationResult = {
   oauth: { connected: boolean; valid: boolean; tokenExpired: boolean; hasRefreshToken: boolean; googleEmail: string | null };
   account: { customerId: string | null; exists: boolean; accessible: boolean; viaMcc: boolean };
   suspension?: { isSuspended: boolean; reason?: string | null };
+  timestamp: string;
+};
+
+type HierarchyAccount = {
+  resourceName: string;
+  customerId: string;
+  formattedId: string;
+};
+
+type HierarchyData = {
+  success: boolean;
+  accounts: HierarchyAccount[];
+  configuredIds: {
+    loginCustomerId: string | null;
+    studioCustomerId: string | null;
+  };
+  oauthScope: string;
   timestamp: string;
 };
 
@@ -87,6 +104,8 @@ export default function AdminGoogleAdsPage() {
   const [refreshingDiagnostics, setRefreshingDiagnostics] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [hierarchyData, setHierarchyData] = useState<HierarchyData | null>(null);
+  const [loadingHierarchy, setLoadingHierarchy] = useState(false);
 
   // Load persistence on mount
   useEffect(() => {
@@ -156,7 +175,24 @@ export default function AdminGoogleAdsPage() {
     }
   }, []);
 
-  useEffect(() => { loadRequests(); loadStudioStatus(); loadLogs(); }, [loadRequests, loadStudioStatus, loadLogs]);
+  const loadHierarchy = useCallback(async () => {
+    setLoadingHierarchy(true);
+    try {
+      const res = await fetch('/api/admin/google-ads/hierarchy', { credentials: 'include' });
+      if (!res.ok) return;
+      setHierarchyData(await res.json());
+    } catch {
+    } finally {
+      setLoadingHierarchy(false);
+    }
+  }, []);
+
+  useEffect(() => { 
+    loadRequests(); 
+    loadStudioStatus(); 
+    loadLogs(); 
+    loadHierarchy(); 
+  }, [loadRequests, loadStudioStatus, loadLogs, loadHierarchy]);
 
   const handleConnectStudio = async () => {
     setConnectingStudio(true);
@@ -666,6 +702,107 @@ export default function AdminGoogleAdsPage() {
             })}
           </div>
         )}
+
+        {/* Hierarchy Diagnostics (Phase 3C) */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-neutral-800 bg-neutral-800/20 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Network className="w-5 h-5 text-amber-400" />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-300">Hierarchy Diagnostics</h2>
+            </div>
+            <button
+              onClick={loadHierarchy}
+              disabled={loadingHierarchy}
+              className="flex items-center gap-2 px-3 py-1.5 text-[10px] bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-bold uppercase tracking-widest rounded-lg transition-all disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3 h-3 ${loadingHierarchy ? 'animate-spin' : ''}`} />
+              {loadingHierarchy ? 'Querying Google…' : 'Refresh Hierarchy'}
+            </button>
+          </div>
+
+          <div className="grid lg:grid-cols-2 divide-x divide-neutral-800">
+            {/* Accessible Accounts */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-[0.2em]">Accessible Accounts (Source of Truth)</p>
+                {hierarchyData?.accounts && (
+                  <span className="text-[10px] font-mono text-neutral-500">{hierarchyData.accounts.length} linked</span>
+                )}
+              </div>
+
+              {!hierarchyData ? (
+                <div className="h-24 flex items-center justify-center border border-dashed border-neutral-800 rounded-xl text-xs text-neutral-600 italic">
+                  {loadingHierarchy ? 'Waiting for Google API response...' : 'Run hierarchy check to see accessible accounts'}
+                </div>
+              ) : hierarchyData.accounts.length === 0 ? (
+                <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-xl text-xs text-red-400">
+                  No accounts found. This OAuth token (`{studioStatus?.verification?.oauth.googleEmail || 'unknown'}`) has no direct access to any Google Ads accounts.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                  {hierarchyData.accounts.map((acc: any) => {
+                    const isConfigured = acc.customerId === hierarchyData.configuredIds.studioCustomerId?.replace(/-/g, '');
+                    return (
+                      <div key={acc.customerId} className={`flex items-center justify-between p-3 rounded-lg border ${isConfigured ? 'bg-amber-500/10 border-amber-500/30' : 'bg-neutral-800/30 border-neutral-800'}`}>
+                        <div>
+                          <p className="text-xs font-mono text-neutral-200">{acc.formattedId}</p>
+                          <p className="text-[9px] text-neutral-500 truncate max-w-[200px]">{acc.resourceName}</p>
+                        </div>
+                        {isConfigured && (
+                          <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-[9px]">Matched in Env</Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Configured Hierarchy */}
+            <div className="p-6 space-y-6">
+              <div className="space-y-4">
+                <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-[0.2em]">Configured Environment Topology</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between group">
+                    <div className="flex items-center gap-2">
+                      <Fingerprint className="w-3.5 h-3.5 text-neutral-500" />
+                      <span className="text-xs text-neutral-400">Login Customer ID (MCC)</span>
+                    </div>
+                    <code className="text-xs font-mono text-neutral-300 bg-neutral-800 px-2 py-0.5 rounded">
+                      {hierarchyData?.configuredIds.loginCustomerId || 'NOT_SET'}
+                    </code>
+                  </div>
+                  <div className="flex items-center justify-between group">
+                    <div className="flex items-center gap-2">
+                      <Target className="w-3.5 h-3.5 text-neutral-500" />
+                      <span className="text-xs text-neutral-400">Studio Customer ID (Target)</span>
+                    </div>
+                    <code className="text-xs font-mono text-neutral-300 bg-neutral-800 px-2 py-0.5 rounded">
+                      {hierarchyData?.configuredIds.studioCustomerId || 'NOT_SET'}
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              {hierarchyData && (
+                <div className="pt-4 border-t border-neutral-800 space-y-3">
+                  <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-[0.2em]">Diagnostic Result</p>
+                  {hierarchyData.accounts.some((a: any) => a.customerId === hierarchyData.configuredIds.studioCustomerId?.replace(/-/g, '')) ? (
+                    <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 p-3 rounded-lg border border-green-500/20">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Target account is directly accessible. No MCC login ID required.
+                    </div>
+                  ) : hierarchyData.accounts.length > 0 ? (
+                    <div className="flex items-start gap-2 text-xs text-amber-400 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                      Target account not in direct list. Must be linked under Login Customer ID (MCC). Ensure MCC hierarchy is correct.
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Operational Logs Section */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-sm">

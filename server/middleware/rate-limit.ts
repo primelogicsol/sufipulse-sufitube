@@ -100,12 +100,14 @@ export async function applyRateLimit(
   req: NextRequest,
   limiter: ReturnType<typeof createRateLimiter>
 ): Promise<NextResponse | null> {
-  const res = NextResponse.next();
-  const allowed = await limiter(req, res);
+  // Use a dummy response to capture headers without using NextResponse.next()
+  // which is not allowed in App Router handlers.
+  const dummyRes = new NextResponse();
+  const allowed = await limiter(req, dummyRes);
   if (allowed) return null;
 
   return NextResponse.json(
     { success: false, error: { message: 'Too many requests. Please try again later.', code: 'RATE_LIMITED' } },
-    { status: 429, headers: Object.fromEntries(res.headers.entries()) }
+    { status: 429, headers: Object.fromEntries(dummyRes.headers.entries()) }
   );
 }

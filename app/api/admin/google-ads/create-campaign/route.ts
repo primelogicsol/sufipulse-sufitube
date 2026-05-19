@@ -9,7 +9,7 @@ import path from 'path';
  * POST /api/admin/google-ads/create-campaign
  */
 
-const ADS_API_VERSION = 'v17';
+const ADS_API_VERSION = 'v22';
 const CREATE_MODE = (process.env.GOOGLE_ADS_CREATE_MODE || 'manual_review') as 'draft' | 'manual_review' | 'live';
 const LOG_FILE = path.join(process.cwd(), '.data', 'google-ads-operation-logs.json');
 
