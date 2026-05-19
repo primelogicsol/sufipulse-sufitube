@@ -10,6 +10,7 @@ import {
 import { upsertGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
 import { getValidStudioAccessToken } from '@/app/lib/server/google-ads-studio-oauth-store';
 import { requireAuth } from '@/server/middleware/authenticate';
+import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
 
 /**
  * POST /api/google-ads/campaigns/create
@@ -215,6 +216,9 @@ async function resolveUserAccessToken(
 }
 
 export async function POST(request: NextRequest) {
+  const limited = await applyRateLimit(request, rateLimiters.standard);
+  if (limited) return limited;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 

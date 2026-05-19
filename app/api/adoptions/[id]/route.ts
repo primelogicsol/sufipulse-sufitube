@@ -45,11 +45,17 @@ export async function GET(
     paymentStatus: payment?.paymentStatus ?? adoption.paymentStatus,
     amountPaid: payment?.amountPaid ?? adoption.amountPaid,
     stripeSessionId: payment?.stripeSessionId ?? null,
-    // Merge campaign status
+    // Merge campaign status and filtered events
     campaignRequestStatus: campaignReq?.status ?? null,
     campaignResourceName: campaignReq?.campaignResourceName ?? adoption.campaignResourceName ?? null,
+    campaignEvents: campaignReq?.events?.filter(e => !e.internalOnly) ?? [],
+    // Expose proposed fields if in awaiting_user_approval or later
+    proposedTargeting: campaignReq?.status === 'awaiting_user_approval' || campaignReq?.status === 'launch_ready' || campaignReq?.status === 'live' ? campaignReq?.proposedTargeting : null,
+    proposedBudget: campaignReq?.status === 'awaiting_user_approval' || campaignReq?.status === 'launch_ready' || campaignReq?.status === 'live' ? campaignReq?.proposedBudget : null,
+    proposedKeywords: campaignReq?.status === 'awaiting_user_approval' || campaignReq?.status === 'launch_ready' || campaignReq?.status === 'live' ? campaignReq?.proposedKeywords : null,
+    proposedAdCopy: campaignReq?.status === 'awaiting_user_approval' || campaignReq?.status === 'launch_ready' || campaignReq?.status === 'live' ? campaignReq?.proposedAdCopy : null,
   });
-}
+  }
 
 /**
  * PATCH /api/adoptions/[id]

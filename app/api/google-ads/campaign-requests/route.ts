@@ -8,6 +8,7 @@ import {
   type CampaignRequestStatus,
 } from '@/app/lib/server/google-ads-campaign-request-store';
 import { getAuthUser, requireAuth, requireAdmin } from '@/server/middleware/authenticate';
+import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
 
 /**
  * GET /api/google-ads/campaign-requests
@@ -62,6 +63,9 @@ export async function GET(request: NextRequest) {
  * Called by AdoptTab after the sponsor completes the Google Ads form.
  */
 export async function POST(request: NextRequest) {
+  const limited = await applyRateLimit(request, rateLimiters.standard);
+  if (limited) return limited;
+
   // Auth optional — unauthenticated sponsors (Google OAuth only) are allowed
   const authResult = await getAuthUser(request);
 

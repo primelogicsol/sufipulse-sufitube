@@ -6,7 +6,7 @@ import { Badge } from '../../components/primitives/Badge';
 import {
   Search, Check, X, RefreshCw, Loader2, AlertCircle,
   DollarSign, Target, ExternalLink, Clock, CheckCircle2,
-  MessageSquare, Rocket, ChevronDown, ChevronUp, User, Link2, Unlink,
+  MessageSquare, Rocket, ChevronDown, ChevronUp, User, Link2,
   ShieldCheck, Activity, Database, AlertTriangle, Fingerprint, List, Network
 } from 'lucide-react';
 import type { GoogleAdsCampaignRequest, CampaignRequestStatus } from '../../lib/server/google-ads-campaign-request-store';
@@ -54,19 +54,29 @@ type StudioStatus = {
 type ActionLoading = { adoptionId: string; action: string } | null;
 
 const STATUS_LABELS: Record<CampaignRequestStatus, { label: string; color: string }> = {
-  pending_review:        { label: 'Pending Review',        color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-  pending_manual_review: { label: 'Manual Review Required', color: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
-  approved:              { label: 'Approved',               color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
-  rejected:              { label: 'Rejected',               color: 'bg-red-500/15 text-red-400 border-red-500/30' },
-  changes_requested:     { label: 'Changes Requested',      color: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
-  campaign_created:      { label: 'Campaign Created',       color: 'bg-green-500/15 text-green-400 border-green-500/30' },
-  campaign_failed:       { label: 'Campaign Failed',        color: 'bg-red-700/20 text-red-300 border-red-700/30' },
+  submitted:              { label: 'Submitted',             color: 'bg-neutral-800 text-neutral-400 border-neutral-700' },
+  under_review:           { label: 'Under Review',          color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+  prepared:               { label: 'Prepared',              color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+  awaiting_user_approval: { label: 'Awaiting User Approval',color: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
+  approved:               { label: 'Approved',              color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+  launch_ready:           { label: 'Launch Ready',          color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+  live:                   { label: 'Live',                  color: 'bg-green-500/15 text-green-400 border-green-500/30' },
+  monitoring:             { label: 'Monitoring',            color: 'bg-teal-500/15 text-teal-400 border-teal-500/30' },
+  completed:              { label: 'Completed',             color: 'bg-neutral-500/15 text-neutral-300 border-neutral-500/30' },
+  report_ready:           { label: 'Report Ready',          color: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30' },
+  rejected:               { label: 'Rejected',              color: 'bg-red-500/15 text-red-400 border-red-500/30' },
+  changes_requested:      { label: 'Changes Requested',     color: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
+  campaign_failed:        { label: 'Campaign Failed',       color: 'bg-red-700/20 text-red-300 border-red-700/30' },
+  // Legacy
+  pending_review:         { label: 'Pending Review',        color: 'bg-neutral-800 text-neutral-400 border-neutral-700' },
+  pending_manual_review:  { label: 'Manual Review Required', color: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
+  campaign_created:       { label: 'Campaign Created',      color: 'bg-green-500/15 text-green-400 border-green-500/30' },
 };
 
 function StatusBadge({ status }: { status: CampaignRequestStatus }) {
   const { label, color } = STATUS_LABELS[status] ?? { label: status, color: 'bg-neutral-800 text-neutral-400 border-neutral-700' };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${color}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${color}`}>
       {label}
     </span>
   );
@@ -96,6 +106,7 @@ export default function AdminGoogleAdsPage() {
   const [statusFilter, setStatusFilter] = useState<CampaignRequestStatus | 'all'>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [adminNote, setAdminNote] = useState<Record<string, string>>({});
+  const [prepForm, setPrepForm] = useState<Record<string, { proposedTargeting: string; proposedBudget: string; proposedKeywords: string; proposedAdCopy: string }>>({});
   const [createForm, setCreateForm] = useState<Record<string, { youtubeId: string; customerId: string; budget: string; dryRun: boolean }>>({});
   const [actionResult, setActionResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
   const [studioStatus, setStudioStatus] = useState<StudioStatus | null>(null);
@@ -116,6 +127,11 @@ export default function AdminGoogleAdsPage() {
     if (savedForms) {
       try { setCreateForm(JSON.parse(savedForms)); } catch (e) {}
     }
+
+    const savedPreps = localStorage.getItem('googleAds_preps');
+    if (savedPreps) {
+      try { setPrepForm(JSON.parse(savedPreps)); } catch (e) {}
+    }
   }, []);
 
   // Save persistence on change
@@ -127,6 +143,10 @@ export default function AdminGoogleAdsPage() {
   useEffect(() => {
     localStorage.setItem('googleAds_forms', JSON.stringify(createForm));
   }, [createForm]);
+
+  useEffect(() => {
+    localStorage.setItem('googleAds_preps', JSON.stringify(prepForm));
+  }, [prepForm]);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -212,12 +232,13 @@ export default function AdminGoogleAdsPage() {
 
   const doAction = async (
     adoptionId: string,
-    action: 'approve' | 'reject' | 'request_changes' | 'create_campaign',
+    action: string,
     extra?: Record<string, unknown>
   ) => {
     setActionLoading({ adoptionId, action });
     setActionResult((prev) => ({ ...prev, [adoptionId]: { ok: true, msg: '' } }));
     try {
+      const prep = prepForm[adoptionId] || {};
       const res = await fetch('/api/admin/google-ads/campaign-requests', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -226,12 +247,13 @@ export default function AdminGoogleAdsPage() {
           adoptionId,
           action,
           adminNote: adminNote[adoptionId] || undefined,
+          ...prep,
           ...extra,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Action failed');
-      setActionResult((prev) => ({ ...prev, [adoptionId]: { ok: true, msg: 'Done.' } }));
+      setActionResult((prev) => ({ ...prev, [adoptionId]: { ok: true, msg: 'Stage updated.' } }));
       await loadRequests();
       await loadLogs();
     } catch (e: any) {
@@ -261,7 +283,7 @@ export default function AdminGoogleAdsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-6 max-w-7xl mx-auto space-y-6 text-neutral-100">
         {oauthError && (
           <div className="p-3 rounded-lg text-sm flex items-center justify-between gap-2 bg-red-500/10 border border-red-500/25 text-red-400">
             <span>{oauthError}</span>
@@ -272,7 +294,7 @@ export default function AdminGoogleAdsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-neutral-100">Google Ads Operations</h1>
+            <h1 className="text-2xl font-semibold">Google Ads Operations</h1>
             <p className="text-sm text-neutral-500 mt-1">
               Internal console for managing managed_sufitube infrastructure and sponsor campaign requests.
             </p>
@@ -284,7 +306,7 @@ export default function AdminGoogleAdsPage() {
               className="flex items-center gap-2 px-4 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${refreshingDiagnostics ? 'animate-spin' : ''}`} /> 
-              {refreshingDiagnostics ? 'Running Diagnostics…' : 'Run Infrastructure Check'}
+              {refreshingDiagnostics ? 'Running Diagnostics…' : 'Infrastructure Check'}
             </button>
             <button
               onClick={loadRequests}
@@ -391,9 +413,6 @@ export default function AdminGoogleAdsPage() {
                         <span className="text-neutral-300 truncate max-w-[120px]">{studioStatus.verification.oauth.googleEmail || '—'}</span>
                       </div>
                     </div>
-                    {studioStatus.verification.oauth.error && (
-                      <p className="text-[10px] text-red-400 italic">Error: {studioStatus.verification.oauth.error}</p>
-                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -412,17 +431,6 @@ export default function AdminGoogleAdsPage() {
                         {studioStatus.verification.account.viaMcc ? <Check className="w-3.5 h-3.5 text-green-400" /> : <X className="w-3.5 h-3.5 text-red-400" />}
                       </div>
                     </div>
-                    {studioStatus.verification.account.error && (
-                      <div className="p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider mb-1">Classification</p>
-                        <p className="text-[10px] text-neutral-300 font-mono">
-                          {studioStatus.verification.account.error === 'USER_PERMISSION_DENIED' ? 'Hierarchy Mismatch (Google-side Permission)' :
-                           studioStatus.verification.account.error === 'INVALID_CUSTOMER_ID' ? 'Target Account ID Invalid' :
-                           studioStatus.verification.account.error === 'SERVICE_DISABLED' ? 'Google Ads API Disabled' :
-                           studioStatus.verification.account.error}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -434,11 +442,11 @@ export default function AdminGoogleAdsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
             { label: 'Total',    key: 'all',              count: requests.length },
-            { label: 'Pending',  key: 'pending_review',   count: counts.pending_review ?? 0 },
-            { label: 'Approved', key: 'approved',          count: counts.approved ?? 0 },
-            { label: 'Created',  key: 'campaign_created',  count: counts.campaign_created ?? 0 },
-            { label: 'Rejected', key: 'rejected',          count: counts.rejected ?? 0 },
-            { label: 'Failed',   key: 'campaign_failed',   count: counts.campaign_failed ?? 0 },
+            { label: 'Pending',  key: 'submitted',        count: (counts.submitted ?? 0) + (counts.pending_review ?? 0) },
+            { label: 'Review',   key: 'under_review',     count: counts.under_review ?? 0 },
+            { label: 'Prepared', key: 'prepared',         count: counts.prepared ?? 0 },
+            { label: 'Live',     key: 'live',             count: (counts.live ?? 0) + (counts.campaign_created ?? 0) },
+            { label: 'Failed',   key: 'campaign_failed',  count: counts.campaign_failed ?? 0 },
           ].map(({ label, key, count }) => (
             <button
               key={key}
@@ -462,8 +470,8 @@ export default function AdminGoogleAdsPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by release, sponsor, customer ID…"
-              className="w-full pl-10 pr-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-lg text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+              placeholder="Search requests…"
+              className="w-full pl-10 pr-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-lg text-sm placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
             />
           </div>
           <select
@@ -486,21 +494,19 @@ export default function AdminGoogleAdsPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-24 text-neutral-600">
             <Target className="w-8 h-8 mx-auto mb-3 opacity-40" />
-            <p className="text-sm">No campaign requests found.</p>
+            <p className="text-sm">No requests found.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {filtered.map((req) => {
               const isExpanded = expanded === req.adoptionId;
               const form = createForm[req.adoptionId] ?? { youtubeId: req.youtubeVideoId ?? '', customerId: req.googleAdsCustomerId ?? '', budget: String(req.budgetAmount), dryRun: true };
+              const prep = prepForm[req.adoptionId] ?? { proposedTargeting: req.proposedTargeting || '', proposedBudget: String(req.proposedBudget || req.budgetAmount), proposedKeywords: req.proposedKeywords || '', proposedAdCopy: req.proposedAdCopy || '' };
               const result = actionResult[req.adoptionId];
               const isActing = actionLoading?.adoptionId === req.adoptionId;
 
               return (
-                <div
-                  key={req.adoptionId}
-                  className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-sm"
-                >
+                <div key={req.adoptionId} className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-sm">
                   {/* Row header */}
                   <div
                     className="flex items-start gap-4 p-5 cursor-pointer hover:bg-neutral-800/30 transition-colors"
@@ -512,13 +518,8 @@ export default function AdminGoogleAdsPage() {
                           {req.releaseTitle || req.releaseId}
                         </span>
                         <StatusBadge status={req.status} />
-                        {req.oauthConnected && (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
-                            <Check className="w-3 h-3" /> OAuth Connected
-                          </span>
-                        )}
                       </div>
-                      <div className="flex flex-wrap gap-4 text-sm text-neutral-500">
+                      <div className="flex flex-wrap gap-4 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
                         <span className="flex items-center gap-1">
                           <User className="w-3.5 h-3.5" />
                           {req.sponsorName || 'Anonymous'} · {req.sponsorEmail || '—'}
@@ -528,24 +529,14 @@ export default function AdminGoogleAdsPage() {
                           ${req.budgetAmount}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Target className="w-3.5 h-3.5" />
-                          {req.campaignObjective}
-                        </span>
-                        <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
                           {new Date(req.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    <div className="flex-shrink-0 flex items-center gap-2">
+                    <div className="flex-shrink-0 flex items-center gap-2 mt-1">
                       {req.releaseSlug && (
-                        <a
-                          href={`/release-detail/${req.releaseSlug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-1.5 text-neutral-500 hover:text-neutral-300 transition-colors"
-                        >
+                        <a href={`/release-detail/${req.releaseSlug}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="p-1.5 text-neutral-500 hover:text-neutral-300 transition-colors">
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       )}
@@ -555,165 +546,207 @@ export default function AdminGoogleAdsPage() {
 
                   {/* Expanded detail */}
                   {isExpanded && (
-                    <div className="border-t border-neutral-800 p-5 space-y-5">
-                      <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-neutral-500 mb-0.5">Adoption ID</p>
-                          <code className="text-neutral-300 text-xs break-all">{req.adoptionId}</code>
-                        </div>
-                        <div>
-                          <p className="text-neutral-500 mb-0.5">Method</p>
-                          <span className={`text-sm font-medium ${req.methodType === 'managed_sufitube' ? 'text-amber-400' : 'text-blue-400'}`}>
-                            {req.methodType === 'managed_sufitube' ? 'Managed by SufiTube' : 'Use My Google Ads'}
-                          </span>
-                        </div>
-                        {req.methodType !== 'managed_sufitube' && (
+                    <div className="border-t border-neutral-800 p-6 space-y-8 bg-neutral-950/30">
+                      {/* Grid Sections */}
+                      <div className="grid lg:grid-cols-2 gap-8">
+                        {/* Info Column */}
+                        <div className="space-y-6">
                           <div>
-                            <p className="text-neutral-500 mb-0.5">Google Ads Customer ID</p>
-                            <span className="text-neutral-300">{req.googleAdsCustomerId || '—'}</span>
+                            <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                              <Fingerprint className="w-3 h-3" /> Identity & Logistics
+                            </h4>
+                            <div className="bg-neutral-900/50 rounded-xl p-4 border border-neutral-800/50 space-y-3 text-xs">
+                              <div className="flex justify-between"><span className="text-neutral-500">Adoption ID</span><code className="text-neutral-300">{req.adoptionId}</code></div>
+                              <div className="flex justify-between"><span className="text-neutral-500">Method</span><span className={req.methodType === 'managed_sufitube' ? 'text-amber-400' : 'text-blue-400'}>{req.methodType === 'managed_sufitube' ? 'Managed by SufiTube' : 'Use My Google Ads'}</span></div>
+                              {req.methodType !== 'managed_sufitube' && <div className="flex justify-between"><span className="text-neutral-500">Customer ID</span><span className="text-neutral-200">{req.googleAdsCustomerId || '—'}</span></div>}
+                              <div className="flex justify-between"><span className="text-neutral-500">Regions</span><span className="text-neutral-300">{req.targetRegions.join(', ')}</span></div>
+                              <div className="flex justify-between"><span className="text-neutral-500">Objective</span><span className="text-neutral-300">{req.campaignObjective}</span></div>
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <p className="text-neutral-500 mb-0.5">Target Regions</p>
-                          <span className="text-neutral-300">{req.targetRegions.join(', ')}</span>
+
+                          <div>
+                            <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                              <Clock className="w-3 h-3" /> Audit Timeline
+                            </h4>
+                            <div className="bg-neutral-900/50 rounded-xl p-4 border border-neutral-800/50 space-y-4 max-h-[250px] overflow-y-auto custom-scrollbar">
+                              {req.events?.length === 0 ? (
+                                <p className="text-[10px] text-neutral-600 italic">No events recorded.</p>
+                              ) : (
+                                req.events.map((evt) => (
+                                  <div key={evt.id} className="relative pl-4 border-l border-neutral-800 pb-4 last:pb-0">
+                                    <div className="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-neutral-800 border border-neutral-700" />
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-[9px] font-bold uppercase text-neutral-400">{evt.eventType.replace(/_/g, ' ')}</span>
+                                      <span className="text-[8px] text-neutral-600">{new Date(evt.createdAt).toLocaleString()}</span>
+                                    </div>
+                                    {evt.message && <p className="text-[10px] text-neutral-500 leading-relaxed">{evt.message}</p>}
+                                    {evt.internalOnly && <Badge className="mt-1 bg-red-500/10 text-red-400 border-red-500/20 text-[8px] px-1 py-0 uppercase">Internal</Badge>}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-neutral-500 mb-0.5">Target Languages</p>
-                          <span className="text-neutral-300">{req.targetLanguages.join(', ')}</span>
-                        </div>
-                        <div>
-                          <p className="text-neutral-500 mb-0.5">YouTube Video ID</p>
-                          <span className="text-neutral-300 font-mono">{req.youtubeVideoId || '—'}</span>
+
+                        {/* Moderation Column */}
+                        <div className="space-y-6">
+                          <div>
+                            <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                              <Rocket className="w-3 h-3" /> Campaign Preparation
+                            </h4>
+                            <div className="bg-neutral-900/50 rounded-xl p-5 border border-neutral-800/50 space-y-4">
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-[10px] text-neutral-500 font-bold uppercase mb-1.5">Proposed Targeting (Regions/Audience)</label>
+                                  <input 
+                                    value={prep.proposedTargeting} 
+                                    onChange={(e) => setPrepForm(p => ({ ...p, [req.adoptionId]: { ...prep, proposedTargeting: e.target.value }}))}
+                                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none focus:border-amber-500/50 transition-colors" 
+                                    placeholder="e.g. US, UK, South Asia - Spiritual/Sufi enthusiasts"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-[10px] text-neutral-500 font-bold uppercase mb-1.5">Proposed Budget ($)</label>
+                                    <input 
+                                      type="number"
+                                      value={prep.proposedBudget} 
+                                      onChange={(e) => setPrepForm(p => ({ ...p, [req.adoptionId]: { ...prep, proposedBudget: e.target.value }}))}
+                                      className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none focus:border-amber-500/50" 
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] text-neutral-500 font-bold uppercase mb-1.5">Keywords (Comma separated)</label>
+                                    <input 
+                                      value={prep.proposedKeywords} 
+                                      onChange={(e) => setPrepForm(p => ({ ...p, [req.adoptionId]: { ...prep, proposedKeywords: e.target.value }}))}
+                                      className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none focus:border-amber-500/50" 
+                                      placeholder="Sufi, Kalam, Devotional..."
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-neutral-500 font-bold uppercase mb-1.5">Proposed Ad Copy / Headlines</label>
+                                  <textarea 
+                                    value={prep.proposedAdCopy} 
+                                    onChange={(e) => setPrepForm(p => ({ ...p, [req.adoptionId]: { ...prep, proposedAdCopy: e.target.value }}))}
+                                    className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none focus:border-amber-500/50 h-16 resize-none" 
+                                    placeholder="H1: Experience the Sufi Way..."
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="pt-2">
+                                <label className="block text-[10px] text-neutral-500 font-bold uppercase mb-1.5 flex items-center gap-1.5">
+                                  <MessageSquare className="w-2.5 h-2.5" /> Internal Moderation Note
+                                </label>
+                                <div className="flex gap-2">
+                                  <input 
+                                    value={adminNote[req.adoptionId] || ''} 
+                                    onChange={(e) => setAdminNote(p => ({ ...p, [req.adoptionId]: e.target.value }))}
+                                    placeholder="Add a private note to the audit log..."
+                                    className="flex-1 px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none"
+                                  />
+                                  <button 
+                                    onClick={() => doAction(req.adoptionId, 'add_note')}
+                                    className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors text-[10px] font-bold uppercase"
+                                  >
+                                    Save Note
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Admin note */}
-                      {req.adminNote && (
-                        <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-lg px-4 py-3">
-                          <p className="text-xs text-neutral-500 mb-1">Admin note</p>
-                          <p className="text-sm text-neutral-300">{req.adminNote}</p>
-                        </div>
-                      )}
-
-                      {/* Action result */}
+                      {/* Action Result / Feedback */}
                       {result?.msg && (
-                        <div className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm ${
-                          result.ok
-                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                            : 'bg-red-500/10 border-red-500/30 text-red-400'
+                        <div className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-xs font-medium ${
+                          result.ok ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
                         }`}>
                           {result.ok ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                           {result.msg}
                         </div>
                       )}
 
-                      {/* Quick actions */}
-                      {req.status !== 'campaign_created' && (
-                        <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-800/50">
-                          {req.status !== 'approved' && (
-                            <button
-                              disabled={isActing}
-                              onClick={() => doAction(req.adoptionId, 'approve')}
-                              className="flex items-center gap-1.5 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 text-sm rounded-lg transition-colors disabled:opacity-50"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              Approve
-                            </button>
+                      {/* Stage Transition Controls */}
+                      <div className="pt-6 border-t border-neutral-800/50 space-y-4">
+                        <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
+                          <Activity className="w-3 h-3" /> Workflow Orchestration
+                        </h4>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {(req.status === 'submitted' || req.status === 'pending_review') && (
+                            <button onClick={() => doAction(req.adoptionId, 'start_review')} className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 text-[10px] font-bold uppercase rounded-lg transition-all">Begin Institutional Review</button>
                           )}
-                          {req.status !== 'rejected' && (
-                            <button
-                              disabled={isActing}
-                              onClick={() => doAction(req.adoptionId, 'reject')}
-                              className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-sm rounded-lg transition-colors disabled:opacity-50"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                              Reject
-                            </button>
+                          {req.status === 'under_review' && (
+                            <button onClick={() => doAction(req.adoptionId, 'prepare')} className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-500 text-[10px] font-bold uppercase rounded-lg transition-all">Save Campaign Preparation</button>
                           )}
-                          <button
-                            disabled={isActing}
-                            onClick={() => doAction(req.adoptionId, 'request_changes')}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm rounded-lg transition-colors disabled:opacity-50"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            Request Changes
-                          </button>
+                          {req.status === 'prepared' && (
+                            <button onClick={() => doAction(req.adoptionId, 'request_user_approval')} className="px-4 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-500 text-[10px] font-bold uppercase rounded-lg transition-all">Send for Sponsor Approval</button>
+                          )}
+                          {req.status === 'awaiting_user_approval' && (
+                            <button onClick={() => doAction(req.adoptionId, 'mark_launch_ready')} className="px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-500 text-[10px] font-bold uppercase rounded-lg transition-all">Confirm Approval & Mark Launch Ready</button>
+                          )}
+                          {req.status !== 'rejected' && req.status !== 'completed' && (
+                            <button onClick={() => doAction(req.adoptionId, 'reject')} className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase rounded-lg transition-all">Reject Request</button>
+                          )}
                         </div>
-                      )}
+                      </div>
 
-                      {/* Create Campaign panel */}
-                      {(req.status === 'approved' || req.status === 'campaign_failed') && (
-                        <div className="bg-neutral-800/40 border border-neutral-700/50 rounded-xl p-4 space-y-4 shadow-inner">
+                      {/* Launch Console (Visible when ready or failed) */}
+                      {(req.status === 'launch_ready' || req.status === 'prepared' || req.status === 'approved' || req.status === 'campaign_failed' || req.status === 'live') && (
+                        <div className="bg-blue-600/5 border border-blue-500/10 rounded-2xl p-6 space-y-6 shadow-sm">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-neutral-300">
-                              <Rocket className="w-4 h-4 inline-block mr-1.5 text-blue-400" />
-                              Launch Google Ads Campaign
-                            </p>
-                            <label className="flex items-center gap-2 cursor-pointer group">
+                            <div className="space-y-1">
+                              <h5 className="text-sm font-semibold text-blue-400 flex items-center gap-2">
+                                <Rocket className="w-4 h-4" /> Google Ads Launch API
+                              </h5>
+                              <p className="text-[10px] text-neutral-500">Push campaign structure to Google Ads API</p>
+                            </div>
+                            <label className="flex items-center gap-3 cursor-pointer select-none">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Dry Run Safety</span>
                               <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  className="sr-only peer"
-                                  checked={form.dryRun}
-                                  onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, dryRun: e.target.checked } }))}
-                                />
-                                <div className="w-8 h-4 bg-neutral-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                                <input type="checkbox" className="sr-only peer" checked={form.dryRun} onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, dryRun: e.target.checked } }))} />
+                                <div className="w-9 h-5 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>
                               </div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 group-hover:text-neutral-400 transition-colors">Dry Run</span>
                             </label>
                           </div>
 
-                          <div className="grid sm:grid-cols-3 gap-3">
-                            <div>
-                              <label className="block text-xs text-neutral-500 mb-1">YouTube Video ID</label>
-                              <input
-                                value={form.youtubeId}
-                                onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, youtubeId: e.target.value } }))}
-                                placeholder="e.g. dQw4w9WgXcQ"
-                                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 focus:outline-none"
-                              />
+                          <div className="grid sm:grid-cols-3 gap-4">
+                            <div className="space-y-1.5">
+                              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider">YouTube ID</label>
+                              <input value={form.youtubeId} onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, youtubeId: e.target.value } }))} className="w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none focus:border-blue-500/50" />
                             </div>
                             {req.methodType !== 'managed_sufitube' && (
-                              <div>
-                                <label className="block text-xs text-neutral-500 mb-1">Customer ID</label>
-                                <input
-                                  value={form.customerId}
-                                  onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, customerId: e.target.value } }))}
-                                  placeholder="123-456-7890"
-                                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 focus:outline-none"
-                                />
+                              <div className="space-y-1.5">
+                                <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Customer ID</label>
+                                <input value={form.customerId} onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, customerId: e.target.value } }))} className="w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none focus:border-blue-500/50" />
                               </div>
                             )}
-                            <div>
-                              <label className="block text-xs text-neutral-500 mb-1">Budget (USD)</label>
-                              <input
-                                type="number"
-                                value={form.budget}
-                                onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, budget: e.target.value } }))}
-                                placeholder="50"
-                                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-200 focus:outline-none"
-                              />
+                            <div className="space-y-1.5">
+                              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Launch Budget ($)</label>
+                              <input type="number" value={form.budget} onChange={(e) => setCreateForm((p) => ({ ...p, [req.adoptionId]: { ...form, budget: e.target.value } }))} className="w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-xs text-neutral-200 focus:outline-none focus:border-blue-500/50" />
                             </div>
                           </div>
 
-                          <button
-                            disabled={isActing || !form.youtubeId || (req.methodType !== 'managed_sufitube' && !form.customerId)}
-                            onClick={() =>
-                              doAction(req.adoptionId, 'create_campaign', {
-                                youtubeVideoId: form.youtubeId,
-                                selectedCustomerId: req.methodType === 'managed_sufitube' ? undefined : form.customerId,
-                                budgetAmount: Number(form.budget),
-                                dry_run: form.dryRun
-                              })
-                            }
-                            className={`flex items-center gap-2 px-4 py-2.5 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 ${form.dryRun ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-blue-600 hover:bg-blue-500'}`}
-                          >
-                            {isActing && actionLoading?.action === 'create_campaign' ? (
-                              <><Loader2 className="w-4 h-4 animate-spin" /> {form.dryRun ? 'Validating…' : 'Creating…'}</>
-                            ) : (
-                              <>{form.dryRun ? <ShieldCheck className="w-4 h-4" /> : <Rocket className="w-4 h-4" />} {form.dryRun ? 'Run Campaign Validation (Dry Run)' : 'Create Campaign in Google Ads'}</>
+                          <div className="flex items-center gap-3">
+                            <button
+                              disabled={isActing || !form.youtubeId || (req.methodType !== 'managed_sufitube' && !form.customerId)}
+                              onClick={() => doAction(req.adoptionId, 'launch', { youtubeVideoId: form.youtubeId, selectedCustomerId: req.methodType === 'managed_sufitube' ? undefined : form.customerId, budgetAmount: Number(form.budget), dry_run: form.dryRun })}
+                              className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-[0.98] disabled:opacity-50 ${form.dryRun ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20'}`}
+                            >
+                              {isActing && actionLoading?.action === 'launch' ? (
+                                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {form.dryRun ? 'Validating…' : 'Launching…'}</>
+                              ) : (
+                                <>{form.dryRun ? <ShieldCheck className="w-3.5 h-3.5" /> : <Rocket className="w-3.5 h-3.5" />} {form.dryRun ? 'Validate Campaign Structure' : 'Push Live to Google Ads'}</>
+                              )}
+                            </button>
+                            {req.status === 'live' && (
+                              <button onClick={() => doAction(req.adoptionId, 'complete')} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-400 text-[10px] font-bold uppercase tracking-widest rounded-xl border border-neutral-700 transition-all">Mark as Completed</button>
                             )}
-                          </button>
+                          </div>
                         </div>
                       )}
                     </div>

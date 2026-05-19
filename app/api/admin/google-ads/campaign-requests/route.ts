@@ -60,13 +60,29 @@ export async function PATCH(request: NextRequest) {
     }
 
     const statusMap: Record<string, CampaignRequestStatus> = {
+      start_review: 'under_review',
+      prepare: 'prepared',
+      request_user_approval: 'awaiting_user_approval',
+      mark_launch_ready: 'launch_ready',
       approve: 'approved',
       reject: 'rejected',
       request_changes: 'changes_requested',
+      complete: 'completed',
     };
 
-    if (action === 'create_campaign') {
-      // Trigger actual Google Ads campaign creation
+    if (action === 'add_note') {
+      const updated = await addCampaignRequestEvent(adoptionId, {
+        eventType: 'note_added',
+        actorType: 'admin',
+        actorId: authResult.id,
+        message: adminNote,
+        internalOnly: true,
+      });
+      return NextResponse.json({ success: true, request: updated });
+    }
+
+    if (action === 'create_campaign' || action === 'launch') {
+      // Trigger actual Google Ads campaign creation (Launch)
       const createBody = {
         adoptionId,
         releaseId: releaseId || existing.releaseId,
@@ -113,53 +129,61 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      const updated = await updateCampaignRequestStatus(adoptionId, 'campaign_created', adminNote, {
+      // If dry run passed, we stay in prepared or launch_ready
+      const isDryRunPassed = createData.status === 'dry_run_passed';
+      const finalStatus = isDryRunPassed ? existing.status : 'live';
+
+      const updated = await updateCampaignRequestStatus(adoptionId, finalStatus, adminNote, {
         campaignResourceName: createData.campaign_resource_name,
       });
 
       await addCampaignRequestEvent(adoptionId, {
-        eventType: 'campaign_created',
+        eventType: isDryRunPassed ? 'prepared' : 'launched',
         actorType: 'admin',
         actorId: authResult.id,
-        message: 'Campaign created in Google Ads.',
+        message: isDryRunPassed ? 'Validation passed (Dry Run).' : 'Campaign launched live in Google Ads.',
         metadata: {
           campaign_resource_name: createData.campaign_resource_name,
           customer_id: createData.customer_id,
+          isDryRun: isDryRunPassed
         },
       });
-
-      // Also update the campaign store record
-      if (createData.campaign_resource_name) {
-        await upsertGoogleAdsCampaign({
-          adoptionId,
-          releaseId: releaseId || existing.releaseId,
-          userId: existing.userId || '',
-          selectedCustomerId: selectedCustomerId || existing.googleAdsCustomerId || '',
-          youtubeVideoId: youtubeVideoId || existing.youtubeVideoId || '',
-          budgetAmount: budgetAmount || existing.budgetAmount,
-          campaignResourceName: createData.campaign_resource_name,
-          campaignStatus: 'PAUSED',
-        });
-      }
 
       return NextResponse.json({ success: true, request: updated, campaign: createData });
     }
 
-    // approve / reject / request_changes
+    // Standard lifecycle transitions
     const newStatus = statusMap[action];
     if (!newStatus) {
       return NextResponse.json(
-        { error: `Unknown action: ${action}. Use approve, reject, request_changes, or create_campaign.` },
+        { error: `Unknown action: ${action}.` },
         { status: 400 }
       );
     }
 
-    const updated = await updateCampaignRequestStatus(adoptionId, newStatus, adminNote);
+    const eventTypeMap: Record<string, any> = {
+      start_review: 'review_started',
+      prepare: 'prepared',
+      request_user_approval: 'approval_requested',
+      mark_launch_ready: 'launch_ready',
+      approve: 'approved',
+      reject: 'rejected',
+      request_changes: 'changes_requested',
+      complete: 'completed',
+    };
+
+    const updated = await updateCampaignRequestStatus(adoptionId, newStatus, adminNote, {
+      proposedTargeting: body.proposedTargeting,
+      proposedBudget: body.proposedBudget,
+      proposedKeywords: body.proposedKeywords,
+      proposedAdCopy: body.proposedAdCopy,
+    });
+
     await addCampaignRequestEvent(adoptionId, {
-      eventType: action === 'request_changes' ? 'changes_requested' : action as any,
+      eventType: eventTypeMap[action] || 'note_added',
       actorType: 'admin',
       actorId: authResult.id,
-      message: adminNote,
+      message: adminNote || `Status changed to ${newStatus.replace(/_/g, ' ')}`,
     });
 
     return NextResponse.json({ success: true, request: updated });

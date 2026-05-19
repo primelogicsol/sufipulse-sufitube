@@ -2,20 +2,45 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 export type CampaignRequestStatus =
-  | 'pending_review'
-  | 'pending_manual_review'
+  | 'submitted'
+  | 'under_review'
+  | 'prepared'
+  | 'awaiting_user_approval'
   | 'approved'
+  | 'launch_ready'
+  | 'live'
+  | 'monitoring'
+  | 'completed'
+  | 'report_ready'
   | 'rejected'
   | 'changes_requested'
-  | 'campaign_created'
-  | 'campaign_failed';
+  | 'campaign_failed'
+  // Legacy support
+  | 'pending_review'
+  | 'pending_manual_review'
+  | 'campaign_created';
 
 export type CampaignRequestEvent = {
   id: string;
-  eventType: 'submitted' | 'approved' | 'rejected' | 'changes_requested' | 'campaign_created' | 'campaign_failed' | 'note_added';
+  eventType: 
+    | 'submitted' 
+    | 'review_started'
+    | 'prepared'
+    | 'approval_requested'
+    | 'approved' 
+    | 'rejected' 
+    | 'changes_requested' 
+    | 'launch_ready'
+    | 'launched'
+    | 'completed'
+    | 'report_ready'
+    | 'campaign_created' 
+    | 'campaign_failed' 
+    | 'note_added';
   actorType: 'user' | 'admin' | 'system';
   actorId?: string;
   message?: string;
+  internalOnly?: boolean; // If true, hidden from public tracking timeline
   metadata?: Record<string, unknown>;
   createdAt: string;
 };

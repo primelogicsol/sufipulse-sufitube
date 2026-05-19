@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Check, Clock, Loader2, AlertCircle, Music, ArrowLeft, ExternalLink, Copy, Lock } from 'lucide-react';
+import { Check, Clock, Loader2, AlertCircle, Music, ArrowLeft, ExternalLink, Copy, Lock, Rocket, Activity } from 'lucide-react';
 
 const TIMELINE_STEPS_MANAGED = [
   { key: 'submitted',        label: 'Submitted',        detail: 'Your sponsorship request has been received.' },
@@ -18,41 +18,35 @@ const TIMELINE_STEPS_MANAGED = [
 
 const TIMELINE_STEPS_DIRECT = [
   { key: 'submitted',        label: 'Request Submitted',            detail: 'Your Google Ads details have been received.' },
-  { key: 'account_linked',   label: 'Account Verified',             detail: 'Google account linked and customer ID verified.' },
-  { key: 'under_review',     label: 'Campaign Structure Review',    detail: 'SufiPulse is preparing your campaign structure.' },
-  { key: 'prepared',         label: 'User Approval Required',       detail: 'Please approve budget and launch inside Google Ads.' },
+  { key: 'under_review',     label: 'Institutional Review',         detail: 'SufiPulse is reviewing your request.' },
+  { key: 'prepared',         label: 'Campaign Prepared',            detail: 'Institutional structure is ready for approval.' },
+  { key: 'awaiting_user_approval', label: 'Awaiting Your Approval', detail: 'Please review proposed targeting and approve.' },
+  { key: 'launch_ready',     label: 'Ready for Launch',             detail: 'Approved structure is ready for API push.' },
   { key: 'live',             label: 'Campaign Live',                detail: 'Your campaign is active inside Google Ads.' },
   { key: 'monitoring',       label: 'Performance Monitoring',       detail: 'Campaign metrics are being tracked.' },
   { key: 'completed',        label: 'Completed',                    detail: 'Campaign has finished.' },
-  { key: 'report_ready',     label: 'Impact Report Ready',          detail: 'Final insights are ready.' },
 ] as const;
 
 type TimelineKey = typeof TIMELINE_STEPS_MANAGED[number]['key'] | typeof TIMELINE_STEPS_DIRECT[number]['key'];
 
 function resolveTimelineStep(adoption: any): TimelineKey {
-  const status: string = adoption?.adoptionStatus || 'draft';
+  const status: string = adoption?.campaignRequestStatus || adoption?.adoptionStatus || 'draft';
   const payment: string = adoption?.paymentStatus || 'unpaid';
   const methodType: string = adoption?.methodType || '';
 
   if (status === 'report_ready') return 'report_ready';
-  if (status === 'completed' && adoption?.reportUrl) return 'report_ready';
   if (status === 'completed') return 'completed';
   if (status === 'monitoring') return 'monitoring';
-  if (status === 'live') {
-    const created = new Date(adoption.updatedAt || adoption.createdAt).getTime();
-    return Date.now() - created > 3 * 86400000 ? 'monitoring' : 'live';
-  }
+  if (status === 'live' || status === 'launched') return 'live';
+  if (status === 'launch_ready') return 'launch_ready';
+  if (status === 'awaiting_user_approval') return 'awaiting_user_approval';
+  if (status === 'prepared') return 'prepared';
+  if (status === 'under_review' || status === 'review_started') return 'under_review';
   
   if (methodType === 'use_my_google_ads') {
-    if (status === 'awaiting_user_approval' || status === 'campaign_prepared') return 'prepared';
-    if (['pending_google_ads_manual_review', 'google_ads_connected_pending_review', 'pending_review', 'google_ads_verified'].includes(status)) return 'under_review';
-    if (adoption?.googleAdsVerificationStatus === 'verified') return 'account_linked';
-    return 'submitted';
+    if (status === 'submitted' || status === 'pending_review' || status === 'pending_manual_review') return 'submitted';
   }
 
-  if (['scheduled', 'campaign_prepared', 'awaiting_user_approval', 'approved'].includes(status)) return 'prepared';
-  if (['admin_review', 'google_ads_verified', 'pending_google_ads_manual_review', 'google_ads_verification_failed'].includes(status)) return 'under_review';
-  if (status === 'campaign_preparation_requested') return 'payment_received';
   if (status === 'pending_review') {
     if (payment === 'paid') return 'under_review';
     return 'payment_received';
@@ -246,6 +240,31 @@ export default function AdoptionTrackingPage() {
           )}
         </div>
 
+        {/* Proposed Details (Awaiting Approval) */}
+        {adoption.proposedTargeting && (
+          <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-6 space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+              <Rocket className="w-3.5 h-3.5" /> Institutional Preparation
+            </h3>
+            <div className="grid sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold">Proposed Targeting</p>
+                <p className="text-neutral-200">{adoption.proposedTargeting}</p>
+              </div>
+              <div>
+                <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold">Keywords</p>
+                <p className="text-neutral-200">{adoption.proposedKeywords || '—'}</p>
+              </div>
+            </div>
+            {adoption.proposedAdCopy && (
+              <div className="pt-2">
+                <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold text-[10px]">Proposed Ad Headlines</p>
+                <p className="text-neutral-300 italic whitespace-pre-line">{adoption.proposedAdCopy}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {!isManaged && currentStep === 'submitted' && (
           <div className="bg-blue-900/10 border border-blue-500/30 rounded-xl p-5 space-y-4">
             <div className="flex items-start gap-3">
@@ -290,8 +309,11 @@ export default function AdoptionTrackingPage() {
           </div>
         )}
 
+        {/* Status Milestones */}
         <div className="space-y-1">
-          <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-widest mb-4">Status Timeline</h2>
+          <h2 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+            <Activity className="w-3 h-3" /> Lifecycle Milestones
+          </h2>
           <div className="relative">
             <div className="absolute left-4 top-4 bottom-4 w-px bg-neutral-800" />
             <div className="space-y-0">
@@ -327,6 +349,29 @@ export default function AdoptionTrackingPage() {
             </div>
           </div>
         </div>
+
+        {/* Detailed Event History */}
+        {adoption.campaignEvents?.length > 0 && (
+          <div className="pt-8 border-t border-neutral-900 space-y-6">
+            <h2 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Clock className="w-3 h-3" /> Institutional Timeline
+            </h2>
+            <div className="space-y-6">
+              {adoption.campaignEvents.map((evt: any) => (
+                <div key={evt.id} className="relative pl-6 border-l border-neutral-800">
+                  <div className="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-neutral-800 border border-neutral-700" />
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{evt.eventType.replace(/_/g, ' ')}</span>
+                    <span className="text-[10px] text-neutral-600">{new Date(evt.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  {evt.message && (
+                    <p className="text-xs text-neutral-500 leading-relaxed italic">"{evt.message}"</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <p className="text-xs text-center text-neutral-700">
           Questions? Email{' '}
