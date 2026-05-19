@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2, Lock, ExternalLink, Clock, AlertCircle } from 'lucide-react';
-import { SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
+import { SongAdoptionPackage, AdoptionFormData } from '../../../../types/adoption.types';
 
 const ADOPTION_PACKAGES: SongAdoptionPackage[] = [
   { id: 'pkg_1', method_type: 'managed_sufitube', package_name: 'Blessing Support', description: 'Early visibility push and community testing — ideal for first-time sponsors', currency: 'USD', amount: 25, estimated_impressions_min: 500, estimated_impressions_max: 3000, duration_days: 4, regions_targeted: ['Local'], reporting_level: 'Basic', is_active: true, sort_order: 1 },
@@ -128,34 +128,19 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [customModalAmount, setCustomModalAmount] = useState('');
   const [customModalError, setCustomModalError] = useState('');
 
-  // Phase 2A: Google Ads Direct Feature Flag
+  // Public Beta: Google Ads Direct visibility
+  // If the feature flag is on, we show the active CTA immediately.
   const ENABLE_GOOGLE_ADS_DIRECT = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ADS_DIRECT === 'true';
   const isAdmin = ['admin', 'administrator', 'super_admin', 'governance_admin'].includes(user?.role || '');
   const isDev = process.env.NODE_ENV === 'development';
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '3000');
-  
-  // FORCED BYPASS FOR LOCALHOST TESTING
-  const isLocalTesting = isDev || isLocalhost;
 
-  // Eligibility: Is the user allowed to see the "Direct" option at all?
-  const isEligibleForDirect = isLocalTesting || ENABLE_GOOGLE_ADS_DIRECT || (!authLoading && isAdmin);
-  
-  // Active status: Only show the active CTA when eligibility is confirmed AND Google Ads is confirmed available.
-  const showGoogleAdsActive = isLocalTesting || (isEligibleForDirect && googleAdsConfigured === true && (ENABLE_GOOGLE_ADS_DIRECT || isAdmin));
-
-  // Debug Quarantine State
-  useEffect(() => {
-    console.log('--- Google Ads Direct UI Debug ---');
-    console.log('isDev:', isDev);
-    console.log('isLocalhost:', isLocalhost);
-    console.log('isLocalTesting:', isLocalTesting);
-    console.log('showGoogleAdsActive:', showGoogleAdsActive);
-    console.log('googleAdsConfigured:', googleAdsConfigured);
-    console.log('isAdmin:', isAdmin);
-    console.log('authLoading:', authLoading);
-    console.log('---------------------------------');
-  }, [authLoading, isAdmin, isDev, isLocalhost, isLocalTesting, googleAdsConfigured, showGoogleAdsActive]);
+  // Active status: Only show the active CTA when:
+  // 1. Explicitly enabled by feature flag
+  // 2. OR confirmed available by the server
+  // 3. OR it's an admin on localhost/development (quarantine lifted)
+  const showGoogleAdsActive = ENABLE_GOOGLE_ADS_DIRECT || googleAdsConfigured === true || (isAdmin && (isDev || isLocalhost));
 
   // ── Effects ───────────────────────────────────────────────────────────────
 
@@ -163,17 +148,10 @@ export function AdoptTab({ release }: AdoptTabProps) {
   useEffect(() => {
     const hasPaymentLink = !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_SONG_PAYMENT_LINK || 
                           !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25;
-    
-    console.log('Stripe Config Debug:', {
-      hasAdopt25: !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25,
-      hasAdopt50: !!process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_50,
-      link25: process.env.NEXT_PUBLIC_STRIPE_ADOPT_LINK_25?.slice(0, 20) + '...',
-    });
 
     fetch('/api/payment/status')
       .then(res => res.json())
       .then(data => {
-        console.log('Payment API Status:', data);
         setStripeEnabled(!!data.available || hasPaymentLink);
       })
       .catch(() => setStripeEnabled(!!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || hasPaymentLink));
@@ -184,7 +162,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/google-ads/status');
+        const res = await fetch('/api/google-ads/status', { credentials: 'include' });
         const payload = await res.json();
         setGoogleAdsConfigured(payload?.available);
         setGoogleAdsMessage(payload?.message || '');
@@ -201,6 +179,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
       }
     })();
   }, [user?.id]);
+
 
   // Restore state after Google OAuth callback redirect
   // Handles both legacy (?adoption_oauth=success) and new (?step=google_ads_connected) URLs

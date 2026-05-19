@@ -11,35 +11,44 @@ import { getGoogleAdsAvailability } from '@/lib/google-ads/config';
  * Returns connection status and availability.
  */
 export async function GET(request: NextRequest) {
-  const auth = await getAuthUser(request);
-  const isAdmin = checkIsAdmin(auth);
-  const availability = getGoogleAdsAvailability(isAdmin);
+  try {
+    const auth = await getAuthUser(request);
+    const isAdmin = checkIsAdmin(auth);
+    const availability = getGoogleAdsAvailability(isAdmin);
 
-  if (!auth) {
+    if (!auth) {
+      return NextResponse.json({
+        ...availability,
+        connected: false,
+        message: availability.available 
+          ? 'Sign in to connect your Google Ads account.' 
+          : availability.message
+      });
+    }
+
+    const userId = auth.id;
+    const userRecord = await getGoogleAdsUserOAuth(userId);
+    const { searchParams } = new URL(request.url);
+    const adoptionId = searchParams.get('adoptionId') || '';
+    const campaign = adoptionId ? await getGoogleAdsCampaign(adoptionId) : null;
+
     return NextResponse.json({
       ...availability,
-      connected: false,
-      message: availability.available 
-        ? 'Sign in to connect your Google Ads account.' 
-        : availability.message
+      connected: !!userRecord,
+      userId,
+      googleEmail: userRecord?.googleEmail || null,
+      verifiedCustomerId: userRecord?.verifiedCustomerId || null,
+      accessibleCustomerIds: userRecord?.accessibleCustomerIds || [],
+      selectedCustomerId: campaign?.selectedCustomerId || userRecord?.verifiedCustomerId || null,
+      campaignStatus: campaign?.campaignStatus || null,
+      updatedAt: userRecord?.updatedAt || null,
     });
+  } catch (err: any) {
+    console.error('[google-ads/status] Server Error:', err);
+    return NextResponse.json({ 
+      available: false, 
+      error: err.message || 'Internal Server Error',
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    }, { status: 500 });
   }
-
-  const userId = auth.id;
-  const userRecord = await getGoogleAdsUserOAuth(userId);
-  const { searchParams } = new URL(request.url);
-  const adoptionId = searchParams.get('adoptionId') || '';
-  const campaign = adoptionId ? await getGoogleAdsCampaign(adoptionId) : null;
-
-  return NextResponse.json({
-    ...availability,
-    connected: !!userRecord,
-    userId,
-    googleEmail: userRecord?.googleEmail || null,
-    verifiedCustomerId: userRecord?.verifiedCustomerId || null,
-    accessibleCustomerIds: userRecord?.accessibleCustomerIds || [],
-    selectedCustomerId: campaign?.selectedCustomerId || userRecord?.verifiedCustomerId || null,
-    campaignStatus: campaign?.campaignStatus || null,
-    updatedAt: userRecord?.updatedAt || null,
-  });
 }

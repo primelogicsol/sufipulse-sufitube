@@ -51,16 +51,17 @@ export function getGoogleAdsAvailability(isAdmin: boolean = false): GoogleAdsAva
   const configComplete = missing.length === 0;
 
   // PUBLIC BETA LOGIC:
-  // Available to everyone if configuration is complete and not explicitly disabled.
-  const available = configComplete && ENABLE_PUBLIC_DIRECT;
+  // Available to everyone if explicitly enabled (default true if not false).
+  // We decouple visibility from config completion to remove the "Under Enhancement" quarantine.
+  const available = ENABLE_PUBLIC_DIRECT;
 
   const result: GoogleAdsAvailability = {
     available,
     oauthReady: configComplete,
     mode: config.createMode,
     message: available 
-      ? 'Google Ads Direct is available.' 
-      : 'Google Ads Direct is under infrastructure enhancement. Managed by SufiPulse is available.',
+      ? 'Google Ads Direct is active.' 
+      : 'Google Ads Direct is under infrastructure enhancement.',
   };
 
   if (isAdmin && missing.length > 0) {
