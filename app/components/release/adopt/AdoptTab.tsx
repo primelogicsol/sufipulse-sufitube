@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, X, Globe, CreditCard, CirclePlay as PlayCircle, Settings, Music, ChartBar as BarChart, Loader2, Lock, ExternalLink, Clock, AlertCircle } from 'lucide-react';
-import { SongAdoptionPackage, AdoptionFormData } from '../../../../types/adoption.types';
+import { SongAdoptionPackage, AdoptionFormData } from '../../../types/adoption.types';
 
 const ADOPTION_PACKAGES: SongAdoptionPackage[] = [
   { id: 'pkg_1', method_type: 'managed_sufitube', package_name: 'Blessing Support', description: 'Early visibility push and community testing — ideal for first-time sponsors', currency: 'USD', amount: 25, estimated_impressions_min: 500, estimated_impressions_max: 3000, duration_days: 4, regions_targeted: ['Local'], reporting_level: 'Basic', is_active: true, sort_order: 1 },
@@ -129,18 +129,20 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const [customModalError, setCustomModalError] = useState('');
 
   // Public Beta: Google Ads Direct visibility
-  // If the feature flag is on, we show the active CTA immediately.
   const ENABLE_GOOGLE_ADS_DIRECT = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ADS_DIRECT === 'true';
   const isAdmin = ['admin', 'administrator', 'super_admin', 'governance_admin'].includes(user?.role || '');
   const isDev = process.env.NODE_ENV === 'development';
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '3000');
 
-  // Active status: Only show the active CTA when:
-  // 1. Explicitly enabled by feature flag
+  const isLocalTesting = isDev || isLocalhost;
+  const isEligibleForDirect = isLocalTesting || ENABLE_GOOGLE_ADS_DIRECT || (!authLoading && isAdmin);
+  
+  // Show active CTA if:
+  // 1. Feature flag is explicitly ON
   // 2. OR confirmed available by the server
   // 3. OR it's an admin on localhost/development (quarantine lifted)
-  const showGoogleAdsActive = ENABLE_GOOGLE_ADS_DIRECT || googleAdsConfigured === true || (isAdmin && (isDev || isLocalhost));
+  const showGoogleAdsActive = ENABLE_GOOGLE_ADS_DIRECT || googleAdsConfigured === true || (isAdmin && isLocalTesting);
 
   // ── Effects ───────────────────────────────────────────────────────────────
 

@@ -592,9 +592,34 @@ export default function AdminGoogleAdsPage() {
                         <div className="space-y-6">
                           <div>
                             <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                              <Rocket className="w-3 h-3" /> Campaign Preparation
+                              <Rocket className="w-3 h-3" /> Campaign Intelligence Engine
                             </h4>
-                            <div className="bg-neutral-900/50 rounded-xl p-5 border border-neutral-800/50 space-y-4">
+                            <div className="bg-neutral-900/50 rounded-xl p-5 border border-neutral-800/50 space-y-6">
+                              {/* Intelligence Selectors */}
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Linguistic Intelligence</label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {['Urdu', 'Kashmiri', 'Punjabi', 'English'].map(lang => (
+                                      <button key={lang} className="px-2.5 py-1.5 rounded-lg border border-neutral-800 bg-neutral-950 text-[10px] font-bold uppercase tracking-tight text-neutral-400 hover:border-blue-500/30 hover:text-blue-400 transition-all">
+                                        {lang}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Devotional Targeting Presets</label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {['Global Sufi', 'Islamic Reflection', 'Spiritual Poetry', 'Healing'].map(preset => (
+                                      <button key={preset} className="px-2.5 py-1.5 rounded-lg border border-neutral-800 bg-neutral-950 text-[10px] font-bold uppercase tracking-tight text-neutral-400 hover:border-amber-500/30 hover:text-amber-400 transition-all">
+                                        {preset}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
                               <div className="space-y-3">
                                 <div>
                                   <label className="block text-[10px] text-neutral-500 font-bold uppercase mb-1.5">Proposed Targeting (Regions/Audience)</label>

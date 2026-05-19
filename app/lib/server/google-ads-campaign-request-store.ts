@@ -68,10 +68,27 @@ export type GoogleAdsCampaignRequest = {
   status: CampaignRequestStatus;
   reviewReason?: string;
   adminNote?: string;
+
+  // Campaign Intelligence & Preparation
+  selectedPresets?: string[];
+  selectedLanguagesIntelligence?: string[];
+  selectedSemantics?: string[];
+  customKeywords?: string[];
+  customNegativeKeywords?: string[];
   proposedTargeting?: string;
   proposedBudget?: number;
   proposedKeywords?: string;
   proposedAdCopy?: string;
+  
+  sponsorSafeSummary?: {
+    objective: string;
+    regions: string[];
+    languages: string[];
+    audienceSummary: string;
+    resonanceProfile: string;
+    culturalOverview: string;
+  };
+
   campaignResourceName?: string;
   events: CampaignRequestEvent[];
   createdAt: string;

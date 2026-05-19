@@ -248,18 +248,36 @@ export default function AdoptionTrackingPage() {
             </h3>
             <div className="grid sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold">Proposed Targeting</p>
+                <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold">Targeted Regions</p>
                 <p className="text-neutral-200">{adoption.proposedTargeting}</p>
               </div>
               <div>
-                <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold">Keywords</p>
-                <p className="text-neutral-200">{adoption.proposedKeywords || '—'}</p>
+                <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold">Planned Budget</p>
+                <p className="text-neutral-200">${adoption.proposedBudget || budget}</p>
               </div>
             </div>
-            {adoption.proposedAdCopy && (
-              <div className="pt-2">
+            
+            {adoption.sponsorSafeSummary && (
+              <div className="space-y-4 pt-4 border-t border-amber-500/10">
+                <div>
+                  <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold text-[10px]">Campaign Resonance Profile</p>
+                  <p className="text-sm text-amber-200/90 leading-relaxed font-serif italic">
+                    "{adoption.sponsorSafeSummary.resonanceProfile}"
+                  </p>
+                </div>
+                <div>
+                  <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold text-[10px]">Cultural Targeting Strategy</p>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    {adoption.sponsorSafeSummary.culturalOverview}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!adoption.sponsorSafeSummary && adoption.proposedAdCopy && (
+              <div className="pt-2 border-t border-amber-500/10">
                 <p className="text-neutral-500 mb-1 uppercase tracking-tighter font-bold text-[10px]">Proposed Ad Headlines</p>
-                <p className="text-neutral-300 italic whitespace-pre-line">{adoption.proposedAdCopy}</p>
+                <p className="text-neutral-300 italic whitespace-pre-line text-xs">{adoption.proposedAdCopy}</p>
               </div>
             )}
           </div>

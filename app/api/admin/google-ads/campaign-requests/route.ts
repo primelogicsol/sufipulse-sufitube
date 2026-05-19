@@ -172,12 +172,21 @@ export async function PATCH(request: NextRequest) {
       complete: 'completed',
     };
 
-    const updated = await updateCampaignRequestStatus(adoptionId, newStatus, adminNote, {
+    // Intelligence Data Extraction
+    const intelligenceFields = {
+      selectedPresets: body.selectedPresets,
+      selectedLanguagesIntelligence: body.selectedLanguagesIntelligence,
+      selectedSemantics: body.selectedSemantics,
+      customKeywords: body.customKeywords,
+      customNegativeKeywords: body.customNegativeKeywords,
       proposedTargeting: body.proposedTargeting,
-      proposedBudget: body.proposedBudget,
+      proposedBudget: body.proposedBudget ? Number(body.proposedBudget) : undefined,
       proposedKeywords: body.proposedKeywords,
       proposedAdCopy: body.proposedAdCopy,
-    });
+      sponsorSafeSummary: body.sponsorSafeSummary,
+    };
+
+    const updated = await updateCampaignRequestStatus(adoptionId, newStatus, adminNote, intelligenceFields);
 
     await addCampaignRequestEvent(adoptionId, {
       eventType: eventTypeMap[action] || 'note_added',
