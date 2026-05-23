@@ -162,6 +162,11 @@ jobs:
               exit 1
             }
 
+            # ── SEED ADMIN ──────────────────────────────────────────────────
+            _s="seed-admin"
+            echo "Synchronizing admin credentials..."
+            docker compose -p sufipulse_new exec -T app node scripts/seed-admin.js
+
             # ── CLEANUP ──────────────────────────────────────────────────────
             _s="cleanup"
             docker image prune -f
