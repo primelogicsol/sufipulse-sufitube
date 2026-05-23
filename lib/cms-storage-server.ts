@@ -48,19 +48,56 @@ const ensureHydrated = (force = false) => {
 
   console.log(`[CMS-SERVER] Re-hydrating from disk... (Force: ${force}, File Mtime: ${currentMtime})`);
   try {
+    let releasesToImport: CMSRelease[] = [];
+    let sourceUsed = 'none';
+
+    // 1. Read seed file if it exists (Repo Truth)
+    let seedReleases: CMSRelease[] = [];
+    if (fs.existsSync(SEED_FILE)) {
+      try {
+        const seedRaw = fs.readFileSync(SEED_FILE, 'utf8');
+        seedReleases = JSON.parse(seedRaw || '[]');
+      } catch (e) {
+        console.error('[CMS-SERVER] Error reading seed file:', e);
+      }
+    }
+
+    // 2. Read current data file (Persistent Truth)
+    let diskReleases: CMSRelease[] = [];
     if (fs.existsSync(SERVER_DATA_FILE)) {
-      const raw = fs.readFileSync(SERVER_DATA_FILE, 'utf8');
-      const releases = JSON.parse(raw || '[]');
+      try {
+        const raw = fs.readFileSync(SERVER_DATA_FILE, 'utf8');
+        diskReleases = JSON.parse(raw || '[]');
+      } catch (e) {
+        console.error('[CMS-SERVER] Error reading data file:', e);
+      }
+    }
+
+    // 3. Logic: Prefer seed if it has more releases or if disk is empty
+    // This allows repo-pushed data updates to "win" over stale persistent volumes
+    if (seedReleases.length > diskReleases.length) {
+      console.log(`[CMS-SERVER] Seed file has MORE releases (${seedReleases.length}) than disk (${diskReleases.length}). Using seed.`);
+      releasesToImport = seedReleases;
+      sourceUsed = 'seed';
+    } else if (diskReleases.length > 0) {
+      releasesToImport = diskReleases;
+      sourceUsed = 'disk';
+    } else if (seedReleases.length > 0) {
+      releasesToImport = seedReleases;
+      sourceUsed = 'seed';
+    }
+
+    if (releasesToImport.length > 0) {
       cmsStorage.clearAll();
-      cmsStorage.importReleases(releases);
-      console.log(`[CMS-SERVER] Hydrated ${releases.length} releases.`);
-    } else {
-      console.warn(`[CMS-SERVER] Data file not found, seeking seed...`);
-      if (fs.existsSync(SEED_FILE)) {
-        const seed = JSON.parse(fs.readFileSync(SEED_FILE, 'utf8') || '[]');
-        cmsStorage.importReleases(seed);
+      cmsStorage.importReleases(releasesToImport);
+      console.log(`[CMS-SERVER] Hydrated ${releasesToImport.length} releases from ${sourceUsed}.`);
+      
+      // If we used the seed because it was better, persist it to disk now
+      if (sourceUsed === 'seed') {
         persist();
       }
+    } else {
+      console.warn(`[CMS-SERVER] No releases found in either disk or seed.`);
     }
 
     if (fs.existsSync(REQUESTS_DATA_FILE)) {
