@@ -185,13 +185,13 @@ export default function StudioCredentialsForm({
   }
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative px-4 md:px-0 pb-32">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 items-start relative px-3 sm:px-4 md:px-0 pb-24 md:pb-32">
       
       {/* ── LEFT SIDE: FORM FLOW ────────────────────────────────────────────── */}
-      <div className="lg:col-span-8 space-y-4">
-        <div className="mb-12 border-l-4 border-amber-400 pl-8 py-2">
-          <h2 className="text-4xl font-bold text-white mb-4 tracking-tighter">Network Studio Application</h2>
-          <p className="text-neutral-400 text-base leading-relaxed max-w-2xl font-light">
+      <div className="lg:col-span-8 space-y-3 md:space-y-4">
+        <div className="mb-6 md:mb-12 border-l-4 border-amber-400 pl-4 md:pl-8 py-2">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-4 tracking-tighter">Network Studio Application</h2>
+          <p className="text-neutral-400 text-sm md:text-base leading-relaxed max-w-2xl font-light">
             Technical credentials for recording facilities seeking inclusion within the Karkhana-e-Sada production network.
           </p>
         </div>
@@ -621,6 +621,13 @@ export default function StudioCredentialsForm({
           background: rgba(15, 15, 15, 1);
           box-shadow: 0 0 20px rgba(212, 175, 55, 0.05), inset 0 2px 4px rgba(0,0,0,0.2);
         }
+        @media (max-width: 639px) {
+          .elite-input {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-radius: 10px;
+          }
+        }
         .elite-card {
           background: rgba(18, 18, 18, 0.4);
           backdrop-filter: blur(12px);
@@ -629,6 +636,24 @@ export default function StudioCredentialsForm({
           box-shadow: 
             0 20px 40px rgba(0,0,0,0.4),
             inset 0 1px 1px rgba(255,255,255,0.02);
+        }
+        @media (max-width: 639px) {
+          .elite-card {
+            border-radius: 16px;
+          }
+        }
+        ::-webkit-scrollbar {
+          width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.05);
+          border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(212, 175, 55, 0.2);
         }
       `}</style>
     </div>
@@ -651,46 +676,46 @@ function SectionWrapper({ id, title, subtitle, children, activeStep, onTitleClic
   const isPast = activeStep > id;
 
   return (
-    <div className={`relative pl-12 transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-60'}`}>
-      {/* Progression Rail */}
-      <div className={`absolute left-[15px] top-0 bottom-0 w-px ${isActive || isPast ? 'bg-amber-400/30' : 'bg-neutral-800'}`} />
+    <div className={`relative pl-0 md:pl-12 transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+      {/* Progression Rail - desktop only */}
+      <div className={`hidden md:block absolute left-[15px] top-0 bottom-0 w-px ${isActive || isPast ? 'bg-amber-400/30' : 'bg-neutral-800'}`} />
       
       {/* Step Node */}
-      <div className={`absolute left-0 top-6 w-8 h-8 rounded-full border-2 z-10 flex items-center justify-center transition-all duration-500 ${
+      <div className={`absolute left-0 md:left-0 -top-4 md:top-6 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 z-10 flex items-center justify-center transition-all duration-500 ${
         isActive ? 'bg-amber-400 border-amber-400 text-black shadow-[0_0_15px_rgba(251,191,36,0.4)]' : 
         isPast ? 'bg-emerald-500 border-emerald-500 text-black' : 
         'bg-[#0a0a0a] border-neutral-800 text-neutral-600'
       }`}>
-        {isPast ? <Check size={14} className="stroke-[4]" /> : <span className="text-[10px] font-black">{id}</span>}
+        {isPast ? <Check size={10} className="md:stroke-[4]" /> : <span className="text-[8px] md:text-[10px] font-black">{id}</span>}
       </div>
 
       <div className={`elite-card overflow-hidden transition-all duration-500 ${
-        isActive ? 'ring-1 ring-amber-400/10 shadow-2xl translate-x-2' : 'hover:border-white/10'
+        isActive ? 'ring-1 ring-amber-400/10 shadow-2xl md:translate-x-2' : 'hover:border-white/10'
       }`}>
         <button 
           onClick={onTitleClick}
-          className={`w-full flex items-start justify-between px-8 py-6 text-left transition-colors ${isActive ? 'bg-white/[0.02]' : ''}`}
+          className={`w-full flex items-start justify-between px-4 md:px-8 py-4 md:py-6 text-left transition-colors ${isActive ? 'bg-white/[0.02]' : ''}`}
         >
-          <div className="flex-1 pr-8 text-left">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 mb-1.5 leading-none">PHASE 0{id}</p>
-            <h3 className={`text-xl font-bold tracking-tight mb-1 transition-colors ${isActive ? 'text-white' : 'text-neutral-400'}`}>{title}</h3>
-            <p className="text-xs text-neutral-500 font-medium leading-relaxed">{subtitle}</p>
+          <div className="flex-1 pr-4 md:pr-8 min-w-0">
+            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-neutral-600 mb-1 md:mb-1.5 leading-none">PHASE 0{id}</p>
+            <h3 className={`text-base md:text-xl font-bold tracking-tight mb-0.5 md:mb-1 transition-colors truncate ${isActive ? 'text-white' : 'text-neutral-400'}`}>{title}</h3>
+            <p className="text-[10px] md:text-xs text-neutral-500 font-medium leading-relaxed line-clamp-1 md:line-clamp-none">{subtitle}</p>
           </div>
           
-          <div className="flex flex-col items-end gap-3 shrink-0 pt-1">
+          <div className="flex flex-col items-end gap-2 md:gap-3 shrink-0 pt-0 md:pt-1">
             {isComplete ? (
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                Completed <Check size={10} className="stroke-[4]" />
+              <span className="flex items-center gap-1 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-emerald-500 whitespace-nowrap">
+                Completed <Check size={8} className="md:stroke-[4]" />
               </span>
             ) : isActive ? (
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/80 animate-pulse">In Progress</span>
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-amber-400/80 animate-pulse whitespace-nowrap">In Progress</span>
             ) : null}
-            {isActive ? <ChevronDown size={18} className="text-neutral-600" /> : <ChevronRight size={18} className="text-neutral-800" />}
+            {isActive ? <ChevronDown size={16} className="md:size-[18px] text-neutral-600" /> : <ChevronRight size={16} className="md:size-[18px] text-neutral-800" />}
           </div>
         </button>
         
         {isActive && (
-          <div className="p-8 pt-2 animate-in fade-in slide-in-from-top-4 duration-500 border-t border-white/[0.03]">
+          <div className="p-4 md:p-8 md:pt-2 animate-in fade-in slide-in-from-top-4 duration-500 border-t border-white/[0.03]">
             {children}
           </div>
         )}
@@ -701,11 +726,11 @@ function SectionWrapper({ id, title, subtitle, children, activeStep, onTitleClic
 
 function StepActions({ step, onNext, onBack }: { step: number; onNext?: () => void; onBack?: () => void }) {
   return (
-    <div className="flex items-center gap-4 mt-10 pt-8 border-t border-white/5">
+    <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 mt-6 md:mt-10 pt-6 md:pt-8 border-t border-white/5">
       {onBack && (
         <button 
           onClick={onBack}
-          className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
+          className="px-5 md:px-6 py-3 md:py-3 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
         >
           ← Back
         </button>
@@ -713,7 +738,7 @@ function StepActions({ step, onNext, onBack }: { step: number; onNext?: () => vo
       {onNext && (
         <button 
           onClick={onNext}
-          className="px-8 py-3.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-white/10 hover:border-amber-400/30 transition-all ml-auto flex items-center gap-2 group"
+          className="px-6 md:px-8 py-3.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-white/10 hover:border-amber-400/30 transition-all sm:ml-auto flex items-center justify-center gap-2 group"
         >
           Continue
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -727,20 +752,20 @@ function GovernanceCard({ label, desc, checked, onChange }: { label: string; des
   return (
     <button 
       onClick={() => onChange(!checked)}
-      className={`flex items-start text-left p-6 rounded-2xl border transition-all duration-300 ${
+      className={`flex items-start text-left p-4 md:p-6 rounded-xl md:rounded-2xl border transition-all duration-300 min-h-[44px] ${
         checked 
           ? 'bg-amber-400/5 border-amber-400/30' 
           : 'bg-neutral-950/50 border-white/5 hover:border-white/10'
       }`}
     >
-      <div className={`w-6 h-6 rounded-lg border mt-0.5 flex items-center justify-center transition-all shrink-0 ${
+      <div className={`w-5 h-5 md:w-6 md:h-6 rounded-lg border mt-0.5 flex items-center justify-center transition-all shrink-0 ${
         checked ? 'bg-amber-400 border-amber-400 shadow-lg shadow-amber-400/20' : 'border-neutral-800 bg-neutral-900'
       }`}>
-        {checked && <Check size={14} className="text-black stroke-[4]" />}
+        {checked && <Check size={12} className="md:size-[14px] text-black stroke-[4]" />}
       </div>
-      <div className="ml-6">
-        <p className={`text-xs font-black uppercase tracking-widest mb-2 ${checked ? 'text-amber-400' : 'text-neutral-500'}`}>{label}</p>
-        <p className="text-[11px] text-neutral-500 leading-relaxed font-medium">{desc}</p>
+      <div className="ml-3 md:ml-6">
+        <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2 ${checked ? 'text-amber-400' : 'text-neutral-500'}`}>{label}</p>
+        <p className="text-[10px] md:text-[11px] text-neutral-500 leading-relaxed font-medium">{desc}</p>
       </div>
     </button>
   );

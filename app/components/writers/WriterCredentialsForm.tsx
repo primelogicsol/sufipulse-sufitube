@@ -267,13 +267,13 @@ export default function WriterCredentialsForm({
   }
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative px-4 md:px-0 pb-32">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 items-start relative px-3 sm:px-4 md:px-0 pb-24 md:pb-32">
       
       {/* ── LEFT SIDE: FORM FLOW ────────────────────────────────────────────── */}
-      <div className="lg:col-span-8 space-y-4">
-        <div className="mb-12 border-l-4 border-amber-400 pl-8 py-2">
-          <h2 className="text-4xl font-bold text-white mb-4 tracking-tighter">Institutional Editorial Intake</h2>
-          <p className="text-neutral-400 text-base leading-relaxed max-w-2xl font-light">
+      <div className="lg:col-span-8 space-y-3 md:space-y-4">
+        <div className="mb-6 md:mb-12 border-l-4 border-amber-400 pl-4 md:pl-8 py-2">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-4 tracking-tighter">Institutional Editorial Intake</h2>
+          <p className="text-neutral-400 text-sm md:text-base leading-relaxed max-w-2xl font-light">
             Formal registry intake for writers seeking structured consideration within the SufiPulse literary and production framework. All submissions are processed through the Majlis-e-Nazr.
           </p>
         </div>
@@ -288,9 +288,9 @@ export default function WriterCredentialsForm({
           icon={<User size={18} />}
           isComplete={sections[0].complete}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Legal Full Name</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-1">
+            <div className="space-y-1.5 md:space-y-2">
+              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Legal Full Name</label>
               <input 
                 type="text" 
                 value={formData.full_name}
@@ -299,8 +299,8 @@ export default function WriterCredentialsForm({
                 placeholder="Required for registry"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Pen Name / Takhallus</label>
+            <div className="space-y-1.5 md:space-y-2">
+              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Pen Name / Takhallus</label>
               <input 
                 type="text" 
                 value={formData.pen_name}
@@ -309,8 +309,8 @@ export default function WriterCredentialsForm({
                 placeholder="Optional"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Secure Contact Email</label>
+            <div className="space-y-1.5 md:space-y-2">
+              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Secure Contact Email</label>
               <input 
                 type="email" 
                 value={formData.email}
@@ -319,9 +319,9 @@ export default function WriterCredentialsForm({
                 placeholder="Intake notifications will be sent here"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Country</label>
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="space-y-1.5 md:space-y-2">
+                <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Country</label>
                 <input 
                   type="text" 
                   value={formData.country}
@@ -329,8 +329,8 @@ export default function WriterCredentialsForm({
                   className="elite-input w-full"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">City</label>
+              <div className="space-y-1.5 md:space-y-2">
+                <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">City</label>
                 <input 
                   type="text" 
                   value={formData.city}
@@ -353,22 +353,22 @@ export default function WriterCredentialsForm({
           icon={<Languages size={18} />}
           isComplete={sections[1].complete}
         >
-          <div className="space-y-10">
+          <div className="space-y-6 md:space-y-10">
             {/* Intelligent Language Selector */}
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-black uppercase tracking-widest text-neutral-400">Literary Languages</label>
-                <span className="text-[10px] text-neutral-500 italic">Select all that apply</span>
+                <label className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Literary Languages</label>
+                <span className="text-[9px] md:text-[10px] text-neutral-500 italic">Select all that apply</span>
               </div>
               
               <div className="relative w-full group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within:text-amber-400 transition-colors pointer-events-none" />
+                <Search className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-white/40 group-focus-within:text-amber-400 transition-colors pointer-events-none" />
                 <input 
                   type="text"
                   value={languageSearch}
                   onChange={e => setLanguageSearch(e.target.value)}
                   placeholder="Search taxonomy (Urdu, Persian, Kashmiri...)"
-                  className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                  className="w-full rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-4 md:pr-6 py-3.5 md:py-5 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                 />
               </div>
 
@@ -408,15 +408,15 @@ export default function WriterCredentialsForm({
             </div>
 
             {/* Expandable Taxonomy Selector for Forms */}
-            <div className="space-y-4">
-              <label className="text-[11px] font-black uppercase tracking-widest text-neutral-400">Literary Forms & Styles</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3 md:space-y-4">
+              <label className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Literary Forms & Styles</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 {FORMS_TAXONOMY.map(form => {
                   const isActive = formData.writing_styles.includes(form);
                   return (
                     <label
                       key={form}
-                      className={`flex w-full min-h-[72px] items-center justify-start gap-4 rounded-xl border px-6 py-5 cursor-pointer transition-all duration-300 group ${
+                      className={`flex w-full min-h-[48px] md:min-h-[72px] items-center justify-start gap-3 md:gap-4 rounded-xl border px-4 md:px-6 py-3 md:py-5 cursor-pointer transition-all duration-300 group ${
                         isActive 
                           ? 'bg-amber-400/10 border-amber-400/50 text-amber-400' 
                           : 'bg-neutral-900 border-white/5 text-neutral-500 hover:border-white/20'
@@ -424,11 +424,11 @@ export default function WriterCredentialsForm({
                     >
                       <input 
                         type="checkbox"
-                        className="h-5 w-5 shrink-0 accent-amber-400"
+                        className="h-4 w-4 md:h-5 md:w-5 shrink-0 accent-amber-400"
                         checked={isActive}
                         onChange={() => handleFormToggle(form)}
                       />
-                      <span className="text-left text-sm font-semibold uppercase tracking-[0.18em] leading-relaxed">
+                      <span className="text-left text-[10px] md:text-sm font-semibold uppercase tracking-[0.12em] md:tracking-[0.18em] leading-relaxed">
                         {form}
                       </span>
                     </label>
@@ -438,37 +438,37 @@ export default function WriterCredentialsForm({
             </div>
 
             {/* Guided Thematic Framework */}
-            <div className="space-y-8 pt-8 border-t border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles size={16} className="text-amber-400" />
-                <label className="text-[11px] font-black uppercase tracking-widest text-neutral-400">Guided Thematic Framework</label>
+            <div className="space-y-6 md:space-y-8 pt-6 md:pt-8 border-t border-white/5">
+              <div className="flex items-center gap-2 mb-3 md:mb-4">
+                <Sparkles size={14} className="md:size-[16px] text-amber-400" />
+                <label className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Guided Thematic Framework</label>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-3 md:gap-4">
                 {THEMES_FRAMEWORK.map(theme => {
                   const isActive = formData.selected_themes.includes(theme.id);
                   return (
                     <button
                       key={theme.id}
                       onClick={() => handleThemeToggle(theme.id)}
-                      className={`flex items-start text-left p-5 rounded-2xl border transition-all duration-500 min-h-[100px] ${
+                      className={`flex items-start text-left p-4 md:p-5 rounded-xl md:rounded-2xl border transition-all duration-500 min-h-[44px] md:min-h-[100px] ${
                         isActive 
                           ? 'bg-amber-400/5 border-amber-400/30' 
                           : 'bg-neutral-900/40 border-white/5 hover:border-white/10'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-md border mt-0.5 flex items-center justify-center transition-all shrink-0 ${
+                      <div className={`w-4 h-4 md:w-5 md:h-5 rounded-md border mt-0.5 flex items-center justify-center transition-all shrink-0 ${
                         isActive ? 'bg-amber-400 border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : 'border-neutral-800 bg-[#0a0a0a]'
                       }`}>
-                        {isActive && <Check size={12} className="text-black stroke-[4]" />}
+                        {isActive && <Check size={10} className="md:size-[12px] text-black stroke-[4]" />}
                       </div>
-                      <div className="ml-4 flex-1">
-                        <p className={`text-sm font-semibold tracking-tight leading-none mb-1.5 transition-colors ${isActive ? 'text-white' : 'text-neutral-300'}`}>
+                      <div className="ml-3 md:ml-4 flex-1">
+                        <p className={`text-xs md:text-sm font-semibold tracking-tight leading-none mb-1 md:mb-1.5 transition-colors ${isActive ? 'text-white' : 'text-neutral-300'}`}>
                           {theme.label}
                         </p>
-                        <div className="space-y-1">
-                          {theme.labelAr && <p className="text-[10px] text-amber-400/60 font-arabic tracking-wide">{theme.labelAr}</p>}
-                          <p className="text-[11px] text-neutral-500 leading-relaxed font-medium">
+                        <div className="space-y-0.5 md:space-y-1">
+                          {theme.labelAr && <p className="text-[9px] md:text-[10px] text-amber-400/60 font-arabic tracking-wide">{theme.labelAr}</p>}
+                          <p className="text-[10px] md:text-[11px] text-neutral-500 leading-relaxed font-medium">
                             {theme.desc}
                           </p>
                         </div>
@@ -489,7 +489,7 @@ export default function WriterCredentialsForm({
                 <textarea 
                   value={formData.additional_themes}
                   onChange={e => setFormData({...formData, additional_themes: e.target.value})}
-                  className="elite-input w-full h-32 p-4 text-sm leading-relaxed"
+                  className="elite-input w-full h-24 md:h-32 text-sm leading-relaxed"
                   placeholder="Define your literary orientation within our institutional framework..."
                 />
               </div>
@@ -511,19 +511,19 @@ export default function WriterCredentialsForm({
           <div className="space-y-6">
             <div className="bg-neutral-950 border border-white/5 rounded-2xl overflow-hidden shadow-inner">
               {/* Toolbar Metrics */}
-              <div className="flex flex-wrap items-center justify-between px-6 py-4 bg-white/[0.02] border-b border-white/5">
-                <div className="flex gap-6">
-                  <div className="flex items-center gap-2">
-                    <Hash size={12} className="text-neutral-600" />
-                    <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Words: <span className="text-white">{kalamMetrics.words}</span></span>
+              <div className="flex flex-wrap items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white/[0.02] border-b border-white/5 gap-2">
+                <div className="flex flex-wrap gap-3 md:gap-6">
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <Hash size={10} className="md:size-[12px] text-neutral-600" />
+                    <span className="text-[9px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest">Words: <span className="text-white">{kalamMetrics.words}</span></span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <BookOpen size={12} className="text-neutral-600" />
-                    <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Stanzas: <span className="text-white">{kalamMetrics.stanzas}</span></span>
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <BookOpen size={10} className="md:size-[12px] text-neutral-600" />
+                    <span className="text-[9px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest">Stanzas: <span className="text-white">{kalamMetrics.stanzas}</span></span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock size={12} className="text-neutral-600" />
-                    <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Est. Reading: <span className="text-white">{kalamMetrics.readingTime} min</span></span>
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <Clock size={10} className="md:size-[12px] text-neutral-600" />
+                    <span className="text-[9px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest">Reading: <span className="text-white">{kalamMetrics.readingTime} min</span></span>
                   </div>
                 </div>
                 <div className="hidden md:flex items-center gap-2">
@@ -537,11 +537,11 @@ export default function WriterCredentialsForm({
                 required
                 value={formData.sample_kalam}
                 onChange={e => setFormData({...formData, sample_kalam: e.target.value})}
-                className="w-full bg-transparent p-8 md:p-12 text-lg md:text-xl text-white font-mono min-h-[500px] outline-none leading-[2] placeholder:text-neutral-800 placeholder:italic"
+                className="w-full bg-transparent p-4 md:p-8 lg:p-12 text-base md:text-lg lg:text-xl text-white font-mono min-h-[250px] md:min-h-[400px] lg:min-h-[500px] outline-none leading-[1.8] md:leading-[2] placeholder:text-neutral-800 placeholder:italic"
                 placeholder="Write or paste your sacred kalam here... \n\nFocus on structural flow and linguistic precision."
               />
               
-              <div className="px-8 py-6 bg-white/[0.01] border-t border-white/5">
+              <div className="px-4 md:px-8 py-4 md:py-6 bg-white/[0.01] border-t border-white/5">
                 <div className="flex items-start gap-4">
                   <Info size={16} className="text-neutral-700 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-neutral-600 leading-relaxed uppercase tracking-wider italic">
@@ -556,7 +556,7 @@ export default function WriterCredentialsForm({
               <textarea 
                 value={formData.previous_publications}
                 onChange={e => setFormData({...formData, previous_publications: e.target.value})}
-                className="elite-input w-full h-24 p-4"
+                className="elite-input w-full h-20 md:h-24"
                 placeholder="Mention where your work has been previously featured or provides context for the board."
               />
             </div>
@@ -592,12 +592,12 @@ export default function WriterCredentialsForm({
             </div>
 
             {/* Advanced Security Verification */}
-            <div className="pt-8 mt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="pt-6 md:pt-8 mt-6 md:mt-8 border-t border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
               <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-neutral-600" />
+                <Shield className="w-4 h-4 md:w-5 md:h-5 text-neutral-600 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">Security Protocol</p>
-                  <p className="text-[9px] text-neutral-600 uppercase tracking-widest mt-1">Verification of institutional integrity</p>
+                  <p className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">Security Protocol</p>
+                  <p className="text-[8px] md:text-[9px] text-neutral-600 uppercase tracking-widest mt-0.5 md:mt-1">Verification of institutional integrity</p>
                 </div>
               </div>
 
@@ -608,16 +608,16 @@ export default function WriterCredentialsForm({
               <button
                 type="button"
                 onClick={() => setNotABot(!notABot)}
-                className={`flex items-center gap-4 px-6 py-3 rounded-xl transition-all duration-300 border ${
+                className={`flex items-center gap-3 md:gap-4 px-5 md:px-6 py-3 rounded-xl transition-all duration-300 border w-full md:w-auto justify-center ${
                   notABot ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-neutral-950 border-white/5 text-neutral-600'
                 }`}
               >
-                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                <div className={`w-4 h-4 md:w-5 md:h-5 rounded-md border flex items-center justify-center transition-all shrink-0 ${
                   notABot ? 'bg-emerald-500 border-emerald-500' : 'border-neutral-800'
                 }`}>
-                  {notABot && <Check size={14} className="text-black stroke-[4]" />}
+                  {notABot && <Check size={10} className="md:size-[14px] text-black stroke-[4]" />}
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Verified Human Contributor</span>
+                <span className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em]">Verified Human</span>
               </button>
             </div>
           </div>
@@ -634,52 +634,52 @@ export default function WriterCredentialsForm({
           icon={<ShieldCheck size={18} />}
           isComplete={sections[4].complete}
         >
-          <div className="space-y-8">
-            <div className="p-8 bg-amber-400/5 border border-amber-400/10 rounded-2xl">
-              <h4 className="text-sm font-black text-amber-400 uppercase tracking-widest mb-4">Registry Authorization Preview</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
+          <div className="space-y-6 md:space-y-8">
+            <div className="p-4 md:p-8 bg-amber-400/5 border border-amber-400/10 rounded-xl md:rounded-2xl">
+              <h4 className="text-xs md:text-sm font-black text-amber-400 uppercase tracking-widest mb-3 md:mb-4">Registry Authorization Preview</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                <div className="space-y-3 md:space-y-4">
                   <div>
-                    <p className="text-[10px] text-neutral-600 uppercase font-black tracking-widest">Ahl-e-Qalam Identity</p>
-                    <p className="text-white font-bold">{formData.full_name || '—'}</p>
-                    <p className="text-neutral-500 text-xs">{formData.email}</p>
+                    <p className="text-[9px] md:text-[10px] text-neutral-600 uppercase font-black tracking-widest">Ahl-e-Qalam Identity</p>
+                    <p className="text-white font-bold text-sm md:text-base">{formData.full_name || '—'}</p>
+                    <p className="text-neutral-500 text-[11px] md:text-xs">{formData.email}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-neutral-600 uppercase font-black tracking-widest">Linguistic Base</p>
-                    <p className="text-white text-xs font-bold uppercase tracking-wider">{formData.primary_languages.join(', ') || 'None selected'}</p>
+                    <p className="text-[9px] md:text-[10px] text-neutral-600 uppercase font-black tracking-widest">Linguistic Base</p>
+                    <p className="text-white text-[11px] md:text-xs font-bold uppercase tracking-wider">{formData.primary_languages.join(', ') || 'None selected'}</p>
                   </div>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   <div>
-                    <p className="text-[10px] text-neutral-600 uppercase font-black tracking-widest">Sample Metrics</p>
-                    <p className="text-white text-xs font-bold">{kalamMetrics.words} Words · {kalamMetrics.stanzas} Stanzas</p>
+                    <p className="text-[9px] md:text-[10px] text-neutral-600 uppercase font-black tracking-widest">Sample Metrics</p>
+                    <p className="text-white text-xs md:text-sm font-bold">{kalamMetrics.words} Words · {kalamMetrics.stanzas} Stanzas</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-neutral-600 uppercase font-black tracking-widest">Readiness Level</p>
-                    <p className={`text-xs font-black uppercase tracking-widest ${readinessScore > 90 ? 'text-emerald-400' : 'text-amber-400'}`}>{readinessScore}% Registry Alignment</p>
-                  </div>
+                    <p className="text-[9px] md:text-[10px] text-neutral-600 uppercase font-black tracking-widest">Readiness Level</p>
+                    <p className={`text-xs md:text-sm font-black uppercase tracking-widest ${readinessScore > 90 ? 'text-emerald-400' : 'text-amber-400'}`}>{readinessScore}% Registry Alignment</p>
+                    </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
-                <div className="flex items-start gap-4">
-                  <Clock className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div className="p-4 md:p-6 bg-blue-500/5 border border-blue-500/10 rounded-xl md:rounded-2xl">
+                <div className="flex items-start gap-3 md:gap-4">
+                  <Clock className="w-4 h-4 md:w-5 md:h-5 text-blue-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1.5">Intake Authorization</p>
-                    <p className="text-[9px] text-neutral-400 leading-relaxed uppercase tracking-wider">
+                    <p className="text-[9px] md:text-[10px] font-black text-white uppercase tracking-widest mb-1 md:mb-1.5">Intake Authorization</p>
+                    <p className="text-[8px] md:text-[9px] text-neutral-400 leading-relaxed uppercase tracking-wider">
                       Reference ID generation and secure link dispatch occurs immediately upon formal entry.
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
-                <div className="flex items-start gap-4">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+              <div className="p-4 md:p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-xl md:rounded-2xl">
+                <div className="flex items-start gap-3 md:gap-4">
+                  <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1.5">Lifecycle Monitoring</p>
-                    <p className="text-[9px] text-neutral-400 leading-relaxed uppercase tracking-wider">
+                    <p className="text-[9px] md:text-[10px] font-black text-white uppercase tracking-widest mb-1 md:mb-1.5">Lifecycle Monitoring</p>
+                    <p className="text-[8px] md:text-[9px] text-neutral-400 leading-relaxed uppercase tracking-wider">
                       Monitor review progression, editorial requests, and registry decisions in real-time.
                     </p>
                   </div>
@@ -720,23 +720,23 @@ export default function WriterCredentialsForm({
         </SectionWrapper>
 
         {/* WRITER BENEFITS & INSTITUTIONAL VALUE */}
-        <div className="relative pl-12 pt-16">
-          {/* Workflow Continuity Line */}
-          <div className="absolute left-[15px] top-0 bottom-0 w-px bg-neutral-800" />
+        <div className="relative pl-0 md:pl-12 pt-12 md:pt-16">
+          {/* Workflow Continuity Line - desktop only */}
+          <div className="hidden md:block absolute left-[15px] top-0 bottom-0 w-px bg-neutral-800" />
           
           {/* Activation Node */}
-          <div className="absolute left-0 top-16 w-8 h-8 rounded-full border-2 border-amber-400/30 bg-[#0a0a0a] z-10 flex items-center justify-center shadow-[0_0_15px_rgba(251,191,36,0.1)]">
-            <Sparkles size={14} className="text-amber-400" />
+          <div className="absolute left-0 md:left-0 top-12 md:top-16 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-amber-400/30 bg-[#0a0a0a] z-10 flex items-center justify-center shadow-[0_0_15px_rgba(251,191,36,0.1)]">
+            <Sparkles size={10} className="md:size-[14px] text-amber-400" />
           </div>
           
           <div className="elite-card overflow-hidden">
-            <div className="p-10 space-y-10">
-              <div className="border-l-2 border-amber-400/40 pl-6">
-                <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Writer Benefits & Institutional Value</h3>
-                <p className="text-sm text-neutral-500 font-medium">If approved, Ahl-e-Qalam contributors may receive:</p>
+            <div className="p-6 md:p-10 space-y-6 md:space-y-10">
+              <div className="border-l-2 border-amber-400/40 pl-4 md:pl-6">
+                <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight mb-2">Writer Benefits & Institutional Value</h3>
+                <p className="text-xs md:text-sm text-neutral-500 font-medium">If approved, Ahl-e-Qalam contributors may receive:</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 md:gap-y-8">
                 {[
                   { b: 'Contributor Registry Activation', m: 'Formal recognition inside the SufiPulse writer registry' },
                   { b: 'Writer Dashboard Access', m: 'Ability to monitor submissions, revisions, assignments, and status' },
@@ -747,19 +747,19 @@ export default function WriterCredentialsForm({
                   { b: 'Marketing Visibility', m: 'Approved works may be featured through SufiPulse releases, pages, and media' },
                   { b: 'Institutional Archive', m: 'Approved works remain part of the protected SufiPulse literary archive' },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex gap-4 group">
+                  <div key={idx} className="flex gap-3 md:gap-4 group">
                     <div className="w-1 h-1 rounded-full bg-amber-400 mt-2 shrink-0 group-hover:scale-150 transition-transform duration-300" />
                     <div>
-                      <p className="text-[11px] font-black uppercase tracking-widest text-white mb-1.5 transition-colors group-hover:text-amber-400">{item.b}</p>
-                      <p className="text-xs text-neutral-500 leading-relaxed font-medium">{item.m}</p>
+                      <p className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-white mb-1 md:mb-1.5 transition-colors group-hover:text-amber-400">{item.b}</p>
+                      <p className="text-[11px] md:text-xs text-neutral-500 leading-relaxed font-medium">{item.m}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="pt-8 border-t border-white/5">
-                <div className="p-6 bg-neutral-950 border border-white/5 rounded-2xl">
-                  <p className="text-[10px] text-neutral-600 leading-relaxed uppercase tracking-widest italic font-bold">
+              <div className="pt-6 md:pt-8 border-t border-white/5">
+                <div className="p-4 md:p-6 bg-neutral-950 border border-white/5 rounded-xl md:rounded-2xl">
+                  <p className="text-[9px] md:text-[10px] text-neutral-600 leading-relaxed uppercase tracking-widest italic font-bold">
                     Institutional Disclaimer: Benefits depend on approval status, editorial decision, production selection, release authorization, and applicable revenue activity. Approval as a writer does not guarantee production, publication, marketing campaign placement, or royalty income.
                   </p>
                 </div>
@@ -955,7 +955,7 @@ export default function WriterCredentialsForm({
         </div>
 
         {/* Contributor Tracking Activation */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center relative overflow-hidden">
+        <div className="bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-6 md:p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12">
             <ShieldCheck size={80} />
           </div>
@@ -993,6 +993,13 @@ export default function WriterCredentialsForm({
           background: rgba(15, 15, 15, 1);
           box-shadow: 0 0 20px rgba(212, 175, 55, 0.05), inset 0 2px 4px rgba(0,0,0,0.2);
         }
+        @media (max-width: 639px) {
+          .elite-input {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-radius: 10px;
+          }
+        }
         .elite-card {
           background: rgba(18, 18, 18, 0.4);
           backdrop-filter: blur(12px);
@@ -1001,6 +1008,11 @@ export default function WriterCredentialsForm({
           box-shadow: 
             0 20px 40px rgba(0,0,0,0.4),
             inset 0 1px 1px rgba(255,255,255,0.02);
+        }
+        @media (max-width: 639px) {
+          .elite-card {
+            border-radius: 16px;
+          }
         }
         ::-webkit-scrollbar {
           width: 6px;
@@ -1036,46 +1048,46 @@ function SectionWrapper({ id, title, subtitle, children, activeStep, onTitleClic
   const isPast = activeStep > id;
 
   return (
-    <div className={`relative pl-12 transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-60'}`}>
-      {/* Progression Rail */}
-      <div className={`absolute left-[15px] top-0 bottom-0 w-px ${isActive || isPast ? 'bg-amber-400/30' : 'bg-neutral-800'}`} />
+    <div className={`relative pl-0 md:pl-12 transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+      {/* Progression Rail - desktop only */}
+      <div className={`hidden md:block absolute left-[15px] top-0 bottom-0 w-px ${isActive || isPast ? 'bg-amber-400/30' : 'bg-neutral-800'}`} />
       
       {/* Step Node */}
-      <div className={`absolute left-0 top-6 w-8 h-8 rounded-full border-2 z-10 flex items-center justify-center transition-all duration-500 ${
+      <div className={`absolute left-0 md:left-0 -top-4 md:top-6 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 z-10 flex items-center justify-center transition-all duration-500 ${
         isActive ? 'bg-amber-400 border-amber-400 text-black shadow-[0_0_15px_rgba(251,191,36,0.4)]' : 
         isPast ? 'bg-emerald-500 border-emerald-500 text-black' : 
         'bg-[#0a0a0a] border-neutral-800 text-neutral-600'
       }`}>
-        {isPast ? <Check size={14} className="stroke-[4]" /> : <span className="text-[10px] font-black">{id}</span>}
+        {isPast ? <Check size={10} className="md:stroke-[4]" /> : <span className="text-[8px] md:text-[10px] font-black">{id}</span>}
       </div>
 
       <div className={`elite-card overflow-hidden transition-all duration-500 ${
-        isActive ? 'ring-1 ring-amber-400/10 shadow-2xl translate-x-2' : 'hover:border-white/10'
+        isActive ? 'ring-1 ring-amber-400/10 shadow-2xl md:translate-x-2' : 'hover:border-white/10'
       }`}>
         <button 
           onClick={onTitleClick}
-          className={`w-full flex items-start justify-between px-8 py-6 text-left transition-colors ${isActive ? 'bg-white/[0.02]' : ''}`}
+          className={`w-full flex items-start justify-between px-4 md:px-8 py-4 md:py-6 text-left transition-colors ${isActive ? 'bg-white/[0.02]' : ''}`}
         >
-          <div className="flex-1 pr-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 mb-1.5 leading-none">PHASE 0{id}</p>
-            <h3 className={`text-xl font-bold tracking-tight mb-1 transition-colors ${isActive ? 'text-white' : 'text-neutral-400'}`}>{title}</h3>
-            <p className="text-xs text-neutral-500 font-medium leading-relaxed">{subtitle}</p>
+          <div className="flex-1 pr-4 md:pr-8 min-w-0">
+            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-neutral-600 mb-1 md:mb-1.5 leading-none">PHASE 0{id}</p>
+            <h3 className={`text-base md:text-xl font-bold tracking-tight mb-0.5 md:mb-1 transition-colors truncate ${isActive ? 'text-white' : 'text-neutral-400'}`}>{title}</h3>
+            <p className="text-[10px] md:text-xs text-neutral-500 font-medium leading-relaxed line-clamp-1 md:line-clamp-none">{subtitle}</p>
           </div>
           
-          <div className="flex flex-col items-end gap-3 shrink-0 pt-1">
+          <div className="flex flex-col items-end gap-2 md:gap-3 shrink-0 pt-0 md:pt-1">
             {isComplete ? (
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                Completed <Check size={10} className="stroke-[4]" />
+              <span className="flex items-center gap-1 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-emerald-500 whitespace-nowrap">
+                Completed <Check size={8} className="md:stroke-[4]" />
               </span>
             ) : isActive ? (
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/80 animate-pulse">In Progress</span>
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-amber-400/80 animate-pulse whitespace-nowrap">In Progress</span>
             ) : null}
-            {isActive ? <ChevronDown size={18} className="text-neutral-600" /> : <ChevronRight size={18} className="text-neutral-800" />}
+            {isActive ? <ChevronDown size={16} className="md:size-[18px] text-neutral-600" /> : <ChevronRight size={16} className="md:size-[18px] text-neutral-800" />}
           </div>
         </button>
         
         {isActive && (
-          <div className="p-8 pt-2 animate-in fade-in slide-in-from-top-4 duration-500 border-t border-white/[0.03]">
+          <div className="p-4 md:p-8 md:pt-2 animate-in fade-in slide-in-from-top-4 duration-500 border-t border-white/[0.03]">
             {children}
           </div>
         )}
@@ -1086,11 +1098,11 @@ function SectionWrapper({ id, title, subtitle, children, activeStep, onTitleClic
 
 function StepActions({ step, onNext, onBack }: { step: number; onNext?: () => void; onBack?: () => void }) {
   return (
-    <div className="flex items-center gap-4 mt-10 pt-8 border-t border-white/5">
+    <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 mt-6 md:mt-10 pt-6 md:pt-8 border-t border-white/5">
       {onBack && (
         <button 
           onClick={onBack}
-          className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
+          className="px-5 md:px-6 py-3 md:py-3 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
         >
           ← Back
         </button>
@@ -1098,7 +1110,7 @@ function StepActions({ step, onNext, onBack }: { step: number; onNext?: () => vo
       {onNext && (
         <button 
           onClick={onNext}
-          className="px-8 py-3.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-white/10 hover:border-amber-400/30 transition-all ml-auto flex items-center gap-2 group"
+          className="px-6 md:px-8 py-3.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-white/10 hover:border-amber-400/30 transition-all sm:ml-auto flex items-center justify-center gap-2 group"
         >
           Continue
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -1112,20 +1124,20 @@ function GovernanceCard({ label, desc, checked, onChange }: { label: string; des
   return (
     <button 
       onClick={() => onChange(!checked)}
-      className={`flex items-start text-left p-6 rounded-2xl border transition-all duration-300 ${
+      className={`flex items-start text-left p-4 md:p-6 rounded-xl md:rounded-2xl border transition-all duration-300 min-h-[44px] ${
         checked 
           ? 'bg-amber-400/5 border-amber-400/30' 
           : 'bg-neutral-950/50 border-white/5 hover:border-white/10'
       }`}
     >
-      <div className={`w-6 h-6 rounded-lg border mt-0.5 flex items-center justify-center transition-all shrink-0 ${
+      <div className={`w-5 h-5 md:w-6 md:h-6 rounded-lg border mt-0.5 flex items-center justify-center transition-all shrink-0 ${
         checked ? 'bg-amber-400 border-amber-400 shadow-lg shadow-amber-400/20' : 'border-neutral-800 bg-neutral-900'
       }`}>
-        {checked && <Check size={14} className="text-black stroke-[4]" />}
+        {checked && <Check size={12} className="md:size-[14px] text-black stroke-[4]" />}
       </div>
-      <div className="ml-6">
-        <p className={`text-xs font-black uppercase tracking-widest mb-2 ${checked ? 'text-amber-400' : 'text-neutral-500'}`}>{label}</p>
-        <p className="text-[11px] text-neutral-500 leading-relaxed font-medium">{desc}</p>
+      <div className="ml-3 md:ml-6">
+        <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2 ${checked ? 'text-amber-400' : 'text-neutral-500'}`}>{label}</p>
+        <p className="text-[10px] md:text-[11px] text-neutral-500 leading-relaxed font-medium">{desc}</p>
       </div>
     </button>
   );

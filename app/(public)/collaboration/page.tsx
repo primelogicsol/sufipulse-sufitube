@@ -184,16 +184,16 @@ export default function InstitutionalCollaboration() {
                                     title="Collaborative Process"
                                     subtitle="The sequence of engagement"
                                 />
-                                <div className="elite-card p-10 space-y-6">
+                                <div className="elite-card p-6 md:p-10 space-y-4 md:space-y-6">
                                     {[
                                         'Proposal submission',
                                         'Internal review',
                                         'Governance clearance',
                                         'Formalization agreement'
                                     ].map((item, i) => (
-                                        <div key={i} className="flex items-center gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                                            <span className="text-amber-400 font-black text-xs">0{i+1}</span>
-                                            <p className="text-neutral-400 text-[10px] font-black uppercase tracking-widest">{item}</p>
+                                        <div key={i} className="flex items-center gap-3 md:gap-4 border-b border-white/5 pb-3 md:pb-4 last:border-0 last:pb-0">
+                                            <span className="text-amber-400 font-black text-[10px] md:text-xs">0{i+1}</span>
+                                            <p className="text-neutral-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">{item}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -211,41 +211,41 @@ export default function InstitutionalCollaboration() {
 
             <Section background="slate" spacing="normal">
                 <PageContainer>
-                    <div className="max-w-4xl mx-auto text-center mb-16">
-                        <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">Sacred Alignment</h2>
-                        <p className="text-neutral-400 text-lg leading-relaxed font-light">
+                    <div className="max-w-4xl mx-auto text-center mb-10 md:mb-16">
+                        <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-6 tracking-tight">Sacred Alignment</h2>
+                        <p className="text-neutral-400 text-base md:text-lg leading-relaxed font-light">
                             SufiPulse collaborations are guided by a commitment to serving the sacred without commercialization. We seek partnerships that honor spiritual values, promote unity, and amplify divine voice while preserving institutional integrity.
                         </p>
                     </div>
 
                     <div className="max-w-5xl mx-auto">
                         <div className="elite-card overflow-hidden shadow-2xl">
-                            <div className="border-b border-white/5 px-8 py-8 bg-white/[0.02]">
-                                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Partnership Proposal</h3>
+                            <div className="border-b border-white/5 px-6 md:px-8 py-6 md:py-8 bg-white/[0.02]">
+                                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 tracking-tight">Partnership Proposal</h3>
                                 <p className="text-[10px] text-amber-400 font-black uppercase tracking-[0.3em]">Institutional Intake Pathway</p>
                             </div>
 
                             {submitted ? (
-                                <div className="p-16 text-center animate-in fade-in zoom-in duration-700">
-                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(16,185,129,0.1)]">
-                                        <CheckCircle className="w-10 h-10 text-emerald-500 stroke-[2.5]" />
+                                <div className="p-8 md:p-16 text-center animate-in fade-in zoom-in duration-700">
+                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-[0_0_50px_rgba(16,185,129,0.1)]">
+                                        <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-emerald-500 stroke-[2.5]" />
                                     </div>
-                                    <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">Proposal Submitted Successfully</h3>
-                                    <p className="text-neutral-400 text-base leading-relaxed mb-10 max-w-md mx-auto">
+                                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-3 md:mb-4 tracking-tight">Proposal Submitted Successfully</h3>
+                                    <p className="text-neutral-400 text-sm md:text-base leading-relaxed mb-8 md:mb-10 max-w-md mx-auto">
                                         Thank you for your partnership proposal. Our governance team will review your submission and respond within the institutional review cycle (10–14 business days).
                                     </p>
                                     <button
                                         onClick={() => setSubmitted(false)}
-                                        className="px-10 py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
+                                        className="px-8 md:px-10 py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
                                     >
                                         Submit Another Proposal
                                     </button>
                                 </div>
                             ) : (
-                                <form onSubmit={handleSubmit} className="p-10 md:p-16 space-y-12">
-                                    <div className="space-y-8">
-                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-4 border-b border-white/5 pb-4">01 — Contact Identity</p>
-                                        <div className="grid md:grid-cols-2 gap-8">
+                                <form onSubmit={handleSubmit} className="p-6 md:p-10 lg:p-16 space-y-8 md:space-y-12">
+                                    <div className="space-y-6 md:space-y-8">
+                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-3 md:mb-4 border-b border-white/5 pb-3 md:pb-4">01 — Contact Identity</p>
+                                        <div className="grid md:grid-cols-2 gap-4 md:gap-8">
                                             <IconInput icon={User} label="Your Name">
                                                 <input
                                                     type="text"
@@ -254,7 +254,7 @@ export default function InstitutionalCollaboration() {
                                                     onChange={handleChange}
                                                     required
                                                     placeholder="Enter your full name"
-                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                    className="w-full rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-4 md:pr-6 py-3.5 md:py-5 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
                                             </IconInput>
 
@@ -266,7 +266,7 @@ export default function InstitutionalCollaboration() {
                                                     onChange={handleChange}
                                                     required
                                                     placeholder="your.email@example.com"
-                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                    className="w-full rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-4 md:pr-6 py-3.5 md:py-5 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
                                             </IconInput>
 
@@ -278,7 +278,7 @@ export default function InstitutionalCollaboration() {
                                                     onChange={handleChange}
                                                     required
                                                     placeholder="Full institutional name"
-                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                    className="w-full rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-4 md:pr-6 py-3.5 md:py-5 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
                                             </IconInput>
 
@@ -290,22 +290,22 @@ export default function InstitutionalCollaboration() {
                                                     onChange={handleChange}
                                                     required
                                                     placeholder="Lead, Director, etc."
-                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                    className="w-full rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-4 md:pr-6 py-3.5 md:py-5 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
                                             </IconInput>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-8">
-                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-4 border-b border-white/5 pb-4">02 — Organization Profile</p>
-                                        <div className="grid md:grid-cols-2 gap-8">
+                                    <div className="space-y-6 md:space-y-8">
+                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-3 md:mb-4 border-b border-white/5 pb-3 md:pb-4">02 — Organization Profile</p>
+                                        <div className="grid md:grid-cols-2 gap-4 md:gap-8">
                                             <IconInput icon={Target} label="Organization Type" rightIcon>
                                                 <select
                                                     name="organization_type"
                                                     value={formData.organization_type}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
+                                                    className="w-full appearance-none rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-10 md:pr-14 py-3.5 md:py-5 text-sm md:text-base text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
                                                 >
                                                     <option value="">Select type</option>
                                                     {organizationTypes.map(type => (
@@ -320,7 +320,7 @@ export default function InstitutionalCollaboration() {
                                                     value={formData.partnership_type}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
+                                                    className="w-full appearance-none rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-10 md:pr-14 py-3.5 md:py-5 text-sm md:text-base text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
                                                 >
                                                     <option value="">Select pathway</option>
                                                     {partnershipTypes.map(type => (
@@ -337,26 +337,26 @@ export default function InstitutionalCollaboration() {
                                                         value={formData.organization_website}
                                                         onChange={handleChange}
                                                         placeholder="https://official-site.org"
-                                                        className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                        className="w-full rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-4 md:pr-6 py-3.5 md:py-5 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                     />
                                                 </IconInput>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-8">
-                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-4 border-b border-white/5 pb-4">03 — Proposal Specifics</p>
-                                        <div className="space-y-8">
+                                    <div className="space-y-6 md:space-y-8">
+                                        <p className="text-[9px] text-neutral-600 font-black uppercase tracking-[0.4em] mb-3 md:mb-4 border-b border-white/5 pb-3 md:pb-4">03 — Proposal Specifics</p>
+                                        <div className="space-y-6 md:space-y-8">
                                             <div className="space-y-2 group">
-                                                <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Collaboration Proposal</label>
+                                                <label className="text-[9px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Collaboration Proposal</label>
                                                 <textarea
                                                     name="proposal_description"
                                                     value={formData.proposal_description}
                                                     onChange={handleChange}
                                                     placeholder="Describe your partnership vision, goals, and alignment with SufiPulse's institutional mission..."
                                                     required
-                                                    rows={6}
-                                                    className="w-full h-48 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
+                                                    rows={5}
+                                                    className="w-full h-32 md:h-48 rounded-xl md:rounded-2xl bg-black/40 border border-white/10 px-4 md:px-8 py-4 md:py-6 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
                                                 />
                                             </div>
 
@@ -367,49 +367,49 @@ export default function InstitutionalCollaboration() {
                                                     value={formData.proposed_timeline}
                                                     onChange={handleChange}
                                                     placeholder="6 months, ongoing, specific dates, etc."
-                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                    className="w-full rounded-xl md:rounded-2xl bg-black/40 border border-white/10 pl-10 md:pl-16 pr-4 md:pr-6 py-3.5 md:py-5 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
                                             </IconInput>
 
                                             <div className="space-y-2 group">
-                                                <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Resources & Capacities</label>
+                                                <label className="text-[9px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Resources & Capacities</label>
                                                 <textarea
                                                     name="resources_offered"
                                                     value={formData.resources_offered}
                                                     onChange={handleChange}
                                                     placeholder="Expertise, platform access, institutional network, infrastructure, etc."
-                                                    rows={4}
-                                                    className="w-full h-32 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
+                                                    rows={3}
+                                                    className="w-full h-24 md:h-32 rounded-xl md:rounded-2xl bg-black/40 border border-white/10 px-4 md:px-8 py-4 md:py-6 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
                                                 />
                                             </div>
 
                                             <div className="space-y-2 group">
-                                                <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Partnership Goals</label>
+                                                <label className="text-[9px] md:text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">Partnership Goals</label>
                                                 <textarea
                                                     name="partnership_goals"
                                                     value={formData.partnership_goals}
                                                     onChange={handleChange}
                                                     placeholder="What do you seek to achieve through this collaboration?"
-                                                    rows={4}
-                                                    className="w-full h-32 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
+                                                    rows={3}
+                                                    className="w-full h-24 md:h-32 rounded-xl md:rounded-2xl bg-black/40 border border-white/10 px-4 md:px-8 py-4 md:py-6 text-sm md:text-base text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
                                     {error && (
-                                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6 text-red-400 text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
+                                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 md:p-6 text-red-400 text-[10px] md:text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
                                             {error}
                                         </div>
                                     )}
 
-                                    <div className="pt-6">
+                                    <div className="pt-4 md:pt-6">
                                         <button
                                             type="submit"
                                             disabled={submitting}
-                                            className="w-full py-8 bg-linear-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
+                                            className="w-full py-5 md:py-8 bg-linear-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-2xl md:rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[11px] md:text-[12px] tracking-[0.3em] md:tracking-[0.5em] flex items-center justify-center gap-4 md:gap-5 group shadow-2xl"
                                         >
-                                            {submitting ? <Loader2 className="w-6 h-6 animate-spin text-black" /> : <Sparkles size={24} className="group-hover:scale-110 transition-transform" />}
+                                            {submitting ? <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin text-black" /> : <Sparkles size={20} className="md:size-[24px] group-hover:scale-110 transition-transform" />}
                                             {submitting ? 'Authenticating Proposal...' : 'Submit Partnership Proposal'}
                                         </button>
                                     </div>
@@ -429,8 +429,8 @@ export default function InstitutionalCollaboration() {
                             centered
                         />
 
-                        <div className="elite-card p-10 md:p-12 mb-12">
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+                        <div className="elite-card p-6 md:p-10 lg:p-12 mb-8 md:mb-12">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 text-left">
                                 {[
                                     { t: 'Alignment Required', d: 'Non-commercial spiritual alignment mandatory' },
                                     { t: 'Review Process', d: 'Structured governance review for all proposals' },
@@ -439,12 +439,12 @@ export default function InstitutionalCollaboration() {
                                     { t: 'Brand Integrity', d: 'No brand dilution or unauthorized co-branding' },
                                     { t: 'Charter Focus', d: 'Strict adherence to institutional Mithaq provisions' }
                                 ].map((item, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                                            <p className="text-white text-xs font-black uppercase tracking-widest">{item.t}</p>
+                                    <div key={idx} className="space-y-1 md:space-y-2">
+                                        <div className="flex items-center gap-2 md:gap-3">
+                                            <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-amber-400 shrink-0" />
+                                            <p className="text-white text-[10px] md:text-xs font-black uppercase tracking-widest">{item.t}</p>
                                         </div>
-                                        <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest ml-4">{item.d}</p>
+                                        <p className="text-neutral-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest ml-3 md:ml-4">{item.d}</p>
                                     </div>
                                 ))}
                             </div>
@@ -476,6 +476,11 @@ export default function InstitutionalCollaboration() {
                     box-shadow: 
                         0 20px 40px rgba(0,0,0,0.4),
                         inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+                @media (max-width: 639px) {
+                    .elite-card {
+                        border-radius: 20px;
+                    }
                 }
             `}</style>
         </Layout>

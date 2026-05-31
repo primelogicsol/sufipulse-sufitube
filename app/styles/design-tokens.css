@@ -58,6 +58,9 @@
   --text-hero: clamp(2.5rem, 5vw, 4.5rem);      /* 40px-72px */
   --text-section: clamp(1.875rem, 3vw, 3rem);   /* 30px-48px */
 
+  /* Responsive Label - scales down on mobile */
+  --text-label: clamp(0.5625rem, 1.2vw, 0.625rem);  /* 9px-10px */
+
   /* Line Heights */
   --leading-tight: 1.2;
   --leading-normal: 1.5;

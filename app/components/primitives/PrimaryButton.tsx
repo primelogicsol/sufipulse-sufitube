@@ -42,9 +42,9 @@ export function PrimaryButton({
   };
 
   const sizeStyles = {
-    small: 'px-4 py-2 text-sm',
-    medium: 'px-6 py-3 text-base',
-    large: 'px-8 py-4 text-lg'
+    small: 'px-4 py-2.5 text-xs md:text-sm min-h-[44px]',
+    medium: 'px-5 md:px-6 py-3.5 text-sm md:text-base min-h-[48px]',
+    large: 'px-6 md:px-8 py-4 text-base md:text-lg min-h-[52px]'
   };
 
   const baseStyles = `

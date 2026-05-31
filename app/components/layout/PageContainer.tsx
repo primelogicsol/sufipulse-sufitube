@@ -12,7 +12,7 @@ export function PageContainer({ children, className = '' }: PageContainerProps) 
         w-full
         max-w-[1200px]
         mx-auto
-        px-4
+        px-3 sm:px-4
         md:px-6
         ${className}
       `.trim()}
