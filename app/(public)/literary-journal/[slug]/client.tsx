@@ -122,9 +122,33 @@ function renderContent(content: string) {
 export default function LiteraryArticleClient() {
   const params = useParams();
   const slug = params?.slug as string;
-  const article = findArticle(slug);
-  const authorExtras = article as any;
+  const [article, setArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!slug) return;
+    const staticMatch = findArticle(slug);
+    if (staticMatch) {
+      setArticle(staticMatch);
+      setLoading(false);
+      return;
+    }
+
+    // Dynamic API fetch fallback
+    fetch('/api/public/articles')
+      .then(res => res.ok ? res.json() : [])
+      .then((data: any[]) => {
+        const found = data.find(a => a.slug === slug);
+        if (found) {
+          setArticle(found);
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  const authorExtras = article as any;
 
   const relatedArticles = article
     ? literaryArticles.filter(a => a.id !== article.id && a.category === article.category).slice(0, 3)
@@ -137,21 +161,35 @@ export default function LiteraryArticleClient() {
   }
 
   const formatCategory = (cat: string) =>
-    cat.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    (cat || '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
   const handleShare = () => {
     if (typeof navigator === 'undefined') return;
-    if (navigator.share) {
-      navigator.share({ title: article?.title, url: window.location.href });
+    if (navigator.share && article) {
+      navigator.share({ title: article.title, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div className="w-10 h-10 border-2 border-[var(--color-gold)]/30 border-t-[var(--color-gold)] rounded-full animate-spin mx-auto mb-4" />
+            <p style={{ color: 'var(--color-text-secondary)' }}>Loading article…</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   // Article not found
   if (!article) {

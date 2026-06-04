@@ -110,6 +110,19 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     enableAdoption: existing?.enableAdoption !== false,
     enableCredits: existing?.enableCredits !== false,
     distribution: existing?.distribution || getDefaultDistribution(),
+
+    // Release Intelligence fields protected from YouTube Sync overwrites
+    targetRegions: existing?.targetRegions,
+    targetDiaspora: existing?.targetDiaspora,
+    targetLanguages: existing?.targetLanguages,
+    sufiConcepts: existing?.sufiConcepts,
+    themes: existing?.themes,
+    moods: existing?.moods,
+    seoKeywords: existing?.seoKeywords,
+    relatedReleases: existing?.relatedReleases,
+    relatedPlaylists: existing?.relatedPlaylists,
+    intelligenceStatus: existing?.intelligenceStatus,
+    intelligenceUpdatedAt: existing?.intelligenceUpdatedAt,
   } as CMSRelease;
 };
 
@@ -145,5 +158,18 @@ export const mapPlaylistToRelease = (playlist: any, existing?: CMSRelease | null
         enableAdoption: existing?.enableAdoption !== false,
         enableCredits: existing?.enableCredits !== false,
         distribution: existing?.distribution || getDefaultDistribution(),
+
+        // Release Intelligence fields protected from YouTube Sync overwrites
+        targetRegions: existing?.targetRegions,
+        targetDiaspora: existing?.targetDiaspora,
+        targetLanguages: existing?.targetLanguages,
+        sufiConcepts: existing?.sufiConcepts,
+        themes: existing?.themes,
+        moods: existing?.moods,
+        seoKeywords: existing?.seoKeywords,
+        relatedReleases: existing?.relatedReleases,
+        relatedPlaylists: existing?.relatedPlaylists,
+        intelligenceStatus: existing?.intelligenceStatus,
+        intelligenceUpdatedAt: existing?.intelligenceUpdatedAt,
     } as CMSRelease;
 };

@@ -7,6 +7,8 @@ import { logger } from '@/app/lib/logger';
 import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
 import { generateSocialShareKit } from '@/lib/social-share-generator';
 
+import { cmsReleaseSchema } from '@/app/lib/validation-schemas';
+
 export const dynamic = 'force-dynamic';
 
 const cacheHeaders = {
@@ -202,6 +204,16 @@ export async function PUT(
        merged.source = existing.source || merged.source;
        merged.status = body.status || existing.status;
        merged.visibility = body.visibility || existing.visibility;
+    }
+
+    // Run Zod validation schema
+    const validationResult = cmsReleaseSchema.safeParse(merged);
+    if (!validationResult.success) {
+      console.warn(`[API /api/releases/${id}] Validation failed:`, validationResult.error.format());
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.format() },
+        { status: 400 }
+      );
     }
 
     // Generate social share kit whenever status becomes published (first publish or re-publish)

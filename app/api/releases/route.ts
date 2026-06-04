@@ -140,6 +140,16 @@ export async function POST(request: NextRequest) {
       ...body,
     };
 
+    // Run Zod validation schema
+    const validationResult = cmsReleaseSchema.safeParse(release);
+    if (!validationResult.success) {
+      console.warn('[API /api/releases] POST Validation failed:', validationResult.error.format());
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.format() },
+        { status: 400 }
+      );
+    }
+
     const saved = cmsServerStorage.saveRelease(release);
 
     // --- CACHE INVALIDATION ---

@@ -1,4 +1,12 @@
 import { z } from 'zod';
+import {
+  REGION_CODES,
+  DIASPORA_CODES,
+  LANGUAGE_CODES,
+  SUFI_CONCEPT_CODES,
+  THEME_CODES,
+  MOOD_CODES
+} from '@/lib/cms-taxonomy';
 
 /**
  * Universal Security Audit & Hardening PASS
@@ -210,6 +218,28 @@ export const cmsReleaseSchema = z.object({
   producer: z.object({
     name: z.string().max(120),
   }).optional(),
+
+  // Release Intelligence Fields
+  targetRegions: z.array(z.string().refine(val => REGION_CODES.includes(val as any), "Invalid region code")).optional(),
+  targetDiaspora: z.array(z.string().refine(val => DIASPORA_CODES.includes(val as any), "Invalid diaspora market")).optional(),
+  targetLanguages: z.array(z.string().refine(val => LANGUAGE_CODES.includes(val as any), "Invalid language code")).optional(),
+  sufiConcepts: z.array(z.string().refine(val => SUFI_CONCEPT_CODES.includes(val as any), "Invalid Sufi concept")).optional(),
+  themes: z.array(z.string().refine(val => THEME_CODES.includes(val as any), "Invalid spiritual theme")).optional(),
+  moods: z.array(z.string().refine(val => MOOD_CODES.includes(val as any), "Invalid mood code")).optional(),
+  seoKeywords: z.array(z.string().max(100)).optional(),
+  relatedReleases: z.array(z.string().max(100)).optional(),
+  relatedPlaylists: z.array(z.string().max(100)).optional(),
+  intelligenceStatus: z.enum(['draft', 'reviewed', 'approved']).default('draft'),
+  intelligenceUpdatedAt: z.string().max(100).optional(),
+}).refine((data) => {
+  // Prevent relatedReleases from containing the current release ID
+  if (data.id && data.relatedReleases && data.relatedReleases.includes(data.id)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Related releases cannot include the current release itself",
+  path: ['relatedReleases']
 });
 
 /**

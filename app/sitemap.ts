@@ -17,6 +17,21 @@ function getReleases(): { slug: string; updatedAt?: string }[] {
   }
 }
 
+function getRegistryItems(type: 'concepts' | 'themes' | 'regions' | 'moods'): { slug: string; updatedAt?: string }[] {
+  try {
+    const file = path.join(process.cwd(), '.data', 'registries.json');
+    if (!fs.existsSync(file)) return [];
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const items = data[type];
+    if (!Array.isArray(items)) return [];
+    return items
+      .filter((item: any) => item.slug && item.isActive && item.isPublic)
+      .map((item: any) => ({ slug: item.slug, updatedAt: item.updatedAt || item.createdAt }));
+  } catch {
+    return [];
+  }
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
   const now = new Date().toISOString();
@@ -53,5 +68,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.75,
   }));
 
-  return [...staticRoutes, ...releaseRoutes, ...articleRoutes];
+  const conceptRoutes: MetadataRoute.Sitemap = getRegistryItems('concepts').map((c) => ({
+    url: `${baseUrl}/concepts/${c.slug}`,
+    lastModified: c.updatedAt || now,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  const themeRoutes: MetadataRoute.Sitemap = getRegistryItems('themes').map((t) => ({
+    url: `${baseUrl}/themes/${t.slug}`,
+    lastModified: t.updatedAt || now,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  const moodRoutes: MetadataRoute.Sitemap = getRegistryItems('moods').map((m) => ({
+    url: `${baseUrl}/moods/${m.slug}`,
+    lastModified: m.updatedAt || now,
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }));
+
+  const regionRoutes: MetadataRoute.Sitemap = getRegistryItems('regions').map((reg) => ({
+    url: `${baseUrl}/regions/${reg.slug}`,
+    lastModified: reg.updatedAt || now,
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }));
+
+  return [
+    ...staticRoutes, 
+    ...releaseRoutes, 
+    ...articleRoutes, 
+    ...conceptRoutes, 
+    ...themeRoutes, 
+    ...moodRoutes, 
+    ...regionRoutes
+  ];
 }

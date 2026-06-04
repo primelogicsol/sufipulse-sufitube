@@ -270,6 +270,19 @@ export interface CMSRelease {
     telegram: string;
   };
 
+  // Release Intelligence Fields
+  targetRegions?: string[];
+  targetDiaspora?: string[];
+  targetLanguages?: string[];
+  sufiConcepts?: string[];
+  themes?: string[];
+  moods?: string[];
+  seoKeywords?: string[];
+  relatedReleases?: string[];
+  relatedPlaylists?: string[];
+  intelligenceStatus?: 'draft' | 'reviewed' | 'approved';
+  intelligenceUpdatedAt?: string;
+
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;

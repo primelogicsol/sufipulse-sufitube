@@ -54,6 +54,14 @@ import {
   Download,
   Globe,
 } from "lucide-react";
+import {
+  REGIONS,
+  DIASPORA_MARKETS,
+  LANGUAGES,
+  SUFI_CONCEPTS,
+  SPIRITUAL_THEMES,
+  MOODS
+} from "@/lib/cms-taxonomy";
 // import { useRelease } from '../../../hooks/useRelease';
 // import { formatDuration } from '../../../services/youtubeSync';
 import Link from "next/link";
@@ -83,6 +91,13 @@ import {
   useVideoTimeTracker,
   TimeDisplay,
 } from "./components/VideoTimeTracker";
+
+const getRegionLabel = (code: string) => REGIONS.find((r) => r.code === code)?.label || code;
+const getDiasporaLabel = (code: string) => DIASPORA_MARKETS.find((d) => d.code === code)?.label || code;
+const getLanguageLabelForIntelligence = (code: string) => LANGUAGES.find((l) => l.code === code)?.label || code;
+const getConceptLabel = (code: string) => SUFI_CONCEPTS.find((c) => c.code === code)?.label || code;
+const getThemeLabel = (code: string) => SPIRITUAL_THEMES.find((t) => t.code === code)?.label || code;
+const getMoodLabel = (code: string) => MOODS.find((m) => m.code === code)?.label || code;
 
 // Lazy-load heavy components — not needed for initial render
 const VideoOverlay = dynamic(
@@ -602,7 +617,7 @@ function Release() {
     | "credits"
     | "commentary"
     | "sponsors"
-  >("credits");
+  >("overview");
   const [isEditing, setIsEditing] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -616,10 +631,29 @@ function Release() {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [release, setRelease] = useState<any>(null);
+  const [allReleases, setAllReleases] = useState<any[]>([]);
   const [resolutionSource, setResolutionSource] = useState<
    "cms_key" | "cms_slug" | "cms_youtube_compat" | "external_youtube_fallback" | null
   >(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/releases")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAllReleases(data);
+        }
+      })
+      .catch((err) => console.error("Failed to load releases for relationships:", err));
+  }, []);
+
+  useEffect(() => {
+    if (slug) {
+      fetch(`/api/track-click?type=release&slug=${encodeURIComponent(slug)}&action=page_view&json=true`)
+        .catch((err) => console.error("Failed to record release page view telemetry:", err));
+    }
+  }, [slug]);
   const [releaseError, setReleaseError] = useState<string | null>(null);
 
   const handlePlatformStatusChange = async (idx: number, newStatus: string) => {
@@ -1152,6 +1186,19 @@ function Release() {
           streaming_platforms: cmsRelease.streamingPlatforms || [],
           spotify_url: "",
           apple_music_url: "",
+
+          // Release Intelligence Fields
+          targetRegions: cmsRelease.targetRegions || [],
+          targetDiaspora: cmsRelease.targetDiaspora || [],
+          targetLanguages: cmsRelease.targetLanguages || [],
+          sufiConcepts: cmsRelease.sufiConcepts || [],
+          themes: cmsRelease.themes || [],
+          moods: cmsRelease.moods || [],
+          seoKeywords: cmsRelease.seoKeywords || [],
+          relatedReleases: cmsRelease.relatedReleases || [],
+          relatedPlaylists: cmsRelease.relatedPlaylists || [],
+          intelligenceStatus: cmsRelease.intelligenceStatus || "draft",
+          intelligenceUpdatedAt: cmsRelease.intelligenceUpdatedAt || "",
         });
 
         setReleaseError(null);
@@ -2256,23 +2303,89 @@ function Release() {
                       )}
                     </>
                   ) : resolvedVideoId ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${resolvedVideoId}?autoplay=1`}
-                      width="100%"
-                      height="100%"
-                      allow="autoplay; encrypted-media"
-                      allowFullScreen
-                      className="w-full h-full aspect-video"
-                    ></iframe>
+                    <div className="w-full h-full relative">
+                      <YouTube
+                        videoId={resolvedVideoId}
+                        className="w-full h-full"
+                        iframeClassName="w-full h-full aspect-video"
+                        opts={{
+                          width: "100%",
+                          height: "100%",
+                          playerVars: {
+                            autoplay: 1,
+                            enablejsapi: 1,
+                            modestbranding: 1,
+                            rel: 0,
+                            controls: 1,
+                            playsinline: 1,
+                          }
+                        }}
+                        onReady={(event) => {
+                          setPlayerTarget(event.target);
+                          try {
+                            const duration = event.target?.getDuration?.();
+                            if (duration) {
+                              setVideoDuration(Number(duration));
+                            }
+                          } catch (e) {}
+                          setVideoReady(true);
+                        }}
+                        onStateChange={(event) => {
+                          setIsPlaying(event.data === 1);
+                          if (event.data === 0) {
+                            setIsVideoEnded(true);
+                          } else if (event.data === 1) {
+                            setIsVideoEnded(false);
+                          }
+                        }}
+                        onEnd={() => {
+                          setIsPlaying(false);
+                          setIsVideoEnded(true);
+                        }}
+                      />
+                      {videoReady && activeOverlayTrack && (
+                        <VideoOverlay
+                          track={activeOverlayTrack}
+                          currentTime={currentTime}
+                          captionsEnabled={captionsEnabled}
+                        />
+                      )}
+                    </div>
                   ) : release.mediaUrl || release.videoUrl ? (
-                    <video
-                      controls
-                      className="w-full h-full"
-                      poster={thumbnailCandidates[0]}
-                    >
-                      <source src={release.mediaUrl || release.videoUrl} />
-                      Your browser does not support the video tag.
-                    </video>
+                    <div className="w-full h-full relative">
+                      <video
+                        controls
+                        className="w-full h-full"
+                        poster={thumbnailCandidates[0]}
+                        onPlay={() => {
+                          setIsPlaying(true);
+                          setIsVideoEnded(false);
+                        }}
+                        onPause={() => {
+                          setIsPlaying(false);
+                        }}
+                        onEnded={() => {
+                          setIsPlaying(false);
+                          setIsVideoEnded(true);
+                        }}
+                        onDurationChange={(e) => {
+                          setVideoDuration(e.currentTarget.duration);
+                        }}
+                        onTimeUpdate={(e) => {
+                          setCurrentTime(e.currentTarget.currentTime);
+                        }}
+                      >
+                        <source src={release.mediaUrl || release.videoUrl} />
+                        Your browser does not support the video tag.
+                      </video>
+                      {activeOverlayTrack && (
+                        <VideoOverlay
+                          track={activeOverlayTrack}
+                          currentTime={currentTime}
+                          captionsEnabled={captionsEnabled}
+                        />
+                      )}
+                    </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-neutral-500 bg-neutral-900/50">
                       <div className="text-center">
@@ -2350,6 +2463,23 @@ function Release() {
               className="flex flex-col lg:flex-row justify-between lg:items-end gap-4 mb-8 border-b border-neutral-800"
             >
               <div className="flex justify-between w-full lg:w-auto gap-0.5 sm:gap-2 pb-0">
+                <button
+                  onClick={() => setActiveTab("overview")}
+                  className={`px-2 sm:px-4 py-3 font-medium text-xs sm:text-sm transition-all relative whitespace-nowrap ${
+                    activeTab === "overview"
+                      ? "text-neutral-100"
+                      : "text-neutral-500 hover:text-neutral-300"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    Overview
+                  </span>
+                  {activeTab === "overview" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
+                  )}
+                </button>
+
                 {release.enable_credits !== false && (
                   <button
                     onClick={() => setActiveTab("credits")}
@@ -2368,18 +2498,6 @@ function Release() {
                     )}
                   </button>
                 )}
-                {/* <button
-                                    onClick={() => setActiveTab('production')}
-                                    className={`px-4 sm:px-6 py-3 font-medium transition-all relative whitespace-nowrap ${activeTab === 'production'
-                                        ? 'text-neutral-100'
-                                        : 'text-neutral-500 hover:text-neutral-300'
-                                        }`}
-                                >
-                                    Production
-                                    {activeTab === 'production' && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
-                                    )}
-                                </button> */}
 
                 <button
                   onClick={() => setActiveTab("lyrics")}
@@ -2392,26 +2510,15 @@ function Release() {
                   <span className="flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="hidden sm:inline">
-                      LYRICS IN 17 LANGUAGES
+                      Lyrics
                     </span>
-                    <span className="inline sm:hidden">LYRICS</span>
+                    <span className="inline sm:hidden">Lyrics</span>
                   </span>
                   {activeTab === "lyrics" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
                   )}
                 </button>
-                {/* <button
-                                    onClick={() => setActiveTab('overview')}
-                                    className={`px-4 sm:px-6 py-3 font-medium transition-all relative whitespace-nowrap ${activeTab === 'overview'
-                                        ? 'text-neutral-100'
-                                        : 'text-neutral-500 hover:text-neutral-300'
-                                        }`}
-                                >
-                                    Overview
-                                    {activeTab === 'overview' && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-100"></div>
-                                    )}
-                                </button> */}
+
                 {release.enable_adoption !== false && (
                   <button
                     onClick={() => setActiveTab("adopt")}
@@ -2427,6 +2534,7 @@ function Release() {
                     )}
                   </button>
                 )}
+
                 {release.enable_commentary !== false && (
                   <button
                     onClick={() => setActiveTab("commentary")}
@@ -2469,7 +2577,7 @@ function Release() {
               {/* Action Buttons */}
               <div className="flex items-center gap-2 sm:gap-3 lg:pb-2 flex-shrink-0">
                 <a
-                  href="https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ?sub_confirmation=1"
+                  href={`/api/track-click?type=release&slug=${release?.slug || slug}&action=subscribe_click&redirect=${encodeURIComponent(youtubeSubscribeUrl || "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ?sub_confirmation=1")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() =>
@@ -2489,10 +2597,10 @@ function Release() {
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
                   Subscribe
-                </a>
+                </a >
                 {resolvedVideoId && (
                   <a
-                    href={`https://www.youtube.com/watch?v=${resolvedVideoId}${release?.youtubePlaylistId ? `&list=${release.youtubePlaylistId}` : ""}`}
+                    href={`/api/track-click?type=release&slug=${release?.slug || slug}&action=video_click&redirect=${encodeURIComponent(`https://www.youtube.com/watch?v=${resolvedVideoId}${release?.youtubePlaylistId ? `&list=${release.youtubePlaylistId}` : ""}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() =>
@@ -2551,6 +2659,171 @@ function Release() {
                     <div className="prose prose-invert max-w-none">
                       <div className="text-neutral-300 leading-relaxed space-y-4 text-base">
                         {formatDescription(release.description)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Release Intelligence - Sufi Taxonomy & Targeting Context */}
+                  {((release.sufiConcepts && release.sufiConcepts.length > 0) ||
+                    (release.themes && release.themes.length > 0) ||
+                    (release.moods && release.moods.length > 0) ||
+                    (release.targetLanguages && release.targetLanguages.length > 0) ||
+                    (release.targetRegions && release.targetRegions.length > 0)) && (
+                    <div className="mt-8 pt-8 border-t border-neutral-800/80">
+                      <h4 className="text-sm font-semibold tracking-widest text-amber-400 uppercase mb-5">
+                        Spiritual & Cultural Context
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Column 1: Concepts, Themes & Moods */}
+                        <div className="space-y-5">
+                          {release.sufiConcepts && release.sufiConcepts.length > 0 && (
+                            <div>
+                              <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Sufi Concepts</span>
+                              <div className="flex flex-wrap gap-2">
+                                {release.sufiConcepts.map((code: string) => (
+                                  <span key={code} className="px-3 py-1 text-xs rounded-full bg-amber-950/30 text-amber-300 border border-amber-800/20 font-medium">
+                                    {getConceptLabel(code)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {release.themes && release.themes.length > 0 && (
+                            <div>
+                              <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Spiritual Themes</span>
+                              <div className="flex flex-wrap gap-2">
+                                {release.themes.map((code: string) => (
+                                  <span key={code} className="px-3 py-1 text-xs rounded-full bg-neutral-800/50 text-neutral-300 border border-neutral-700/50 font-medium">
+                                    {getThemeLabel(code)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {release.moods && release.moods.length > 0 && (
+                            <div>
+                              <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Mood & Atmosphere</span>
+                              <div className="flex flex-wrap gap-2">
+                                {release.moods.map((code: string) => (
+                                  <span key={code} className="px-3 py-1 text-xs rounded-full bg-neutral-800/50 text-neutral-300 border border-neutral-700/50 font-medium">
+                                    {getMoodLabel(code)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Column 2: Target Languages & Regions */}
+                        <div className="space-y-5">
+                          {release.targetLanguages && release.targetLanguages.length > 0 && (
+                            <div>
+                              <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Primary Audiences (Languages)</span>
+                              <div className="flex flex-wrap gap-2">
+                                {release.targetLanguages.map((code: string) => (
+                                  <span key={code} className="px-3 py-1 text-xs rounded bg-neutral-800/30 text-neutral-400 border border-neutral-800 font-medium">
+                                    {getLanguageLabelForIntelligence(code)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {release.targetRegions && release.targetRegions.length > 0 && (
+                            <div>
+                              <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Target Geographies</span>
+                              <div className="flex flex-wrap gap-2">
+                                {release.targetRegions.map((code: string) => (
+                                  <span key={code} className="px-3 py-1 text-xs rounded bg-neutral-800/30 text-neutral-400 border border-neutral-800 font-medium">
+                                    {getRegionLabel(code)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {release.targetDiaspora && release.targetDiaspora.length > 0 && (
+                            <div>
+                              <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Diaspora Focus</span>
+                              <div className="flex flex-wrap gap-2">
+                                {release.targetDiaspora.map((code: string) => (
+                                  <span key={code} className="px-3 py-1 text-xs rounded bg-neutral-800/30 text-neutral-400 border border-neutral-800 font-medium">
+                                    {getDiasporaLabel(code)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Related Content (Releases & Playlists) */}
+                  {((release.relatedReleases && release.relatedReleases.length > 0) ||
+                    (release.relatedPlaylists && release.relatedPlaylists.length > 0)) && (
+                    <div className="mt-8 pt-8 border-t border-neutral-800/80">
+                      <h4 className="text-sm font-semibold tracking-widest text-amber-400 uppercase mb-5">
+                        Related Content
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Related Releases */}
+                        {release.relatedReleases && release.relatedReleases.length > 0 && (
+                          <div>
+                            <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-3">Related Releases</span>
+                            <div className="space-y-2">
+                              {release.relatedReleases.map((id: string) => {
+                                const rel = allReleases.find(r => r.id === id);
+                                if (!rel) return null;
+                                return (
+                                  <Link
+                                    key={id}
+                                    href={`/release-detail/${rel.slug}`}
+                                    className="block p-3 rounded-lg border border-neutral-800/80 bg-neutral-950/40 hover:bg-neutral-900/40 hover:border-amber-900/30 transition group animate-in fade-in duration-200"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm font-medium text-neutral-300 group-hover:text-amber-400 transition-colors">
+                                        {rel.title}
+                                      </span>
+                                      <span className="text-xs text-neutral-600 group-hover:text-neutral-500">
+                                        View Release &rarr;
+                                      </span>
+                                    </div>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Related Playlists */}
+                        {release.relatedPlaylists && release.relatedPlaylists.length > 0 && (
+                          <div>
+                            <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-3">Related Playlists</span>
+                            <div className="space-y-2">
+                              {release.relatedPlaylists.map((playlistId: string) => {
+                                const playlistUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
+                                const trackingPlaylistHref = `/api/track-click?type=release&slug=${release?.slug || slug}&action=playlist_click&redirect=${encodeURIComponent(playlistUrl)}`;
+                                return (
+                                  <a
+                                    key={playlistId}
+                                    href={trackingPlaylistHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block p-3 rounded-lg border border-neutral-800/80 bg-neutral-950/40 hover:bg-neutral-900/40 hover:border-amber-900/30 transition group"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm font-medium text-neutral-300 group-hover:text-amber-400 transition-colors">
+                                        Playlist ID: {playlistId}
+                                      </span>
+                                      <span className="text-xs text-neutral-600 group-hover:text-neutral-500">
+                                        Open Playlist &rarr;
+                                      </span>
+                                    </div>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

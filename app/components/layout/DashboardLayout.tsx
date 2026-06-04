@@ -29,7 +29,8 @@ import {
   History,
   PenTool,
   MessageSquare,
-  Music2
+  Music2,
+  Network
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -90,6 +91,10 @@ const adminNavigation = [
       { path: '/admin/release-workflow',    label: 'Release Workflow',        icon: Globe },
       { path: '/admin/cms',                 label: 'CMS Dashboard',           icon: Globe },
       { path: '/admin/cms-releases',        label: 'CMS Releases',            icon: FileText },
+      { path: '/admin/registries',          label: 'Master Registries',       icon: Settings },
+      { path: '/admin/discovery-graph',     label: 'Discovery Graph',         icon: Network },
+      { path: '/admin/discovery-performance', label: 'Discovery Performance', icon: BarChart2 },
+      { path: '/admin/knowledge-registry',  label: 'Knowledge Registry',      icon: BookOpen },
     ],
   },
   {

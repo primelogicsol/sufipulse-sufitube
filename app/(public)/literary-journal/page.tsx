@@ -9,45 +9,8 @@ import { BookOpen, Calendar, Clock, Tag, Search, ListFilter as Filter, Eye, Tren
 import Link from 'next/link';
 import { literaryArticles, Article } from '../../data/literary-articles';
 
-// Merge localStorage approved articles with static data
-function getAllArticles(): Article[] {
-    const staticArticles = [...literaryArticles];
-    if (typeof window === 'undefined') return staticArticles;
-    try {
-        const raw = localStorage.getItem('sufipulse_articles');
-        const all: any[] = raw ? JSON.parse(raw) : [];
-        const published = all.filter((a: any) => a.status === 'approved' || a.status === 'published');
-        const dynamic: Article[] = published.map((a: any) => ({
-            id: a.id,
-            title: a.title || 'Untitled',
-            subtitle: a.abstract ? a.abstract.slice(0, 120) : null,
-            slug: a.slug || `article-${a.id}`,
-            category: a.article_type || 'reflective_essay',
-            content: a.content || '',
-            excerpt: a.excerpt || (a.content || '').replace(/<[^>]*>/g, '').slice(0, 200) + '...',
-            reading_time_minutes: Math.max(1, Math.ceil(((a.content || '').replace(/<[^>]*>/g, '').split(' ').length) / 200)),
-            featured: false,
-            published_at: a.updated_at || a.created_at || new Date().toISOString(),
-            tags: a.author_domain ? a.author_domain.split(',').map((t: string) => t.trim()) : [],
-            view_count: 0,
-            author_id: a.user_id || '',
-            author_name: a.author_name || a.author_full_name || 'Ahl-e-Tahreer',
-            author_professional_name: a.author_professional_name || '',
-            author_country: a.author_country || '',
-            author_city: a.author_city || '',
-            author_domain: a.author_domain || '',
-            author_photo: a.author_photo || '',
-        }));
-        // Avoid duplicate IDs
-        const staticIds = new Set(staticArticles.map(a => a.id));
-        const uniqueDynamic = dynamic.filter(a => !staticIds.has(a.id));
-        return [...staticArticles, ...uniqueDynamic];
-    } catch {
-        return staticArticles;
-    }
-}
-
 export default function LiteraryJournal() {
+    const [allArticles, setAllArticles] = useState<Article[]>([]);
     const [articles, setArticles] = useState<Article[]>([]);
     const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
@@ -65,10 +28,41 @@ export default function LiteraryJournal() {
         { value: 'institutional_guidance', label: 'Institutional Guidance' },
     ];
 
+    // Load dynamic articles on mount
+    useEffect(() => {
+        const fetchArticles = async () => {
+            try {
+                const res = await fetch('/api/public/articles');
+                const data = res.ok ? await res.json() : [];
+                
+                const staticArticles = [...literaryArticles];
+                const staticIds = new Set(staticArticles.map(a => a.id));
+                const uniqueDynamic = (Array.isArray(data) ? data : []).filter((a: any) => !staticIds.has(a.id));
+                const merged = [...staticArticles, ...uniqueDynamic];
+                
+                setAllArticles(merged);
+
+                // Stats calculation
+                const totalViews = merged.reduce((sum, article) => sum + (article.view_count || 0), 0);
+                const uniqueCategories = new Set(merged.map(a => a.category)).size;
+                setStats({
+                    totalArticles: merged.length,
+                    totalViews,
+                    categories: uniqueCategories
+                });
+            } catch (err) {
+                console.error('Failed to load dynamic articles:', err);
+                setAllArticles(literaryArticles);
+            }
+        };
+
+        fetchArticles();
+    }, []);
+
+    // Filter articles based on input state changes
     useEffect(() => {
         setLoading(true);
         const timer = setTimeout(() => {
-            const allArticles = getAllArticles();
             let filtered = allArticles;
 
             if (selectedCategory !== 'all') {
@@ -79,7 +73,7 @@ export default function LiteraryJournal() {
                 const q = searchQuery.toLowerCase();
                 filtered = filtered.filter(a =>
                     a.title.toLowerCase().includes(q) ||
-                    a.excerpt.toLowerCase().includes(q)
+                    (a.excerpt && a.excerpt.toLowerCase().includes(q))
                 );
             }
 
@@ -89,20 +83,9 @@ export default function LiteraryJournal() {
             setFeaturedArticles(featured);
             setArticles(regular);
             setLoading(false);
-        }, 600); // Small delay to show skeleton polish
+        }, 300); // reduced delay for snappier experience
         return () => clearTimeout(timer);
-    }, [selectedCategory, searchQuery]);
-
-    useEffect(() => {
-        const allArticles = getAllArticles();
-        const totalViews = allArticles.reduce((sum, article) => sum + (article.view_count || 0), 0);
-        const uniqueCategories = new Set(allArticles.map(a => a.category)).size;
-        setStats({
-            totalArticles: allArticles.length,
-            totalViews,
-            categories: uniqueCategories
-        });
-    }, []);
+    }, [allArticles, selectedCategory, searchQuery]);
 
     return (
         <Layout>

@@ -147,12 +147,12 @@ export default function OfficialChannels() {
                                         </div>
                                     </div>
                                     <div className="shrink-0">
-                                        <Link 
-                                            href="/releases" 
+                                        <a 
+                                            href={`/api/track-click?type=playlist&slug=sufipulse-radio&action=brand_asset_click&assetType=website&assetName=SufiPulse+Radio&sourcePage=official-channels&redirect=${encodeURIComponent('/releases')}`}
                                             className="px-10 py-5 bg-amber-400 text-black font-black uppercase text-[11px] tracking-[0.3em] rounded-xl hover:bg-amber-500 transition-all flex items-center justify-center gap-3 shadow-2xl"
                                         >
                                             Access Broadcast <ArrowRight size={14} />
-                                        </Link>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -177,14 +177,20 @@ export default function OfficialChannels() {
                                                 <p className="text-neutral-300 text-xs font-medium leading-relaxed uppercase tracking-wider">{platform.purpose}</p>
                                             </div>
                                         </div>
-                                        <a 
-                                            href={platform.url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="w-full py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all"
-                                        >
-                                            {platform.buttonText} <ExternalLink size={12} />
-                                        </a>
+                                        {(() => {
+                                            const platformSlug = platform.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                                            const trackUrl = `/api/track-click?type=playlist&slug=${platformSlug}&action=brand_asset_click&assetType=${platformSlug === 'youtube' ? 'youtube_channel' : platformSlug}&assetName=${encodeURIComponent(platform.name)}&sourcePage=official-channels&redirect=${encodeURIComponent(platform.url)}`;
+                                            return (
+                                                <a 
+                                                    href={trackUrl} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="w-full py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all"
+                                                >
+                                                    {platform.buttonText} <ExternalLink size={12} />
+                                                </a>
+                                            );
+                                        })()}
                                     </div>
                                 ))}
                             </div>

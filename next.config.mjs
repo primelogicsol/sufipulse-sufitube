@@ -45,6 +45,16 @@ const nextConfig = {
         destination: '/admin/song-adoptions',
         permanent: true,
       },
+      {
+        source: '/releases-cms',
+        destination: '/releases',
+        permanent: true,
+      },
+      {
+        source: '/releases-cms/:slug*',
+        destination: '/release-detail/:slug*',
+        permanent: true,
+      },
     ];
   },
   async headers() {

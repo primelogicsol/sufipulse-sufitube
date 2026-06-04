@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
 import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
+import { canAccessAdmin } from '@/app/lib/role-access';
 
 type FilterType = 'all' | 'native_governed' | 'legacy_registry';
 type FormatFilter = 'all' | 'video' | 'audio' | 'short' | 'live' | 'playlist';

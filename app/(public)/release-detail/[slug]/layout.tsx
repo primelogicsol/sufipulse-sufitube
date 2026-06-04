@@ -13,48 +13,35 @@ function getReleaseBySlug(slug: string): any | null {
   }
 }
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> }
-): Promise<Metadata> {
-  const { slug } = await params;
-  const release = getReleaseBySlug(slug);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
-  const canonicalUrl = `${baseUrl}/release-detail/${slug}`;
-
-  if (!release) {
-    return {
-      title: "Release",
-      description: "Discover sacred Sufi music releases on SufiPulse.",
-      alternates: { canonical: canonicalUrl },
-    };
-  }
-
+function buildSchemas(release: any, canonicalUrl: string) {
   const title = release.title || release.name || "SufiPulse Release";
   const description = release.description
     || release.publicCommentary
     || `Listen to "${title}" — a sacred Sufi music release on SufiPulse.`;
-
-  const thumbnail = release.youtubeId
-    ? `https://i.ytimg.com/vi/${release.youtubeId}/maxresdefault.jpg`
-    : `/og?title=${encodeURIComponent(title)}&subtitle=Listen+on+SufiPulse`;
-
   const artistName = release.artist || release.artistName;
-  const keywords = [
-    title, "Sufi music", "kalam", "qawwali",
-    ...(artistName ? [artistName] : []),
-    ...(release.availableLanguages || []),
-    "SufiPulse release", "sacred music",
-  ].filter(Boolean);
 
   const lyricsText = (() => {
     if (!release.lyrics) return undefined;
     if (typeof release.lyrics === 'string') return release.lyrics.slice(0, 5000);
+    
     if (Array.isArray(release.lyrics)) {
       return release.lyrics
         .map((l: any) => (typeof l === 'string' ? l : l.text || l.content || l.line || ''))
         .filter(Boolean)
         .join('\n')
         .slice(0, 5000);
+    }
+    
+    if (typeof release.lyrics === 'object') {
+      const lang = release.defaultLanguage || Object.keys(release.lyrics)[0];
+      const lines = release.lyrics[lang];
+      if (Array.isArray(lines)) {
+        return lines
+          .map((l: any) => l.translation || l.transliteration || l.urdu || '')
+          .filter(Boolean)
+          .join('\n')
+          .slice(0, 5000);
+      }
     }
     return undefined;
   })();
@@ -107,6 +94,42 @@ export async function generateMetadata(
     },
   } : null;
 
+  return { musicRecordingSchema, videoObjectSchema };
+}
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params;
+  const release = getReleaseBySlug(slug);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+  const canonicalUrl = `${baseUrl}/release-detail/${slug}`;
+
+  if (!release) {
+    return {
+      title: "Release",
+      description: "Discover sacred Sufi music releases on SufiPulse.",
+      alternates: { canonical: canonicalUrl },
+    };
+  }
+
+  const title = release.title || release.name || "SufiPulse Release";
+  const description = release.description
+    || release.publicCommentary
+    || `Listen to "${title}" — a sacred Sufi music release on SufiPulse.`;
+
+  const thumbnail = release.youtubeId
+    ? `https://i.ytimg.com/vi/${release.youtubeId}/maxresdefault.jpg`
+    : `/og?title=${encodeURIComponent(title)}&subtitle=Listen+on+SufiPulse`;
+
+  const artistName = release.artist || release.artistName;
+  const keywords = [
+    title, "Sufi music", "kalam", "qawwali",
+    ...(artistName ? [artistName] : []),
+    ...(release.availableLanguages || []),
+    "SufiPulse release", "sacred music",
+  ].filter(Boolean);
+
   return {
     title,
     description: description.slice(0, 160),
@@ -126,13 +149,91 @@ export async function generateMetadata(
       images: [thumbnail],
     },
     alternates: { canonical: canonicalUrl },
-    other: {
-      "script:ld+json": JSON.stringify(musicRecordingSchema),
-      ...(videoObjectSchema && { "script:ld+json:video": JSON.stringify(videoObjectSchema) }),
-    },
   };
 }
 
-export default function ReleaseDetailLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+interface LayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ slug: string }>;
+}
+
+export default async function ReleaseDetailLayout({ children, params }: LayoutProps) {
+  const { slug } = await params;
+  const release = getReleaseBySlug(slug);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+  const canonicalUrl = `${baseUrl}/release-detail/${slug}`;
+
+  if (!release) {
+    return <>{children}</>;
+  }
+
+  const { musicRecordingSchema, videoObjectSchema } = buildSchemas(release, canonicalUrl);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(musicRecordingSchema) }}
+      />
+      {videoObjectSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(videoObjectSchema) }}
+        />
+      )}
+      
+      {/* Search Engine Crawlability Layer (Pre-rendered SSR content for bot indexation) */}
+      <div style={{ display: 'none' }} aria-hidden="true">
+        <h1>{release.title}</h1>
+        {release.subtitle && <h2>{release.subtitle}</h2>}
+        <p>{release.description}</p>
+        
+        {/* Render Lyrics */}
+        {release.lyrics && Object.entries(release.lyrics).map(([lang, lines]: any) => (
+          <div key={lang}>
+            <h3>Lyrics ({lang})</h3>
+            {Array.isArray(lines) && lines.map((line: any, idx: number) => (
+              <p key={idx}>
+                {line.urdu && <span>{line.urdu}<br /></span>}
+                {line.transliteration && <span>{line.transliteration}<br /></span>}
+                {line.translation && <span>{line.translation}<br /></span>}
+              </p>
+            ))}
+          </div>
+        ))}
+
+        {/* Render Commentary / Meanings */}
+        {release.publicCommentary && (
+          <div>
+            <h3>Commentary & Significance</h3>
+            {release.publicCommentary.map((c: any) => (
+              <div key={c.id}>
+                <h4>{c.title}</h4>
+                <p>{c.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Render Credits */}
+        {release.publicCredits && (
+          <div>
+            <h3>Artistic & Production Credits</h3>
+            {Object.entries(release.publicCredits).map(([category, roles]: any) => (
+              <div key={category}>
+                <h4>{category}</h4>
+                <ul>
+                  {Object.entries(roles).map(([role, name]: any) => (
+                    <li key={role}><strong>{role}:</strong> {String(name)}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {children}
+    </>
+  );
 }

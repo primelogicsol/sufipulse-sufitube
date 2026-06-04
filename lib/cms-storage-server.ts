@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { cmsStorage, type CMSRelease } from '@/lib/cms-storage';
 import { getBestReleaseDate } from './release-utils';
+import { graphResolver } from './graph-resolver';
 
 /**
  * Robust Data Directory Resolution
@@ -193,6 +194,11 @@ export const cmsServerStorage = {
   saveRelease(release: CMSRelease): CMSRelease {
     ensureHydrated();
     const saved = cmsStorage.saveRelease(release);
+    try {
+      graphResolver.syncReleaseJoins(saved);
+    } catch (e) {
+      console.error('[CMS-SERVER] Failed to sync graph joins for release:', e);
+    }
     persist();
     return saved;
   },
@@ -201,7 +207,13 @@ export const cmsServerStorage = {
     ensureHydrated();
     const saved: CMSRelease[] = [];
     for (const r of releases) {
-      saved.push(cmsStorage.saveRelease(r));
+      const s = cmsStorage.saveRelease(r);
+      try {
+        graphResolver.syncReleaseJoins(s);
+      } catch (e) {
+        console.error('[CMS-SERVER] Failed to sync graph joins for bulk release:', e);
+      }
+      saved.push(s);
     }
     persist();
     return saved;
@@ -210,7 +222,14 @@ export const cmsServerStorage = {
   deleteRelease(id: string): boolean {
     ensureHydrated();
     const deleted = cmsStorage.deleteRelease(id);
-    if (deleted) persist();
+    if (deleted) {
+      try {
+        graphResolver.removeAllJoinsForRelease(id);
+      } catch (e) {
+        console.error('[CMS-SERVER] Failed to remove graph joins for deleted release:', e);
+      }
+      persist();
+    }
     return deleted;
   },
 
