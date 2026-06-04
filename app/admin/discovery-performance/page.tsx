@@ -750,6 +750,89 @@ export default function DiscoveryPerformanceDashboard() {
           </div>
         )}
 
+        {/* Phase 2 Observation Window Card */}
+        {data && (
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-6 relative overflow-hidden group hover:border-purple-500/20 transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="text-sm font-black text-white flex items-center gap-2">
+                <Award size={16} className="text-purple-400" />
+                Phase 2 Observation Window
+                <span className="px-1.5 py-0.2 bg-purple-500/15 border border-purple-500/20 text-purple-400 text-[8px] font-bold rounded uppercase">Outcome Tracker</span>
+              </h3>
+              <span className="text-[10px] font-mono bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20 font-bold">
+                Observation Started: 2026-06-03
+              </span>
+            </div>
+
+            <p className="text-xs text-neutral-400 leading-relaxed max-w-3xl">
+              Monitors live outcome indices during the 90-day observation window, including search console indexation coverage, crawler hits from major search/LLM engines, and branded occupancy queries.
+            </p>
+
+            {/* Timeline Progress Bar */}
+            <div className="space-y-4">
+              {(() => {
+                const start = new Date('2026-06-03T00:00:00.000Z').getTime();
+                const now = Date.now();
+                const elapsedDays = Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
+                const progressPercent = Math.min(100, Math.max(0, (elapsedDays / 90) * 100));
+
+                const milestones = [
+                  { day: 0, label: 'Day 0', title: 'Baseline Check', desc: 'Sitemap submission & index baselines', active: elapsedDays >= 0 },
+                  { day: 7, label: 'Day 7', title: 'Crawler Indexing', desc: 'Googlebot, Bingbot & LLM scrapers scans', active: elapsedDays >= 7 },
+                  { day: 30, label: 'Day 30', title: 'Authority Outcome Audit', desc: 'Outcome checks & playlist continuation', active: elapsedDays >= 30 },
+                  { day: 60, label: 'Day 60', title: 'Trust Accrual Check', desc: 'Branded search organic occupy gains', active: elapsedDays >= 60 },
+                  { day: 90, label: 'Day 90', title: 'Ecosystem Recognition', desc: 'Canonical AI & search registry complete', active: elapsedDays >= 90 },
+                ];
+
+                return (
+                  <div className="space-y-6">
+                    {/* Progress Bar Header */}
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-neutral-400">Current Progress</span>
+                      <span className="font-mono text-purple-400 font-bold bg-purple-500/5 px-2 py-0.5 border border-purple-500/10 rounded-lg">
+                        {elapsedDays >= 90 ? 'Completed' : `Day ${elapsedDays + 1} of 90 (${progressPercent.toFixed(1)}%)`}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar Track */}
+                    <div className="relative w-full h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                      <div 
+                        className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-400 rounded-full transition-all duration-500" 
+                        style={{ width: `${progressPercent}%` }}
+                      ></div>
+                    </div>
+
+                    {/* Milestones Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 pt-2">
+                      {milestones.map((m) => (
+                        <div 
+                          key={m.day} 
+                          className={`border rounded-2xl p-3.5 space-y-1.5 transition-all duration-300 ${
+                            m.active 
+                              ? 'bg-purple-500/5 border-purple-500/20 text-white' 
+                              : 'bg-black/20 border-white/5 text-neutral-500'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black tracking-wider uppercase font-mono">{m.label}</span>
+                            {m.active ? (
+                              <span className="text-[9px] bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 px-1 rounded font-bold uppercase">Active</span>
+                            ) : (
+                              <span className="text-[9px] bg-white/5 border border-white/5 text-neutral-600 px-1 rounded font-bold uppercase">Pending</span>
+                            )}
+                          </div>
+                          <h4 className={`text-xs font-black ${m.active ? 'text-white' : 'text-neutral-400'}`}>{m.title}</h4>
+                          <p className="text-[9px] leading-normal text-neutral-400">{m.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
         {/* AI & Discovery Tracking Grid */}
         {data && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
