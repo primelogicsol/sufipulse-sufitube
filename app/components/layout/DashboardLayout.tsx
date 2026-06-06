@@ -94,6 +94,7 @@ const adminNavigation = [
       { path: '/admin/registries',          label: 'Master Registries',       icon: Settings },
       { path: '/admin/discovery-graph',     label: 'Discovery Graph',         icon: Network },
       { path: '/admin/discovery-performance', label: 'Discovery Performance', icon: BarChart2 },
+      { path: '/admin/discovery-mission',   label: 'Discovery Mission Ops',   icon: Database },
       { path: '/admin/knowledge-registry',  label: 'Knowledge Registry',      icon: BookOpen },
     ],
   },

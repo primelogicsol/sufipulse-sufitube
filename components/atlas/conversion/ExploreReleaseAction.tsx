@@ -19,7 +19,7 @@ export function ExploreReleaseAction({ releaseSlug, title = 'Explore Original Re
           <Disc3 className="w-7 h-7 text-emerald-400 group-hover:animate-spin-slow" />
         </div>
         <div>
-          <p className="text-sm font-bold text-emerald-500 uppercase tracking-wider mb-1">Priority Content</p>
+          <p className="text-sm font-bold text-emerald-500 uppercase tracking-wider mb-1">SufiPulse Original</p>
           <h4 className="text-white font-bold text-lg">{title}</h4>
         </div>
       </div>

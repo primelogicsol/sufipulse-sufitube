@@ -7,6 +7,7 @@ import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { ExternalLink, Award, Music, Shield, BookOpen, Globe, Heart, Leaf, Zap, GraduationCap, Scale, Search } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 
 export default function Founder() {
@@ -284,8 +285,10 @@ export default function Founder() {
                                         />
                                     </div>
                                     <div className="mt-8 text-center lg:text-left">
-                                        <p className="text-white font-bold text-2xl tracking-tight">Dr. Zarf-e-Noori</p>
-                                        <p className="text-amber-400 font-black uppercase tracking-[0.3em] text-xs mt-1">Representative Founder</p>
+                                        <Link href="/about/zarf-e-noori" className="group/link inline-block">
+                                            <p className="text-white font-bold text-2xl tracking-tight group-hover/link:text-amber-400 transition-colors">Dr. Zarf-e-Noori</p>
+                                            <p className="text-amber-400 font-black uppercase tracking-[0.3em] text-xs mt-1 group-hover/link:text-amber-300 transition-colors">Representative Founder</p>
+                                        </Link>
                                     </div>
                                 </div>
                                 
