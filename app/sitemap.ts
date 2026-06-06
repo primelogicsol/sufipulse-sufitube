@@ -52,6 +52,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/royalty-policy`,                lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${baseUrl}/contributor-policy`,            lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${baseUrl}/contact`,                       lastModified: now, changeFrequency: 'yearly',  priority: 0.5 },
+    { url: `${baseUrl}/verification`,                  lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/official-channels`,             lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
   ];
 
   const releaseRoutes: MetadataRoute.Sitemap = getReleases().map((r) => ({

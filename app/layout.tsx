@@ -90,7 +90,10 @@ const organizationSchema = {
     url: `${BASE_URL}/contact`,
   },
   sameAs: [
-    "https://www.youtube.com/@sufipulse",
+    "https://www.youtube.com/@SufiPulse-USA",
+    "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
+    "https://dkf.sufisciencecenter.info",
+    `${BASE_URL}/verification`,
   ],
 };
 
