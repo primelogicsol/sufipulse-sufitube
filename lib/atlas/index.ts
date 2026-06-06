@@ -68,6 +68,9 @@ export {
   calculateConnectionScore,
   recalculateEntityScores,
   calculateProductionPriority,
+  calculateDiscoveryReadinessScore,
+  determineDiscoveryStatus,
+  type FlagshipProtectionInputs,
 } from './atlas-scoring-engine';
 
 // Graph Engine

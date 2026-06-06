@@ -276,6 +276,71 @@ export function calculateProductionPriority(
 }
 
 // ─────────────────────────────────────────────────────────────────
+// DISCOVERY READINESS SCORING
+// ─────────────────────────────────────────────────────────────────
+
+export interface DiscoveryReadinessInputs {
+  entityCompleteness: number;    // 0-20
+  relationshipDensity: number;   // 0-20
+  conversionStrength: number;    // 0-20 
+  contentQuality: number;        // 0-20
+  authorityScore: number;        // 0-20
+  releaseConnectionStrength: number; // Required. If 0, readiness cannot exceed 79.
+}
+
+/**
+ * Calculate the Discovery Readiness Score.
+ * Formula: Completeness + Relationship Density + Conversion Strength + Content Quality + Authority Score
+ */
+export function calculateDiscoveryReadinessScore(inputs: DiscoveryReadinessInputs): number {
+  let raw = inputs.entityCompleteness 
+          + inputs.relationshipDensity 
+          + inputs.conversionStrength 
+          + inputs.contentQuality 
+          + inputs.authorityScore;
+  
+  if (inputs.releaseConnectionStrength === 0 && raw >= 80) {
+    raw = 79; // Hard cap if no release connection exists
+  }
+  
+  return Math.round(clamp(raw, 0, 100));
+}
+
+export interface FlagshipProtectionInputs {
+  discoveryReadinessScore: number;
+  strategicGPS: number;
+  advantageScore: number;
+  relationshipCount: number;
+  relatedEntityCount: number;
+  releaseCount: number;
+  publicationCount: number;
+  videoCount: number;
+  conversionPathwayCount: number;
+}
+
+/**
+ * Determine if an entity is ready for public discovery using Flagship Protection Rules
+ */
+export function determineDiscoveryStatus(inputs: FlagshipProtectionInputs): 'public' | 'review' | 'draft' {
+  if (
+    inputs.discoveryReadinessScore >= 80 &&
+    inputs.strategicGPS >= 70 &&
+    inputs.advantageScore >= 60 &&
+    inputs.relationshipCount >= 5 &&
+    inputs.relatedEntityCount >= 2 &&
+    inputs.releaseCount >= 1 &&
+    inputs.publicationCount >= 1 &&
+    inputs.videoCount >= 1 &&
+    inputs.conversionPathwayCount >= 1
+  ) {
+    return 'public';
+  }
+  
+  if (inputs.discoveryReadinessScore >= 60) return 'review';
+  return 'draft';
+}
+
+// ─────────────────────────────────────────────────────────────────
 // UTILITIES
 // ─────────────────────────────────────────────────────────────────
 

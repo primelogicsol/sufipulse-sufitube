@@ -1,5 +1,8 @@
 # SufiPulse — Project Instructions & Architecture Baselines
 
+> **MANDATORY GOVERNANCE:** All AI agents, developers, and CMS operators must adhere to the `docs/discovery-mission-doctrine.md` before proposing architecture, content, SEO, or graph changes.
+> **Primary Mission:** SufiPulse Discovery exists to capture global search demand related to Sufism and Sufi culture and convert that demand into authority, traffic, engagement, and audience growth for SufiPulse.com and the SufiPulse-USA YouTube channel. **Discovery is not an encyclopedia; it is a global SEO Capture Engine.** 
+
 ## Core Architecture Posture
 
 ### Public Sponsorship Engine (Managed Path)
@@ -25,5 +28,32 @@
 - **Stripe Safety:** `test_` payment links are strictly blocked in production but allowed in development.
 
 ## Strategic Direction
-- **Phase:** Quiet Internal Maturation.
-- **Focus:** Stabilization, monitoring, and internal tool refinement. Avoid broad architectural changes or public feature releases in the immediate window.
+- **Phase:** Production Focus (Post-Architecture Freeze).
+- **Focus:** The Discovery Engine, Authority Framework, Conversion Architecture, and Strategic Scoring System are 🏆 FROZEN. No new major architectural changes until the first 10 flagship releases, 10 flagship publications, and 10 flagship videos are fully produced.
+- **Future Roadmap:** Post-production, the next architectural enhancement will be the `Citation Center` (/discovery/citations) to aggregate books, academic sources, and historical records for AI trust and researcher citations.
+
+## Atlas Engine Principles
+
+### Principle: Capture The Entire Sufi Universe
+**Capture first. Prioritize second. Convert third.**
+The graph should never ask "Does this help SufiPulse today?" It should ask "Is this part of the Sufi universe?" If yes: Store it, classify it, score it, then decide its status (Publish, Review, Reference Only, Production Candidate, Archive). This ensures SufiPulse scales to become the Wikipedia of Sufi music without losing the conversion discipline of a production studio.
+
+### SufiPulse Production Doctrine
+Every flagship release must accomplish five goals simultaneously:
+1. Teach something historically accurate.
+2. Preserve something culturally valuable.
+3. Interpret something through the SufiPulse lens.
+4. Connect readers to the wider Sufi knowledge graph.
+5. Inspire engagement with original SufiPulse content.
+
+### The True Objective: Global SEO Capture Engine
+SufiPulse Discovery is not merely an archive; it is a **massive SEO and AI-search traffic engine**.
+**Mission Statement:** SufiPulse Discovery exists to capture global search demand around Sufism, Sufi music, Sufi poetry, Sufi singers, Sufi albums, saints, songs, and traditions, then convert that traffic into SufiPulse.com authority and SufiPulse-USA YouTube viewership.
+
+**The Conversion Formula:**
+1. User searches popular Sufi topic (e.g., Qawwali, Nund Rishi)
+2. Google / AI / browser finds SufiPulse Discovery
+3. User lands on SufiPulse.com
+4. User explores release / article / interpretation
+5. User watches SufiPulse-USA
+6. Views, subscribers, authority grow

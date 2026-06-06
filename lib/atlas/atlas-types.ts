@@ -67,6 +67,8 @@ export interface AtlasEntity {
   strategicGPS: number;             // 0-100: Weighted combination
   // GPS = (connection × 0.20) + (authority × 0.20) + (capture × 0.15) 
   //      + (seed × 0.20) + (advantage × 0.25)
+  discoveryReadinessScore: number;  // 0-100: Readiness for public discovery
+  releaseConnectionStrength: number;// 0-100: Strength of connection to original release
 
   // ── ADVANTAGE SUB-SCORES ──────────────────────────────────────
   contentGapScore: number;          // 0-35
@@ -78,6 +80,7 @@ export interface AtlasEntity {
   hopsToSufiPulseContent: number;   // Calculated
   hopsToYouTube: number;            // Calculated
   sufipulseJustification: string;   // Required: "How does this connect to SufiPulse?"
+  sufipulseInterpretation?: string; // Optional: Unique editorial voice for the bottom section
   connectedReleaseIds: string[];
   connectedVideoIds: string[];
   connectedArticleIds: string[];
@@ -94,6 +97,9 @@ export interface AtlasEntity {
   musicbrainzId?: string;
   sameAs: string[];
   sourceReferences: string[];
+
+  // ── AUTHORITY METADATA ────────────────────────────────────────
+  authorityMetadata?: Record<string, string | string[]>;
 
   // Schema.org
   schemaType: string;
@@ -411,6 +417,8 @@ export interface SeedEntity {
   audienceCaptureScore: number;
   advantageScore: number;
   strategicGPS: number;
+  discoveryReadinessScore: number;
+  releaseConnectionStrength: number;
 
   // Advantage sub-scores
   contentGapScore: number;

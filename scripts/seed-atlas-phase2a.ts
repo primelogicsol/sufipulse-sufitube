@@ -54,6 +54,8 @@ async function seedPhase2A() {
       seedAuthorityScore: 20,
       advantageScore: 100,
       strategicGPS: 100,
+      discoveryReadinessScore: 100,
+      releaseConnectionStrength: 100,
       contentGapScore: 35,
       winProbability: 30,
       competitionLevel: 'none',
@@ -135,6 +137,8 @@ async function seedPhase2A() {
         seedAuthorityScore,
         advantageScore,
         strategicGPS,
+        discoveryReadinessScore: 50,
+        releaseConnectionStrength: 50,
         contentGapScore,
         winProbability,
         competitionLevel: 'moderate',
@@ -185,7 +189,8 @@ async function seedPhase2A() {
             targetEntityId: anchor,
             relationshipType: type,
             confidence: 1.0,
-            verification: 'institutional_verified'
+            verification: 'institutional_verified',
+            conversionPathDelta: 0
           });
           edgeCount++;
         } catch(e) {
@@ -212,7 +217,8 @@ async function seedPhase2A() {
           targetEntityId: target.id,
           relationshipType: type,
           confidence: 0.8,
-          verification: 'web_verified'
+          verification: 'web_verified',
+          conversionPathDelta: 0
         });
         edgeCount++;
       } catch (e) {
