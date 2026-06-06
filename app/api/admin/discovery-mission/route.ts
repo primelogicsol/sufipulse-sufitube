@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sessionStore, pageviewStore, eventStore, getClusterFunnel } from '../../../lib/atlas/atlas-telemetry';
+import { sessionStore, pageviewStore, eventStore, getClusterFunnel } from '@/lib/atlas/atlas-telemetry';
 
 export async function GET() {
   // Querying raw telemetry database directly

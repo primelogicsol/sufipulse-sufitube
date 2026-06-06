@@ -30,7 +30,8 @@ import {
   PenTool,
   MessageSquare,
   Music2,
-  Network
+  Network,
+  Database
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';

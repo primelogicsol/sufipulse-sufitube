@@ -95,7 +95,7 @@ export function calculateHopsToContent(
   if (!entity) return Infinity;
 
   // Hop 0: Entity IS SufiPulse content
-  if (entity.entityType === 'release' && entity.connectedVideoIds.length > 0) {
+  if (entity.entityType === 'release' && (entity.connectedVideoIds || []).length > 0) {
     return 0;
   }
 
@@ -434,7 +434,7 @@ export function calculateGraphStats(
     averageHops: hopsCount > 0 ? parseFloat((totalHops / hopsCount).toFixed(1)) : 0,
     orphanCount,
     orphanRate: entities.length > 0 ? parseFloat(((orphanCount / entities.length) * 100).toFixed(1)) : 0,
-    convertingEntities: entities.filter(e => e.connectedVideoIds.length > 0).length,
+    convertingEntities: entities.filter(e => (e.connectedVideoIds || []).length > 0).length,
     domainCoverage,
     edgesPerEntity: entities.length > 0 ? parseFloat((relationships.length / entities.length).toFixed(1)) : 0,
   };

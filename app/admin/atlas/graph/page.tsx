@@ -3,6 +3,8 @@ import { relationshipStore } from '@/lib/atlas/atlas-relationship';
 import { buildGraphIndex, calculateGraphStats } from '@/lib/atlas/atlas-graph-engine';
 import { calculateStrategicGPS } from '@/lib/atlas/atlas-scoring-engine';
 
+export const dynamic = 'force-dynamic';
+
 export default function AtlasAdminGraphPage() {
   const entities = entityStore.findAll();
   const relationships = relationshipStore.findAll();

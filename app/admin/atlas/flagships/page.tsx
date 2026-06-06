@@ -3,6 +3,8 @@ import { relationshipStore } from '@/lib/atlas/atlas-relationship';
 import { determineDiscoveryStatus } from '@/lib/atlas/atlas-scoring-engine';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Flagship Authority Dashboard | Admin',
 };
@@ -23,9 +25,9 @@ export default function FlagshipsDashboardPage() {
       const edges = allEdges.filter(e => e.sourceEntityId === entity.id || e.targetEntityId === entity.id);
       const relatedIds = new Set(edges.map(e => e.sourceEntityId === entity.id ? e.targetEntityId : e.sourceEntityId));
       
-      const releaseCount = entity.connectedReleaseIds.length;
-      const publicationCount = entity.connectedArticleIds.length;
-      const videoCount = entity.connectedVideoIds.length;
+      const releaseCount = (entity.connectedReleaseIds || []).length;
+      const publicationCount = (entity.connectedArticleIds || []).length;
+      const videoCount = (entity.connectedVideoIds || []).length;
       
       // Calculate conversion pathways (Hop <= 1 means a conversion pathway exists)
       const conversionPathwayCount = entity.hopsToSufiPulseContent <= 1 ? 1 : 0; // Simplified

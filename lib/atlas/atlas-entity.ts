@@ -104,7 +104,7 @@ export class AtlasEntityStore {
     const q = query.toLowerCase();
     return this.table.getAll().filter(e => 
       e.canonicalName.toLowerCase().includes(q) || 
-      e.alternateNames.some(n => n.toLowerCase().includes(q))
+      (e.alternateNames || []).some(n => n.toLowerCase().includes(q))
     );
   }
 
