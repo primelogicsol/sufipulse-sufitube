@@ -479,6 +479,21 @@ export interface YouTubeAnalyticsSnapshot {
 /**
  * Export all schema types
  */
+/**
+ * Atlas Engine Types — imported from lib/atlas/atlas-types.ts
+ * These represent the knowledge graph layer (entities + relationships + domains).
+ */
+import type { AtlasEntity, AtlasRelationship, StrategicDomain } from './atlas/atlas-types';
+
+/** File-based entity storage type (extends AtlasEntity with id for DatabaseTable) */
+export type AtlasEntityRecord = AtlasEntity & { id: string };
+
+/** File-based relationship storage type */
+export type AtlasRelationshipRecord = AtlasRelationship & { id: string };
+
+/** File-based strategic domain storage type */
+export type AtlasStrategicDomainRecord = StrategicDomain & { id: string };
+
 export type DatabaseSchema = {
   users: User;
   writer_profiles: WriterProfile;
@@ -500,6 +515,11 @@ export type DatabaseSchema = {
   media_library: MediaLibrary;
   notifications: Notification;
   youtube_analytics_snapshots: YouTubeAnalyticsSnapshot;
+
+  // ── Atlas Knowledge Graph Engine ──────────────────────────────
+  atlas_entities: AtlasEntityRecord;
+  atlas_relationships: AtlasRelationshipRecord;
+  atlas_strategic_domains: AtlasStrategicDomainRecord;
 };
 
 /**

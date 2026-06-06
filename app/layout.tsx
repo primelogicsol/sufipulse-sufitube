@@ -75,13 +75,19 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${BASE_URL}/#organization`,
   name: "SufiPulse",
   url: BASE_URL,
   logo: `${BASE_URL}/sufipulse-logo-v5.png`,
   description: "The premier platform for authentic Sufi music, sacred poetry, and literary works from Kashmir and the Indian Subcontinent.",
+  founder: {
+    "@type": "Person",
+    "@id": `${BASE_URL}/#founder`,
+    name: "Dr. Fayaz Khan"
+  },
   foundingLocation: {
     "@type": "Place",
-    name: "Kashmir, India",
+    name: "Virginia, USA",
   },
   areaServed: ["US", "IN", "GB", "CA", "AE"],
   contactPoint: {
@@ -94,15 +100,37 @@ const organizationSchema = {
     "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
     "https://dkf.sufisciencecenter.info",
     `${BASE_URL}/verification`,
+    "https://www.facebook.com/SufiPulse",
+    "https://www.instagram.com/SufiPulse",
+    "https://twitter.com/SufiPulse",
+    "https://www.linkedin.com/company/sufipulse"
   ],
+};
+
+const personSchema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `${BASE_URL}/#founder`,
+  name: "Dr. Fayaz Khan",
+  url: BASE_URL,
+  jobTitle: "Founder",
+  worksFor: {
+    "@type": "Organization",
+    "@id": `${BASE_URL}/#organization`
+  }
 };
 
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${BASE_URL}/#website`,
   name: "SufiPulse",
   url: BASE_URL,
   description: "Sacred Sufi music, poetry, and literary works from Kashmir and the Indian Subcontinent.",
+  publisher: {
+    "@type": "Organization",
+    "@id": `${BASE_URL}/#organization`
+  },
   potentialAction: {
     "@type": "SearchAction",
     target: {
@@ -125,6 +153,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
         />
         <script
           type="application/ld+json"

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const { cmsStorage } = require('@/lib/cms-storage');
     const releases = cmsStorage.exportReleases() || [];
     
-    const fallbackData: VideoImpression[] = releases.map((rel, index) => {
+    const fallbackData: VideoImpression[] = releases.map((rel: any, index: number) => {
       // Deterministic impressions based on index/slug to make it look stable and realistic
       const baseViews = 15000 - (index * 120) > 500 ? (15000 - (index * 120)) : 500;
       let hash = 0;
