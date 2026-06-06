@@ -62,6 +62,21 @@ A cluster is successful only when telemetry proves:
 
 ---
 
+### No Vanity Expansion Rule
+
+No new flagship cluster may be approved because:
+*   it is famous
+*   it is historically important
+*   it is culturally significant
+*   it is personally interesting
+
+A new flagship cluster may only be approved because:
+*   Real telemetry suggests it will increase authority.
+*   Real telemetry suggests it will increase traffic.
+*   Real telemetry suggests it will increase conversions.
+
+---
+
 ### Final Rule
 
 The objective is not to build the world's largest Sufi database.

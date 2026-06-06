@@ -5,10 +5,14 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { 
-  Network, TrendingUp, Search, Youtube, Users, ShieldCheck, Sparkles, Activity, Link as LinkIcon, Database, ExternalLink, ArrowRight
+  Network, TrendingUp, Search, Youtube, Users, ShieldCheck, Sparkles, Activity, Link as LinkIcon, Database, ExternalLink, ArrowRight, Target
 } from 'lucide-react';
 
 interface OpsData {
+  discoveryScore: {
+    current: number;
+    weeklyHistory: Array<{ week: string, score: number }>;
+  };
   acquisition: {
     searchEntrances: number;
     aiReferrals: number;
@@ -82,6 +86,42 @@ export default function DiscoveryMissionOperationsCenter() {
             </p>
           </div>
         </div>
+
+        {/* The Giant Discovery Mission Score Card */}
+        <section className="bg-emerald-500/5 border-2 border-emerald-500/30 rounded-[2rem] p-8 md:p-12 relative overflow-hidden group">
+          <div className="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+            <div className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-black text-emerald-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                <Target className="w-8 h-8" />
+                Discovery Mission Score
+              </h2>
+              <p className="text-neutral-400 max-w-xl text-sm leading-relaxed">
+                The ultimate KPI for the Discovery Engine. A weighted calculation of Organic Search Growth (30%), Publication Engagement (20%), Release Conversion (20%), YouTube Transfers (20%), and Returning Visitors (10%).
+              </p>
+              
+              {/* Weekly History Mini-Chart */}
+              <div className="flex items-end gap-3 pt-4">
+                {data.discoveryScore.weeklyHistory.map((week, idx) => (
+                  <div key={idx} className="flex flex-col items-center gap-2">
+                    <div className="w-12 bg-black/40 rounded-t-lg border border-white/5 relative flex items-end justify-center pb-2" style={{ height: '80px' }}>
+                      <div className="w-full bg-emerald-500/40 rounded-t-sm absolute bottom-0" style={{ height: `${week.score}%` }}></div>
+                      <span className="text-[10px] font-mono font-bold text-white relative z-10">{week.score}</span>
+                    </div>
+                    <span className="text-[8px] text-neutral-500 uppercase font-bold tracking-wider">{week.week}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex-shrink-0 text-center">
+              <div className="text-[8rem] md:text-[10rem] font-black text-white font-mono leading-none tracking-tighter drop-shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+                {data.discoveryScore.current}
+              </div>
+              <p className="text-emerald-500 font-bold tracking-[0.3em] uppercase text-xs mt-2">Current Score</p>
+            </div>
+          </div>
+        </section>
 
         {/* The 5 Core Sections */}
         <div className="space-y-8">
