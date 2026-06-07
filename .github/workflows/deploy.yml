@@ -48,11 +48,11 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p .data
-          echo "[]" > .data/constitutional_core.json
-          echo "[]" > .data/unified_knowledge.json
-          echo "[]" > .data/cms-releases.json
-          echo "[]" > .data/articles.json
           echo "{}" > .data/registries.json
+          echo "{}" > .data/brand-registry.json
+          echo "{}" > .data/crawler-registry.json
+          echo "{}" > .data/discovery-analytics.json
+          for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
           npm run build 2>&1 | tee /tmp/build-output.log
           BUILD_STATUS=${PIPESTATUS[0]}
           if [ "$BUILD_STATUS" -ne 0 ]; then

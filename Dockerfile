@@ -43,11 +43,11 @@ ENV NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS=$NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS
 ENV NEXT_PUBLIC_APP_COMMIT=$NEXT_PUBLIC_APP_COMMIT
 # Stub out .data JSON files so Next.js static evaluation doesn't throw ENOENT
 RUN mkdir -p .data \
-    && echo "[]" > .data/constitutional_core.json \
-    && echo "[]" > .data/unified_knowledge.json \
-    && echo "[]" > .data/cms-releases.json \
-    && echo "[]" > .data/articles.json \
-    && echo "{}" > .data/registries.json
+    && echo "{}" > .data/registries.json \
+    && echo "{}" > .data/brand-registry.json \
+    && echo "{}" > .data/crawler-registry.json \
+    && echo "{}" > .data/discovery-analytics.json \
+    && for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
 
 # Build the application
 RUN npm run build
