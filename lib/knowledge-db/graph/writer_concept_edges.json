@@ -1,0 +1,717 @@
+[
+  {
+    "source": "writer_000001",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000019",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000021",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000006",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000006",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000007",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000007",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000009",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000009",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000011",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000011",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000011",
+    "target": "concept_000016",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000013",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000013",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000015",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000015",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000016",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000016",
+    "target": "concept_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000017",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000017",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000018",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000018",
+    "target": "concept_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000018",
+    "target": "concept_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000019",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000019",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000020",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000020",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000021",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000021",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000022",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000022",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000023",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000023",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000024",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000024",
+    "target": "concept_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000024",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000026",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000026",
+    "target": "concept_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000027",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000027",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000028",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000028",
+    "target": "concept_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000029",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000029",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000030",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000030",
+    "target": "concept_000029",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000031",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000031",
+    "target": "concept_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000032",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000032",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000033",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000033",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000034",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000034",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000035",
+    "target": "concept_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000035",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000036",
+    "target": "concept_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000036",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000037",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000037",
+    "target": "concept_000042",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000038",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000038",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000039",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000039",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000040",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000040",
+    "target": "concept_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000041",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000041",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000042",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000042",
+    "target": "concept_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000043",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000043",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000044",
+    "target": "concept_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000044",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000045",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000045",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000046",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000046",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000047",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000047",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000048",
+    "target": "concept_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000048",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000049",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000049",
+    "target": "concept_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000050",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000050",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000050",
+    "target": "concept_000025",
+    "type": "associated_with"
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "TotalNodes": 326,
+  "TotalEdges": 1222,
+  "AverageSongsPerWriter": 1.88,
+  "AverageSongsPerSinger": 3.36,
+  "AverageConceptsPerSong": 1.93,
+  "MostConnectedWriter": {
+    "id": "writer_000003",
+    "name": "Bulleh Shah",
+    "degree": 25
+  },
+  "MostConnectedSinger": {
+    "id": "singer_000001",
+    "name": "Nusrat Fateh Ali Khan",
+    "degree": 78
+  },
+  "MostConnectedConcept": {
+    "id": "concept_000001",
+    "name": "Ishq",
+    "degree": 90
+  },
+  "DisconnectedNodesCount": 0,
+  "DisconnectedNodesPercentage": 0
+}

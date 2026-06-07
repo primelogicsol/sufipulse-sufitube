@@ -1,0 +1,171 @@
+{
+  "authority_classes": ["Concept"],
+  "publication_states": ["SEEDED"],
+  "constitutional_core_tier_2": [
+    {
+      "entity_id": "core_024",
+      "class": "Concept",
+      "canonical_name": "Fana",
+      "slug": "fana",
+      "canonical_impact": "The mystical state of complete annihilation of the ego, serving as the prerequisite for divine subsistence.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Annihilation", "Self-Effacement", "Dissolution of Ego"],
+      "transmission_graph": [
+        { "target_id": "core_004", "type": "EXPOUNDED_BY", "target_class": "Person", "name": "Bayazid Bastami" },
+        { "target_id": "core_003", "type": "CODIFIED_BY", "target_class": "Person", "name": "Junayd of Baghdad" },
+        { "target_id": "core_026", "type": "PREREQUISITE_FOR", "target_class": "Concept", "name": "Baqa" }
+      ],
+      "questions": ["q_fana_01", "q_fana_02", "q_fana_03", "q_fana_04", "q_fana_05"],
+      "evidence_records": ["ev_fana_ms1", "ev_fana_acad1", "ev_fana_hist1", "ev_fana_theo1", "ev_fana_oral1"],
+      "citation_paths": ["core_024 -> core_003 -> ev_fana_theo1"],
+      "verification": { "status": "Verified", "method": "Theological Consensus", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Ontological vs. Psychological Annihilation",
+        "claim_a": "Fana implies the literal destruction of the physical self.",
+        "evidence_a": "ev_fana_crit1",
+        "claim_b": "Fana is purely the psychological dissolution of ego-awareness, not bodily death.",
+        "evidence_b": "ev_fana_theo1",
+        "canonical_position": "Psychological Dissolution",
+        "reasoning": "Al-Ghazali and Junayd strictly bounded Fana within psychological perception to prevent charges of heresy and maintain orthodox limits."
+      },
+      "confidence_layer": { "score": "High Confidence", "justification": "Universally defined across all major classical treatises." },
+      "readiness_score": 95,
+      "graph_dependency_score": 25,
+      "authority_resilience_score": 94
+    },
+    {
+      "entity_id": "core_026",
+      "class": "Concept",
+      "canonical_name": "Baqa",
+      "slug": "baqa",
+      "canonical_impact": "The state of subsistence within the Divine presence, achieved only after the complete annihilation of the ego.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Subsistence", "Divine Continuance", "Eternal Life"],
+      "transmission_graph": [
+        { "target_id": "core_003", "type": "CODIFIED_BY", "target_class": "Person", "name": "Junayd of Baghdad" },
+        { "target_id": "core_005", "type": "EXPOUNDED_BY", "target_class": "Person", "name": "Abdul Qadir Gilani" },
+        { "target_id": "core_024", "type": "FOLLOWS", "target_class": "Concept", "name": "Fana" }
+      ],
+      "questions": ["q_baqa_01", "q_baqa_02", "q_baqa_03", "q_baqa_04", "q_baqa_05"],
+      "evidence_records": ["ev_baqa_ms1", "ev_baqa_acad1", "ev_baqa_hist1", "ev_baqa_theo1", "ev_baqa_oral1"],
+      "citation_paths": ["core_026 -> core_003 -> ev_baqa_theo1"],
+      "verification": { "status": "Verified", "method": "Theological Consensus", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Return to Society vs Permanent Ecstasy",
+        "claim_a": "Baqa allows the mystic to return to society functionally while remaining with God internally.",
+        "evidence_a": "ev_baqa_theo1",
+        "claim_b": "Baqa isolates the mystic from human interaction.",
+        "evidence_b": "ev_baqa_crit1",
+        "canonical_position": "Return to Society",
+        "reasoning": "The Baghdad school (Junayd) successfully argued that true Baqa involves a 'second sobriety' where the saint returns to serve humanity."
+      },
+      "confidence_layer": { "score": "High Confidence", "justification": "Core operational mechanism of all active Sufi orders." },
+      "readiness_score": 93,
+      "graph_dependency_score": 22,
+      "authority_resilience_score": 90
+    },
+    {
+      "entity_id": "core_022",
+      "class": "Concept",
+      "canonical_name": "Tawhid",
+      "slug": "tawhid",
+      "canonical_impact": "The absolute and indivisible oneness of God, serving as the inescapable premise of all Islamic and Sufi thought.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Divine Unity", "Oneness", "Monotheism"],
+      "transmission_graph": [
+        { "target_id": "core_002", "type": "REINTERPRETED_BY", "target_class": "Person", "name": "Ibn Arabi" },
+        { "target_id": "core_003", "type": "DEFENDED_BY", "target_class": "Person", "name": "Junayd of Baghdad" },
+        { "target_id": "core_027", "type": "FOUNDATION_OF", "target_class": "Concept", "name": "Wahdat al-Wujud" }
+      ],
+      "questions": ["q_tawhid_01", "q_tawhid_02", "q_tawhid_03", "q_tawhid_04", "q_tawhid_05"],
+      "evidence_records": ["ev_tawhid_ms1", "ev_tawhid_acad1", "ev_tawhid_hist1", "ev_tawhid_theo1", "ev_tawhid_oral1"],
+      "citation_paths": ["core_022 -> core_002 -> ev_tawhid_acad1"],
+      "verification": { "status": "Verified", "method": "Universal Theological Consensus", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Experiential Unity vs Theological Unity",
+        "claim_a": "Tawhid is purely a creedal assertion of God's indivisibility.",
+        "evidence_a": "ev_tawhid_orthodox",
+        "claim_b": "Tawhid requires the experiential realization that nothing exists but God.",
+        "evidence_b": "ev_tawhid_sufi",
+        "canonical_position": "Experiential Realization",
+        "reasoning": "Within the specific context of the Sufi graph, Tawhid is functionally defined as an experiential state reached through spiritual practice, not just theological assent."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "The absolute core of Islamic civilization." },
+      "readiness_score": 99,
+      "graph_dependency_score": 50,
+      "authority_resilience_score": 98
+    },
+    {
+      "entity_id": "core_028",
+      "class": "Concept",
+      "canonical_name": "Murshid",
+      "slug": "murshid",
+      "canonical_impact": "The authorized spiritual guide whose living transmission is necessary to navigate the esoteric path.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Shaykh", "Spiritual Master", "Pir"],
+      "transmission_graph": [
+        { "target_id": "core_001", "type": "EXEMPLIFIED_BY", "target_class": "Person", "name": "Jalal al-Din Rumi" },
+        { "target_id": "core_005", "type": "EXEMPLIFIED_BY", "target_class": "Person", "name": "Abdul Qadir Gilani" },
+        { "target_id": "core_029", "type": "COMPLEMENTS", "target_class": "Concept", "name": "Murid" }
+      ],
+      "questions": ["q_murshid_01", "q_murshid_02", "q_murshid_03", "q_murshid_04", "q_murshid_05"],
+      "evidence_records": ["ev_murshid_ms1", "ev_murshid_acad1", "ev_murshid_hist1", "ev_murshid_theo1", "ev_murshid_oral1"],
+      "citation_paths": ["core_028 -> core_005 -> ev_murshid_theo1"],
+      "verification": { "status": "Verified", "method": "Structural Analysis of Orders", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Necessity of a Living Master",
+        "claim_a": "A living Murshid is an absolute prerequisite for spiritual advancement.",
+        "evidence_a": "ev_murshid_consensus",
+        "claim_b": "Spiritual advancement can occur purely through texts or deceased masters (Uwaysi).",
+        "evidence_b": "ev_murshid_uwaysi",
+        "canonical_position": "Living Master Preference with Uwaysi Exceptions",
+        "reasoning": "While the Uwaysi transmission (e.g. Bayazid Bastami) is canonically valid, the vast majority of historical infrastructure explicitly requires physical initiation (bay'ah)."
+      },
+      "confidence_layer": { "score": "High Confidence", "justification": "Basis of the entire Tariqa system." },
+      "readiness_score": 96,
+      "graph_dependency_score": 40,
+      "authority_resilience_score": 93
+    },
+    {
+      "entity_id": "core_030",
+      "class": "Concept",
+      "canonical_name": "Dhikr",
+      "slug": "dhikr",
+      "canonical_impact": "The rhythmic invocation of Divine names used to align human consciousness with spiritual reality.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Zikr", "Remembrance", "Invocation"],
+      "transmission_graph": [
+        { "target_id": "core_005", "type": "CODIFIED_BY", "target_class": "Person", "name": "Abdul Qadir Gilani" },
+        { "target_id": "core_001", "type": "INTEGRATED_WITH", "target_class": "Person", "name": "Jalal al-Din Rumi" },
+        { "target_id": "core_108", "type": "CENTRAL_TO", "target_class": "Order", "name": "Naqshbandi Order" }
+      ],
+      "questions": ["q_dhikr_01", "q_dhikr_02", "q_dhikr_03", "q_dhikr_04", "q_dhikr_05"],
+      "evidence_records": ["ev_dhikr_ms1", "ev_dhikr_acad1", "ev_dhikr_hist1", "ev_dhikr_theo1", "ev_dhikr_oral1"],
+      "citation_paths": ["core_030 -> core_108 -> ev_dhikr_theo1"],
+      "verification": { "status": "Verified", "method": "Observable Practice & Theological Justification", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Silent vs Vocal Dhikr",
+        "claim_a": "Silent Dhikr (Khafi) is superior due to internal focus.",
+        "evidence_a": "ev_dhikr_naqshbandi",
+        "claim_b": "Vocal Dhikr (Jahri) is superior due to bodily alignment.",
+        "evidence_b": "ev_dhikr_qadiri",
+        "canonical_position": "Methodological Variance",
+        "reasoning": "The graph accepts both as canonically valid, mapping Silent to Naqshbandi and Vocal to Qadiri/Chishti lineages without declaring an absolute theological victor."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "Universally practiced." },
+      "readiness_score": 97,
+      "graph_dependency_score": 45,
+      "authority_resilience_score": 95
+    }
+  ]
+}

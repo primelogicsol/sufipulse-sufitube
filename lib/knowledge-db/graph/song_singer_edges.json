@@ -1,0 +1,842 @@
+[
+  {
+    "source": "song_000001",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000001",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000002",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000002",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000003",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000003",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000009",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000011",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000005",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000005",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000005",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000006",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000007",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000007",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000008",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000008",
+    "target": "singer_000050",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000008",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000009",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000009",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000010",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000011",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000011",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000011",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000012",
+    "target": "singer_000038",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000012",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000013",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000013",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000014",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000014",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000015",
+    "target": "singer_000005",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000016",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000017",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000018",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000019",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000020",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000020",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000020",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000021",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000021",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000022",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000023",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000024",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000025",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000025",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000026",
+    "target": "singer_000019",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000027",
+    "target": "singer_000028",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000028",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000029",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000029",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000030",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000030",
+    "target": "singer_000017",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000031",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000031",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000032",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000032",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000033",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000033",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000034",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000034",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000035",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000036",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000037",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000037",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000038",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000038",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000039",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000039",
+    "target": "singer_000006",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000040",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000041",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000042",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000042",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000043",
+    "target": "singer_000050",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000044",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000045",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000046",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000046",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000048",
+    "target": "singer_000034",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000048",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000049",
+    "target": "singer_000019",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000050",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000051",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000051",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000052",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000053",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000054",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000055",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000056",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000056",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000057",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000058",
+    "target": "singer_000031",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000061",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000061",
+    "target": "singer_000050",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000062",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000063",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000064",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000065",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000065",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000066",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000066",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000067",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000067",
+    "target": "singer_000038",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000070",
+    "target": "singer_000005",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000071",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000074",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000075",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000075",
+    "target": "singer_000027",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000076",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000076",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000076",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000080",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000081",
+    "target": "singer_000035",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000082",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000082",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000083",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000083",
+    "target": "singer_000005",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000084",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000085",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000085",
+    "target": "singer_000017",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000089",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000089",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000091",
+    "target": "singer_000034",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000092",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000093",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000094",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000094",
+    "target": "singer_000017",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000095",
+    "target": "singer_000027",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000096",
+    "target": "singer_000035",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000098",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000098",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000099",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000099",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000100",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000100",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000101",
+    "target": "singer_000019",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000101",
+    "target": "singer_000020",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000108",
+    "target": "singer_000008",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000109",
+    "target": "singer_000020",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000110",
+    "target": "singer_000026",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000111",
+    "target": "singer_000043",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000112",
+    "target": "singer_000025",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000113",
+    "target": "singer_000042",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000116",
+    "target": "singer_000044",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000117",
+    "target": "singer_000030",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000118",
+    "target": "singer_000037",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000120",
+    "target": "singer_000018",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000121",
+    "target": "singer_000021",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000122",
+    "target": "singer_000023",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000122",
+    "target": "singer_000022",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000123",
+    "target": "singer_000024",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000124",
+    "target": "singer_000029",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000124",
+    "target": "singer_000032",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000125",
+    "target": "singer_000033",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000126",
+    "target": "singer_000036",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000127",
+    "target": "singer_000039",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000128",
+    "target": "singer_000040",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000129",
+    "target": "singer_000041",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000130",
+    "target": "singer_000045",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000131",
+    "target": "singer_000046",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000132",
+    "target": "singer_000047",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000133",
+    "target": "singer_000048",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000134",
+    "target": "singer_000049",
+    "type": "performed_by"
+  }
+]

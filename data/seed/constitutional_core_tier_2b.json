@@ -1,0 +1,173 @@
+{
+  "authority_classes": ["Concept"],
+  "publication_states": ["SEEDED"],
+  "constitutional_core_tier_2b": [
+    {
+      "entity_id": "core_031",
+      "class": "Concept",
+      "canonical_name": "Ihsan",
+      "slug": "ihsan",
+      "canonical_impact": "The highest station of Islamic practice, defined as worshipping God as if you see Him, forming the theological foundation of all Sufi methodology.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Spiritual Excellence", "Perfect Beauty", "Sincerity"],
+      "transmission_graph": [
+        { "target_id": "core_003", "type": "DEFENDED_BY", "target_class": "Person", "name": "Junayd of Baghdad" },
+        { "target_id": "core_005", "type": "EXEMPLIFIED_BY", "target_class": "Person", "name": "Abdul Qadir Gilani" },
+        { "target_id": "core_032", "type": "REQUIRES", "target_class": "Concept", "name": "Tazkiyah" }
+      ],
+      "questions": ["q_ihsan_01", "q_ihsan_02", "q_ihsan_03", "q_ihsan_04", "q_ihsan_05"],
+      "evidence_records": ["ev_ihsan_ms1", "ev_ihsan_acad1", "ev_ihsan_hadith1", "ev_ihsan_theo1", "ev_ihsan_oral1"],
+      "citation_paths": ["core_031 -> core_005 -> ev_ihsan_hadith1"],
+      "verification": { "status": "Verified", "method": "Universal Prophetic Tradition (Hadith of Gabriel)", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Definition of Sufism within Orthodoxy",
+        "claim_a": "Sufism is an external, foreign innovation to Islam.",
+        "evidence_a": "ev_ihsan_crit1",
+        "claim_b": "Sufism is merely the systematic operationalization of Ihsan.",
+        "evidence_b": "ev_ihsan_acad1",
+        "canonical_position": "Operationalized Ihsan",
+        "reasoning": "The consensus of orthodox jurists and classical Sufi masters (e.g. Al-Ghazali) definitively equates the science of Tasawwuf with the Quranic and Prophetic mandate of Ihsan."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "Rooted directly in canonical Hadith." },
+      "readiness_score": 98,
+      "graph_dependency_score": 40,
+      "authority_resilience_score": 97
+    },
+    {
+      "entity_id": "core_032",
+      "class": "Concept",
+      "canonical_name": "Tazkiyah",
+      "slug": "tazkiyah",
+      "canonical_impact": "The active process of purifying the self (Nafs) from spiritual diseases, acting as the primary curriculum of Sufi orders.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Tazkiyat al-Nafs", "Purification of the Heart", "Spiritual Refinement"],
+      "transmission_graph": [
+        { "target_id": "core_005", "type": "SYSTEMATIZED_BY", "target_class": "Person", "name": "Abdul Qadir Gilani" },
+        { "target_id": "core_004", "type": "DEMONSTRATED_BY", "target_class": "Person", "name": "Bayazid Bastami" },
+        { "target_id": "core_033", "type": "APPLIED_TO", "target_class": "Concept", "name": "Nafs" }
+      ],
+      "questions": ["q_tazkiyah_01", "q_tazkiyah_02", "q_tazkiyah_03", "q_tazkiyah_04", "q_tazkiyah_05"],
+      "evidence_records": ["ev_tazkiyah_ms1", "ev_tazkiyah_acad1", "ev_tazkiyah_hist1", "ev_tazkiyah_theo1", "ev_tazkiyah_oral1"],
+      "citation_paths": ["core_032 -> core_005 -> ev_tazkiyah_theo1"],
+      "verification": { "status": "Verified", "method": "Quranic Imperative & Sufi Textual Tradition", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Methodology of Purification",
+        "claim_a": "Tazkiyah requires extreme physical asceticism (starvation, isolation).",
+        "evidence_a": "ev_tazkiyah_earlyascetics",
+        "claim_b": "Tazkiyah requires internal detachment while living normally in society.",
+        "evidence_b": "ev_tazkiyah_naqshbandi",
+        "canonical_position": "Internal Detachment (Sober School)",
+        "reasoning": "The graph defers to the Junaydian/Ghazalian consensus which prioritizes psychological purification over destructive physical asceticism."
+      },
+      "confidence_layer": { "score": "High Confidence", "justification": "Quranic basis and universal order adoption." },
+      "readiness_score": 94,
+      "graph_dependency_score": 35,
+      "authority_resilience_score": 92
+    },
+    {
+      "entity_id": "core_033",
+      "class": "Concept",
+      "canonical_name": "Nafs",
+      "slug": "nafs",
+      "canonical_impact": "The human ego or lower self, categorized into seven ascending stages of spiritual development.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["The Ego", "Lower Self", "The Soul"],
+      "transmission_graph": [
+        { "target_id": "core_001", "type": "ANALYZED_BY", "target_class": "Person", "name": "Jalal al-Din Rumi" },
+        { "target_id": "core_002", "type": "ONTOLOGIZED_BY", "target_class": "Person", "name": "Ibn Arabi" },
+        { "target_id": "core_032", "type": "SUBJECT_OF", "target_class": "Concept", "name": "Tazkiyah" }
+      ],
+      "questions": ["q_nafs_01", "q_nafs_02", "q_nafs_03", "q_nafs_04", "q_nafs_05"],
+      "evidence_records": ["ev_nafs_ms1", "ev_nafs_acad1", "ev_nafs_hist1", "ev_nafs_theo1", "ev_nafs_oral1"],
+      "citation_paths": ["core_033 -> core_001 -> ev_nafs_acad1"],
+      "verification": { "status": "Verified", "method": "Universal Poetic & Theological Usage", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Nature of the Ego",
+        "claim_a": "The Nafs is inherently evil and must be destroyed.",
+        "evidence_a": "ev_nafs_crit1",
+        "claim_b": "The Nafs is an untrained entity that must be educated and elevated to 'Mutma'innah' (tranquil).",
+        "evidence_b": "ev_nafs_theo1",
+        "canonical_position": "Elevation/Education",
+        "reasoning": "Rumi's Masnavi explicitly treats the Nafs as a vehicle (a horse) that must be trained, rather than a demon that must be killed."
+      },
+      "confidence_layer": { "score": "High Confidence", "justification": "Categorization of Nafs is standard across all major Tariqas." },
+      "readiness_score": 96,
+      "graph_dependency_score": 42,
+      "authority_resilience_score": 95
+    },
+    {
+      "entity_id": "core_029",
+      "class": "Concept",
+      "canonical_name": "Murid",
+      "slug": "murid",
+      "canonical_impact": "The seeker or disciple who formally commits to the spiritual curriculum of a specific Murshid.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Disciple", "Seeker", "Salik"],
+      "transmission_graph": [
+        { "target_id": "core_001", "type": "EXEMPLIFIED_BY", "target_class": "Person", "name": "Jalal al-Din Rumi (as disciple of Shams)" },
+        { "target_id": "core_003", "type": "GUIDED_BY", "target_class": "Person", "name": "Junayd of Baghdad" },
+        { "target_id": "core_028", "type": "DEPENDENT_ON", "target_class": "Concept", "name": "Murshid" }
+      ],
+      "questions": ["q_murid_01", "q_murid_02", "q_murid_03", "q_murid_04", "q_murid_05"],
+      "evidence_records": ["ev_murid_ms1", "ev_murid_acad1", "ev_murid_hist1", "ev_murid_theo1", "ev_murid_oral1"],
+      "citation_paths": ["core_029 -> core_028 -> ev_murid_theo1"],
+      "verification": { "status": "Verified", "method": "Structural Rule of Tariqa Formation", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Level of Submission to the Guide",
+        "claim_a": "A murid must be like a 'corpse in the hands of the washer'.",
+        "evidence_a": "ev_murid_classical",
+        "claim_b": "A murid retains intellectual autonomy.",
+        "evidence_b": "ev_murid_modernist",
+        "canonical_position": "Methodological Surrender",
+        "reasoning": "The 'corpse' metaphor is canonically accepted not as intellectual slavery, but as absolute methodological trust in the spiritual prescription of the guide to eliminate egoic resistance."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "Foundation of the Bay'ah (initiation) contract." },
+      "readiness_score": 92,
+      "graph_dependency_score": 38,
+      "authority_resilience_score": 90
+    },
+    {
+      "entity_id": "core_034",
+      "class": "Concept",
+      "canonical_name": "Silsila",
+      "slug": "silsila",
+      "canonical_impact": "The unbroken chain of spiritual transmission linking a living master back to the Prophet Muhammad.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Spiritual Chain", "Lineage", "Tariqa Line"],
+      "transmission_graph": [
+        { "target_id": "core_003", "type": "ANCHORS_TEACHER_CHAIN", "target_class": "Person", "name": "Junayd of Baghdad" },
+        { "target_id": "core_005", "type": "ANCHORS_STUDENT_CHAIN", "target_class": "Person", "name": "Abdul Qadir Gilani" },
+        { "target_id": "core_109", "type": "VALIDATES_ORDER", "target_class": "Order", "name": "Qadiriyya" },
+        { "target_id": "core_028", "type": "AUTHORIZES", "target_class": "Concept", "name": "Murshid" },
+        { "target_id": "core_030", "type": "TRANSMITS_PRACTICE", "target_class": "Concept", "name": "Dhikr" }
+      ],
+      "questions": ["q_silsila_01", "q_silsila_02", "q_silsila_03", "q_silsila_04", "q_silsila_05"],
+      "evidence_records": ["ev_silsila_ms1", "ev_silsila_acad1", "ev_silsila_hist1", "ev_silsila_theo1", "ev_silsila_oral1"],
+      "citation_paths": ["core_034 -> core_109 -> ev_silsila_hist1"],
+      "verification": { "status": "Verified", "method": "Ijazah (Authorization) Documentation", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Historical Continuity vs Spiritual Reality",
+        "claim_a": "Every link in the chain must have physically met the previous link.",
+        "evidence_a": "ev_silsila_hist_crit",
+        "claim_b": "Spiritual (Uwaysi) links are valid where historical meetings are impossible.",
+        "evidence_b": "ev_silsila_uwaysi",
+        "canonical_position": "Uwaysi Exceptions Accepted",
+        "reasoning": "The Naqshbandi silsila canonically includes the link between Bayazid Bastami and Ja'far al-Sadiq, proving that institutional Sufism structurally accepts verified Uwaysi transmission."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "Without a valid Silsila, an order cannot canonically exist." },
+      "readiness_score": 99,
+      "graph_dependency_score": 60,
+      "authority_resilience_score": 98
+    }
+  ]
+}

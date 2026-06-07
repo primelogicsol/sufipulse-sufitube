@@ -1,0 +1,842 @@
+[
+  {
+    "source": "singer_000001",
+    "target": "song_000001",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000001",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000002",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000002",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000003",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000003",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000009",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000011",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000005",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000005",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000005",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000006",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000007",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000007",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000008",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000050",
+    "target": "song_000008",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000008",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000009",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000009",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000010",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000011",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000011",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000011",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000038",
+    "target": "song_000012",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000012",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000013",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000013",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000014",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000014",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000005",
+    "target": "song_000015",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000016",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000017",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000018",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000019",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000020",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000020",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000020",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000021",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000021",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000022",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000023",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000024",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000025",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000025",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000019",
+    "target": "song_000026",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000028",
+    "target": "song_000027",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000028",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000029",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000029",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000030",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000017",
+    "target": "song_000030",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000031",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000031",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000032",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000032",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000033",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000033",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000034",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000034",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000035",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000036",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000037",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000037",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000038",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000038",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000039",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000006",
+    "target": "song_000039",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000040",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000041",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000042",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000042",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000050",
+    "target": "song_000043",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000044",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000045",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000046",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000046",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000034",
+    "target": "song_000048",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000048",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000019",
+    "target": "song_000049",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000050",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000051",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000051",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000052",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000053",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000054",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000055",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000056",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000056",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000057",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000031",
+    "target": "song_000058",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000061",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000050",
+    "target": "song_000061",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000062",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000063",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000064",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000065",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000065",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000066",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000066",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000067",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000038",
+    "target": "song_000067",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000005",
+    "target": "song_000070",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000071",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000074",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000075",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000027",
+    "target": "song_000075",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000076",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000076",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000076",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000080",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000035",
+    "target": "song_000081",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000082",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000082",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000083",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000005",
+    "target": "song_000083",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000084",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000085",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000017",
+    "target": "song_000085",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000089",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000089",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000034",
+    "target": "song_000091",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000092",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000093",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000094",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000017",
+    "target": "song_000094",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000027",
+    "target": "song_000095",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000035",
+    "target": "song_000096",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000098",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000098",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000099",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000099",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000100",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000100",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000019",
+    "target": "song_000101",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000020",
+    "target": "song_000101",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000008",
+    "target": "song_000108",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000020",
+    "target": "song_000109",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000026",
+    "target": "song_000110",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000043",
+    "target": "song_000111",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000025",
+    "target": "song_000112",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000042",
+    "target": "song_000113",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000044",
+    "target": "song_000116",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000030",
+    "target": "song_000117",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000037",
+    "target": "song_000118",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000018",
+    "target": "song_000120",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000021",
+    "target": "song_000121",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000023",
+    "target": "song_000122",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000022",
+    "target": "song_000122",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000024",
+    "target": "song_000123",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000029",
+    "target": "song_000124",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000032",
+    "target": "song_000124",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000033",
+    "target": "song_000125",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000036",
+    "target": "song_000126",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000039",
+    "target": "song_000127",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000040",
+    "target": "song_000128",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000041",
+    "target": "song_000129",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000045",
+    "target": "song_000130",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000046",
+    "target": "song_000131",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000047",
+    "target": "song_000132",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000048",
+    "target": "song_000133",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000049",
+    "target": "song_000134",
+    "type": "performed"
+  }
+]

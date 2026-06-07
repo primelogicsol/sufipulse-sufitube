@@ -1,0 +1,1292 @@
+[
+  {
+    "source": "song_000001",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000001",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000002",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000002",
+    "target": "concept_000019",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000003",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000003",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000004",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000005",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000005",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000005",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000006",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000006",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000007",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000007",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000008",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000008",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000009",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000009",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000010",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000010",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000011",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000011",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000012",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000012",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000013",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000013",
+    "target": "concept_000040",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000014",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000014",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000015",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000015",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000016",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000016",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000017",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000017",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000018",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000019",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000019",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000020",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000020",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000021",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000021",
+    "target": "concept_000029",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000022",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000022",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000023",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000023",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000024",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000025",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000025",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000026",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000026",
+    "target": "concept_000015",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000027",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000028",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000028",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000029",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000029",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000030",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000030",
+    "target": "concept_000048",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000031",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000031",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000032",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000032",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000033",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000034",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000034",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000035",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000035",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000036",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000036",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000037",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000037",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000038",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000038",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000039",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000040",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000040",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000041",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000041",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000042",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000042",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000043",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000043",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000044",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000044",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000045",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000046",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000046",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000047",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000047",
+    "target": "concept_000040",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000048",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000048",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000049",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000050",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000050",
+    "target": "concept_000042",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000051",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000051",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000052",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000053",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000053",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000054",
+    "target": "concept_000032",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000054",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000055",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000055",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000056",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000057",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000057",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000058",
+    "target": "concept_000032",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000058",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000059",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000059",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000059",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000061",
+    "target": "concept_000021",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000061",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000062",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000062",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000063",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000063",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000064",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000064",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000065",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000065",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000066",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000067",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000067",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000068",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000068",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000069",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000069",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000070",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000070",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000071",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000071",
+    "target": "concept_000029",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000073",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000073",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000074",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000074",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000075",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000076",
+    "target": "concept_000016",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000076",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000077",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000077",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000078",
+    "target": "concept_000020",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000078",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000080",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000080",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000081",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000081",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000082",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000082",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000083",
+    "target": "concept_000043",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000083",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000084",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000084",
+    "target": "concept_000009",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000085",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000085",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000086",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000086",
+    "target": "concept_000015",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000087",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000087",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000088",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000088",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000089",
+    "target": "concept_000016",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000089",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000091",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000091",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000092",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000092",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000093",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000093",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000094",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000094",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000095",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000095",
+    "target": "concept_000032",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000096",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000096",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000097",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000097",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000098",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000098",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000099",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000099",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000100",
+    "target": "concept_000021",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000100",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000101",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000101",
+    "target": "concept_000015",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000102",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000102",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000103",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000103",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000104",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000104",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000105",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000105",
+    "target": "concept_000048",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000106",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000106",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000107",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000107",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000108",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000108",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000109",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000109",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000110",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000110",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000111",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000112",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000112",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000113",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000113",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000114",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000114",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000115",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000115",
+    "target": "concept_000023",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000115",
+    "target": "concept_000024",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000116",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000116",
+    "target": "concept_000014",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000117",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000117",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000118",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000118",
+    "target": "concept_000029",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000119",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000119",
+    "target": "concept_000030",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000120",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000120",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000121",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000121",
+    "target": "concept_000038",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000122",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000122",
+    "target": "concept_000034",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000123",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000123",
+    "target": "concept_000007",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000124",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000124",
+    "target": "concept_000036",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000125",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000125",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000126",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000126",
+    "target": "concept_000041",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000127",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000127",
+    "target": "concept_000027",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000128",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000128",
+    "target": "concept_000003",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000129",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000129",
+    "target": "concept_000033",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000130",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000130",
+    "target": "concept_000039",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000131",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000131",
+    "target": "concept_000018",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000132",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000132",
+    "target": "concept_000045",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000133",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000133",
+    "target": "concept_000044",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000134",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000134",
+    "target": "concept_000046",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000135",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000135",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000136",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000136",
+    "target": "concept_000027",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000137",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000137",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000138",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000138",
+    "target": "concept_000022",
+    "type": "expresses"
+  }
+]

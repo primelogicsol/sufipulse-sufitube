@@ -31,6 +31,21 @@ export function DesktopNav() {
         />
       </Link>
       <Link
+        href="/knowledge"
+        className={`
+          text-nowrap
+          transition-colors
+          duration-[var(--transition-base)]
+          font-medium
+          ${pathname.startsWith('/knowledge')
+            ? 'text-[var(--color-gold)]'
+            : 'text-[var(--color-text-primary)] hover:text-[var(--color-gold)]'
+          }
+        `.trim()}
+      >
+        Knowledge Archive
+      </Link>
+      <Link
         href="/literary-journal"
         className={`
           text-nowrap

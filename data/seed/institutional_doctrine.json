@@ -1,0 +1,38 @@
+{
+  "authority_classes": ["Institution"],
+  "publication_states": ["CONSTITUTIONAL_APPROVED"],
+  "constitutional_root": [
+    {
+      "entity_id": "inst_001",
+      "class": "Institution",
+      "canonical_name": "SufiPulse Authority Doctrine",
+      "slug": "sufipulse-authority-doctrine",
+      "canonical_impact": "The constitutional root node that dictates the scope, methodology, and dispute resolution logic for all subsequent knowledge graph entities.",
+      "status": "CONSTITUTIONAL_APPROVED",
+      "aliases": ["Constitutional Root", "The Doctrine", "Governance Node"],
+      "transmission_graph": [
+        { "target_id": "core_001", "type": "GOVERNS", "target_class": "Person", "name": "Jalal al-Din Rumi" },
+        { "target_id": "core_024", "type": "GOVERNS", "target_class": "Concept", "name": "Fana" },
+        { "target_id": "core_011", "type": "GOVERNS", "target_class": "Book", "name": "Masnavi" },
+        { "target_id": "ALL_CONSTITUTIONAL_NODES", "type": "GOVERNS", "target_class": "ALL", "name": "Constitutional Core" }
+      ],
+      "questions": ["q_inst_01", "q_inst_02", "q_inst_03", "q_inst_04", "q_inst_05"],
+      "evidence_records": ["ev_inst_mission"],
+      "citation_paths": ["inst_001 -> ev_inst_mission"],
+      "verification": { "status": "Verified", "method": "Founder Ratification", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Scope Authority",
+        "claim_a": "Adjudicate political and sectarian boundaries.",
+        "evidence_a": "ev_inst_null",
+        "claim_b": "Remain an absolute neutral documentation authority.",
+        "evidence_b": "ev_inst_mission",
+        "canonical_position": "Neutral Documentation",
+        "reasoning": "The doctrine explicitly outlaws takfir, sectarian supremacy, and modern political disputes to preserve unshakeable academic authority."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "Absolute Root Node." },
+      "readiness_score": 100,
+      "graph_dependency_score": 999,
+      "authority_resilience_score": 100
+    }
+  ]
+}

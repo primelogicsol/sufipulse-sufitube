@@ -1,0 +1,8982 @@
+[
+  {
+    "source": "song_000001",
+    "target": "writer_000002",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000002",
+    "target": "writer_000002",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000003",
+    "target": "writer_000002",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000005",
+    "target": "writer_000050",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000007",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000008",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000009",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000010",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000011",
+    "target": "writer_000011",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000012",
+    "target": "writer_000004",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000013",
+    "target": "writer_000024",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000014",
+    "target": "writer_000012",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000020",
+    "target": "writer_000050",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000028",
+    "target": "writer_000005",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000029",
+    "target": "writer_000005",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000030",
+    "target": "writer_000005",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000031",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000034",
+    "target": "writer_000012",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000036",
+    "target": "writer_000008",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000037",
+    "target": "writer_000010",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000038",
+    "target": "writer_000013",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000047",
+    "target": "writer_000001",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000050",
+    "target": "writer_000037",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000051",
+    "target": "writer_000008",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000054",
+    "target": "writer_000001",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "writer_000050",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000061",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000062",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000063",
+    "target": "writer_000010",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000064",
+    "target": "writer_000005",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000065",
+    "target": "writer_000008",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000067",
+    "target": "writer_000004",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000068",
+    "target": "writer_000006",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000069",
+    "target": "writer_000007",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000070",
+    "target": "writer_000015",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000073",
+    "target": "writer_000020",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000074",
+    "target": "writer_000008",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000077",
+    "target": "writer_000014",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000078",
+    "target": "writer_000014",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000080",
+    "target": "writer_000001",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000081",
+    "target": "writer_000025",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000082",
+    "target": "writer_000012",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000083",
+    "target": "writer_000036",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000085",
+    "target": "writer_000010",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000086",
+    "target": "writer_000023",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000087",
+    "target": "writer_000026",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000088",
+    "target": "writer_000012",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000089",
+    "target": "writer_000011",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000091",
+    "target": "writer_000041",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000092",
+    "target": "writer_000024",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000093",
+    "target": "writer_000008",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000094",
+    "target": "writer_000005",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000096",
+    "target": "writer_000025",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000097",
+    "target": "writer_000001",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000098",
+    "target": "writer_000005",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000100",
+    "target": "writer_000003",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000101",
+    "target": "writer_000009",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000102",
+    "target": "writer_000022",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000103",
+    "target": "writer_000021",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000104",
+    "target": "writer_000032",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000105",
+    "target": "writer_000016",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000106",
+    "target": "writer_000017",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000107",
+    "target": "writer_000019",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000108",
+    "target": "writer_000050",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000114",
+    "target": "writer_000027",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000115",
+    "target": "writer_000018",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000116",
+    "target": "writer_000028",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000117",
+    "target": "writer_000029",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000118",
+    "target": "writer_000030",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000119",
+    "target": "writer_000031",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000121",
+    "target": "writer_000002",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000135",
+    "target": "writer_000045",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000136",
+    "target": "writer_000043",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000137",
+    "target": "writer_000049",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000138",
+    "target": "writer_000046",
+    "type": "authored_by"
+  },
+  {
+    "source": "song_000001",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000001",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000002",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000002",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000003",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000003",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000009",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000004",
+    "target": "singer_000011",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000005",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000005",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000005",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000006",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000007",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000007",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000008",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000008",
+    "target": "singer_000050",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000008",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000009",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000009",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000010",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000011",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000011",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000011",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000012",
+    "target": "singer_000038",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000012",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000013",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000013",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000014",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000014",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000015",
+    "target": "singer_000005",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000016",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000017",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000018",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000019",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000020",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000020",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000020",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000021",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000021",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000022",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000023",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000024",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000025",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000025",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000026",
+    "target": "singer_000019",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000027",
+    "target": "singer_000028",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000028",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000029",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000029",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000030",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000030",
+    "target": "singer_000017",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000031",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000031",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000032",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000032",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000033",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000033",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000034",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000034",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000035",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000036",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000037",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000037",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000038",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000038",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000039",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000039",
+    "target": "singer_000006",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000040",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000041",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000042",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000042",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000043",
+    "target": "singer_000050",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000044",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000045",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000046",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000046",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000048",
+    "target": "singer_000034",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000048",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000049",
+    "target": "singer_000019",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000050",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000051",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000051",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000052",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000053",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000054",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000055",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000056",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000056",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000057",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000058",
+    "target": "singer_000031",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000014",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000059",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000061",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000061",
+    "target": "singer_000050",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000062",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000063",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000064",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000065",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000065",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000066",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000066",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000067",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000067",
+    "target": "singer_000038",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000070",
+    "target": "singer_000005",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000071",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000074",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000075",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000075",
+    "target": "singer_000027",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000076",
+    "target": "singer_000003",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000076",
+    "target": "singer_000004",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000076",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000080",
+    "target": "singer_000010",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000081",
+    "target": "singer_000035",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000082",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000082",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000083",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000083",
+    "target": "singer_000005",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000084",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000085",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000085",
+    "target": "singer_000017",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000089",
+    "target": "singer_000012",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000089",
+    "target": "singer_000013",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000091",
+    "target": "singer_000034",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000092",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000093",
+    "target": "singer_000007",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000094",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000094",
+    "target": "singer_000017",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000095",
+    "target": "singer_000027",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000096",
+    "target": "singer_000035",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000098",
+    "target": "singer_000015",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000098",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000099",
+    "target": "singer_000016",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000099",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000100",
+    "target": "singer_000002",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000100",
+    "target": "singer_000001",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000101",
+    "target": "singer_000019",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000101",
+    "target": "singer_000020",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000108",
+    "target": "singer_000008",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000109",
+    "target": "singer_000020",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000110",
+    "target": "singer_000026",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000111",
+    "target": "singer_000043",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000112",
+    "target": "singer_000025",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000113",
+    "target": "singer_000042",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000116",
+    "target": "singer_000044",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000117",
+    "target": "singer_000030",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000118",
+    "target": "singer_000037",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000120",
+    "target": "singer_000018",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000121",
+    "target": "singer_000021",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000122",
+    "target": "singer_000023",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000122",
+    "target": "singer_000022",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000123",
+    "target": "singer_000024",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000124",
+    "target": "singer_000029",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000124",
+    "target": "singer_000032",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000125",
+    "target": "singer_000033",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000126",
+    "target": "singer_000036",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000127",
+    "target": "singer_000039",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000128",
+    "target": "singer_000040",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000129",
+    "target": "singer_000041",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000130",
+    "target": "singer_000045",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000131",
+    "target": "singer_000046",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000132",
+    "target": "singer_000047",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000133",
+    "target": "singer_000048",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000134",
+    "target": "singer_000049",
+    "type": "performed_by"
+  },
+  {
+    "source": "song_000001",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000001",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000002",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000002",
+    "target": "concept_000019",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000003",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000003",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000004",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000005",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000005",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000005",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000006",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000006",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000007",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000007",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000008",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000008",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000009",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000009",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000010",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000010",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000011",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000011",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000012",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000012",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000013",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000013",
+    "target": "concept_000040",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000014",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000014",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000015",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000015",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000016",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000016",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000017",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000017",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000018",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000019",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000019",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000020",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000020",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000021",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000021",
+    "target": "concept_000029",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000022",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000022",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000023",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000023",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000024",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000025",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000025",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000026",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000026",
+    "target": "concept_000015",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000027",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000028",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000028",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000029",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000029",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000030",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000030",
+    "target": "concept_000048",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000031",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000031",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000032",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000032",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000033",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000034",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000034",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000035",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000035",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000036",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000036",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000037",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000037",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000038",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000038",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000039",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000040",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000040",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000041",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000041",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000042",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000042",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000043",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000043",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000044",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000044",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000045",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000046",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000046",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000047",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000047",
+    "target": "concept_000040",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000048",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000048",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000049",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000050",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000050",
+    "target": "concept_000042",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000051",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000051",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000052",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000053",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000053",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000054",
+    "target": "concept_000032",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000054",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000055",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000055",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000056",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000057",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000057",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000058",
+    "target": "concept_000032",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000058",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000059",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000059",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000059",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000061",
+    "target": "concept_000021",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000061",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000062",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000062",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000063",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000063",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000064",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000064",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000065",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000065",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000066",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000067",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000067",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000068",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000068",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000069",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000069",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000070",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000070",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000071",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000071",
+    "target": "concept_000029",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000073",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000073",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000074",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000074",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000075",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000076",
+    "target": "concept_000016",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000076",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000077",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000077",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000078",
+    "target": "concept_000020",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000078",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000080",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000080",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000081",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000081",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000082",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000082",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000083",
+    "target": "concept_000043",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000083",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000084",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000084",
+    "target": "concept_000009",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000085",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000085",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000086",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000086",
+    "target": "concept_000015",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000087",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000087",
+    "target": "concept_000011",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000088",
+    "target": "concept_000050",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000088",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000089",
+    "target": "concept_000016",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000089",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000091",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000091",
+    "target": "concept_000037",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000092",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000092",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000093",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000093",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000094",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000094",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000095",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000095",
+    "target": "concept_000032",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000096",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000096",
+    "target": "concept_000010",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000097",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000097",
+    "target": "concept_000008",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000098",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000098",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000099",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000099",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000100",
+    "target": "concept_000021",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000100",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000101",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000101",
+    "target": "concept_000015",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000102",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000102",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000103",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000103",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000104",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000104",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000105",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000105",
+    "target": "concept_000048",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000106",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000106",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000107",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000107",
+    "target": "concept_000049",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000108",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000108",
+    "target": "concept_000035",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000109",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000109",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000110",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000110",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000111",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000112",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000112",
+    "target": "concept_000028",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000113",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000113",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000114",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000114",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000115",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000115",
+    "target": "concept_000023",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000115",
+    "target": "concept_000024",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000116",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000116",
+    "target": "concept_000014",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000117",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000117",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000118",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000118",
+    "target": "concept_000029",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000119",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000119",
+    "target": "concept_000030",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000120",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000120",
+    "target": "concept_000006",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000121",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000121",
+    "target": "concept_000038",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000122",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000122",
+    "target": "concept_000034",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000123",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000123",
+    "target": "concept_000007",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000124",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000124",
+    "target": "concept_000036",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000125",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000125",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000126",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000126",
+    "target": "concept_000041",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000127",
+    "target": "concept_000004",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000127",
+    "target": "concept_000027",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000128",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000128",
+    "target": "concept_000003",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000129",
+    "target": "concept_000012",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000129",
+    "target": "concept_000033",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000130",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000130",
+    "target": "concept_000039",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000131",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000131",
+    "target": "concept_000018",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000132",
+    "target": "concept_000017",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000132",
+    "target": "concept_000045",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000133",
+    "target": "concept_000013",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000133",
+    "target": "concept_000044",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000134",
+    "target": "concept_000025",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000134",
+    "target": "concept_000046",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000135",
+    "target": "concept_000002",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000135",
+    "target": "concept_000026",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000136",
+    "target": "concept_000005",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000136",
+    "target": "concept_000027",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000137",
+    "target": "concept_000001",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000137",
+    "target": "concept_000047",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000138",
+    "target": "concept_000031",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000138",
+    "target": "concept_000022",
+    "type": "expresses"
+  },
+  {
+    "source": "song_000001",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000001",
+    "target": "lang_011",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000002",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000002",
+    "target": "lang_011",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000003",
+    "target": "lang_011",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000004",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000005",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000005",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000006",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000006",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000007",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000008",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000009",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000010",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000011",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000012",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000013",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000013",
+    "target": "lang_015",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000014",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000015",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000016",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000016",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000017",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000017",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000018",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000019",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000020",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000020",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000020",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000021",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000022",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000023",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000024",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000025",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000026",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000027",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000028",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000029",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000030",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000031",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000032",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000033",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000034",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000035",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000036",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000037",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000037",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000038",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000039",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000040",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000041",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000042",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000042",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000043",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000044",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000045",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000046",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000047",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000048",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000049",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000050",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000050",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000051",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000052",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000053",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000054",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000055",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000056",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000056",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000057",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000058",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000059",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000059",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000059",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000061",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000062",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000063",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000063",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000064",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000065",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000066",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000067",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000068",
+    "target": "lang_007",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000069",
+    "target": "lang_007",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000070",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000071",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000073",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000074",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000075",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000076",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000077",
+    "target": "lang_009",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000078",
+    "target": "lang_009",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000080",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000081",
+    "target": "lang_010",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000081",
+    "target": "lang_011",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000082",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000083",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000083",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000084",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000085",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000086",
+    "target": "lang_008",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000087",
+    "target": "lang_007",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000088",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000089",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000091",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000091",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000092",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000092",
+    "target": "lang_015",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000093",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000094",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000095",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000096",
+    "target": "lang_011",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000096",
+    "target": "lang_010",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000097",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000098",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000099",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000099",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000100",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000101",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000102",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000103",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000104",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000105",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000106",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000107",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000108",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000108",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000109",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000110",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000110",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000111",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000112",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000112",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000113",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000113",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000114",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000115",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000116",
+    "target": "lang_005",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000117",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000117",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000118",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000119",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000120",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000121",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000121",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000122",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000122",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000122",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000123",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000124",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000124",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000125",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000126",
+    "target": "lang_016",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000127",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000128",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000129",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000129",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000130",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000130",
+    "target": "lang_008",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000131",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000131",
+    "target": "lang_006",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000132",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000133",
+    "target": "lang_003",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000133",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000134",
+    "target": "lang_004",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000135",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000135",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000136",
+    "target": "lang_002",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000137",
+    "target": "lang_008",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000138",
+    "target": "lang_001",
+    "type": "in_language"
+  },
+  {
+    "source": "song_000001",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000002",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000003",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000004",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000005",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000005",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000006",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000007",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000008",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000009",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000010",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000011",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000012",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000013",
+    "target": "reg_005",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000013",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000014",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000014",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000015",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000016",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000017",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000018",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000019",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000020",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000020",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000021",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000022",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000023",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000024",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000025",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000026",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000027",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000028",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000028",
+    "target": "reg_011",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000029",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000030",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000031",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000032",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000033",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000034",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000034",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000035",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000036",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000036",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000037",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000038",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000038",
+    "target": "reg_012",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000039",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000040",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000041",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000042",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000043",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000044",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000044",
+    "target": "reg_019",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000045",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000046",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000047",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000047",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000048",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000049",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000050",
+    "target": "reg_017",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000050",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000051",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000051",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000052",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000053",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000054",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000055",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000056",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000057",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000058",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000059",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000059",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000061",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000062",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000063",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000064",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000065",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000065",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000066",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000067",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000068",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000069",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000070",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000071",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000073",
+    "target": "reg_033",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000073",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000074",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000074",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000075",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000076",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000077",
+    "target": "reg_041",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000078",
+    "target": "reg_041",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000080",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000081",
+    "target": "reg_023",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000082",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000082",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000083",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000083",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000084",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000085",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000086",
+    "target": "reg_015",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000087",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000088",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000089",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000091",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000092",
+    "target": "reg_005",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000092",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000093",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000094",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000095",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000096",
+    "target": "reg_023",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000097",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000098",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000099",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000100",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000101",
+    "target": "reg_032",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000102",
+    "target": "reg_032",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000103",
+    "target": "reg_040",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000104",
+    "target": "reg_031",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000105",
+    "target": "reg_037",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000106",
+    "target": "reg_045",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000107",
+    "target": "reg_030",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000108",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000108",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000109",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000109",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000110",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000111",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000111",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000112",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000112",
+    "target": "reg_007",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000113",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000113",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000114",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000115",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000115",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000116",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000117",
+    "target": "reg_013",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000117",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000118",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000119",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000119",
+    "target": "reg_008",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000120",
+    "target": "reg_014",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000121",
+    "target": "reg_009",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000122",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000123",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000123",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000124",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000125",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000126",
+    "target": "reg_019",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000127",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000128",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000128",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000129",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000130",
+    "target": "reg_015",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000130",
+    "target": "reg_014",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000131",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000132",
+    "target": "reg_014",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000133",
+    "target": "reg_009",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000134",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000135",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000136",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000137",
+    "target": "reg_015",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000138",
+    "target": "reg_031",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000138",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "writer_000002",
+    "target": "song_000001",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000002",
+    "target": "song_000002",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000002",
+    "target": "song_000003",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000050",
+    "target": "song_000005",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000007",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000008",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000009",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000010",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000011",
+    "target": "song_000011",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000004",
+    "target": "song_000012",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000024",
+    "target": "song_000013",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000012",
+    "target": "song_000014",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000050",
+    "target": "song_000020",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000005",
+    "target": "song_000028",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000005",
+    "target": "song_000029",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000005",
+    "target": "song_000030",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000031",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000012",
+    "target": "song_000034",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000008",
+    "target": "song_000036",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000010",
+    "target": "song_000037",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000013",
+    "target": "song_000038",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000001",
+    "target": "song_000047",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000037",
+    "target": "song_000050",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000008",
+    "target": "song_000051",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000001",
+    "target": "song_000054",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000050",
+    "target": "song_000059",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000061",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000062",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000010",
+    "target": "song_000063",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000005",
+    "target": "song_000064",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000008",
+    "target": "song_000065",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000004",
+    "target": "song_000067",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000006",
+    "target": "song_000068",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000007",
+    "target": "song_000069",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000015",
+    "target": "song_000070",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000020",
+    "target": "song_000073",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000008",
+    "target": "song_000074",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000014",
+    "target": "song_000077",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000014",
+    "target": "song_000078",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000001",
+    "target": "song_000080",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000025",
+    "target": "song_000081",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000012",
+    "target": "song_000082",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000036",
+    "target": "song_000083",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000010",
+    "target": "song_000085",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000023",
+    "target": "song_000086",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000026",
+    "target": "song_000087",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000012",
+    "target": "song_000088",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000011",
+    "target": "song_000089",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000041",
+    "target": "song_000091",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000024",
+    "target": "song_000092",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000008",
+    "target": "song_000093",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000005",
+    "target": "song_000094",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000025",
+    "target": "song_000096",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000001",
+    "target": "song_000097",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000005",
+    "target": "song_000098",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000003",
+    "target": "song_000100",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000009",
+    "target": "song_000101",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000022",
+    "target": "song_000102",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000021",
+    "target": "song_000103",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000032",
+    "target": "song_000104",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000016",
+    "target": "song_000105",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000017",
+    "target": "song_000106",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000019",
+    "target": "song_000107",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000050",
+    "target": "song_000108",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000027",
+    "target": "song_000114",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000018",
+    "target": "song_000115",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000028",
+    "target": "song_000116",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000029",
+    "target": "song_000117",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000030",
+    "target": "song_000118",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000031",
+    "target": "song_000119",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000002",
+    "target": "song_000121",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000045",
+    "target": "song_000135",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000043",
+    "target": "song_000136",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000049",
+    "target": "song_000137",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000046",
+    "target": "song_000138",
+    "type": "authored"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000001",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000019",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000002",
+    "target": "concept_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000021",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000003",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000004",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000005",
+    "target": "concept_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000006",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000006",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000007",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000007",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000008",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000009",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000009",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000010",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000011",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000011",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000011",
+    "target": "concept_000016",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000012",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000013",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000013",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000014",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000015",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000015",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000016",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000016",
+    "target": "concept_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000017",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000017",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000018",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000018",
+    "target": "concept_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000018",
+    "target": "concept_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000019",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000019",
+    "target": "concept_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000020",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000020",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000021",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000021",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000022",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000022",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000023",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000023",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000024",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000024",
+    "target": "concept_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000024",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000025",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000026",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000026",
+    "target": "concept_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000027",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000027",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000028",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000028",
+    "target": "concept_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000029",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000029",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000030",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000030",
+    "target": "concept_000029",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000031",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000031",
+    "target": "concept_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000032",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000032",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000033",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000033",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000034",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000034",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000035",
+    "target": "concept_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000035",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000036",
+    "target": "concept_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000036",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000037",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000037",
+    "target": "concept_000042",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000038",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000038",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000039",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000039",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000040",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000040",
+    "target": "concept_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000041",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000041",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000042",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000042",
+    "target": "concept_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000043",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000043",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000044",
+    "target": "concept_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000044",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000045",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000045",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000046",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000046",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000047",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000047",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000048",
+    "target": "concept_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000048",
+    "target": "concept_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000049",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000049",
+    "target": "concept_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000050",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000050",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000050",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000001",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000001",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000002",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000002",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000003",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000003",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000009",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000011",
+    "target": "song_000004",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000005",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000005",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000005",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000006",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000007",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000007",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000008",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000050",
+    "target": "song_000008",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000008",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000009",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000009",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000010",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000011",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000011",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000011",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000038",
+    "target": "song_000012",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000012",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000013",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000013",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000014",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000014",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000005",
+    "target": "song_000015",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000016",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000017",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000018",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000019",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000020",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000020",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000020",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000021",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000021",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000022",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000023",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000024",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000025",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000025",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000019",
+    "target": "song_000026",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000028",
+    "target": "song_000027",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000028",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000029",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000029",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000030",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000017",
+    "target": "song_000030",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000031",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000031",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000032",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000032",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000033",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000033",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000034",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000034",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000035",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000036",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000037",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000037",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000038",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000038",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000039",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000006",
+    "target": "song_000039",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000040",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000041",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000042",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000042",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000050",
+    "target": "song_000043",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000044",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000045",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000046",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000046",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000034",
+    "target": "song_000048",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000048",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000019",
+    "target": "song_000049",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000050",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000051",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000051",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000052",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000053",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000054",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000055",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000056",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000056",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000057",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000031",
+    "target": "song_000058",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000014",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000059",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000061",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000050",
+    "target": "song_000061",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000062",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000063",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000064",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000065",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000065",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000066",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000066",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000067",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000038",
+    "target": "song_000067",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000005",
+    "target": "song_000070",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000071",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000074",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000075",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000027",
+    "target": "song_000075",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000003",
+    "target": "song_000076",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000004",
+    "target": "song_000076",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000076",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000010",
+    "target": "song_000080",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000035",
+    "target": "song_000081",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000082",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000082",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000083",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000005",
+    "target": "song_000083",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000084",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000085",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000017",
+    "target": "song_000085",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000012",
+    "target": "song_000089",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000013",
+    "target": "song_000089",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000034",
+    "target": "song_000091",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000092",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000007",
+    "target": "song_000093",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000094",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000017",
+    "target": "song_000094",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000027",
+    "target": "song_000095",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000035",
+    "target": "song_000096",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000015",
+    "target": "song_000098",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000098",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000016",
+    "target": "song_000099",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000099",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000002",
+    "target": "song_000100",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000001",
+    "target": "song_000100",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000019",
+    "target": "song_000101",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000020",
+    "target": "song_000101",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000008",
+    "target": "song_000108",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000020",
+    "target": "song_000109",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000026",
+    "target": "song_000110",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000043",
+    "target": "song_000111",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000025",
+    "target": "song_000112",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000042",
+    "target": "song_000113",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000044",
+    "target": "song_000116",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000030",
+    "target": "song_000117",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000037",
+    "target": "song_000118",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000018",
+    "target": "song_000120",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000021",
+    "target": "song_000121",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000023",
+    "target": "song_000122",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000022",
+    "target": "song_000122",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000024",
+    "target": "song_000123",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000029",
+    "target": "song_000124",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000032",
+    "target": "song_000124",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000033",
+    "target": "song_000125",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000036",
+    "target": "song_000126",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000039",
+    "target": "song_000127",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000040",
+    "target": "song_000128",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000041",
+    "target": "song_000129",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000045",
+    "target": "song_000130",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000046",
+    "target": "song_000131",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000047",
+    "target": "song_000132",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000048",
+    "target": "song_000133",
+    "type": "performed"
+  },
+  {
+    "source": "singer_000049",
+    "target": "song_000134",
+    "type": "performed"
+  },
+  {
+    "source": "writer_000006",
+    "target": "writer_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000007",
+    "target": "concept_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000009",
+    "target": "song_000117",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000013",
+    "target": "writer_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000015",
+    "target": "reg_042",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000016",
+    "target": "song_000084",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000017",
+    "target": "lang_005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000019",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000020",
+    "target": "reg_057",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000021",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000022",
+    "target": "song_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000023",
+    "target": "song_000058",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000026",
+    "target": "lang_005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000027",
+    "target": "song_000053",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000028",
+    "target": "lang_001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000029",
+    "target": "song_000056",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000030",
+    "target": "song_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000031",
+    "target": "song_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000032",
+    "target": "song_000086",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000033",
+    "target": "lang_005",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000033",
+    "target": "song_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000033",
+    "target": "song_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000034",
+    "target": "writer_000016",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000034",
+    "target": "singer_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000034",
+    "target": "writer_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000035",
+    "target": "song_000100",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000035",
+    "target": "song_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000035",
+    "target": "song_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000036",
+    "target": "song_000093",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000037",
+    "target": "concept_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000038",
+    "target": "singer_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000038",
+    "target": "reg_056",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000038",
+    "target": "reg_055",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000039",
+    "target": "song_000093",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000039",
+    "target": "writer_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000039",
+    "target": "reg_043",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000040",
+    "target": "singer_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000040",
+    "target": "song_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000040",
+    "target": "song_000136",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000041",
+    "target": "song_000066",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000042",
+    "target": "song_000131",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000042",
+    "target": "reg_014",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000042",
+    "target": "singer_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000043",
+    "target": "writer_000041",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000044",
+    "target": "song_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000044",
+    "target": "song_000080",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000044",
+    "target": "song_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000045",
+    "target": "song_000118",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000046",
+    "target": "song_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000047",
+    "target": "song_000133",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000047",
+    "target": "song_000104",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000047",
+    "target": "singer_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000048",
+    "target": "writer_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000048",
+    "target": "song_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000048",
+    "target": "reg_025",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000049",
+    "target": "writer_000036",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000051",
+    "target": "writer_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000051",
+    "target": "writer_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000051",
+    "target": "reg_048",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000051",
+    "target": "song_000064",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000051",
+    "target": "song_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000052",
+    "target": "song_000085",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000052",
+    "target": "reg_011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000052",
+    "target": "song_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000052",
+    "target": "song_000053",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000052",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000053",
+    "target": "writer_000041",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000053",
+    "target": "reg_011",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000053",
+    "target": "writer_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000053",
+    "target": "writer_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "writer_000053",
+    "target": "reg_043",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000006",
+    "target": "song_000066",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000006",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000006",
+    "target": "writer_000044",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000008",
+    "target": "song_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000008",
+    "target": "song_000137",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000008",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000009",
+    "target": "song_000120",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000009",
+    "target": "lang_022",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000009",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000011",
+    "target": "song_000092",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000011",
+    "target": "song_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000011",
+    "target": "writer_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000018",
+    "target": "writer_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000018",
+    "target": "song_000075",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000018",
+    "target": "song_000108",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000020",
+    "target": "writer_000036",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000021",
+    "target": "song_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000021",
+    "target": "concept_000019",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000021",
+    "target": "writer_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000022",
+    "target": "lang_001",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000022",
+    "target": "singer_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000022",
+    "target": "writer_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000023",
+    "target": "singer_000019",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000023",
+    "target": "reg_052",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000023",
+    "target": "song_000123",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000024",
+    "target": "song_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000024",
+    "target": "singer_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000024",
+    "target": "song_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000025",
+    "target": "concept_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000025",
+    "target": "song_000091",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000025",
+    "target": "reg_023",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000026",
+    "target": "singer_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000026",
+    "target": "writer_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000026",
+    "target": "reg_013",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000027",
+    "target": "writer_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000028",
+    "target": "song_000117",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000028",
+    "target": "song_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000028",
+    "target": "song_000056",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000029",
+    "target": "song_000080",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000029",
+    "target": "song_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000029",
+    "target": "reg_047",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000030",
+    "target": "song_000106",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000030",
+    "target": "song_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000030",
+    "target": "lang_030",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000031",
+    "target": "song_000091",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000031",
+    "target": "singer_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000031",
+    "target": "concept_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000032",
+    "target": "reg_050",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000032",
+    "target": "song_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000032",
+    "target": "reg_040",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000033",
+    "target": "singer_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000033",
+    "target": "song_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000033",
+    "target": "song_000084",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000034",
+    "target": "concept_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000035",
+    "target": "reg_051",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000036",
+    "target": "song_000117",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000036",
+    "target": "writer_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000036",
+    "target": "song_000009",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000037",
+    "target": "concept_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000037",
+    "target": "song_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000037",
+    "target": "concept_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000038",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000039",
+    "target": "writer_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000039",
+    "target": "song_000087",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000039",
+    "target": "singer_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000040",
+    "target": "song_000105",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000040",
+    "target": "song_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000040",
+    "target": "song_000075",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000041",
+    "target": "reg_057",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000041",
+    "target": "song_000080",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000041",
+    "target": "song_000131",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000042",
+    "target": "song_000042",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000042",
+    "target": "writer_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000042",
+    "target": "reg_053",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000043",
+    "target": "singer_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000043",
+    "target": "reg_029",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000043",
+    "target": "lang_019",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000044",
+    "target": "concept_000046",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000044",
+    "target": "reg_008",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000044",
+    "target": "writer_000021",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000045",
+    "target": "reg_053",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000045",
+    "target": "song_000117",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000045",
+    "target": "reg_004",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000046",
+    "target": "writer_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000046",
+    "target": "song_000056",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000046",
+    "target": "singer_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000047",
+    "target": "song_000021",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000047",
+    "target": "singer_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000047",
+    "target": "singer_000021",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000048",
+    "target": "song_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000048",
+    "target": "lang_005",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000048",
+    "target": "song_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000049",
+    "target": "song_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000049",
+    "target": "song_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "singer_000049",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000003",
+    "target": "reg_008",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000003",
+    "target": "lang_025",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000003",
+    "target": "lang_027",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000003",
+    "target": "song_000054",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000007",
+    "target": "writer_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000007",
+    "target": "writer_000019",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000007",
+    "target": "writer_000021",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000009",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000009",
+    "target": "song_000085",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000009",
+    "target": "writer_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000009",
+    "target": "song_000125",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000014",
+    "target": "lang_024",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000014",
+    "target": "concept_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000014",
+    "target": "lang_019",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000016",
+    "target": "reg_041",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000016",
+    "target": "reg_057",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000018",
+    "target": "singer_000009",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000018",
+    "target": "lang_014",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000018",
+    "target": "song_000097",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000018",
+    "target": "lang_019",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000019",
+    "target": "song_000073",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000019",
+    "target": "singer_000021",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000019",
+    "target": "song_000135",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000020",
+    "target": "song_000077",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000020",
+    "target": "writer_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000020",
+    "target": "song_000095",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000021",
+    "target": "song_000077",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000021",
+    "target": "reg_007",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000023",
+    "target": "reg_040",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000023",
+    "target": "concept_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000024",
+    "target": "song_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000024",
+    "target": "song_000094",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000029",
+    "target": "writer_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000030",
+    "target": "song_000083",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000032",
+    "target": "song_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000033",
+    "target": "concept_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000033",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000033",
+    "target": "singer_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000033",
+    "target": "song_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000034",
+    "target": "singer_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000034",
+    "target": "song_000052",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000034",
+    "target": "reg_002",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000034",
+    "target": "song_000033",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000036",
+    "target": "reg_012",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000036",
+    "target": "song_000116",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000036",
+    "target": "song_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000036",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000038",
+    "target": "singer_000034",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000038",
+    "target": "writer_000019",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000038",
+    "target": "writer_000051",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000039",
+    "target": "reg_022",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000039",
+    "target": "song_000029",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000039",
+    "target": "reg_018",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000039",
+    "target": "lang_012",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000040",
+    "target": "writer_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000041",
+    "target": "song_000092",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000041",
+    "target": "song_000127",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000041",
+    "target": "song_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000041",
+    "target": "song_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000042",
+    "target": "concept_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000042",
+    "target": "song_000112",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000042",
+    "target": "song_000103",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000043",
+    "target": "writer_000041",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000043",
+    "target": "singer_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000043",
+    "target": "writer_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000044",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000044",
+    "target": "song_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000044",
+    "target": "lang_016",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000044",
+    "target": "song_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000045",
+    "target": "song_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000045",
+    "target": "song_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000045",
+    "target": "song_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000045",
+    "target": "concept_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000046",
+    "target": "reg_020",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000046",
+    "target": "reg_042",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000046",
+    "target": "writer_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000046",
+    "target": "concept_000012",
+    "type": "associated_with"
+  },
+  {
+    "source": "concept_000048",
+    "target": "song_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_007",
+    "target": "song_000051",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_007",
+    "target": "singer_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_008",
+    "target": "reg_040",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_008",
+    "target": "reg_030",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_009",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_009",
+    "target": "reg_012",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_009",
+    "target": "writer_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_010",
+    "target": "writer_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_010",
+    "target": "singer_000046",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_010",
+    "target": "lang_019",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_012",
+    "target": "concept_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_012",
+    "target": "singer_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_012",
+    "target": "singer_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_012",
+    "target": "song_000058",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_012",
+    "target": "song_000061",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_013",
+    "target": "writer_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_013",
+    "target": "song_000070",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_013",
+    "target": "song_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_013",
+    "target": "reg_003",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_013",
+    "target": "reg_023",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_014",
+    "target": "reg_048",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_014",
+    "target": "reg_050",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_014",
+    "target": "song_000056",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_014",
+    "target": "song_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_014",
+    "target": "singer_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_015",
+    "target": "lang_013",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_015",
+    "target": "reg_037",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_015",
+    "target": "concept_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_016",
+    "target": "reg_026",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_016",
+    "target": "writer_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_016",
+    "target": "song_000131",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_016",
+    "target": "song_000120",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_017",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_017",
+    "target": "song_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_017",
+    "target": "song_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_017",
+    "target": "concept_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_017",
+    "target": "reg_003",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_018",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_018",
+    "target": "song_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_018",
+    "target": "concept_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_018",
+    "target": "song_000008",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_018",
+    "target": "concept_000022",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_019",
+    "target": "song_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_019",
+    "target": "singer_000023",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_019",
+    "target": "reg_023",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_019",
+    "target": "song_000129",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_019",
+    "target": "writer_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_020",
+    "target": "reg_024",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_020",
+    "target": "writer_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_020",
+    "target": "lang_006",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_020",
+    "target": "reg_054",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_020",
+    "target": "song_000133",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_021",
+    "target": "reg_005",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_021",
+    "target": "reg_017",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_021",
+    "target": "song_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_021",
+    "target": "song_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_021",
+    "target": "lang_028",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_022",
+    "target": "writer_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_022",
+    "target": "reg_014",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_022",
+    "target": "song_000082",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_022",
+    "target": "reg_023",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_022",
+    "target": "song_000052",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_023",
+    "target": "concept_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_023",
+    "target": "writer_000042",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_023",
+    "target": "song_000084",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_023",
+    "target": "song_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_023",
+    "target": "singer_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_024",
+    "target": "song_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_024",
+    "target": "singer_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_024",
+    "target": "writer_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_024",
+    "target": "song_000119",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_024",
+    "target": "concept_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_025",
+    "target": "song_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_025",
+    "target": "concept_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_025",
+    "target": "song_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_025",
+    "target": "lang_019",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_025",
+    "target": "song_000099",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_026",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_026",
+    "target": "reg_055",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_026",
+    "target": "song_000093",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_026",
+    "target": "lang_002",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_026",
+    "target": "writer_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_027",
+    "target": "song_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_027",
+    "target": "song_000064",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_027",
+    "target": "song_000112",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_027",
+    "target": "concept_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_027",
+    "target": "concept_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_028",
+    "target": "song_000117",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_028",
+    "target": "singer_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_028",
+    "target": "singer_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_028",
+    "target": "song_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_028",
+    "target": "song_000131",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_029",
+    "target": "writer_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_029",
+    "target": "reg_010",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_029",
+    "target": "lang_014",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_029",
+    "target": "song_000068",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_029",
+    "target": "singer_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_030",
+    "target": "reg_007",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_030",
+    "target": "song_000080",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_030",
+    "target": "reg_058",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_030",
+    "target": "concept_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "lang_030",
+    "target": "song_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_003",
+    "target": "lang_007",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_003",
+    "target": "singer_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_003",
+    "target": "lang_006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_003",
+    "target": "singer_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_003",
+    "target": "concept_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_004",
+    "target": "writer_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_004",
+    "target": "reg_012",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_004",
+    "target": "song_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_004",
+    "target": "lang_002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_004",
+    "target": "lang_006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_005",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_005",
+    "target": "singer_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_005",
+    "target": "reg_056",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_007",
+    "target": "singer_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_007",
+    "target": "writer_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_007",
+    "target": "reg_013",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_007",
+    "target": "reg_008",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_008",
+    "target": "reg_018",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_008",
+    "target": "song_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_008",
+    "target": "lang_002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_008",
+    "target": "song_000087",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_009",
+    "target": "lang_010",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_009",
+    "target": "reg_006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_009",
+    "target": "song_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_010",
+    "target": "song_000076",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_011",
+    "target": "concept_000036",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_011",
+    "target": "reg_044",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_011",
+    "target": "reg_028",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_011",
+    "target": "concept_000019",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_012",
+    "target": "song_000105",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_012",
+    "target": "concept_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_012",
+    "target": "writer_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_012",
+    "target": "reg_047",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_013",
+    "target": "song_000087",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_013",
+    "target": "reg_055",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_013",
+    "target": "singer_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_013",
+    "target": "lang_001",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_014",
+    "target": "song_000091",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_014",
+    "target": "singer_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_015",
+    "target": "song_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_015",
+    "target": "concept_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_017",
+    "target": "lang_002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_017",
+    "target": "writer_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_017",
+    "target": "song_000105",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_017",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_018",
+    "target": "singer_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_018",
+    "target": "concept_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_018",
+    "target": "song_000070",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_018",
+    "target": "song_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_018",
+    "target": "writer_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_019",
+    "target": "singer_000034",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_019",
+    "target": "song_000130",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_019",
+    "target": "concept_000033",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_020",
+    "target": "reg_041",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_021",
+    "target": "writer_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_021",
+    "target": "song_000033",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_021",
+    "target": "song_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_021",
+    "target": "writer_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_021",
+    "target": "writer_000016",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_022",
+    "target": "song_000085",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_022",
+    "target": "singer_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_022",
+    "target": "concept_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_022",
+    "target": "song_000049",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_022",
+    "target": "song_000028",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_023",
+    "target": "song_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_023",
+    "target": "song_000132",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_023",
+    "target": "reg_005",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_024",
+    "target": "song_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_024",
+    "target": "concept_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_024",
+    "target": "reg_015",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_024",
+    "target": "reg_002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_024",
+    "target": "writer_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_025",
+    "target": "song_000063",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_025",
+    "target": "lang_025",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_025",
+    "target": "song_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_025",
+    "target": "song_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_025",
+    "target": "singer_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_026",
+    "target": "song_000087",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_026",
+    "target": "singer_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_026",
+    "target": "singer_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_026",
+    "target": "reg_035",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_026",
+    "target": "reg_049",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_028",
+    "target": "reg_047",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_028",
+    "target": "song_000111",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_028",
+    "target": "singer_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_028",
+    "target": "song_000109",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_028",
+    "target": "writer_000009",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_029",
+    "target": "song_000074",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_029",
+    "target": "concept_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_029",
+    "target": "concept_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_029",
+    "target": "song_000081",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_029",
+    "target": "writer_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_030",
+    "target": "song_000101",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_030",
+    "target": "song_000096",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_030",
+    "target": "writer_000036",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_030",
+    "target": "song_000018",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_031",
+    "target": "singer_000034",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_031",
+    "target": "reg_019",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_031",
+    "target": "song_000114",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_032",
+    "target": "writer_000053",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_032",
+    "target": "song_000016",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_032",
+    "target": "writer_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_033",
+    "target": "singer_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_033",
+    "target": "singer_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_033",
+    "target": "song_000106",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_033",
+    "target": "reg_017",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_034",
+    "target": "song_000053",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_035",
+    "target": "song_000125",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_035",
+    "target": "writer_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_035",
+    "target": "singer_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_035",
+    "target": "singer_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_035",
+    "target": "song_000108",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_036",
+    "target": "lang_029",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_037",
+    "target": "song_000083",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_037",
+    "target": "concept_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_037",
+    "target": "writer_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_037",
+    "target": "song_000105",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_038",
+    "target": "song_000100",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_038",
+    "target": "reg_006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_038",
+    "target": "song_000085",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_038",
+    "target": "song_000102",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_038",
+    "target": "singer_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_039",
+    "target": "song_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_039",
+    "target": "song_000010",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_039",
+    "target": "reg_042",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_039",
+    "target": "reg_009",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_039",
+    "target": "song_000041",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_040",
+    "target": "song_000083",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_040",
+    "target": "writer_000048",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_040",
+    "target": "lang_003",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_040",
+    "target": "reg_032",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_041",
+    "target": "song_000004",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_041",
+    "target": "reg_006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_041",
+    "target": "concept_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_042",
+    "target": "reg_051",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_042",
+    "target": "lang_008",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_042",
+    "target": "song_000046",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_042",
+    "target": "concept_000005",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_042",
+    "target": "singer_000015",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_043",
+    "target": "writer_000011",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_043",
+    "target": "song_000051",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_043",
+    "target": "writer_000033",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_043",
+    "target": "song_000042",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_043",
+    "target": "singer_000040",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_044",
+    "target": "writer_000047",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_044",
+    "target": "song_000087",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_044",
+    "target": "song_000083",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_044",
+    "target": "singer_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_044",
+    "target": "singer_000045",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_045",
+    "target": "song_000100",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_045",
+    "target": "song_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_045",
+    "target": "song_000083",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_045",
+    "target": "concept_000007",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_046",
+    "target": "reg_030",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_046",
+    "target": "writer_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_046",
+    "target": "reg_002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_046",
+    "target": "writer_000051",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_046",
+    "target": "singer_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_047",
+    "target": "singer_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_047",
+    "target": "writer_000016",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_047",
+    "target": "singer_000002",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_047",
+    "target": "song_000105",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_047",
+    "target": "singer_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_048",
+    "target": "reg_039",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_048",
+    "target": "writer_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_048",
+    "target": "concept_000024",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_048",
+    "target": "song_000029",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_048",
+    "target": "writer_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_049",
+    "target": "reg_024",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_049",
+    "target": "concept_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_049",
+    "target": "song_000030",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_049",
+    "target": "reg_013",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_049",
+    "target": "song_000106",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_050",
+    "target": "lang_029",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_050",
+    "target": "song_000082",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_050",
+    "target": "song_000129",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_050",
+    "target": "singer_000006",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_050",
+    "target": "reg_013",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_051",
+    "target": "reg_041",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_051",
+    "target": "concept_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_051",
+    "target": "concept_000031",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_051",
+    "target": "reg_038",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_051",
+    "target": "song_000065",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_052",
+    "target": "reg_047",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_052",
+    "target": "reg_051",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_052",
+    "target": "lang_004",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_052",
+    "target": "reg_056",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_052",
+    "target": "concept_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_053",
+    "target": "song_000095",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_053",
+    "target": "song_000001",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_053",
+    "target": "concept_000043",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_053",
+    "target": "singer_000017",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_053",
+    "target": "writer_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_054",
+    "target": "writer_000041",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_054",
+    "target": "reg_034",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_054",
+    "target": "reg_003",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_054",
+    "target": "reg_022",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_054",
+    "target": "song_000077",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_055",
+    "target": "concept_000016",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_055",
+    "target": "writer_000046",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_055",
+    "target": "song_000103",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_055",
+    "target": "song_000119",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_055",
+    "target": "reg_044",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_056",
+    "target": "song_000137",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_056",
+    "target": "lang_010",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_056",
+    "target": "song_000041",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_056",
+    "target": "song_000131",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_056",
+    "target": "concept_000035",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_057",
+    "target": "concept_000013",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_057",
+    "target": "reg_034",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_057",
+    "target": "writer_000026",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_057",
+    "target": "reg_045",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_057",
+    "target": "lang_003",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_058",
+    "target": "song_000003",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_058",
+    "target": "writer_000046",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_058",
+    "target": "song_000131",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_058",
+    "target": "concept_000032",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_058",
+    "target": "writer_000025",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_059",
+    "target": "singer_000014",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_059",
+    "target": "writer_000050",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_059",
+    "target": "writer_000037",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_059",
+    "target": "song_000039",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_059",
+    "target": "writer_000020",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_060",
+    "target": "reg_041",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_060",
+    "target": "singer_000027",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_060",
+    "target": "concept_000038",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_060",
+    "target": "song_000095",
+    "type": "associated_with"
+  },
+  {
+    "source": "reg_060",
+    "target": "singer_000042",
+    "type": "associated_with"
+  }
+]

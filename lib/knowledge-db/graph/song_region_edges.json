@@ -1,0 +1,827 @@
+[
+  {
+    "source": "song_000001",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000002",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000003",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000004",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000005",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000005",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000006",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000007",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000008",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000009",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000010",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000011",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000012",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000013",
+    "target": "reg_005",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000013",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000014",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000014",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000015",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000016",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000017",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000018",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000019",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000020",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000020",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000021",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000022",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000023",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000024",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000025",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000026",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000027",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000028",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000028",
+    "target": "reg_011",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000029",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000030",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000031",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000032",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000033",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000034",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000034",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000035",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000036",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000036",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000037",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000038",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000038",
+    "target": "reg_012",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000039",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000040",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000041",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000042",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000043",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000044",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000044",
+    "target": "reg_019",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000045",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000046",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000047",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000047",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000048",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000049",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000050",
+    "target": "reg_017",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000050",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000051",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000051",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000052",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000053",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000054",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000055",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000056",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000057",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000058",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000059",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000059",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000061",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000062",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000063",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000064",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000065",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000065",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000066",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000067",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000068",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000069",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000070",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000071",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000073",
+    "target": "reg_033",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000073",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000074",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000074",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000075",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000076",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000077",
+    "target": "reg_041",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000078",
+    "target": "reg_041",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000080",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000081",
+    "target": "reg_023",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000082",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000082",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000083",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000083",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000084",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000085",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000086",
+    "target": "reg_015",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000087",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000088",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000089",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000091",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000092",
+    "target": "reg_005",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000092",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000093",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000094",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000095",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000096",
+    "target": "reg_023",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000097",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000098",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000099",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000100",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000101",
+    "target": "reg_032",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000102",
+    "target": "reg_032",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000103",
+    "target": "reg_040",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000104",
+    "target": "reg_031",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000105",
+    "target": "reg_037",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000106",
+    "target": "reg_045",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000107",
+    "target": "reg_030",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000108",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000108",
+    "target": "reg_010",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000109",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000109",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000110",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000111",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000111",
+    "target": "reg_020",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000112",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000112",
+    "target": "reg_007",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000113",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000113",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000114",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000115",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000115",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000116",
+    "target": "reg_002",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000117",
+    "target": "reg_013",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000117",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000118",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000119",
+    "target": "reg_027",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000119",
+    "target": "reg_008",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000120",
+    "target": "reg_014",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000121",
+    "target": "reg_009",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000122",
+    "target": "reg_016",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000123",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000123",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000124",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000125",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000126",
+    "target": "reg_019",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000127",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000128",
+    "target": "reg_006",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000128",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000129",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000130",
+    "target": "reg_015",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000130",
+    "target": "reg_014",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000131",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000132",
+    "target": "reg_014",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000133",
+    "target": "reg_009",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000134",
+    "target": "reg_001",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000135",
+    "target": "reg_034",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000136",
+    "target": "reg_036",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000137",
+    "target": "reg_015",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000138",
+    "target": "reg_031",
+    "type": "from_region"
+  },
+  {
+    "source": "song_000138",
+    "target": "reg_027",
+    "type": "from_region"
+  }
+]

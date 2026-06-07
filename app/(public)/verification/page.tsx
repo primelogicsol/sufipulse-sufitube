@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -40,8 +40,12 @@ const similarNames = [
   { name: 'Sufi Pulse Official', relationship: 'Not Verified', status: 'unverified' as const },
   { name: 'SufiPulse99', relationship: 'Not Verified', status: 'unverified' as const },
   { name: 'Sufi Pulse Productions Limited (UK)', relationship: 'Independent Entity', status: 'independent' as const },
-  { name: 'SufiPulse Instagram (unauthorized)', relationship: 'Not Verified', status: 'unverified' as const },
+  { name: 'SufiPulse Instagram (@sufipulse)', relationship: 'Not Verified', status: 'unverified' as const },
   { name: 'Sufi Pulse Topic', relationship: 'Auto-generated Platform Channel', status: 'auto' as const },
+  { name: 'Sufi Pulse (Spotify Track)', relationship: 'Independent Creative Work', status: 'independent' as const },
+  { name: 'Sufi Pulse (Sufi Nabz\u0131)', relationship: 'Independent Creative Work', status: 'independent' as const },
+  { name: 'Jupe7us Music', relationship: 'Independent Entity', status: 'independent' as const },
+  { name: 'Sufi Pulse (Anghami Release)', relationship: 'Independent Creative Work', status: 'independent' as const },
 ];
 
 const timeline = [
@@ -492,7 +496,7 @@ export default function VerificationCenter() {
                 <h2 className="v-section-title">Similar Names Registry</h2>
                 <p className="v-section-subtitle">
                   Classification of entities and channels using similar or related names.
-                  This registry is provided for public clarity ΓÇö no affiliations are implied.
+                  This registry is provided for public clarity - no affiliations are implied.
                 </p>
               </div>
 
@@ -512,7 +516,22 @@ export default function VerificationCenter() {
                           {item.name}
                         </td>
                         <td>{item.relationship}</td>
-                        <td><StatusBadge status={item.status} /></td>
+                        <td>
+                          <span style={{
+                            fontSize: '0.6875rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.05em',
+                            color: 'var(--color-text-tertiary)',
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '0.375rem',
+                            padding: '0.25rem 0.625rem',
+                            display: 'inline-block',
+                            whiteSpace: 'nowrap' as const,
+                          }}>
+                            Not Part of Official SufiPulse Ecosystem
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -520,11 +539,14 @@ export default function VerificationCenter() {
               </div>
 
               <div className="v-callout" style={{ marginTop: '2rem' }}>
-                <p style={{ fontStyle: 'normal', fontSize: '0.8125rem' }}>
-                  <strong style={{ color: 'var(--color-text-primary)' }}>Disclaimer:</strong>{' '}
-                  This registry classifies name similarities for public clarity. It does not imply
-                  legal claims, accusations, or disputes. Entities listed as &ldquo;Not Verified&rdquo; are simply
-                  not part of the official SufiPulse institutional ecosystem.
+                <p style={{ fontStyle: 'normal', fontSize: '0.8125rem', lineHeight: 1.75 }}>
+                  Classification of entities, channels, creative works, organizations, and digital properties using similar or related names. This registry is maintained solely for public clarity and institutional identification purposes. Inclusion in this registry does not imply affiliation, endorsement, partnership, ownership, dispute, or legal claim.
+                </p>
+                <p style={{ fontStyle: 'normal', fontSize: '0.8125rem', lineHeight: 1.75, marginTop: '1rem' }}>
+                  Entities classified as Not Verified, Independent Entity, Independent Creative Work, or Auto-generated Platform Channel are not part of the official SufiPulse institutional ecosystem unless explicitly identified elsewhere on this website as an Official Brand, Official Channel, Official Internal Brand, Verified Affiliate, or Official Partner.
+                </p>
+                <p style={{ fontStyle: 'normal', fontSize: '0.8125rem', lineHeight: 1.75, marginTop: '1rem' }}>
+                  The official SufiPulse institutional ecosystem is represented through SufiPulse.com and the verified properties listed within the Official Verification Registry.
                 </p>
               </div>
             </div>

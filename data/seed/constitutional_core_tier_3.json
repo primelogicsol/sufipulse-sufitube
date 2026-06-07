@@ -1,0 +1,181 @@
+{
+  "authority_classes": ["Book"],
+  "publication_states": ["SEEDED"],
+  "constitutional_core_tier_3": [
+    {
+      "entity_id": "core_011",
+      "class": "Book",
+      "canonical_name": "Spiritual Couplets (Masnavi)",
+      "slug": "masnavi",
+      "canonical_impact": "The definitive transmission container for Persian mystical thought, acting as a functional commentary on the Quran for the esoteric path.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Mathnawi", "Mesnevi", "Masnavi-I Ma'navi"],
+      "transmission_graph": [
+        { "target_id": "core_001", "type": "AUTHORED_BY", "target_class": "Person", "name": "Jalal al-Din Rumi" },
+        { "target_id": "core_033", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Nafs" },
+        { "target_id": "core_024", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Fana" },
+        { "target_id": "core_105", "type": "INFLUENCES_ORDER", "target_class": "Order", "name": "Mevlevi Order" },
+        { "target_id": "core_110", "type": "TRANSMITS_KNOWLEDGE", "target_class": "Concept", "name": "Sufi Didactics" }
+      ],
+      "questions": ["q_masnavi_01", "q_masnavi_02", "q_masnavi_03", "q_masnavi_04", "q_masnavi_05"],
+      "evidence_records": ["ev_masnavi_ms1", "ev_masnavi_acad1", "ev_masnavi_hist1"],
+      "citation_paths": ["core_011 -> core_001 -> ev_masnavi_ms1"],
+      "verification": { "status": "Verified", "method": "Universal Historical Transmission", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Quranic Status",
+        "claim_a": "The text is an inspired revelation equal to primary scripture.",
+        "evidence_a": "ev_masnavi_folk",
+        "claim_b": "The text is an esoteric tafsir (exegesis) of the Quran, entirely subordinate to it.",
+        "evidence_b": "ev_masnavi_acad1",
+        "canonical_position": "Esoteric Exegesis",
+        "reasoning": "Rumi himself explicitly frames the Masnavi as the 'roots of the roots of the roots of religion' intended solely to uncover the inner meaning of Islamic law, not replace it."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "Countless verified manuscript copies dating back to the author's immediate disciples." },
+      "readiness_score": 98,
+      "graph_dependency_score": 45,
+      "authority_resilience_score": 96
+    },
+    {
+      "entity_id": "core_012",
+      "class": "Book",
+      "canonical_name": "The Bezels of Wisdom (Fusus al-Hikam)",
+      "slug": "fusus-al-hikam",
+      "canonical_impact": "The ultimate codification of Akbarian metaphysics, summarizing the esoteric wisdom transmitted through twenty-seven prophets.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Fusus", "Bezels of Wisdom", "Seals of Wisdom"],
+      "transmission_graph": [
+        { "target_id": "core_002", "type": "AUTHORED_BY", "target_class": "Person", "name": "Ibn Arabi" },
+        { "target_id": "core_022", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Wahdat al-Wujud" },
+        { "target_id": "core_026", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Baqa" },
+        { "target_id": "core_108", "type": "INFLUENCES_ORDER", "target_class": "Order", "name": "Naqshbandi Order (Mujaddidi critique/synthesis)" },
+        { "target_id": "core_111", "type": "TRANSMITS_KNOWLEDGE", "target_class": "Concept", "name": "Prophetology" }
+      ],
+      "questions": ["q_fusus_01", "q_fusus_02", "q_fusus_03", "q_fusus_04", "q_fusus_05"],
+      "evidence_records": ["ev_fusus_ms1", "ev_fusus_acad1", "ev_fusus_theo1"],
+      "citation_paths": ["core_012 -> core_002 -> ev_fusus_ms1"],
+      "verification": { "status": "Verified", "method": "Autograph Manuscript (Evkaf Museum, Istanbul)", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Origin of the Text",
+        "claim_a": "Dictated verbatim by the Prophet Muhammad in a dream vision.",
+        "evidence_a": "ev_fusus_author_preface",
+        "claim_b": "A synthesis of his lifetime philosophical output.",
+        "evidence_b": "ev_fusus_acad_analysis",
+        "canonical_position": "Visionary Transmission + Intellectual Synthesis",
+        "reasoning": "The graph records the author's explicit visionary claim while acknowledging that the conceptual architecture directly mirrors his broader, lifelong philosophical framework."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "The existence of an autograph manuscript definitively attributes the text." },
+      "readiness_score": 96,
+      "graph_dependency_score": 50,
+      "authority_resilience_score": 95
+    },
+    {
+      "entity_id": "core_016",
+      "class": "Book",
+      "canonical_name": "The Meccan Revelations (Futuhat al-Makkiyya)",
+      "slug": "futuhat-al-makkiyya",
+      "canonical_impact": "The monumental encyclopedic container of Sufi doctrine, cosmology, and jurisprudence that established the vocabulary for all subsequent mysticism.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Futuhat", "Meccan Illuminations", "Al-Futuhat al-Makkiyya"],
+      "transmission_graph": [
+        { "target_id": "core_002", "type": "AUTHORED_BY", "target_class": "Person", "name": "Ibn Arabi" },
+        { "target_id": "core_028", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Murshid" },
+        { "target_id": "core_030", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Dhikr" },
+        { "target_id": "core_112", "type": "INFLUENCES_TRADITION", "target_class": "Institution", "name": "Akbarian School" },
+        { "target_id": "core_113", "type": "TRANSMITS_KNOWLEDGE", "target_class": "Concept", "name": "Cosmology" }
+      ],
+      "questions": ["q_futuhat_01", "q_futuhat_02", "q_futuhat_03", "q_futuhat_04", "q_futuhat_05"],
+      "evidence_records": ["ev_futuhat_ms1", "ev_futuhat_acad1", "ev_futuhat_hist1"],
+      "citation_paths": ["core_016 -> core_002 -> ev_futuhat_acad1"],
+      "verification": { "status": "Verified", "method": "Autograph Manuscript", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Textual Integrity",
+        "claim_a": "The text was heavily interpolated by later heterodox editors.",
+        "evidence_a": "ev_futuhat_apologists",
+        "claim_b": "The text is fundamentally intact as written by the author.",
+        "evidence_b": "ev_futuhat_manuscript_analysis",
+        "canonical_position": "Intact Originality",
+        "reasoning": "Modern critical editions rely on the final draft (the Konya manuscript) written in Ibn Arabi's own hand, dismissing claims of significant later interpolation."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "Verified by multiple surviving volumes in the author's handwriting." },
+      "readiness_score": 97,
+      "graph_dependency_score": 48,
+      "authority_resilience_score": 97
+    },
+    {
+      "entity_id": "core_017",
+      "class": "Book",
+      "canonical_name": "Unveiling the Hidden (Kashf al-Mahjub)",
+      "slug": "kashf-al-mahjub",
+      "canonical_impact": "The earliest systematic manual of Sufism in Persian, definitively bridging early Arabic asceticism with later Persian mystical institutionalization.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Kashf ul Mahjoob", "Revelation of the Veiled", "Kashful Mahjub"],
+      "transmission_graph": [
+        { "target_id": "core_018", "type": "AUTHORED_BY", "target_class": "Person", "name": "Ali Hujwiri (Data Ganj Bakhsh)" },
+        { "target_id": "core_003", "type": "VALIDATES_AUTHORITY_OF", "target_class": "Person", "name": "Junayd of Baghdad" },
+        { "target_id": "core_034", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Silsila" },
+        { "target_id": "core_029", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Murid" },
+        { "target_id": "core_114", "type": "INFLUENCES_TRADITION", "target_class": "Place", "name": "South Asian Sufism" }
+      ],
+      "questions": ["q_kashf_01", "q_kashf_02", "q_kashf_03", "q_kashf_04", "q_kashf_05"],
+      "evidence_records": ["ev_kashf_ms1", "ev_kashf_acad1", "ev_kashf_hist1"],
+      "citation_paths": ["core_017 -> core_018 -> ev_kashf_acad1"],
+      "verification": { "status": "Verified", "method": "Historical Academic Consensus", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Doctrinal Alignment",
+        "claim_a": "Hujwiri advocated for 'sober' Sufism exclusively.",
+        "evidence_a": "ev_kashf_text_analysis",
+        "claim_b": "Hujwiri tolerated 'intoxicated' utterances.",
+        "evidence_b": "ev_kashf_crit1",
+        "canonical_position": "Sober Orthodoxy",
+        "reasoning": "The text explicitly elevates the Junaydian school of 'Sahw' (sobriety) over the 'Sukr' (intoxication) of Bayazid, establishing orthodox boundaries for South Asian Sufism."
+      },
+      "confidence_layer": { "score": "High Confidence", "justification": "Foundational text for all subsequent South Asian hagiographies." },
+      "readiness_score": 93,
+      "graph_dependency_score": 35,
+      "authority_resilience_score": 90
+    },
+    {
+      "entity_id": "core_019",
+      "class": "Book",
+      "canonical_name": "The Revival of the Religious Sciences (Ihya Ulum al-Din)",
+      "slug": "ihya-ulum-al-din",
+      "canonical_impact": "The definitive synthesis that successfully legitimized Sufism as an indispensable inward science of orthodox Islamic jurisprudence.",
+      "status": "PUBLISHED",
+      "protected_class": "Constitutional Entity",
+      "governance_node": "inst_001",
+      "aliases": ["Ihya", "Revivification of the Sciences of Religion", "Ihya Ulum ud-Din"],
+      "transmission_graph": [
+        { "target_id": "core_020", "type": "AUTHORED_BY", "target_class": "Person", "name": "Abu Hamid Al-Ghazali" },
+        { "target_id": "core_031", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Ihsan" },
+        { "target_id": "core_032", "type": "PRESERVES_CONCEPT", "target_class": "Concept", "name": "Tazkiyah" },
+        { "target_id": "core_115", "type": "INFLUENCES_TRADITION", "target_class": "Institution", "name": "Sunni Orthodoxy" },
+        { "target_id": "core_116", "type": "TRANSMITS_KNOWLEDGE", "target_class": "Concept", "name": "Spiritual Ethics (Akhlaq)" }
+      ],
+      "questions": ["q_ihya_01", "q_ihya_02", "q_ihya_03", "q_ihya_04", "q_ihya_05"],
+      "evidence_records": ["ev_ihya_ms1", "ev_ihya_acad1", "ev_ihya_hist1"],
+      "citation_paths": ["core_019 -> core_020 -> ev_ihya_acad1"],
+      "verification": { "status": "Verified", "method": "Universal Academic & Historical Consensus", "timestamp": "2026-06-07T00:00:00Z" },
+      "canonical_authority_layer": {
+        "dispute": "Orthodox Acceptance",
+        "claim_a": "The text was rejected by orthodox jurists.",
+        "evidence_a": "ev_ihya_burnings (Andalusian context)",
+        "claim_b": "The text became the gold standard of Sunni orthodoxy.",
+        "evidence_b": "ev_ihya_consensus",
+        "canonical_position": "Universal Synthesis",
+        "reasoning": "Despite isolated early burnings in Al-Andalus, the Ihya rapidly achieved universal acceptance, successfully integrating esoteric practice with exoteric law."
+      },
+      "confidence_layer": { "score": "Verified", "justification": "One of the most widely copied and distributed texts in Islamic history." },
+      "readiness_score": 99,
+      "graph_dependency_score": 55,
+      "authority_resilience_score": 98
+    }
+  ]
+}
