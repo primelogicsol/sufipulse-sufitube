@@ -5,45 +5,35 @@ import Link from 'next/link';
 
 export default function KnowledgeClient({ entities, initialClass = 'all', stats }: { entities: any[], initialClass?: string, stats?: any }) {
   const [search, setSearch] = useState('');
-  const [activeClasses, setActiveClasses] = useState<string[]>(initialClass !== 'all' ? [initialClass] : []);
+  const [activeClass, setActiveClass] = useState(initialClass);
 
   useEffect(() => {
-    setActiveClasses(initialClass !== 'all' ? [initialClass] : []);
+    setActiveClass(initialClass);
   }, [initialClass]);
 
-  const toggleClass = (c: string) => {
-    if (c === 'all') {
-      setActiveClasses([]);
-      return;
-    }
-    setActiveClasses(prev => 
-      prev.includes(c) ? prev.filter(cls => cls !== c) : [...prev, c]
-    );
-  };
-
   const filtered = entities.filter(entity => {
-    const eClasses = entity.classes || [entity.class];
-    const matchClass = activeClasses.length === 0 || activeClasses.every(ac => eClasses.includes(ac));
-    const searchString = `${entity.title} ${entity.aliases?.join(' ')} ${entity.class} ${eClasses.join(' ')}`.toLowerCase();
+    // Single-select: match if entity's classes array contains the active filter
+    const eClasses: string[] = entity.classes || [entity.class];
+    const matchClass = activeClass === 'all' || eClasses.includes(activeClass);
+    const searchString = `${entity.title} ${entity.aliases?.join(' ') || ''}`.toLowerCase();
     const matchSearch = searchString.includes(search.toLowerCase());
     return matchClass && matchSearch;
   }).sort((a, b) => a.title.localeCompare(b.title));
 
-  // Use fixed order for major classes to make UI deterministic and ensure all requested filters are visible
+  // Fixed order for all required filter classes
   const requestedFilters = [
     'person', 'singer', 'poet', 'writer', 'song', 'release', 'album', 'concept', 'tradition', 'order',
     'root', 'concepts', 'works', 'publication', 'artist', 'channel', 'saint', 'practice', 'spiritualstate',
-    'musicaltradition', 'article'
+    'musicaltradition', 'article', 'scholar'
   ];
-  const dataClasses = Array.from(new Set(entities.flatMap(e => e.classes || [e.class])));
-  // Ensure all requested filters are present even if empty
+  const dataClasses = Array.from(new Set(entities.flatMap((e: any) => e.classes || [e.class])));
   const availableClasses = Array.from(new Set([...requestedFilters, ...dataClasses]));
 
-  // Pre-calculate counts for each filter class
-  const classCounts = availableClasses.reduce((acc: Record<string, number>, c) => {
-    acc[c] = entities.filter(e => (e.classes || [e.class]).includes(c)).length;
-    return acc;
-  }, {});
+  // Pre-calculate counts: how many entities have this class in their classes array
+  const classCounts: Record<string, number> = {};
+  availableClasses.forEach(c => {
+    classCounts[c] = entities.filter((e: any) => (e.classes || [e.class]).includes(c)).length;
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12">
@@ -126,19 +116,19 @@ export default function KnowledgeClient({ entities, initialClass = 'all', stats 
             <span className="text-xs font-mono text-[#776B60] uppercase mr-2">Filter Class:</span>
             
             <button 
-              onClick={() => toggleClass('all')}
-              className={`px-4 py-2 text-[10px] font-mono uppercase tracking-widest border transition-colors ${activeClasses.length === 0 ? 'bg-[#2A241F] text-[#f7f3ec] border-[#2A241F]' : 'bg-[#e8e2d5] text-[#3A322B] border-[#d8d2c6] hover:border-[#2A241F]'}`}
+              onClick={() => setActiveClass('all')}
+              className={`px-4 py-2 text-[10px] font-mono uppercase tracking-widest border transition-colors ${activeClass === 'all' ? 'bg-[#2A241F] text-[#f7f3ec] border-[#2A241F]' : 'bg-[#e8e2d5] text-[#3A322B] border-[#d8d2c6] hover:border-[#2A241F]'}`}
             >
               All Classes ({entities.length})
             </button>
             
             {availableClasses.map(c => {
-              const isActive = activeClasses.includes(c);
+              const isActive = activeClass === c;
               const count = classCounts[c] || 0;
               return (
                 <button 
                   key={c}
-                  onClick={() => toggleClass(c)}
+                  onClick={() => setActiveClass(isActive ? 'all' : c)}
                   className={`px-4 py-2 text-[10px] font-mono uppercase tracking-widest border transition-colors ${isActive ? 'bg-[#2A241F] text-[#f7f3ec] border-[#2A241F]' : 'bg-[#e8e2d5] text-[#3A322B] border-[#d8d2c6] hover:border-[#2A241F]'}`}
                 >
                   {c.toUpperCase()} ({count})
@@ -147,7 +137,7 @@ export default function KnowledgeClient({ entities, initialClass = 'all', stats 
             })}
             
             <button 
-              onClick={() => { setSearch(''); setActiveClasses([]); }}
+              onClick={() => { setSearch(''); setActiveClass('all'); }}
               className="px-4 py-2 text-[10px] font-mono uppercase tracking-widest border border-[#d8d2c6] text-[#776B60] hover:text-[#2A241F] ml-auto"
             >
               Reset Filters
@@ -159,23 +149,21 @@ export default function KnowledgeClient({ entities, initialClass = 'all', stats 
       {filtered.length === 0 ? (
         <div className="text-center py-24 border border-[#d8d2c6] bg-[#faf7f2]">
           <h3 className="text-2xl font-serif text-[#3A322B] mb-2">No entities found.</h3>
-          <p className="text-[#776B60]">Try adjusting your search criteria or unselecting some classes.</p>
+          <p className="text-[#776B60]">Try adjusting your search criteria or selecting a different class.</p>
           {initialClass === 'all' && (
-            <button onClick={() => { setSearch(''); setActiveClasses([]); }} className="mt-6 uppercase text-[10px] font-mono tracking-widest text-[#2A241F] border border-[#2A241F] px-4 py-2 hover:bg-[#2A241F] hover:text-[#f7f3ec] transition-colors">Clear all filters</button>
+            <button onClick={() => { setSearch(''); setActiveClass('all'); }} className="mt-6 uppercase text-[10px] font-mono tracking-widest text-[#2A241F] border border-[#2A241F] px-4 py-2 hover:bg-[#2A241F] hover:text-[#f7f3ec] transition-colors">Clear all filters</button>
           )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map(entity => (
-            <Link key={entity.slug} href={`/knowledge/${entity.class}s/${entity.slug}`} className="block group">
+            <Link key={entity.id || entity.slug} href={`/knowledge/${entity.class}s/${entity.slug}`} className="block group">
               <div className="border border-[#d8d2c6] p-6 hover:border-[#2A241F] bg-[#faf7f2] transition-colors h-full flex flex-col justify-between">
                 <div>
-                  <div className="flex flex-wrap gap-2 items-start mb-3">
-                    {(entity.classes || [entity.class]).map((cls: string, idx: number) => (
-                      <div key={idx} className="text-[10px] font-mono text-[#2A241F] uppercase tracking-widest bg-[#e8e2d5] inline-block px-2 py-1">
-                        {cls}
-                      </div>
-                    ))}
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="text-[10px] font-mono text-[#2A241F] uppercase tracking-widest bg-[#e8e2d5] inline-block px-2 py-1">
+                      {entity.class}
+                    </div>
                     {entity.source === 'constitutional_core' && (
                       <div className="text-[10px] font-mono text-[#8a7a6c] uppercase tracking-widest border border-[#d8d2c6] px-2 py-1">
                         Constitutional

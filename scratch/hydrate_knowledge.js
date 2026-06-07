@@ -363,11 +363,13 @@ unifiedMap.forEach(entity => {
   }
 });
 
-// Ensure all entities have classes array
+// Ensure all entities have classes array, normalize to lowercase, deduplicate
 const finalEntities = Array.from(unifiedMap.values()).map(e => {
+  e.class = (e.class || 'concept').toLowerCase();
   if (!e.classes) {
     e.classes = [e.class];
   }
+  e.classes = [...new Set(e.classes.map(c => c.toLowerCase()))];
   return e;
 });
 
