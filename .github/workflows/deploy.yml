@@ -10,8 +10,42 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # ── Step 1: Verify the build passes on Linux before touching Docker ──────────
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run build (Linux, same env as Docker)
+        env:
+          CI: 'true'
+          SKIP_ENV_VALIDATION: 'true'
+          NEXT_TELEMETRY_DISABLED: '1'
+          SENTRY_DISABLE_AUTO_UPLOAD: 'true'
+          NODE_ENV: production
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com' }}
+          NEXT_PUBLIC_API_URL: /api
+          NEXT_PUBLIC_YOUTUBE_CHANNEL_ID: ${{ secrets.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ' }}
+          NEXT_PUBLIC_YOUTUBE_API_KEY: ${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS: 'false'
+        run: npm run build
+
+  # ── Step 2: Build Docker image and deploy ───────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
+    needs: build-test
 
     permissions:
       contents: read
