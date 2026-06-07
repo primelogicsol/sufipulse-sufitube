@@ -13,20 +13,22 @@ RUN npm install
 # 2. Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
-# Build-time env vars — disable all env/secret validation during image build
+# Set these FIRST — before any COPY so prebuild/predev scripts see them
 ENV CI=true
 ENV SKIP_ENV_VALIDATION=true
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SENTRY_DISABLE_AUTO_UPLOAD=true
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
 # Accept NEXT_PUBLIC vars at build time (baked into client bundle)
-ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ARG NEXT_PUBLIC_APP_URL=https://sufipulse.com
 ARG NEXT_PUBLIC_API_URL=/api
 ARG NEXT_PUBLIC_YOUTUBE_API_KEY=""
-ARG NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=""
+ARG NEXT_PUBLIC_YOUTUBE_CHANNEL_ID="UCraDr3i5A3k0j7typ6tOOsQ"
 ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=""
 ARG NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS="false"
 ARG NEXT_PUBLIC_APP_COMMIT=unknown
