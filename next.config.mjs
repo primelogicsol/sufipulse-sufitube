@@ -117,5 +117,8 @@ const sentryWebpackPluginOptions = {
   telemetry: false,
 };
 
-export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
- 
+const isCIBuild = process.env.CI === 'true' || process.env.SENTRY_DISABLE_AUTO_UPLOAD === 'true';
+
+export default isCIBuild
+  ? nextConfig
+  : withSentryConfig(nextConfig, sentryWebpackPluginOptions);

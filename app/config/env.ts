@@ -42,7 +42,7 @@ export const env = createEnv({
     SMTP_SECURE: z
       .string()
       .transform((v) => v === "true")
-      .default(false),
+      .default("false"),
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     FROM_EMAIL: z.string().optional().default("noreply@sufipulse.com"),

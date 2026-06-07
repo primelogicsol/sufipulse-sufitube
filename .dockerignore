@@ -25,6 +25,7 @@ build
 .env.development
 .env.vps
 .env.test
+.sentryclirc
 
 # Debug
 npm-debug.log*
