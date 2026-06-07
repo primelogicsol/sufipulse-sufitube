@@ -47,6 +47,11 @@ jobs:
           NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS: 'false'
         run: |
           set -o pipefail
+          mkdir -p .data
+          echo "[]" > .data/constitutional_core.json
+          echo "[]" > .data/unified_knowledge.json
+          echo "[]" > .data/cms-releases.json
+          echo "[]" > .data/articles.json
           npm run build 2>&1 | tee /tmp/build-output.log
           BUILD_STATUS=${PIPESTATUS[0]}
           if [ "$BUILD_STATUS" -ne 0 ]; then

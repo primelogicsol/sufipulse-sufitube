@@ -41,6 +41,12 @@ ENV NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=$NEXT_PUBLIC_YOUTUBE_CHANNEL_ID
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS=$NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS
 ENV NEXT_PUBLIC_APP_COMMIT=$NEXT_PUBLIC_APP_COMMIT
+# Stub out .data JSON files so Next.js static evaluation doesn't throw ENOENT
+RUN mkdir -p .data \
+    && echo "[]" > .data/constitutional_core.json \
+    && echo "[]" > .data/unified_knowledge.json \
+    && echo "[]" > .data/cms-releases.json \
+    && echo "[]" > .data/articles.json
 
 # Build the application
 RUN npm run build
