@@ -20,6 +20,8 @@ ENV SKIP_ENV_VALIDATION=true
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SENTRY_DISABLE_AUTO_UPLOAD=true
 ENV NODE_ENV=production
+# Increase Node.js heap to prevent OOM on memory-constrained CI runners
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
