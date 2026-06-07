@@ -5,7 +5,12 @@ import path from 'path';
 
 export default async function ArchiveHome() {
   const dataPath = path.join(process.cwd(), '.data', 'constitutional_core.json');
-  const entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+  let entities: any[] = [];
+  try {
+    if (fs.existsSync(dataPath)) {
+      entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    }
+  } catch (e) {}
   
   // Fake some archive entries for functionality
   const archiveRecords = entities.slice(0, 10);

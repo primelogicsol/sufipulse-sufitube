@@ -5,7 +5,12 @@ import path from 'path';
 
 export default async function ResearchHome() {
   const dataPath = path.join(process.cwd(), '.data', 'constitutional_core.json');
-  const entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+  let entities: any[] = [];
+  try {
+    if (fs.existsSync(dataPath)) {
+      entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    }
+  } catch (e) {}
   
   const researchPaths = entities.slice(10, 20);
 

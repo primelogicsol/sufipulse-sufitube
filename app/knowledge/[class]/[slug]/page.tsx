@@ -8,7 +8,12 @@ export default async function KnowledgeEntityPage({ params }: { params: Promise<
   const { class: urlClass, slug } = resolvedParams;
 
   const dataPath = path.join(process.cwd(), '.data', 'unified_knowledge.json');
-  const entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+  let entities: any[] = [];
+  try {
+    if (fs.existsSync(dataPath)) {
+      entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    }
+  } catch (e) {}
   
   const entity = entities.find((e: any) => e.slug === slug || e.id === slug);
 

@@ -5,7 +5,12 @@ import KnowledgeClient from './KnowledgeClient';
 
 export default async function KnowledgeHome() {
   const dataPath = path.join(process.cwd(), '.data', 'unified_knowledge.json');
-  const entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+  let entities: any[] = [];
+  try {
+    if (fs.existsSync(dataPath)) {
+      entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    }
+  } catch (e) {}
 
   // Calculate stats for the Knowledge Landing Page
   const stats = {

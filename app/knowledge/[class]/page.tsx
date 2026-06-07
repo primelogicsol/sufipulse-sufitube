@@ -25,7 +25,12 @@ export default async function KnowledgeClassHome({ params }: { params: Promise<{
   const targetClass = classMap[urlClass] || urlClass;
 
   const dataPath = path.join(process.cwd(), '.data', 'unified_knowledge.json');
-  const entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+  let entities: any[] = [];
+  try {
+    if (fs.existsSync(dataPath)) {
+      entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    }
+  } catch (e) {}
 
   return <KnowledgeClient entities={entities} initialClass={targetClass} />;
 }
