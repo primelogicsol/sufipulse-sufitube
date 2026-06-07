@@ -52,6 +52,7 @@ jobs:
           echo "[]" > .data/unified_knowledge.json
           echo "[]" > .data/cms-releases.json
           echo "[]" > .data/articles.json
+          echo "{}" > .data/registries.json
           npm run build 2>&1 | tee /tmp/build-output.log
           BUILD_STATUS=${PIPESTATUS[0]}
           if [ "$BUILD_STATUS" -ne 0 ]; then
@@ -211,6 +212,9 @@ jobs:
 
             _s="docker-up"
             docker compose -p sufipulse_new up -d --force-recreate app
+
+            # Ensure mounted volume has correct ownership so the app and seed-admin can write to it
+            docker compose -p sufipulse_new exec -T -u root app chown -R node:node /app/.data
 
             # ── HEALTH CHECK ─────────────────────────────────────────────────
             _s="health-check"

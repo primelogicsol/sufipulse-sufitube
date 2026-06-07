@@ -46,7 +46,8 @@ RUN mkdir -p .data \
     && echo "[]" > .data/constitutional_core.json \
     && echo "[]" > .data/unified_knowledge.json \
     && echo "[]" > .data/cms-releases.json \
-    && echo "[]" > .data/articles.json
+    && echo "[]" > .data/articles.json \
+    && echo "{}" > .data/registries.json
 
 # Build the application
 RUN npm run build
