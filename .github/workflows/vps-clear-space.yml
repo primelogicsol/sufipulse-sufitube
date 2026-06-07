@@ -1,0 +1,36 @@
+name: VPS Clear Space (Safe)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clear-space:
+    name: Clear Safe Logs and Dangling Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clear Space
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            echo "Current Disk Space:"
+            df -h
+            echo ""
+            echo "1. Vacuuming journald logs to 100M max..."
+            journalctl --vacuum-size=100M || true
+            
+            echo "2. Clearing apt cache..."
+            apt-get clean || true
+            
+            echo "3. Removing dangling (un-tagged) Docker images..."
+            docker image prune -f || true
+            
+            echo "4. Removing Docker builder cache..."
+            docker builder prune -f || true
+            
+            echo ""
+            echo "Disk Space After Safe Cleanup:"
+            df -h
