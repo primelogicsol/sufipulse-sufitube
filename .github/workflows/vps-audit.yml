@@ -1,0 +1,60 @@
+name: VPS Audit (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  audit-vps:
+    name: Audit VPS Disk and Docker State
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Audit Commands
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -u
+            echo "=========================================================="
+            echo " PHASE 1: DISK USAGE (Immediate Failure Suspect)"
+            echo "=========================================================="
+            df -h
+            echo ""
+            docker system df
+            echo ""
+            echo "=========================================================="
+            echo " PHASE 2: INVENTORY EVERYTHING"
+            echo "=========================================================="
+            pwd
+            echo ""
+            docker ps -a
+            echo ""
+            docker images
+            echo ""
+            docker volume ls
+            echo ""
+            docker network ls
+            echo ""
+            ss -tulpn || netstat -tulpn
+            echo ""
+            ls -lah /var/www
+            echo ""
+            echo "=========================================================="
+            echo " PHASE 3: IDENTIFY ACTIVE CONTAINERS & VOLUMES"
+            echo "=========================================================="
+            docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.Status}}"
+            echo ""
+            docker volume inspect sufipulse_new_data || true
+            docker volume inspect sufipulse_new_backups || true
+            docker volume inspect sufipulse_new_audit || true
+            echo ""
+            echo "=========================================================="
+            echo " PHASE 4: FIND OLD TEST SITES"
+            echo "=========================================================="
+            find /var/www -maxdepth 2 -type f -name "docker-compose.yml" -exec grep -H "ghcr.io" {} \; || true
+            echo ""
+            echo "=========================================================="
+            echo " AUDIT COMPLETE"
+            echo "=========================================================="
