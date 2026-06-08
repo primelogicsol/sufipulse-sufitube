@@ -133,6 +133,9 @@ export function Footer() {
               <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)]">
                 Institutional stewardship of sacred kalam through transparent governance and disciplined production.
               </p>
+              <p className="text-[var(--text-xs)] text-[var(--color-text-primary)]">
+                Sponsored by <a href="https://primelogicsol.com/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">Prime Logic Solutions USA</a>
+              </p>
               <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
                 &copy; {currentYear} All rights reserved.
               </p>
@@ -159,9 +162,9 @@ export function Footer() {
                   desc="Ethical commerce and creative expression"
                 />
                 <ExtensionLink 
-                  href="https://primelogicsol.com/" 
-                  title="Prime Logic Solutions USA"
-                  desc="Secure infrastructure and digital systems"
+                  href="https://ifpb.sufisciencecenter.info/" 
+                  title="Interfaith Peace Bridge USA"
+                  desc="Peace and dialogue platform."
                 />
               </div>
             </div>
