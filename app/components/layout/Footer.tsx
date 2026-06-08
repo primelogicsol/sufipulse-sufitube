@@ -134,7 +134,7 @@ export function Footer() {
                 Institutional stewardship of sacred kalam through transparent governance and disciplined production.
               </p>
               <p className="text-[var(--text-xs)] text-[var(--color-text-primary)]">
-                Sponsored by <a href="https://primelogicsol.com/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">Prime Logic Solutions USA</a>
+                Sponsored by <a href="https://primelogicsol.com/" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)]">Prime Logic Solutions USA</a>
               </p>
               <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
                 &copy; {currentYear} All rights reserved.
