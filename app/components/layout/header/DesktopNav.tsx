@@ -31,7 +31,7 @@ export function DesktopNav() {
         />
       </Link>
       <Link
-        href="/knowledge"
+        href="releases"
         className={`
           text-nowrap
           transition-colors
@@ -43,7 +43,7 @@ export function DesktopNav() {
           }
         `.trim()}
       >
-        Knowledge Archive
+        Sufi Songs
       </Link>
       <Link
         href="/literary-journal"

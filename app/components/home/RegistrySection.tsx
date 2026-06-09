@@ -67,10 +67,10 @@ export function RegistrySection({ featuredReleases, recentReleases, loading }: R
         <PageContainer>
           <div className="max-w-6xl mx-auto mb-12 sm:text-center">
             <div className="inline-block px-3 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded text-[var(--text-xs)] text-[var(--color-gold)] uppercase tracking-widest font-semibold mb-4">
-              Registry Highlights
+              Songs Registry Highlights
             </div>
             <h2 className="text-[var(--text-section)] font-bold text-[var(--color-text-primary)] mb-4 leading-[1.2]">
-              Registry Highlights
+              Songs Registry Highlights
             </h2>
             <p className="text-[var(--text-base)] md:text-[var(--text-lg)] text-[var(--color-text-secondary)] max-w-2xl md:mx-auto leading-[var(--leading-relaxed)]">
               Curated selections from the institutional registry of approved and distributed works.
@@ -164,7 +164,7 @@ export function RegistrySection({ featuredReleases, recentReleases, loading }: R
             <div className="text-center mb-16">
               <Badge variant="gold">Latest Submissions</Badge>
               <h2 className="text-[var(--text-section)] font-bold text-[var(--color-text-primary)] mt-4">
-                Recent Registry Entries
+                Recent Songs Registry Entries
               </h2>
             </div>
 
