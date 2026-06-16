@@ -241,7 +241,7 @@ jobs:
 
             # ── CLEANUP ──────────────────────────────────────────────────────
             _s="cleanup"
-            docker image prune -f
+            docker image prune -af
 
             # ── VERIFY ───────────────────────────────────────────────────────
             _s="verify"

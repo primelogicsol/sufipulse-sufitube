@@ -596,7 +596,7 @@ export default function Releases() {
                                 {/* Search Row */}
                                 <div className="flex flex-col md:flex-row gap-4">
                                     <div className="relative flex-1">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] w-5 h-5" />
+                                        <Search className="absolute left-4 top-1/3 -translate-y-1/2 text-[var(--color-text-tertiary)] w-5 h-5" />
                                         <input 
                                             type="text" 
                                             placeholder="Search title, vocalist, writer, or tags..."
