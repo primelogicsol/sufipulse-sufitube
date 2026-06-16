@@ -196,6 +196,7 @@ jobs:
             _e GOOGLE_ADS_LOGIN_CUSTOMER_ID "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
             _e GOOGLE_ADS_CREATE_MODE       "manual_review"
             _e SMTP_PASS                    "${{ secrets.SMTP_PASS }}"
+            _e YOUTUBE_REFRESH_TOKEN     "${{ secrets.YOUTUBE_REFRESH_TOKEN }}"
 
             # ── GHCR AUTH ────────────────────────────────────────────────────
             _s="docker-login"

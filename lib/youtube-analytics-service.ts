@@ -181,12 +181,10 @@ export const youtubeAnalyticsService = {
     } catch (error: any) {
       console.error('[youtubeAnalyticsService] API Health Check Failed:', error);
       
-      const isMissingCreds = error.message?.includes('credentials missing');
-      
       const errorSnapshot: AnalyticsSnapshot = {
         ...current,
-        status: isMissingCreds ? (current.status || 'active') : 'error',
-        errorMessage: isMissingCreds ? undefined : (error.message || 'Unknown refresh error'),
+        status: 'error',
+        errorMessage: error.message || 'Unknown refresh error',
         lastUpdated: current.lastUpdated,
         
         // Preserve verified baseline even on error
