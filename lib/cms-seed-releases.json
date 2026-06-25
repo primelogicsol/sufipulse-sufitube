@@ -1,5 +1,32 @@
 [
   {
+    "id": "release_ik-khamoshi-tu-aur-main",
+    "slug": "ik-khamoshi-tu-aur-main",
+    "title": "Ik Khamoshi, Tu Aur Main | Mystical Kalam | Ishq • Fanā • Baqā | Dr. Zarf-e-Noori | SufiPulse USA",
+    "status": "published",
+    "visible": true,
+    "source": "manual_youtube_seed",
+    "registryType": "legacy_registry",
+    "format": "video",
+    "releaseType": "video",
+    "year": 2026,
+    "youtubeUrl": "https://www.youtube.com/watch?v=Dbd0fhJty4A",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Dbd0fhJty4A/maxresdefault.jpg",
+    "duration": "10:45",
+    "viewCount": 0,
+    "tags": [
+      "SufiPulse",
+      "Mystical Kalam",
+      "Ishq",
+      "Fana",
+      "Baqa",
+      "Dr. Zarf-e-Noori"
+    ],
+    "createdAt": "2026-06-25T00:00:00.000Z",
+    "updatedAt": "2026-06-25T00:00:00.000Z",
+    "youtubeId": "Dbd0fhJty4A"
+  },
+  {
     "id": "release_1775202913815_aMzdiIuYgK4",
     "title": "Take Control – A Ramadan Prayer | English & Urdu | Ramadan Reset Reflection | SufiPulse USA",
     "slug": "take-control-a-ramadan-prayer-english-urdu-ramadan-reset-reflection-sufipulse-usa",
