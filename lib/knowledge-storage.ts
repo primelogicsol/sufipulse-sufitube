@@ -10,7 +10,14 @@ export type KnowledgeEntityType =
   | 'quranicTheme'
   | 'spiritualState'
   | 'musicalTradition'
-  | 'literaryTradition';
+  | 'literaryTradition'
+  | 'singer'
+  | 'song'
+  | 'kalam'
+  | 'release'
+  | 'album'
+  | 'concept'
+  | 'order';
 
 export interface KnowledgeEntity {
   id: string; // unique ID e.g., type_slug
@@ -19,10 +26,24 @@ export interface KnowledgeEntity {
   name: string;
   alternateNames: string[];
   shortDescription: string; // Enforced minimum 40 words for public
-  longDescription: string;  // Enforced minimum 150 words for public
+  article: string;  // Enforced minimum 150 words for public
   theologicalNotes?: string;
   historicalNotes?: string;
+  
+  // Person/Life Metadata
+  birthDate?: string;
+  deathDate?: string;
+  birthPlace?: string;
+  deathPlace?: string;
+  nationality?: string;
+  occupation?: string[];
+
+  // Knowledge Graph Edges
   regionLinks: string[]; // region slugs
+  languageLinks: string[]; // language slugs
+  traditionLinks?: string[]; // order/tradition IDs
+  teacherLinks?: string[]; // person IDs
+  influencedLinks?: string[]; // person IDs
   languageLinks: string[]; // language slugs
   relatedConcepts: string[]; // concept slugs
   relatedReleases: string[]; // release IDs
@@ -41,17 +62,30 @@ export interface KnowledgeEntity {
 export const knowledgeEntitySchema = z.object({
   id: z.string(),
   type: z.enum([
-    'saint', 'scholar', 'poet', 'practice', 'quranicTheme', 'spiritualState', 'musicalTradition', 'literaryTradition'
+    'saint', 'scholar', 'poet', 'practice', 'quranicTheme', 'spiritualState', 'musicalTradition', 'literaryTradition',
+    'singer', 'song', 'kalam', 'release', 'album', 'concept', 'order'
   ]),
   slug: z.string().min(2).max(100).regex(/^[a-z0-9-]+$/),
   name: z.string().min(2).max(160),
   alternateNames: z.array(z.string()).default([]),
   shortDescription: z.string().max(3000),
-  longDescription: z.string().max(25000),
+  article: z.string().max(25000),
   theologicalNotes: z.string().max(8000).optional().or(z.literal('')),
   historicalNotes: z.string().max(8000).optional().or(z.literal('')),
+  
+  birthDate: z.string().optional().or(z.literal('')),
+  deathDate: z.string().optional().or(z.literal('')),
+  birthPlace: z.string().optional().or(z.literal('')),
+  deathPlace: z.string().optional().or(z.literal('')),
+  nationality: z.string().optional().or(z.literal('')),
+  occupation: z.array(z.string()).optional(),
+
   regionLinks: z.array(z.string()).default([]),
   languageLinks: z.array(z.string()).default([]),
+  traditionLinks: z.array(z.string()).optional(),
+  teacherLinks: z.array(z.string()).optional(),
+  influencedLinks: z.array(z.string()).optional(),
+  
   relatedConcepts: z.array(z.string()).default([]),
   relatedReleases: z.array(z.string()).default([]),
   relatedArticles: z.array(z.string()).default([]),
@@ -62,7 +96,7 @@ export const knowledgeEntitySchema = z.object({
   isPublic: z.boolean().default(false),
   createdAt: z.string(),
   updatedAt: z.string()
-});
+}).passthrough();
 
 const resolveDataDir = () => {
   if (process.env.DATA_DIR) return process.env.DATA_DIR;

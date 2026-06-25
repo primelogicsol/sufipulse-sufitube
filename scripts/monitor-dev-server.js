@@ -24,7 +24,7 @@ function checkServerHealth() {
   return new Promise((resolve) => {
     const options = {
       hostname: 'localhost',
-      port: 3000,
+      port: 3005,
       path: '/',
       method: 'GET',
       timeout: 3000
@@ -77,7 +77,7 @@ async function monitor() {
 
   if (health) {
     if (!isServerHealthy) {
-      log('✅ Development server is healthy (http://localhost:3000)');
+      log('✅ Development server is healthy (http://localhost:3005)');
       isServerHealthy = true;
       restartCount = 0; // Reset counter
     }

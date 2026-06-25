@@ -32,12 +32,31 @@ function getRegistryItems(type: 'concepts' | 'themes' | 'regions' | 'moods'): { 
   }
 }
 
+function getKnowledgeEntities(): { class: string; slug: string; updatedAt?: string }[] {
+  try {
+    const file = path.join(process.cwd(), '.data', 'unified_knowledge.json');
+    if (!fs.existsSync(file)) return [];
+    const entities = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!Array.isArray(entities)) return [];
+    return entities
+      .filter((e: any) => e.slug && e.class)
+      .map((e: any) => ({
+        class: e.class,
+        slug: e.slug,
+        updatedAt: e.metadata?.lastVerified || e.createdAt,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
   const now = new Date().toISOString();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl,                                    lastModified: now, changeFrequency: 'daily',   priority: 1.0 },
+    { url: `${baseUrl}/knowledge`,                     lastModified: now, changeFrequency: 'daily',   priority: 0.9 },
     { url: `${baseUrl}/releases`,                      lastModified: now, changeFrequency: 'weekly',  priority: 0.9 },
     { url: `${baseUrl}/literary-journal`,              lastModified: now, changeFrequency: 'weekly',  priority: 0.8 },
     { url: `${baseUrl}/about/what-is-sufipulse`,       lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
@@ -55,6 +74,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verification`,                  lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/official-channels`,             lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
   ];
+
+  const knowledgeRoutes: MetadataRoute.Sitemap = getKnowledgeEntities().map((e) => ({
+    url: `${baseUrl}/knowledge/${e.class}/${e.slug}`,
+    lastModified: e.updatedAt || now,
+    changeFrequency: 'weekly',
+    priority: 0.85,
+  }));
 
   const releaseRoutes: MetadataRoute.Sitemap = getReleases().map((r) => ({
     url: `${baseUrl}/release-detail/${r.slug}`,
@@ -100,6 +126,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...staticRoutes, 
+    ...knowledgeRoutes,
     ...releaseRoutes, 
     ...articleRoutes, 
     ...conceptRoutes, 

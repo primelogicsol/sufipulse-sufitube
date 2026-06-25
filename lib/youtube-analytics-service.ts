@@ -111,12 +111,11 @@ export const youtubeAnalyticsService = {
     const lastCheck = new Date().toISOString();
 
     try {
-      console.log('[youtubeAnalyticsService] Performing live API health check (Recent Window)...');
+      console.log('[youtubeAnalyticsService] Performing live API health check (Lifetime Window)...');
       const token = await getAccessToken();
 
-      // We query the last 365 days as a health check and to see recent growth
       const endDate = new Date().toISOString().split('T')[0];
-      const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const startDate = '2006-01-01'; // Lifetime scope
 
       const [basicRaw, trafficRaw] = await Promise.all([
         analyticsQuery(token, {
@@ -136,11 +135,20 @@ export const youtubeAnalyticsService = {
 
       // Process Basic Metrics
       const br = basicRaw.rows?.[0] ?? [0, 0, 0];
-      const recentViews = Number(br[0]) || 0;
-      const recentWatchTimeHours = br[1] ? Math.round(Number(br[1]) / 60) : 0;
-      const recentAvgDurationSecs = Number(br[2]) || 0;
+      const lifetimeViews = Number(br[0]) || 0;
+      const lifetimeWatchTimeHours = br[1] ? Math.round(Number(br[1]) / 60) : 0;
+      const lifetimeAvgDurationSecs = Number(br[2]) || 0;
 
-      // Process Traffic Sources
+      let recommendationViews = 0;
+      (trafficRaw.rows ?? []).forEach((row: any[]) => {
+         const source = String(row[0]);
+         const views = Number(row[1]);
+         if (RECOMMENDATION_SOURCES.has(source)) {
+           recommendationViews += views;
+         }
+      });
+      const viewsPercentage = lifetimeViews > 0 ? Number(((recommendationViews / lifetimeViews) * 100).toFixed(1)) : 0;
+
       const topTrafficSources = (trafficRaw.rows ?? [])
         .slice(0, 5)
         .map((row: any[]) => ({
@@ -148,21 +156,35 @@ export const youtubeAnalyticsService = {
           views: Number(row[1])
         }));
 
+      const newLastUpdated = new Date().toISOString();
+
       const updatedSnapshot: AnalyticsSnapshot = {
         ...current,
         status: 'active',
-        lastUpdated: current.lastUpdated, // Preserve original verified timestamp
+        lastUpdated: newLastUpdated, // Fresh valid timestamp
         nextRefreshAt: nextFriday.toISOString(),
         
-        // 1. Institutional Source of Truth (STRICTLY PRESERVED)
-        lifetimeSnapshot: current.lifetimeSnapshot || DEFAULT_PAYLOAD.lifetimeSnapshot,
+        // 1. Update Institutional Source of Truth with fetched lifetime data
+        lifetimeSnapshot: {
+          ...current.lifetimeSnapshot,
+          performance: {
+            ...current.lifetimeSnapshot.performance,
+            views: lifetimeViews > 0 ? lifetimeViews : current.lifetimeSnapshot.performance.views,
+            watchTimeHours: lifetimeWatchTimeHours > 0 ? lifetimeWatchTimeHours : current.lifetimeSnapshot.performance.watchTimeHours,
+            averageViewDurationFormatted: lifetimeAvgDurationSecs > 0 ? fmtDuration(lifetimeAvgDurationSecs) : current.lifetimeSnapshot.performance.averageViewDurationFormatted,
+          },
+          recommendationEngine: {
+            ...current.lifetimeSnapshot.recommendationEngine,
+            viewsPercentage: viewsPercentage > 0 ? viewsPercentage : current.lifetimeSnapshot.recommendationEngine.viewsPercentage
+          }
+        },
 
-        // 2. Live API Telemetry (Recent growth)
+        // 2. Live API Telemetry (Admin view)
         recentAnalytics: {
-          lastQueryWindow: "Last 365 Days",
-          views: recentViews,
-          watchTimeHours: recentWatchTimeHours,
-          averageViewDurationSeconds: recentAvgDurationSecs,
+          lastQueryWindow: "Lifetime",
+          views: lifetimeViews,
+          watchTimeHours: lifetimeWatchTimeHours,
+          averageViewDurationSeconds: lifetimeAvgDurationSecs,
           topTrafficSources
         },
 

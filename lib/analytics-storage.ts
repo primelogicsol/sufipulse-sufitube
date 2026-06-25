@@ -13,6 +13,7 @@ export interface PublicGlobalReachPayload {
   performance: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['performance'];
   recommendationEngine: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['recommendationEngine'];
   geographies: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['geographies'];
+  snapshotStatus?: string;
   lastUpdated: string;
   status: 'active' | 'stale' | 'error';
   errorMessage?: string;
@@ -30,11 +31,11 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
   // 1. Immutable Institutional Results
   lifetimeSnapshot: {
     performance: {
-      impressions: 964100,
-      views: 82200,
+      impressions: 973000,
+      views: 82500,
       watchTimeHours: 8700,
       clickThroughRate: 8.5,
-      averageViewDurationFormatted: "6:21"
+      averageViewDurationFormatted: "6:20"
     },
     ageGender: {
       gender: { female: 42.7, male: 57.3 },
@@ -49,12 +50,13 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
       ]
     },
     recommendationEngine: {
-      viewsPercentage: 87.7
+      viewsPercentage: 87.2
     },
     geographies: {
       totalCountries: 50
     }
   },
+  snapshotStatus: "Verified YouTube Studio Snapshot",
 
   // 2. Live API Telemetry (Admins only)
   apiStatus: {
@@ -64,7 +66,7 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
     restrictedMetrics: ["impressions", "ctr", "demographics", "geography"]
   },
 
-  lastUpdated: new Date().toISOString(),
+  lastUpdated: new Date("2026-06-24T00:00:00Z").toISOString(),
   nextRefreshAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 };
 

@@ -12,6 +12,7 @@ import { PipelineSection } from './components/home/PipelineSection';
 import { RegistrySection } from './components/home/RegistrySection';
 import { ArticlesSection } from './components/home/ArticlesSection';
 import { NetworkSection } from './components/home/NetworkSection';
+import { KnowledgeSection } from './components/home/KnowledgeSection';
 
 interface FeaturedArticle {
   id: string;
@@ -150,6 +151,8 @@ export default function Home() {
       <ArchitectureSection />
       
       <PipelineSection />
+      
+      <KnowledgeSection />
       
       <RegistrySection 
         featuredReleases={featuredReleases} 

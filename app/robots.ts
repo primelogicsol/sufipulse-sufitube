@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: 'Googlebot',
-        allow: ['/', '/releases', '/literary-journal', '/about/', '/writers', '/vocalists', '/producers', '/studio', '/contact'],
+        allow: ['/', '/releases', '/literary-journal', '/knowledge', '/about/', '/writers', '/vocalists', '/producers', '/studio', '/contact'],
         disallow: privateRoutes,
       },
       {

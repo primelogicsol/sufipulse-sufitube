@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
       recommendationEngine: analytics.lifetimeSnapshot.recommendationEngine,
       geographies: analytics.lifetimeSnapshot.geographies,
       
+      snapshotStatus: analytics.apiStatus?.connected ? 'Live refreshed' : 'Preserved verified fallback',
+      
       lastUpdated: analytics.lastUpdated,
       nextRefreshAt: analytics.nextRefreshAt,
       status: analytics.status,

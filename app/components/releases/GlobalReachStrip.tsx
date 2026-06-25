@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Globe, Users, TrendingUp, Loader2, RefreshCw, AlertCircle } from "lucide-react";
+import { ArrowRight, Globe, Users, TrendingUp, Loader2, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 import type { GlobalReachPayload } from "@/lib/analytics-storage";
 import { useAuth } from "@/app/contexts/AuthContext";
 
@@ -314,10 +314,47 @@ export default function GlobalReachStrip() {
               <FootprintCard g={data!.geographies} />
             </div>
           </div>
-          <div className="mt-6 flex flex-col items-end gap-1 opacity-40">
-            <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">
-              Lifetime Analytics • Source: Official YouTube Analytics Snapshot
-            </p>
+          <div className="mt-6 border border-neutral-800/50 rounded-xl bg-neutral-900/30 overflow-hidden">
+            <div className="px-4 py-2 bg-neutral-800/20 border-b border-neutral-800/50 flex items-center gap-2">
+              <CheckCircle className="w-3 h-3 text-amber-500/70" />
+              <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-bold">Verified Analytics Source</span>
+            </div>
+            <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Data Source</span>
+                <span className="text-xs text-amber-400/90 font-medium">YouTube Analytics API / Verified Snapshot</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Last Sync</span>
+                <span className="text-xs text-neutral-300 font-mono">
+                  {data?.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : "Verified snapshot on file"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Snapshot Type</span>
+                <span className="text-xs text-neutral-300">Lifetime</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Channel ID</span>
+                <span className="text-[11px] text-neutral-400 font-mono">UCraDr3i5A3k0j7typ6tOOsQ</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Public Display Mode</span>
+                <span className="text-xs text-neutral-300">Cached Verified Snapshot</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Data Range</span>
+                <span className="text-xs text-neutral-300">May 20, 2025 – Jun 24, 2026</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Live API Dependency</span>
+                <span className="text-xs text-neutral-300">No public-page dependency</span>
+              </div>
+              <div className="flex flex-col gap-1 md:col-span-2">
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Snapshot Status</span>
+                <span className="text-xs text-amber-500/90 font-bold">{data?.snapshotStatus || 'Preserved verified fallback'}</span>
+              </div>
+            </div>
           </div>
         </>
       )}

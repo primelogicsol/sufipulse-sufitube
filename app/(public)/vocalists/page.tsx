@@ -226,6 +226,25 @@ export default function Vocalists() {
         </PageContainer>
       </Section>
 
+      <Section background="slate" spacing="normal" className="border-y border-[var(--color-gold)]/10">
+        <PageContainer>
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-[var(--text-2xl)] font-bold text-[var(--color-text-primary)] mb-4">
+              Explore Our Master Artists
+            </h2>
+            <p className="text-[var(--color-text-secondary)] mb-8 max-w-2xl mx-auto">
+              Discover the legendary voices that have shaped the spiritual and musical heritage of SufiPulse.
+            </p>
+            <Link 
+              href="/knowledge" 
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-xl text-[var(--color-gold)] font-bold hover:bg-[var(--color-gold)]/20 transition-colors"
+            >
+              Enter the Knowledge Hub <ArrowRight size={18} />
+            </Link>
+          </div>
+        </PageContainer>
+      </Section>
+
       <Section background="midnight" spacing="normal" className="pb-24">
         <PageContainer>
           <div className="max-w-4xl mx-auto">

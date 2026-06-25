@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Releases",
   description: "Browse all SufiPulse releases — a curated collection of authentic Sufi music, qawwali, and devotional songs from Kashmir and the Indian Subcontinent. Stream, adopt, and support sacred music.",

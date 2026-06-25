@@ -636,6 +636,7 @@ function Release() {
    "cms_key" | "cms_slug" | "cms_youtube_compat" | "external_youtube_fallback" | null
   >(null);
   const [loading, setLoading] = useState(true);
+  const [knowledgeData, setKnowledgeData] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/releases")
@@ -646,6 +647,11 @@ function Release() {
         }
       })
       .catch((err) => console.error("Failed to load releases for relationships:", err));
+      
+    fetch("/api/knowledge")
+      .then(res => res.json())
+      .then(data => setKnowledgeData(data))
+      .catch(err => console.error("Failed to load knowledge data:", err));
   }, []);
 
   useEffect(() => {
@@ -2827,6 +2833,49 @@ function Release() {
                       </div>
                     </div>
                   )}
+                  {/* Explore in Knowledge Graph */}
+                  {knowledgeData?.nodes && (() => {
+                    const matchedNodes = knowledgeData.nodes.filter((node: any) => {
+                      if (!node.name) return false;
+                      const checkNames = [
+                        release?.vocalist?.name, release?.vocalist, release?.lead_vocalists?.[0], 
+                        release?.writer?.name, release?.writer,
+                        ...(release?.sufiConcepts?.map(getConceptLabel) || []),
+                        ...(release?.themes?.map(getThemeLabel) || [])
+                      ].filter(Boolean).map(n => n?.toLowerCase?.() || '');
+                      
+                      return checkNames.includes(node.name.toLowerCase()) || (node.nameUrdu && checkNames.includes(node.nameUrdu.toLowerCase()));
+                    });
+
+                    if (matchedNodes.length === 0) return null;
+
+                    return (
+                      <div className="mt-8 pt-8 border-t border-neutral-800/80">
+                        <h4 className="text-sm font-semibold tracking-widest text-[var(--color-gold)] uppercase mb-5 flex items-center gap-2">
+                          <Book className="w-4 h-4" /> Explore in Knowledge Graph
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {matchedNodes.map((node: any) => (
+                            <Link
+                              key={node.slug}
+                              href={`/knowledge/${node.class}/${node.slug}`}
+                              className="block p-4 rounded-xl border border-[var(--color-gold)]/20 bg-[var(--color-gold)]/5 hover:bg-[var(--color-gold)]/10 hover:border-[var(--color-gold)]/40 transition group"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <span className="text-[10px] font-bold text-[var(--color-gold)] uppercase tracking-widest bg-[var(--color-gold)]/10 px-2 py-0.5 rounded">
+                                  {node.class}
+                                </span>
+                              </div>
+                              <h5 className="text-lg font-bold text-neutral-100 group-hover:text-[var(--color-gold)] transition-colors">
+                                {node.name}
+                              </h5>
+                              {node.nameUrdu && <p className="text-sm font-medium text-[var(--color-gold)]/80 mt-1">{node.nameUrdu}</p>}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -2906,6 +2955,10 @@ function Release() {
                                 ? actualVal
                                 : (field.fallback || seed);
 
+                            const matchedNode = val && typeof val === 'string' && knowledgeData?.nodes?.find(
+                              (n: any) => n.name.toLowerCase() === val.toLowerCase() || (n.nameUrdu && n.nameUrdu === val)
+                            );
+
                             return isEditing ? (
                               <div key={field.key}>
                                 <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">
@@ -2931,7 +2984,14 @@ function Release() {
                                 <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">
                                   {field.label}
                                 </p>
-                                <p className="text-neutral-200">{val || "—"}</p>
+                                {matchedNode ? (
+                                  <Link href={`/knowledge/${matchedNode.class}/${matchedNode.slug}`} className="text-[var(--color-gold)] font-medium hover:underline flex items-center gap-1 w-fit">
+                                    {val}
+                                    <span className="text-[10px] bg-[var(--color-gold)]/10 text-[var(--color-gold)] px-1.5 py-0.5 rounded ml-1">Graph</span>
+                                  </Link>
+                                ) : (
+                                  <p className="text-neutral-200">{val || "—"}</p>
+                                )}
                               </div>
                             );
                           });

@@ -324,6 +324,7 @@ export default function Releases() {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [knowledgeData, setKnowledgeData] = useState<any>(null);
 
     const [syncModalOpen, setSyncModalOpen] = useState(false);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
@@ -488,6 +489,10 @@ export default function Releases() {
 
     useEffect(() => {
         fetchVideos();
+        fetch('/api/knowledge')
+            .then(res => res.json())
+            .then(data => setKnowledgeData(data))
+            .catch(err => console.error('Failed to load knowledge data:', err));
     }, []);
 
     const filteredReleases = useMemo(() => {
@@ -795,6 +800,29 @@ export default function Releases() {
                                                 <h3 className="text-lg font-semibold text-white/90 group-hover:text-[var(--color-gold)] transition-colors line-clamp-3 leading-snug min-h-[5.4rem]">
                                                     {release.title}
                                                 </h3>
+
+                                                {(() => {
+                                                    const vocalistMatch = release.vocalist && knowledgeData?.nodes?.find(
+                                                        (n: any) => n.class === 'singer' && (
+                                                            n.name.toLowerCase() === release.vocalist.toLowerCase() || 
+                                                            (n.nameUrdu && n.nameUrdu === release.vocalist)
+                                                        )
+                                                    );
+                                                    if (!vocalistMatch) return null;
+                                                    return (
+                                                        <div className="flex gap-2">
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    router.push(`/knowledge/singer/${vocalistMatch.slug}`);
+                                                                }}
+                                                                className="px-2 py-0.5 rounded text-[10px] font-bold text-[var(--color-gold)] bg-[var(--color-gold)]/10 hover:bg-[var(--color-gold)]/20 hover:underline transition-all"
+                                                            >
+                                                                {vocalistMatch.name}
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })()}
                                                 
                                                 <div className="mt-auto flex items-center justify-between pt-1 text-xs text-zinc-400 font-medium shrink-0">
                                                     <div className="flex items-center gap-3">

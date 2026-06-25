@@ -1,0 +1,29 @@
+{
+  "channelId": "UCraDr3i5A3k0j7typ6tOOsQ",
+  "timestamp": "2026-06-16T04:02:35.881Z",
+  "results": {
+    "envApiKey": {
+      "status": "WORKING",
+      "message": "Successfully fetched videos! First video title: \"Gardish I Rab Ki Khamosh Daleel I The Inescapable Cycle\"",
+      "details": null
+    },
+    "hardcodedApiKey": {
+      "status": "WORKING",
+      "message": "Successfully fetched videos! First video title: \"Zair-o-Zabar ka Jalwa | Qira’at-e-Qur’an That Outlived the Fire\"",
+      "details": null
+    },
+    "tokenRefresh": {
+      "status": "FAILED",
+      "message": "Bad Request",
+      "details": {
+        "error": "invalid_grant",
+        "error_description": "Bad Request"
+      }
+    },
+    "oauthApiCall": {
+      "status": "SKIPPED",
+      "message": "No active access token available (refresh step failed or skipped)",
+      "details": null
+    }
+  }
+}

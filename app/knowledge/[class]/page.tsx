@@ -24,11 +24,14 @@ export default async function KnowledgeClassHome({ params }: { params: Promise<{
   const urlClass = resolvedParams.class;
   const targetClass = classMap[urlClass] || urlClass;
 
-  const dataPath = path.join(process.cwd(), '.data', 'unified_knowledge.json');
+  const dataPath = path.join(process.cwd(), '.data', 'knowledge-registry.json');
   let entities: any[] = [];
   try {
     if (fs.existsSync(dataPath)) {
       entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+      if (Array.isArray(entities)) {
+          entities = entities.map(e => ({ ...e, class: e.class || e.type }));
+      }
     }
   } catch (e) {}
 

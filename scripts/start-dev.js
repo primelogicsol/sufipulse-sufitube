@@ -10,7 +10,7 @@ console.log('🚀 Starting SufiPulse Development Server...\n');
 function cleanup() {
   console.log('\n🧹 Cleaning up...');
   try {
-    // Kill any existing node processes on port 3000
+    // Kill any existing node processes on port 3005
     if (process.platform === 'win32') {
       execSync('taskkill /F /IM node.exe /T 2>nul', { stdio: 'ignore' });
     } else {
@@ -52,12 +52,12 @@ async function startDev() {
   cleanup();
   cleanCache();
 
-  // Check if port 3000 is available
+  // Check if port 3005 is available
   console.log('🔍 Checking port availability...');
-  const portAvailable = await checkPort(3000);
+  const portAvailable = await checkPort(3005);
 
   if (!portAvailable) {
-    console.log('⚠️  Port 3000 is in use. Attempting to free it...');
+    console.log('⚠️  Port 3005 is in use. Attempting to free it...');
     cleanup();
     // Wait a bit
     await new Promise(resolve => setTimeout(resolve, 2000));

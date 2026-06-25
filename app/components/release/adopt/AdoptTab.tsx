@@ -133,7 +133,7 @@ export function AdoptTab({ release }: AdoptTabProps) {
   const isAdmin = ['admin', 'administrator', 'super_admin', 'governance_admin'].includes(user?.role || '');
   const isDev = process.env.NODE_ENV === 'development';
   const isLocalhost = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '3000');
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '3000' || window.location.port === '3005');
 
   const isLocalTesting = isDev || isLocalhost;
   const isEligibleForDirect = isLocalTesting || ENABLE_GOOGLE_ADS_DIRECT || (!authLoading && isAdmin);

@@ -63,13 +63,13 @@ export const env = createEnv({
     GOOGLE_ADS_CLIENT_SECRET: z.string().optional(),
 
     // Misc
-    CORS_ORIGINS: z.string().default("http://localhost:3000"),
-    API_URL: z.string().url().default("http://localhost:3000/api"),
+    CORS_ORIGINS: z.string().default("http://localhost:3005"),
+    API_URL: z.string().url().default("http://localhost:3005/api"),
   },
 
   // ── Client (browser-exposed) variables ────────────────────────────────────
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+    NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3005"),
     NEXT_PUBLIC_API_URL: z.string().optional(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
     NEXT_PUBLIC_YOUTUBE_API_KEY: z.string().optional(),
