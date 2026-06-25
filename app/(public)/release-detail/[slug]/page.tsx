@@ -2265,7 +2265,7 @@ function Release() {
                   onContextMenu={(e) => e.preventDefault()}
                   className={`bg-black overflow-hidden relative group ${isFullscreen ? "fixed inset-0 z-[100] w-screen h-screen rounded-none" : "aspect-video rounded-lg shadow-2xl border border-neutral-800"}`}
                 >
-                  {!videoLoaded ? (
+                  {(!videoLoaded && !resolvedVideoId) ? (
                     <>
                       <img
                         src={thumbnailCandidates[0]}

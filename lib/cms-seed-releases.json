@@ -11,7 +11,7 @@
     "releaseType": "video",
     "year": 2026,
     "youtubeUrl": "https://www.youtube.com/watch?v=Dbd0fhJty4A",
-    "thumbnailUrl": "https://i.ytimg.com/vi/Dbd0fhJty4A/maxresdefault.jpg",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Dbd0fhJty4A/hqdefault.jpg",
     "duration": "10:45",
     "viewCount": 0,
     "tags": [
@@ -34,7 +34,9 @@
     "vocalists": "",
     "writers": "",
     "themes": [],
-    "language": "Roman Urdu"
+    "language": "Roman Urdu",
+    "youtubeVideoId": "Dbd0fhJty4A",
+    "embedUrl": "https://www.youtube.com/embed/Dbd0fhJty4A"
   },
   {
     "id": "release_1775202913815_aMzdiIuYgK4",
