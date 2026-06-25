@@ -25,7 +25,16 @@
     "createdAt": "2026-06-25T00:00:00.000Z",
     "updatedAt": "2026-06-25T00:00:00.000Z",
     "youtubeId": "Dbd0fhJty4A",
-    "durationSeconds": 645
+    "durationSeconds": 645,
+    "description": "",
+    "article": "",
+    "lyrics": "",
+    "credits": "",
+    "artists": "",
+    "vocalists": "",
+    "writers": "",
+    "themes": [],
+    "language": "Roman Urdu"
   },
   {
     "id": "release_1775202913815_aMzdiIuYgK4",

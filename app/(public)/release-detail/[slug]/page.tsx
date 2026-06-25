@@ -1846,7 +1846,7 @@ function Release() {
   };
 
   const formatDescription = (text: string) => {
-    const sections = text.split(/\n{2,}/);
+    const sections = (text || "").split(/\n{2,}/);
     return sections.map((section, index) => {
       const lines = section.split("\n").filter((line) => line.trim());
       return (
