@@ -38,6 +38,11 @@ export interface KnowledgeEntity {
   nationality?: string;
   occupation?: string[];
 
+  // Artistic & Thematic Attributes
+  performanceCharacteristics?: string[];
+  musicalStyle?: string[];
+  primaryThemes?: string[];
+
   // Knowledge Graph Edges
   regionLinks: string[]; // region slugs
   languageLinks: string[]; // language slugs
@@ -79,6 +84,10 @@ export const knowledgeEntitySchema = z.object({
   deathPlace: z.string().optional().or(z.literal('')),
   nationality: z.string().optional().or(z.literal('')),
   occupation: z.array(z.string()).optional(),
+  
+  performanceCharacteristics: z.array(z.string()).optional(),
+  musicalStyle: z.array(z.string()).optional(),
+  primaryThemes: z.array(z.string()).optional(),
 
   regionLinks: z.array(z.string()).default([]),
   languageLinks: z.array(z.string()).default([]),

@@ -301,6 +301,45 @@ export default async function KnowledgeEntityPage({ params }: { params: Promise<
                 </div>
               </Card>
 
+              {/* Artistic & Thematic Profile */}
+              {(entity.musicalStyle?.length > 0 || entity.performanceCharacteristics?.length > 0 || entity.primaryThemes?.length > 0) && (
+                <Card>
+                  <h3 className="text-[var(--text-xs)] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6 font-semibold border-b border-[var(--color-border-strong)] pb-3">Artistic Profile</h3>
+                  <div className="space-y-6 text-[var(--text-sm)]">
+                    {entity.musicalStyle?.length > 0 && (
+                      <div>
+                        <div className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest mb-2 font-semibold">Musical Style</div>
+                        <div className="flex flex-wrap gap-2">
+                          {entity.musicalStyle.map((style: string) => (
+                            <Badge key={style} variant="neutral" className="bg-white/5 border-white/10 hover:border-[var(--color-gold)]/50 transition-colors">{style}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {entity.performanceCharacteristics?.length > 0 && (
+                      <div>
+                        <div className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest mb-2 font-semibold">Performance Characteristics</div>
+                        <div className="flex flex-wrap gap-2">
+                          {entity.performanceCharacteristics.map((char: string) => (
+                            <Badge key={char} variant="neutral" className="bg-white/5 border-white/10 hover:border-[var(--color-gold)]/50 transition-colors">{char}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {entity.primaryThemes?.length > 0 && (
+                      <div>
+                        <div className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest mb-2 font-semibold">Primary Themes</div>
+                        <div className="flex flex-wrap gap-2">
+                          {entity.primaryThemes.map((theme: string) => (
+                            <Badge key={theme} variant="neutral" className="bg-white/5 border-white/10 hover:border-[var(--color-gold)]/50 transition-colors">{theme}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+
               {/* Version History & Editorial Governance */}
               <Card>
                 <h3 className="text-[var(--text-xs)] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6 font-semibold border-b border-[var(--color-border-strong)] pb-3">Editorial Record</h3>

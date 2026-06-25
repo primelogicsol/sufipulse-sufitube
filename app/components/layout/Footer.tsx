@@ -43,7 +43,6 @@ export function Footer() {
 
           <FooterSection title="Institutional Identity">
             <FooterLink href="/about/what-is-sufipulse">What is SufiPulse</FooterLink>
-            <FooterLink href="/knowledge">Knowledge Archive</FooterLink>
             <FooterLink href="/about/founder">Founder</FooterLink>
             <FooterLink href="/about/our-network">Our Network</FooterLink>
             <FooterLink href="/about/institutional-partners">Institutional Partners</FooterLink>
@@ -109,6 +108,7 @@ export function Footer() {
           <Link href="/contributor-policy" className="hover:text-[var(--color-gold)] transition-colors">Contributor Policy</Link>
           <Link href="/royalty-policy" className="hover:text-[var(--color-gold)] transition-colors">Royalty Policy</Link>
           <Link href="/release-policy" className="hover:text-[var(--color-gold)] transition-colors">Release Policy</Link>
+          <Link href="/knowledge" className="hover:text-[var(--color-gold)] transition-colors">Knowledge Base</Link>
         </div>
 
         <div className="mt-[var(--space-6)] pt-[var(--space-6)] border-t border-[var(--color-border)]">

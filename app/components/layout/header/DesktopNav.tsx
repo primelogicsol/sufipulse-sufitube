@@ -37,7 +37,7 @@ export function DesktopNav() {
           transition-colors
           duration-[var(--transition-base)]
           font-medium
-          ${pathname.startsWith('/knowledge')
+          ${pathname.startsWith('/releases') || pathname.startsWith('/release-detail')
             ? 'text-[var(--color-gold)]'
             : 'text-[var(--color-text-primary)] hover:text-[var(--color-gold)]'
           }

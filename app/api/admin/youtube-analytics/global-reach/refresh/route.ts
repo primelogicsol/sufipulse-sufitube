@@ -21,11 +21,20 @@ export async function POST(request: NextRequest) {
     } catch (cacheErr) {
       console.warn('[API /api/admin/youtube-analytics/global-reach/refresh] Cache revalidation failed', cacheErr);
     }
+    if (analytics.status === 'error') {
+      return NextResponse.json({
+        success: false,
+        error: analytics.errorMessage || 'Failed to refresh YouTube Analytics.',
+        lastUpdated: analytics.lastUpdated,
+        snapshotStatus: analytics.snapshotStatus || 'Preserved verified fallback'
+      }, { status: 400 });
+    }
     
     return NextResponse.json({
       success: true,
       message: 'YouTube Global Reach analytics refreshed successfully.',
-      lastUpdated: analytics.lastUpdated
+      lastUpdated: analytics.lastUpdated,
+      snapshotStatus: analytics.snapshotStatus
     });
   } catch (error: any) {
     console.error('[API /api/admin/youtube-analytics/global-reach/refresh] Refresh failed:', error);
