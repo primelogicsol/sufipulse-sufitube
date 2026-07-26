@@ -237,7 +237,10 @@ export default function GlobalReachStrip() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      const res = await fetch("/api/admin/youtube-analytics/global-reach/refresh", { method: 'POST' });
+      const res = await fetch("/api/admin/youtube-analytics/global-reach/refresh", { 
+        method: 'POST',
+        credentials: 'include'
+      });
       const result = await res.json();
       if (result.success) {
         // Pass true to trigger cache-busting and fresh fetch
@@ -247,7 +250,12 @@ export default function GlobalReachStrip() {
       }
     } catch (err: any) {
       console.error("Refresh failed:", err);
-      alert("Failed to refresh analytics: " + err.message);
+      const msg = err.message || "";
+      if (msg.includes("token exchange failed") || msg.includes("Bad Request") || msg.includes("credentials missing")) {
+        alert("YouTube API connection notice:\n\nThe current YouTube OAuth refresh token is expired or missing. Please authenticate through YouTube Studio / Admin Settings or update your environment variables to enable live sync.");
+      } else {
+        alert("Failed to refresh analytics: " + msg);
+      }
     } finally {
       setRefreshing(false);
     }
@@ -271,7 +279,7 @@ export default function GlobalReachStrip() {
           </p>
         </div>
 
-        {user?.role === 'admin' && (
+        {user && ['admin', 'administrator', 'super_admin', 'governance_admin'].includes(user.role) && (
           <div className="flex flex-col items-end gap-2">
             <button
               onClick={handleRefresh}

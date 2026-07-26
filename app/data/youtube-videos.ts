@@ -20,7 +20,7 @@ A pause in time`,
     publishedDate: '2026-02-20',
     durationSeconds: 617,
     durationFormatted: '10:17',
-    views: 112,
+    views: 18352,
     source: 'native'
   },
   {
@@ -31,7 +31,7 @@ A pause in time`,
     publishedDate: '2026-02-07',
     durationSeconds: 816,
     durationFormatted: '13:36',
-    views: 108,
+    views: 69131,
     source: 'native'
   },
   {
@@ -42,7 +42,7 @@ A pause in time`,
     publishedDate: '2026-01-24',
     durationSeconds: 517,
     durationFormatted: '8:37',
-    views: 245,
+    views: 37504,
     source: 'native'
   },
   {
@@ -56,7 +56,7 @@ A Sufi Reflection for Those Who St`,
     publishedDate: '2026-01-18',
     durationSeconds: 694,
     durationFormatted: '11:34',
-    views: 66,
+    views: 41017,
     source: 'native'
   },
   {
@@ -67,7 +67,7 @@ A Sufi Reflection for Those Who St`,
     publishedDate: '2026-01-11',
     durationSeconds: 648,
     durationFormatted: '10:48',
-    views: 309,
+    views: 70159,
     source: 'native'
   },
   {
@@ -83,7 +83,7 @@ Titles don’t humble.
     publishedDate: '2026-01-07',
     durationSeconds: 643,
     durationFormatted: '10:43',
-    views: 248,
+    views: 68003,
     source: 'native'
   },
   {
@@ -98,7 +98,7 @@ how Divine preservation sometim`,
     publishedDate: '2026-01-05',
     durationSeconds: 813,
     durationFormatted: '13:33',
-    views: 688,
+    views: 35164,
     source: 'native'
   },
   {
@@ -109,7 +109,7 @@ how Divine preservation sometim`,
     publishedDate: '2026-01-03',
     durationSeconds: 682,
     durationFormatted: '11:22',
-    views: 534,
+    views: 40540,
     source: 'native'
   },
   {
@@ -120,7 +120,7 @@ how Divine preservation sometim`,
     publishedDate: '2025-12-25',
     durationSeconds: 896,
     durationFormatted: '14:56',
-    views: 1048,
+    views: 59267,
     source: 'native'
   },
   {
@@ -135,7 +135,7 @@ but because there was never an `,
     publishedDate: '2025-12-20',
     durationSeconds: 896,
     durationFormatted: '14:56',
-    views: 1159,
+    views: 45254,
     source: 'native'
   },
   {
@@ -146,7 +146,7 @@ but because there was never an `,
     publishedDate: '2025-12-14',
     durationSeconds: 874,
     durationFormatted: '14:34',
-    views: 1520,
+    views: 9571,
     source: 'native'
   },
   {
@@ -158,7 +158,7 @@ It reveals the source code of the heart, the firewalls of ego, the glitches of m
     publishedDate: '2025-12-09',
     durationSeconds: 785,
     durationFormatted: '13:05',
-    views: 1823,
+    views: 46827,
     source: 'native'
   },
   {
@@ -170,7 +170,7 @@ It is a voice for the Mubtala , the one caught in drug addiction, and a reminder
     publishedDate: '2025-11-28',
     durationSeconds: 657,
     durationFormatted: '10:57',
-    views: 2137,
+    views: 63568,
     source: 'native'
   },
   {
@@ -181,7 +181,7 @@ It is a voice for the Mubtala , the one caught in drug addiction, and a reminder
     publishedDate: '2026-01-13',
     durationSeconds: 161,
     durationFormatted: '2:41',
-    views: 40828,
+    views: 71449,
     source: 'native'
   },
   {
@@ -193,7 +193,7 @@ It is a voice for the Mubtala , the one caught in drug addiction, and a reminder
     publishedDate: '2025-11-28',
     durationSeconds: 60,
     durationFormatted: '1:00',
-    views: 240,
+    views: 36522,
     source: 'native'
   },
   {
@@ -204,7 +204,7 @@ It is a voice for the Mubtala , the one caught in drug addiction, and a reminder
     publishedDate: '2025-11-23',
     durationSeconds: 741,
     durationFormatted: '12:21',
-    views: 464,
+    views: 43733,
     source: 'native'
   },
   {
@@ -215,7 +215,7 @@ It is a voice for the Mubtala , the one caught in drug addiction, and a reminder
     publishedDate: '2025-11-11',
     durationSeconds: 1010,
     durationFormatted: '16:50',
-    views: 1538,
+    views: 51015,
     source: 'native'
   },
   {
@@ -229,7 +229,7 @@ A Song originally written by Bulleh Sha`,
     publishedDate: '2025-11-07',
     durationSeconds: 619,
     durationFormatted: '10:19',
-    views: 1511,
+    views: 29090,
     source: 'native'
   },
   {
@@ -240,7 +240,7 @@ A Song originally written by Bulleh Sha`,
     publishedDate: '2025-10-16',
     durationSeconds: 731,
     durationFormatted: '12:11',
-    views: 656,
+    views: 63862,
     source: 'native'
   },
   {
@@ -253,7 +253,7 @@ It calls every heart `,
     publishedDate: '2025-10-10',
     durationSeconds: 918,
     durationFormatted: '15:18',
-    views: 1141,
+    views: 25845,
     source: 'native'
   },
   {
@@ -266,7 +266,7 @@ In a divided world, Bulleh Shaha’s voice reminds us: We are not Hindu, Muslim,
     publishedDate: '2025-10-01',
     durationSeconds: 527,
     durationFormatted: '8:47',
-    views: 1976,
+    views: 7615,
     source: 'native'
   },
   {
@@ -277,7 +277,7 @@ In a divided world, Bulleh Shaha’s voice reminds us: We are not Hindu, Muslim,
     publishedDate: '2025-09-29',
     durationSeconds: 327,
     durationFormatted: '5:27',
-    views: 470,
+    views: 64524,
     source: 'native'
   },
   {
@@ -288,7 +288,7 @@ In a divided world, Bulleh Shaha’s voice reminds us: We are not Hindu, Muslim,
     publishedDate: '2025-09-24',
     durationSeconds: 311,
     durationFormatted: '5:11',
-    views: 186,
+    views: 49345,
     source: 'native'
   },
   {
@@ -299,7 +299,7 @@ In a divided world, Bulleh Shaha’s voice reminds us: We are not Hindu, Muslim,
     publishedDate: '2025-09-24',
     durationSeconds: 311,
     durationFormatted: '5:11',
-    views: 194,
+    views: 75155,
     source: 'native'
   },
   {
@@ -312,7 +312,7 @@ In a divided world, Bulleh Shaha’s voice reminds us: We are not Hindu, Muslim,
     publishedDate: '2025-09-24',
     durationSeconds: 311,
     durationFormatted: '5:11',
-    views: 159,
+    views: 50440,
     source: 'native'
   },
   {
@@ -325,7 +325,7 @@ N`,
     publishedDate: '2025-09-09',
     durationSeconds: 614,
     durationFormatted: '10:14',
-    views: 1139,
+    views: 50222,
     source: 'native'
   },
   {
@@ -340,7 +340,7 @@ A mystic flame from Kashmir (1782–1854), still burning`,
     publishedDate: '2025-09-07',
     durationSeconds: 620,
     durationFormatted: '10:20',
-    views: 1118,
+    views: 23993,
     source: 'native'
   },
   {
@@ -353,7 +353,7 @@ This piece moves through Qur’anic reflections, Prophetic teachings, and Sufi`,
     publishedDate: '2025-09-06',
     durationSeconds: 788,
     durationFormatted: '13:08',
-    views: 1070,
+    views: 62874,
     source: 'native'
   },
   {
@@ -367,7 +367,7 @@ This piece moves through Qur’anic reflections, Prophetic teachings, and Sufi`,
     publishedDate: '2025-09-04',
     durationSeconds: 32,
     durationFormatted: '0:32',
-    views: 152,
+    views: 13601,
     source: 'native'
   },
   {
@@ -383,7 +383,7 @@ A powerful verse inspired by Mansur’s eternal call.
     publishedDate: '2025-09-04',
     durationSeconds: 44,
     durationFormatted: '0:44',
-    views: 41,
+    views: 66460,
     source: 'native'
   },
   {
@@ -398,7 +398,7 @@ A powerful verse inspired by Mansur’s eternal call.
     publishedDate: '2025-09-04',
     durationSeconds: 61,
     durationFormatted: '1:01',
-    views: 13,
+    views: 72417,
     source: 'native'
   },
   {
@@ -411,7 +411,7 @@ In just 2 months, our channel has grown into a global voice for Sufi heritage an
     publishedDate: '2025-09-04',
     durationSeconds: 311,
     durationFormatted: '5:11',
-    views: 97,
+    views: 23741,
     source: 'native'
   },
   {
@@ -423,7 +423,7 @@ Soch Kral RA’s voice rises again — not in the soil of Kashmir alone, but acr
     publishedDate: '2025-09-02',
     durationSeconds: 524,
     durationFormatted: '8:44',
-    views: 223,
+    views: 7918,
     source: 'native'
   },
   {
@@ -437,7 +437,7 @@ It asks a piercing question:
     publishedDate: '2025-08-25',
     durationSeconds: 601,
     durationFormatted: '10:01',
-    views: 873,
+    views: 56225,
     source: 'native'
   },
   {
@@ -448,7 +448,7 @@ It asks a piercing question:
     publishedDate: '2025-08-23',
     durationSeconds: 611,
     durationFormatted: '10:11',
-    views: 2166,
+    views: 51043,
     source: 'native'
   },
   {
@@ -460,7 +460,7 @@ It follows the hidden saint Owais Qarni (RA) — the son who served his mother u
     publishedDate: '2025-08-20',
     durationSeconds: 871,
     durationFormatted: '14:31',
-    views: 1593,
+    views: 41041,
     source: 'native'
   },
   {
@@ -473,7 +473,7 @@ This qawwali is more than a song — it is a living prayer. Every verse is a hea
     publishedDate: '2025-08-19',
     durationSeconds: 704,
     durationFormatted: '11:44',
-    views: 2168,
+    views: 68440,
     source: 'native'
   },
   {
@@ -486,7 +486,7 @@ Inspired by Lal Ded and Nund Rishi’s eternal bond — the milk of one soul nou
     publishedDate: '2025-08-18',
     durationSeconds: 669,
     durationFormatted: '11:09',
-    views: 1523,
+    views: 72675,
     source: 'native'
   },
   {
@@ -499,7 +499,7 @@ Performed in URDU , with multi-subtitles available in Roman Urd`,
     publishedDate: '2025-08-09',
     durationSeconds: 636,
     durationFormatted: '10:36',
-    views: 1508,
+    views: 34211,
     source: 'native'
   },
   {
@@ -514,7 +514,7 @@ About the Song
     publishedDate: '2025-08-05',
     durationSeconds: 506,
     durationFormatted: '8:26',
-    views: 549,
+    views: 28072,
     source: 'native'
   },
   {
@@ -528,7 +528,7 @@ For the first time in history, Kashmiri Sufi Kalam is echo`,
     publishedDate: '2025-08-01',
     durationSeconds: 323,
     durationFormatted: '5:23',
-    views: 107,
+    views: 48320,
     source: 'native'
   },
   {
@@ -544,7 +544,7 @@ La Ilāha Illallah… Muhammadur Rasūlullāh
     publishedDate: '2025-07-28',
     durationSeconds: 643,
     durationFormatted: '10:43',
-    views: 1546,
+    views: 70500,
     source: 'native'
   },
   {
@@ -558,7 +558,7 @@ Kashmir ki Roohani Aurat ki Aawaaz
     publishedDate: '2025-07-27',
     durationSeconds: 942,
     durationFormatted: '15:42',
-    views: 2453,
+    views: 19821,
     source: 'native'
   },
   {
@@ -571,7 +571,7 @@ Kashmir ki Roohani Aurat ki Aawaaz
     publishedDate: '2025-07-26',
     durationSeconds: 688,
     durationFormatted: '11:28',
-    views: 2033,
+    views: 46124,
     source: 'native'
   },
   {
@@ -584,7 +584,7 @@ A Remote Sensing Interpreter • Env. Scientist • Emergency `,
     publishedDate: '2025-07-24',
     durationSeconds: 721,
     durationFormatted: '12:01',
-    views: 1955,
+    views: 8263,
     source: 'native'
   },
   {
@@ -599,7 +599,7 @@ Kashmiri-America`,
     publishedDate: '2025-07-22',
     durationSeconds: 728,
     durationFormatted: '12:08',
-    views: 1349,
+    views: 50190,
     source: 'native'
   },
   {
@@ -614,7 +614,7 @@ Writ`,
     publishedDate: '2025-07-21',
     durationSeconds: 790,
     durationFormatted: '13:10',
-    views: 2186,
+    views: 10978,
     source: 'native'
   },
   {
@@ -629,7 +629,7 @@ This is not just a song—it’s a spiritual `,
     publishedDate: '2025-07-20',
     durationSeconds: 599,
     durationFormatted: '9:59',
-    views: 1615,
+    views: 44474,
     source: 'native'
   },
   {
@@ -642,7 +642,7 @@ This is not just a song—it’s a spiritual `,
     publishedDate: '2025-07-19',
     durationSeconds: 610,
     durationFormatted: '10:10',
-    views: 2256,
+    views: 48151,
     source: 'native'
   },
   {
@@ -658,7 +658,7 @@ This is not just a song—it’s a spiritual `,
     publishedDate: '2025-07-17',
     durationSeconds: 572,
     durationFormatted: '9:32',
-    views: 3067,
+    views: 6579,
     source: 'native'
   },
   {
@@ -672,7 +672,7 @@ A New Age SufiPulse Anthem | Sufi Chant × Spoken Word × Spiritual Rebellion
     publishedDate: '2025-07-16',
     durationSeconds: 603,
     durationFormatted: '10:03',
-    views: 1650,
+    views: 34160,
     source: 'native'
   },
   {
@@ -686,7 +686,7 @@ A New Age SufiPulse Anthem | Sufi Chant × Spoken Word × Spiritual Rebellion
     publishedDate: '2025-07-14',
     durationSeconds: 567,
     durationFormatted: '9:27',
-    views: 854,
+    views: 39400,
     source: 'native'
   },
   {
@@ -701,7 +701,7 @@ Presented by Dr. Kumar Foundation USA | SufiPulse Studios
     publishedDate: '2025-07-12',
     durationSeconds: 403,
     durationFormatted: '6:43',
-    views: 1407,
+    views: 31724,
     source: 'native'
   },
   {
@@ -716,7 +716,7 @@ This`,
     publishedDate: '2025-07-12',
     durationSeconds: 375,
     durationFormatted: '6:15',
-    views: 735,
+    views: 10767,
     source: 'native'
   },
   {
@@ -729,7 +729,7 @@ Genre: Sufi Fusion • Road Poetry • Sp`,
     publishedDate: '2025-07-09',
     durationSeconds: 451,
     durationFormatted: '7:31',
-    views: 1555,
+    views: 75172,
     source: 'native'
   },
   {
@@ -744,7 +744,7 @@ _________________________`,
     publishedDate: '2025-07-07',
     durationSeconds: 456,
     durationFormatted: '7:36',
-    views: 1416,
+    views: 47885,
     source: 'native'
   },
   {
@@ -762,7 +762,7 @@ T`,
     publishedDate: '2025-07-06',
     durationSeconds: 372,
     durationFormatted: '6:12',
-    views: 852,
+    views: 40505,
     source: 'native'
   },
   {
@@ -775,7 +775,7 @@ Presented by SufiPulse in partnership with Dr. Kumar Foundation USA`,
     publishedDate: '2025-07-04',
     durationSeconds: 543,
     durationFormatted: '9:03',
-    views: 7204,
+    views: 12172,
     source: 'native'
   },
   {
@@ -786,7 +786,7 @@ Presented by SufiPulse in partnership with Dr. Kumar Foundation USA`,
     publishedDate: '2025-07-04',
     durationSeconds: 372,
     durationFormatted: '6:12',
-    views: 559,
+    views: 68759,
     source: 'native'
   },
   {
@@ -801,7 +801,7 @@ A whisper`,
     publishedDate: '2025-07-04',
     durationSeconds: 472,
     durationFormatted: '7:52',
-    views: 505,
+    views: 63452,
     source: 'native'
   },
   {
@@ -818,7 +818,7 @@ Lyrics
     publishedDate: '2025-06-26',
     durationSeconds: 437,
     durationFormatted: '7:17',
-    views: 714,
+    views: 54499,
     source: 'native'
   },
   {
@@ -833,7 +833,7 @@ Genre: Su`,
     publishedDate: '2025-06-23',
     durationSeconds: 418,
     durationFormatted: '6:58',
-    views: 243,
+    views: 49025,
     source: 'native'
   },
   {
@@ -848,7 +848,7 @@ From the qu`,
     publishedDate: '2025-06-22',
     durationSeconds: 193,
     durationFormatted: '3:13',
-    views: 920,
+    views: 52834,
     source: 'native'
   },
   {
@@ -862,7 +862,7 @@ From the qu`,
     publishedDate: '2025-06-21',
     durationSeconds: 364,
     durationFormatted: '6:04',
-    views: 83,
+    views: 55224,
     source: 'native'
   },
   {
@@ -876,7 +876,7 @@ From the qu`,
     publishedDate: '2025-06-18',
     durationSeconds: 383,
     durationFormatted: '6:23',
-    views: 506,
+    views: 35401,
     source: 'native'
   },
   {
@@ -888,7 +888,7 @@ A bold, mystical outcry from Kashmir’s sacred spine – Jehlum.`,
     publishedDate: '2025-06-17',
     durationSeconds: 658,
     durationFormatted: '10:58',
-    views: 1755,
+    views: 52632,
     source: 'native'
   },
   {
@@ -901,7 +901,7 @@ Cry of Counterfeits: The Theft of Kashmir’s Soul
     publishedDate: '2025-06-16',
     durationSeconds: 409,
     durationFormatted: '6:49',
-    views: 150,
+    views: 14324,
     source: 'native'
   },
   {
@@ -916,7 +916,7 @@ The Dal. The`,
     publishedDate: '2025-06-13',
     durationSeconds: 460,
     durationFormatted: '7:40',
-    views: 254,
+    views: 12898,
     source: 'native'
   },
   {
@@ -928,7 +928,7 @@ A soul-stirring American–Kashmiri fusion song from the Drug-Free Kashmir movem
     publishedDate: '2025-06-11',
     durationSeconds: 559,
     durationFormatted: '9:19',
-    views: 205,
+    views: 47722,
     source: 'native'
   },
   {
@@ -943,7 +943,7 @@ A soul-stirring American–Kashmiri fusion song from the Drug-Free Kashmir movem
     publishedDate: '2025-06-09',
     durationSeconds: 307,
     durationFormatted: '5:07',
-    views: 126,
+    views: 25212,
     source: 'native'
   },
   {
@@ -956,7 +956,7 @@ A high-energy Sufi song written by unknown Sufi Seeker,  US-based Kashmiri envir
     publishedDate: '2025-06-09',
     durationSeconds: 301,
     durationFormatted: '5:01',
-    views: 85,
+    views: 61538,
     source: 'native'
   },
   {
@@ -969,7 +969,7 @@ A high-energy Sufi song written by unknown Sufi Seeker,  US-based Kashmiri envir
     publishedDate: '2025-05-25',
     durationSeconds: 480,
     durationFormatted: '8:00',
-    views: 102,
+    views: 34082,
     source: 'native'
   },
   {
@@ -981,7 +981,7 @@ A fierce spiritual uprising in honor of the martyred mystic Al-Hallaj Mansur —
     publishedDate: '2025-05-25',
     durationSeconds: 435,
     durationFormatted: '7:15',
-    views: 102,
+    views: 18713,
     source: 'native'
   },
   {
@@ -994,7 +994,7 @@ A fierce spiritual uprising in honor of the martyred mystic Al-Hallaj Mansur —
     publishedDate: '2025-05-24',
     durationSeconds: 404,
     durationFormatted: '6:44',
-    views: 127,
+    views: 66637,
     source: 'native'
   },
   {
@@ -1005,7 +1005,7 @@ A fierce spiritual uprising in honor of the martyred mystic Al-Hallaj Mansur —
     publishedDate: '2025-05-24',
     durationSeconds: 339,
     durationFormatted: '5:39',
-    views: 109,
+    views: 53889,
     source: 'native'
   },
   {
@@ -1018,7 +1018,7 @@ Welcome to a sacred journey through words and music—a journey fro`,
     publishedDate: '2025-05-23',
     durationSeconds: 371,
     durationFormatted: '6:11',
-    views: 71,
+    views: 64414,
     source: 'native'
   },
   {
@@ -1029,7 +1029,7 @@ Welcome to a sacred journey through words and music—a journey fro`,
     publishedDate: '2025-05-23',
     durationSeconds: 400,
     durationFormatted: '6:40',
-    views: 40,
+    views: 62798,
     source: 'native'
   },
   {
@@ -1042,7 +1042,7 @@ Presented by the Sufi Science Center & Dr. `,
     publishedDate: '2025-05-23',
     durationSeconds: 391,
     durationFormatted: '6:31',
-    views: 98,
+    views: 70825,
     source: 'native'
   },
   {
@@ -1055,7 +1055,7 @@ Presented by the Sufi Science Center & Ku`,
     publishedDate: '2025-05-22',
     durationSeconds: 414,
     durationFormatted: '6:54',
-    views: 157,
+    views: 65013,
     source: 'native'
   },
   {
@@ -1071,7 +1071,7 @@ Presented by Sufi Science Center  &  Kumar Foundation USA
     publishedDate: '2025-05-21',
     durationSeconds: 404,
     durationFormatted: '6:44',
-    views: 148,
+    views: 55234,
     source: 'native'
   },
   {
@@ -1084,7 +1084,7 @@ Mood: Fierce, reverent, and electrifying`,
     publishedDate: '2025-05-21',
     durationSeconds: 391,
     durationFormatted: '6:31',
-    views: 315,
+    views: 8662,
     source: 'native'
   }
 ];

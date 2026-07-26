@@ -19,7 +19,11 @@ export default async function KnowledgeHome() {
     if (fs.existsSync(dataPath)) {
       entities = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
       if (Array.isArray(entities)) {
-          entities = entities.map(e => ({ ...e, class: e.class || e.type }));
+          entities = entities.map(e => {
+            const baseClass = e.class || e.type;
+            const classes = baseClass === 'saint_poet' ? ['saint', 'poet', 'saint_poet'] : [baseClass];
+            return { ...e, class: baseClass, classes };
+          });
       }
     }
   } catch (e) {}

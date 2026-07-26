@@ -13,7 +13,7 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=Dbd0fhJty4A",
     "thumbnailUrl": "https://i.ytimg.com/vi/Dbd0fhJty4A/hqdefault.jpg",
     "duration": "10:45",
-    "viewCount": 0,
+    "viewCount": 8,
     "tags": [
       "SufiPulse",
       "Mystical Kalam",
@@ -36,7 +36,10 @@
     "themes": [],
     "language": "Roman Urdu",
     "youtubeVideoId": "Dbd0fhJty4A",
-    "embedUrl": "https://www.youtube.com/embed/Dbd0fhJty4A"
+    "embedUrl": "https://www.youtube.com/embed/Dbd0fhJty4A",
+    "views": 8,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775202913815_aMzdiIuYgK4",
@@ -49,7 +52,7 @@
     "releaseDate": "2026-02-20",
     "durationSeconds": 617,
     "durationFormatted": "10:17",
-    "viewCount": 121,
+    "viewCount": 131,
     "likeCount": 1,
     "status": "published",
     "contentReadinessState": "delivery_attention_required",
@@ -438,7 +441,7 @@
     "youtubeChannelUrl": "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
     "chorusVocalists": [],
     "source": "youtube",
-    "views": 102,
+    "views": 131,
     "likes": 0,
     "subtitlesAvailable": false,
     "subtitleLanguages": [],
@@ -544,7 +547,9 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775202913816_g9VGzWRHZ0g",
@@ -684,7 +689,7 @@
     "releaseDate": "2026-01-24",
     "durationSeconds": 517,
     "durationFormatted": "8:37",
-    "viewCount": 263,
+    "viewCount": 296,
     "likeCount": 16,
     "status": "published",
     "contentReadinessState": "draft",
@@ -798,7 +803,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 296,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775202913817_n6q_g4bY_sA",
@@ -811,7 +819,7 @@
     "releaseDate": "2026-01-18",
     "durationSeconds": 694,
     "durationFormatted": "11:34",
-    "viewCount": 73,
+    "viewCount": 74,
     "likeCount": 4,
     "status": "published",
     "contentReadinessState": "draft",
@@ -924,7 +932,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 74,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775202913817_lMxb4Dk-n0Y",
@@ -1618,7 +1629,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 536,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775202913819_sPOY59RAkAU",
@@ -1631,7 +1645,7 @@
     "releaseDate": "2025-12-25",
     "durationSeconds": 896,
     "durationFormatted": "14:56",
-    "viewCount": 1062,
+    "viewCount": 1000,
     "likeCount": 178,
     "status": "published",
     "contentReadinessState": "draft",
@@ -1745,7 +1759,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1000,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775202913819_24SrdzzLYus",
@@ -2012,7 +2029,7 @@
     "releaseDate": "2025-12-09",
     "durationSeconds": 785,
     "durationFormatted": "13:05",
-    "viewCount": 1834,
+    "viewCount": 1800,
     "likeCount": 163,
     "status": "published",
     "contentReadinessState": "draft",
@@ -2126,7 +2143,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1800,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775202913821_be6GFwGpobw",
@@ -2513,7 +2533,7 @@
     "releaseDate": "2025-11-23",
     "durationSeconds": 741,
     "durationFormatted": "12:21",
-    "viewCount": 466,
+    "viewCount": 467,
     "likeCount": 23,
     "status": "published",
     "contentReadinessState": "draft",
@@ -2623,7 +2643,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 467,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218441_BFG-8G3-thY",
@@ -3008,7 +3031,7 @@
     "releaseDate": "2025-10-10",
     "durationSeconds": 918,
     "durationFormatted": "15:18",
-    "viewCount": 1148,
+    "viewCount": 1100,
     "likeCount": 8,
     "status": "published",
     "contentReadinessState": "draft",
@@ -3119,7 +3142,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1100,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218444_QrNA31-s8u0",
@@ -3132,7 +3158,7 @@
     "releaseDate": "2025-10-01",
     "durationSeconds": 527,
     "durationFormatted": "8:47",
-    "viewCount": 1979,
+    "viewCount": 1900,
     "likeCount": 12,
     "status": "published",
     "contentReadinessState": "draft",
@@ -3243,7 +3269,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1900,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218445_lqMkErpT3dQ",
@@ -3256,7 +3285,7 @@
     "releaseDate": "2025-09-29",
     "durationSeconds": 327,
     "durationFormatted": "5:27",
-    "viewCount": 472,
+    "viewCount": 473,
     "likeCount": 5,
     "status": "published",
     "contentReadinessState": "draft",
@@ -3368,7 +3397,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 473,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218446_jdGv8DEu4pE",
@@ -3753,7 +3785,7 @@
     "releaseDate": "2025-09-09",
     "durationSeconds": 614,
     "durationFormatted": "10:14",
-    "viewCount": 1145,
+    "viewCount": 1100,
     "likeCount": 7,
     "status": "published",
     "contentReadinessState": "draft",
@@ -3864,7 +3896,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1100,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218449_kVtYDOa5hPs",
@@ -4369,7 +4404,7 @@
     "releaseDate": "2025-09-04",
     "durationSeconds": 61,
     "durationFormatted": "1:01",
-    "viewCount": 13,
+    "viewCount": 1100,
     "likeCount": 5,
     "status": "published",
     "contentReadinessState": "draft",
@@ -4478,7 +4513,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1100,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218453_BzcmOqiIHck",
@@ -4491,7 +4529,7 @@
     "releaseDate": "2025-09-04",
     "durationSeconds": 311,
     "durationFormatted": "5:11",
-    "viewCount": 99,
+    "viewCount": 102,
     "likeCount": 18,
     "status": "published",
     "contentReadinessState": "draft",
@@ -4600,7 +4638,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 102,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218454_hbe-e1x1yAU",
@@ -4844,7 +4885,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 878,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218456_LMen31sMjMg",
@@ -4857,7 +4901,7 @@
     "releaseDate": "2025-08-23",
     "durationSeconds": 611,
     "durationFormatted": "10:11",
-    "viewCount": 2171,
+    "viewCount": 2100,
     "likeCount": 14,
     "status": "published",
     "contentReadinessState": "draft",
@@ -4966,7 +5010,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 2100,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218457__5a7HNedpUw",
@@ -5955,7 +6002,7 @@
     "releaseDate": "2025-07-26",
     "durationSeconds": 688,
     "durationFormatted": "11:28",
-    "viewCount": 2034,
+    "viewCount": 2000,
     "likeCount": 4,
     "status": "published",
     "contentReadinessState": "draft",
@@ -6064,7 +6111,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 2000,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218467_eEwA-LGF7uo",
@@ -6077,7 +6127,7 @@
     "releaseDate": "2025-07-24",
     "durationSeconds": 721,
     "durationFormatted": "12:01",
-    "viewCount": 1956,
+    "viewCount": 1900,
     "likeCount": 14,
     "status": "published",
     "contentReadinessState": "draft",
@@ -6186,7 +6236,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1900,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218468_najlQsUlBiw",
@@ -6565,7 +6618,7 @@
     "releaseDate": "2025-07-19",
     "durationSeconds": 610,
     "durationFormatted": "10:10",
-    "viewCount": 2258,
+    "viewCount": 2200,
     "likeCount": 20,
     "status": "published",
     "contentReadinessState": "draft",
@@ -6674,7 +6727,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 2200,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218474_CsgGFTd8iLI",
@@ -6687,7 +6743,7 @@
     "releaseDate": "2025-07-17",
     "durationSeconds": 572,
     "durationFormatted": "9:32",
-    "viewCount": 3069,
+    "viewCount": 3000,
     "likeCount": 31,
     "status": "published",
     "contentReadinessState": "draft",
@@ -6796,7 +6852,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 3000,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218475_a_MynvITxO4",
@@ -7785,7 +7844,7 @@
     "releaseDate": "2025-07-04",
     "durationSeconds": 372,
     "durationFormatted": "6:12",
-    "viewCount": 562,
+    "viewCount": 563,
     "likeCount": 3,
     "status": "published",
     "contentReadinessState": "draft",
@@ -7894,7 +7953,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 563,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218490_VKDBw6TiRC0",
@@ -7907,7 +7969,7 @@
     "releaseDate": "2025-07-04",
     "durationSeconds": 472,
     "durationFormatted": "7:52",
-    "viewCount": 505,
+    "viewCount": 507,
     "likeCount": 4,
     "status": "published",
     "contentReadinessState": "draft",
@@ -8016,7 +8078,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 507,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218493_3UwkaoS9xr4",
@@ -8029,7 +8094,7 @@
     "releaseDate": "2025-06-26",
     "durationSeconds": 437,
     "durationFormatted": "7:17",
-    "viewCount": 721,
+    "viewCount": 724,
     "likeCount": 10,
     "status": "published",
     "contentReadinessState": "draft",
@@ -8138,7 +8203,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 724,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218494_k9nznafeQ60",
@@ -8273,7 +8341,7 @@
     "releaseDate": "2025-06-22",
     "durationSeconds": 193,
     "durationFormatted": "3:13",
-    "viewCount": 927,
+    "viewCount": 932,
     "likeCount": 17,
     "status": "published",
     "contentReadinessState": "draft",
@@ -8382,7 +8450,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 932,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218497_cz9BhrPKoBc",
@@ -8395,7 +8466,7 @@
     "releaseDate": "2025-06-21",
     "durationSeconds": 364,
     "durationFormatted": "6:04",
-    "viewCount": 83,
+    "viewCount": 85,
     "likeCount": 2,
     "status": "published",
     "contentReadinessState": "draft",
@@ -8504,7 +8575,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 85,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218499_Qn0j9rNPAkI",
@@ -8639,7 +8713,7 @@
     "releaseDate": "2025-06-17",
     "durationSeconds": 658,
     "durationFormatted": "10:58",
-    "viewCount": 1756,
+    "viewCount": 1700,
     "likeCount": 30,
     "status": "published",
     "contentReadinessState": "draft",
@@ -8748,7 +8822,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 1700,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218502__6pVqwZSQIE",
@@ -8761,7 +8838,7 @@
     "releaseDate": "2025-06-16",
     "durationSeconds": 409,
     "durationFormatted": "6:49",
-    "viewCount": 150,
+    "viewCount": 153,
     "likeCount": 6,
     "status": "published",
     "contentReadinessState": "draft",
@@ -8870,7 +8947,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 153,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218504_nFAGGKia4aU",
@@ -8992,7 +9072,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 255,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218506_ZxgCJ1fXrKc",
@@ -9114,7 +9197,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 205,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218508_J0Vbn5XuVoc",
@@ -9236,7 +9322,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 126,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218509_Aa-T-aA3kpk",
@@ -9358,7 +9447,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 85,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218511_EtehDd3oUVc",
@@ -9371,7 +9463,7 @@
     "releaseDate": "2025-05-25",
     "durationSeconds": 480,
     "durationFormatted": "8:00",
-    "viewCount": 102,
+    "viewCount": 103,
     "likeCount": 2,
     "status": "published",
     "contentReadinessState": "draft",
@@ -9480,7 +9572,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 103,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218513_U6uT9yaQy0Y",
@@ -9493,7 +9588,7 @@
     "releaseDate": "2025-05-25",
     "durationSeconds": 435,
     "durationFormatted": "7:15",
-    "viewCount": 102,
+    "viewCount": 103,
     "likeCount": 3,
     "status": "published",
     "contentReadinessState": "draft",
@@ -9602,7 +9697,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 103,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218514_tFpnzwapo1A",
@@ -9724,7 +9822,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 129,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218516_I1b9QtSmRAQ",
@@ -9968,7 +10069,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 71,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218522_DiWJ_RBML08",
@@ -10212,7 +10316,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 99,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218525_8yL--I2zeDE",
@@ -10334,7 +10441,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 158,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1775203218527_Sibgklh-W5g",
@@ -10469,7 +10579,7 @@
     "releaseDate": "2025-05-21",
     "durationSeconds": 391,
     "durationFormatted": "6:31",
-    "viewCount": 316,
+    "viewCount": 318,
     "likeCount": 15,
     "status": "published",
     "contentReadinessState": "draft",
@@ -10578,7 +10688,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 318,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1777974043319_D7hvqyQYJrk",
@@ -10737,7 +10850,7 @@
     "publishedAt": "2026-05-03T10:43:11Z",
     "durationSeconds": 952,
     "durationFormatted": "15:52",
-    "viewCount": 73,
+    "viewCount": 85,
     "likeCount": 5,
     "status": "published",
     "contentReadinessState": "draft",
@@ -10835,7 +10948,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 85,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "LjmOxu1AVAg",
@@ -11016,7 +11132,7 @@
     "title": "Lord of the Mysteries I خداوندانِ اسرار",
     "thumbnailUrl": "https://i.ytimg.com/vi/q58mRXIsi-Y/hqdefault.jpg",
     "description": "An immersive Sufi musical experience inspired by the sacred atmosphere of Persian mysticism, sama‘, and the timeless tradition of seekers journeying through Divine remembrance.\n\nBuilt around the recurring invocation:\n\n“Khuda, raazdaraan-e-raazdaaran…”\nGod, Keeper of the keepers of secrets.\n\nThis composition travels through the language of:\nNoor within Noor,\nhidden celestial gatherings,\nthe silence of inward longing,\nthe dissolution of ego,\nand the eternal orbit of lovers around the Muhammadan Light ﷺ.\n\nAt the spiritual center of the kalam stands:\n“Aaftaab-e-Noor”\nThe Sun of Divine Light ﷺ\n\nA symbolic reflection of Noor-e-Muhammadi ﷺ:\nthe primordial light carried through Prophets, saints, seekers, and hearts awakened through remembrance.\n\nBlending Persian spiritual poetry, cinematic soundscapes, meditative repetition, and mystical symbolism, Khudawand-e-Asraar unfolds as both a musical composition and an inward spiritual journey.\n\n“Raaz-e-nihaani-e dar seena-am furood aawar…\nKe dil bar aahang-e-aan, baarahaa be raqs aayad…”\n\n“Place within my chest a hidden mystery,\nwhose rhythm makes this heart dance again and again.”\n\nThis release is presented in two interconnected movements:\n\nPart I\nThe awakening of longing, hidden mysteries, and Divine Light.\n\nPart II\nA Sama‘ experience for seekers entering the hidden realms of spiritual remembrance.\n\nInspired by the spirit of:\nJalal al-Din Rumi,\nShams-e-Tabriz,\nclassical Persian irfaan,\nand the sacred traditions of zikr and sama‘.\n\nLanguages:\nFarsi • Urdu • Roman Urdu • Mystical English Translation\n\nKalam & Creative Direction\nDr. Zarf-e-Noori\n\nProduced By\nSufiPulse SufiTube Studio\n\nPresented By\nSufiPulse-USA\nSufi Science Center USA\nDr Kumar Foundation USA",
-    "viewCount": 26,
+    "viewCount": 78,
     "likeCount": 3,
     "durationSeconds": 1115,
     "durationFormatted": "18:35",
@@ -11097,7 +11213,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 78,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1778705546287_wMxWfsst48Q",
@@ -11287,7 +11406,7 @@
     "title": "The Next Generation Sufi Way Forward I Website Inaugural Promo | Sufi Science Center",
     "thumbnailUrl": "https://i.ytimg.com/vi/kX2g8o2uEGw/maxresdefault.jpg",
     "description": "Sufi Science Center USA is an upcoming platform initiative within the wider Sufi Science vision of Dr. Kumar Foundation USA. \n\nThis pre-launch video offers an early introduction to its direction, purpose, and evolving role.\n\nThe platform is being developed as a future-facing space for:\n\nconsciousness research\ncontemplative knowledge systems\ninner development\nscholarly dialogue\nmeaningful public engagement\n\nRooted in the wider vision of Dr. Kumar Foundation USA, it represents an expanded phase of inquiry designed to deepen engagement with spiritual wisdom, knowledge systems, interdisciplinary reflection, and human transformation.",
-    "viewCount": 76,
+    "viewCount": 86,
     "likeCount": 0,
     "durationSeconds": 669,
     "durationFormatted": "11:09",
@@ -11368,7 +11487,10 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "views": 86,
+    "viewCountSource": "youtube_manual_snapshot",
+    "viewCountSnapshotDate": "2026-06-25"
   },
   {
     "id": "release_1779542779861_4HZbA2sfGmY",

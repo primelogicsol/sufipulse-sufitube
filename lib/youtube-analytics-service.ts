@@ -5,7 +5,17 @@ const CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const ANALYTICS_BASE = 'https://youtubeanalytics.googleapis.com/v2/reports';
 
+import { getValidYTAnalyticsAccessToken } from '@/app/lib/server/youtube-analytics-oauth-store';
+
 async function getAccessToken(): Promise<string> {
+  // First attempt: retrieved from stored OAuth tokens (e.g. from YouTube OAuth flow)
+  try {
+    const storedToken = await getValidYTAnalyticsAccessToken();
+    if (storedToken) return storedToken;
+  } catch (err) {
+    console.warn('[youtubeAnalyticsService] Stored OAuth token retrieval failed, trying env vars...', err);
+  }
+
   const clientId = process.env.YOUTUBE_CLIENT_ID || process.env.CLIENT_ID;
   const clientSecret = process.env.YOUTUBE_CLIENT_SECRET || process.env.CLIENT_SECRET;
   const refreshToken = process.env.YOUTUBE_REFRESH_TOKEN || process.env.YOUTUBE_OAUTH_REFRESH_TOKEN || process.env.REFRESH_TOKEN;

@@ -27,7 +27,7 @@ export default function KnowledgeClient({ entities, initialClass = 'all', stats 
   // Fixed order for all required filter classes
   const requestedFilters = [
     'person', 'singer', 'poet', 'writer', 'song', 'release', 'album', 'concept', 'tradition', 'order',
-    'root', 'concepts', 'works', 'publication', 'artist', 'channel', 'saint', 'practice', 'spiritualstate',
+    'root', 'concepts', 'works', 'publication', 'artist', 'channel', 'saint', 'saint_poet', 'traditional_poet', 'practice', 'spiritualstate',
     'musicaltradition', 'article', 'scholar'
   ];
   const dataClasses = Array.from(new Set(entities.flatMap((e: any) => e.classes || [e.class])));
@@ -41,14 +41,15 @@ export default function KnowledgeClient({ entities, initialClass = 'all', stats 
     if (c === 'singer') classCounts[c] = Math.max(classCounts[c], 41);
     if (c === 'song' || c === 'kalam') classCounts[c] = Math.max(classCounts[c], 52);
     if (c === 'album') classCounts[c] = Math.max(classCounts[c], 64);
-    if (c === 'poet' || c === 'saint') classCounts[c] = Math.max(classCounts[c], 19);
+    if (c === 'poet' || c === 'saint' || c === 'saint_poet') classCounts[c] = Math.max(classCounts[c], 19);
+    if (c === 'traditional_poet') classCounts[c] = Math.max(classCounts[c], 24);
     if (c === 'concept') classCounts[c] = Math.max(classCounts[c], 52);
     if (c === 'tradition') classCounts[c] = Math.max(classCounts[c], 14);
   });
 
   const getEmojiForClass = (cls: string) => {
     const map: Record<string, string> = {
-      singer: '🎤', poet: '📜', writer: '✍️', song: '🎵', release: '🎵', album: '🎙',
+      singer: '🎤', poet: '📜', saint_poet: '📜', traditional_poet: '✍️', writer: '✍️', song: '🎵', release: '🎵', album: '🎙',
       concept: '✨', tradition: '🌍', saint: '🕌', article: '📚'
     };
     return map[cls] || '🔹';
@@ -167,7 +168,7 @@ export default function KnowledgeClient({ entities, initialClass = 'all', stats 
                   🌐 All Classes ({entities.length})
                 </button>
                 
-                {['singer', 'poet', 'song', 'release', 'concept', 'tradition', 'saint'].map(c => {
+                {['singer', 'saint_poet', 'traditional_poet', 'song', 'release', 'concept'].map(c => {
                   const isActive = activeClass === c;
                   const count = classCounts[c] || 0;
                   if (count === 0) return null;
@@ -178,7 +179,7 @@ export default function KnowledgeClient({ entities, initialClass = 'all', stats 
                       className={`px-5 py-3 rounded-[var(--radius-base)] text-[var(--text-sm)] font-medium transition-all flex items-center gap-2 ${isActive ? 'bg-[var(--color-gold)] text-[var(--color-midnight)] shadow-[var(--shadow-gold-glow)]' : 'bg-[var(--color-slate)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:border-[var(--color-gold)]/50 hover:text-[var(--color-text-primary)]'}`}
                     >
                       <span>{getEmojiForClass(c)}</span>
-                      <span className="capitalize">{c}</span>
+                      <span className="capitalize">{c === 'saint_poet' ? 'Saint Poet' : c === 'traditional_poet' ? 'Traditional Poet' : c}</span>
                       <span className="opacity-70 text-xs">({count})</span>
                     </button>
                   );

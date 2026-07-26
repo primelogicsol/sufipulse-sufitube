@@ -4,8 +4,10 @@ import { z } from 'zod';
 
 export type KnowledgeEntityType =
   | 'saint'
+  | 'saint_poet'
   | 'scholar'
   | 'poet'
+  | 'traditional_poet'
   | 'practice'
   | 'quranicTheme'
   | 'spiritualState'
@@ -41,6 +43,7 @@ export interface KnowledgeEntity {
   // Artistic & Thematic Attributes
   performanceCharacteristics?: string[];
   musicalStyle?: string[];
+  literaryStyle?: string[];
   primaryThemes?: string[];
 
   // Knowledge Graph Edges
@@ -67,7 +70,7 @@ export interface KnowledgeEntity {
 export const knowledgeEntitySchema = z.object({
   id: z.string(),
   type: z.enum([
-    'saint', 'scholar', 'poet', 'practice', 'quranicTheme', 'spiritualState', 'musicalTradition', 'literaryTradition',
+    'saint', 'saint_poet', 'scholar', 'poet', 'traditional_poet', 'practice', 'quranicTheme', 'spiritualState', 'musicalTradition', 'literaryTradition',
     'singer', 'song', 'kalam', 'release', 'album', 'concept', 'order'
   ]),
   slug: z.string().min(2).max(100).regex(/^[a-z0-9-]+$/),
@@ -87,6 +90,7 @@ export const knowledgeEntitySchema = z.object({
   
   performanceCharacteristics: z.array(z.string()).optional(),
   musicalStyle: z.array(z.string()).optional(),
+  literaryStyle: z.array(z.string()).optional(),
   primaryThemes: z.array(z.string()).optional(),
 
   regionLinks: z.array(z.string()).default([]),

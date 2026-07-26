@@ -31,10 +31,10 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
   // 1. Immutable Institutional Results
   lifetimeSnapshot: {
     performance: {
-      impressions: 973000,
-      views: 82500,
-      watchTimeHours: 8700,
-      clickThroughRate: 8.5,
+      impressions: 85115666,
+      views: 7149716,
+      watchTimeHours: 755803,
+      clickThroughRate: 8.4,
       averageViewDurationFormatted: "6:20"
     },
     ageGender: {
@@ -50,13 +50,13 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
       ]
     },
     recommendationEngine: {
-      viewsPercentage: 87.2
+      viewsPercentage: 86.9
     },
     geographies: {
-      totalCountries: 50
+      totalCountries: 53
     }
   },
-  snapshotStatus: "Verified YouTube Studio Snapshot",
+  snapshotStatus: "Verified YouTube Studio Snapshot (May 20, 2025 - Jul 24, 2026)",
 
   // 2. Live API Telemetry (Admins only)
   apiStatus: {
@@ -66,7 +66,7 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
     restrictedMetrics: ["impressions", "ctr", "demographics", "geography"]
   },
 
-  lastUpdated: new Date("2026-06-24T00:00:00Z").toISOString(),
+  lastUpdated: new Date("2026-07-24T00:00:00Z").toISOString(),
   nextRefreshAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 };
 
