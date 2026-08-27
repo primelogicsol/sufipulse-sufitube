@@ -34,6 +34,22 @@ function testStudioCsvParsing() {
   assert.equal(snapshot.rows[0].impressions, 1100);
   assert.equal(snapshot.rows[0].ctr, 8.8);
 
+  const realExportShape = [
+    'Content,Video title,Video publish time,Duration,Views,Watch time (hours),Subscribers,Estimated revenue (USD),Thumbnail impressions,Thumbnail click-through rate (%)',
+    'Total,,,,159475,10359.5571,2209,31.84,986789,8.4',
+    '8nmW-vJbwMA,13 January 2026,"Jan 13, 2026",161,40840,4950.7594,666,0.988,163837,21.92',
+  ].join('\n');
+
+  const realExportSnapshot = parseYouTubeStudioCsv(realExportShape, 'Table data.csv');
+  assert.equal(realExportSnapshot.rowCount, 1, 'Studio Total row must not be treated as a video');
+  assert.equal(realExportSnapshot.rows[0].videoId, '8nmW-vJbwMA');
+  assert.equal(realExportSnapshot.rows[0].views, 40840);
+  assert.equal(realExportSnapshot.rows[0].watchTimeMinutes, 297045.564);
+  assert.equal(realExportSnapshot.rows[0].impressions, 163837);
+  assert.equal(realExportSnapshot.rows[0].ctr, 21.92, 'Real Thumbnail click-through rate (%) header must map to CTR');
+  assert.equal(realExportSnapshot.rows[0].publishedAt, 'Jan 13, 2026');
+  assert.equal(realExportSnapshot.rows[0].avgViewDurationSecs, null, 'Missing Average view duration must remain unavailable, not fabricated from video Duration');
+
   assert.throws(
     () => parseYouTubeStudioCsv('Title,Views\nNo video id,12', 'bad.csv'),
     /video\/content ID column/i,
