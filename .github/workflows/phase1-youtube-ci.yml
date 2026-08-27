@@ -71,7 +71,7 @@ jobs:
           fi
           echo "No TypeScript errors were reported in Phase 1 changed files."
 
-      - name: Lint repository (capture baseline)
+      - name: Lint repository (runner validation)
         id: lint
         continue-on-error: true
         env:
@@ -87,8 +87,34 @@ jobs:
             echo "No lintable Phase 1 files changed."
             exit 0
           fi
-          printf 'Linting Phase 1 changed files:\n%s\n' "${changed[*]}"
-          npx eslint "${changed[@]}"
+
+          echo "Linting current Phase 1 files..."
+          npx eslint "${changed[@]}" -f json > /tmp/phase1-head-lint.json || true
+
+          rm -rf /tmp/phase1-base
+          git worktree add --detach /tmp/phase1-base origin/main
+          cp eslint.config.mjs /tmp/phase1-base/eslint.config.mjs
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/phase1-base/node_modules
+
+          basefiles=()
+          for file in "${changed[@]}"; do
+            [ "$file" = "eslint.config.mjs" ] && continue
+            if git cat-file -e "origin/main:$file" 2>/dev/null; then
+              basefiles+=("$file")
+            fi
+          done
+
+          if [ "${#basefiles[@]}" -gt 0 ]; then
+            (
+              cd /tmp/phase1-base
+              "$GITHUB_WORKSPACE/node_modules/.bin/eslint" "${basefiles[@]}" -f json > /tmp/phase1-base-lint.json || true
+            )
+          else
+            echo '[]' > /tmp/phase1-base-lint.json
+          fi
+
+          node scripts/phase1-lint-differential.mjs /tmp/phase1-base-lint.json /tmp/phase1-head-lint.json
+          git worktree remove --force /tmp/phase1-base
 
       - name: Production build
         id: build
@@ -158,7 +184,7 @@ jobs:
         if: always()
         run: |
           echo "Repository type-check baseline: ${{ steps.typecheck.outcome }}"
-          echo "Repository lint baseline:       ${{ steps.lint.outcome }}"
+          echo "Repository lint runner:         ${{ steps.lint.outcome }}"
           echo "Production build:              ${{ steps.build.outcome }}"
           echo "Live catalog outcome:          ${{ steps.live_catalog.outcome }}"
           echo "Live catalog status:           ${{ steps.live_catalog.outputs.status }}"
