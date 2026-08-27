@@ -23,6 +23,28 @@ function fmtDuration(secs: number | null): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+type MetricSource = 'youtube_analytics_api' | 'studio_csv' | 'unavailable';
+
+function sourceLabel(source: MetricSource): string {
+  if (source === 'youtube_analytics_api') return 'LIVE API';
+  if (source === 'studio_csv') return 'STUDIO CSV';
+  return 'UNAVAILABLE';
+}
+
+function sourceClass(source: MetricSource): string {
+  if (source === 'youtube_analytics_api') return 'bg-green-500/10 border-green-500/20 text-green-300';
+  if (source === 'studio_csv') return 'bg-sky-500/10 border-sky-500/20 text-sky-300';
+  return 'bg-neutral-800 border-neutral-700 text-neutral-500';
+}
+
+function SourceBadge({ source }: { source: MetricSource }) {
+  return (
+    <span className={`inline-flex mt-1 px-1.5 py-0.5 rounded border text-[8px] font-bold tracking-wider ${sourceClass(source)}`}>
+      {sourceLabel(source)}
+    </span>
+  );
+}
+
 export default function YouTubeAnalyticsPage() {
   const [connected, setConnected] = useState<boolean | null>(null);
   const [connecting, setConnecting] = useState(false);
@@ -64,7 +86,7 @@ export default function YouTubeAnalyticsPage() {
         });
       }
     } catch {
-      // Studio import is an optional fallback source; live Analytics can continue independently.
+      // Studio import is an optional first-party fallback; live Analytics can continue independently.
     }
   }, []);
 
@@ -152,7 +174,7 @@ export default function YouTubeAnalyticsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Studio CSV import failed.');
       setStudioSummary({ rowCount: json.rowCount, importedAt: json.importedAt, fileName: json.fileName });
-      setWarning(`YouTube Studio snapshot imported: ${json.rowCount} unique video rows. Studio-only metrics now use this first-party source.`);
+      setWarning(`YouTube Studio snapshot imported: ${json.rowCount} unique video rows. Studio-only metrics now use this verified first-party source.`);
       await loadAnalytics();
     } catch (e: any) {
       setError(e.message || 'Studio CSV import failed.');
@@ -262,6 +284,18 @@ export default function YouTubeAnalyticsPage() {
           </label>
         </div>
 
+        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className="text-neutral-400 font-medium">Metric provenance:</span>
+            <SourceBadge source="youtube_analytics_api" />
+            <SourceBadge source="studio_csv" />
+            <SourceBadge source="unavailable" />
+          </div>
+          <p className="text-[11px] text-neutral-600 mt-2">
+            Each value below carries its own source. Missing metrics remain unavailable; imported Studio values never masquerade as live API telemetry.
+          </p>
+        </div>
+
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-400 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -347,11 +381,26 @@ export default function YouTubeAnalyticsPage() {
                         <p className="text-neutral-200 truncate" title={v.title}>{v.title}</p>
                         <p className="text-xs text-neutral-600 font-mono mt-0.5">{v.videoId}</p>
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-amber-400 tabular-nums">{fmt(v.views)}</td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">{fmtDuration(v.avgViewDurationSecs)}</td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">{fmt(v.watchTimeMinutes)}</td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">{fmt(v.impressions)}</td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">{v.ctr === null ? '—' : `${v.ctr.toFixed(2)}%`}</td>
+                      <td className="px-4 py-3 text-right font-bold text-amber-400 tabular-nums align-top">
+                        <div>{fmt(v.views)}</div>
+                        <SourceBadge source={v.metricSources.views} />
+                      </td>
+                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
+                        <div>{fmtDuration(v.avgViewDurationSecs)}</div>
+                        <SourceBadge source={v.metricSources.averageViewDuration} />
+                      </td>
+                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
+                        <div>{fmt(v.watchTimeMinutes)}</div>
+                        <SourceBadge source={v.metricSources.watchTime} />
+                      </td>
+                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
+                        <div>{fmt(v.impressions)}</div>
+                        <SourceBadge source={v.metricSources.impressions} />
+                      </td>
+                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
+                        <div>{v.ctr === null ? '—' : `${v.ctr.toFixed(2)}%`}</div>
+                        <SourceBadge source={v.metricSources.ctr} />
+                      </td>
                       <td className="px-4 py-3">
                         <a
                           href={`https://www.youtube.com/watch?v=${v.videoId}`}
@@ -369,7 +418,7 @@ export default function YouTubeAnalyticsPage() {
               </table>
             </div>
             <p className="text-xs text-neutral-700 text-right">
-              {filtered.length} of {data.length} videos · source: {dataSource || 'verified YouTube source'}
+              {filtered.length} of {data.length} videos · aggregate source: {dataSource || 'verified YouTube source'}
             </p>
           </div>
         )}
