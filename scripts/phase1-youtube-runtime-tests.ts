@@ -154,10 +154,56 @@ async function testOAuthRefreshContracts() {
   }
 }
 
+async function testAnalyticsUpstreamContracts() {
+  const originalFetch = globalThis.fetch;
+  try {
+    const analytics = await import('../lib/youtube-analytics-client');
+
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({ error: { code: 403, message: 'Insufficient Permission' } }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+
+    let scopeError: unknown;
+    try {
+      await analytics.queryYouTubeAnalytics(
+        { dimensions: 'video', metrics: 'views', maxResults: '1' },
+        'phase1-explicit-access-token'
+      );
+    } catch (error) {
+      scopeError = error;
+    }
+
+    assert.ok(scopeError instanceof analytics.YouTubeAnalyticsUpstreamError);
+    assert.equal(scopeError.status, 403, 'Insufficient Analytics scope must preserve upstream 403 for reconnect handling');
+
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({ error: { code: 500, message: 'Temporary upstream failure' } }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+
+    let upstreamError: unknown;
+    try {
+      await analytics.queryYouTubeAnalytics(
+        { dimensions: 'video', metrics: 'views', maxResults: '1' },
+        'phase1-explicit-access-token'
+      );
+    } catch (error) {
+      upstreamError = error;
+    }
+
+    assert.ok(upstreamError instanceof analytics.YouTubeAnalyticsUpstreamError);
+    assert.equal(upstreamError.status, 500, 'Temporary upstream failure must remain an explicit API error');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 async function main() {
   testStudioCsvParsing();
   await testYouTubeDataApiFailures();
   await testOAuthRefreshContracts();
+  await testAnalyticsUpstreamContracts();
   console.log('Phase 1 YouTube runtime contract tests passed.');
 }
 
