@@ -32,30 +32,51 @@ async function parseJson(response) {
   }
 }
 
+async function tokenExchange({ clientId, clientSecret, refreshToken, includeSecret }) {
+  const params = {
+    client_id: clientId,
+    refresh_token: refreshToken,
+    grant_type: 'refresh_token',
+  };
+  if (includeSecret && clientSecret) params.client_secret = clientSecret;
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(params),
+  });
+  const payload = await parseJson(response);
+  return { response, payload };
+}
+
 async function refreshAccessToken() {
   const clientId = normalizeEnvSecret(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
   const clientSecret = normalizeEnvSecret(process.env.YOUTUBE_CLIENT_SECRET, 'YOUTUBE_CLIENT_SECRET');
   const refreshToken = normalizeEnvSecret(process.env.YOUTUBE_REFRESH_TOKEN, 'YOUTUBE_REFRESH_TOKEN');
 
-  if (!clientId || !clientSecret || !refreshToken) return null;
+  if (!clientId || !refreshToken) return null;
 
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    refresh_token: refreshToken,
-    grant_type: 'refresh_token',
-  });
-
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-  const payload = await parseJson(response);
-  if (!response.ok || !payload.access_token) {
-    throw new Error(`OAuth token refresh failed (${response.status}): ${payload.error_description || payload.error || 'unknown error'}`);
+  const attempts = clientSecret ? [true, false] : [false];
+  const failures = [];
+  for (const includeSecret of attempts) {
+    const { response, payload } = await tokenExchange({
+      clientId,
+      clientSecret,
+      refreshToken,
+      includeSecret,
+    });
+    if (response.ok && payload.access_token) {
+      return {
+        accessToken: payload.access_token,
+        label: includeSecret ? 'oauth-owner' : 'oauth-owner-no-secret',
+      };
+    }
+    failures.push(
+      `${includeSecret ? 'with-secret' : 'without-secret'} ${response.status}: ${payload.error_description || payload.error || 'unknown error'}`
+    );
   }
-  return payload.access_token;
+
+  throw new Error(`OAuth token refresh failed. ${failures.join(' | ')}`);
 }
 
 async function youtubeJson(path, credential) {
@@ -122,8 +143,10 @@ async function main() {
   const failures = [];
 
   try {
-    const accessToken = await refreshAccessToken();
-    if (accessToken) credentials.push({ type: 'oauth', value: accessToken, label: 'oauth-owner' });
+    const oauth = await refreshAccessToken();
+    if (oauth?.accessToken) {
+      credentials.push({ type: 'oauth', value: oauth.accessToken, label: oauth.label });
+    }
   } catch (error) {
     failures.push(`oauth-refresh: ${error.message}`);
   }
