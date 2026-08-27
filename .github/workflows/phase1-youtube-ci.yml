@@ -146,6 +146,10 @@ jobs:
         id: regression
         run: node scripts/phase1-built-route-regression-guard.mjs
 
+      - name: Main-route parity guard
+        id: route_parity
+        run: node scripts/phase1-route-parity-guard.mjs
+
       - name: Live read-only YouTube Data API catalog audit
         id: live_catalog
         env:
@@ -195,6 +199,7 @@ jobs:
           echo "Differential lint gate:          ${{ steps.lint_diff.outcome }}"
           echo "Production build:                ${{ steps.build.outcome }}"
           echo "Built-route regression guard:    ${{ steps.regression.outcome }}"
+          echo "Main-route parity guard:         ${{ steps.route_parity.outcome }}"
           echo "Live catalog outcome:            ${{ steps.live_catalog.outcome }}"
           echo "Live catalog status:             ${{ steps.live_catalog.outputs.status }}"
           echo "Live catalog credential:         ${{ steps.live_catalog.outputs.credential_mode }}"
@@ -213,5 +218,5 @@ jobs:
           echo "Incremental create plan:         ${{ steps.live_reconciliation.outputs.recent_create }}"
           echo "Incremental update plan:         ${{ steps.live_reconciliation.outputs.recent_update }}"
           echo "Live CMS sync integration:       ${{ steps.live_sync.outcome }}"
-          echo "Hard Phase 1 gates include integrity + UI provenance + final review + runtime contracts + differential TypeScript + differential lint + production build + built-route regression + live Data API audit + live CMS reconciliation + isolated live CMS sync integration."
+          echo "Hard Phase 1 gates include integrity + UI provenance + final review + runtime contracts + differential TypeScript + differential lint + production build + critical-route regression + full main-route parity + live Data API audit + live CMS reconciliation + isolated live CMS sync integration."
           echo "The live Data API audit tries owner OAuth first, then a server-only API key, then the legacy key. Admin catalog sync itself uses the OAuth-first read-only client."
