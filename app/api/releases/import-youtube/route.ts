@@ -7,6 +7,9 @@ import { mapVideoToRelease } from '@/lib/release-mapping';
 import type { CMSRelease } from '@/lib/cms-storage';
 
 const MAX_CHANNEL_VIDEOS = 500;
+const STALE_AFTER_DAYS = 30;
+
+type ReconciliationStatus = 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate';
 
 function dedupeVideos(videos: any[]): any[] {
   const byId = new Map<string, any>();
@@ -14,6 +17,30 @@ function dedupeVideos(videos: any[]): any[] {
     if (video?.id && !byId.has(video.id)) byId.set(video.id, video);
   }
   return Array.from(byId.values());
+}
+
+function normalizeText(value: unknown): string {
+  return String(value ?? '').replace(/\r\n/g, '\n').trim();
+}
+
+function getMismatchFields(existing: CMSRelease, video: any): string[] {
+  const fields: string[] = [];
+  const liveTitle = video.title || video.snippet?.title || '';
+  const liveDescription = video.description || video.snippet?.description || '';
+  const liveDuration = Number(video.durationSeconds || 0);
+
+  if (normalizeText(existing.title) !== normalizeText(liveTitle)) fields.push('title');
+  if (normalizeText(existing.description) !== normalizeText(liveDescription)) fields.push('description');
+  if (liveDuration > 0 && Number(existing.durationSeconds || 0) !== liveDuration) fields.push('duration');
+
+  return fields;
+}
+
+function isStale(release: CMSRelease): boolean {
+  if (!release.lastYoutubeSyncAt) return true;
+  const syncedAt = new Date(release.lastYoutubeSyncAt).getTime();
+  if (!Number.isFinite(syncedAt)) return true;
+  return Date.now() - syncedAt > STALE_AFTER_DAYS * 24 * 60 * 60 * 1000;
 }
 
 export async function GET(request: NextRequest) {
@@ -31,7 +58,7 @@ export async function GET(request: NextRequest) {
       const ids = videoIdsParam.split(',').map(id => id.trim()).filter(Boolean);
       for (const id of ids) {
         const video = await youtubeService.getVideoById(id);
-        if (video) videos.push(video);
+        if (video?.source === 'youtube') videos.push(video);
       }
     } else {
       const max = fetchAll
@@ -40,28 +67,95 @@ export async function GET(request: NextRequest) {
       videos = await youtubeService.getLatestVideos(max);
     }
 
-    const rows = (videos || []).map((video: any) => ({
-      id: video.id,
-      title: video.title || video.snippet?.title,
-      description: video.description || video.snippet?.description,
-      thumbnailUrl:
-        video.thumbnailUrl ||
-        video.snippet?.thumbnails?.maxres?.url ||
-        video.snippet?.thumbnails?.high?.url ||
-        video.snippet?.thumbnails?.medium?.url,
-      publishedDate: video.publishedDate || video.snippet?.publishedAt,
-      durationSeconds: video.durationSeconds,
-      durationFormatted: video.durationFormatted,
-      views: video.views,
-      alreadyImported: !!cmsServerStorage.getReleaseByYoutubeId(video.id),
-    }));
+    videos = dedupeVideos(videos);
+    const cmsReleases = cmsServerStorage.getAllReleases();
+    const cmsByYoutubeId = new Map<string, CMSRelease[]>();
+
+    for (const release of cmsReleases) {
+      if (!release.youtubeId) continue;
+      const list = cmsByYoutubeId.get(release.youtubeId) || [];
+      list.push(release);
+      cmsByYoutubeId.set(release.youtubeId, list);
+    }
+
+    const rows = videos.map((video: any) => {
+      const matches = cmsByYoutubeId.get(video.id) || [];
+      const existing = matches[0] || null;
+      const mismatchFields = existing ? getMismatchFields(existing, video) : [];
+      let reconciliationStatus: ReconciliationStatus = 'matched';
+
+      if (matches.length > 1) reconciliationStatus = 'duplicate';
+      else if (!existing) reconciliationStatus = 'youtube_only';
+      else if (mismatchFields.length > 0) reconciliationStatus = 'metadata_mismatch';
+
+      return {
+        id: video.id,
+        title: video.title || video.snippet?.title,
+        description: video.description || video.snippet?.description,
+        thumbnailUrl:
+          video.thumbnailUrl ||
+          video.snippet?.thumbnails?.maxres?.url ||
+          video.snippet?.thumbnails?.high?.url ||
+          video.snippet?.thumbnails?.medium?.url,
+        publishedDate: video.publishedDate || video.snippet?.publishedAt,
+        durationSeconds: video.durationSeconds,
+        durationFormatted: video.durationFormatted,
+        views: video.views,
+        alreadyImported: !!existing,
+        reconciliationStatus,
+        mismatchFields,
+        cmsReleaseId: existing?.id ?? null,
+        lastYoutubeSyncAt: existing?.lastYoutubeSyncAt ?? null,
+        stale: existing ? isStale(existing) : false,
+      };
+    });
+
+    const youtubeIds = new Set(videos.map(video => video.id));
+    const cmsOnly = fetchAll
+      ? cmsReleases
+          .filter(release => release.youtubeId && !youtubeIds.has(release.youtubeId))
+          .map(release => ({
+            cmsReleaseId: release.id,
+            title: release.title,
+            youtubeId: release.youtubeId,
+            status: 'cms_only_or_nonpublic' as const,
+            lastYoutubeSyncAt: release.lastYoutubeSyncAt ?? null,
+            stale: isStale(release),
+          }))
+      : [];
+
+    const missingYoutubeId = fetchAll
+      ? cmsReleases
+          .filter(release => !release.youtubeId && release.format !== 'playlist')
+          .map(release => ({
+            cmsReleaseId: release.id,
+            title: release.title,
+            status: 'missing_youtube_id' as const,
+          }))
+      : [];
+
+    const reconciliation = {
+      matched: rows.filter(row => row.reconciliationStatus === 'matched').length,
+      youtubeOnly: rows.filter(row => row.reconciliationStatus === 'youtube_only').length,
+      metadataMismatch: rows.filter(row => row.reconciliationStatus === 'metadata_mismatch').length,
+      duplicates: rows.filter(row => row.reconciliationStatus === 'duplicate').length,
+      stale: rows.filter(row => row.stale).length,
+      cmsOnlyOrNonpublic: cmsOnly.length,
+      missingYoutubeId: missingYoutubeId.length,
+    };
 
     return NextResponse.json({
       count: rows.length,
       requestedMax: fetchAll ? MAX_CHANNEL_VIDEOS : Math.max(1, Math.min(Number(searchParams.get('max') || 25), MAX_CHANNEL_VIDEOS)),
       fetchAll,
       items: rows,
+      reconciliation,
+      cmsOnly,
+      missingYoutubeId,
       source: 'youtube_data_api',
+      note: fetchAll
+        ? 'CMS-only records may represent deleted, private, or unlisted videos because API-key catalog discovery sees public channel uploads.'
+        : null,
     });
   } catch (error: any) {
     console.error('[api/releases/import-youtube][GET]', error);
@@ -91,7 +185,7 @@ export async function POST(request: NextRequest) {
     if (requestedIds.length > 0) {
       for (const id of requestedIds) {
         const video = await youtubeService.getVideoById(id);
-        if (video) selected.push(video);
+        if (video?.source === 'youtube') selected.push(video);
       }
     } else {
       selected = await youtubeService.getLatestVideos(MAX_CHANNEL_VIDEOS);
@@ -119,7 +213,7 @@ export async function POST(request: NextRequest) {
         source: 'youtube_data_api',
         message: mode === 'incremental'
           ? `No YouTube uploads found in the last ${lookbackDays} days.`
-          : 'No YouTube videos were returned for the configured channel.',
+          : 'No live YouTube videos were returned for the configured channel.',
       });
     }
 
@@ -140,8 +234,6 @@ export async function POST(request: NextRequest) {
         const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
         const mapped = mapVideoToRelease(video, existing);
 
-        // API-key channel sync only returns publicly accessible channel videos.
-        // Keep the CMS representation aligned with the public YouTube state.
         mapped.status = 'published';
         mapped.visibility = 'public';
 
