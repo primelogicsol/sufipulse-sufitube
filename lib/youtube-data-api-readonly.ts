@@ -1,0 +1,279 @@
+import 'server-only';
+import {
+  getValidYTAnalyticsAccessToken,
+  hasYTAnalyticsRefreshCredential,
+} from '@/app/lib/server/youtube-analytics-oauth-store';
+
+export type YouTubeReadCredentialMode = 'youtube-oauth-client' | 'server-api-key';
+
+export type ReadOnlyYouTubeVideo = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  publishedDate: string;
+  durationSeconds: number;
+  durationFormatted: string;
+  views: number;
+  likes?: number;
+  comments?: number;
+  liveBroadcastContent?: string;
+  source: 'youtube';
+  format: 'video' | 'short' | 'live';
+};
+
+type ReadCredential = {
+  mode: YouTubeReadCredentialMode;
+  value: string;
+};
+
+export class YouTubeDataApiReadError extends Error {
+  status: number;
+  reason: string;
+  reconnectRequired: boolean;
+
+  constructor(message: string, options: { status?: number; reason?: string; reconnectRequired?: boolean } = {}) {
+    super(message);
+    this.name = 'YouTubeDataApiReadError';
+    this.status = options.status ?? 502;
+    this.reason = options.reason ?? 'youtube_data_api_error';
+    this.reconnectRequired = options.reconnectRequired ?? false;
+  }
+}
+
+function normalizeSecret(raw: unknown, keyName = ''): string {
+  let value = String(raw ?? '').trim();
+  if (keyName && value.startsWith(`${keyName}=`)) value = value.slice(keyName.length + 1).trim();
+  if (
+    value.length >= 2 &&
+    ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'")))
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+  return value;
+}
+
+function expectedChannelId(): string {
+  return normalizeSecret(
+    process.env.YOUTUBE_CHANNEL_ID || process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ',
+    'YOUTUBE_CHANNEL_ID'
+  );
+}
+
+function parseDuration(duration: string): number {
+  const match = String(duration || '').match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return 0;
+  const hours = Number(match[1] || 0);
+  const minutes = Number(match[2] || 0);
+  const seconds = Number(match[3] || 0);
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+function formatDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+  if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+  return `${minutes}:${String(remainder).padStart(2, '0')}`;
+}
+
+function inferFormat(durationSeconds: number, hasLiveDetails: boolean): ReadOnlyYouTubeVideo['format'] {
+  if (hasLiveDetails) return 'live';
+  if (durationSeconds > 0 && durationSeconds <= 180) return 'short';
+  return 'video';
+}
+
+async function getCredential(): Promise<ReadCredential> {
+  if (await hasYTAnalyticsRefreshCredential()) {
+    const accessToken = await getValidYTAnalyticsAccessToken();
+    if (!accessToken) {
+      throw new YouTubeDataApiReadError(
+        'YouTube OAuth authorization is expired or revoked. Reconnect the SufiPulse YouTube account before synchronizing.',
+        { status: 401, reason: 'oauth_refresh_failed', reconnectRequired: true }
+      );
+    }
+    return { mode: 'youtube-oauth-client', value: accessToken };
+  }
+
+  const apiKey = normalizeSecret(process.env.YOUTUBE_API_KEY, 'YOUTUBE_API_KEY');
+  if (!apiKey || apiKey.includes('YOUR_KEY_HERE')) {
+    throw new YouTubeDataApiReadError(
+      'No read-only YouTube credential is available. Connect YouTube OAuth or configure the server-only YOUTUBE_API_KEY.',
+      { status: 503, reason: 'missing_read_credential' }
+    );
+  }
+
+  return { mode: 'server-api-key', value: apiKey };
+}
+
+async function youtubeRequest(
+  resource: string,
+  params: Record<string, string>,
+  credential: ReadCredential
+): Promise<any> {
+  const url = new URL(`https://www.googleapis.com/youtube/v3/${resource}`);
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+
+  const headers: Record<string, string> = {};
+  if (credential.mode === 'youtube-oauth-client') headers.Authorization = `Bearer ${credential.value}`;
+  else url.searchParams.set('key', credential.value);
+
+  let response: Response;
+  try {
+    response = await fetch(url, { headers, cache: 'no-store' });
+  } catch (error) {
+    throw new YouTubeDataApiReadError(
+      `YouTube Data API request could not be completed: ${error instanceof Error ? error.message : 'network failure'}`,
+      { status: 502, reason: 'upstream_network_failure' }
+    );
+  }
+
+  const text = await response.text();
+  let payload: any = {};
+  try {
+    payload = text ? JSON.parse(text) : {};
+  } catch {
+    payload = { raw: text };
+  }
+
+  if (!response.ok) {
+    const reason = String(payload?.error?.errors?.[0]?.reason || payload?.error?.status || 'youtube_data_api_error');
+    const message = String(payload?.error?.message || payload?.error_description || `YouTube Data API returned ${response.status}.`);
+    const lower = `${reason} ${message}`.toLowerCase();
+    const quota = response.status === 403 && lower.includes('quota');
+    const insufficientScope =
+      credential.mode === 'youtube-oauth-client' &&
+      response.status === 403 &&
+      (lower.includes('insufficient') || lower.includes('permission') || lower.includes('forbidden'));
+    const reconnectRequired = credential.mode === 'youtube-oauth-client' && (response.status === 401 || insufficientScope);
+
+    throw new YouTubeDataApiReadError(message, {
+      status: response.status,
+      reason: quota ? 'quota_exceeded' : insufficientScope ? 'insufficient_scope' : reason,
+      reconnectRequired,
+    });
+  }
+
+  return payload;
+}
+
+async function getUploadsPlaylist(credential: ReadCredential): Promise<string> {
+  const configuredChannelId = expectedChannelId();
+  const channelPayload = credential.mode === 'youtube-oauth-client'
+    ? await youtubeRequest('channels', { part: 'contentDetails,snippet', mine: 'true', maxResults: '50' }, credential)
+    : await youtubeRequest('channels', { part: 'contentDetails,snippet', id: configuredChannelId }, credential);
+
+  const items = Array.isArray(channelPayload?.items) ? channelPayload.items : [];
+  const channel = items.find((item: any) => String(item?.id || '').trim() === configuredChannelId);
+  if (!channel) {
+    throw new YouTubeDataApiReadError(
+      credential.mode === 'youtube-oauth-client'
+        ? `Authorized YouTube identity did not return the configured SufiPulse channel ${configuredChannelId}.`
+        : `YouTube Data API did not return the configured SufiPulse channel ${configuredChannelId}.`,
+      { status: 409, reason: 'wrong_channel_identity', reconnectRequired: credential.mode === 'youtube-oauth-client' }
+    );
+  }
+
+  const uploads = String(channel?.contentDetails?.relatedPlaylists?.uploads || '').trim();
+  if (!uploads) {
+    throw new YouTubeDataApiReadError('YouTube did not return the uploads playlist for the configured channel.', {
+      status: 502,
+      reason: 'uploads_playlist_missing',
+    });
+  }
+  return uploads;
+}
+
+function normalizeVideo(video: any): ReadOnlyYouTubeVideo {
+  const durationSeconds = parseDuration(video?.contentDetails?.duration || 'PT0S');
+  const hasLiveDetails = Boolean(
+    video?.liveStreamingDetails?.actualStartTime || video?.liveStreamingDetails?.scheduledStartTime
+  );
+  return {
+    id: String(video?.id || ''),
+    title: String(video?.snippet?.title || ''),
+    description: String(video?.snippet?.description || ''),
+    thumbnailUrl:
+      video?.snippet?.thumbnails?.maxres?.url ||
+      video?.snippet?.thumbnails?.high?.url ||
+      video?.snippet?.thumbnails?.medium?.url ||
+      '',
+    publishedDate: String(video?.snippet?.publishedAt || ''),
+    durationSeconds,
+    durationFormatted: formatDuration(durationSeconds),
+    views: Number(video?.statistics?.viewCount || 0),
+    likes: Number(video?.statistics?.likeCount || 0),
+    comments: Number(video?.statistics?.commentCount || 0),
+    liveBroadcastContent: String(video?.snippet?.liveBroadcastContent || 'none'),
+    source: 'youtube',
+    format: inferFormat(durationSeconds, hasLiveDetails),
+  };
+}
+
+async function getVideosByIdsWithCredential(ids: string[], credential: ReadCredential): Promise<ReadOnlyYouTubeVideo[]> {
+  const normalizedIds = Array.from(new Set(ids.map(id => String(id).trim()).filter(Boolean)));
+  if (normalizedIds.length === 0) return [];
+
+  const expected = expectedChannelId();
+  const result: ReadOnlyYouTubeVideo[] = [];
+  for (let index = 0; index < normalizedIds.length; index += 50) {
+    const chunk = normalizedIds.slice(index, index + 50);
+    const payload = await youtubeRequest(
+      'videos',
+      {
+        part: 'snippet,contentDetails,statistics,liveStreamingDetails',
+        id: chunk.join(','),
+        maxResults: '50',
+      },
+      credential
+    );
+    for (const item of payload?.items || []) {
+      if (String(item?.snippet?.channelId || '').trim() !== expected) continue;
+      result.push(normalizeVideo(item));
+    }
+  }
+  return result;
+}
+
+export async function fetchReadOnlyYouTubeVideosByIds(ids: string[]): Promise<{
+  videos: ReadOnlyYouTubeVideo[];
+  credentialMode: YouTubeReadCredentialMode;
+}> {
+  const credential = await getCredential();
+  if (credential.mode === 'youtube-oauth-client') await getUploadsPlaylist(credential);
+  const videos = await getVideosByIdsWithCredential(ids, credential);
+  return { videos, credentialMode: credential.mode };
+}
+
+export async function fetchReadOnlyYouTubeChannelVideos(maxResults = 500): Promise<{
+  videos: ReadOnlyYouTubeVideo[];
+  credentialMode: YouTubeReadCredentialMode;
+}> {
+  const safeMax = Math.max(1, Math.min(Number(maxResults || 500), 500));
+  const credential = await getCredential();
+  const uploadsPlaylist = await getUploadsPlaylist(credential);
+
+  const ids: string[] = [];
+  let pageToken = '';
+  while (ids.length < safeMax) {
+    const params: Record<string, string> = {
+      part: 'contentDetails',
+      playlistId: uploadsPlaylist,
+      maxResults: String(Math.min(50, safeMax - ids.length)),
+    };
+    if (pageToken) params.pageToken = pageToken;
+    const page = await youtubeRequest('playlistItems', params, credential);
+    for (const item of page?.items || []) {
+      const id = String(item?.contentDetails?.videoId || '').trim();
+      if (id && !ids.includes(id)) ids.push(id);
+    }
+    pageToken = String(page?.nextPageToken || '');
+    if (!pageToken || (page?.items || []).length === 0) break;
+  }
+
+  const videos = await getVideosByIdsWithCredential(ids.slice(0, safeMax), credential);
+  const byId = new Map(videos.map(video => [video.id, video]));
+  const ordered = ids.map(id => byId.get(id)).filter((video): video is ReadOnlyYouTubeVideo => Boolean(video));
+  return { videos: ordered, credentialMode: credential.mode };
+}
