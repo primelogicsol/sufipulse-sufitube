@@ -1,0 +1,40 @@
+name: Phase 1 YouTube Live Data API Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/youtube-phase1-foundation
+    paths:
+      - scripts/phase1-youtube-live-audit.mjs
+      - .github/workflows/phase1-youtube-live-audit.yml
+      - .github/workflows/phase1-youtube-ci.yml
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  live-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Live read-only YouTube Data API catalog audit
+        id: live_catalog
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          LEGACY_YOUTUBE_API_KEY: ${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
+          YOUTUBE_CHANNEL_ID: 'UCraDr3i5A3k0j7typ6tOOsQ'
+        run: node scripts/phase1-youtube-live-audit.mjs
+
+      - name: Audit summary
+        if: always()
+        run: |
+          echo "Live catalog status:     ${{ steps.live_catalog.outputs.status }}"
+          echo "Credential mode:         ${{ steps.live_catalog.outputs.credential_mode }}"
+          echo "Verified public uploads: ${{ steps.live_catalog.outputs.count }}"
