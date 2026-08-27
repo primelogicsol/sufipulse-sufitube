@@ -68,12 +68,15 @@ export default function YouTubeAnalyticsPage() {
       const res = await fetch('/api/admin/youtube-analytics/status', { cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
-        setConnected(json.connected);
+        setConnected(Boolean(json.connected));
+        setReconnectRequired(Boolean(json.reconnectRequired));
       } else {
         setConnected(false);
+        setReconnectRequired(false);
       }
     } catch {
       setConnected(false);
+      setReconnectRequired(false);
     }
   }, []);
 
@@ -134,6 +137,7 @@ export default function YouTubeAnalyticsPage() {
     const p = new URLSearchParams(window.location.search);
     if (p.get('yt_auth') === 'success') {
       setConnected(true);
+      setReconnectRequired(false);
       window.history.replaceState({}, '', '/admin/youtube-analytics');
     } else if (p.get('yt_auth') === 'denied') {
       setError('Authorization was denied.');
@@ -258,22 +262,32 @@ export default function YouTubeAnalyticsPage() {
           </div>
         )}
 
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-200 flex flex-col md:flex-row md:items-center gap-4">
-          <FileSpreadsheet className="w-5 h-5 shrink-0" />
-          <div className="flex-1">
-            <p className="font-medium">YouTube Studio Advanced Mode CSV</p>
-            <p className="text-blue-300/70 mt-1">
-              Import the Content/Video breakdown. It supplies first-party catalog IDs and can supply thumbnail impressions and Impressions CTR that are not available from the channel Analytics API report.
-            </p>
-            {studioSummary && (
-              <p className="text-[11px] text-blue-300/60 mt-2 font-mono">
-                Loaded {studioSummary.rowCount} videos · {studioSummary.fileName} · {new Date(studioSummary.importedAt).toLocaleString()}
-              </p>
-            )}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-3">
+          <div className="flex items-center gap-2 text-neutral-200">
+            <Database className="w-4 h-4 text-neutral-400" />
+            <span className="text-sm font-medium">Metric provenance</span>
           </div>
-          <label className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-200 text-xs font-semibold cursor-pointer transition-colors">
+          <p className="text-xs text-neutral-500">
+            Every displayed field is labeled by source. YouTube Analytics API provides live views/watch time/average view duration. Thumbnail impressions and Impressions CTR are populated only from a verified Studio Advanced Mode CSV; they are never estimated.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <SourceBadge source="youtube_analytics_api" />
+            <SourceBadge source="studio_csv" />
+            <SourceBadge source="unavailable" />
+          </div>
+        </div>
+
+        <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-5 space-y-3">
+          <div className="flex items-center gap-2 text-sky-200">
+            <FileSpreadsheet className="w-5 h-5" />
+            <span className="text-sm font-medium">YouTube Studio Advanced Mode CSV</span>
+          </div>
+          <p className="text-xs text-sky-300/60">
+            Import a first-party Studio export to supply impressions/CTR and preserve a quota-independent catalog snapshot. CSV data is stored persistently and remains explicitly labeled STUDIO CSV.
+          </p>
+          <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition-colors ${studioImporting ? 'opacity-50 pointer-events-none' : 'bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20 text-sky-200'}`}>
             {studioImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {studioSummary ? 'Replace CSV Snapshot' : 'Import Studio CSV'}
+            {studioImporting ? 'Importing…' : studioSummary ? 'Replace Studio CSV' : 'Import Studio CSV'}
             <input
               type="file"
               accept=".csv,text/csv"
@@ -286,145 +300,122 @@ export default function YouTubeAnalyticsPage() {
               }}
             />
           </label>
-        </div>
-
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <span className="text-neutral-400 font-medium">Metric provenance:</span>
-            <SourceBadge source="youtube_analytics_api" />
-            <SourceBadge source="studio_csv" />
-            <SourceBadge source="unavailable" />
-          </div>
-          <p className="text-[11px] text-neutral-600 mt-2">
-            Each value below carries its own source. Missing metrics remain unavailable; imported Studio values never masquerade as live API telemetry.
-          </p>
+          {studioSummary && (
+            <p className="text-[11px] text-sky-300/70">
+              Latest snapshot: {studioSummary.fileName} · {studioSummary.rowCount} unique videos · imported {new Date(studioSummary.importedAt).toLocaleString()}
+            </p>
+          )}
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-400 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <p>{error}</p>
-              {reconnectRequired && (
-                <p className="text-red-300/70 mt-1">Reconnect once to grant the current read-only scopes required by Google. The latest Studio CSV remains usable while OAuth is unavailable.</p>
-              )}
-            </div>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-300 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
         {warning && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-300 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-200">
             {warning}
           </div>
         )}
 
-        {data.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { icon: <Eye className="w-4 h-4" />, label: 'Total Views', value: fmt(totalViews) },
-              { icon: <Clock className="w-4 h-4" />, label: 'Watch Time', value: totalWatchMinutes > 0 ? `${fmt(totalWatchMinutes / 60)} hr` : '—' },
-              { icon: <Database className="w-4 h-4" />, label: 'Weighted Avg Duration', value: fmtDuration(weightedAvgDuration) },
-            ].map(({ icon, label, value }) => (
-              <div key={label} className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-neutral-500 text-xs uppercase tracking-wide mb-2">
-                  <span className="text-amber-400/70">{icon}</span>
-                  {label}
-                </div>
-                <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
+        {(connected === true || studioSummary) && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+                <Eye className="w-5 h-5 text-blue-400 mb-2" />
+                <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(totalViews)}</div>
+                <div className="text-xs text-neutral-500 mt-1">Total views in selected API window</div>
+                <SourceBadge source={dataSource === 'studio_csv' ? 'studio_csv' : data.length > 0 ? 'youtube_analytics_api' : 'unavailable'} />
               </div>
-            ))}
-          </div>
-        )}
-
-        {loading && data.length === 0 && (
-          <div className="space-y-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-14 bg-neutral-900/40 rounded-xl animate-pulse border border-neutral-800" />
-            ))}
-          </div>
-        )}
-
-        {(connected === true || studioSummary) && !loading && !error && data.length === 0 && (
-          <div className="border border-neutral-800 rounded-xl p-8 text-center text-neutral-500">
-            No per-video rows were returned from the available verified sources.
-          </div>
-        )}
-
-        {data.length > 0 && (
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search videos..."
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-amber-500/50"
-              />
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+                <Clock className="w-5 h-5 text-purple-400 mb-2" />
+                <div className="text-2xl font-bold text-neutral-100 tabular-nums">{totalWatchMinutes > 0 ? `${(totalWatchMinutes / 60).toFixed(1)}h` : '—'}</div>
+                <div className="text-xs text-neutral-500 mt-1">Watch time</div>
+                <SourceBadge source={dataSource === 'studio_csv' ? 'studio_csv' : data.some(row => row.watchTimeMinutes !== null) ? 'youtube_analytics_api' : 'unavailable'} />
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+                <Clock className="w-5 h-5 text-amber-400 mb-2" />
+                <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmtDuration(weightedAvgDuration)}</div>
+                <div className="text-xs text-neutral-500 mt-1">Weighted average view duration</div>
+                <SourceBadge source={dataSource === 'studio_csv' ? 'studio_csv' : weightedAvgDuration !== null ? 'youtube_analytics_api' : 'unavailable'} />
+              </div>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-neutral-800">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                    <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">#</th>
-                    <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Video</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Views</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Avg Duration</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Watch Min</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Impressions</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">CTR</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-800/50">
-                  {filtered.map((v, i) => (
-                    <tr key={v.videoId} className="hover:bg-neutral-900/40 transition-colors">
-                      <td className="px-4 py-3 text-neutral-600 tabular-nums">{i + 1}</td>
-                      <td className="px-4 py-3 max-w-xs">
-                        <p className="text-neutral-200 truncate" title={v.title}>{v.title}</p>
-                        <p className="text-xs text-neutral-600 font-mono mt-0.5">{v.videoId}</p>
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-amber-400 tabular-nums align-top">
-                        <div>{fmt(v.views)}</div>
-                        <SourceBadge source={v.metricSources.views} />
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
-                        <div>{fmtDuration(v.avgViewDurationSecs)}</div>
-                        <SourceBadge source={v.metricSources.averageViewDuration} />
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
-                        <div>{fmt(v.watchTimeMinutes)}</div>
-                        <SourceBadge source={v.metricSources.watchTime} />
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
-                        <div>{fmt(v.impressions)}</div>
-                        <SourceBadge source={v.metricSources.impressions} />
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums align-top">
-                        <div>{v.ctr === null ? '—' : `${v.ctr.toFixed(2)}%`}</div>
-                        <SourceBadge source={v.metricSources.ctr} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <a
-                          href={`https://www.youtube.com/watch?v=${v.videoId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-neutral-600 hover:text-amber-400 transition-colors"
-                          aria-label={`Open ${v.title} on YouTube`}
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </td>
+            <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-neutral-800 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                <div>
+                  <h2 className="text-sm font-medium text-neutral-200">Per-video performance</h2>
+                  <p className="text-[11px] text-neutral-600 mt-0.5">Impressions and CTR remain unavailable unless supplied by Studio CSV.</p>
+                </div>
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search title or video ID"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-9 pr-3 py-2 text-sm text-neutral-200 placeholder:text-neutral-700 focus:outline-none focus:border-neutral-700"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[920px] text-sm">
+                  <thead className="bg-neutral-950/70 text-neutral-500 text-xs uppercase tracking-wide">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium">Video</th>
+                      <th className="text-right px-3 py-3 font-medium">Views</th>
+                      <th className="text-right px-3 py-3 font-medium">Watch time</th>
+                      <th className="text-right px-3 py-3 font-medium">Avg duration</th>
+                      <th className="text-right px-3 py-3 font-medium">Impressions</th>
+                      <th className="text-right px-3 py-3 font-medium">CTR</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-800">
+                    {filtered.map(row => (
+                      <tr key={row.videoId} className="hover:bg-neutral-800/30">
+                        <td className="px-4 py-3 max-w-md">
+                          <div className="flex items-start gap-2">
+                            <a
+                              href={`https://www.youtube.com/watch?v=${row.videoId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-neutral-200 hover:text-white line-clamp-2"
+                            >
+                              {row.title}
+                            </a>
+                            <ExternalLink className="w-3 h-3 text-neutral-700 shrink-0 mt-1" />
+                          </div>
+                          <span className="text-[10px] text-neutral-700 font-mono">{row.videoId}</span>
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
+                          {fmt(row.views)}<br/><SourceBadge source={row.metricSources.views} />
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
+                          {row.watchTimeMinutes === null ? '—' : `${(row.watchTimeMinutes / 60).toFixed(1)}h`}<br/><SourceBadge source={row.metricSources.watchTimeMinutes} />
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
+                          {fmtDuration(row.avgViewDurationSecs)}<br/><SourceBadge source={row.metricSources.avgViewDurationSecs} />
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
+                          {fmt(row.impressions)}<br/><SourceBadge source={row.metricSources.impressions} />
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
+                          {row.ctr === null ? '—' : `${row.ctr.toFixed(2)}%`}<br/><SourceBadge source={row.metricSources.ctr} />
+                        </td>
+                      </tr>
+                    ))}
+                    {!loading && filtered.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-10 text-center text-neutral-600">No verified analytics rows are available for this view.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <p className="text-xs text-neutral-700 text-right">
-              {filtered.length} of {data.length} videos · aggregate source: {dataSource || 'verified YouTube source'}
-            </p>
-          </div>
+          </>
         )}
       </div>
     </DashboardLayout>
