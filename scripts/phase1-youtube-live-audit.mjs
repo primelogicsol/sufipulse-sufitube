@@ -32,51 +32,76 @@ async function parseJson(response) {
   }
 }
 
-async function tokenExchange({ clientId, clientSecret, refreshToken, includeSecret }) {
-  const params = {
-    client_id: clientId,
-    refresh_token: refreshToken,
-    grant_type: 'refresh_token',
-  };
-  if (includeSecret && clientSecret) params.client_secret = clientSecret;
-
+async function tokenExchange(clientId, clientSecret, refreshToken) {
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(params),
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
   });
-  const payload = await parseJson(response);
-  return { response, payload };
+  return { response, payload: await parseJson(response) };
 }
 
-async function refreshAccessToken() {
-  const clientId = normalizeEnvSecret(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
-  const clientSecret = normalizeEnvSecret(process.env.YOUTUBE_CLIENT_SECRET, 'YOUTUBE_CLIENT_SECRET');
+function oauthClientCandidates() {
+  const candidates = [
+    {
+      label: 'youtube-oauth-client',
+      clientId: normalizeEnvSecret(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID'),
+      clientSecret: normalizeEnvSecret(process.env.YOUTUBE_CLIENT_SECRET, 'YOUTUBE_CLIENT_SECRET'),
+    },
+    {
+      label: 'google-web-client-diagnostic',
+      clientId: normalizeEnvSecret(process.env.GOOGLE_CLIENT_ID, 'GOOGLE_CLIENT_ID'),
+      clientSecret: normalizeEnvSecret(process.env.GOOGLE_CLIENT_SECRET, 'GOOGLE_CLIENT_SECRET'),
+    },
+    {
+      label: 'google-ads-client-diagnostic',
+      clientId: normalizeEnvSecret(process.env.GOOGLE_ADS_CLIENT_ID, 'GOOGLE_ADS_CLIENT_ID'),
+      clientSecret: normalizeEnvSecret(process.env.GOOGLE_ADS_CLIENT_SECRET, 'GOOGLE_ADS_CLIENT_SECRET'),
+    },
+  ];
+
+  const seen = new Set();
+  return candidates.filter((candidate) => {
+    if (!candidate.clientId || !candidate.clientSecret) return false;
+    const fingerprint = `${candidate.clientId}\u0000${candidate.clientSecret}`;
+    if (seen.has(fingerprint)) return false;
+    seen.add(fingerprint);
+    return true;
+  });
+}
+
+async function refreshAccessTokens() {
   const refreshToken = normalizeEnvSecret(process.env.YOUTUBE_REFRESH_TOKEN, 'YOUTUBE_REFRESH_TOKEN');
+  if (!refreshToken) return { credentials: [], failures: ['oauth-refresh: YOUTUBE_REFRESH_TOKEN is not configured'] };
 
-  if (!clientId || !refreshToken) return null;
-
-  const attempts = clientSecret ? [true, false] : [false];
+  const credentials = [];
   const failures = [];
-  for (const includeSecret of attempts) {
-    const { response, payload } = await tokenExchange({
-      clientId,
-      clientSecret,
-      refreshToken,
-      includeSecret,
-    });
-    if (response.ok && payload.access_token) {
-      return {
-        accessToken: payload.access_token,
-        label: includeSecret ? 'oauth-owner' : 'oauth-owner-no-secret',
-      };
-    }
-    failures.push(
-      `${includeSecret ? 'with-secret' : 'without-secret'} ${response.status}: ${payload.error_description || payload.error || 'unknown error'}`
-    );
+  const candidates = oauthClientCandidates();
+  if (candidates.length === 0) {
+    return { credentials, failures: ['oauth-refresh: no OAuth client ID/secret pair is configured'] };
   }
 
-  throw new Error(`OAuth token refresh failed. ${failures.join(' | ')}`);
+  for (const candidate of candidates) {
+    const { response, payload } = await tokenExchange(candidate.clientId, candidate.clientSecret, refreshToken);
+    if (response.ok && payload.access_token) {
+      credentials.push({
+        type: 'oauth',
+        value: payload.access_token,
+        label: candidate.label,
+      });
+    } else {
+      failures.push(
+        `${candidate.label}: refresh ${response.status}: ${payload.error_description || payload.error || 'unknown error'}`
+      );
+    }
+  }
+
+  return { credentials, failures };
 }
 
 async function youtubeJson(path, credential) {
@@ -93,10 +118,7 @@ async function youtubeJson(path, credential) {
   if (!response.ok) {
     const reason = payload?.error?.errors?.[0]?.reason || '';
     const message = payload?.error?.message || payload?.error_description || 'request failed';
-    const error = new Error(`YouTube Data API ${response.status}${reason ? ` ${reason}` : ''}: ${message}`);
-    error.status = response.status;
-    error.reason = reason;
-    throw error;
+    throw new Error(`YouTube Data API ${response.status}${reason ? ` ${reason}` : ''}: ${message}`);
   }
   return payload;
 }
@@ -139,17 +161,12 @@ async function auditWith(credential) {
 }
 
 async function main() {
-  const credentials = [];
   const failures = [];
+  const credentials = [];
 
-  try {
-    const oauth = await refreshAccessToken();
-    if (oauth?.accessToken) {
-      credentials.push({ type: 'oauth', value: oauth.accessToken, label: oauth.label });
-    }
-  } catch (error) {
-    failures.push(`oauth-refresh: ${error.message}`);
-  }
+  const oauth = await refreshAccessTokens();
+  credentials.push(...oauth.credentials);
+  failures.push(...oauth.failures);
 
   const serverKey = normalizeEnvSecret(process.env.YOUTUBE_API_KEY, 'YOUTUBE_API_KEY');
   const legacyKey = normalizeEnvSecret(process.env.LEGACY_YOUTUBE_API_KEY, 'NEXT_PUBLIC_YOUTUBE_API_KEY');
@@ -157,7 +174,7 @@ async function main() {
   if (legacyKey && legacyKey !== serverKey) credentials.push({ type: 'api-key', value: legacyKey, label: 'legacy-api-key' });
 
   if (credentials.length === 0) {
-    console.log('No OAuth or YouTube Data API credential is available; live catalog audit skipped.');
+    console.log('No usable OAuth or YouTube Data API credential is available; live catalog audit skipped.');
     writeOutput('status', 'skipped');
     writeOutput('credential_mode', 'none');
     return;
