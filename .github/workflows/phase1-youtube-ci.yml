@@ -40,11 +40,16 @@ jobs:
       - name: Phase 1 YouTube integrity guard
         run: node scripts/phase1-youtube-integrity-guard.mjs
 
+      - name: Phase 1 UI provenance guard
+        id: provenance
+        run: node scripts/phase1-provenance-ui-guard.mjs
+
       - name: Phase 1 final code-review guard
         id: final_review
         run: node scripts/phase1-final-review-guard.mjs
 
       - name: Phase 1 runtime failure contracts
+        id: failure_contracts
         run: node -r ./scripts/register-phase1-ts.cjs ./scripts/phase1-youtube-runtime-tests.ts
 
       - name: Type check (capture repository baseline)
@@ -181,30 +186,32 @@ jobs:
       - name: Validation summary
         if: always()
         run: |
+          echo "UI provenance guard:             ${{ steps.provenance.outcome }}"
           echo "Final code-review guard:         ${{ steps.final_review.outcome }}"
-          echo "Repository type-check baseline: ${{ steps.typecheck.outcome }}"
-          echo "Differential TypeScript gate:   ${{ steps.typescript_diff.outcome }}"
-          echo "Repository lint runner:         ${{ steps.lint.outcome }}"
-          echo "Differential lint gate:         ${{ steps.lint_diff.outcome }}"
-          echo "Production build:               ${{ steps.build.outcome }}"
-          echo "Built-route regression guard:   ${{ steps.regression.outcome }}"
-          echo "Live catalog outcome:           ${{ steps.live_catalog.outcome }}"
-          echo "Live catalog status:            ${{ steps.live_catalog.outputs.status }}"
-          echo "Live catalog credential:        ${{ steps.live_catalog.outputs.credential_mode }}"
-          echo "Live public uploads:            ${{ steps.live_catalog.outputs.count }}"
-          echo "Reconciliation outcome:         ${{ steps.live_reconciliation.outcome }}"
-          echo "Reconciliation status:          ${{ steps.live_reconciliation.outputs.status }}"
-          echo "Reconciliation uploads:         ${{ steps.live_reconciliation.outputs.uploads }}"
-          echo "CMS seed releases:              ${{ steps.live_reconciliation.outputs.cms_seed }}"
-          echo "Matched:                        ${{ steps.live_reconciliation.outputs.matched }}"
-          echo "YouTube only:                   ${{ steps.live_reconciliation.outputs.youtube_only }}"
-          echo "Metadata mismatch:              ${{ steps.live_reconciliation.outputs.metadata_mismatch }}"
-          echo "Duplicate YouTube IDs:          ${{ steps.live_reconciliation.outputs.duplicates }}"
-          echo "CMS only / nonpublic:           ${{ steps.live_reconciliation.outputs.cms_only_or_nonpublic }}"
-          echo "Missing YouTube ID:             ${{ steps.live_reconciliation.outputs.missing_youtube_id }}"
-          echo "Live uploads in last 30 days:   ${{ steps.live_reconciliation.outputs.recent_30d }}"
-          echo "Incremental create plan:        ${{ steps.live_reconciliation.outputs.recent_create }}"
-          echo "Incremental update plan:        ${{ steps.live_reconciliation.outputs.recent_update }}"
-          echo "Live CMS sync integration:      ${{ steps.live_sync.outcome }}"
-          echo "Hard Phase 1 gates include integrity + final review + runtime contracts + differential TypeScript + differential lint + production build + built-route regression + live Data API audit + live CMS reconciliation + isolated live CMS sync integration."
+          echo "Runtime failure contracts:       ${{ steps.failure_contracts.outcome }}"
+          echo "Repository type-check baseline:  ${{ steps.typecheck.outcome }}"
+          echo "Differential TypeScript gate:    ${{ steps.typescript_diff.outcome }}"
+          echo "Repository lint runner:          ${{ steps.lint.outcome }}"
+          echo "Differential lint gate:          ${{ steps.lint_diff.outcome }}"
+          echo "Production build:                ${{ steps.build.outcome }}"
+          echo "Built-route regression guard:    ${{ steps.regression.outcome }}"
+          echo "Live catalog outcome:            ${{ steps.live_catalog.outcome }}"
+          echo "Live catalog status:             ${{ steps.live_catalog.outputs.status }}"
+          echo "Live catalog credential:         ${{ steps.live_catalog.outputs.credential_mode }}"
+          echo "Live public uploads:             ${{ steps.live_catalog.outputs.count }}"
+          echo "Reconciliation outcome:          ${{ steps.live_reconciliation.outcome }}"
+          echo "Reconciliation status:           ${{ steps.live_reconciliation.outputs.status }}"
+          echo "Reconciliation uploads:          ${{ steps.live_reconciliation.outputs.uploads }}"
+          echo "CMS seed releases:               ${{ steps.live_reconciliation.outputs.cms_seed }}"
+          echo "Matched:                         ${{ steps.live_reconciliation.outputs.matched }}"
+          echo "YouTube only:                    ${{ steps.live_reconciliation.outputs.youtube_only }}"
+          echo "Metadata mismatch:               ${{ steps.live_reconciliation.outputs.metadata_mismatch }}"
+          echo "Duplicate YouTube IDs:           ${{ steps.live_reconciliation.outputs.duplicates }}"
+          echo "CMS only / nonpublic:            ${{ steps.live_reconciliation.outputs.cms_only_or_nonpublic }}"
+          echo "Missing YouTube ID:              ${{ steps.live_reconciliation.outputs.missing_youtube_id }}"
+          echo "Live uploads in last 30 days:    ${{ steps.live_reconciliation.outputs.recent_30d }}"
+          echo "Incremental create plan:         ${{ steps.live_reconciliation.outputs.recent_create }}"
+          echo "Incremental update plan:         ${{ steps.live_reconciliation.outputs.recent_update }}"
+          echo "Live CMS sync integration:       ${{ steps.live_sync.outcome }}"
+          echo "Hard Phase 1 gates include integrity + UI provenance + final review + runtime contracts + differential TypeScript + differential lint + production build + built-route regression + live Data API audit + live CMS reconciliation + isolated live CMS sync integration."
           echo "The live Data API audit tries owner OAuth first, then a server-only API key, then the legacy key. Admin catalog sync itself uses the OAuth-first read-only client."
