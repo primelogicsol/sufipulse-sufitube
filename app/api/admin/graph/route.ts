@@ -2,17 +2,78 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { registriesStorage } from '@/lib/registries-storage';
-import { graphResolver } from '@/lib/graph-resolver';
+import { graphResolver, type GraphJoin } from '@/lib/graph-resolver';
 
 export const dynamic = 'force-dynamic';
+
+type StandardRelationship = 'concept' | 'theme' | 'mood' | 'region' | 'language' | 'diasporaMarket' | 'playlist';
+
+function getStructuralPerformance(
+  registryId: string,
+  relationshipType: StandardRelationship,
+  rawJoins: GraphJoin[]
+) {
+  const connectedReleases = graphResolver.getReleasesForRegistry(registryId, relationshipType);
+  const totalViews = connectedReleases.reduce((sum, release) => sum + (Number(release.viewCount) || 0), 0);
+  const connectedReleaseIds = new Set(connectedReleases.map(release => release.id));
+
+  const baseViewsScore = totalViews > 0 ? Math.min(60, Math.log10(totalViews) * 10) : 0;
+  const connectivityScore = Math.min(40, connectedReleases.length * 4);
+  const discoveryScore = Math.round(baseViewsScore + connectivityScore);
+
+  const connectedCategories = new Set<string>();
+  rawJoins.forEach(join => {
+    if (join.releaseId && connectedReleaseIds.has(join.releaseId)) {
+      if (join.registryId && join.registryId !== registryId) {
+        connectedCategories.add(`${join.relationshipType}_${join.registryId}`);
+      }
+      if (join.targetEntityId && join.targetEntityId !== registryId) {
+        connectedCategories.add(`${join.relationshipType}_${join.targetEntityId}`);
+      }
+      if (join.sourceEntityId && join.sourceEntityId !== registryId) {
+        connectedCategories.add(`${join.relationshipType}_${join.sourceEntityId}`);
+      }
+    }
+
+    if (join.targetEntityId === registryId) {
+      const otherId = join.sourceEntityId || join.registryId;
+      if (otherId && otherId !== registryId) connectedCategories.add(`${join.relationshipType}_${otherId}`);
+    } else if (join.sourceEntityId === registryId) {
+      const otherId = join.targetEntityId || join.registryId;
+      if (otherId && otherId !== registryId) connectedCategories.add(`${join.relationshipType}_${otherId}`);
+    } else if (join.registryId === registryId) {
+      const otherId = join.sourceEntityId || join.targetEntityId;
+      if (otherId && otherId !== registryId) connectedCategories.add(`${join.relationshipType}_${otherId}`);
+    }
+  });
+
+  const releaseWeight = Math.min(40, connectedReleases.length * 4);
+  const overlapWeight = Math.min(60, connectedCategories.size * 3);
+  const authorityScore = Math.round(releaseWeight + overlapWeight);
+
+  return {
+    totalReleases: connectedReleases.length,
+    totalViews,
+    totalWatchTime: '—',
+    averageCtr: '—',
+    discoveryScore,
+    authorityScore,
+    unavailableMetrics: ['watchTime', 'ctr'],
+    dataProvenance: {
+      views: 'youtube_data_api_cached_in_cms',
+      graphScores: 'derived_from_measured_views_and_verified_graph_structure',
+      watchTime: 'unavailable',
+      ctr: 'unavailable',
+    },
+  };
+}
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    // Rehydrate disk-backed CMS data first. cmsServerStorage hydration repopulates
-    // the shared cmsStorage singleton used by graphResolver.
+    // Disk-backed hydration repopulates the shared CMS singleton used by graphResolver.
     cmsServerStorage.forceHydrate();
     registriesStorage.forceHydrate();
     graphResolver.forceHydrate();
@@ -22,7 +83,7 @@ export async function GET(request: NextRequest) {
     const rawRegistries = registriesStorage.getRawData();
     const performanceScores: Record<string, any> = {};
 
-    const relationMapping: Record<string, 'concept' | 'theme' | 'mood' | 'region' | 'language' | 'diasporaMarket' | 'playlist'> = {
+    const relationMapping: Record<string, StandardRelationship> = {
       concepts: 'concept',
       themes: 'theme',
       moods: 'mood',
@@ -37,28 +98,8 @@ export async function GET(request: NextRequest) {
       if (!relationshipType) return;
 
       items.forEach((item: any) => {
-        const legacyStats = graphResolver.getRegistryPerformanceScore(item.slug, relationshipType);
-
-        // Phase 1 integrity rule: the legacy resolver historically generated a
-        // deterministic CTR and estimated watch time from a fixed retention ratio.
-        // Those values are not YouTube measurements and must never be exposed as
-        // performance telemetry. Structural scores and measured public view counts
-        // remain usable; watch time and CTR stay unavailable until real analytics
-        // are joined in a later phase.
         performanceScores[item.slug] = {
-          totalReleases: legacyStats.totalReleases,
-          totalViews: legacyStats.totalViews,
-          totalWatchTime: '—',
-          averageCtr: '—',
-          discoveryScore: legacyStats.discoveryScore,
-          authorityScore: legacyStats.authorityScore,
-          unavailableMetrics: ['watchTime', 'ctr'],
-          dataProvenance: {
-            views: 'youtube_data_api_cached_in_cms',
-            graphScores: 'derived_from_measured_views_and_graph_structure',
-            watchTime: 'unavailable',
-            ctr: 'unavailable',
-          },
+          ...getStructuralPerformance(item.slug, relationshipType, rawJoins),
           slug: item.slug,
           title: item.title,
           type: regType,
@@ -80,6 +121,7 @@ export async function GET(request: NextRequest) {
       dataProvenance: {
         releases: 'hydrated_cms_registry',
         joins: 'persisted_graph_joins',
+        views: 'youtube_data_api_cached_in_cms',
         watchTime: 'unavailable',
         ctr: 'unavailable',
       },
@@ -89,8 +131,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/graph
-// Used to manually add/remove joins from the Graph Explorer.
 export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
