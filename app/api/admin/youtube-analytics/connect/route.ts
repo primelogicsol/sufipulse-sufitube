@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
@@ -5,6 +6,8 @@ const SCOPES = [
   'https://www.googleapis.com/auth/yt-analytics.readonly',
   'https://www.googleapis.com/auth/youtube.readonly',
 ];
+
+const OAUTH_STATE_COOKIE = 'sufipulse_yt_oauth_state';
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
@@ -17,6 +20,7 @@ export async function POST(request: NextRequest) {
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
   const redirectUri = `${appUrl}/api/admin/youtube-analytics/callback`;
+  const state = randomBytes(32).toString('hex');
 
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.searchParams.set('client_id', clientId);
@@ -26,6 +30,16 @@ export async function POST(request: NextRequest) {
   url.searchParams.set('access_type', 'offline');
   url.searchParams.set('include_granted_scopes', 'true');
   url.searchParams.set('prompt', 'consent');
+  url.searchParams.set('state', state);
 
-  return NextResponse.json({ authUrl: url.toString(), redirectUri, scopes: SCOPES });
+  const response = NextResponse.json({ authUrl: url.toString(), redirectUri, scopes: SCOPES });
+  response.cookies.set(OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/admin/youtube-analytics/callback',
+    maxAge: 10 * 60,
+  });
+
+  return response;
 }
