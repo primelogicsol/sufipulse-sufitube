@@ -22,51 +22,45 @@ export type KnowledgeEntityType =
   | 'order';
 
 export interface KnowledgeEntity {
-  id: string; // unique ID e.g., type_slug
+  id: string;
   type: KnowledgeEntityType;
   slug: string;
   name: string;
   alternateNames: string[];
-  shortDescription: string; // Enforced minimum 40 words for public
-  article: string;  // Enforced minimum 150 words for public
+  shortDescription: string;
+  longDescription: string;
+  /** Legacy rich-article field retained for backwards compatibility. */
+  article?: string;
   theologicalNotes?: string;
   historicalNotes?: string;
-  
-  // Person/Life Metadata
   birthDate?: string;
   deathDate?: string;
   birthPlace?: string;
   deathPlace?: string;
   nationality?: string;
   occupation?: string[];
-
-  // Artistic & Thematic Attributes
   performanceCharacteristics?: string[];
   musicalStyle?: string[];
   literaryStyle?: string[];
   primaryThemes?: string[];
-
-  // Knowledge Graph Edges
-  regionLinks: string[]; // region slugs
-  languageLinks: string[]; // language slugs
-  traditionLinks?: string[]; // order/tradition IDs
-  teacherLinks?: string[]; // person IDs
-  influencedLinks?: string[]; // person IDs
-  languageLinks: string[]; // language slugs
-  relatedConcepts: string[]; // concept slugs
-  relatedReleases: string[]; // release IDs
-  relatedArticles: string[]; // article slugs
-  relatedPlaylists: string[]; // playlist slugs
-  sameAs: string[]; // external authority URLs
+  regionLinks: string[];
+  languageLinks: string[];
+  traditionLinks?: string[];
+  teacherLinks?: string[];
+  influencedLinks?: string[];
+  relatedConcepts: string[];
+  relatedReleases: string[];
+  relatedArticles: string[];
+  relatedPlaylists: string[];
+  sameAs: string[];
   wikidataId?: string;
   isActive: boolean;
-  isPublic: boolean; // Enforced publishing checks
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
-  knowledgeDensityScore?: number; // Calculated dynamically on read/write
+  knowledgeDensityScore?: number;
 }
 
-// Zod Schema
 export const knowledgeEntitySchema = z.object({
   id: z.string(),
   type: z.enum([
@@ -77,28 +71,25 @@ export const knowledgeEntitySchema = z.object({
   name: z.string().min(2).max(160),
   alternateNames: z.array(z.string()).default([]),
   shortDescription: z.string().max(3000),
-  article: z.string().max(25000),
+  longDescription: z.string().max(25000),
+  article: z.string().max(25000).optional().or(z.literal('')),
   theologicalNotes: z.string().max(8000).optional().or(z.literal('')),
   historicalNotes: z.string().max(8000).optional().or(z.literal('')),
-  
   birthDate: z.string().optional().or(z.literal('')),
   deathDate: z.string().optional().or(z.literal('')),
   birthPlace: z.string().optional().or(z.literal('')),
   deathPlace: z.string().optional().or(z.literal('')),
   nationality: z.string().optional().or(z.literal('')),
   occupation: z.array(z.string()).optional(),
-  
   performanceCharacteristics: z.array(z.string()).optional(),
   musicalStyle: z.array(z.string()).optional(),
   literaryStyle: z.array(z.string()).optional(),
   primaryThemes: z.array(z.string()).optional(),
-
   regionLinks: z.array(z.string()).default([]),
   languageLinks: z.array(z.string()).default([]),
   traditionLinks: z.array(z.string()).optional(),
   teacherLinks: z.array(z.string()).optional(),
   influencedLinks: z.array(z.string()).optional(),
-  
   relatedConcepts: z.array(z.string()).default([]),
   relatedReleases: z.array(z.string()).default([]),
   relatedArticles: z.array(z.string()).default([]),
@@ -113,9 +104,7 @@ export const knowledgeEntitySchema = z.object({
 
 const resolveDataDir = () => {
   if (process.env.DATA_DIR) return process.env.DATA_DIR;
-  if (typeof window === 'undefined' && fs.existsSync('/app/.data')) {
-    return '/app/.data';
-  }
+  if (typeof window === 'undefined' && fs.existsSync('/app/.data')) return '/app/.data';
   return path.join(process.cwd(), '.data');
 };
 
@@ -135,15 +124,15 @@ class KnowledgeStorage {
     if (this.initialized) return;
 
     try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
       if (fs.existsSync(KNOWLEDGE_FILE)) {
         const content = fs.readFileSync(KNOWLEDGE_FILE, 'utf-8');
         const list = JSON.parse(content || '[]');
         this.entities = {};
         list.forEach((entity: KnowledgeEntity) => {
+          // Backward compatibility for historical records that used `article` as the long field.
+          if (!entity.longDescription && entity.article) entity.longDescription = entity.article;
           this.entities[entity.id] = entity;
         });
       } else {
@@ -162,61 +151,36 @@ class KnowledgeStorage {
     this.init();
   }
 
-  /**
-   * Enforces minimum formatting guidelines before allowing an entity to be set public:
-   * 1. Short description: minimum 40 words
-   * 2. Long description: minimum 150 words
-   * 3. At least 1 connected release OR article
-   * 4. At least 3 internal links (combining relatedConcepts, regionLinks, languageLinks, sameAs, relatedPlaylists)
-   * 5. Active and public status checked
-   */
   public validatePublishReady(entity: KnowledgeEntity): { ready: boolean; errors?: string[] } {
     const errors: string[] = [];
-
-    // Helper word counter
     const countWords = (str: string) => str.trim().split(/\s+/).filter(w => w.length > 0).length;
 
-    // 1. Short description check
     const shortWordCount = countWords(entity.shortDescription || '');
-    if (shortWordCount < 40) {
-      errors.push(`Short description is too thin (${shortWordCount} words, minimum 40 required).`);
-    }
+    if (shortWordCount < 40) errors.push(`Short description is too thin (${shortWordCount} words, minimum 40 required).`);
 
-    // 2. Long description check
     const longWordCount = countWords(entity.longDescription || '');
-    if (longWordCount < 150) {
-      errors.push(`Long description is too thin (${longWordCount} words, minimum 150 required).`);
-    }
+    if (longWordCount < 150) errors.push(`Long description is too thin (${longWordCount} words, minimum 150 required).`);
 
-    // 3. Connection check
     const hasReleases = (entity.relatedReleases || []).length > 0;
     const hasArticles = (entity.relatedArticles || []).length > 0;
-    if (!hasReleases && !hasArticles) {
-      errors.push(`Entity must be connected to at least one release or journal article.`);
-    }
+    if (!hasReleases && !hasArticles) errors.push('Entity must be connected to at least one release or journal article.');
 
-    // 4. Internal links density check
     const conceptLinks = (entity.relatedConcepts || []).length;
     const regionLinks = (entity.regionLinks || []).length;
     const languageLinks = (entity.languageLinks || []).length;
     const sameAsLinks = (entity.sameAs || []).length;
     const playlistLinks = (entity.relatedPlaylists || []).length;
     const totalLinks = conceptLinks + regionLinks + languageLinks + sameAsLinks + playlistLinks;
-
     if (totalLinks < 3) {
       errors.push(`Entity must have at least 3 internal link references (found ${totalLinks} links: ${conceptLinks} concepts, ${regionLinks} regions, ${languageLinks} languages, ${sameAsLinks} external refs).`);
     }
 
-    return {
-      ready: errors.length === 0,
-      errors: errors.length > 0 ? errors : undefined
-    };
+    return { ready: errors.length === 0, errors: errors.length > 0 ? errors : undefined };
   }
 
   private seedInitialData(): void {
     const now = new Date().toISOString();
 
-    // 1. Seed Rumi (Poet)
     const rumi: KnowledgeEntity = {
       id: 'poet_rumi',
       type: 'poet',
@@ -229,7 +193,7 @@ class KnowledgeStorage {
       regionLinks: ['tr', 'pk', 'in', 'me'],
       languageLinks: ['fa', 'tr', 'en', 'ur'],
       relatedConcepts: ['ishq', 'fana', 'sabr'],
-      relatedReleases: ['release_1779542779861_4HZbA2sfGmY'], // Connects to Aahista Aahista
+      relatedReleases: ['release_1779542779861_4HZbA2sfGmY'],
       relatedArticles: [],
       relatedPlaylists: [],
       sameAs: ['https://en.wikipedia.org/wiki/Rumi', 'https://www.britannica.com/biography/Rumi'],
@@ -240,7 +204,6 @@ class KnowledgeStorage {
       updatedAt: now
     };
 
-    // 2. Seed Dhikr (Practice)
     const dhikr: KnowledgeEntity = {
       id: 'practice_dhikr',
       type: 'practice',
@@ -272,12 +235,9 @@ class KnowledgeStorage {
     try {
       const serialized = JSON.stringify(Object.values(this.entities), null, 2);
       fs.writeFileSync(KNOWLEDGE_FILE, serialized, 'utf-8');
-
-      // Standalone double-write caching support (production Docker container mapping helper)
       const standaloneDataDir = path.join(process.cwd(), '.next', 'standalone', '.data');
       if (fs.existsSync(standaloneDataDir)) {
-        const standaloneDataFile = path.join(standaloneDataDir, 'knowledge-registry.json');
-        fs.writeFileSync(standaloneDataFile, serialized, 'utf-8');
+        fs.writeFileSync(path.join(standaloneDataDir, 'knowledge-registry.json'), serialized, 'utf-8');
       }
     } catch (error) {
       console.error('[KNOWLEDGE] Failed to write knowledge registry to disk:', error);
@@ -286,80 +246,51 @@ class KnowledgeStorage {
 
   public calculateKnowledgeDensityScore(entity: KnowledgeEntity): number {
     const countWords = (str: string) => (str || '').trim().split(/\s+/).filter(w => w.length > 0).length;
-
-    // 1. Description Completeness (Max 30)
     const shortWords = countWords(entity.shortDescription || '');
     const shortScore = Math.min(15, (shortWords / 40) * 15);
-
     const longWords = countWords(entity.longDescription || '');
     const longScore = Math.min(15, (longWords / 150) * 15);
-
     const descCompleteness = shortScore + longScore;
 
-    // 2. Relationships Layer (Max 50)
-    const releasesCount = (entity.relatedReleases || []).length;
-    const releasesScore = Math.min(15, releasesCount * 15);
-
-    const articlesCount = (entity.relatedArticles || []).length;
-    const articlesScore = Math.min(10, articlesCount * 10);
-
-    const conceptsCount = (entity.relatedConcepts || []).length;
-    const conceptsScore = Math.min(10, conceptsCount * 5);
-
-    const otherLinksCount = 
-      (entity.regionLinks || []).length + 
-      (entity.languageLinks || []).length + 
-      (entity.relatedPlaylists || []).length;
+    const releasesScore = Math.min(15, (entity.relatedReleases || []).length * 15);
+    const articlesScore = Math.min(10, (entity.relatedArticles || []).length * 10);
+    const conceptsScore = Math.min(10, (entity.relatedConcepts || []).length * 5);
+    const otherLinksCount = (entity.regionLinks || []).length + (entity.languageLinks || []).length + (entity.relatedPlaylists || []).length;
     const otherLinksScore = Math.min(15, otherLinksCount * 5);
-
     const relationsScore = releasesScore + articlesScore + conceptsScore + otherLinksScore;
 
-    // 3. External References (Max 20)
     const wikidataScore = entity.wikidataId ? 10 : 0;
-    const sameAsCount = (entity.sameAs || []).length;
-    const sameAsScore = Math.min(10, sameAsCount * 5);
-
-    const externalRefsScore = wikidataScore + sameAsScore;
-
-    return Math.round(descCompleteness + relationsScore + externalRefsScore);
+    const sameAsScore = Math.min(10, (entity.sameAs || []).length * 5);
+    return Math.round(descCompleteness + relationsScore + wikidataScore + sameAsScore);
   }
 
   public getEntity(slug: string, type: KnowledgeEntityType): KnowledgeEntity | undefined {
     this.init();
     const entity = this.entities[`${type}_${slug}`];
-    if (entity) {
-      entity.knowledgeDensityScore = this.calculateKnowledgeDensityScore(entity);
-    }
+    if (entity) entity.knowledgeDensityScore = this.calculateKnowledgeDensityScore(entity);
     return entity;
   }
 
   public getEntities(type?: KnowledgeEntityType): KnowledgeEntity[] {
     this.init();
     const list = Object.values(this.entities);
-    list.forEach(entity => {
-      entity.knowledgeDensityScore = this.calculateKnowledgeDensityScore(entity);
-    });
-    if (type) {
-      return list.filter(e => e.type === type);
-    }
-    return list;
+    list.forEach(entity => { entity.knowledgeDensityScore = this.calculateKnowledgeDensityScore(entity); });
+    return type ? list.filter(e => e.type === type) : list;
   }
 
   public saveEntity(entity: KnowledgeEntity): KnowledgeEntity {
     this.init();
     const now = new Date().toISOString();
-    
-    // Auto-generate ID
     const entityId = `${entity.type}_${entity.slug.trim().toLowerCase()}`;
-    const cleanEntity = {
+    const cleanEntity: KnowledgeEntity = {
       ...entity,
       id: entityId,
       slug: entity.slug.trim().toLowerCase(),
+      longDescription: entity.longDescription || entity.article || '',
       createdAt: entity.createdAt || now,
       updatedAt: now
     };
 
-    // If setting to public, run validation checks
     if (cleanEntity.isPublic) {
       const validation = this.validatePublishReady(cleanEntity);
       if (!validation.ready) {
@@ -367,12 +298,10 @@ class KnowledgeStorage {
       }
     }
 
-    const saved = cleanEntity;
-    saved.knowledgeDensityScore = this.calculateKnowledgeDensityScore(cleanEntity);
-
+    cleanEntity.knowledgeDensityScore = this.calculateKnowledgeDensityScore(cleanEntity);
     this.entities[entityId] = cleanEntity;
     this.persist();
-    return saved;
+    return cleanEntity;
   }
 
   public deleteEntity(slug: string, type: KnowledgeEntityType): boolean {
