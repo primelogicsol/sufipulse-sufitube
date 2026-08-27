@@ -31,8 +31,8 @@ jobs:
           mkdir -p .data
           echo "{}" > .data/registries.json
           echo "{}" > .data/brand-registry.json
-          echo "{}" > .data/crawler-registry.json
-          echo "{}" > .data/discovery-analytics.json
+          echo "[]" > .data/crawler-registry.json
+          echo "[]" > .data/discovery-analytics.json
           for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
 
       - name: Type check (capture repository baseline)
@@ -65,12 +65,64 @@ jobs:
           NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS: 'false'
         run: npm run build
 
+      - name: Live read-only YouTube public catalog audit
+        id: live_catalog
+        continue-on-error: true
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
+          YOUTUBE_CHANNEL_ID: 'UCraDr3i5A3k0j7typ6tOOsQ'
+        run: |
+          if [ -z "${YOUTUBE_API_KEY}" ]; then
+            echo "No repository YouTube API key secret is available to this branch; live catalog audit skipped."
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          node <<'NODE'
+          const fs = require('fs');
+          const key = process.env.YOUTUBE_API_KEY;
+          const channelId = process.env.YOUTUBE_CHANNEL_ID;
+          const output = process.env.GITHUB_OUTPUT;
+
+          async function json(url) {
+            const res = await fetch(url);
+            const body = await res.json();
+            if (!res.ok) throw new Error(`YouTube Data API ${res.status}: ${body?.error?.message || 'request failed'}`);
+            return body;
+          }
+
+          (async () => {
+            const channel = await json(`https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&id=${channelId}&key=${key}`);
+            const uploads = channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+            if (!uploads) throw new Error('Uploads playlist was not returned for the configured channel.');
+
+            let count = 0;
+            let pageToken = '';
+            do {
+              const token = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '';
+              const page = await json(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${uploads}&maxResults=50${token}&key=${key}`);
+              count += page.items?.length || 0;
+              pageToken = page.nextPageToken || '';
+            } while (pageToken);
+
+            console.log(`LIVE_PUBLIC_UPLOAD_COUNT=${count}`);
+            fs.appendFileSync(output, `status=success\ncount=${count}\n`);
+            if (count === 0) throw new Error('Configured channel returned zero public uploads.');
+          })().catch(error => {
+            console.error(error.message);
+            fs.appendFileSync(output, 'status=failure\n');
+            process.exit(1);
+          });
+          NODE
+
       - name: Validation summary
         if: always()
         run: |
-          echo "Type check outcome: ${{ steps.typecheck.outcome }}"
-          echo "Lint outcome:       ${{ steps.lint.outcome }}"
-          echo "Build outcome:      ${{ steps.build.outcome }}"
+          echo "Type check outcome:  ${{ steps.typecheck.outcome }}"
+          echo "Lint outcome:        ${{ steps.lint.outcome }}"
+          echo "Build outcome:       ${{ steps.build.outcome }}"
+          echo "Live catalog outcome:${{ steps.live_catalog.outcome }}"
+          echo "Live catalog status: ${{ steps.live_catalog.outputs.status }}"
+          echo "Live public uploads: ${{ steps.live_catalog.outputs.count }}"
           if [ "${{ steps.build.outcome }}" != "success" ]; then
             echo "Production build did not pass; Phase 1 remains blocked."
             exit 1
