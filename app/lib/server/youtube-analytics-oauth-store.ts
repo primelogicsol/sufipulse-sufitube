@@ -8,7 +8,12 @@ export type YTAnalyticsToken = {
   updatedAt: string;
 };
 
-const STORE_FILE = path.join(process.cwd(), '.data', 'youtube-analytics-token.json');
+const resolveDataDir = () => {
+  if (process.env.DATA_DIR) return process.env.DATA_DIR;
+  return path.join(process.cwd(), '.data');
+};
+
+const STORE_FILE = path.join(resolveDataDir(), 'youtube-analytics-token.json');
 
 async function read(): Promise<YTAnalyticsToken | null> {
   try {
@@ -22,7 +27,9 @@ async function read(): Promise<YTAnalyticsToken | null> {
 
 async function write(record: YTAnalyticsToken): Promise<void> {
   await fs.mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await fs.writeFile(STORE_FILE, JSON.stringify(record, null, 2), 'utf8');
+  const temp = `${STORE_FILE}.tmp`;
+  await fs.writeFile(temp, JSON.stringify(record, null, 2), 'utf8');
+  await fs.rename(temp, STORE_FILE);
 }
 
 export async function getYTAnalyticsToken(): Promise<YTAnalyticsToken | null> {
@@ -52,33 +59,45 @@ export async function getValidYTAnalyticsAccessToken(): Promise<string | null> {
   const record = await read();
   if (!record?.refreshToken) return null;
 
-  const expiringSoon = record.expiresAt
-    ? Date.now() + 5 * 60 * 1000 >= new Date(record.expiresAt).getTime()
-    : true;
+  const expiresAtMs = record.expiresAt ? new Date(record.expiresAt).getTime() : Number.NaN;
+  const expiringSoon = !Number.isFinite(expiresAtMs) || Date.now() + 5 * 60 * 1000 >= expiresAtMs;
 
-  if (!expiringSoon) return record.accessToken;
+  if (!expiringSoon && record.accessToken) return record.accessToken;
 
   const clientId = process.env.YOUTUBE_CLIENT_ID;
   const clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
-  if (!clientId || !clientSecret) return record.accessToken;
+  if (!clientId || !clientSecret) {
+    console.warn('[youtube-analytics-oauth-store] Access token is expired/expiring and OAuth client credentials are unavailable.');
+    return null;
+  }
 
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: record.refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  });
-  const tokens = await res.json();
-  if (!res.ok || !tokens.access_token) return record.accessToken;
+  try {
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: record.refreshToken,
+        grant_type: 'refresh_token',
+      }),
+      cache: 'no-store',
+    });
+    const tokens = await res.json();
 
-  await saveYTAnalyticsToken({
-    accessToken: tokens.access_token,
-    refreshToken: record.refreshToken,
-    expiresInSeconds: Number(tokens.expires_in || 3600),
-  });
-  return tokens.access_token;
+    if (!res.ok || !tokens.access_token) {
+      console.warn('[youtube-analytics-oauth-store] Refresh token exchange failed; reconnect is required.', tokens?.error || res.status);
+      return null;
+    }
+
+    await saveYTAnalyticsToken({
+      accessToken: tokens.access_token,
+      refreshToken: record.refreshToken,
+      expiresInSeconds: Number(tokens.expires_in || 3600),
+    });
+    return String(tokens.access_token);
+  } catch (error) {
+    console.warn('[youtube-analytics-oauth-store] Refresh token exchange could not be completed; reconnect is required.', error);
+    return null;
+  }
 }
