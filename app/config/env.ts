@@ -42,7 +42,7 @@ export const env = createEnv({
     SMTP_SECURE: z
       .string()
       .transform((v) => v === "true")
-      .default("false"),
+      .default(false),
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     FROM_EMAIL: z.string().optional().default("noreply@sufipulse.com"),
@@ -131,14 +131,12 @@ export const env = createEnv({
       ].join("\n")
     );
 
-    // THROW - this satisfies the 'never' return type required by some versions of @t3-oss/env-nextjs
     throw new Error("Environment validation failed. See above logs for details.");
   },
 });
 
 export type Env = typeof env;
 
-// Backward-compat: client-safe values (must use process.env directly — not the t3 proxy)
 export const ENV = {
   API_URL: process.env.NEXT_PUBLIC_API_URL ?? "/api",
   YOUTUBE_API_KEY: process.env.NEXT_PUBLIC_YOUTUBE_API_KEY,
