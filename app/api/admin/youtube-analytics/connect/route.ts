@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { normalizeYTAnalyticsCredential } from '@/app/lib/server/youtube-analytics-oauth-store';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
 const SCOPES = [
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (auth instanceof NextResponse) return auth;
 
-  const clientId = process.env.YOUTUBE_CLIENT_ID;
+  const clientId = normalizeYTAnalyticsCredential(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
   if (!clientId) {
     return NextResponse.json({ error: 'YOUTUBE_CLIENT_ID not configured.' }, { status: 503 });
   }
