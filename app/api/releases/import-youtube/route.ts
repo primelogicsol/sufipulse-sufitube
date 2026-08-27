@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { youtubeService } from '@/lib/youtube-service';
-import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { requireAdmin } from '@/server/middleware/authenticate';
-import { revalidatePath } from 'next/cache';
 import { mapVideoToRelease } from '@/lib/release-mapping';
+import type { CMSRelease } from '@/lib/cms-storage';
+
+const MAX_CHANNEL_VIDEOS = 500;
+
+function dedupeVideos(videos: any[]): any[] {
+  const byId = new Map<string, any>();
+  for (const video of videos) {
+    if (video?.id && !byId.has(video.id)) byId.set(video.id, video);
+  }
+  return Array.from(byId.values());
+}
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -14,24 +24,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const videoIdsParam = searchParams.get('videoIds');
     const fetchAll = searchParams.get('fetchAll') === '1';
-    
+
     let videos: any[] = [];
-    
+
     if (videoIdsParam) {
       const ids = videoIdsParam.split(',').map(id => id.trim()).filter(Boolean);
-      if (ids.length > 0) {
-        // Special case for mock testing without a key
-        if (ids.length === 1 && ids[0] === 'q58mRXIsi-Y') {
-           const mock = await youtubeService.getVideoById('q58mRXIsi-Y');
-           videos = mock ? [mock] : [];
-        } else {
-           videos = await youtubeService.getVideosByIds(ids);
-        }
-      }
+      if (ids.length > 0) videos = await youtubeService.getVideosByIds(ids);
     } else {
       const max = fetchAll
-        ? 500
-        : Math.max(1, Math.min(Number(searchParams.get('max') || 25), 500));
+        ? MAX_CHANNEL_VIDEOS
+        : Math.max(1, Math.min(Number(searchParams.get('max') || 25), MAX_CHANNEL_VIDEOS));
       videos = await youtubeService.getLatestVideos(max);
     }
 
@@ -39,7 +41,11 @@ export async function GET(request: NextRequest) {
       id: video.id,
       title: video.title || video.snippet?.title,
       description: video.description || video.snippet?.description,
-      thumbnailUrl: video.thumbnailUrl || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url,
+      thumbnailUrl:
+        video.thumbnailUrl ||
+        video.snippet?.thumbnails?.maxres?.url ||
+        video.snippet?.thumbnails?.high?.url ||
+        video.snippet?.thumbnails?.medium?.url,
       publishedDate: video.publishedDate || video.snippet?.publishedAt,
       durationSeconds: video.durationSeconds,
       durationFormatted: video.durationFormatted,
@@ -49,12 +55,17 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       count: rows.length,
-      requestedMax: fetchAll ? 500 : 25,
+      requestedMax: fetchAll ? MAX_CHANNEL_VIDEOS : Math.max(1, Math.min(Number(searchParams.get('max') || 25), MAX_CHANNEL_VIDEOS)),
       fetchAll,
       items: rows,
+      source: 'youtube_data_api',
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to fetch YouTube videos' }, { status: 500 });
+    console.error('[api/releases/import-youtube][GET]', error);
+    return NextResponse.json(
+      { error: error?.message || 'Failed to fetch YouTube videos' },
+      { status: 502 }
+    );
   }
 }
 
@@ -62,237 +73,137 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 
-  const debugLog: any[] = [];
-  const log = (msg: string, data?: any) => {
-    console.log(msg, data ? JSON.stringify(data).substring(0, 200) : '');
-    debugLog.push({ time: new Date().toISOString(), msg, data });
-  };
-  
-  log('Request started: POST /api/releases/import-youtube');
-
   try {
     youtubeService.clearCache();
     const body = await request.json().catch(() => ({}));
-    log('Body parsed', body);
-    
-    // FORCE INJECT THE VIDEO
-    log('Force searching exact video ID: Dbd0fhJty4A');
-    const forceVideo = await youtubeService.getVideoById('Dbd0fhJty4A');
-    
-    let forceSaved = false;
-    let forceReadback = false;
-    if (forceVideo) {
-      log('YouTube Data API returned forceVideo', forceVideo.title);
-      const existing = cmsServerStorage.getReleaseByYoutubeId('Dbd0fhJty4A');
-      const mapped = mapVideoToRelease(forceVideo, existing);
-      mapped.status = 'published';
-      mapped.visibility = 'public';
-      mapped.source = 'legacy_registry';
-      
-      log('Attempting to save forceVideo to cmsServerStorage');
-      try {
-        const savedResult = cmsServerStorage.saveRelease(mapped);
-        log('Saved result ID', savedResult.id);
-        forceSaved = true;
-        
-        // Reread to verify
-        const readback = cmsServerStorage.getReleaseByYoutubeId('Dbd0fhJty4A');
-        if (readback) {
-          log('Verified readback of forceVideo from cmsServerStorage');
-          forceReadback = true;
-        } else {
-          log('ERROR: Failed to readback forceVideo from cmsServerStorage');
-        }
-      } catch (saveErr: any) {
-        log('ERROR saving forceVideo', saveErr.message);
-      }
-    } else {
-      log('ERROR: YouTube Data API did not return Dbd0fhJty4A');
-    }
-    const requestedIds = Array.isArray(body.videoIds) ? body.videoIds.filter(Boolean) : [];
-    const lookbackDays = Number(body.lookbackDays || 30);
-    const lookbackMs = lookbackDays * 24 * 60 * 60 * 1000;
-    const now = Date.now();
-    const cutoffDate = new Date(now - lookbackMs);
+    const requestedIds = Array.isArray(body.videoIds)
+      ? body.videoIds.map((id: unknown) => String(id).trim()).filter(Boolean)
+      : [];
+    const mode = body.mode === 'incremental' ? 'incremental' : 'full';
+    const lookbackDays = Math.max(1, Math.min(Number(body.lookbackDays || 30), 3650));
+    const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
 
     let selected: any[] = [];
-    let isFallback = false;
 
-    if (requestedIds.length) {
-      for (const vid of requestedIds) {
-        const detail = await youtubeService.getVideoById(vid);
-        if (detail) selected.push(detail);
-      }
+    if (requestedIds.length > 0) {
+      selected = await youtubeService.getVideosByIds(requestedIds);
     } else {
-      // 1. Fetch latest videos from uploads playlist
-      const latestVideos = await youtubeService.getLatestVideos(500);
-      selected = [...latestVideos];
-      
-      // 2. Fetch latest completed live streams
-      try {
-        const liveStreams = await youtubeService.getCompletedLiveStreams(25);
-        // Add only unique IDs
-        const existingIds = new Set(selected.map(v => v.id));
-        for (const stream of liveStreams) {
-          if (!existingIds.has(stream.id)) {
-            selected.push(stream);
-          }
-        }
-      } catch (err) {
-        console.error('[Import] Failed to fetch live streams during sync:', err);
-      }
-      
-      isFallback = selected.some(v => v.source === 'native' || !v.source);
+      selected = await youtubeService.getLatestVideos(MAX_CHANNEL_VIDEOS);
     }
 
-    if (!selected.length) {
-      return NextResponse.json({ 
-        error: 'No videos found to import',
-        diagnostics: {
-          checkedCount: 0,
-          lookbackDays
-        }
-      }, { status: 404 });
+    selected = dedupeVideos(selected);
+
+    if (mode === 'incremental' && requestedIds.length === 0) {
+      selected = selected.filter(video => {
+        const published = new Date(video.publishedDate || video.snippet?.publishedAt || 0);
+        return Number.isFinite(published.getTime()) && published >= cutoff;
+      });
     }
 
-    // Sort by date to identify the latest
-    selected.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
-    const latestVideo = selected[0];
+    if (selected.length === 0) {
+      return NextResponse.json({
+        importedCount: 0,
+        imported: 0,
+        count: 0,
+        newCount: 0,
+        updatedCount: 0,
+        checkedCount: 0,
+        registryCount: cmsServerStorage.getAllReleases().length,
+        mode,
+        source: 'youtube_data_api',
+        message: mode === 'incremental'
+          ? `No YouTube uploads found in the last ${lookbackDays} days.`
+          : 'No YouTube videos were returned for the configured channel.',
+      });
+    }
 
     const toSave: CMSRelease[] = [];
-    const diagnostics: any[] = [];
+    const diagnostics: Array<{
+      youtubeId: string;
+      title: string;
+      action: 'created' | 'updated' | 'failed';
+      error?: string;
+    }> = [];
+
     let newCount = 0;
     let updatedCount = 0;
-    let skippedCount = 0;
     let errorCount = 0;
 
     for (const video of selected) {
-      const diag: any = {
-        youtubeId: video.id,
-        title: video.title,
-        publishedAt: video.publishedDate,
-        durationSeconds: video.durationSeconds,
-        format: video.format,
-        candidateForImport: true,
-        importAction: 'none',
-        importReason: 'none',
-        publicVisibleAfterSync: false,
-        reasonHiddenAfterSync: 'none'
-      };
-
       try {
-        const pubDate = new Date(video.publishedDate);
-        const isLatest = video.id === latestVideo.id;
-
-        if (pubDate < cutoffDate && !requestedIds.length && !isLatest) {
-          skippedCount++;
-          diag.candidateForImport = false;
-          diag.importAction = 'skipped';
-          diag.importReason = `Published before cutoff date (${cutoffDate.toLocaleDateString()})`;
-          diagnostics.push(diag);
-          continue;
-        }
-
         const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
-        if (!existing) {
-          newCount++;
-          diag.importAction = 'created';
-          diag.importReason = 'New YouTube upload detected';
-        } else {
-          updatedCount++;
-          diag.importAction = 'updated';
-          diag.importReason = 'Existing registry record updated with fresh metadata';
-          diag.dbRecordId = existing.id;
-        }
-        
         const mapped = mapVideoToRelease(video, existing);
-        
-        // Force public visibility for synced YouTube content
+
+        // API-key channel sync only returns publicly accessible channel videos.
+        // Keep the CMS representation aligned with the public YouTube state.
         mapped.status = 'published';
         mapped.visibility = 'public';
-        
+
+        if (existing) updatedCount += 1;
+        else newCount += 1;
+
         toSave.push(mapped);
-        
-        // Immediate visibility check on mapped data
-        diag.publicVisibleAfterSync = mapped.status === 'published' && mapped.visibility === 'public';
-        if (!diag.publicVisibleAfterSync) {
-          diag.reasonHiddenAfterSync = mapped.status !== 'published' ? 'status_not_published' : 'visibility_not_public';
-        }
-      } catch (err: any) {
-        console.error(`[Import] Failed to process video ${video.id}:`, err);
-        errorCount++;
-        diag.importAction = 'failed';
-        diag.importReason = err.message || 'Mapping or validation error';
-        diag.dbErrorMessage = err.message;
-      }
-      diagnostics.push(diag);
-    }
-
-    let saved: CMSRelease[] = [];
-    let persistenceError: string | null = null;
-    try {
-      console.log(`[Import] Attempting bulk save of ${toSave.length} releases...`);
-      saved = cmsServerStorage.bulkSaveReleases(toSave);
-      // Re-hydrate all processes to see the new data
-      cmsServerStorage.forceHydrate();
-      revalidatePath('/');
-      revalidatePath('/releases');
-    } catch (saveErr: any) {
-      console.error('[Import] Bulk save failed:', saveErr.message);
-      persistenceError = saveErr.message;
-    }
-
-    const serverInfo = cmsServerStorage.getInfo();
-    const allReleases = cmsServerStorage.getAllReleases();
-    const finalCount = allReleases.length;
-
-    console.log(`[Import] Post-save registry count: ${finalCount}`);
-
-    // Diagnostic for latest video specifically
-    const latestDiag = diagnostics.find(d => d.youtubeId === latestVideo.id);
-    const latestInDb = cmsServerStorage.getReleaseByYoutubeId(latestVideo.id);
-    
-    if (latestDiag) {
-      latestDiag.existsInDb = !!latestInDb;
-      if (latestInDb) {
-        latestDiag.dbRecordId = latestInDb.id;
-        latestDiag.publicVisibleAfterSync = latestInDb.status === 'published' && latestInDb.visibility === 'public';
-        latestDiag.reasonHiddenAfterSync = !latestDiag.publicVisibleAfterSync 
-          ? (latestInDb.status !== 'published' ? 'status_not_published' : 'visibility_not_public')
-          : 'none';
-      } else {
-        latestDiag.existsInDb = false;
-        latestDiag.reasonHiddenAfterSync = 'missing_from_db_after_save';
+        diagnostics.push({
+          youtubeId: video.id,
+          title: video.title || video.snippet?.title || video.id,
+          action: existing ? 'updated' : 'created',
+        });
+      } catch (error: any) {
+        errorCount += 1;
+        diagnostics.push({
+          youtubeId: video?.id || 'unknown',
+          title: video?.title || video?.snippet?.title || 'Unknown video',
+          action: 'failed',
+          error: error?.message || 'Mapping failed',
+        });
       }
     }
+
+    if (toSave.length === 0 && errorCount > 0) {
+      return NextResponse.json(
+        {
+          error: 'All YouTube videos failed during mapping; no CMS records were changed.',
+          checkedCount: selected.length,
+          errorCount,
+          diagnostics,
+        },
+        { status: 422 }
+      );
+    }
+
+    const saved = cmsServerStorage.bulkSaveReleases(toSave);
+    cmsServerStorage.forceHydrate();
+
+    revalidatePath('/');
+    revalidatePath('/releases');
+    revalidatePath('/admin/cms-releases');
+    revalidatePath('/admin/youtube-sync');
+
+    const registryCount = cmsServerStorage.getAllReleases().length;
 
     return NextResponse.json({
       importedCount: saved.length,
+      imported: saved.length,
+      count: saved.length,
       newCount,
       updatedCount,
-      skippedCount,
       errorCount,
       checkedCount: selected.length,
-      registryCount: finalCount,
-      persistenceError,
-      serverInfo,
-      isFallback,
-      diagnostic: latestDiag,
-      diagnostics: diagnostics.slice(0, 50),
-      debugLog,
-      message: persistenceError 
-        ? `Sync partially failed! Found ${newCount} new items but could not save them to disk: ${persistenceError}`
-        : `Sync Registry Complete. Checked ${selected.length} uploads. ${newCount} new, ${updatedCount} updated. Final Registry Count: ${finalCount}`,
-      details: {
-        lookbackDays,
-        latestVideo: latestDiag,
-        serverInfo,
-        persistenceError
-      }
+      registryCount,
+      mode,
+      lookbackDays: mode === 'incremental' ? lookbackDays : null,
+      source: 'youtube_data_api',
+      diagnostics,
+      message: `YouTube sync complete. Checked ${selected.length}; ${newCount} created, ${updatedCount} updated, ${errorCount} failed. Registry now contains ${registryCount} releases.`,
     });
   } catch (error: any) {
-    console.error('[API /api/releases/import-youtube] POST ERROR:', error);
-    log('FATAL ERROR', error?.message);
-    return NextResponse.json({ error: error?.message || 'Failed to import YouTube videos', debugLog }, { status: 500 });
+    console.error('[api/releases/import-youtube][POST]', error);
+    return NextResponse.json(
+      {
+        error: error?.message || 'Failed to import YouTube videos',
+        source: 'youtube_data_api',
+      },
+      { status: 502 }
+    );
   }
 }
