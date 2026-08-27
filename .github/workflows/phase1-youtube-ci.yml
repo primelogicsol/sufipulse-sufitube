@@ -152,6 +152,22 @@ jobs:
           MIN_EXPECTED_UPLOADS: '95'
         run: node scripts/phase1-youtube-live-reconciliation.mjs
 
+      - name: Live incremental and full CMS sync integration
+        id: live_sync
+        env:
+          DATA_DIR: /tmp/sufipulse-phase1-live-sync-${{ github.run_id }}-${{ github.run_attempt }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CHANNEL_ID: 'UCraDr3i5A3k0j7typ6tOOsQ'
+          MIN_EXPECTED_UPLOADS: '95'
+          INCREMENTAL_LOOKBACK_DAYS: '30'
+        run: |
+          rm -rf "$DATA_DIR"
+          mkdir -p "$DATA_DIR"
+          node -r ./scripts/register-phase1-ts.cjs ./scripts/phase1-youtube-live-sync-integration.ts
+          rm -rf "$DATA_DIR"
+
       - name: Validation summary
         if: always()
         run: |
@@ -175,5 +191,6 @@ jobs:
           echo "Live uploads in last 30 days:  ${{ steps.live_reconciliation.outputs.recent_30d }}"
           echo "Incremental create plan:       ${{ steps.live_reconciliation.outputs.recent_create }}"
           echo "Incremental update plan:       ${{ steps.live_reconciliation.outputs.recent_update }}"
-          echo "Hard Phase 1 gates include integrity guard + runtime contracts + differential TypeScript + differential lint + production build + live Data API audit + live CMS reconciliation."
+          echo "Live CMS sync integration:     ${{ steps.live_sync.outcome }}"
+          echo "Hard Phase 1 gates include integrity guard + runtime contracts + differential TypeScript + differential lint + production build + live Data API audit + live CMS reconciliation + isolated live CMS sync integration."
           echo "The live Data API audit tries owner OAuth first, then a server-only API key, then the legacy key. Admin catalog sync itself now uses the OAuth-first read-only client."
