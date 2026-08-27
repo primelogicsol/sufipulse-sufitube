@@ -18,9 +18,11 @@ function load(file) {
 }
 
 function normalizeFile(filePath) {
-  const relative = path.relative(process.cwd(), filePath).replaceAll('\\', '/');
-  const basePrefix = '.phase1-base/';
-  return relative.startsWith(basePrefix) ? relative.slice(basePrefix.length) : relative;
+  const portable = filePath.replaceAll('\\', '/');
+  const worktreeMarker = '/phase1-base/';
+  const markerIndex = portable.lastIndexOf(worktreeMarker);
+  if (markerIndex >= 0) return portable.slice(markerIndex + worktreeMarker.length);
+  return path.relative(process.cwd(), filePath).replaceAll('\\', '/');
 }
 
 function errorCounts(results) {
