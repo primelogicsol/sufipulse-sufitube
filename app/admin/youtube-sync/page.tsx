@@ -36,6 +36,10 @@ type Reconciliation = {
   missingYoutubeId: number;
 };
 
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 export default function YouTubeSync() {
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
@@ -55,8 +59,8 @@ export default function YouTubeSync() {
         setReconciliation(data.reconciliation ?? null);
         setReconciliationSource('youtube_data_api');
         return 'youtube_data_api' as const;
-      } catch (error: any) {
-        liveError = error?.message || 'Live YouTube Data API reconciliation was unavailable.';
+      } catch (error: unknown) {
+        liveError = errorMessage(error, 'Live YouTube Data API reconciliation was unavailable.');
       }
     }
 
@@ -107,9 +111,9 @@ export default function YouTubeSync() {
           ? `${data.message || 'YouTube catalog sync completed.'} Reconciliation used the latest verified YouTube Studio CSV because the live catalog read was unavailable.`
           : (data.message || 'YouTube catalog sync completed.')
       );
-    } catch (err: any) {
+    } catch (error: unknown) {
       setStatus('error');
-      setMessage(err.message || 'An unexpected error occurred.');
+      setMessage(errorMessage(error, 'An unexpected error occurred.'));
     } finally {
       setSyncing(false);
     }
@@ -127,9 +131,9 @@ export default function YouTubeSync() {
       await loadReconciliation(true);
       setStatus('success');
       setMessage('Studio catalog reconciliation completed. No YouTube API quota was consumed and no YouTube data was modified.');
-    } catch (err: any) {
+    } catch (error: unknown) {
       setStatus('error');
-      setMessage(err.message || 'Studio catalog reconciliation failed.');
+      setMessage(errorMessage(error, 'Studio catalog reconciliation failed.'));
     } finally {
       setSyncing(false);
     }
