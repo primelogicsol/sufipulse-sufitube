@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
-const SCOPE = 'https://www.googleapis.com/auth/yt-analytics.readonly';
+const SCOPES = [
+  'https://www.googleapis.com/auth/yt-analytics.readonly',
+  'https://www.googleapis.com/auth/youtube.readonly',
+];
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
@@ -19,9 +22,10 @@ export async function POST(request: NextRequest) {
   url.searchParams.set('client_id', clientId);
   url.searchParams.set('redirect_uri', redirectUri);
   url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', SCOPE);
+  url.searchParams.set('scope', SCOPES.join(' '));
   url.searchParams.set('access_type', 'offline');
+  url.searchParams.set('include_granted_scopes', 'true');
   url.searchParams.set('prompt', 'consent');
 
-  return NextResponse.json({ authUrl: url.toString(), redirectUri });
+  return NextResponse.json({ authUrl: url.toString(), redirectUri, scopes: SCOPES });
 }
