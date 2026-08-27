@@ -23,6 +23,10 @@ function fmtDuration(secs: number | null): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 type MetricSource = 'youtube_analytics_api' | 'studio_csv' | 'unavailable';
 
 function sourceLabel(source: MetricSource): string {
@@ -116,8 +120,8 @@ export default function YouTubeAnalyticsPage() {
       if (Array.isArray(j.warnings) && j.warnings.length > 0) {
         setWarning(j.warnings.join(' '));
       }
-    } catch (e: any) {
-      setError(e.message || 'Failed to load YouTube Analytics.');
+    } catch (error: unknown) {
+      setError(errorMessage(error, 'Failed to load YouTube Analytics.'));
     } finally {
       setLoading(false);
     }
@@ -153,8 +157,8 @@ export default function YouTubeAnalyticsPage() {
       const j = await res.json();
       if (j.authUrl) window.location.href = j.authUrl;
       else setError(j.error || 'Failed to start authorization.');
-    } catch (e: any) {
-      setError(e.message || 'Failed to start authorization.');
+    } catch (error: unknown) {
+      setError(errorMessage(error, 'Failed to start authorization.'));
     } finally {
       setConnecting(false);
     }
@@ -176,8 +180,8 @@ export default function YouTubeAnalyticsPage() {
       setStudioSummary({ rowCount: json.rowCount, importedAt: json.importedAt, fileName: json.fileName });
       setWarning(`YouTube Studio snapshot imported: ${json.rowCount} unique video rows. Studio-only metrics now use this verified first-party source.`);
       await loadAnalytics();
-    } catch (e: any) {
-      setError(e.message || 'Studio CSV import failed.');
+    } catch (error: unknown) {
+      setError(errorMessage(error, 'Studio CSV import failed.'));
     } finally {
       setStudioImporting(false);
     }
