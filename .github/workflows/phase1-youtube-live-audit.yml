@@ -21,6 +21,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify configured YouTube OAuth client identity
+        env:
+          CONFIGURED_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          EXPECTED_CLIENT_ID: '176632661339-vblolbmsu073vu0bimlprbc962cgdbh3.apps.googleusercontent.com'
+        run: |
+          node <<'NODE'
+          function normalize(raw, keyName) {
+            let value = String(raw || '').trim();
+            if (keyName && value.startsWith(`${keyName}=`)) value = value.slice(keyName.length + 1).trim();
+            if (
+              value.length >= 2 &&
+              ((value.startsWith('"') && value.endsWith('"')) ||
+               (value.startsWith("'") && value.endsWith("'")))
+            ) value = value.slice(1, -1).trim();
+            return value;
+          }
+          const configured = normalize(process.env.CONFIGURED_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
+          const expected = normalize(process.env.EXPECTED_CLIENT_ID, 'EXPECTED_CLIENT_ID');
+          if (!configured) {
+            console.error('YOUTUBE_CLIENT_ID is not configured in GitHub Actions.');
+            process.exit(1);
+          }
+          if (configured !== expected) {
+            console.error('YOUTUBE_CLIENT_ID does not match the verified Sufipulse OAuth web client.');
+            process.exit(1);
+          }
+          console.log('YOUTUBE_CLIENT_ID matches the verified Sufipulse OAuth web client.');
+          NODE
+
       - name: Live read-only YouTube Data API catalog audit
         id: live_catalog
         env:
