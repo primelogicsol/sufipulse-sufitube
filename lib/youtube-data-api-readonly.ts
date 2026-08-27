@@ -27,6 +27,49 @@ type ReadCredential = {
   value: string;
 };
 
+type YouTubeThumbnail = { url?: string };
+type YouTubeApiItem = {
+  id?: string;
+  snippet?: {
+    title?: string;
+    description?: string;
+    publishedAt?: string;
+    channelId?: string;
+    liveBroadcastContent?: string;
+    thumbnails?: {
+      maxres?: YouTubeThumbnail;
+      high?: YouTubeThumbnail;
+      medium?: YouTubeThumbnail;
+    };
+  };
+  contentDetails?: {
+    duration?: string;
+    videoId?: string;
+    relatedPlaylists?: { uploads?: string };
+  };
+  statistics?: {
+    viewCount?: string;
+    likeCount?: string;
+    commentCount?: string;
+  };
+  liveStreamingDetails?: {
+    actualStartTime?: string;
+    scheduledStartTime?: string;
+  };
+};
+
+type YouTubeApiPayload = {
+  items?: YouTubeApiItem[];
+  nextPageToken?: string;
+  error?: {
+    errors?: Array<{ reason?: string }>;
+    status?: string;
+    message?: string;
+  };
+  error_description?: string;
+  raw?: string;
+};
+
 export class YouTubeDataApiReadError extends Error {
   status: number;
   reason: string;
@@ -111,7 +154,7 @@ async function youtubeRequest(
   resource: string,
   params: Record<string, string>,
   credential: ReadCredential
-): Promise<any> {
+): Promise<YouTubeApiPayload> {
   const url = new URL(`https://www.googleapis.com/youtube/v3/${resource}`);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
 
@@ -130,16 +173,16 @@ async function youtubeRequest(
   }
 
   const text = await response.text();
-  let payload: any = {};
+  let payload: YouTubeApiPayload = {};
   try {
-    payload = text ? JSON.parse(text) : {};
+    payload = text ? (JSON.parse(text) as YouTubeApiPayload) : {};
   } catch {
     payload = { raw: text };
   }
 
   if (!response.ok) {
-    const reason = String(payload?.error?.errors?.[0]?.reason || payload?.error?.status || 'youtube_data_api_error');
-    const message = String(payload?.error?.message || payload?.error_description || `YouTube Data API returned ${response.status}.`);
+    const reason = String(payload.error?.errors?.[0]?.reason || payload.error?.status || 'youtube_data_api_error');
+    const message = String(payload.error?.message || payload.error_description || `YouTube Data API returned ${response.status}.`);
     const lower = `${reason} ${message}`.toLowerCase();
     const quota = response.status === 403 && lower.includes('quota');
     const insufficientScope =
@@ -164,8 +207,8 @@ async function getUploadsPlaylist(credential: ReadCredential): Promise<string> {
     ? await youtubeRequest('channels', { part: 'contentDetails,snippet', mine: 'true', maxResults: '50' }, credential)
     : await youtubeRequest('channels', { part: 'contentDetails,snippet', id: configuredChannelId }, credential);
 
-  const items = Array.isArray(channelPayload?.items) ? channelPayload.items : [];
-  const channel = items.find((item: any) => String(item?.id || '').trim() === configuredChannelId);
+  const items = Array.isArray(channelPayload.items) ? channelPayload.items : [];
+  const channel = items.find(item => String(item.id || '').trim() === configuredChannelId);
   if (!channel) {
     throw new YouTubeDataApiReadError(
       credential.mode === 'youtube-oauth-client'
@@ -175,7 +218,7 @@ async function getUploadsPlaylist(credential: ReadCredential): Promise<string> {
     );
   }
 
-  const uploads = String(channel?.contentDetails?.relatedPlaylists?.uploads || '').trim();
+  const uploads = String(channel.contentDetails?.relatedPlaylists?.uploads || '').trim();
   if (!uploads) {
     throw new YouTubeDataApiReadError('YouTube did not return the uploads playlist for the configured channel.', {
       status: 502,
@@ -185,27 +228,27 @@ async function getUploadsPlaylist(credential: ReadCredential): Promise<string> {
   return uploads;
 }
 
-function normalizeVideo(video: any): ReadOnlyYouTubeVideo {
-  const durationSeconds = parseDuration(video?.contentDetails?.duration || 'PT0S');
+function normalizeVideo(video: YouTubeApiItem): ReadOnlyYouTubeVideo {
+  const durationSeconds = parseDuration(video.contentDetails?.duration || 'PT0S');
   const hasLiveDetails = Boolean(
-    video?.liveStreamingDetails?.actualStartTime || video?.liveStreamingDetails?.scheduledStartTime
+    video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime
   );
   return {
-    id: String(video?.id || ''),
-    title: String(video?.snippet?.title || ''),
-    description: String(video?.snippet?.description || ''),
+    id: String(video.id || ''),
+    title: String(video.snippet?.title || ''),
+    description: String(video.snippet?.description || ''),
     thumbnailUrl:
-      video?.snippet?.thumbnails?.maxres?.url ||
-      video?.snippet?.thumbnails?.high?.url ||
-      video?.snippet?.thumbnails?.medium?.url ||
+      video.snippet?.thumbnails?.maxres?.url ||
+      video.snippet?.thumbnails?.high?.url ||
+      video.snippet?.thumbnails?.medium?.url ||
       '',
-    publishedDate: String(video?.snippet?.publishedAt || ''),
+    publishedDate: String(video.snippet?.publishedAt || ''),
     durationSeconds,
     durationFormatted: formatDuration(durationSeconds),
-    views: Number(video?.statistics?.viewCount || 0),
-    likes: Number(video?.statistics?.likeCount || 0),
-    comments: Number(video?.statistics?.commentCount || 0),
-    liveBroadcastContent: String(video?.snippet?.liveBroadcastContent || 'none'),
+    views: Number(video.statistics?.viewCount || 0),
+    likes: Number(video.statistics?.likeCount || 0),
+    comments: Number(video.statistics?.commentCount || 0),
+    liveBroadcastContent: String(video.snippet?.liveBroadcastContent || 'none'),
     source: 'youtube',
     format: inferFormat(durationSeconds, hasLiveDetails),
   };
@@ -228,8 +271,8 @@ async function getVideosByIdsWithCredential(ids: string[], credential: ReadCrede
       },
       credential
     );
-    for (const item of payload?.items || []) {
-      if (String(item?.snippet?.channelId || '').trim() !== expected) continue;
+    for (const item of payload.items || []) {
+      if (String(item.snippet?.channelId || '').trim() !== expected) continue;
       result.push(normalizeVideo(item));
     }
   }
@@ -264,12 +307,12 @@ export async function fetchReadOnlyYouTubeChannelVideos(maxResults = 500): Promi
     };
     if (pageToken) params.pageToken = pageToken;
     const page = await youtubeRequest('playlistItems', params, credential);
-    for (const item of page?.items || []) {
-      const id = String(item?.contentDetails?.videoId || '').trim();
+    for (const item of page.items || []) {
+      const id = String(item.contentDetails?.videoId || '').trim();
       if (id && !ids.includes(id)) ids.push(id);
     }
-    pageToken = String(page?.nextPageToken || '');
-    if (!pageToken || (page?.items || []).length === 0) break;
+    pageToken = String(page.nextPageToken || '');
+    if (!pageToken || (page.items || []).length === 0) break;
   }
 
   const videos = await getVideosByIdsWithCredential(ids.slice(0, safeMax), credential);
