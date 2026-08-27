@@ -3,6 +3,7 @@ import { requireAdmin } from '@/server/middleware/authenticate';
 import {
   getValidYTAnalyticsAccessToken,
   getYTAnalyticsToken,
+  hasYTAnalyticsRefreshCredential,
 } from '@/app/lib/server/youtube-analytics-oauth-store';
 
 export const dynamic = 'force-dynamic';
@@ -12,11 +13,13 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const stored = await getYTAnalyticsToken();
-  if (!stored?.refreshToken) {
+  const hasRefreshCredential = await hasYTAnalyticsRefreshCredential();
+  if (!hasRefreshCredential) {
     return NextResponse.json({
       connected: false,
       reconnectRequired: false,
       updatedAt: null,
+      credentialSource: 'unavailable',
     });
   }
 
@@ -24,6 +27,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     connected: !!accessToken,
     reconnectRequired: !accessToken,
-    updatedAt: stored.updatedAt ?? null,
+    updatedAt: stored?.updatedAt ?? null,
+    credentialSource: stored?.refreshToken ? 'interactive_oauth' : 'server_refresh_token',
   });
 }
