@@ -41,7 +41,7 @@ jobs:
         run: node scripts/phase1-youtube-integrity-guard.mjs
 
       - name: Phase 1 runtime failure contracts
-        run: npx swc-node scripts/phase1-youtube-runtime-tests.ts
+        run: node -r ./scripts/register-phase1-ts.cjs ./scripts/phase1-youtube-runtime-tests.ts
 
       - name: Type check (capture repository baseline)
         id: typecheck
@@ -82,7 +82,7 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
         run: |
-          mapfile -t changed < <(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx' '*.js' '*.mjs' | grep -v '^\.github/' || true)
+          mapfile -t changed < <(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx' '*.js' '*.mjs' '*.cjs' | grep -v '^\.github/' || true)
           if [ "${#changed[@]}" -eq 0 ]; then
             echo "No lintable Phase 1 files changed."
             exit 0
