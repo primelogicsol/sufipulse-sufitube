@@ -11,12 +11,9 @@ export const metadata = {
 export default function DiscoveryHubPage() {
   const entities = entityStore.findAll().filter(e => e.isActive && e.isPublic);
 
-  // Group Flagship Clusters
-  const flagships = entities.filter(e => e.strategicGPS >= 90 || e.authorityMetadata?.relatedConcepts);
-  
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-slate-300">
-      <DiscoveryBuilder initialEntities={entities} flagships={flagships} />
+      <DiscoveryBuilder initialEntities={entities} />
     </div>
   );
 }
