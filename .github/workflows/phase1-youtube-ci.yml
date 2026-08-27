@@ -12,10 +12,12 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -35,23 +37,58 @@ jobs:
           echo "[]" > .data/discovery-analytics.json
           for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
 
+      - name: Phase 1 YouTube integrity guard
+        run: node scripts/phase1-youtube-integrity-guard.mjs
+
       - name: Type check (capture repository baseline)
         id: typecheck
         continue-on-error: true
         env:
           SKIP_ENV_VALIDATION: 'true'
-        run: npm run type-check
+        run: |
+          set -o pipefail
+          npm run type-check 2>&1 | tee /tmp/phase1-typecheck.log
 
-      - name: Lint (capture repository baseline)
+      - name: Differential TypeScript gate
+        run: |
+          changed="$(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx')"
+          echo "Phase 1 changed TypeScript files:"
+          echo "$changed"
+          failed=0
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            if grep -Fq "$file(" /tmp/phase1-typecheck.log; then
+              echo "Phase 1 TypeScript error detected in changed file: $file"
+              grep -F "$file(" /tmp/phase1-typecheck.log || true
+              failed=1
+            fi
+          done <<< "$changed"
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
+          echo "No TypeScript errors were reported in Phase 1 changed files."
+
+      - name: Lint repository (capture baseline)
         id: lint
         continue-on-error: true
         env:
           SKIP_ENV_VALIDATION: 'true'
         run: npm run lint
 
+      - name: Differential lint gate
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+        run: |
+          mapfile -t changed < <(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx' '*.js' '*.mjs' | grep -v '^\.github/' || true)
+          if [ "${#changed[@]}" -eq 0 ]; then
+            echo "No lintable Phase 1 files changed."
+            exit 0
+          fi
+          printf 'Linting Phase 1 changed files:\n%s\n' "${changed[*]}"
+          npx eslint "${changed[@]}"
+
       - name: Production build
         id: build
-        continue-on-error: true
         env:
           CI: 'true'
           SKIP_ENV_VALIDATION: 'true'
@@ -117,13 +154,11 @@ jobs:
       - name: Validation summary
         if: always()
         run: |
-          echo "Type check outcome:  ${{ steps.typecheck.outcome }}"
-          echo "Lint outcome:        ${{ steps.lint.outcome }}"
-          echo "Build outcome:       ${{ steps.build.outcome }}"
-          echo "Live catalog outcome:${{ steps.live_catalog.outcome }}"
-          echo "Live catalog status: ${{ steps.live_catalog.outputs.status }}"
-          echo "Live public uploads: ${{ steps.live_catalog.outputs.count }}"
-          if [ "${{ steps.build.outcome }}" != "success" ]; then
-            echo "Production build did not pass; Phase 1 remains blocked."
-            exit 1
-          fi
+          echo "Repository type-check baseline: ${{ steps.typecheck.outcome }}"
+          echo "Repository lint baseline:       ${{ steps.lint.outcome }}"
+          echo "Production build:              ${{ steps.build.outcome }}"
+          echo "Live catalog outcome:          ${{ steps.live_catalog.outcome }}"
+          echo "Live catalog status:           ${{ steps.live_catalog.outputs.status }}"
+          echo "Live public uploads:           ${{ steps.live_catalog.outputs.count }}"
+          echo "Hard Phase 1 gates are integrity guard + differential TypeScript + differential lint + production build."
+          echo "The live catalog probe remains informative while the existing Google project is quota-limited; Studio CSV is the approved first-party fallback for acceptance."
