@@ -102,14 +102,17 @@ async function testOAuthRefreshContracts() {
   const originalDataDir = process.env.DATA_DIR;
   const originalClientId = process.env.YOUTUBE_CLIENT_ID;
   const originalClientSecret = process.env.YOUTUBE_CLIENT_SECRET;
+  const originalRefreshToken = process.env.YOUTUBE_REFRESH_TOKEN;
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'sufipulse-phase1-oauth-'));
 
   try {
     process.env.DATA_DIR = tempDir;
     process.env.YOUTUBE_CLIENT_ID = 'phase1-client';
     process.env.YOUTUBE_CLIENT_SECRET = 'phase1-secret';
+    delete process.env.YOUTUBE_REFRESH_TOKEN;
 
     const store = await import('../app/lib/server/youtube-analytics-oauth-store');
+    const readClient = await import('../lib/youtube-data-api-readonly');
 
     await store.saveYTAnalyticsToken({
       accessToken: 'expired-access',
@@ -124,6 +127,17 @@ async function testOAuthRefreshContracts() {
 
     const revokedResult = await store.getValidYTAnalyticsAccessToken();
     assert.equal(revokedResult, null, 'Revoked refresh token must require reconnect instead of returning stale access token');
+
+    let revokedReadError: unknown;
+    try {
+      await readClient.fetchReadOnlyYouTubeChannelVideos(1);
+    } catch (error) {
+      revokedReadError = error;
+    }
+    assert.ok(revokedReadError instanceof readClient.YouTubeDataApiReadError);
+    assert.equal(revokedReadError.status, 401, 'Revoked OAuth credential must surface as unauthorized on the sync read path');
+    assert.equal(revokedReadError.reason, 'oauth_refresh_failed');
+    assert.equal(revokedReadError.reconnectRequired, true, 'Revoked OAuth credential must explicitly require reconnect');
 
     await store.saveYTAnalyticsToken({
       accessToken: 'expired-access-2',
@@ -142,6 +156,29 @@ async function testOAuthRefreshContracts() {
     const stored = await store.getYTAnalyticsToken();
     assert.equal(stored?.accessToken, 'renewed-access', 'Renewed access token must be persisted atomically');
     assert.equal(stored?.refreshToken, 'valid-refresh', 'Refresh token must be preserved after renewal');
+
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({
+        error: {
+          code: 403,
+          status: 'PERMISSION_DENIED',
+          message: 'Insufficient Permission',
+          errors: [{ reason: 'forbidden' }],
+        },
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+
+    let scopeReadError: unknown;
+    try {
+      await readClient.fetchReadOnlyYouTubeChannelVideos(1);
+    } catch (error) {
+      scopeReadError = error;
+    }
+    assert.ok(scopeReadError instanceof readClient.YouTubeDataApiReadError);
+    assert.equal(scopeReadError.status, 403, 'Insufficient Data API scope must preserve upstream 403');
+    assert.equal(scopeReadError.reason, 'insufficient_scope');
+    assert.equal(scopeReadError.reconnectRequired, true, 'Insufficient scope must explicitly require reconnect');
   } finally {
     globalThis.fetch = originalFetch;
     await fs.rm(tempDir, { recursive: true, force: true });
@@ -151,6 +188,8 @@ async function testOAuthRefreshContracts() {
     else process.env.YOUTUBE_CLIENT_ID = originalClientId;
     if (originalClientSecret === undefined) delete process.env.YOUTUBE_CLIENT_SECRET;
     else process.env.YOUTUBE_CLIENT_SECRET = originalClientSecret;
+    if (originalRefreshToken === undefined) delete process.env.YOUTUBE_REFRESH_TOKEN;
+    else process.env.YOUTUBE_REFRESH_TOKEN = originalRefreshToken;
   }
 }
 
