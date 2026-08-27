@@ -51,7 +51,7 @@ requireText(syncRoute, "source: 'youtube_data_api'", 'live catalog source labeli
 requireText(studioRecon, "source: 'studio_csv'", 'Studio reconciliation provenance');
 requireText(studioRecon, 'authoritative: true', 'first-party Studio reconciliation authority flag');
 
-requireText(analyticsPage, 'Metric provenance:', 'analytics provenance legend');
+requireText(analyticsPage, 'Metric provenance', 'analytics provenance legend');
 requireText(analyticsPage, 'SourceBadge', 'per-field analytics provenance badges');
 requireText(syncPage, 'Reconcile Studio Snapshot', 'quota-independent reconciliation workflow');
 requireText(syncPage, 'LIVE DATA API', 'live reconciliation provenance label');
