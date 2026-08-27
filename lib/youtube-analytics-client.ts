@@ -7,7 +7,7 @@ const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const ANALYTICS_BASE = 'https://youtubeanalytics.googleapis.com/v2/reports';
 
 export type YouTubeAnalyticsResponse = {
-  rows?: any[][];
+  rows?: unknown[][];
   columnHeaders?: Array<{ name?: string; columnType?: string; dataType?: string }>;
 };
 
