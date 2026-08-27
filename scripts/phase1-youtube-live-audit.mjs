@@ -1,6 +1,21 @@
 import fs from 'node:fs';
 
-const expectedChannelId = String(process.env.YOUTUBE_CHANNEL_ID || '').trim();
+function normalizeEnvSecret(raw, keyName = '') {
+  let value = String(raw || '').trim();
+  if (keyName && value.startsWith(`${keyName}=`)) {
+    value = value.slice(keyName.length + 1).trim();
+  }
+  if (
+    value.length >= 2 &&
+    ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'")))
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+  return value;
+}
+
+const expectedChannelId = normalizeEnvSecret(process.env.YOUTUBE_CHANNEL_ID, 'YOUTUBE_CHANNEL_ID');
 const output = process.env.GITHUB_OUTPUT || '';
 
 function writeOutput(key, value) {
@@ -18,9 +33,9 @@ async function parseJson(response) {
 }
 
 async function refreshAccessToken() {
-  const clientId = String(process.env.YOUTUBE_CLIENT_ID || '').trim();
-  const clientSecret = String(process.env.YOUTUBE_CLIENT_SECRET || '').trim();
-  const refreshToken = String(process.env.YOUTUBE_REFRESH_TOKEN || '').trim();
+  const clientId = normalizeEnvSecret(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
+  const clientSecret = normalizeEnvSecret(process.env.YOUTUBE_CLIENT_SECRET, 'YOUTUBE_CLIENT_SECRET');
+  const refreshToken = normalizeEnvSecret(process.env.YOUTUBE_REFRESH_TOKEN, 'YOUTUBE_REFRESH_TOKEN');
 
   if (!clientId || !clientSecret || !refreshToken) return null;
 
@@ -113,8 +128,8 @@ async function main() {
     failures.push(`oauth-refresh: ${error.message}`);
   }
 
-  const serverKey = String(process.env.YOUTUBE_API_KEY || '').trim();
-  const legacyKey = String(process.env.LEGACY_YOUTUBE_API_KEY || '').trim();
+  const serverKey = normalizeEnvSecret(process.env.YOUTUBE_API_KEY, 'YOUTUBE_API_KEY');
+  const legacyKey = normalizeEnvSecret(process.env.LEGACY_YOUTUBE_API_KEY, 'NEXT_PUBLIC_YOUTUBE_API_KEY');
   if (serverKey) credentials.push({ type: 'api-key', value: serverKey, label: 'server-api-key' });
   if (legacyKey && legacyKey !== serverKey) credentials.push({ type: 'api-key', value: legacyKey, label: 'legacy-api-key' });
 
