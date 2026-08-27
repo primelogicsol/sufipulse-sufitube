@@ -9,6 +9,7 @@ import {
   CircleAlert as AlertCircle,
   Loader,
   Database,
+  SearchCheck,
 } from 'lucide-react';
 
 type SyncMode = 'full' | 'incremental';
@@ -23,17 +24,36 @@ type SyncResult = {
   message: string;
 };
 
+type Reconciliation = {
+  matched: number;
+  youtubeOnly: number;
+  metadataMismatch: number;
+  duplicates: number;
+  stale: number;
+  cmsOnlyOrNonpublic: number;
+  missingYoutubeId: number;
+};
+
 export default function YouTubeSync() {
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [result, setResult] = useState<SyncResult | null>(null);
+  const [reconciliation, setReconciliation] = useState<Reconciliation | null>(null);
+
+  const loadReconciliation = async () => {
+    const res = await fetch('/api/releases/import-youtube?fetchAll=1', { cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Catalog reconciliation failed.');
+    setReconciliation(data.reconciliation ?? null);
+  };
 
   const syncFromYouTube = async (mode: SyncMode) => {
     setSyncing(true);
     setStatus('syncing');
     setMessage(mode === 'full' ? 'Synchronizing the full YouTube catalog...' : 'Synchronizing recent YouTube uploads...');
     setResult(null);
+    setReconciliation(null);
 
     try {
       const res = await fetch('/api/releases/import-youtube', {
@@ -54,6 +74,11 @@ export default function YouTubeSync() {
         registryCount: data.registryCount ?? 0,
         message: data.message || 'YouTube catalog sync completed.',
       });
+
+      // Always run a read-only full reconciliation after a successful sync so the
+      // dashboard reports the true channel-vs-CMS state, including CMS-only records.
+      await loadReconciliation();
+
       setStatus('success');
       setMessage(data.message || 'YouTube catalog sync completed.');
     } catch (err: any) {
@@ -68,6 +93,7 @@ export default function YouTubeSync() {
     setStatus('idle');
     setMessage('');
     setResult(null);
+    setReconciliation(null);
   };
 
   return (
@@ -85,7 +111,7 @@ export default function YouTubeSync() {
           <div>
             <p className="font-medium">Read-only channel synchronization</p>
             <p className="text-blue-300/70 mt-1">
-              Existing releases are matched by YouTube video ID. New channel videos create CMS records; existing records receive refreshed public YouTube metadata. No release is deleted automatically.
+              Existing releases are matched by YouTube video ID. New public channel videos create CMS records; existing records receive refreshed operational YouTube stats without overwriting governed SufiPulse intelligence fields. Nothing is deleted automatically.
             </p>
           </div>
         </div>
@@ -115,7 +141,7 @@ export default function YouTubeSync() {
             </div>
             <h2 className="text-xl font-medium text-neutral-100">Recent Sync</h2>
             <p className="text-sm text-neutral-500 mt-2 mb-5">
-              Refresh videos published in the last 30 days. Use this after the initial full catalog reconciliation.
+              Refresh videos published in the last 30 days, then run a full read-only reconciliation against the CMS.
             </p>
             <button
               onClick={() => syncFromYouTube('incremental')}
@@ -136,29 +162,62 @@ export default function YouTubeSync() {
         )}
 
         {status === 'success' && result && (
-          <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-6 space-y-5">
-            <div className="flex items-start gap-3 text-green-400">
-              <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Catalog synchronization completed</p>
-                <p className="text-sm text-green-300/70 mt-1">{result.message}</p>
+          <div className="space-y-5">
+            <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-6 space-y-5">
+              <div className="flex items-start gap-3 text-green-400">
+                <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Catalog synchronization completed</p>
+                  <p className="text-sm text-green-300/70 mt-1">{result.message}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {[
+                  ['Checked', result.checkedCount],
+                  ['Created', result.newCount],
+                  ['Updated', result.updatedCount],
+                  ['Failed', result.errorCount],
+                  ['Registry', result.registryCount],
+                ].map(([label, value]) => (
+                  <div key={String(label)} className="bg-black/20 border border-white/5 rounded-lg p-3">
+                    <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+                    <p className="text-xl font-bold text-neutral-100 mt-1 tabular-nums">{value}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {[
-                ['Checked', result.checkedCount],
-                ['Created', result.newCount],
-                ['Updated', result.updatedCount],
-                ['Failed', result.errorCount],
-                ['Registry', result.registryCount],
-              ].map(([label, value]) => (
-                <div key={String(label)} className="bg-black/20 border border-white/5 rounded-lg p-3">
-                  <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
-                  <p className="text-xl font-bold text-neutral-100 mt-1 tabular-nums">{value}</p>
+            {reconciliation && (
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <SearchCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="text-lg font-medium text-neutral-100">Channel ↔ CMS Reconciliation</h3>
+                    <p className="text-sm text-neutral-500 mt-1">
+                      CMS-only items may be deleted, private, or unlisted because public API-key discovery cannot distinguish those states.
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                  {[
+                    ['Matched', reconciliation.matched],
+                    ['YouTube Only', reconciliation.youtubeOnly],
+                    ['Metadata Diff', reconciliation.metadataMismatch],
+                    ['Duplicates', reconciliation.duplicates],
+                    ['Stale', reconciliation.stale],
+                    ['CMS Only / Nonpublic', reconciliation.cmsOnlyOrNonpublic],
+                    ['Missing YT ID', reconciliation.missingYoutubeId],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="bg-black/20 border border-white/5 rounded-lg p-3">
+                      <p className="text-[10px] uppercase tracking-wide text-neutral-500 min-h-7">{label}</p>
+                      <p className="text-xl font-bold text-neutral-100 mt-1 tabular-nums">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <button
               onClick={reset}
