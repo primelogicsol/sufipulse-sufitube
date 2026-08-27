@@ -11,20 +11,17 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    // 1. Force re-hydration to get fresh disk states
+    // Rehydrate disk-backed CMS data first. cmsServerStorage hydration repopulates
+    // the shared cmsStorage singleton used by graphResolver.
     cmsServerStorage.forceHydrate();
     registriesStorage.forceHydrate();
     graphResolver.forceHydrate();
 
-    // 2. Fetch all raw joins & orphans
     const rawJoins = graphResolver.getRawJoins();
     const orphans = graphResolver.getOrphanReleases();
-
-    // 3. Compile registry performance statistics
     const rawRegistries = registriesStorage.getRawData();
     const performanceScores: Record<string, any> = {};
 
-    // Grouping mapping between registry property names and graph relationshipType
     const relationMapping: Record<string, 'concept' | 'theme' | 'mood' | 'region' | 'language' | 'diasporaMarket' | 'playlist'> = {
       concepts: 'concept',
       themes: 'theme',
@@ -32,7 +29,7 @@ export async function GET(request: NextRequest) {
       regions: 'region',
       languages: 'language',
       diasporaMarkets: 'diasporaMarket',
-      playlists: 'playlist'
+      playlists: 'playlist',
     };
 
     Object.entries(rawRegistries).forEach(([regType, items]) => {
@@ -40,12 +37,31 @@ export async function GET(request: NextRequest) {
       if (!relationshipType) return;
 
       items.forEach((item: any) => {
-        const stats = graphResolver.getRegistryPerformanceScore(item.slug, relationshipType);
+        const legacyStats = graphResolver.getRegistryPerformanceScore(item.slug, relationshipType);
+
+        // Phase 1 integrity rule: the legacy resolver historically generated a
+        // deterministic CTR and estimated watch time from a fixed retention ratio.
+        // Those values are not YouTube measurements and must never be exposed as
+        // performance telemetry. Structural scores and measured public view counts
+        // remain usable; watch time and CTR stay unavailable until real analytics
+        // are joined in a later phase.
         performanceScores[item.slug] = {
-          ...stats,
+          totalReleases: legacyStats.totalReleases,
+          totalViews: legacyStats.totalViews,
+          totalWatchTime: '—',
+          averageCtr: '—',
+          discoveryScore: legacyStats.discoveryScore,
+          authorityScore: legacyStats.authorityScore,
+          unavailableMetrics: ['watchTime', 'ctr'],
+          dataProvenance: {
+            views: 'youtube_data_api_cached_in_cms',
+            graphScores: 'derived_from_measured_views_and_graph_structure',
+            watchTime: 'unavailable',
+            ctr: 'unavailable',
+          },
           slug: item.slug,
           title: item.title,
-          type: regType
+          type: regType,
         };
       });
     });
@@ -58,9 +74,15 @@ export async function GET(request: NextRequest) {
         title: r.title,
         viewCount: r.viewCount,
         durationFormatted: r.durationFormatted,
-        status: r.status
+        status: r.status,
       })),
-      performance: performanceScores
+      performance: performanceScores,
+      dataProvenance: {
+        releases: 'hydrated_cms_registry',
+        joins: 'persisted_graph_joins',
+        watchTime: 'unavailable',
+        ctr: 'unavailable',
+      },
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -68,7 +90,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/admin/graph
-// Used to manually add/remove joins from the Graph Explorer
+// Used to manually add/remove joins from the Graph Explorer.
 export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -85,7 +107,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing parameters: releaseId, registryId, and relationshipType are required.' }, { status: 400 });
     }
 
-    // Load fresh states first
     cmsServerStorage.forceHydrate();
     registriesStorage.forceHydrate();
     graphResolver.forceHydrate();
@@ -96,36 +117,32 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
 
-      // Keep CMSRelease arrays in sync
       const release = cmsServerStorage.getRelease(releaseId);
       if (release) {
-        // Sync arrays based on graphResolver source of truth
         updateReleaseArraysFromJoins(release);
         cmsServerStorage.saveRelease(release);
       }
 
       return NextResponse.json({ success: true, join: result.join });
-    } else {
-      const success = graphResolver.removeJoin(releaseId, registryId, relationshipType);
-      if (!success) {
-        return NextResponse.json({ error: 'Join relationship not found' }, { status: 404 });
-      }
-
-      // Keep CMSRelease arrays in sync
-      const release = cmsServerStorage.getRelease(releaseId);
-      if (release) {
-        updateReleaseArraysFromJoins(release);
-        cmsServerStorage.saveRelease(release);
-      }
-
-      return NextResponse.json({ success: true });
     }
+
+    const success = graphResolver.removeJoin(releaseId, registryId, relationshipType);
+    if (!success) {
+      return NextResponse.json({ error: 'Join relationship not found' }, { status: 404 });
+    }
+
+    const release = cmsServerStorage.getRelease(releaseId);
+    if (release) {
+      updateReleaseArraysFromJoins(release);
+      cmsServerStorage.saveRelease(release);
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// Helper to update CMSRelease string arrays based on current joins
 function updateReleaseArraysFromJoins(release: any) {
   const releaseId = release.id;
   const joins = graphResolver.getRawJoins().filter(j => j.releaseId === releaseId);
