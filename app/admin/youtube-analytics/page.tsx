@@ -3,20 +3,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
-  Youtube, Link2, Unlink, RefreshCw, Loader2, AlertCircle,
-  Eye, TrendingUp, Clock, MousePointerClick, ExternalLink, Search,
+  Youtube, Link2, RefreshCw, Loader2, AlertCircle,
+  Eye, Clock, ExternalLink, Search, Database, FileSpreadsheet,
 } from 'lucide-react';
 import type { VideoImpression } from '@/app/api/admin/youtube-analytics/impressions/route';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
+  return String(Math.round(n));
 }
 
 function fmtDuration(secs: number): string {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
+  const safe = Number.isFinite(secs) ? Math.max(0, Math.round(secs)) : 0;
+  const m = Math.floor(safe / 60);
+  const s = safe % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
@@ -27,31 +28,50 @@ export default function YouTubeAnalyticsPage() {
   const [loading, setLoading] = useState(false);
   const [asOf, setAsOf] = useState('');
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
   const [search, setSearch] = useState('');
+  const [reconnectRequired, setReconnectRequired] = useState(false);
 
   const checkStatus = useCallback(async () => {
-    const res = await fetch('/api/admin/youtube-analytics/status');
-    if (res.ok) {
-      const json = await res.json();
-      setConnected(json.connected);
+    try {
+      const res = await fetch('/api/admin/youtube-analytics/status', { cache: 'no-store' });
+      if (res.ok) {
+        const json = await res.json();
+        setConnected(json.connected);
+      } else {
+        setConnected(false);
+      }
+    } catch {
+      setConnected(false);
     }
   }, []);
 
-  const loadImpressions = useCallback(async () => {
+  const loadAnalytics = useCallback(async () => {
     setLoading(true);
     setError('');
+    setWarning('');
+    setReconnectRequired(false);
+
     try {
-      const res = await fetch('/api/admin/youtube-analytics/impressions');
-      if (!res.ok) {
-        const j = await res.json();
-        if (j.error === 'not_connected') { setConnected(false); return; }
-        throw new Error(j.error || `HTTP ${res.status}`);
-      }
+      const res = await fetch('/api/admin/youtube-analytics/impressions', { cache: 'no-store' });
       const j = await res.json();
+
+      if (!res.ok) {
+        if (j.error === 'not_connected') {
+          setConnected(false);
+          return;
+        }
+        if (j.reconnectRequired) setReconnectRequired(true);
+        throw new Error(j.message || j.error || `HTTP ${res.status}`);
+      }
+
       setData(j.data ?? []);
       setAsOf(j.asOf ?? '');
+      if (Array.isArray(j.warnings) && j.warnings.length > 0) {
+        setWarning(j.warnings.join(' '));
+      }
     } catch (e: any) {
-      setError(e.message);
+      setError(e.message || 'Failed to load YouTube Analytics.');
     } finally {
       setLoading(false);
     }
@@ -59,7 +79,7 @@ export default function YouTubeAnalyticsPage() {
 
   useEffect(() => {
     checkStatus();
-    // read yt_auth param from URL
+
     const p = new URLSearchParams(window.location.search);
     if (p.get('yt_auth') === 'success') {
       setConnected(true);
@@ -74,18 +94,20 @@ export default function YouTubeAnalyticsPage() {
   }, [checkStatus]);
 
   useEffect(() => {
-    if (connected === true) loadImpressions();
-  }, [connected, loadImpressions]);
+    if (connected === true) loadAnalytics();
+  }, [connected, loadAnalytics]);
 
   const handleConnect = async () => {
     setConnecting(true);
+    setError('');
+
     try {
       const res = await fetch('/api/admin/youtube-analytics/connect', { method: 'POST' });
       const j = await res.json();
       if (j.authUrl) window.location.href = j.authUrl;
-      else setError(j.error || 'Failed to start auth');
+      else setError(j.error || 'Failed to start authorization.');
     } catch (e: any) {
-      setError(e.message);
+      setError(e.message || 'Failed to start authorization.');
     } finally {
       setConnecting(false);
     }
@@ -95,89 +117,106 @@ export default function YouTubeAnalyticsPage() {
     !search || v.title.toLowerCase().includes(search.toLowerCase()) || v.videoId.includes(search)
   );
 
-  const totalImpressions = data.reduce((s, v) => s + v.impressions, 0);
   const totalViews = data.reduce((s, v) => s + v.views, 0);
-  const avgCtr = data.length
-    ? Math.round(data.reduce((s, v) => s + v.ctr, 0) / data.length * 10) / 10
+  const totalWatchMinutes = data.reduce((s, v) => s + v.watchTimeMinutes, 0);
+  const weightedAvgDuration = totalViews > 0
+    ? Math.round(data.reduce((s, v) => s + (v.avgViewDurationSecs * v.views), 0) / totalViews)
     : 0;
 
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-6">
-
-        {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-3xl font-serif font-light text-neutral-100 flex items-center gap-3">
               <Youtube className="w-7 h-7 text-red-500" />
-              YouTube Impressions
+              YouTube Analytics
             </h1>
             <p className="text-sm text-neutral-500 mt-1">
-              Per-song impressions, CTR, and watch time from YouTube Analytics
-              {asOf && <span className="ml-2 text-neutral-600">· as of {asOf}</span>}
+              Verified per-video performance from the YouTube Analytics API
+              {asOf && <span className="ml-2 text-neutral-600">· through {asOf}</span>}
             </p>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex flex-wrap gap-2">
             {connected === true && (
               <button
-                onClick={loadImpressions}
+                onClick={loadAnalytics}
                 disabled={loading}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg border border-neutral-700 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg border border-neutral-700 transition-colors disabled:opacity-50"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                 Refresh
               </button>
             )}
-            {connected === false && (
+
+            {(connected === false || reconnectRequired) && (
               <button
                 onClick={handleConnect}
                 disabled={connecting}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors disabled:opacity-50"
               >
                 {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-                Connect YouTube Analytics
+                {reconnectRequired ? 'Reconnect YouTube' : 'Connect YouTube Analytics'}
               </button>
             )}
-            {connected === true && (
+
+            {connected === true && !reconnectRequired && (
               <span className="flex items-center gap-1.5 px-3 py-2 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                Connected
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                Read-only connection
               </span>
             )}
           </div>
         </div>
 
-        {/* OAuth note */}
         {connected === false && (
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-300 space-y-1">
             <p className="font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              One-time setup required
+              One-time Google authorization required
             </p>
             <p className="text-amber-400/70">
-              Add <code className="bg-neutral-900 px-1 rounded text-xs">
-                {typeof window !== 'undefined' ? window.location.origin : 'https://sufipulse.com'}
-                /api/admin/youtube-analytics/callback
-              </code> as an authorized redirect URI in your Google Cloud Console OAuth 2.0 client, then click Connect.
+              Authorize read-only YouTube and YouTube Analytics access. SufiPulse never needs your Google password, passkey, recovery code, or 2FA code.
             </p>
           </div>
         )}
 
-        {/* Error */}
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-200 flex gap-3">
+          <FileSpreadsheet className="w-5 h-5 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">Studio-only metrics stay separate</p>
+            <p className="text-blue-300/70 mt-1">
+              Thumbnail impressions and Impressions CTR are not derived here. Import a YouTube Studio Advanced Mode CSV when those fields are required. Missing metrics are shown as unavailable rather than estimated.
+            </p>
+          </div>
+        </div>
+
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-400 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            {error}
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-400 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div>
+              <p>{error}</p>
+              {reconnectRequired && (
+                <p className="text-red-300/70 mt-1">Reconnect once to grant the current read-only scopes required by Google.</p>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Summary cards */}
+        {warning && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-300 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            {warning}
+          </div>
+        )}
+
         {data.length > 0 && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { icon: <Eye className="w-4 h-4" />, label: 'Total Impressions', value: fmt(totalImpressions) },
-              { icon: <TrendingUp className="w-4 h-4" />, label: 'Total Views', value: fmt(totalViews) },
-              { icon: <MousePointerClick className="w-4 h-4" />, label: 'Avg CTR', value: `${avgCtr}%` },
+              { icon: <Eye className="w-4 h-4" />, label: 'Total Views', value: fmt(totalViews) },
+              { icon: <Clock className="w-4 h-4" />, label: 'Watch Time', value: `${fmt(totalWatchMinutes / 60)} hr` },
+              { icon: <Database className="w-4 h-4" />, label: 'Weighted Avg Duration', value: fmtDuration(weightedAvgDuration) },
             ].map(({ icon, label, value }) => (
               <div key={label} className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
                 <div className="flex items-center gap-2 text-neutral-500 text-xs uppercase tracking-wide mb-2">
@@ -190,7 +229,6 @@ export default function YouTubeAnalyticsPage() {
           </div>
         )}
 
-        {/* Loading skeleton */}
         {loading && data.length === 0 && (
           <div className="space-y-2">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -199,7 +237,12 @@ export default function YouTubeAnalyticsPage() {
           </div>
         )}
 
-        {/* Table */}
+        {connected === true && !loading && !error && data.length === 0 && (
+          <div className="border border-neutral-800 rounded-xl p-8 text-center text-neutral-500">
+            No per-video analytics rows were returned for the configured channel and date range.
+          </div>
+        )}
+
         {data.length > 0 && (
           <div className="space-y-3">
             <div className="relative">
@@ -207,7 +250,7 @@ export default function YouTubeAnalyticsPage() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search songs..."
+                placeholder="Search videos..."
                 className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-amber-500/50"
               />
             </div>
@@ -217,16 +260,12 @@ export default function YouTubeAnalyticsPage() {
                 <thead>
                   <tr className="border-b border-neutral-800 bg-neutral-900/60">
                     <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">#</th>
-                    <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Song</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">
-                      <span className="flex items-center justify-end gap-1"><Eye className="w-3 h-3" />Impressions</span>
-                    </th>
+                    <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Video</th>
                     <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Views</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">CTR</th>
-                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">
-                      <span className="flex items-center justify-end gap-1"><Clock className="w-3 h-3" />Avg Duration</span>
-                    </th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Avg Duration</th>
                     <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Watch Min</th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">Impressions</th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-neutral-500 font-medium">CTR</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -238,29 +277,18 @@ export default function YouTubeAnalyticsPage() {
                         <p className="text-neutral-200 truncate" title={v.title}>{v.title}</p>
                         <p className="text-xs text-neutral-600 font-mono mt-0.5">{v.videoId}</p>
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-amber-400 tabular-nums">
-                        {fmt(v.impressions)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-300 tabular-nums">
-                        {fmt(v.views)}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
-                        <span className={`${v.ctr >= 5 ? 'text-green-400' : v.ctr >= 2 ? 'text-amber-400' : 'text-neutral-500'}`}>
-                          {v.ctr}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">
-                        {fmtDuration(v.avgViewDurationSecs)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">
-                        {fmt(v.watchTimeMinutes)}
-                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-amber-400 tabular-nums">{fmt(v.views)}</td>
+                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">{fmtDuration(v.avgViewDurationSecs)}</td>
+                      <td className="px-4 py-3 text-right text-neutral-400 tabular-nums">{fmt(v.watchTimeMinutes)}</td>
+                      <td className="px-4 py-3 text-right text-neutral-600 text-xs">Studio CSV</td>
+                      <td className="px-4 py-3 text-right text-neutral-600 text-xs">Studio CSV</td>
                       <td className="px-4 py-3">
                         <a
                           href={`https://www.youtube.com/watch?v=${v.videoId}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-neutral-600 hover:text-amber-400 transition-colors"
+                          aria-label={`Open ${v.title} on YouTube`}
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>
@@ -270,10 +298,9 @@ export default function YouTubeAnalyticsPage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-neutral-700 text-right">{filtered.length} of {data.length} songs</p>
+            <p className="text-xs text-neutral-700 text-right">{filtered.length} of {data.length} videos · source: YouTube Analytics API</p>
           </div>
         )}
-
       </div>
     </DashboardLayout>
   );
