@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { promises as fs } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { parseYouTubeStudioCsv } from '../lib/youtube-studio-import';
 import { YouTubeService } from '../lib/youtube-service';
 
@@ -94,9 +97,67 @@ async function testYouTubeDataApiFailures() {
   }
 }
 
+async function testOAuthRefreshContracts() {
+  const originalFetch = globalThis.fetch;
+  const originalDataDir = process.env.DATA_DIR;
+  const originalClientId = process.env.YOUTUBE_CLIENT_ID;
+  const originalClientSecret = process.env.YOUTUBE_CLIENT_SECRET;
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'sufipulse-phase1-oauth-'));
+
+  try {
+    process.env.DATA_DIR = tempDir;
+    process.env.YOUTUBE_CLIENT_ID = 'phase1-client';
+    process.env.YOUTUBE_CLIENT_SECRET = 'phase1-secret';
+
+    const store = await import('../app/lib/server/youtube-analytics-oauth-store');
+
+    await store.saveYTAnalyticsToken({
+      accessToken: 'expired-access',
+      refreshToken: 'revoked-refresh',
+      expiresInSeconds: -60,
+    });
+
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({ error: 'invalid_grant', error_description: 'Token has been expired or revoked.' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const revokedResult = await store.getValidYTAnalyticsAccessToken();
+    assert.equal(revokedResult, null, 'Revoked refresh token must require reconnect instead of returning stale access token');
+
+    await store.saveYTAnalyticsToken({
+      accessToken: 'expired-access-2',
+      refreshToken: 'valid-refresh',
+      expiresInSeconds: -60,
+    });
+
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({ access_token: 'renewed-access', expires_in: 3600, token_type: 'Bearer' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const renewed = await store.getValidYTAnalyticsAccessToken();
+    assert.equal(renewed, 'renewed-access', 'Valid refresh token must renew the access token');
+
+    const stored = await store.getYTAnalyticsToken();
+    assert.equal(stored?.accessToken, 'renewed-access', 'Renewed access token must be persisted atomically');
+    assert.equal(stored?.refreshToken, 'valid-refresh', 'Refresh token must be preserved after renewal');
+  } finally {
+    globalThis.fetch = originalFetch;
+    await fs.rm(tempDir, { recursive: true, force: true });
+    if (originalDataDir === undefined) delete process.env.DATA_DIR;
+    else process.env.DATA_DIR = originalDataDir;
+    if (originalClientId === undefined) delete process.env.YOUTUBE_CLIENT_ID;
+    else process.env.YOUTUBE_CLIENT_ID = originalClientId;
+    if (originalClientSecret === undefined) delete process.env.YOUTUBE_CLIENT_SECRET;
+    else process.env.YOUTUBE_CLIENT_SECRET = originalClientSecret;
+  }
+}
+
 async function main() {
   testStudioCsvParsing();
   await testYouTubeDataApiFailures();
+  await testOAuthRefreshContracts();
   console.log('Phase 1 YouTube runtime contract tests passed.');
 }
 
