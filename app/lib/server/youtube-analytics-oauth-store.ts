@@ -15,7 +15,7 @@ const resolveDataDir = () => {
 
 const STORE_FILE = path.join(resolveDataDir(), 'youtube-analytics-token.json');
 
-function normalizeSecret(raw: unknown, keyName = ''): string {
+export function normalizeYTAnalyticsCredential(raw: unknown, keyName = ''): string {
   let value = String(raw ?? '').trim();
   if (keyName && value.startsWith(`${keyName}=`)) value = value.slice(keyName.length + 1).trim();
   if (
@@ -52,7 +52,7 @@ export async function getYTAnalyticsToken(): Promise<YTAnalyticsToken | null> {
 export async function hasYTAnalyticsRefreshCredential(): Promise<boolean> {
   const stored = await read();
   if (stored?.refreshToken) return true;
-  return Boolean(normalizeSecret(process.env.YOUTUBE_REFRESH_TOKEN, 'YOUTUBE_REFRESH_TOKEN'));
+  return Boolean(normalizeYTAnalyticsCredential(process.env.YOUTUBE_REFRESH_TOKEN, 'YOUTUBE_REFRESH_TOKEN'));
 }
 
 export async function saveYTAnalyticsToken(params: {
@@ -76,7 +76,7 @@ export async function saveYTAnalyticsToken(params: {
 
 export async function getValidYTAnalyticsAccessToken(): Promise<string | null> {
   const record = await read();
-  const environmentRefreshToken = normalizeSecret(process.env.YOUTUBE_REFRESH_TOKEN, 'YOUTUBE_REFRESH_TOKEN');
+  const environmentRefreshToken = normalizeYTAnalyticsCredential(process.env.YOUTUBE_REFRESH_TOKEN, 'YOUTUBE_REFRESH_TOKEN');
   const refreshToken = record?.refreshToken || environmentRefreshToken;
   if (!refreshToken) return null;
 
@@ -85,8 +85,8 @@ export async function getValidYTAnalyticsAccessToken(): Promise<string | null> {
 
   if (record?.refreshToken && !expiringSoon && record.accessToken) return record.accessToken;
 
-  const clientId = normalizeSecret(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
-  const clientSecret = normalizeSecret(process.env.YOUTUBE_CLIENT_SECRET, 'YOUTUBE_CLIENT_SECRET');
+  const clientId = normalizeYTAnalyticsCredential(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
+  const clientSecret = normalizeYTAnalyticsCredential(process.env.YOUTUBE_CLIENT_SECRET, 'YOUTUBE_CLIENT_SECRET');
   if (!clientId || !clientSecret) {
     console.warn('[youtube-analytics-oauth-store] Access token is expired/expiring and OAuth client credentials are unavailable.');
     return null;
