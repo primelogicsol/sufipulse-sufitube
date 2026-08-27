@@ -133,7 +133,6 @@ jobs:
 
       - name: Live read-only YouTube Data API catalog audit
         id: live_catalog
-        continue-on-error: true
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
@@ -153,5 +152,5 @@ jobs:
           echo "Live catalog status:           ${{ steps.live_catalog.outputs.status }}"
           echo "Live catalog credential:       ${{ steps.live_catalog.outputs.credential_mode }}"
           echo "Live public uploads:           ${{ steps.live_catalog.outputs.count }}"
-          echo "Hard Phase 1 gates are integrity guard + runtime contracts + differential TypeScript + differential lint + production build."
-          echo "The live Data API audit now tries owner OAuth first, then a server-only API key, then the legacy key."
+          echo "Hard Phase 1 gates are integrity guard + runtime contracts + differential TypeScript + differential lint + production build + live Data API audit."
+          echo "The live Data API audit tries owner OAuth first, then a server-only API key, then the legacy key."
