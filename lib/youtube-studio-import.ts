@@ -132,7 +132,14 @@ function buildHeaderIndex(headers: string[]) {
     watchMinutes: ['watch time minutes'],
     avgDuration: ['average view duration', 'avg view duration'],
     impressions: ['impressions', 'thumbnail impressions'],
-    ctr: ['impressions click through rate', 'impression click through rate', 'impressions ctr', 'ctr'],
+    ctr: [
+      'impressions click through rate',
+      'impression click through rate',
+      'thumbnail click through rate',
+      'impressions ctr',
+      'thumbnail ctr',
+      'ctr',
+    ],
     publishedAt: ['video publish time', 'publish time', 'published at', 'published date', 'video publish date'],
   };
 
