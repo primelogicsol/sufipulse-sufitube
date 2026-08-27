@@ -29,7 +29,10 @@ export async function GET(request: NextRequest) {
 
     if (videoIdsParam) {
       const ids = videoIdsParam.split(',').map(id => id.trim()).filter(Boolean);
-      if (ids.length > 0) videos = await youtubeService.getVideosByIds(ids);
+      for (const id of ids) {
+        const video = await youtubeService.getVideoById(id);
+        if (video) videos.push(video);
+      }
     } else {
       const max = fetchAll
         ? MAX_CHANNEL_VIDEOS
@@ -86,7 +89,10 @@ export async function POST(request: NextRequest) {
     let selected: any[] = [];
 
     if (requestedIds.length > 0) {
-      selected = await youtubeService.getVideosByIds(requestedIds);
+      for (const id of requestedIds) {
+        const video = await youtubeService.getVideoById(id);
+        if (video) selected.push(video);
+      }
     } else {
       selected = await youtubeService.getLatestVideos(MAX_CHANNEL_VIDEOS);
     }
