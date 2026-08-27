@@ -8,6 +8,12 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error && error.message
+    ? error.message
+    : 'YouTube Studio CSV import failed.';
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (auth instanceof NextResponse) return auth;
@@ -71,10 +77,10 @@ export async function POST(request: NextRequest) {
       availableMetrics,
       message: `Imported ${snapshot.rowCount} unique YouTube video rows from YouTube Studio.`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[youtube-analytics/studio-import] Import failed:', error);
     return NextResponse.json(
-      { error: error?.message || 'YouTube Studio CSV import failed.' },
+      { error: errorMessage(error) },
       { status: 422 }
     );
   }
