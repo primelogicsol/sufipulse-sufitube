@@ -74,16 +74,10 @@ export class DatabaseTable<T extends { id: string }> {
   private save(): void {
     try {
       const records = Array.from(this.data.values());
-      
-      // Create backup before saving
       this.createBackup();
-      
-      // Write atomically using temp file
       const tempPath = this.filePath + '.tmp';
       fs.writeFileSync(tempPath, JSON.stringify(records, null, 2), 'utf-8');
       fs.renameSync(tempPath, this.filePath);
-      
-      // Update indexes
       this.rebuildIndexes();
     } catch (error) {
       console.error(`[Database] Error saving table ${this.tableName}:`, error);
@@ -91,9 +85,6 @@ export class DatabaseTable<T extends { id: string }> {
     }
   }
 
-  /**
-   * Create backup
-   */
   private createBackup(): void {
     const now = Date.now();
     if (now - this.lastBackup < BACKUP_INTERVAL) return;
@@ -101,12 +92,9 @@ export class DatabaseTable<T extends { id: string }> {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const backupPath = path.join(BACKUP_DIR, `${this.tableName}_${timestamp}.json`);
-      
       if (fs.existsSync(this.filePath)) {
         fs.copyFileSync(this.filePath, backupPath);
         this.lastBackup = now;
-        
-        // Clean old backups
         this.cleanupBackups();
       }
     } catch (error) {
@@ -114,17 +102,12 @@ export class DatabaseTable<T extends { id: string }> {
     }
   }
 
-  /**
-   * Clean old backups
-   */
   private cleanupBackups(): void {
     try {
       const backups = fs.readdirSync(BACKUP_DIR)
         .filter(f => f.startsWith(`${this.tableName}_`))
         .sort()
         .reverse();
-
-      // Keep only MAX_BACKUPS most recent
       if (backups.length > MAX_BACKUPS) {
         backups.slice(MAX_BACKUPS).forEach(file => {
           fs.unlinkSync(path.join(BACKUP_DIR, file));
@@ -135,29 +118,19 @@ export class DatabaseTable<T extends { id: string }> {
     }
   }
 
-  /**
-   * Rebuild all indexes
-   */
   private rebuildIndexes(): void {
     this.indexes.clear();
     this.data.forEach(record => {
       Object.keys(record).forEach(key => {
-        if (!this.indexes.has(key)) {
-          this.indexes.set(key, new Map());
-        }
+        if (!this.indexes.has(key)) this.indexes.set(key, new Map());
         const index = this.indexes.get(key)!;
         const value = (record as any)[key];
-        if (!index.has(value)) {
-          index.set(value, []);
-        }
+        if (!index.has(value)) index.set(value, []);
         index.get(value)!.push(record.id);
       });
     });
   }
 
-  /**
-   * Insert a new record
-   */
   insert(record: T): T {
     if (this.data.has(record.id)) {
       throw new Error(`Record with id ${record.id} already exists`);
@@ -167,44 +140,30 @@ export class DatabaseTable<T extends { id: string }> {
     return record;
   }
 
-  /**
-   * Insert multiple records
-   */
   insertMany(records: T[]): T[] {
-    records.forEach(record => {
-      this.data.set(record.id, record);
-    });
+    records.forEach(record => this.data.set(record.id, record));
     this.save();
     return records;
   }
 
-  /**
-   * Find record(s) by query
-   */
   find(query: Partial<T>): T[] {
     const results: T[] = [];
-    
-    // Check if we can use index
     const queryKeys = Object.keys(query);
     if (queryKeys.length === 1) {
       const [key] = queryKeys;
       const value = (query as any)[key];
       const index = this.indexes.get(key);
-      
       if (index && index.has(value)) {
         const ids = index.get(value)!;
         return ids.map(id => this.data.get(id)!);
       }
     }
 
-    // Full scan
     this.data.forEach(record => {
       const matches = queryKeys.every(key => {
         const queryValue = (query as any)[key];
         const recordValue = (record as any)[key];
-        
         if (typeof queryValue === 'object' && queryValue !== null) {
-          // Support operators: $gt, $gte, $lt, $lte, $ne, $in, $nin, $contains
           if ('$gt' in queryValue) return recordValue > queryValue.$gt;
           if ('$gte' in queryValue) return recordValue >= queryValue.$gte;
           if ('$lt' in queryValue) return recordValue < queryValue.$lt;
@@ -218,158 +177,105 @@ export class DatabaseTable<T extends { id: string }> {
             return false;
           }
         }
-        
         return recordValue === queryValue;
       });
-      
       if (matches) results.push(record);
     });
 
     return results;
   }
 
-  /**
-   * Find single record
-   */
   findOne(query: Partial<T>): T | null {
     const results = this.find(query);
     return results.length > 0 ? results[0] : null;
   }
 
-  /**
-   * Find by ID
-   */
   findById(id: string): T | null {
     return this.data.get(id) || null;
   }
 
   /**
-   * Update record
+   * Compatibility/read helper used by analytics and telemetry modules.
+   * Returns a snapshot array; callers cannot mutate the table's internal Map.
    */
+  findAll(): T[] {
+    return Array.from(this.data.values());
+  }
+
   update(id: string, updates: Partial<T>): T | null {
     const record = this.data.get(id);
     if (!record) return null;
-
     const updated = { ...record, ...updates };
     this.data.set(id, updated);
     this.save();
     return updated;
   }
 
-  /**
-   * Update multiple records
-   */
   updateMany(query: Partial<T>, updates: Partial<T>): number {
     const records = this.find(query);
     let count = 0;
-
     records.forEach(record => {
       const updated = { ...record, ...updates };
       this.data.set(record.id, updated);
       count++;
     });
-
     if (count > 0) this.save();
     return count;
   }
 
-  /**
-   * Delete record
-   */
   delete(id: string): boolean {
     const deleted = this.data.delete(id);
     if (deleted) this.save();
     return deleted;
   }
 
-  /**
-   * Delete multiple records
-   */
   deleteMany(query: Partial<T>): number {
     const records = this.find(query);
     let count = 0;
-
     records.forEach(record => {
       this.data.delete(record.id);
       count++;
     });
-
     if (count > 0) this.save();
     return count;
   }
 
-  /**
-   * Count records
-   */
   count(query?: Partial<T>): number {
     if (!query) return this.data.size;
     return this.find(query).length;
   }
 
-  /**
-   * Get all records
-   */
   getAll(): T[] {
     return Array.from(this.data.values());
   }
 
-  /**
-   * Clear all records
-   */
   clear(): void {
     this.data.clear();
     this.save();
   }
 
-  /**
-   * Get table statistics
-   */
   stats(): { count: number; indexes: number; size: number } {
-    const size = fs.existsSync(this.filePath) 
-      ? fs.statSync(this.filePath).size 
-      : 0;
-    
-    return {
-      count: this.data.size,
-      indexes: this.indexes.size,
-      size,
-    };
+    const size = fs.existsSync(this.filePath) ? fs.statSync(this.filePath).size : 0;
+    return { count: this.data.size, indexes: this.indexes.size, size };
   }
 
-  /**
-   * Restore from backup
-   */
   restore(backupPath?: string): void {
     if (!backupPath) {
-      // Find most recent backup
       const backups = fs.existsSync(BACKUP_DIR)
         ? fs.readdirSync(BACKUP_DIR)
             .filter(f => f.startsWith(`${this.tableName}_`))
             .sort()
             .reverse()
         : [];
-
-      if (backups.length === 0) {
-        throw new Error('No backups found');
-      }
-
+      if (backups.length === 0) throw new Error('No backups found');
       backupPath = path.join(BACKUP_DIR, backups[0]);
     }
-
-    if (!fs.existsSync(backupPath)) {
-      throw new Error(`Backup file not found: ${backupPath}`);
-    }
-
-    // Copy backup to main file
+    if (!fs.existsSync(backupPath)) throw new Error(`Backup file not found: ${backupPath}`);
     fs.copyFileSync(backupPath, this.filePath);
     this.load();
   }
 }
 
-/**
- * Database Instance
- * Singleton for managing all tables
- */
 export class Database {
   private static instance: Database;
   private tables: Map<string, DatabaseTable<any>> = new Map();
@@ -377,62 +283,36 @@ export class Database {
   private constructor() {}
 
   static getInstance(): Database {
-    if (!Database.instance) {
-      Database.instance = new Database();
-    }
+    if (!Database.instance) Database.instance = new Database();
     return Database.instance;
   }
 
-  /**
-   * Get or create a table
-   */
   table<T extends { id: string }>(tableName: string): DatabaseTable<T> {
-    if (!this.tables.has(tableName)) {
-      this.tables.set(tableName, new DatabaseTable<T>(tableName));
-    }
+    if (!this.tables.has(tableName)) this.tables.set(tableName, new DatabaseTable<T>(tableName));
     return this.tables.get(tableName)!;
   }
 
-  /**
-   * Get all table statistics
-   */
   stats(): Record<string, { count: number; indexes: number; size: number }> {
     const stats: Record<string, any> = {};
-    this.tables.forEach((table, name) => {
-      stats[name] = table.stats();
-    });
+    this.tables.forEach((table, name) => { stats[name] = table.stats(); });
     return stats;
   }
 
-  /**
-   * Clear all tables (DANGER!)
-   */
   clearAll(): void {
     this.tables.forEach(table => table.clear());
   }
 
-  /**
-   * Backup all tables
-   */
   backupAll(): string {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupPath = path.join(BACKUP_DIR, `full_backup_${timestamp}.json`);
-    
     const backup: Record<string, any[]> = {};
-    this.tables.forEach((table, name) => {
-      backup[name] = table.getAll();
-    });
-
+    this.tables.forEach((table, name) => { backup[name] = table.getAll(); });
     fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2), 'utf-8');
     return backupPath;
   }
 
-  /**
-   * Restore all tables
-   */
   restoreAll(backupPath: string): void {
     const backup = JSON.parse(fs.readFileSync(backupPath, 'utf-8'));
-    
     Object.keys(backup).forEach(tableName => {
       const table = this.table(tableName);
       table.clear();
@@ -441,21 +321,12 @@ export class Database {
   }
 }
 
-/**
- * Convenience exports
- */
 export const db = Database.getInstance();
 
-/**
- * Generate unique ID
- */
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-/**
- * Backup utilities
- */
 export function backupDatabase(): string {
   return db.backupAll();
 }
