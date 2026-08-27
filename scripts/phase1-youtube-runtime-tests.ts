@@ -86,8 +86,8 @@ async function testYouTubeDataApiFailures() {
     );
 
     const emptyService = new YouTubeService({ apiKey: 'phase1-test-key', maxRetries: 0 });
-    const missingVideo = await emptyService.getVideoById('ccccccccccc');
-    assert.equal(missingVideo, null, 'Empty upstream response must not manufacture a video record');
+    const missingVideos = await emptyService.getVideosByIds('ccccccccccc');
+    assert.deepEqual(missingVideos, [], 'Empty upstream response must remain empty and must not manufacture a video record');
   } finally {
     globalThis.fetch = originalFetch;
     if (originalKey === undefined) delete process.env.YOUTUBE_API_KEY;
