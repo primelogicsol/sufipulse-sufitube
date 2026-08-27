@@ -126,18 +126,28 @@ async function youtubeJson(path, credential) {
 async function auditWith(credential) {
   let channel;
   if (credential.type === 'oauth') {
-    channel = await youtubeJson('channels?part=contentDetails,snippet&mine=true', credential);
+    channel = await youtubeJson('channels?part=contentDetails,snippet&mine=true&maxResults=50', credential);
   } else {
     if (!expectedChannelId) throw new Error('YOUTUBE_CHANNEL_ID is required for API-key catalog audit.');
     channel = await youtubeJson(`channels?part=contentDetails,snippet&id=${encodeURIComponent(expectedChannelId)}`, credential);
   }
 
-  const channelItem = channel.items?.[0];
-  const actualChannelId = String(channelItem?.id || '').trim();
-  if (!actualChannelId) throw new Error('YouTube Data API returned no channel for the selected credential.');
-  if (expectedChannelId && actualChannelId !== expectedChannelId) {
-    throw new Error(`Authorized YouTube channel mismatch: expected ${expectedChannelId}, got ${actualChannelId}.`);
+  const channelItems = Array.isArray(channel.items) ? channel.items : [];
+  const channelItem = expectedChannelId
+    ? channelItems.find((item) => String(item?.id || '').trim() === expectedChannelId)
+    : channelItems[0];
+
+  if (!channelItem) {
+    if (credential.type === 'oauth' && expectedChannelId) {
+      throw new Error(
+        `Authorized Google account returned ${channelItems.length} YouTube channel(s), but none matched the expected SufiPulse channel.`
+      );
+    }
+    throw new Error('YouTube Data API returned no channel for the selected credential.');
   }
+
+  const actualChannelId = String(channelItem.id || '').trim();
+  if (!actualChannelId) throw new Error('YouTube Data API returned a channel without an ID.');
 
   const uploads = channelItem?.contentDetails?.relatedPlaylists?.uploads;
   if (!uploads) throw new Error('Uploads playlist was not returned for the configured channel.');
