@@ -8,32 +8,44 @@ if (!fs.existsSync(manifestPath)) {
 }
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-const routes = new Set(Object.keys(manifest));
+
+function normalizeRouteKey(key) {
+  const normalized = key
+    // Next App Router route groups, e.g. /(public)/releases/page, are not URL segments.
+    .replace(/\/\([^/]+\)/g, '')
+    // Manifest keys end in /page for pages and /route for route handlers.
+    .replace(/\/(page|route)$/, '')
+    .replace(/\/+/g, '/');
+
+  return normalized === '' ? '/' : normalized;
+}
+
+const routes = new Set(Object.keys(manifest).map(normalizeRouteKey));
 
 const requiredRoutes = [
   '/',
-  '/releases/page',
-  '/release-detail/[slug]/page',
-  '/admin/page',
-  '/admin/cms-releases/page',
-  '/admin/discovery-graph/page',
-  '/admin/discovery-performance/page',
-  '/admin/youtube-analytics/page',
-  '/admin/youtube-sync/page',
-  '/api/admin/discovery-performance/route',
-  '/api/admin/graph/route',
-  '/api/admin/youtube-analytics/connect/route',
-  '/api/admin/youtube-analytics/callback/route',
-  '/api/admin/youtube-analytics/impressions/route',
-  '/api/admin/youtube-analytics/status/route',
-  '/api/admin/youtube-analytics/studio-import/route',
-  '/api/releases/import-youtube/route',
-  '/api/releases/import-youtube/studio-reconciliation/route',
+  '/releases',
+  '/release-detail/[slug]',
+  '/admin',
+  '/admin/cms-releases',
+  '/admin/discovery-graph',
+  '/admin/discovery-performance',
+  '/admin/youtube-analytics',
+  '/admin/youtube-sync',
+  '/api/admin/discovery-performance',
+  '/api/admin/graph',
+  '/api/admin/youtube-analytics/connect',
+  '/api/admin/youtube-analytics/callback',
+  '/api/admin/youtube-analytics/impressions',
+  '/api/admin/youtube-analytics/status',
+  '/api/admin/youtube-analytics/studio-import',
+  '/api/releases/import-youtube',
+  '/api/releases/import-youtube/studio-reconciliation',
 ];
 
 const missing = requiredRoutes.filter(route => !routes.has(route));
 if (missing.length > 0) {
-  console.error('Phase 1 route regression guard FAILED. Missing built routes:');
+  console.error('Phase 1 route regression guard FAILED. Missing built routes after Next App Router normalization:');
   missing.forEach(route => console.error(` - ${route}`));
   process.exit(1);
 }
