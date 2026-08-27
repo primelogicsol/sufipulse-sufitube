@@ -393,10 +393,10 @@ export default function YouTubeAnalyticsPage() {
                           {fmt(row.views)}<br/><SourceBadge source={row.metricSources.views} />
                         </td>
                         <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
-                          {row.watchTimeMinutes === null ? '—' : `${(row.watchTimeMinutes / 60).toFixed(1)}h`}<br/><SourceBadge source={row.metricSources.watchTimeMinutes} />
+                          {row.watchTimeMinutes === null ? '—' : `${(row.watchTimeMinutes / 60).toFixed(1)}h`}<br/><SourceBadge source={row.metricSources.watchTime} />
                         </td>
                         <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
-                          {fmtDuration(row.avgViewDurationSecs)}<br/><SourceBadge source={row.metricSources.avgViewDurationSecs} />
+                          {fmtDuration(row.avgViewDurationSecs)}<br/><SourceBadge source={row.metricSources.averageViewDuration} />
                         </td>
                         <td className="px-3 py-3 text-right tabular-nums text-neutral-300">
                           {fmt(row.impressions)}<br/><SourceBadge source={row.metricSources.impressions} />
