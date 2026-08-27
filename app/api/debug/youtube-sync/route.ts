@@ -6,12 +6,12 @@ import path from 'path';
 
 export async function GET() {
   try {
-    const envLoaded = !!process.env.YOUTUBE_API_KEY;
-    const channelId = youtubeService.config.channelId;
-    const uploadsPlaylistId = channelId.replace('UC', 'UU');
-    const apiKeyPresent = !!youtubeService.config.apiKey;
-    
-    // Check YouTube data API for latest uploads
+    const configuredApiKey = process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
+    const channelId = process.env.YOUTUBE_CHANNEL_ID || process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ';
+    const envLoaded = Boolean(configuredApiKey);
+    const uploadsPlaylistId = channelId.startsWith('UC') ? `UU${channelId.slice(2)}` : '';
+    const apiKeyPresent = Boolean(configuredApiKey && !configuredApiKey.includes('YOUR_'));
+
     let latestVideosFromYouTube: any[] = [];
     try {
       latestVideosFromYouTube = await youtubeService.getLatestVideos(5);
@@ -19,7 +19,6 @@ export async function GET() {
       latestVideosFromYouTube = [{ error: e.message }];
     }
 
-    // Check CMS file
     const cmsFilePath = path.join(process.cwd(), '.data', 'cms-releases.json');
     let cmsWritable = false;
     try {
@@ -28,12 +27,11 @@ export async function GET() {
       }
       fs.accessSync(path.dirname(cmsFilePath), fs.constants.W_OK);
       cmsWritable = true;
-    } catch (e) {
+    } catch {
       cmsWritable = false;
     }
 
     const allReleases = cmsServerStorage.getAllReleases();
-    const containsVideoId_Dbd0fhJty4A = !!allReleases.find(r => r.youtubeId === 'Dbd0fhJty4A' || r.id === 'Dbd0fhJty4A');
 
     return NextResponse.json({
       envLoaded,
@@ -44,9 +42,9 @@ export async function GET() {
       cmsFilePath,
       cmsWritable,
       cmsTotalRecords: allReleases.length,
-      containsVideoId_Dbd0fhJty4A,
+      note: 'Diagnostic route exposes configuration presence only; API key values are never returned.',
       lastImportResult: 'Check server logs for POST /api/releases/import-youtube',
-      lastAnalyticsRefreshResult: 'Check server logs for POST /api/admin/youtube-analytics/global-reach/refresh'
+      lastAnalyticsRefreshResult: 'Check server logs for POST /api/admin/youtube-analytics/global-reach/refresh',
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
