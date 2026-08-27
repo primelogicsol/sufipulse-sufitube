@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { youtubeService } from '@/lib/youtube-service';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { mapVideoToRelease } from '@/lib/release-mapping';
+import {
+  fetchReadOnlyYouTubeChannelVideos,
+  fetchReadOnlyYouTubeVideosByIds,
+  YouTubeDataApiReadError,
+  type YouTubeReadCredentialMode,
+} from '@/lib/youtube-data-api-readonly';
 import type { CMSRelease } from '@/lib/cms-storage';
 
 const MAX_CHANNEL_VIDEOS = 500;
@@ -43,6 +48,35 @@ function isStale(release: CMSRelease): boolean {
   return Date.now() - syncedAt > STALE_AFTER_DAYS * 24 * 60 * 60 * 1000;
 }
 
+function failureResponse(error: unknown, fallback: string) {
+  const message = error instanceof Error && error.message ? error.message : fallback;
+  if (error instanceof YouTubeDataApiReadError) {
+    return NextResponse.json(
+      {
+        error: message,
+        reason: error.reason,
+        reconnectRequired: error.reconnectRequired,
+        source: 'youtube_data_api',
+      },
+      { status: error.status >= 400 && error.status <= 599 ? error.status : 502 }
+    );
+  }
+  return NextResponse.json(
+    { error: message, source: 'youtube_data_api' },
+    { status: 502 }
+  );
+}
+
+async function readVideos(params: { ids?: string[]; max?: number }): Promise<{
+  videos: any[];
+  credentialMode: YouTubeReadCredentialMode;
+}> {
+  if (params.ids && params.ids.length > 0) {
+    return fetchReadOnlyYouTubeVideosByIds(params.ids);
+  }
+  return fetchReadOnlyYouTubeChannelVideos(params.max ?? MAX_CHANNEL_VIDEOS);
+}
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -51,23 +85,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const videoIdsParam = searchParams.get('videoIds');
     const fetchAll = searchParams.get('fetchAll') === '1';
+    const ids = videoIdsParam
+      ? videoIdsParam.split(',').map(id => id.trim()).filter(Boolean)
+      : [];
+    const max = fetchAll
+      ? MAX_CHANNEL_VIDEOS
+      : Math.max(1, Math.min(Number(searchParams.get('max') || 25), MAX_CHANNEL_VIDEOS));
 
-    let videos: any[] = [];
-
-    if (videoIdsParam) {
-      const ids = videoIdsParam.split(',').map(id => id.trim()).filter(Boolean);
-      for (const id of ids) {
-        const video = await youtubeService.getVideoById(id);
-        if (video?.source === 'youtube') videos.push(video);
-      }
-    } else {
-      const max = fetchAll
-        ? MAX_CHANNEL_VIDEOS
-        : Math.max(1, Math.min(Number(searchParams.get('max') || 25), MAX_CHANNEL_VIDEOS));
-      videos = await youtubeService.getLatestVideos(max);
-    }
-
-    videos = dedupeVideos(videos);
+    const live = await readVideos({ ids, max });
+    const videos = dedupeVideos(live.videos);
     const cmsReleases = cmsServerStorage.getAllReleases();
     const cmsByYoutubeId = new Map<string, CMSRelease[]>();
 
@@ -146,23 +172,21 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       count: rows.length,
-      requestedMax: fetchAll ? MAX_CHANNEL_VIDEOS : Math.max(1, Math.min(Number(searchParams.get('max') || 25), MAX_CHANNEL_VIDEOS)),
+      requestedMax: max,
       fetchAll,
       items: rows,
       reconciliation,
       cmsOnly,
       missingYoutubeId,
       source: 'youtube_data_api',
+      credentialMode: live.credentialMode,
       note: fetchAll
-        ? 'CMS-only records may represent deleted, private, or unlisted videos because API-key catalog discovery sees public channel uploads.'
+        ? 'CMS-only records may represent deleted, private, or unlisted videos. Live reconciliation uses the authenticated uploads playlist when OAuth is connected.'
         : null,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[api/releases/import-youtube][GET]', error);
-    return NextResponse.json(
-      { error: error?.message || 'Failed to fetch YouTube videos' },
-      { status: 502 }
-    );
+    return failureResponse(error, 'Failed to fetch YouTube videos');
   }
 }
 
@@ -171,7 +195,6 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    youtubeService.clearCache();
     const body = await request.json().catch(() => ({}));
     const requestedIds = Array.isArray(body.videoIds)
       ? body.videoIds.map((id: unknown) => String(id).trim()).filter(Boolean)
@@ -180,18 +203,8 @@ export async function POST(request: NextRequest) {
     const lookbackDays = Math.max(1, Math.min(Number(body.lookbackDays || 30), 3650));
     const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
 
-    let selected: any[] = [];
-
-    if (requestedIds.length > 0) {
-      for (const id of requestedIds) {
-        const video = await youtubeService.getVideoById(id);
-        if (video?.source === 'youtube') selected.push(video);
-      }
-    } else {
-      selected = await youtubeService.getLatestVideos(MAX_CHANNEL_VIDEOS);
-    }
-
-    selected = dedupeVideos(selected);
+    const live = await readVideos({ ids: requestedIds, max: MAX_CHANNEL_VIDEOS });
+    let selected = dedupeVideos(live.videos);
 
     if (mode === 'incremental' && requestedIds.length === 0) {
       selected = selected.filter(video => {
@@ -211,6 +224,7 @@ export async function POST(request: NextRequest) {
         registryCount: cmsServerStorage.getAllReleases().length,
         mode,
         source: 'youtube_data_api',
+        credentialMode: live.credentialMode,
         message: mode === 'incremental'
           ? `No YouTube uploads found in the last ${lookbackDays} days.`
           : 'No live YouTube videos were returned for the configured channel.',
@@ -246,13 +260,13 @@ export async function POST(request: NextRequest) {
           title: video.title || video.snippet?.title || video.id,
           action: existing ? 'updated' : 'created',
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         errorCount += 1;
         diagnostics.push({
           youtubeId: video?.id || 'unknown',
           title: video?.title || video?.snippet?.title || 'Unknown video',
           action: 'failed',
-          error: error?.message || 'Mapping failed',
+          error: error instanceof Error ? error.message : 'Mapping failed',
         });
       }
     }
@@ -264,6 +278,8 @@ export async function POST(request: NextRequest) {
           checkedCount: selected.length,
           errorCount,
           diagnostics,
+          source: 'youtube_data_api',
+          credentialMode: live.credentialMode,
         },
         { status: 422 }
       );
@@ -291,17 +307,12 @@ export async function POST(request: NextRequest) {
       mode,
       lookbackDays: mode === 'incremental' ? lookbackDays : null,
       source: 'youtube_data_api',
+      credentialMode: live.credentialMode,
       diagnostics,
       message: `YouTube sync complete. Checked ${selected.length}; ${newCount} created, ${updatedCount} updated, ${errorCount} failed. Registry now contains ${registryCount} releases.`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[api/releases/import-youtube][POST]', error);
-    return NextResponse.json(
-      {
-        error: error?.message || 'Failed to import YouTube videos',
-        source: 'youtube_data_api',
-      },
-      { status: 502 }
-    );
+    return failureResponse(error, 'Failed to import YouTube videos');
   }
 }
