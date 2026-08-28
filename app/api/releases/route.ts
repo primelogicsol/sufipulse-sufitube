@@ -58,11 +58,15 @@ export async function GET(request: NextRequest) {
       releases = releases.filter(r => r.releaseType === type);
     }
 
-    // 3. governance (governanceOrigin / govType)
+    // 3. governance (governanceOrigin / govType only)
+    // NOTE: r.source is intentionally NOT used as a fallback here.
+    // Distribution/import source and governance provenance are independent domains.
+    // A SufiPulse-governed release can be imported from YouTube; source tells us
+    // how the record entered the system, not who governs the content.
     if (governance && governance !== 'all') {
       releases = releases.filter(r => {
-        const govType = (r as any).governanceOrigin || (r as any).govType || (r as any).source;
-        return govType === governance;
+        const govOrigin = (r as any).governanceOrigin || (r as any).govType;
+        return govOrigin === governance;
       });
     }
 

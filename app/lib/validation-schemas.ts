@@ -313,7 +313,7 @@ export const releasesQuerySchema = z.object({
   slug: z.string().optional(),
   youtubeId: z.string().optional(),
   // Server-side filter pipeline — applied in order before pagination
-  governance: z.enum(['native_governed', 'legacy_registry', 'all']).optional(),
+  governance: z.enum(['native_governed', 'legacy_registry', 'unresolved', 'all']).optional(),
   format: z.enum(['video', 'audio', 'short', 'live', 'playlist', 'all']).optional(),
   duration: z.enum(['short', 'standard', 'long', 'default', 'all']).optional(),
   year: z.string().regex(/^\d{4}$|^all$/).optional(),
