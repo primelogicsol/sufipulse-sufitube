@@ -38,7 +38,7 @@ export function HeroSection({ kpiStats }: HeroSectionProps) {
             <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
               <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
               <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                Institutional Archive
+                SufiPulse USA - Institutional Archive
               </span>
             </div>
 
