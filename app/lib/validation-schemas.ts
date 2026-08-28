@@ -312,11 +312,16 @@ export const releasesQuerySchema = z.object({
   key: z.string().optional(),
   slug: z.string().optional(),
   youtubeId: z.string().optional(),
-  t: z.string().optional(),
-  forceHydrate: z.string().optional(),
+  // Server-side filter pipeline
+  governance: z.string().optional(),  // 'native_governed' | 'legacy_registry' | 'all'
+  format: z.string().optional(),      // 'video' | 'audio' | 'short' | 'live' | 'playlist' | 'all'
+  duration: z.string().optional(),    // 'short' | 'standard' | 'long' | 'default' | 'all'
+  year: z.string().optional(),        // '2024' | '2025' | '2026' | 'all'
+  sort: z.string().optional(),        // 'newest' | 'oldest' | 'popular'
+  page: z.string().optional(),
+  pageSize: z.string().optional(),
   limit: z.string().optional(),
   offset: z.string().optional(),
-  refresh: z.string().optional(),
 }).passthrough();
 
 /**

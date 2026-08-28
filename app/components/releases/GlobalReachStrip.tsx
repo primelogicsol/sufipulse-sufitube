@@ -215,7 +215,7 @@ export default function GlobalReachStrip() {
   const fetchAnalytics = async (isManualRefresh = false) => {
     try {
       const url = isManualRefresh 
-        ? `/api/public/youtube/global-reach?refresh=1&t=${Date.now()}` 
+        ? `/api/public/youtube/global-reach?refresh=1` 
         : `/api/public/youtube/global-reach`;
       const r = await fetch(url, { cache: 'no-store' });
       const d = await r.json();

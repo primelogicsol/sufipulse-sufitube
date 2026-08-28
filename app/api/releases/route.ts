@@ -6,11 +6,9 @@ import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
 import { validateRequestBody, validateQueryParams } from '@/app/lib/api-middleware';
 import { cmsReleaseSchema, releasesQuerySchema } from '@/app/lib/validation-schemas';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 const cacheHeaders = {
-  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=3600',
+  'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=3600',
 };
 
 export async function GET(request: NextRequest) {

@@ -344,6 +344,8 @@ export default function Releases() {
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [serverTotalPages, setServerTotalPages] = useState(1);
+    const [serverCount, setServerCount] = useState(0);
 
     const formatSeconds = (totalSeconds: number): string => {
         if (!totalSeconds) return '0:00';
@@ -425,7 +427,7 @@ export default function Releases() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
             
-            await fetchVideos(false, true);
+            await fetchVideos(false);
             
             if (data.diagnostic) {
                 const d = data.diagnostic;
@@ -564,7 +566,7 @@ export default function Releases() {
         return releases.find(r => r.govType === 'native_governed') || releases[0];
     }, [releases]);
 
-    const totalPages = Math.ceil(filteredReleases.length / ITEMS_PER_PAGE);
+    const totalPages = serverTotalPages;
     const paginatedReleases = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         return filteredReleases.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -1148,7 +1150,7 @@ export default function Releases() {
                 result={syncResult}
                 error={syncError}
                 onRefresh={() => {
-                    fetchVideos(false, true);
+                    fetchVideos(false);
                     setSyncModalOpen(false);
                 }}
             />
