@@ -16,6 +16,7 @@ export interface ReleaseQuery {
   sort?: string;
   page?: number;
   pageSize?: number;
+  offset?: number;
   limit?: number;
   facets?: boolean;
 }
@@ -150,7 +151,7 @@ export class PostgresReleaseRepository {
     // Duration
     if (query.duration && query.duration !== 'all') {
       if (query.duration === 'default') {
-        whereSql += ` AND duration_seconds >= 180 AND format != 'short'`;
+        whereSql += ` AND duration_seconds >= 180 AND format IS DISTINCT FROM 'short'`;
       } else if (query.duration === 'short') {
         whereSql += ` AND duration_seconds > 0 AND duration_seconds < 180`;
       } else if (query.duration === 'standard') {
@@ -170,14 +171,13 @@ export class PostgresReleaseRepository {
     const search = (query.search || query.q || '').trim().toLowerCase();
     if (search) {
       whereSql += ` AND (
-        title ILIKE $${paramIndex} OR
-        canonical_title ILIKE $${paramIndex} OR
-        youtube_title ILIKE $${paramIndex} OR
+        COALESCE(NULLIF(canonical_title, ''), title, '') ILIKE $${paramIndex} OR
+        COALESCE(NULLIF(youtube_title, ''), NULLIF(payload->'youtubeStats'->>'title', ''), '') ILIKE $${paramIndex} OR
         slug ILIKE $${paramIndex} OR
         youtube_id ILIKE $${paramIndex} OR
         description ILIKE $${paramIndex} OR
-        vocalist_name ILIKE $${paramIndex} OR
-        writer_name ILIKE $${paramIndex} OR
+        COALESCE(vocalist_name, '') || ' ' || COALESCE(vocalist_name_urdu, '') ILIKE $${paramIndex} OR
+        COALESCE(writer_name, '') || ' ' || COALESCE(writer_name_urdu, '') ILIKE $${paramIndex} OR
         array_to_string(tags, ' ') ILIKE $${paramIndex}
       )`;
       values.push(`%${search}%`);
@@ -186,18 +186,21 @@ export class PostgresReleaseRepository {
 
     // Sorting
     let orderBy = 'COALESCE(release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
-    if (query.sort === 'newest') {
+    if (query.sort === 'newest' || !query.sort) {
       orderBy = 'COALESCE(release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
     } else if (query.sort === 'oldest') {
       orderBy = 'COALESCE(release_date, created_at) ASC NULLS LAST, registry_order ASC NULLS LAST';
     } else if (query.sort === 'popular') {
       orderBy = 'COALESCE(view_count, 0) DESC, registry_order ASC NULLS LAST';
+    } else if (query.sort === 'default') {
+      orderBy = 'registry_order ASC NULLS LAST';
     }
 
     // Pagination
     const page = query.page || 1;
-    const limit = query.pageSize || query.limit || 24;
-    const offset = (page - 1) * limit;
+    const limit = query.pageSize || query.limit || 12;
+    const computedOffset = (page - 1) * limit;
+    const offset = query.offset && query.offset > 0 ? query.offset : computedOffset;
 
     const countSql = `SELECT COUNT(*) as total FROM releases WHERE ${whereSql}`;
     const countRes = await this.pool.query(countSql, values);
