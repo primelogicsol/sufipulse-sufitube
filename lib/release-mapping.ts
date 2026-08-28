@@ -113,7 +113,15 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     lyrics: existing?.lyrics || {},
     createdAt: existing?.createdAt || now,
     updatedAt: now,
-    format: existing?.format || video.format || 'video',
+    youtubeContentType: video.youtubeContentType || existing?.youtubeContentType,
+    formatClassificationSource: video.formatClassificationSource || existing?.formatClassificationSource,
+    format: (() => {
+        const yct = video.youtubeContentType || existing?.youtubeContentType;
+        if (yct === 'SHORTS') return 'short';
+        if (yct === 'LIVE_STREAM') return 'live';
+        if (yct === 'VIDEO_ON_DEMAND') return 'video';
+        return existing?.format || video.format || 'video';
+    })(),
     
     // System preserves
     enableLyrics: existing?.enableLyrics !== false,

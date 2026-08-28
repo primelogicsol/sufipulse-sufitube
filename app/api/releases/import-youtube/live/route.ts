@@ -3,6 +3,8 @@ import { youtubeService } from '@/lib/youtube-service';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { mapVideoToRelease } from '@/lib/release-mapping';
+import { queryYouTubeAnalytics } from '@/lib/youtube-analytics-client';
+import { getValidYTAnalyticsAccessToken } from '@/app/lib/server/youtube-analytics-oauth-store';
 import { revalidatePath } from 'next/cache';
 
 export async function GET(request: NextRequest) {

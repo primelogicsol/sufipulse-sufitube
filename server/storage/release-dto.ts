@@ -16,7 +16,12 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   canonical.visibility = canonical.visibility || 'public';
   canonical.format = canonical.format || 'video';
   canonical.releaseType = canonical.releaseType || 'studio-release';
-  canonical.publishedAt = canonical.publishedAt || canonical.releaseDate || canonical.createdAt || canonical.created_at;
+  const effectiveDate = canonical.govType === 'native_governed' || canonical.governanceOrigin === 'native_governed'
+    ? (canonical.publishedAt || canonical.published_at || canonical.releaseDate || canonical.createdAt || canonical.created_at)
+    : (canonical.releaseDate || canonical.publishedAt || canonical.published_at || canonical.createdAt || canonical.created_at);
+  
+  canonical.publishedAt = effectiveDate;
+  canonical.publishedDate = effectiveDate;
 
   if (canonical.youtube_id && !canonical.youtubeId) canonical.youtubeId = canonical.youtube_id;
   if (canonical.youtube_url && !canonical.youtubeUrl) canonical.youtubeUrl = canonical.youtube_url;

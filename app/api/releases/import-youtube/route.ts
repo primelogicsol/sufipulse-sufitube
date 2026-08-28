@@ -10,6 +10,8 @@ import {
   type YouTubeReadCredentialMode,
 } from '@/lib/youtube-data-api-readonly';
 import type { CMSRelease } from '@/lib/cms-storage';
+import { queryYouTubeAnalytics } from '@/lib/youtube-analytics-client';
+import { getValidYTAnalyticsAccessToken } from '@/app/lib/server/youtube-analytics-oauth-store';
 
 const MAX_CHANNEL_VIDEOS = 500;
 const STALE_AFTER_DAYS = 30;
@@ -239,11 +241,33 @@ export async function POST(request: NextRequest) {
       error?: string;
     }> = [];
 
+    let contentTypeMap = new Map<string, string>();
+    try {
+      const token = await getValidYTAnalyticsAccessToken();
+      if (token) {
+        const res = await queryYouTubeAnalytics({
+          metrics: 'views',
+          dimensions: 'video,creatorContentType'
+        }, token);
+        if (res?.rows) {
+          for (const row of res.rows) {
+            contentTypeMap.set(String(row[0]), String(row[1]));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Analytics map fetch failed', err);
+    }
+
     let newCount = 0;
     let updatedCount = 0;
     let errorCount = 0;
 
     for (const video of selected) {
+      if (contentTypeMap.has(video.id)) {
+        video.youtubeContentType = contentTypeMap.get(video.id);
+        video.formatClassificationSource = 'youtube_analytics';
+      }
       try {
         const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
         const mapped = mapVideoToRelease(video, existing);
