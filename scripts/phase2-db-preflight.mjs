@@ -16,8 +16,9 @@ async function run() {
     ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
   });
 
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
     
     // 1 & 2. Connect and Report
     const info = await client.query('SELECT version(), current_database(), current_user;');
@@ -57,12 +58,19 @@ async function run() {
       }
       
       console.log(`\nExecuting 001_phase2_foundation.sql...`);
-      await client.query(sql);
-      
-      await client.query(
-        `INSERT INTO schema_migrations (version, checksum) VALUES ($1, $2)`,
-        ['001_phase2_foundation', checksum]
-      );
+      try {
+        await client.query('BEGIN');
+        await client.query(sql);
+        
+        await client.query(
+          `INSERT INTO schema_migrations (version, checksum) VALUES ($1, $2)`,
+          ['001_phase2_foundation', checksum]
+        );
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      }
       console.log(`001 checksum:        PASS (recorded ${checksum.substring(0, 8)}...)`);
     } else {
       const storedChecksum = ledger.rows[0].checksum;
@@ -131,13 +139,14 @@ async function run() {
     if (foundIndexes.rowCount !== expectedIndexes.length) throw new Error(`Missing indexes. Found ${foundIndexes.rowCount} of ${expectedIndexes.length}`);
     console.log(`expected indexes:                PASS`);
 
-    client.release();
     console.log('\n✅ P2-G1 — Schema migration applies cleanly to empty PostgreSQL: PASS');
-    process.exit(0);
   } catch (err) {
     console.error('\n❌ P2-G1 Execution Failed:', err.message);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
+    if (client) {
+      client.release();
+    }
     await pool.end();
   }
 }

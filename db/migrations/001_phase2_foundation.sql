@@ -1,5 +1,3 @@
-BEGIN;
-
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE releases (
@@ -189,5 +187,3 @@ CREATE INDEX graph_target_entity_idx
 
 CREATE INDEX graph_relationship_idx
     ON release_graph_joins(relationship_type);
-
-COMMIT;
