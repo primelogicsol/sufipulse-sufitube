@@ -959,7 +959,7 @@ export default function Releases() {
 
                                                     <div className="flex items-center justify-between text-[11px] text-white/40 font-bold uppercase tracking-wider mt-1">
                                                         <div className="flex items-center gap-4">
-                                                            <span>{new Date(release.govType === 'native_governed' ? (release.publishedDate || release.releaseDate || release.createdAt || new Date().toISOString()) : (release.releaseDate || release.publishedDate || release.createdAt || new Date().toISOString())).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                                            <span>{new Date(release.govType === 'native_governed' ? (release.publishedDate || (release as any).releaseDate || (release as any).createdAt || new Date().toISOString()) : ((release as any).releaseDate || release.publishedDate || (release as any).createdAt || new Date().toISOString())).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                                                             <div className="flex items-center gap-1.5">
                                                                 <div className="w-1 h-1 rounded-full bg-[var(--color-gold)]" />
                                                                 <span>{(Number(release.views) || 0).toLocaleString()} views</span>
