@@ -2,15 +2,22 @@
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Music, Filter, Search, Play, Calendar, Eye, Youtube, Clock, ChevronLeft, ChevronRight, RefreshCw, X, CheckCircle, AlertTriangle, Info, ExternalLink } from 'lucide-react';
+import { PrimaryButton } from '../../components/primitives/PrimaryButton';
+import { 
+    Music, Filter, Search, Play, Calendar, Eye, Youtube, Clock, ChevronLeft, 
+    ChevronRight, RefreshCw, X, CheckCircle, AlertTriangle, Info, ExternalLink,
+    Sparkles, Shield, Radio, ArrowRight, Mic, Feather, Disc3, Layers
+} from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
 import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
 import { canAccessAdmin } from '@/app/lib/role-access';
+import { StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
 type FilterType = 'all' | 'native_governed' | 'legacy_registry';
 type FormatFilter = 'all' | 'video' | 'audio' | 'short' | 'live' | 'playlist';
@@ -32,7 +39,7 @@ interface YouTubeRelease {
     source: string;
     format: 'video' | 'audio' | 'short' | 'live' | 'playlist';
     govType: string;
-    // Expanded fields for search
+    // Expanded fields for search and creative chain
     vocalist: string;
     writer: string;
     tags: string;
@@ -62,7 +69,6 @@ interface SyncResult {
         dbErrorMessage?: string;
         format?: string;
         durationSeconds?: number;
-        // Fields for UI logic
         visibleUnderCurrentFilters?: boolean;
         activeFilters?: string[];
     };
@@ -355,7 +361,6 @@ export default function Releases() {
             if (!cmsRes.ok) throw new Error('Failed to fetch releases');
             const responseData = await cmsRes.json();
             
-            // Handle both legacy array and new object { items, count } formats
             const cmsData = Array.isArray(responseData) 
                 ? responseData 
                 : (responseData.items || []);
@@ -378,7 +383,6 @@ export default function Releases() {
                     source: source,
                     format: r.format || 'video',
                     govType: source === 'youtube' ? 'legacy_registry' : 'native_governed',
-                    // Metadata for search
                     vocalist: typeof r.vocalist === 'string' 
                         ? r.vocalist 
                         : [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
@@ -393,10 +397,6 @@ export default function Releases() {
 
             setReleases(mappedData);
             setError(null);
-            
-            if (responseData.needsRefresh && !silent) {
-                console.log('🔄 YouTube metadata is stale (>24h). Background refresh recommended.');
-            }
         } catch (err: any) {
             console.error("Error fetching releases:", err);
             setError(err.message || "Failed to load releases");
@@ -417,14 +417,11 @@ export default function Releases() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
             
-            // Immediately fetch with loading state and cache busting
             await fetchVideos(false, true);
             
             if (data.diagnostic) {
                 const d = data.diagnostic;
-                
-                // Calculate visibility under current filters
-                const govType = 'legacy_registry'; // YouTube imports are always legacy registry
+                const govType = 'legacy_registry';
                 const activeFilters: string[] = [];
                 let visibleUnderCurrentFilters = true;
 
@@ -441,7 +438,6 @@ export default function Releases() {
                     let hiddenByDuration = false;
                     
                     if (durationFilter === 'default') {
-                        // Default = Standard and Long, no short. Assume missing duration (0) is standard.
                         if ((seconds > 0 && seconds < 180) || d.format === 'short') hiddenByDuration = true;
                     } else if (durationFilter === 'short' && seconds >= 180) {
                         hiddenByDuration = true;
@@ -477,7 +473,6 @@ export default function Releases() {
                     }
                 }
 
-                // Add filter info to diagnostic for modal use
                 d.visibleUnderCurrentFilters = visibleUnderCurrentFilters;
                 d.activeFilters = activeFilters;
             }
@@ -503,17 +498,13 @@ export default function Releases() {
 
     const filteredReleases = useMemo(() => {
         let filtered = releases.filter(release => {
-            // Governance filter
             if (filterType !== 'all') {
                 if (filterType === 'native_governed' && release.govType !== 'native_governed') return false;
                 if (filterType === 'legacy_registry' && release.govType !== 'legacy_registry') return false;
             }
 
-            // Format filter
             if (filterFormat !== 'all' && release.format !== filterFormat) return false;
 
-            // Length filter (Thresholds: < 3m, 3-8m, > 8m)
-            // Default = Standard + Long (Exclude all < 3m or format === 'short')
             if (durationFilter !== 'all') {
                 const seconds = release.durationSeconds || 0;
                 if (durationFilter === 'default') {
@@ -527,13 +518,11 @@ export default function Releases() {
                 }
             }
 
-            // Year filter
             if (yearFilter !== 'all') {
                 const releaseYear = new Date(release.publishedDate).getFullYear();
                 if (releaseYear !== parseInt(yearFilter)) return false;
             }
 
-            // Search filter
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 return (
@@ -549,8 +538,6 @@ export default function Releases() {
             return true;
         });
 
-        // Use standard sort names but map to utility or implement directly
-        // Mapping: default -> all, newest -> new, oldest -> old, popular -> popular
         const internalSortMap: Record<string, string> = {
             default: 'all',
             newest: 'new',
@@ -561,6 +548,12 @@ export default function Releases() {
         return sortReleases(filtered as any, internalSortMap[sortOrder]) as unknown as YouTubeRelease[];
     }, [releases, filterType, filterFormat, durationFilter, yearFilter, searchQuery, sortOrder]);
     
+    // Featured flagship release (first governed release or highest views)
+    const featuredRelease = useMemo(() => {
+        if (!releases || releases.length === 0) return null;
+        return releases.find(r => r.govType === 'native_governed') || releases[0];
+    }, [releases]);
+
     const totalPages = Math.ceil(filteredReleases.length / ITEMS_PER_PAGE);
     const paginatedReleases = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -576,320 +569,566 @@ export default function Releases() {
         return Array.from(yearSet).sort((a, b) => b - a);
     }, [releases]);
 
+    const cataloguePrinciples = [
+        {
+            icon: Shield,
+            title: 'Governed Production',
+            description: 'Produced under strict lyrical, musical, and spiritual protocol.'
+        },
+        {
+            icon: Feather,
+            title: 'Linguistic Precision',
+            description: 'Preservation of authentic Kashmiri, Urdu, Punjabi, Persian, and Arabic Kalam.'
+        },
+        {
+            icon: Disc3,
+            title: 'Archival Permanence',
+            description: 'Documented registry records with immutable authorship provenance.'
+        },
+        {
+            icon: Radio,
+            title: 'Global Broadcast',
+            description: 'High-fidelity multi-platform distribution across world streaming endpoints.'
+        }
+    ];
+
     return (
         <Layout>
-            <Section background="midnight" spacing="normal">
-                <PageContainer>
-                    <div className="mb-12">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-                            <div>
-                                <div className="inline-block px-3 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded text-[10px] text-[var(--color-gold)] uppercase tracking-widest font-bold mb-4">
-                                    Archive Registry
+            {/* ── 01. Dedicated ReleaseArchiveHero with banner28.png ── */}
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+                {/* Cinematic Background Banner */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <Image
+                        src="/banner28.png"
+                        alt="SufiPulse Master Release Room and Completed Audio Catalogue"
+                        fill
+                        priority
+                        quality={95}
+                        className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+                    />
+                    {/* Layered brand gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+                </div>
+
+                {/* Hero Content */}
+                <div className="relative z-10">
+                    <PageContainer>
+                        <div className="max-w-5xl mx-auto text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+                                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
+                                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
+                                    SufiPulse USA — Official Release Archive
+                                </span>
+                            </div>
+
+                            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
+                                Master Releases & Catalogue<br className="hidden md:block" />{" "}
+                                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
+                                    Diwan-e-Saut (Sacred Audio Archive)
+                                </span>
+                            </h1>
+
+                            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
+                                Sacred words transformed into sound, preserved through governed production, validated by institutional registry, and released to the global audience.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <a 
+                                    href="#browse-releases"
+                                    className="px-8 py-3.5 bg-[var(--color-gold)] hover:bg-[#FDE68A] text-[var(--color-midnight)] font-bold rounded-[var(--radius-sm)] shadow-xl transition-all uppercase tracking-wider text-sm flex items-center gap-2"
+                                >
+                                    <Disc3 className="w-4 h-4" /> Explore Catalogue
+                                </a>
+                                <Link href="/official-channels">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        <Radio className="w-4 h-4 inline mr-2 text-[var(--color-gold)]" /> Official Channels & Radio
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            {/* Catalogue Pillars Strip */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {cataloguePrinciples.map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <item.icon className="w-7 h-7 text-[var(--color-gold)] mx-auto mb-2 opacity-90" />
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">
+                                            {item.title}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">
+                                            {item.description}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </PageContainer>
+                </div>
+            </section>
+
+            {/* ── 02. Global Reach Strip (Repositioned as evidence) ── */}
+            <div className="bg-[var(--color-midnight)] border-b border-white/5">
+                <GlobalReachStrip />
+            </div>
+
+            {/* ── 03. Featured Release Spotlight ── */}
+            {featuredRelease && (
+                <section className="py-16 bg-gradient-to-b from-[var(--color-midnight)] to-[var(--color-slate)] border-b border-white/5">
+                    <PageContainer>
+                        <div className="max-w-6xl mx-auto">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Sparkles className="w-4 h-4 text-[var(--color-gold)]" />
+                                <span className="text-xs font-black text-[var(--color-gold)] uppercase tracking-[0.3em]">
+                                    Flagship Spotlight
+                                </span>
+                            </div>
+
+                            <div className="elite-card overflow-hidden bg-gradient-to-br from-amber-400/[0.04] to-transparent border-amber-400/20 p-6 md:p-10 shadow-2xl">
+                                <div className="grid md:grid-cols-12 gap-8 items-center">
+                                    {/* Left: Artwork / Video Thumbnail */}
+                                    <div className="md:col-span-6 relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl group">
+                                        {(() => {
+                                            const thumbCandidates = buildYouTubeThumbnailCandidates(featuredRelease.youtubeId || featuredRelease.id, [featuredRelease.thumbnailUrl]);
+                                            return (
+                                                <img 
+                                                    src={thumbCandidates[0]} 
+                                                    alt={featuredRelease.title}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                                    onError={(e) => advanceThumbnailFallback(e.currentTarget, thumbCandidates)}
+                                                />
+                                            );
+                                        })()}
+                                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                            <Link 
+                                                href={`/release-detail/${featuredRelease.slug || featuredRelease.youtubeId || featuredRelease.id}`}
+                                                className="w-16 h-16 rounded-full bg-[var(--color-gold)] flex items-center justify-center text-[var(--color-midnight)] shadow-2xl hover:scale-110 transition-transform duration-300"
+                                            >
+                                                <Play className="w-8 h-8 ml-1" fill="currentColor" />
+                                            </Link>
+                                        </div>
+                                        <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-white">
+                                            {featuredRelease.durationFormatted}
+                                        </div>
+                                        <div className="absolute top-3 left-3 bg-amber-400 text-black px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                            {featuredRelease.govType === 'native_governed' ? 'Governed Production' : 'Legacy Registry'}
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Metadata & Context */}
+                                    <div className="md:col-span-6 space-y-6">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-3 text-xs text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest">
+                                                <span>{new Date(featuredRelease.publishedDate).getFullYear() || 2026}</span>
+                                                <span>•</span>
+                                                <span>{featuredRelease.format.toUpperCase()}</span>
+                                                <span>•</span>
+                                                <span>{(Number(featuredRelease.views) || 0).toLocaleString()} Views</span>
+                                            </div>
+                                            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
+                                                {featuredRelease.title}
+                                            </h2>
+                                        </div>
+
+                                        {/* Authorship Chain Line */}
+                                        <div className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-2">
+                                            <p className="text-[9px] text-[var(--color-gold)] font-black uppercase tracking-[0.3em]">Authorship & Lineage</p>
+                                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                                <div>
+                                                    <span className="text-[var(--color-text-tertiary)] block text-[10px] uppercase font-bold">Vocalist</span>
+                                                    <span className="text-white font-medium">{featuredRelease.vocalist || 'SufiPulse Vocal Ensemble'}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[var(--color-text-tertiary)] block text-[10px] uppercase font-bold">Kalam / Lyrics</span>
+                                                    <span className="text-white font-medium">{featuredRelease.writer || 'Traditional Sacred Kalam'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed line-clamp-3">
+                                            {featuredRelease.description || 'Institutional release preserving classical devotional poetry through contemporary arrangements and sacred sonic architecture.'}
+                                        </p>
+
+                                        <div className="flex flex-wrap items-center gap-4 pt-2">
+                                            <Link 
+                                                href={`/release-detail/${featuredRelease.slug || featuredRelease.youtubeId || featuredRelease.id}`}
+                                                className="px-6 py-3 bg-[var(--color-gold)] hover:bg-[#FDE68A] text-[var(--color-midnight)] font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-xl flex items-center gap-2"
+                                            >
+                                                <Play className="w-4 h-4" fill="currentColor" /> Watch & Listen
+                                            </Link>
+                                            {featuredRelease.youtubeId && (
+                                                <a 
+                                                    href={`https://youtube.com/watch?v=${featuredRelease.youtubeId}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-6 py-3 bg-white/[0.04] hover:bg-white/10 border border-white/10 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
+                                                >
+                                                    <Youtube className="w-4 h-4 text-red-500" /> YouTube
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-4 tracking-tight">
-                                    Browse Releases
-                                </h1>
-                                <p className="text-[var(--text-base)] md:text-lg text-[var(--color-text-secondary)] max-w-2xl leading-relaxed">
-                                    Explore the institutional registry of sacred words, voices, and productions curated across the SufiPulse network.
+                            </div>
+                        </div>
+                    </PageContainer>
+                </section>
+            )}
+
+            {/* ── 04. Browse the Archive (Search + Filters Toolbar) ── */}
+            <div id="browse-releases">
+                <Section background="midnight" spacing="normal">
+                    <PageContainer>
+                        <div className="mb-10">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                                <div>
+                                    <div className="inline-block px-3 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded text-[10px] text-[var(--color-gold)] uppercase tracking-widest font-bold mb-3">
+                                        Catalogue Control
+                                    </div>
+                                    <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-text-primary)] mb-3 tracking-tight">
+                                        Browse the Archive
+                                    </h2>
+                                    <p className="text-[var(--text-base)] md:text-lg text-[var(--color-text-secondary)] max-w-2xl leading-relaxed">
+                                        Filter and discover recordings by spiritual lineage, vocal contributors, musical format, and production protocol.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Refined Premium Catalogue Toolbar */}
+                            <div className="p-6 md:p-8 elite-card border-white/5 shadow-2xl">
+                                <div className="flex flex-col gap-6">
+                                    {/* Prominent Search Bar */}
+                                    <div className="flex flex-col md:flex-row gap-4">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-gold)] w-5 h-5 opacity-80" />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search by song title, poet/writer, vocalist, theme, or tags..."
+                                                className="w-full bg-[var(--color-midnight)]/90 border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-sm md:text-base text-[var(--color-text-primary)] focus:border-[var(--color-gold)]/60 outline-none transition-all placeholder:text-[var(--color-text-tertiary)] shadow-inner"
+                                                value={searchQuery}
+                                                onChange={(e) => {
+                                                    setSearchQuery(e.target.value);
+                                                    setCurrentPage(1);
+                                                }}
+                                            />
+                                            {searchQuery && (
+                                                <button 
+                                                    onClick={() => setSearchQuery('')}
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white p-1"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {user?.role === 'admin' && (
+                                            <div className="flex flex-col gap-1">
+                                                <button
+                                                    onClick={handleSync}
+                                                    disabled={syncing}
+                                                    className="flex items-center justify-center gap-2 px-6 py-4 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-2xl text-xs font-black uppercase tracking-widest text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 transition-all disabled:opacity-50 whitespace-nowrap h-[56px]"
+                                                >
+                                                    <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                                                    {syncing ? 'Syncing...' : 'Sync YouTube'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Secondary Filter Dropdowns */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 pt-4 border-t border-white/5">
+                                        {/* Governance */}
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Governance</label>
+                                            <select 
+                                                value={filterType} 
+                                                onChange={(e) => { setFilterType(e.target.value as FilterType); setCurrentPage(1); }}
+                                                className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                            >
+                                                <option value="all">All Statuses</option>
+                                                <option value="native_governed">Governed Release</option>
+                                                <option value="legacy_registry">Legacy Registry</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Format */}
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Format</label>
+                                            <select 
+                                                value={filterFormat} 
+                                                onChange={(e) => { setFilterFormat(e.target.value as FormatFilter); setCurrentPage(1); }}
+                                                className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                            >
+                                                <option value="all">All Formats</option>
+                                                <option value="video">Videos</option>
+                                                <option value="audio">Audios</option>
+                                                <option value="short">Shorts</option>
+                                                <option value="live">Live</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Duration */}
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Duration</label>
+                                            <select 
+                                                value={durationFilter} 
+                                                onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
+                                                className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                            >
+                                                <option value="default">Default (Standard/Long)</option>
+                                                <option value="all">Any Duration</option>
+                                                <option value="short">Short (&lt; 3m)</option>
+                                                <option value="standard">Standard (3-8m)</option>
+                                                <option value="long">Long (&gt; 8m)</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Year */}
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Year</label>
+                                            <select 
+                                                value={yearFilter} 
+                                                onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
+                                                className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                            >
+                                                <option value="all">All Years</option>
+                                                {years.map(y => <option key={y} value={y}>{y}</option>)}
+                                            </select>
+                                        </div>
+
+                                        {/* Sort */}
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Order</label>
+                                            <select 
+                                                value={sortOrder} 
+                                                onChange={(e) => { setSortOrder(e.target.value as SortOrder); setCurrentPage(1); }}
+                                                className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                            >
+                                                <option value="default">Default</option>
+                                                <option value="newest">Newest First</option>
+                                                <option value="oldest">Oldest First</option>
+                                                <option value="popular">Most Popular</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── 05. Release Catalogue Grid ── */}
+                        {loading ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {[...Array(8)].map((_, i) => (
+                                    <div key={i} className="flex flex-col bg-[#101a33]/40 border border-white/5 rounded-2xl overflow-hidden h-[420px] animate-pulse">
+                                        <div className="aspect-video bg-[var(--color-midnight)]/50"></div>
+                                        <div className="p-5 flex flex-col gap-4">
+                                            <div className="h-3 w-24 bg-[var(--color-midnight)]/50 rounded"></div>
+                                            <div className="h-6 w-full bg-[var(--color-midnight)]/50 rounded"></div>
+                                            <div className="h-6 w-3/4 bg-[var(--color-midnight)]/50 rounded"></div>
+                                            <div className="mt-auto h-4 w-full bg-[var(--color-midnight)]/50 rounded"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : error ? (
+                            <div className="py-24 text-center">
+                                <p className="text-red-400 mb-4">{error}</p>
+                                <button 
+                                    onClick={() => fetchVideos()}
+                                    className="px-6 py-2 bg-[var(--color-gold)] text-[var(--color-midnight)] rounded font-bold"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        ) : filteredReleases.length === 0 ? (
+                            <div className="py-24 text-center">
+                                <Music className="w-16 h-16 text-[var(--color-border)] mx-auto mb-4" />
+                                <p className="text-[var(--color-text-secondary)] text-xl mb-4">No releases found matching your criteria.</p>
+                                <button 
+                                    onClick={() => {
+                                        setFilterType('all');
+                                        setFilterFormat('all');
+                                        setDurationFilter('all');
+                                        setYearFilter('all');
+                                        setSearchQuery('');
+                                        setSortOrder('newest');
+                                        setCurrentPage(1);
+                                    }}
+                                    className="px-6 py-2.5 bg-amber-400 text-black font-black uppercase text-xs tracking-widest rounded-xl hover:bg-amber-500 transition-all shadow-xl"
+                                >
+                                    Reset Filters
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {paginatedReleases.map((release) => {
+                                        const thumbCandidates = buildYouTubeThumbnailCandidates(release.youtubeId || release.id, [release.thumbnailUrl]);
+                                        const releaseYear = release.publishedDate ? new Date(release.publishedDate).getFullYear() : 2026;
+                                        return (
+                                            <Link 
+                                                key={release.id || release.slug || release.title} 
+                                                href={`/release-detail/${release.slug || release.youtubeId || release.id}`}
+                                                className="group flex flex-col bg-[#101a33] border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/40 transition-all duration-300 shadow-xl min-h-[440px]"
+                                            >
+                                                <div className="relative aspect-video overflow-hidden bg-black">
+                                                    <img 
+                                                        src={thumbCandidates[0]} 
+                                                        alt={release.title}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                        onError={(e) => advanceThumbnailFallback(e.currentTarget, thumbCandidates)}
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                                        <div className="w-12 h-12 rounded-full bg-[var(--color-gold)]/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-xl">
+                                                            <Play className="w-6 h-6 text-[#101a33] ml-0.5" fill="currentColor" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-bold text-white backdrop-blur-sm">
+                                                        {release.durationFormatted}
+                                                    </div>
+                                                    {release.format === 'live' && (
+                                                        <div className="absolute top-2 left-2 bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
+                                                            Live
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="p-5 flex flex-col flex-1 gap-3">
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded ${
+                                                            release.govType === 'native_governed' 
+                                                                ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20' 
+                                                                : 'bg-white/5 text-zinc-400 border border-white/10'
+                                                        }`}>
+                                                            {release.govType === 'native_governed' ? 'Governed Release' : 'Legacy Registry'}
+                                                        </span>
+                                                        <span className="text-[10px] text-white/20">•</span>
+                                                        <span className="text-[10px] text-white/40 uppercase tracking-[0.2em]">
+                                                            {release.format}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <h3 className="text-base font-bold text-white/95 group-hover:text-[var(--color-gold)] transition-colors line-clamp-2 leading-snug">
+                                                        {release.title}
+                                                    </h3>
+
+                                                    {/* Authorship Chain line */}
+                                                    {(release.vocalist || release.writer) && (
+                                                        <div className="text-xs text-[var(--color-text-tertiary)] space-y-1 line-clamp-2 pt-1 border-t border-white/5">
+                                                            {release.vocalist && (
+                                                                <div className="flex items-center gap-1.5 truncate">
+                                                                    <Mic className="w-3 h-3 text-[var(--color-gold)] shrink-0 opacity-75" />
+                                                                    <span className="truncate text-white/80">{release.vocalist}</span>
+                                                                </div>
+                                                            )}
+                                                            {release.writer && (
+                                                                <div className="flex items-center gap-1.5 truncate">
+                                                                    <Feather className="w-3 h-3 text-amber-300 shrink-0 opacity-75" />
+                                                                    <span className="truncate text-zinc-400">{release.writer}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className="mt-auto flex items-center justify-between pt-3 text-xs text-zinc-400 font-medium shrink-0 border-t border-white/5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Calendar className="w-3.5 h-3.5 opacity-50" />
+                                                                <span>{!isNaN(releaseYear) ? releaseYear : 2026}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Eye className="w-3.5 h-3.5 opacity-50" />
+                                                                <span>{(Number(release.views) || 0).toLocaleString()}</span>
+                                                            </div>
+                                                        </div>
+                                                        {release.source === 'youtube' && (
+                                                            <Youtube className="w-4 h-4 text-red-500/60" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="mt-16 flex items-center justify-center gap-4">
+                                        <button 
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                            disabled={currentPage === 1}
+                                            className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </button>
+                                        
+                                        <div className="flex items-center gap-2">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`w-10 h-10 rounded-full text-sm font-bold transition-all ${
+                                                        currentPage === page 
+                                                            ? 'bg-[var(--color-gold)] text-[var(--color-midnight)]' 
+                                                            : 'text-[var(--color-text-secondary)] hover:text-[var(--color-gold)]'
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <button 
+                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </PageContainer>
+                </Section>
+            </div>
+
+            {/* ── 06. Archive & Governance Explanation ── */}
+            <Section background="slate" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="elite-card p-10 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-3 h-3 rounded-full bg-amber-400" />
+                                    <h3 className="text-xl font-bold text-white tracking-tight">Governed Releases</h3>
+                                </div>
+                                <p className="text-neutral-400 text-sm leading-relaxed">
+                                    Original studio productions recorded, mixed, mastered, and cleared under the SufiPulse institutional charter. Every release satisfies strict linguistic oversight, verified attribution, and non-commercial sacred reverence.
+                                </p>
+                            </div>
+
+                            <div className="elite-card p-10 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-3 h-3 rounded-full bg-zinc-400" />
+                                    <h3 className="text-xl font-bold text-white tracking-tight">Legacy Registry</h3>
+                                </div>
+                                <p className="text-neutral-400 text-sm leading-relaxed">
+                                    Historical recordings, devotional archives, and regional audio captures indexed into the Diwan-e-Amanat registry for cultural preservation, scholarly citation, and global audience discovery.
                                 </p>
                             </div>
                         </div>
-
-                        {/* Responsive Toolbar Panel */}
-                        <div className="p-6 bg-[var(--color-slate)]/40 border border-white/5 rounded-2xl">
-                            <div className="flex flex-col gap-6">
-                                {/* Search Row */}
-                                <div className="flex flex-col md:flex-row gap-4">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-4 top-1/3 -translate-y-1/2 text-[var(--color-text-tertiary)] w-5 h-5" />
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search title, vocalist, writer, or tags..."
-                                            className="w-full bg-[var(--color-midnight)] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-gold)]/50 outline-none transition-all placeholder:text-[var(--color-text-tertiary)]"
-                                            value={searchQuery}
-                                            onChange={(e) => {
-                                                setSearchQuery(e.target.value);
-                                                setCurrentPage(1);
-                                            }}
-                                        />
-                                    </div>
-                                    {user?.role === 'admin' && (
-                                        <div className="flex flex-col gap-2">
-                                            <button
-                                                onClick={handleSync}
-                                                disabled={syncing}
-                                                className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 rounded-xl text-sm font-bold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 transition-all disabled:opacity-50 whitespace-nowrap h-[48px]"
-                                            >
-                                                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                                                {syncing ? 'Syncing...' : 'Sync New Releases'}
-                                            </button>
-                                            <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-tight ml-1">
-                                                Checks official YouTube for fresh uploads.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Filters Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {/* Type */}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Governance</label>
-                                        <select 
-                                            value={filterType} 
-                                            onChange={(e) => { setFilterType(e.target.value as FilterType); setCurrentPage(1); }}
-                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
-                                        >
-                                            <option value="all">All Status</option>
-                                            <option value="native_governed">Governed</option>
-                                            <option value="legacy_registry">Legacy Registry</option>
-                                        </select>
-                                    </div>
-
-                                    {/* Format */}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Format</label>
-                                        <select 
-                                            value={filterFormat} 
-                                            onChange={(e) => { setFilterFormat(e.target.value as FormatFilter); setCurrentPage(1); }}
-                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
-                                        >
-                                            <option value="all">All Formats</option>
-                                            <option value="video">Videos</option>
-                                            <option value="audio">Audios</option>
-                                            <option value="short">Shorts</option>
-                                            <option value="live">Live</option>
-                                        </select>
-                                    </div>
-
-                                    {/* Duration */}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Length</label>
-                                        <select 
-                                            value={durationFilter} 
-                                            onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
-                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
-                                        >
-                                            <option value="default">Default</option>
-                                            <option value="all">Any Length</option>
-                                            <option value="short">Short (&lt; 3m)</option>
-                                            <option value="standard">Standard (3-8m)</option>
-                                            <option value="long">Long (&gt; 8m)</option>
-                                        </select>
-                                    </div>
-
-                                    {/* Year */}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Year</label>
-                                        <select 
-                                            value={yearFilter} 
-                                            onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
-                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
-                                        >
-                                            <option value="all">All Years</option>
-                                            {years.map(y => <option key={y} value={y}>{y}</option>)}
-                                        </select>
-                                    </div>
-
-                                    {/* Sort */}
-                                    <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-auto">
-                                        <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Order</label>
-                                        <select 
-                                            value={sortOrder} 
-                                            onChange={(e) => { setSortOrder(e.target.value as SortOrder); setCurrentPage(1); }}
-                                            className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
-                                        >
-                                            <option value="default">Default</option>
-                                            <option value="newest">Newest First</option>
-                                            <option value="oldest">Oldest First</option>
-                                            <option value="popular">Most Popular</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-
-                    {loading ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {[...Array(8)].map((_, i) => (
-                                <div key={i} className="flex flex-col bg-[#101a33]/40 border border-white/5 rounded-2xl overflow-hidden h-[420px] animate-pulse">
-                                    <div className="aspect-video bg-[var(--color-midnight)]/50"></div>
-                                    <div className="p-5 flex flex-col gap-4">
-                                        <div className="h-3 w-24 bg-[var(--color-midnight)]/50 rounded"></div>
-                                        <div className="h-6 w-full bg-[var(--color-midnight)]/50 rounded"></div>
-                                        <div className="h-6 w-3/4 bg-[var(--color-midnight)]/50 rounded"></div>
-                                        <div className="mt-auto h-4 w-full bg-[var(--color-midnight)]/50 rounded"></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : error ? (
-                        <div className="py-24 text-center">
-                            <p className="text-red-400 mb-4">{error}</p>
-                            <button 
-                                onClick={() => fetchVideos()}
-                                className="px-6 py-2 bg-[var(--color-gold)] text-[var(--color-midnight)] rounded font-bold"
-                            >
-                                Retry
-                            </button>
-                        </div>
-                    ) : filteredReleases.length === 0 ? (
-                        <div className="py-24 text-center">
-                            <Music className="w-16 h-16 text-[var(--color-border)] mx-auto mb-4" />
-                            <p className="text-[var(--color-text-secondary)] text-xl">No releases found matching your criteria.</p>
-                            <button 
-                                onClick={() => {
-                                    setFilterType('all');
-                                    setFilterFormat('all');
-                                    setDurationFilter('all');
-                                    setYearFilter('all');
-                                    setSearchQuery('');
-                                    setSortOrder('newest');
-                                    setCurrentPage(1);
-                                }}
-                                className="mt-4 text-[var(--color-gold)] hover:underline"
-                            >
-                                Clear all filters
-                            </button>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {paginatedReleases.map((release) => {
-                                    const thumbCandidates = buildYouTubeThumbnailCandidates(release.youtubeId || release.id, [release.thumbnailUrl]);
-                                    const releaseYear = release.publishedDate ? new Date(release.publishedDate).getFullYear() : 2026;
-                                    return (
-                                        <Link 
-                                            key={release.id || release.slug || release.title} 
-                                            href={`/release-detail/${release.slug || release.youtubeId || release.id}`}
-                                            className="group flex flex-col bg-[#101a33] border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/40 transition-all duration-300 shadow-xl min-h-[420px]"
-                                        >
-                                            <div className="relative aspect-video overflow-hidden bg-black">
-                                                <img 
-                                                    src={thumbCandidates[0]} 
-                                                    alt={release.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                    onError={(e) => advanceThumbnailFallback(e.currentTarget, thumbCandidates)}
-                                                />
-                                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                                                    <div className="w-12 h-12 rounded-full bg-[var(--color-gold)]/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all duration-300">
-                                                        <Play className="w-6 h-6 text-[#101a33] ml-0.5" fill="currentColor" />
-                                                    </div>
-                                                </div>
-                                                <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold text-white backdrop-blur-sm">
-                                                    {release.durationFormatted}
-                                                </div>
-                                                {release.format === 'live' && (
-                                                    <div className="absolute top-2 left-2 bg-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
-                                                        Live
-                                                    </div>
-                                                )}
-                                            </div>
-                                            
-                                            <div className="p-5 flex flex-col flex-1 gap-4">
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gold)]/80">
-                                                        {release.govType === 'native_governed' ? 'Governed' : 'Registry'}
-                                                    </span>
-                                                    <span className="text-[10px] text-white/20">•</span>
-                                                    <span className="text-[10px] text-white/40 uppercase tracking-[0.2em]">
-                                                        {release.format}
-                                                    </span>
-                                                </div>
-                                                
-                                                <h3 className="text-lg font-semibold text-white/90 group-hover:text-[var(--color-gold)] transition-colors line-clamp-3 leading-snug min-h-[5.4rem]">
-                                                    {release.title}
-                                                </h3>
-
-                                                {(() => {
-                                                    const vocalistMatch = release.vocalist && knowledgeData?.nodes?.find(
-                                                        (n: any) => n && n.class === 'singer' && (
-                                                            (typeof n.name === 'string' && n.name.toLowerCase() === release.vocalist.toLowerCase()) || 
-                                                            (typeof n.nameUrdu === 'string' && n.nameUrdu === release.vocalist)
-                                                        )
-                                                    );
-                                                    if (!vocalistMatch) return null;
-                                                    return (
-                                                        <div className="flex gap-2">
-                                                            <button 
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    router.push(`/knowledge/singer/${vocalistMatch.slug}`);
-                                                                }}
-                                                                className="px-2 py-0.5 rounded text-[10px] font-bold text-[var(--color-gold)] bg-[var(--color-gold)]/10 hover:bg-[var(--color-gold)]/20 hover:underline transition-all"
-                                                            >
-                                                                {vocalistMatch.name}
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })()}
-                                                
-                                                <div className="mt-auto flex items-center justify-between pt-1 text-xs text-zinc-400 font-medium shrink-0">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Calendar className="w-4 h-4 opacity-50" />
-                                                            <span>{!isNaN(releaseYear) ? releaseYear : 2026}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Eye className="w-4 h-4 opacity-50" />
-                                                            <span>{(Number(release.views) || 0).toLocaleString()}</span>
-                                                        </div>
-                                                    </div>
-                                                    {release.source === 'youtube' && (
-                                                        <Youtube className="w-4 h-4 text-red-500/50" />
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Pagination */}
-                            {totalPages > 1 && (
-                                <div className="mt-16 flex items-center justify-center gap-4">
-                                    <button 
-                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                        disabled={currentPage === 1}
-                                        className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </button>
-                                    
-                                    <div className="flex items-center gap-2">
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                            <button
-                                                key={page}
-                                                onClick={() => setCurrentPage(page)}
-                                                className={`w-10 h-10 rounded-full text-sm font-bold transition-all ${
-                                                    currentPage === page 
-                                                        ? 'bg-[var(--color-gold)] text-[var(--color-midnight)]' 
-                                                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-gold)]'
-                                                }`}
-                                            >
-                                                {page}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <button 
-                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                        disabled={currentPage === totalPages}
-                                        className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        <ChevronRight className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            )}
-
-                            <div className="mt-20 pt-12 border-t border-white/10">
-                                <GlobalReachStrip />
-                            </div>
-                        </>
-                    )}
                 </PageContainer>
             </Section>
+
+            {/* ── 07. Official Listening Destinations Panel ── */}
+            <StudioGovernancePanel 
+                title="Official Broadcast Endpoints"
+                description="Stream authentic SufiPulse master releases 24/7 across our verified streaming platforms, continuous radio service, and official YouTube channel."
+                primaryCTA={{ label: "Access SufiPulse Radio", href: "/official-channels" }}
+                secondaryCTA={{ label: "YouTube Channel", href: "https://www.youtube.com/@SufiPulse-USA" }}
+                shieldText="Governed Broadcast Framework"
+                background="midnight"
+            />
 
             <SyncResultModal 
                 open={syncModalOpen} 
@@ -901,6 +1140,18 @@ export default function Releases() {
                     setSyncModalOpen(false);
                 }}
             />
+
+            <style jsx global>{`
+                .elite-card {
+                    background: rgba(18, 18, 18, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 32px;
+                    box-shadow: 
+                        0 20px 40px rgba(0,0,0,0.4),
+                        inset 0 1px 1px rgba(255,255,255,0.02);
+                }
+            `}</style>
         </Layout>
     );
 }
