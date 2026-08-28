@@ -217,7 +217,7 @@ export default function GlobalReachStrip() {
       const url = isManualRefresh 
         ? `/api/public/youtube/global-reach?refresh=1&t=${Date.now()}` 
         : `/api/public/youtube/global-reach?t=${Date.now()}`;
-      const r = await fetch(url);
+      const r = await fetch(url, { cache: 'no-store' });
       const d = await r.json();
       if (d && !d.error) setData(d);
     } catch (err) {
@@ -352,7 +352,7 @@ export default function GlobalReachStrip() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Data Range</span>
-                <span className="text-xs text-neutral-300">May 20, 2025 – Jun 24, 2026</span>
+                <span className="text-xs text-neutral-300">May 20, 2025 – Aug 26, 2026</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Live API Dependency</span>

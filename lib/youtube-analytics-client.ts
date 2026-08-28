@@ -124,3 +124,57 @@ export async function getYouTubeVideoTitleMap(videoIds: string[]): Promise<{
 
   return { titles, warnings };
 }
+
+export interface ChannelStatistics {
+  subscriberCount: number | null;
+  videoCount: number | null;
+  viewCount: number | null;
+}
+
+export async function getChannelStatistics(): Promise<ChannelStatistics> {
+  const channelId = YOUTUBE_CHANNEL_ID;
+  const apiKey = process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+
+  try {
+    const accessToken = await getYouTubeAnalyticsAccessToken().catch(() => null);
+    if (accessToken) {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const stats = json.items?.[0]?.statistics;
+        return {
+          subscriberCount: stats?.subscriberCount !== undefined ? Number(stats.subscriberCount) : null,
+          videoCount: stats?.videoCount !== undefined ? Number(stats.videoCount) : null,
+          viewCount: stats?.viewCount !== undefined ? Number(stats.viewCount) : null,
+        };
+      }
+    }
+  } catch {}
+
+  if (apiKey) {
+    try {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${apiKey}`, {
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const stats = json.items?.[0]?.statistics;
+        return {
+          subscriberCount: stats?.subscriberCount !== undefined ? Number(stats.subscriberCount) : null,
+          videoCount: stats?.videoCount !== undefined ? Number(stats.videoCount) : null,
+          viewCount: stats?.viewCount !== undefined ? Number(stats.viewCount) : null,
+        };
+      }
+    } catch {}
+  }
+
+  return { subscriberCount: null, videoCount: null, viewCount: null };
+}
+
+export async function getChannelSubscriberCount(): Promise<number | null> {
+  const stats = await getChannelStatistics();
+  return stats.subscriberCount;
+}

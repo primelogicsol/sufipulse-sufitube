@@ -572,12 +572,6 @@ export default function Releases() {
 
     return (
         <Layout>
-            <section className="w-full overflow-hidden pt-24">
-                <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                    <GlobalReachStrip />
-                </div>
-            </section>
-            
             <Section background="midnight" spacing="normal">
                 <PageContainer>
                     <div className="mb-12">
@@ -881,6 +875,10 @@ export default function Releases() {
                                     </button>
                                 </div>
                             )}
+
+                            <div className="mt-20 pt-12 border-t border-white/10">
+                                <GlobalReachStrip />
+                            </div>
                         </>
                     )}
                 </PageContainer>

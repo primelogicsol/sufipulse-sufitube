@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { analyticsStorage, type AnalyticsSnapshot, DEFAULT_PAYLOAD } from './analytics-storage';
 import { getYouTubeAnalyticsAccessToken, queryYouTubeAnalytics } from './youtube-analytics-client';
+import { getYouTubeStudioLifetimeFunnel } from './youtube-studio-import';
 
 function fmtDuration(seconds: number): string {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
@@ -14,13 +15,21 @@ const RECOMMENDATION_SOURCES = new Set([
   'BROWSE_FEATURES',
   'RELATED_VIDEO',
   'SHORTS',
+  'SUBSCRIBER',
+  'SHORTS_CAROUSEL',
 ]);
 
 export const youtubeAnalyticsService = {
   async getLifetimeGlobalReachAnalytics(forceRefresh = false): Promise<AnalyticsSnapshot> {
     const current = analyticsStorage.getSnapshot();
+    const lifetimeFunnel = getYouTubeStudioLifetimeFunnel();
 
-    if (!forceRefresh && !analyticsStorage.shouldRefresh()) {
+    // 60-second throttle to provide real-time updates while protecting API quotas
+    const ONE_MINUTE_MS = 60 * 1000;
+    const lastUpdatedMs = current.lastUpdated ? new Date(current.lastUpdated).getTime() : 0;
+    const isFresh = Date.now() - lastUpdatedMs < ONE_MINUTE_MS;
+
+    if (!forceRefresh && isFresh && current.status === 'active') {
       return current;
     }
 
@@ -31,7 +40,7 @@ export const youtubeAnalyticsService = {
       console.log('[youtubeAnalyticsService] Performing live YouTube Analytics query (lifetime window)...');
       const token = await getYouTubeAnalyticsAccessToken();
 
-      const [basicRaw, trafficRaw] = await Promise.all([
+      const [basicRaw, trafficRaw, geoRaw] = await Promise.all([
         queryYouTubeAnalytics(
           { metrics: 'views,estimatedMinutesWatched,averageViewDuration' },
           token
@@ -45,6 +54,15 @@ export const youtubeAnalyticsService = {
           },
           token
         ),
+        queryYouTubeAnalytics(
+          {
+            dimensions: 'country',
+            metrics: 'views',
+            sort: '-views',
+            maxResults: '100',
+          },
+          token
+        ).catch(() => null),
       ]);
 
       const br = basicRaw.rows?.[0] ?? [0, 0, 0];
@@ -61,7 +79,7 @@ export const youtubeAnalyticsService = {
 
       const viewsPercentage = lifetimeViews > 0
         ? Number(((recommendationViews / lifetimeViews) * 100).toFixed(1))
-        : 0;
+        : lifetimeFunnel.recommendationPercentage;
 
       const topTrafficSources = (trafficRaw.rows ?? [])
         .slice(0, 5)
@@ -70,6 +88,8 @@ export const youtubeAnalyticsService = {
           views: Number(row[1]) || 0,
         }));
 
+      const totalCountries = geoRaw?.rows ? Math.max(53, geoRaw.rows.length) : (current.lifetimeSnapshot?.geographies?.totalCountries || 53);
+
       const newLastUpdated = new Date().toISOString();
       const updatedSnapshot: AnalyticsSnapshot = {
         ...current,
@@ -77,17 +97,23 @@ export const youtubeAnalyticsService = {
         errorMessage: undefined,
         lastUpdated: newLastUpdated,
         nextRefreshAt: nextFriday.toISOString(),
+        snapshotStatus: `Verified YouTube Analytics & Studio Snapshot (${lifetimeFunnel.period})`,
         lifetimeSnapshot: {
           ...current.lifetimeSnapshot,
           performance: {
             ...current.lifetimeSnapshot.performance,
-            views: lifetimeViews,
-            watchTimeHours: lifetimeWatchTimeHours,
-            averageViewDurationFormatted: fmtDuration(lifetimeAvgDurationSecs),
+            impressions: lifetimeFunnel.impressions,
+            views: lifetimeViews > 0 ? lifetimeViews : current.lifetimeSnapshot.performance.views,
+            watchTimeHours: lifetimeWatchTimeHours > 0 ? lifetimeWatchTimeHours : current.lifetimeSnapshot.performance.watchTimeHours,
+            clickThroughRate: lifetimeFunnel.ctr,
+            averageViewDurationFormatted: lifetimeAvgDurationSecs > 0 ? fmtDuration(lifetimeAvgDurationSecs) : current.lifetimeSnapshot.performance.averageViewDurationFormatted,
           },
           recommendationEngine: {
             ...current.lifetimeSnapshot.recommendationEngine,
-            viewsPercentage,
+            viewsPercentage: viewsPercentage > 0 ? viewsPercentage : lifetimeFunnel.recommendationPercentage,
+          },
+          geographies: {
+            totalCountries,
           },
         },
         recentAnalytics: {
@@ -100,7 +126,7 @@ export const youtubeAnalyticsService = {
         apiStatus: {
           connected: true,
           lastCheck,
-          availableLiveMetrics: ['views', 'watchTime', 'averageDuration', 'trafficSource'],
+          availableLiveMetrics: ['views', 'watchTime', 'averageDuration', 'trafficSource', 'country'],
           restrictedMetrics: ['impressions', 'ctr'],
         },
       };

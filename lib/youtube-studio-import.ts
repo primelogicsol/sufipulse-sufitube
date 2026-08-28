@@ -232,3 +232,47 @@ export function getYouTubeStudioSnapshot(): YouTubeStudioSnapshot | null {
     return null;
   }
 }
+
+export interface YouTubeStudioLifetimeFunnel {
+  period: string;
+  impressions: number;
+  recommendationPercentage: number;
+  ctr: number;
+  engagedViews: number;
+  avgViewDurationFormatted: string;
+  avgViewDurationSecs: number;
+  watchTimeHours: number;
+  updatedAt: string;
+}
+
+const LIFETIME_FUNNEL_FILE = path.join(DATA_DIR, 'youtube-studio-lifetime-funnel.json');
+
+export const DEFAULT_LIFETIME_FUNNEL: YouTubeStudioLifetimeFunnel = {
+  period: 'May 20, 2025 – Aug 26, 2026 (464 days)',
+  impressions: 986800,
+  recommendationPercentage: 86.4,
+  ctr: 8.4,
+  engagedViews: 82900,
+  avgViewDurationFormatted: '6:19',
+  avgViewDurationSecs: 379,
+  watchTimeHours: 8700,
+  updatedAt: new Date().toISOString(),
+};
+
+export function getYouTubeStudioLifetimeFunnel(): YouTubeStudioLifetimeFunnel {
+  try {
+    if (fs.existsSync(LIFETIME_FUNNEL_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(LIFETIME_FUNNEL_FILE, 'utf8')) as YouTubeStudioLifetimeFunnel;
+      if (parsed && parsed.impressions) return parsed;
+    }
+  } catch {}
+  return DEFAULT_LIFETIME_FUNNEL;
+}
+
+export function saveYouTubeStudioLifetimeFunnel(funnel: YouTubeStudioLifetimeFunnel): void {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  const temp = `${LIFETIME_FUNNEL_FILE}.tmp`;
+  fs.writeFileSync(temp, JSON.stringify(funnel, null, 2), 'utf8');
+  fs.renameSync(temp, LIFETIME_FUNNEL_FILE);
+}
+

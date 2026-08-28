@@ -1148,25 +1148,29 @@ function Release() {
       try {
         const mapCmsRelease = (cmsRelease: any) => ({
           id: cmsRelease.id,
+          title: cmsRelease.title,
           release_title: cmsRelease.title,
-          release_date: cmsRelease.releaseDate,
+          release_date: cmsRelease.releaseDate || cmsRelease.publishedAt,
           description: cmsRelease.description,
-          source: "cms",
+          source: cmsRelease.source || "cms",
           duration_seconds: cmsRelease.durationSeconds,
-          views: cmsRelease.viewCount || 0,
+          durationFormatted: cmsRelease.durationFormatted || cmsRelease.duration,
+          views: cmsRelease.viewCount || cmsRelease.views || 0,
           likes: cmsRelease.likeCount || 0,
+          youtubeId: cmsRelease.youtubeId,
           youtube_video_id: cmsRelease.youtubeId,
-          youtube_url: cmsRelease.youtubeUrl,
+          youtube_url: cmsRelease.youtubeUrl || (cmsRelease.youtubeId ? `https://www.youtube.com/watch?v=${cmsRelease.youtubeId}` : ""),
           audioUrl: cmsRelease.audioUrl,
           videoUrl: cmsRelease.videoUrl,
           mediaUrl: cmsRelease.mediaUrl,
-          format: cmsRelease.format,
+          format: cmsRelease.format || "video",
           status: cmsRelease.status,
           visibility: cmsRelease.visibility,
           slug: cmsRelease.slug,
+          thumbnailUrl: cmsRelease.thumbnailUrl,
           thumbnail_url: cmsRelease.thumbnailUrl,
-          subtitles_available: false,
-          subtitle_languages: [],
+          subtitles_available: Boolean(cmsRelease.subtitleCues?.length > 0),
+          subtitle_languages: Object.keys(cmsRelease.subtitleTranslations || {}),
           lyrics: cmsRelease.lyrics || {},
           subtitle_cues: cmsRelease.subtitleCues || [],
           subtitle_translations: cmsRelease.subtitleTranslations || {},
@@ -2265,7 +2269,7 @@ function Release() {
                   onContextMenu={(e) => e.preventDefault()}
                   className={`bg-black overflow-hidden relative group ${isFullscreen ? "fixed inset-0 z-[100] w-screen h-screen rounded-none" : "aspect-video rounded-lg shadow-2xl border border-neutral-800"}`}
                 >
-                  {(!videoLoaded && !resolvedVideoId) ? (
+                  {!videoLoaded ? (
                     <>
                       <img
                         src={thumbnailCandidates[0]}
@@ -2310,43 +2314,16 @@ function Release() {
                     </>
                   ) : resolvedVideoId ? (
                     <div className="w-full h-full relative">
-                      <YouTube
-                        videoId={resolvedVideoId}
-                        className="w-full h-full"
-                        iframeClassName="w-full h-full aspect-video"
-                        opts={{
-                          width: "100%",
-                          height: "100%",
-                          playerVars: {
-                            autoplay: 1,
-                            enablejsapi: 1,
-                            modestbranding: 1,
-                            rel: 0,
-                            controls: 1,
-                            playsinline: 1,
-                          }
-                        }}
-                        onReady={(event) => {
-                          setPlayerTarget(event.target);
-                          try {
-                            const duration = event.target?.getDuration?.();
-                            if (duration) {
-                              setVideoDuration(Number(duration));
-                            }
-                          } catch (e) {}
+                      <iframe
+                        src={`https://www.youtube.com/embed/${resolvedVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                        title={release.release_title || release.title}
+                        className="w-full h-full aspect-video border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                        onLoad={() => {
                           setVideoReady(true);
-                        }}
-                        onStateChange={(event) => {
-                          setIsPlaying(event.data === 1);
-                          if (event.data === 0) {
-                            setIsVideoEnded(true);
-                          } else if (event.data === 1) {
-                            setIsVideoEnded(false);
-                          }
-                        }}
-                        onEnd={() => {
-                          setIsPlaying(false);
-                          setIsVideoEnded(true);
+                          setIsPlaying(true);
                         }}
                       />
                       {videoReady && activeOverlayTrack && (

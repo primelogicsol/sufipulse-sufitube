@@ -31,11 +31,11 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
   // 1. Immutable Institutional Results
   lifetimeSnapshot: {
     performance: {
-      impressions: 85115666,
-      views: 7149716,
-      watchTimeHours: 755803,
+      impressions: 986800,
+      views: 159471,
+      watchTimeHours: 10359,
       clickThroughRate: 8.4,
-      averageViewDurationFormatted: "6:20"
+      averageViewDurationFormatted: "3:54"
     },
     ageGender: {
       gender: { female: 42.7, male: 57.3 },
@@ -50,13 +50,13 @@ export const DEFAULT_PAYLOAD: AnalyticsSnapshot = {
       ]
     },
     recommendationEngine: {
-      viewsPercentage: 86.9
+      viewsPercentage: 86.4
     },
     geographies: {
       totalCountries: 53
     }
   },
-  snapshotStatus: "Verified YouTube Studio Snapshot (May 20, 2025 - Jul 24, 2026)",
+  snapshotStatus: "Verified YouTube Studio Snapshot (May 20, 2025 - Aug 26, 2026)",
 
   // 2. Live API Telemetry (Admins only)
   apiStatus: {
