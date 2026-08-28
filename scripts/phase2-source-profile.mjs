@@ -217,22 +217,18 @@ function runProfile() {
     
     if (isMissing(r.createdAt)) {
       invCreatedAt++;
-      notNullViolations++;
-      logAnomaly('NOT_NULL', r, 'createdAt', r.createdAt);
+      logAnomaly('HISTORICAL_MISSING', r, 'createdAt', r.createdAt);
     } else if (isInvalidDate(r.createdAt)) {
       invCreatedAt++;
-      typeCastViolations++;
-      logAnomaly('TYPE_CAST', r, 'createdAt', r.createdAt);
+      logAnomaly('HISTORICAL_INVALID', r, 'createdAt', r.createdAt);
     }
 
     if (isMissing(r.updatedAt)) {
       invUpdatedAt++;
-      notNullViolations++;
-      logAnomaly('NOT_NULL', r, 'updatedAt', r.updatedAt);
+      logAnomaly('HISTORICAL_MISSING', r, 'updatedAt', r.updatedAt);
     } else if (isInvalidDate(r.updatedAt)) {
       invUpdatedAt++;
-      typeCastViolations++;
-      logAnomaly('TYPE_CAST', r, 'updatedAt', r.updatedAt);
+      logAnomaly('HISTORICAL_INVALID', r, 'updatedAt', r.updatedAt);
     }
   }
 

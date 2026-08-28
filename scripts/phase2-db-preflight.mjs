@@ -3,6 +3,21 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { createHash } from 'crypto';
 
+function sha256(data) {
+  return createHash('sha256').update(data).digest('hex');
+}
+
+const migrations = [
+  {
+    version: '001_phase2_foundation',
+    file: 'db/migrations/001_phase2_foundation.sql'
+  },
+  {
+    version: '002_nullable_historical_timestamps',
+    file: 'db/migrations/002_nullable_historical_timestamps.sql'
+  }
+];
+
 async function run() {
   console.log('=== Phase 2 Preflight Check & Migration ===\n');
   
@@ -35,49 +50,36 @@ async function run() {
     `);
     console.log(`schema_migrations:   PASS`);
 
-    // 4. Read & Hash SQL
-    const sqlPath = resolve('db/migrations/001_phase2_foundation.sql');
-    const sql = readFileSync(sqlPath, 'utf8');
-    const checksum = createHash('sha256').update(sql).digest('hex');
-    
-    // 5. Check Migration Ledger
-    const ledger = await client.query(`SELECT checksum FROM schema_migrations WHERE version = '001_phase2_foundation'`);
-    
-    const tableCheck = await client.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'releases'
-      );
-    `);
-    const releasesExists = tableCheck.rows[0].exists;
+    // 4 & 5. Run Ordered Migrations
+    for (const m of migrations) {
+      const sqlPath = resolve(m.file);
+      const sql = readFileSync(sqlPath, 'utf8');
+      const checksum = sha256(sql);
 
-    if (ledger.rowCount === 0) {
-      if (releasesExists) {
-        throw new Error('Inconsistent database: "releases" table exists but no ledger entry for 001_phase2_foundation.');
-      }
+      const ledger = await client.query(`SELECT checksum FROM schema_migrations WHERE version = $1`, [m.version]);
       
-      console.log(`\nExecuting 001_phase2_foundation.sql...`);
-      try {
-        await client.query('BEGIN');
-        await client.query(sql);
-        
-        await client.query(
-          `INSERT INTO schema_migrations (version, checksum) VALUES ($1, $2)`,
-          ['001_phase2_foundation', checksum]
-        );
-        await client.query('COMMIT');
-      } catch (err) {
-        await client.query('ROLLBACK');
-        throw err;
+      if (ledger.rowCount === 0) {
+        console.log(`\nExecuting ${m.file}...`);
+        try {
+          await client.query('BEGIN');
+          await client.query(sql);
+          await client.query(
+            `INSERT INTO schema_migrations (version, checksum) VALUES ($1, $2)`,
+            [m.version, checksum]
+          );
+          await client.query('COMMIT');
+        } catch (err) {
+          await client.query('ROLLBACK');
+          throw err;
+        }
+        console.log(`${m.version} checksum: PASS (recorded ${checksum.substring(0, 8)}...)`);
+      } else {
+        const storedChecksum = ledger.rows[0].checksum;
+        if (storedChecksum !== checksum) {
+          throw new Error(`Checksum mismatch for ${m.version}. Expected ${checksum}, found ${storedChecksum}`);
+        }
+        console.log(`${m.version} checksum: PASS (matched ${checksum.substring(0, 8)}...)`);
       }
-      console.log(`001 checksum:        PASS (recorded ${checksum.substring(0, 8)}...)`);
-    } else {
-      const storedChecksum = ledger.rows[0].checksum;
-      if (storedChecksum !== checksum) {
-        throw new Error(`Checksum mismatch for 001_phase2_foundation. Expected ${checksum}, found ${storedChecksum}`);
-      }
-      console.log(`001 checksum:        PASS (matched ${checksum.substring(0, 8)}...)`);
     }
 
     // --- SCHEMA VERIFICATION ---
@@ -138,6 +140,32 @@ async function run() {
     const foundIndexes = await client.query(`SELECT indexname FROM pg_indexes WHERE indexname = ANY($1)`, [expectedIndexes]);
     if (foundIndexes.rowCount !== expectedIndexes.length) throw new Error(`Missing indexes. Found ${foundIndexes.rowCount} of ${expectedIndexes.length}`);
     console.log(`expected indexes:                PASS`);
+
+    // 002 Assertions
+    const cols = await client.query(`
+      SELECT column_name, is_nullable, column_default 
+      FROM information_schema.columns 
+      WHERE table_name = 'releases'
+    `);
+    const getCol = (name) => cols.rows.find(c => c.column_name === name);
+    
+    if (getCol('created_at').is_nullable !== 'YES') throw new Error('created_at is not nullable');
+    console.log(`created_at nullable:             PASS`);
+    
+    if (getCol('updated_at').is_nullable !== 'YES') throw new Error('updated_at is not nullable');
+    console.log(`updated_at nullable:             PASS`);
+    
+    if (getCol('db_created_at').is_nullable !== 'NO') throw new Error('db_created_at is nullable');
+    console.log(`db_created_at NOT NULL:          PASS`);
+    
+    if (getCol('db_updated_at').is_nullable !== 'NO') throw new Error('db_updated_at is nullable');
+    console.log(`db_updated_at NOT NULL:          PASS`);
+    
+    if (!getCol('db_created_at').column_default.includes('now()')) throw new Error('db_created_at default invalid');
+    console.log(`db_created_at default:           PASS`);
+    
+    if (!getCol('db_updated_at').column_default.includes('now()')) throw new Error('db_updated_at default invalid');
+    console.log(`db_updated_at default:           PASS`);
 
     console.log('\n✅ P2-G1 — Schema migration applies cleanly to empty PostgreSQL: PASS');
   } catch (err) {
