@@ -10,43 +10,54 @@ The core data pipeline will respect the frozen Title/Format governance model:
 **Rule of Thumb:** YouTube → Registry → PostgreSQL. Never the reverse, and never skipping Registry.
 
 ## 2. Existing Data Flow & Files Audit
-- **YouTube Import**: `app/api/releases/import-youtube/route.ts` (currently manual, triggers on POST).
-- **Registry Layer**: `lib/cms-storage-server.ts` exposes `bulkSaveReleases` to mutate the `.data/cms-releases.json` canonical file.
-- **PostgreSQL Repository**: `server/db/release-repository.ts` exposes `insert`, `update`, but the live automatic replication from Registry does not currently exist in the API layer.
-- **YouTube Client**: `lib/youtube-data-api-readonly.ts` / `lib/youtube-analytics-client.ts` fetch the video data and `creatorContentType`.
+- **YouTube Import**: `app/api/releases/import-youtube/route.ts` (manual UI sync trigger).
+- **Registry Layer**: `lib/cms-storage-server.ts` exposes `bulkSaveReleases` to mutate canonical files.
+- **PostgreSQL Repository**: `server/db/release-repository.ts` currently performs individual non-transactional inserts/updates.
+- **YouTube Client**: `lib/youtube-data-api-readonly.ts` / `lib/youtube-analytics-client.ts` fetch video data and classification.
 
 ## 3. Proposed Pipeline Modifications & New Files
-- **New File (`app/api/internal/youtube-release-sync/route.ts`)**: A protected cron/scheduler endpoint requiring a valid `Authorization: Bearer CRON_SECRET` to execute automatically.
-- **Checkpoint Manager (`lib/sync-checkpoint.ts`)**: A new utility to securely persist and read `lastSuccessfulYouTubeSyncAt`, ensuring incremental discovery overlaps securely (e.g. looking back 24-48 hours before the checkpoint to catch stragglers).
-- **Update to `PostgresReleaseRepository`**: Add a `bulkUpsert` method or integrate replication logic to elegantly mirror Registry outputs into the PostgreSQL layer cleanly.
-- **Sync Audit Log (`lib/sync-audit-log.ts`)**: A durable audit storage (writing to a JSON array or similar persistent file `.data/sync-audit-log.json`) recording the strict metrics required per sync run (runId, triggeredAt, actions, invariant alarms).
+- **Shared Sync Service (`server/services/youtube-release-sync.ts`)**: Orchestrates the entire sync flow under a shared lock. Used by both manual and automatic routes.
+- **Automatic Endpoint (`app/api/internal/youtube-release-sync/route.ts`)**: Protected scheduler endpoint requiring `Authorization: Bearer CRON_SECRET`.
+- **Checkpoint & Audit Persistence (`lib/sync-checkpoint.ts`)**: Manages atomic reads/writes to `${DATA_DIR}/youtube-release-sync-checkpoint.json` and append-only `${DATA_DIR}/youtube-release-sync-audit.jsonl`.
+- **PostgreSQL Transactional Replication**: Adds `bulkUpsert()` to the repository, executing strictly within a `BEGIN / COMMIT / ROLLBACK` transaction.
 
-## 4. Transaction Sequence & Rollback Behavior
-The `/api/internal/youtube-release-sync` endpoint will strictly follow this sequence:
+## 4. Exact Transaction Sequence
+The shared sync service will strictly enforce this 20-step execution model:
 
-1. **Pre-flight & Checkpoint Load:** Authenticate, load `lastSuccessfulYouTubeSyncAt`, compute time window with a 48-hour overlap, and fetch Analytics content-type map.
-2. **Discovery:** Fetch incremental videos from YouTube using the computed window.
-3. **Canonical Mutation Prep:** Execute `mapVideoToRelease` against existing Registry records, preserving `canonicalTitle`, `slug`, and applying authoritative classification. Validate Zod schemas.
-4. **Registry Upsert:** `cmsServerStorage.bulkSaveReleases()`.
-5. **Replication Check:** Execute replication into PostgreSQL using `repository.upsert(release)` loop or bulk.
-   - *Rollback:* If PostgreSQL replication fails midway, the script throws an error, the sync checkpoint is **NOT** advanced, and the audit log records a severe error. The Registry will safely retain the data, but the next sync run will re-attempt replication idempotently.
-6. **Revalidate:** Call `revalidatePath` on cache boundaries (`/`, `/releases`).
-7. **Advance Checkpoint:** Only upon 100% success of Postgres replication, update `lastSuccessfulYouTubeSyncAt`.
-8. **Audit Log Write:** Append the run statistics to the sync audit history.
+0. **Acquire Lock**: Acquire exclusive PostgreSQL advisory sync lock (HTTP 409 if unavailable).
+1. **Init Audit**: Create audit run = `RUNNING`.
+2. **Load Checkpoint**: Load durable checkpoint (`lastSuccessfulYouTubeSyncAt`).
+3. **Discovery**: Discover YouTube candidates using a bounded overlap window.
+4. **Fetch Analytics**: Fetch authoritative Analytics classifications.
+5. **Resolve Registry**: Resolve existing Registry records by `youtubeId`.
+6. **Build Mutations**: Build proposed canonical records.
+7. **Assert Invariants**: Assert `canonicalTitle` unchanged, `slug` unchanged, governed metadata protected, and classification precedence respected (never overwrite higher-authority classification with weaker or missing Analytics).
+8. **Zod Validation**: Zod-validate ALL candidate records.
+9. **Separate Actions**: Determine which records are `created`, materially `updated`, or completely `unchanged` (unchanged records bypass writing to ensure true idempotency).
+10. **Registry Upsert**: Perform atomic `bulkSaveReleases()` on created + materially updated records only.
+   - *Registry Failure:* Abort before Postgres replication. NO Registry mutation, NO checkpoint movement. Restore/re-hydrate durable Registry state. Audit logs failure.
+11. **Read Back**: Read back the saved canonical Registry records.
+12. **Begin Transaction**: `BEGIN` PostgreSQL replication transaction.
+13. **Replicate**: Replicate the exact Registry outputs into PostgreSQL. (PostgreSQL receives ONLY the record returned by Registry, preventing semantic drift).
+14. **Verify Replica**: Verify PostgreSQL payload parity.
+15. **Commit/Rollback**: `COMMIT` or completely `ROLLBACK` on any failure.
+   - *Postgres Failure:* `ROLLBACK` replica, leave Registry as new canonical state, checkpoint remains unchanged.
+16. **Revalidate Cache**: Call `revalidatePath` on public routes (`/`, `/releases`).
+17. **Finalize Audit**: Append the detailed sync evidence to the JSONL log.
+18. **Advance Checkpoint**: Atomically advance the sync checkpoint.
+19. **Release Lock**: Release the exclusive sync lock.
 
 ## 5. Evidence Plan for Acceptance Gates
-- **P2.2-G1 (Frozen baseline unchanged):** Git diff verifies `page.tsx` and mapping files' governance constraints remain strictly intact.
-- **P2.2-G2 (New upload discovered):** Run the sync script, then upload (or simulate) a new YouTube video, re-run, observe pick-up via checkpoint logic.
-- **P2.2-G3 (Registry before Postgres):** Code inspection confirms `cmsServerStorage` commits before Postgres replication begins.
-- **P2.2-G4 & P2.2-G5 (canonicalTitle & slug preserved):** Overwrite a YouTube video's title to a Variant B; the audit log will explicitly assert `canonicalTitleChanged: false` and `slugChanged: false`.
-- **P2.2-G6 (creatorContentType correct):** Inject a mock Short and verify Postgres reads `format: 'short', source: 'youtube_analytics'`.
-- **P2.2-G7 (Zero duplicates on idempotency):** Running the sync endpoint 3 times in a row produces `0 new`, `0 duplicates`.
-- **P2.2-G8 (Failure checkpoint halt):** Inject a deliberate Postgres throw; observe that `lastSuccessfulYouTubeSyncAt` does not move.
-- **P2.2-G9 (PostgreSQL matches Registry):** Data comparison test between `cms-releases.json` and Postgres `SELECT *` payload.
-- **P2.2-G10 & P2.2-G11 (Chronology):** The `/releases?sort=newest` API identically matches the YouTube "Latest" queue output.
-- **P2.2-G12 (Manual Sync):** The legacy manual `/admin/youtube-sync` POST request remains functional.
-- **P2.2-G13 (Scheduler Protected):** GET/POST to `/api/internal/...` without token returns HTTP 401.
-- **P2.2-G14 (Structured sync audit evidence):** Observe the generated `.data/sync-audit.log` file containing `runId`, `newCount`, etc.
-- **P2.2-G15 (Clean compilation):** `tsc --noEmit` returns 0 errors.
-
-Please review this transaction sequence and evidence plan. I will not proceed with coding until this design is confirmed internally consistent.
+- **P2.2-G1 (Frozen baseline unchanged):** Git diff verifies validation schema, CMSRelease type, DB schema/type contract, release mapper, DTO, public filters, and GEMINI doctrine remain 100% strictly intact without semantic modification.
+- **P2.2-G2 (New upload discovered):** Sync script detects and imports new YouTube videos via checkpoint overlap logic.
+- **P2.2-G3 (Registry before Postgres):** Code inspection confirms `cmsServerStorage` commits before Postgres replication `BEGIN` statement.
+- **P2.2-G4 & P2.2-G5 (canonicalTitle & slug preserved):** Overwrite a YouTube video's title; audit log explicitly asserts `canonicalTitleChanged: false` and `slugChanged: false`.
+- **P2.2-G6 (creatorContentType correct):** Inject a mock Short and verify Postgres reads `format: 'short'` and `formatClassificationSource: 'youtube_analytics'`. (`source` remains `youtube` or existing provenance).
+- **P2.2-G7 (True idempotency):** Successive sync runs on unchanged upstream material produce exactly `0 created, 0 updated, N unchanged`, generating zero Registry or Postgres writes.
+- **P2.2-G8 (Failure checkpoint halt):** Inject deliberate PostgreSQL and Registry throws; observe `lastSuccessfulYouTubeSyncAt` does not advance.
+- **P2.2-G9 (PostgreSQL matches Registry):** Data comparison test between canonical `cms-releases.json` and PostgreSQL payload output.
+- **P2.2-G10 & P2.2-G11 (Chronology & Convergence):** `/api/releases?status=published&governance=native_governed&sort=newest&pageSize=20` perfectly matches the eligible native-governed YouTube Latest sequence by `youtubeId`.
+- **P2.2-G12 (Manual Sync):** `POST /api/releases/import-youtube` delegates safely to the shared sync service and respects the shared lock.
+- **P2.2-G13 (Scheduler Protected & Locked):** `/api/internal/youtube-release-sync` requires a CRON token, and simultaneous overlapping cron/manual calls yield HTTP 409 (Already Running).
+- **P2.2-G14 (Structured sync audit evidence):** Observe `${DATA_DIR}/youtube-release-sync-audit.jsonl` accurately records immutable `runId`, actions, failures, and invariant alarm states.
+- **P2.2-G15 (Clean compilation):** `tsc --noEmit` perfectly returns 0 errors.
