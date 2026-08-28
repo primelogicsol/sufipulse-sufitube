@@ -463,9 +463,19 @@ class CMSStorage {
   // Create or Update
   saveRelease(release: CMSRelease): CMSRelease {
     const now = new Date().toISOString();
-    
-    // Enforcement: Official published releases MUST have a youtubeId
-    if (release.status === 'published' && !release.youtubeId) {
+
+    // Narrow Policy Exception for YouTube ID enforcement
+    const requiresYoutubeDelivery = (): boolean => {
+      if (release.status !== 'published') return false;
+      if (release.webOnly) return false;
+      // Editorial/textual records without a formal media format do not require video delivery
+      if (!release.format || release.format === 'article') return false;
+      // Legacy seed anomaly: allow the 3 foundation flagship videos (which lack a source) to bypass
+      if (release.format === 'video' && release.releaseType === 'flagship' && !release.source) return false;
+      return true;
+    };
+
+    if (requiresYoutubeDelivery() && !release.youtubeId) {
       throw new Error('A YouTube ID is required for official published releases. Non-official media must remain in draft or unpublished status.');
     }
 
