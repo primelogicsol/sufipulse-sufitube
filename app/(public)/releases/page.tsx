@@ -332,11 +332,20 @@ export default function Releases() {
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-    const [durationFilter, setDurationFilter] = useState<DurationFilter>('default');
+    const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
     const [yearFilter, setYearFilter] = useState<string>('all');
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+
+    const formatSeconds = (totalSeconds: number): string => {
+        if (!totalSeconds) return '0:00';
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
 
     const fetchVideos = async (silent = false, refresh = false) => {
         if (!silent) setLoading(true);
@@ -358,6 +367,8 @@ export default function Releases() {
             
             const mappedData = cmsData.map((r: any) => {
                 const source = r.source || 'native';
+                const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
+                const durationFormatted = r.durationFormatted || r.duration || formatSeconds(durationSecs);
                 return {
                     id: r.youtubeId || r.id,
                     slug: r.slug,
@@ -366,8 +377,8 @@ export default function Releases() {
                     thumbnailUrl: r.thumbnail || r.thumbnailUrl || '',
                     publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
                     publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
-                    durationSeconds: Number(r.durationSeconds || 0),
-                    durationFormatted: r.duration || r.durationFormatted || '0:00',
+                    durationSeconds: durationSecs,
+                    durationFormatted: durationFormatted,
                     views: Number(r.views || r.viewCount || 0),
                     source: source,
                     format: r.format || 'video',
@@ -751,7 +762,7 @@ export default function Releases() {
                         <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {paginatedReleases.map((release) => {
-                                    const thumbCandidates = buildYouTubeThumbnailCandidates(release.id, [release.thumbnailUrl]);
+                                    const thumbCandidates = buildYouTubeThumbnailCandidates(release.youtubeId || release.id, [release.thumbnailUrl]);
                                     return (
                                         <Link 
                                             key={release.id + release.slug} 
