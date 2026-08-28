@@ -2,7 +2,7 @@
   {
     "id": "release_ik-khamoshi-tu-aur-main",
     "slug": "ik-khamoshi-tu-aur-main",
-    "title": "Ik Khamoshi, Tu Aur Main | Mystical Kalam | Ishq • Fanā • Baqā | Dr. Zarf-e-Noori | SufiPulse USA",
+    "title": "Ik Khamoshi, Tu Aur Main",
     "status": "published",
     "visible": true,
     "source": "manual_youtube_seed",
@@ -39,11 +39,20 @@
     "embedUrl": "https://www.youtube.com/embed/Dbd0fhJty4A",
     "views": 8,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Ik Khamoshi, Tu Aur Main",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Mystical Kalam • Ishq • Fanā • Baqā",
+    "youtubeTitle": "Ik Khamoshi, Tu Aur Main | Mystical Kalam | Ishq • Fanā • Baqā | Dr. Zarf-e-Noori | SufiPulse USA",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/Dbd0fhJty4A/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/Dbd0fhJty4A/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913815_aMzdiIuYgK4",
-    "title": "Take Control – A Ramadan Prayer | English & Urdu | Ramadan Reset Reflection | SufiPulse USA",
+    "title": "Take Control – A Ramadan Prayer",
     "slug": "take-control-a-ramadan-prayer-english-urdu-ramadan-reset-reflection-sufipulse-usa",
     "youtubeId": "aMzdiIuYgK4",
     "youtubeUrl": "https://www.youtube.com/watch?v=aMzdiIuYgK4",
@@ -549,11 +558,20 @@
       }
     },
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Take Control – A Ramadan Prayer",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Ramadan Reset Reflection",
+    "youtubeTitle": "Take Control – A Ramadan Prayer",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/aMzdiIuYgK4/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/aMzdiIuYgK4/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775202913816_g9VGzWRHZ0g",
-    "title": "SufiPulse Studio I Aaja Sufi Banja I Step Away From Ego",
+    "title": "Aaja Sufi Ban Ja",
     "slug": "sufipulse-studio-i-aaja-sufi-banja-i-step-away-from-ego",
     "youtubeId": "g9VGzWRHZ0g",
     "youtubeUrl": "https://www.youtube.com/watch?v=g9VGzWRHZ0g",
@@ -676,11 +694,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Aaja Sufi Ban Ja",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Step Away From Ego",
+    "youtubeTitle": "Aaja Sufi Banja I Step Away From Ego",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/g9VGzWRHZ0g/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/g9VGzWRHZ0g/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913816__zx1N_xZzys",
-    "title": "SufiPulse Studio I Nazar e karam kar de Thori si to lift kar de (A Prayer for Inner Elevation)",
+    "title": "Nazar-e-Karam Kar De",
     "slug": "sufipulse-studio-i-nazar-e-karam-kar-de-thori-si-to-lift-kar-de-a-prayer-for-inner-elevation",
     "youtubeId": "_zx1N_xZzys",
     "youtubeUrl": "https://www.youtube.com/watch?v=_zx1N_xZzys",
@@ -806,11 +833,20 @@
     },
     "views": 296,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Nazar-e-Karam Kar De",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "A Prayer for Inner Elevation",
+    "youtubeTitle": "Nazar e karam kar de Thori si to lift kar de (A Prayer for Inner Elevation)",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/_zx1N_xZzys/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/_zx1N_xZzys/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913817_n6q_g4bY_sA",
-    "title": "SufiPusle Studio  I Main Hoon Sufi Researcher | A Sufi Reflection for Those Who Study the World",
+    "title": "Main Hoon Sufi Researcher",
     "slug": "sufipusle-studio-i-main-hoon-sufi-researcher-a-sufi-reflection-for-those-who-study-the-world",
     "youtubeId": "n6q_g4bY_sA",
     "youtubeUrl": "https://www.youtube.com/watch?v=n6q_g4bY_sA",
@@ -935,11 +971,20 @@
     },
     "views": 74,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Main Hoon Sufi Researcher",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "A Sufi Reflection for Those Who Study the World",
+    "youtubeTitle": "Main Hoon Sufi Researcher | A Sufi Reflection for Those Who Study the World",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/n6q_g4bY_sA/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/n6q_g4bY_sA/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913817_lMxb4Dk-n0Y",
-    "title": "SufiPusle Studio  I  Ya Dost I Asma se Qalb Tak I How Divine Names Shape Responsibility,",
+    "title": "Ya Dost – Asma Se Qalb Tak",
     "slug": "sufipusle-studio-i-ya-dost-i-asma-se-qalb-tak-i-how-divine-names-shape-responsibility",
     "youtubeId": "lMxb4Dk-n0Y",
     "youtubeUrl": "https://www.youtube.com/watch?v=lMxb4Dk-n0Y",
@@ -1062,11 +1107,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Ya Dost – Asma Se Qalb Tak",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "How Divine Names Shape the Heart",
+    "youtubeTitle": "Ya Dost I Asma se Qalb Tak I How Divine Names Shape Responsibility,",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/lMxb4Dk-n0Y/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/lMxb4Dk-n0Y/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913818_QkGzXGrEllo",
-    "title": "SufiPusle Studio  I  Haji Naam Mila, Par Badla Kya ? I The Journey Ended. Did the Ego?",
+    "title": "Haji Naam Mila, Par Badla Kya?",
     "slug": "sufipusle-studio-i-haji-naam-mila-par-badla-kya-i-the-journey-ended-did-the-ego",
     "youtubeId": "QkGzXGrEllo",
     "youtubeUrl": "https://www.youtube.com/watch?v=QkGzXGrEllo",
@@ -1189,11 +1243,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Haji Naam Mila, Par Badla Kya?",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "The Journey Within",
+    "youtubeTitle": "Haji Naam Mila, Par Badla Kya ? I The Journey Ended. Did the Ego?",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/QkGzXGrEllo/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/QkGzXGrEllo/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913818_FelED4DBHCk",
-    "title": "SufiPusle Studio  I  Zair-o-Zabar ka Jalwa | Qira’at-e-Qur’an That Outlived the Fire",
+    "title": "Zair-o-Zabar Ka Jalwa",
     "slug": "sufipusle-studio-i-zair-o-zabar-ka-jalwa-qira-at-e-qur-an-that-outlived-the-fire",
     "youtubeId": "FelED4DBHCk",
     "youtubeUrl": "https://www.youtube.com/watch?v=FelED4DBHCk",
@@ -1502,11 +1565,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Zair-o-Zabar Ka Jalwa",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Qira'at-e-Qur'an That Awakens the Soul",
+    "youtubeTitle": "Zair-o-Zabar ka Jalwa | Qira’at-e-Qur’an That Outlived the Fire",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/FelED4DBHCk/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/FelED4DBHCk/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913818_k0D188oBZ1Y",
-    "title": "Khwaja Mere Khwaja | A Devotional Adaptation | SufiPulse",
+    "title": "Khwaja Mere Khwaja",
     "slug": "khwaja-mere-khwaja-a-devotional-adaptation-sufipulse",
     "youtubeId": "k0D188oBZ1Y",
     "youtubeUrl": "https://www.youtube.com/watch?v=k0D188oBZ1Y",
@@ -1632,11 +1704,20 @@
     },
     "views": 536,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Khwaja Mere Khwaja",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "A Devotional Adaptation",
+    "youtubeTitle": "Khwaja Mere Khwaja | A Devotional Adaptation | SufiPulse",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/k0D188oBZ1Y/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/k0D188oBZ1Y/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913819_sPOY59RAkAU",
-    "title": "A-las-tu Ki Goonj | Rab Ki Khamoshi Mein Rooh I Song for abled children & those who stand with them",
+    "title": "A-las-tu Ki Goonj",
     "slug": "a-las-tu-ki-goonj-rab-ki-khamoshi-mein-rooh-i-song-for-abled-children-those-who-stand-with-them",
     "youtubeId": "sPOY59RAkAU",
     "youtubeUrl": "https://www.youtube.com/watch?v=sPOY59RAkAU",
@@ -1762,11 +1843,20 @@
     },
     "views": 1000,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "A-las-tu Ki Goonj",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Rab Ki Khamoshi Mein Rooh",
+    "youtubeTitle": "A-las-tu Ki Goonj | Rab Ki Khamoshi Mein Rooh I Song for abled children & those who stand with them",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/sPOY59RAkAU/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/sPOY59RAkAU/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913819_24SrdzzLYus",
-    "title": "Gardish I Rab Ki Khamosh Daleel I The Inescapable Cycle",
+    "title": "Gardish",
     "slug": "gardish-i-rab-ki-khamosh-daleel-i-the-inescapable-cycle",
     "youtubeId": "24SrdzzLYus",
     "youtubeUrl": "https://www.youtube.com/watch?v=24SrdzzLYus",
@@ -1889,11 +1979,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Gardish",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Rab Ki Khamosh Daleel • The Inescapable Cycle",
+    "youtubeTitle": "Gardish I Rab Ki Khamosh Daleel I The Inescapable Cycle",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/24SrdzzLYus/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/24SrdzzLYus/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913820_XPaJu3lHd5Y",
-    "title": "Ye Lakeerein Nahi, Lauh e Mehfooz Ki Tahrirein I Sufi reflection on destiny & trust",
+    "title": "Ye Lakeerein Nahi, Lauh-e-Mehfooz Ki Tahrirein",
     "slug": "ye-lakeerein-nahi-lauh-e-mehfooz-ki-tahrirein-i-sufi-reflection-on-destiny-trust",
     "youtubeId": "XPaJu3lHd5Y",
     "youtubeUrl": "https://www.youtube.com/watch?v=XPaJu3lHd5Y",
@@ -2016,11 +2115,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Ye Lakeerein Nahi, Lauh-e-Mehfooz Ki Tahrirein",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "A Sufi Reflection on Destiny",
+    "youtubeTitle": "Ye Lakeerein Nahi, Lauh e Mehfooz Ki Tahrirein I Sufi reflection on destiny & trust",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/XPaJu3lHd5Y/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/XPaJu3lHd5Y/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913820_LwnPXSEJJHI",
-    "title": "Sufi Hacker | Dil Ka Code Reader - A SufiPulse Original (For Developers & Thinkers)",
+    "title": "Sufi Hacker – Dil Ka Code Reader",
     "slug": "sufi-hacker-dil-ka-code-reader-a-sufipulse-original-for-developers-thinkers",
     "youtubeId": "LwnPXSEJJHI",
     "youtubeUrl": "https://www.youtube.com/watch?v=LwnPXSEJJHI",
@@ -2146,11 +2254,20 @@
     },
     "views": 1800,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Sufi Hacker – Dil Ka Code Reader",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "For Developers and Seekers",
+    "youtubeTitle": "Sufi Hacker | Dil Ka Code Reader - A SufiPulse Original (For Developers & Thinkers)",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/LwnPXSEJJHI/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/LwnPXSEJJHI/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775202913821_be6GFwGpobw",
-    "title": "“Needle to Noor | سادۂ نجات | Saada-e-Najaat” ( Voice for the Mubtala, the one caught in addiction)",
+    "title": "Needle to Noor (Saada-e-Najaat)",
     "slug": "needle-to-noor-saada-e-najaat-voice-for-the-mubtala-the-one-caught-in-addiction",
     "youtubeId": "be6GFwGpobw",
     "youtubeUrl": "https://www.youtube.com/watch?v=be6GFwGpobw",
@@ -2270,11 +2387,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Needle to Noor (Saada-e-Najaat)",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Voice for the Mubtala",
+    "youtubeTitle": "“Needle to Noor | سادۂ نجات | Saada-e-Najaat” ( Voice for the Mubtala, the one caught in addiction)",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/be6GFwGpobw/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/be6GFwGpobw/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218431_8nmW-vJbwMA",
-    "title": "13 January 2026",
+    "title": "SufiPulse Studio Session – 13 January 2026",
     "slug": "13-january-2026",
     "youtubeId": "8nmW-vJbwMA",
     "youtubeUrl": "https://www.youtube.com/watch?v=8nmW-vJbwMA",
@@ -2396,7 +2522,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "SufiPulse Studio Session – 13 January 2026",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Recording Session",
+    "youtubeTitle": "13 January 2026",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/8nmW-vJbwMA/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/8nmW-vJbwMA/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218439_X_7bA19M1E8",
@@ -2520,7 +2655,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "ShortNeedle to Noor | سادۂ نجات | Saada-e-Najaat",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "ShortNeedle to Noor | سادۂ نجات | Saada-e-Najaat",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/X_7bA19M1E8/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/X_7bA19M1E8/maxresdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218440_vKVAKJgOa5I",
@@ -2646,7 +2790,16 @@
     },
     "views": 467,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Ya Ghaus ul Azam | Madad Ban Kar Aaja | Come as My Helper",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "Ya Ghaus ul Azam | Madad Ban Kar Aaja | Come as My Helper",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/vKVAKJgOa5I/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/vKVAKJgOa5I/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218441_BFG-8G3-thY",
@@ -2770,7 +2923,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Main Habba Hoon | Meri Kahani Dilon Mein Hai | Kagazon Mein Nahi",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "Main Habba Hoon | Meri Kahani Dilon Mein Hai | Kagazon Mein Nahi",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/BFG-8G3-thY/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/BFG-8G3-thY/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218442_jV-f1b_qSYU",
@@ -2894,7 +3056,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Khaaki Banda (Updated via Legacy Save)",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "Khaaki Banda | Satrangi | Manrangi | Zaat Magar Faani Teri",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/jV-f1b_qSYU/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/jV-f1b_qSYU/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218443_zFD8rHYcx-w",
@@ -3018,7 +3189,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Agar Mohammad ﷺ Na Hotay | Subtitled in 17 Languages",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "Agar Mohammad ﷺ Na Hotay | Subtitled in 17 Languages",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/zFD8rHYcx-w/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/zFD8rHYcx-w/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218443_A0Xrk-Jp9OI",
@@ -3145,7 +3325,16 @@
     },
     "views": 1100,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "RANGDAY YA-ALLAH | The Color of Return",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "RANGDAY YA-ALLAH | The Color of Return",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/A0Xrk-Jp9OI/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/A0Xrk-Jp9OI/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218444_QrNA31-s8u0",
@@ -3272,7 +3461,16 @@
     },
     "views": 1900,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Bulla Ki Jaana Main Kaun | Find Who You Are",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "Bulla Ki Jaana Main Kaun | Find Who You Are",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/QrNA31-s8u0/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/QrNA31-s8u0/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218445_lqMkErpT3dQ",
@@ -3400,7 +3598,16 @@
     },
     "views": 473,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Bas Karjee Hun Bas Karjee | Bulleh Shah Adaptation Version",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "Bas Karjee Hun Bas Karjee | Bulleh Shah Adaptation Version",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/lqMkErpT3dQ/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/lqMkErpT3dQ/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218446_jdGv8DEu4pE",
@@ -3524,11 +3731,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "सूफ़ीपल्स | सूफ़ी कविता और संगीत का एक वैश्विक आंदोलन – आज ही रजिस्टर करें।",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "",
+    "youtubeTitle": "सूफ़ीपल्स | सूफ़ी कविता और संगीत का एक वैश्विक आंदोलन – आज ही रजिस्टर करें।",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/jdGv8DEu4pE/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/jdGv8DEu4pE/maxresdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218447_Sp4cG8TI7i8",
-    "title": "SufiPulse | A Global Movement of Sufi Poetry & Music – Register Today.",
+    "title": "A Global Movement of Sufi Poetry & Music",
     "slug": "sufipulse-a-global-movement-of-sufi-poetry-music-register-today",
     "youtubeId": "Sp4cG8TI7i8",
     "youtubeUrl": "https://www.youtube.com/watch?v=Sp4cG8TI7i8",
@@ -3648,11 +3864,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "A Global Movement of Sufi Poetry & Music",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Institutional Movement Anthem",
+    "youtubeTitle": "SufiPulse | A Global Movement of Sufi Poetry & Music – Register Today.",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/Sp4cG8TI7i8/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/Sp4cG8TI7i8/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218447_nn3gXZQqX84",
-    "title": "صوفی پلس | صوفی شاعری اور موسیقی کی ایک عالمی تحریک – آج ہی رجسٹر کریں",
+    "title": "صوفی پلس | عالمی تحریک",
     "slug": "release-nn3gxzqqx84",
     "youtubeId": "nn3gXZQqX84",
     "youtubeUrl": "https://www.youtube.com/watch?v=nn3gXZQqX84",
@@ -3772,11 +3997,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "صوفی پلس | عالمی تحریک",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "عالمی صوفی تحریک",
+    "youtubeTitle": "صوفی پلس | صوفی شاعری اور موسیقی کی ایک عالمی تحریک – آج ہی رجسٹر کریں",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/nn3gXZQqX84/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/nn3gXZQqX84/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218448__BxraDL7kS0",
-    "title": "Korthas Aye Sanam | Breaking All Measures of Longing.",
+    "title": "Korthas Aye Sanam",
     "slug": "korthas-aye-sanam-breaking-all-measures-of-longing",
     "youtubeId": "_BxraDL7kS0",
     "youtubeUrl": "https://www.youtube.com/watch?v=_BxraDL7kS0",
@@ -3899,11 +4133,20 @@
     },
     "views": 1100,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Korthas Aye Sanam",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Breaking All Measures of Longing",
+    "youtubeTitle": "Korthas Aye Sanam | Breaking All Measures of Longing.",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/_BxraDL7kS0/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/_BxraDL7kS0/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218449_kVtYDOa5hPs",
-    "title": "I Told My Beloved, Let’s Begin A Friendship | Dapyomas Baalyaaras Yaaer Laagav",
+    "title": "Dapyomas Baalyaaras Yaaer Laagav",
     "slug": "i-told-my-beloved-let-s-begin-a-friendship-dapyomas-baalyaaras-yaaer-laagav",
     "youtubeId": "kVtYDOa5hPs",
     "youtubeUrl": "https://www.youtube.com/watch?v=kVtYDOa5hPs",
@@ -4023,11 +4266,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Dapyomas Baalyaaras Yaaer Laagav",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "I Told My Beloved, Let's Begin A Friendship",
+    "youtubeTitle": "I Told My Beloved, Let’s Begin A Friendship | Dapyomas Baalyaaras Yaaer Laagav",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/kVtYDOa5hPs/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/kVtYDOa5hPs/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218450_Ykx2PwA4mOk",
-    "title": "Al-Razzāq | Rozi Sirf Tujh Se Hai",
+    "title": "Al-Razzāq",
     "slug": "al-razz-q-rozi-sirf-tujh-se-hai",
     "youtubeId": "Ykx2PwA4mOk",
     "youtubeUrl": "https://www.youtube.com/watch?v=Ykx2PwA4mOk",
@@ -4147,11 +4399,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Al-Razzāq",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Rozi Sirf Tujh Se Hai",
+    "youtubeTitle": "Al-Razzāq | Rozi Sirf Tujh Se Hai",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/Ykx2PwA4mOk/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/Ykx2PwA4mOk/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218451_srM451HZEOE",
-    "title": "Yeh Ummat Hai | Ya Khwaab Ka Dhoka? #shorts #SufiPullseUSA",
+    "title": "Yeh Ummat Hai Ya Khwaab Ka Dhoka?",
     "slug": "yeh-ummat-hai-ya-khwaab-ka-dhoka-shorts-sufipullseusa",
     "youtubeId": "srM451HZEOE",
     "youtubeUrl": "https://www.youtube.com/watch?v=srM451HZEOE",
@@ -4269,11 +4530,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Yeh Ummat Hai Ya Khwaab Ka Dhoka?",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Reflection",
+    "youtubeTitle": "Yeh Ummat Hai | Ya Khwaab Ka Dhoka? #shorts #SufiPullseUSA",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/srM451HZEOE/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/srM451HZEOE/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218452_p2SWi4XduOU",
-    "title": "Mansur | Jala! Mita! Bana! Saja! #shorts #SufiPulse",
+    "title": "Mansur – Jala! Mita! Bana! Saja!",
     "slug": "mansur-jala-mita-bana-saja-shorts-sufipulse",
     "youtubeId": "p2SWi4XduOU",
     "youtubeUrl": "https://www.youtube.com/watch?v=p2SWi4XduOU",
@@ -4391,11 +4661,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Mansur – Jala! Mita! Bana! Saja!",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Kalam",
+    "youtubeTitle": "Mansur | Jala! Mita! Bana! Saja! #shorts #SufiPulse",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/p2SWi4XduOU/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/p2SWi4XduOU/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218452_CcCVyM3G7JE",
-    "title": "Dapyomas Baleyaaras Yaar Laagav #shorts #sufiPulse",
+    "title": "Dapyomas Baleyaaras Yaar Laagav",
     "slug": "dapyomas-baleyaaras-yaar-laagav-shorts-sufipulse",
     "youtubeId": "CcCVyM3G7JE",
     "youtubeUrl": "https://www.youtube.com/watch?v=CcCVyM3G7JE",
@@ -4516,11 +4795,20 @@
     },
     "views": 1100,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Dapyomas Baleyaaras Yaar Laagav",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Kashmiri Sacred Kalam",
+    "youtubeTitle": "Dapyomas Baleyaaras Yaar Laagav #shorts #sufiPulse",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/CcCVyM3G7JE/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/CcCVyM3G7JE/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218453_BzcmOqiIHck",
-    "title": "SUFIPULSE | YouTube Insights & Global Reach",
+    "title": "SufiPulse Global Reach & YouTube Intelligence",
     "slug": "sufipulse-youtube-insights-global-reach",
     "youtubeId": "BzcmOqiIHck",
     "youtubeUrl": "https://www.youtube.com/watch?v=BzcmOqiIHck",
@@ -4641,11 +4929,20 @@
     },
     "views": 102,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "SufiPulse Global Reach & YouTube Intelligence",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Audience Insight Overview",
+    "youtubeTitle": "SUFIPULSE | YouTube Insights & Global Reach",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/BzcmOqiIHck/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/BzcmOqiIHck/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218454_hbe-e1x1yAU",
-    "title": "Dapyomas  Baleyaaras Yaar Laagav | Sung by Non-Kashmiri Singers, Vessels of the Soch Kral’s flame.",
+    "title": "Dapyomas Baleyaaras Yaar Laagav",
     "slug": "dapyomas-baleyaaras-yaar-laagav-sung-by-non-kashmiri-singers-vessels-of-the-soch-kral-s-flame",
     "youtubeId": "hbe-e1x1yAU",
     "youtubeUrl": "https://www.youtube.com/watch?v=hbe-e1x1yAU",
@@ -4763,11 +5060,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Dapyomas Baleyaaras Yaar Laagav",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Vessels of the Soch Kral's Flame",
+    "youtubeTitle": "Dapyomas  Baleyaaras Yaar Laagav | Sung by Non-Kashmiri Singers, Vessels of the Soch Kral’s flame.",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/hbe-e1x1yAU/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/hbe-e1x1yAU/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218455_tNttnPKjdPg",
-    "title": "Yeh Ummat Hai? Ya Khwaab Ka Dhoka? | Forgotten Last Sermon",
+    "title": "Yeh Ummat Hai? Ya Khwaab Ka Dhoka?",
     "slug": "yeh-ummat-hai-ya-khwaab-ka-dhoka-forgotten-last-sermon",
     "youtubeId": "tNttnPKjdPg",
     "youtubeUrl": "https://www.youtube.com/watch?v=tNttnPKjdPg",
@@ -4888,11 +5194,20 @@
     },
     "views": 878,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Yeh Ummat Hai? Ya Khwaab Ka Dhoka?",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "The Forgotten Last Sermon",
+    "youtubeTitle": "Yeh Ummat Hai? Ya Khwaab Ka Dhoka? | Forgotten Last Sermon",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/tNttnPKjdPg/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/tNttnPKjdPg/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218456_LMen31sMjMg",
-    "title": "Kumar – Qalandar e Zaman | Tribute to Caravan of Sufi Scientists",
+    "title": "Kumar – Qalandar-e-Zaman",
     "slug": "kumar-qalandar-e-zaman-tribute-to-caravan-of-sufi-scientists",
     "youtubeId": "LMen31sMjMg",
     "youtubeUrl": "https://www.youtube.com/watch?v=LMen31sMjMg",
@@ -5013,11 +5328,20 @@
     },
     "views": 2100,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Kumar – Qalandar-e-Zaman",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Tribute to Caravan of Sufi Scientists",
+    "youtubeTitle": "Kumar – Qalandar e Zaman | Tribute to Caravan of Sufi Scientists",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/LMen31sMjMg/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/LMen31sMjMg/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218457__5a7HNedpUw",
-    "title": "Main Silsila e  Owais Hoon | A  Soul-Call.",
+    "title": "Main Silsila-e-Owais Hoon",
     "slug": "main-silsila-e-owais-hoon-a-soul-call",
     "youtubeId": "_5a7HNedpUw",
     "youtubeUrl": "https://www.youtube.com/watch?v=_5a7HNedpUw",
@@ -5135,11 +5459,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Main Silsila-e-Owais Hoon",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "A Soul-Call",
+    "youtubeTitle": "Main Silsila e  Owais Hoon | A  Soul-Call.",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/_5a7HNedpUw/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/_5a7HNedpUw/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218458_NfFq4qjiWDA",
-    "title": "Ya Rab Mujhe Rizq-e Halaal De | A Dua in the Spirit of Iqbal (RA)",
+    "title": "Ya Rab Mujhe Rizq-e-Halaal De",
     "slug": "ya-rab-mujhe-rizq-e-halaal-de-a-dua-in-the-spirit-of-iqbal-ra",
     "youtubeId": "NfFq4qjiWDA",
     "youtubeUrl": "https://www.youtube.com/watch?v=NfFq4qjiWDA",
@@ -5257,11 +5590,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Ya Rab Mujhe Rizq-e-Halaal De",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "A Dua in the Spirit of Allama Iqbal",
+    "youtubeTitle": "Ya Rab Mujhe Rizq-e Halaal De | A Dua in the Spirit of Iqbal (RA)",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/NfFq4qjiWDA/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/NfFq4qjiWDA/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218459_3axIOaWesf0",
-    "title": "Teri Mitti… Mera Kashmir | Sufi Anthem for Kashmir’s Soul",
+    "title": "Teri Mitti… Mera Kashmir",
     "slug": "teri-mitti-mera-kashmir-sufi-anthem-for-kashmir-s-soul",
     "youtubeId": "3axIOaWesf0",
     "youtubeUrl": "https://www.youtube.com/watch?v=3axIOaWesf0",
@@ -5379,7 +5721,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Teri Mitti… Mera Kashmir",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sufi Anthem for Kashmir's Soul",
+    "youtubeTitle": "Teri Mitti… Mera Kashmir | Sufi Anthem for Kashmir’s Soul",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/3axIOaWesf0/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/3axIOaWesf0/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218460_3JmvkoRwM-0",
@@ -5501,11 +5852,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Mansoor! Jala! Mita! Bana! Saja!",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Ecstatic Remembrance",
+    "youtubeTitle": "Mansoor! Jala! Mita! Bana! Saja!",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/3JmvkoRwM-0/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/3JmvkoRwM-0/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218461_hXAJUFwEuGk",
-    "title": "Sheikh! Sheikh! Noorani (RA) | Father of Sustainable Development",
+    "title": "Sheikh Noorani (RA) – Alamdar-e-Kashmir",
     "slug": "sheikh-sheikh-noorani-ra-father-of-sustainable-development",
     "youtubeId": "hXAJUFwEuGk",
     "youtubeUrl": "https://www.youtube.com/watch?v=hXAJUFwEuGk",
@@ -5623,11 +5983,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Sheikh Noorani (RA) – Alamdar-e-Kashmir",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Father of Sustainable Devotion",
+    "youtubeTitle": "Sheikh! Sheikh! Noorani (RA) | Father of Sustainable Development",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/hXAJUFwEuGk/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/hXAJUFwEuGk/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218462_cYAxRG1ESbo",
-    "title": "SufiPulse - A Universal Sufi Call - Kashmir’s Voice in Every Tongue",
+    "title": "A Universal Sufi Call",
     "slug": "sufipulse-a-universal-sufi-call-kashmir-s-voice-in-every-tongue",
     "youtubeId": "cYAxRG1ESbo",
     "youtubeUrl": "https://www.youtube.com/watch?v=cYAxRG1ESbo",
@@ -5745,11 +6114,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "A Universal Sufi Call",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Kashmir's Voice in Every Tongue",
+    "youtubeTitle": "SufiPulse - A Universal Sufi Call - Kashmir’s Voice in Every Tongue",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/cYAxRG1ESbo/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/cYAxRG1ESbo/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218464_n56tjt8uSjM",
-    "title": "LA KE BINA — KALIMA JHOOTI HAI",
+    "title": "La Ke Bina Kalima Jhooti Hai",
     "slug": "la-ke-bina-kalima-jhooti-hai",
     "youtubeId": "n56tjt8uSjM",
     "youtubeUrl": "https://www.youtube.com/watch?v=n56tjt8uSjM",
@@ -5867,11 +6245,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "La Ke Bina Kalima Jhooti Hai",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Tawheed & Annihilation",
+    "youtubeTitle": "LA KE BINA — KALIMA JHOOTI HAI",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/n56tjt8uSjM/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/n56tjt8uSjM/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218465_jChUc58CZyw",
-    "title": "Main Habba Hoon    |   Aaj Ke Habba Hoon",
+    "title": "Main Habba Hoon",
     "slug": "main-habba-hoon-aaj-ke-habba-hoon",
     "youtubeId": "jChUc58CZyw",
     "youtubeUrl": "https://www.youtube.com/watch?v=jChUc58CZyw",
@@ -5989,11 +6376,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Main Habba Hoon",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Aaj Ki Habba Khatoon",
+    "youtubeTitle": "Main Habba Hoon    |   Aaj Ke Habba Hoon",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/jChUc58CZyw/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/jChUc58CZyw/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218466_BMqHN5Uon_k",
-    "title": "Lalla – Noor Ki Maadar | Har Kashmiri Faqeer Uske Dhoodh Ke Qarzdaar Hain ?",
+    "title": "Lalla – Noor Ki Maadar",
     "slug": "lalla-noor-ki-maadar-har-kashmiri-faqeer-uske-dhoodh-ke-qarzdaar-hain",
     "youtubeId": "BMqHN5Uon_k",
     "youtubeUrl": "https://www.youtube.com/watch?v=BMqHN5Uon_k",
@@ -6114,11 +6510,20 @@
     },
     "views": 2000,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Lalla – Noor Ki Maadar",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Kashmiri Mystic Heritage",
+    "youtubeTitle": "Lalla – Noor Ki Maadar | Har Kashmiri Faqeer Uske Dhoodh Ke Qarzdaar Hain ?",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/BMqHN5Uon_k/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/BMqHN5Uon_k/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218467_eEwA-LGF7uo",
-    "title": "Saaz Mein Bhi Tu Hi Hai   |   Song defends spiritual music in Islam with poetic resistance",
+    "title": "Saaz Mein Bhi Tu Hi Hai",
     "slug": "saaz-mein-bhi-tu-hi-hai-song-defends-spiritual-music-in-islam-with-poetic-resistance",
     "youtubeId": "eEwA-LGF7uo",
     "youtubeUrl": "https://www.youtube.com/watch?v=eEwA-LGF7uo",
@@ -6239,11 +6644,20 @@
     },
     "views": 1900,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Saaz Mein Bhi Tu Hi Hai",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Spiritual Music & Poetic Resistance",
+    "youtubeTitle": "Saaz Mein Bhi Tu Hi Hai   |   Song defends spiritual music in Islam with poetic resistance",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/eEwA-LGF7uo/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/eEwA-LGF7uo/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218468_najlQsUlBiw",
-    "title": "Yeh Dargah Mera Lahu Hai  Ab Tu Le Is Amaanat  | Ko Har Lafz Mein Jagaa !  Khwab Maa Ki Zubaan Se",
+    "title": "Yeh Dargah Mera Lahu Hai",
     "slug": "yeh-dargah-mera-lahu-hai-ab-tu-le-is-amaanat-ko-har-lafz-mein-jagaa-khwab-maa-ki-zubaan-se",
     "youtubeId": "najlQsUlBiw",
     "youtubeUrl": "https://www.youtube.com/watch?v=najlQsUlBiw",
@@ -6361,11 +6775,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Yeh Dargah Mera Lahu Hai",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Amaanat Har Lafz Mein Jagaa",
+    "youtubeTitle": "Yeh Dargah Mera Lahu Hai  Ab Tu Le Is Amaanat  | Ko Har Lafz Mein Jagaa !  Khwab Maa Ki Zubaan Se",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/najlQsUlBiw/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/najlQsUlBiw/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218470_i8cES7Ce_BU",
-    "title": "Baad Az Khuda Buzurg To Hai Qissa Mukhtasar | Mid-Song Rebuttal",
+    "title": "Baad Az Khuda Buzurg To Hai Qissa Mukhtasar",
     "slug": "baad-az-khuda-buzurg-to-hai-qissa-mukhtasar-mid-song-rebuttal",
     "youtubeId": "i8cES7Ce_BU",
     "youtubeUrl": "https://www.youtube.com/watch?v=i8cES7Ce_BU",
@@ -6483,11 +6906,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Baad Az Khuda Buzurg To Hai Qissa Mukhtasar",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Mid-Song Rebuttal",
+    "youtubeTitle": "Baad Az Khuda Buzurg To Hai Qissa Mukhtasar | Mid-Song Rebuttal",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/i8cES7Ce_BU/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/i8cES7Ce_BU/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218471_iVBX2ODmOLM",
-    "title": "Sufi Ban   |   Darood Ke Saath Farz Nibha",
+    "title": "Sufi Ban",
     "slug": "sufi-ban-darood-ke-saath-farz-nibha",
     "youtubeId": "iVBX2ODmOLM",
     "youtubeUrl": "https://www.youtube.com/watch?v=iVBX2ODmOLM",
@@ -6605,11 +7037,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Sufi Ban",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Darood Ke Saath Farz Nibha",
+    "youtubeTitle": "Sufi Ban   |   Darood Ke Saath Farz Nibha",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/iVBX2ODmOLM/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/iVBX2ODmOLM/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218473_eL00_rtDWrE",
-    "title": "MERA WALID WALI THA AUR MAIN US SABR KA SUFI HOON",
+    "title": "Mera Walid Wali Tha",
     "slug": "mera-walid-wali-tha-aur-main-us-sabr-ka-sufi-hoon",
     "youtubeId": "eL00_rtDWrE",
     "youtubeUrl": "https://www.youtube.com/watch?v=eL00_rtDWrE",
@@ -6730,11 +7171,20 @@
     },
     "views": 2200,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Mera Walid Wali Tha",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Us Sabr Ka Sufi Hoon",
+    "youtubeTitle": "MERA WALID WALI THA AUR MAIN US SABR KA SUFI HOON",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/eL00_rtDWrE/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/eL00_rtDWrE/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218474_CsgGFTd8iLI",
-    "title": "Sajda Mohammad Ka Tha | Na Adam Ka",
+    "title": "Sajda Mohammad Ka Tha, Na Adam Ka",
     "slug": "sajda-mohammad-ka-tha-na-adam-ka",
     "youtubeId": "CsgGFTd8iLI",
     "youtubeUrl": "https://www.youtube.com/watch?v=CsgGFTd8iLI",
@@ -6855,11 +7305,20 @@
     },
     "views": 3000,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Sajda Mohammad Ka Tha, Na Adam Ka",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Spiritual Realization",
+    "youtubeTitle": "Sajda Mohammad Ka Tha | Na Adam Ka",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/CsgGFTd8iLI/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/CsgGFTd8iLI/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218475_a_MynvITxO4",
-    "title": "Pehla Sufi Mohammad ﷺ I Khuda ne Noor e Muhammad se ki ibtidaa",
+    "title": "Pehla Sufi Mohammad ﷺ",
     "slug": "pehla-sufi-mohammad-i-khuda-ne-noor-e-muhammad-se-ki-ibtidaa",
     "youtubeId": "a_MynvITxO4",
     "youtubeUrl": "https://www.youtube.com/watch?v=a_MynvITxO4",
@@ -6977,11 +7436,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Pehla Sufi Mohammad ﷺ",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Noor-e-Muhammad Se Ibtidaa",
+    "youtubeTitle": "Pehla Sufi Mohammad ﷺ I Khuda ne Noor e Muhammad se ki ibtidaa",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/a_MynvITxO4/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/a_MynvITxO4/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218477_qodWD6igLEE",
-    "title": "Shikwa Jawab e Shikwa I                      Sawaal Jawaab Bhi Tu",
+    "title": "Shikwa Jawab-e-Shikwa",
     "slug": "shikwa-jawab-e-shikwa-i-sawaal-jawaab-bhi-tu",
     "youtubeId": "qodWD6igLEE",
     "youtubeUrl": "https://www.youtube.com/watch?v=qodWD6igLEE",
@@ -7099,11 +7567,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Shikwa Jawab-e-Shikwa",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sawaal Jawaab Bhi Tu",
+    "youtubeTitle": "Shikwa Jawab e Shikwa I                      Sawaal Jawaab Bhi Tu",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/qodWD6igLEE/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/qodWD6igLEE/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218480_OzqO23dy2GM",
-    "title": "Murshid Ke Qadmon Mein Noor Hai Main Murīd hoon, Meri Rooh Us Ki Nazar Mein Hai",
+    "title": "Murshid Ke Qadmon Mein Noor Hai",
     "slug": "murshid-ke-qadmon-mein-noor-hai-main-mur-d-hoon-meri-rooh-us-ki-nazar-mein-hai",
     "youtubeId": "OzqO23dy2GM",
     "youtubeUrl": "https://www.youtube.com/watch?v=OzqO23dy2GM",
@@ -7221,11 +7698,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Murshid Ke Qadmon Mein Noor Hai",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Main Murīd Hoon, Meri Rooh Nazar Mein Hai",
+    "youtubeTitle": "Main Murīd hoon, Meri Rooh Us Ki Nazar Mein Hai",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/OzqO23dy2GM/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/OzqO23dy2GM/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218481_sDmCLoHeWeQ",
-    "title": "Main Iqbal Hoon  Main Sawal Hoon",
+    "title": "Main Iqbal Hoon, Main Sawal Hoon",
     "slug": "main-iqbal-hoon-main-sawal-hoon",
     "youtubeId": "sDmCLoHeWeQ",
     "youtubeUrl": "https://www.youtube.com/watch?v=sDmCLoHeWeQ",
@@ -7343,11 +7829,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Main Iqbal Hoon, Main Sawal Hoon",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Philosophical Inward Inquiry",
+    "youtubeTitle": "Main Iqbal Hoon  Main Sawal Hoon",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/sDmCLoHeWeQ/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/sDmCLoHeWeQ/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218483_Erl0JDrRbHw",
-    "title": "Manzil e Maqām - Labbaik Ya Rabb  (A Sufi Soul of a Traveler)",
+    "title": "Manzil-e-Maqām – Labbaik Ya Rabb",
     "slug": "manzil-e-maq-m-labbaik-ya-rabb-a-sufi-soul-of-a-traveler",
     "youtubeId": "Erl0JDrRbHw",
     "youtubeUrl": "https://www.youtube.com/watch?v=Erl0JDrRbHw",
@@ -7465,11 +7960,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Manzil-e-Maqām – Labbaik Ya Rabb",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "The Soul of a Traveler",
+    "youtubeTitle": "Manzil e Maqām - Labbaik Ya Rabb  (A Sufi Soul of a Traveler)",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/Erl0JDrRbHw/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/Erl0JDrRbHw/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218484_ChLkFuhUISA",
-    "title": "Har Daur Ka Karbala — Aur Tu? (Every Era Has Its Karbala — And You?)",
+    "title": "Har Daur Ka Karbala — Aur Tu?",
     "slug": "har-daur-ka-karbala-aur-tu-every-era-has-its-karbala-and-you",
     "youtubeId": "ChLkFuhUISA",
     "youtubeUrl": "https://www.youtube.com/watch?v=ChLkFuhUISA",
@@ -7587,11 +8091,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Har Daur Ka Karbala — Aur Tu?",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Every Era Has Its Karbala",
+    "youtubeTitle": "Har Daur Ka Karbala — Aur Tu? (Every Era Has Its Karbala — And You?)",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/ChLkFuhUISA/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/ChLkFuhUISA/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218486_8rjuc2GBAns",
-    "title": "Main Bilāl Hoon – Mera Ānsū Azān Ban Gayā",
+    "title": "Main Bilāl Hoon",
     "slug": "main-bil-l-hoon-mera-ns-az-n-ban-gay",
     "youtubeId": "8rjuc2GBAns",
     "youtubeUrl": "https://www.youtube.com/watch?v=8rjuc2GBAns",
@@ -7709,11 +8222,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Main Bilāl Hoon",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Mera Ānsū Azān Ban Gayā",
+    "youtubeTitle": "Main Bilāl Hoon – Mera Ānsū Azān Ban Gayā",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/8rjuc2GBAns/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/8rjuc2GBAns/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218487_gtT_l6AH7Rc",
-    "title": "Ya Ali, Ya Ali, Ya Ali…  | When the Soul Calls Its Master",
+    "title": "Ya Ali, Ya Ali, Ya Ali",
     "slug": "ya-ali-ya-ali-ya-ali-when-the-soul-calls-its-master",
     "youtubeId": "gtT_l6AH7Rc",
     "youtubeUrl": "https://www.youtube.com/watch?v=gtT_l6AH7Rc",
@@ -7831,7 +8353,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Ya Ali, Ya Ali, Ya Ali",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "When the Soul Calls Its Master",
+    "youtubeTitle": "Ya Ali, Ya Ali, Ya Ali…  | When the Soul Calls Its Master",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/gtT_l6AH7Rc/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/gtT_l6AH7Rc/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218489_NBZKTYqQDQA",
@@ -7956,7 +8487,16 @@
     },
     "views": 563,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Main Hoon Sufi Tabeeb",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Healer of the Inner Spirit",
+    "youtubeTitle": "Main Hoon Sufi Tabeeb",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/NBZKTYqQDQA/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/NBZKTYqQDQA/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218490_VKDBw6TiRC0",
@@ -8081,11 +8621,20 @@
     },
     "views": 507,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Meri Khamoshi Teri Saza Banegi",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Silence as Witness",
+    "youtubeTitle": "Meri Khamoshi Teri Saza Banegi",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/VKDBw6TiRC0/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/VKDBw6TiRC0/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218493_3UwkaoS9xr4",
-    "title": "Woh Meri Kaaba Thi, Main Qibla Se Fisal Gaya",
+    "title": "Woh Meri Kaaba Thi",
     "slug": "woh-meri-kaaba-thi-main-qibla-se-fisal-gaya",
     "youtubeId": "3UwkaoS9xr4",
     "youtubeUrl": "https://www.youtube.com/watch?v=3UwkaoS9xr4",
@@ -8206,11 +8755,20 @@
     },
     "views": 724,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Woh Meri Kaaba Thi",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Spiritual Contemplation",
+    "youtubeTitle": "Woh Meri Kaaba Thi, Main Qibla Se Fisal Gaya",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/3UwkaoS9xr4/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/3UwkaoS9xr4/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218494_k9nznafeQ60",
-    "title": "Hu… Hu…  (Har Girah Ki Kunji)",
+    "title": "Hu… Hu…",
     "slug": "hu-hu-har-girah-ki-kunji",
     "youtubeId": "k9nznafeQ60",
     "youtubeUrl": "https://www.youtube.com/watch?v=k9nznafeQ60",
@@ -8328,11 +8886,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Hu… Hu…",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Har Girah Ki Kunji",
+    "youtubeTitle": "Hu… Hu…  (Har Girah Ki Kunji)",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/k9nznafeQ60/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/k9nznafeQ60/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218496_uk22wyFlRFk",
-    "title": "Zameen Badli, Rooh Juda Nahin Hua",
+    "title": "Zameen Badli, Rooh Juda Nahin Hui",
     "slug": "zameen-badli-rooh-juda-nahin-hua",
     "youtubeId": "uk22wyFlRFk",
     "youtubeUrl": "https://www.youtube.com/watch?v=uk22wyFlRFk",
@@ -8453,11 +9020,20 @@
     },
     "views": 932,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Zameen Badli, Rooh Juda Nahin Hui",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Eternal Spiritual Bond",
+    "youtubeTitle": "Zameen Badli, Rooh Juda Nahin Hua",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/uk22wyFlRFk/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/uk22wyFlRFk/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218497_cz9BhrPKoBc",
-    "title": "Shah e Hamdan Jaanta Hai Tu Kaun Hai",
+    "title": "Shah-e-Hamdan Jaanta Hai Tu Kaun Hai",
     "slug": "shah-e-hamdan-jaanta-hai-tu-kaun-hai",
     "youtubeId": "cz9BhrPKoBc",
     "youtubeUrl": "https://www.youtube.com/watch?v=cz9BhrPKoBc",
@@ -8578,11 +9154,20 @@
     },
     "views": 85,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Shah-e-Hamdan Jaanta Hai Tu Kaun Hai",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Kashmiri Spiritual Lineage",
+    "youtubeTitle": "Shah e Hamdan Jaanta Hai Tu Kaun Hai",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/cz9BhrPKoBc/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/cz9BhrPKoBc/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218499_Qn0j9rNPAkI",
-    "title": "🎧 “Jawān o Kashmir Se: Khitāb Qabl-e-Awliya”",
+    "title": "Jawān-o-Kashmir Se: Khitāb Qabl-e-Awliya",
     "slug": "jaw-n-o-kashmir-se-khit-b-qabl-e-awliya",
     "youtubeId": "Qn0j9rNPAkI",
     "youtubeUrl": "https://www.youtube.com/watch?v=Qn0j9rNPAkI",
@@ -8700,11 +9285,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Jawān-o-Kashmir Se: Khitāb Qabl-e-Awliya",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Address to Kashmiri Youth",
+    "youtubeTitle": "🎧 “Jawān o Kashmir Se: Khitāb Qabl-e-Awliya”",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/Qn0j9rNPAkI/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/Qn0j9rNPAkI/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218500_8qyLuPGLx7w",
-    "title": "Sufi Cry for A River",
+    "title": "Sufi Cry for a River",
     "slug": "sufi-cry-for-a-river",
     "youtubeId": "8qyLuPGLx7w",
     "youtubeUrl": "https://www.youtube.com/watch?v=8qyLuPGLx7w",
@@ -8825,11 +9419,20 @@
     },
     "views": 1700,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Sufi Cry for a River",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Environmental & Spiritual Lament",
+    "youtubeTitle": "Sufi Cry for A River",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/8qyLuPGLx7w/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/8qyLuPGLx7w/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218502__6pVqwZSQIE",
-    "title": "SHAH E HAMDAN RETURN",
+    "title": "Shah-e-Hamdan: The Eternal Presence",
     "slug": "shah-e-hamdan-return",
     "youtubeId": "_6pVqwZSQIE",
     "youtubeUrl": "https://www.youtube.com/watch?v=_6pVqwZSQIE",
@@ -8950,7 +9553,16 @@
     },
     "views": 153,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Shah-e-Hamdan: The Eternal Presence",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Heritage Return",
+    "youtubeTitle": "SHAH E HAMDAN RETURN",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/_6pVqwZSQIE/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/_6pVqwZSQIE/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218504_nFAGGKia4aU",
@@ -9075,7 +9687,16 @@
     },
     "views": 255,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Mirror of Hazratbal, Wound of Dal",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Geography of Kashmir",
+    "youtubeTitle": "Mirror of Hazratbal, Wound of Dal",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/nFAGGKia4aU/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/nFAGGKia4aU/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218506_ZxgCJ1fXrKc",
@@ -9200,7 +9821,16 @@
     },
     "views": 205,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Needle's Hell to Noor's Bright Dawn",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "From Darkness to Divine Radiance",
+    "youtubeTitle": "Needle's Hell to Noor's Bright Dawn",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/ZxgCJ1fXrKc/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/ZxgCJ1fXrKc/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218508_J0Vbn5XuVoc",
@@ -9325,11 +9955,20 @@
     },
     "views": 126,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Allah in the Algorithm",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Presence in the Digital Age",
+    "youtubeTitle": "Allah in the Algorithm",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/J0Vbn5XuVoc/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/J0Vbn5XuVoc/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218509_Aa-T-aA3kpk",
-    "title": "New Age Sufi on Highway to Haqq",
+    "title": "New Age Sufi on the Highway to Haqq",
     "slug": "new-age-sufi-on-highway-to-haqq",
     "youtubeId": "Aa-T-aA3kpk",
     "youtubeUrl": "https://www.youtube.com/watch?v=Aa-T-aA3kpk",
@@ -9450,11 +10089,20 @@
     },
     "views": 85,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "New Age Sufi on the Highway to Haqq",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Modern Spiritual Seeker",
+    "youtubeTitle": "New Age Sufi on Highway to Haqq",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/Aa-T-aA3kpk/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/Aa-T-aA3kpk/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218511_EtehDd3oUVc",
-    "title": "Cry of the Kashmir Valley | Come Light The Mystic Lamp",
+    "title": "Cry of the Kashmir Valley",
     "slug": "cry-of-the-kashmir-valley-come-light-the-mystic-lamp",
     "youtubeId": "EtehDd3oUVc",
     "youtubeUrl": "https://www.youtube.com/watch?v=EtehDd3oUVc",
@@ -9575,11 +10223,20 @@
     },
     "views": 103,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Cry of the Kashmir Valley",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Come Light the Mystic Lamp",
+    "youtubeTitle": "Cry of the Kashmir Valley | Come Light The Mystic Lamp",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/EtehDd3oUVc/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/EtehDd3oUVc/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218513_U6uT9yaQy0Y",
-    "title": "let Mansur Speak",
+    "title": "Let Mansur Speak",
     "slug": "let-mansur-speak",
     "youtubeId": "U6uT9yaQy0Y",
     "youtubeUrl": "https://www.youtube.com/watch?v=U6uT9yaQy0Y",
@@ -9700,7 +10357,16 @@
     },
     "views": 103,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Let Mansur Speak",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "The Martyrdom of Divine Truth",
+    "youtubeTitle": "let Mansur Speak",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/U6uT9yaQy0Y/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/U6uT9yaQy0Y/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218514_tFpnzwapo1A",
@@ -9825,11 +10491,20 @@
     },
     "views": 129,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Sultan – The Spiritual King of Kashmir",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Saint History",
+    "youtubeTitle": "Sultan – The Spiritual King of Kashmir",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/tFpnzwapo1A/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/tFpnzwapo1A/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218516_I1b9QtSmRAQ",
-    "title": "Dr  Kumar ! Kashmir Calling Me",
+    "title": "Dr. Kumar – Kashmir Calling Me",
     "slug": "dr-kumar-kashmir-calling-me",
     "youtubeId": "I1b9QtSmRAQ",
     "youtubeUrl": "https://www.youtube.com/watch?v=I1b9QtSmRAQ",
@@ -9947,7 +10622,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Dr. Kumar – Kashmir Calling Me",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "The Calling of the Valley",
+    "youtubeTitle": "Dr  Kumar ! Kashmir Calling Me",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/I1b9QtSmRAQ/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/I1b9QtSmRAQ/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218519_ZtI5T0H0nnY",
@@ -10072,11 +10756,20 @@
     },
     "views": 71,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Seeker to Sufi – Divine Homecoming",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "The Spiritual Transformation",
+    "youtubeTitle": "Seeker to Sufi – Divine Homecoming",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/ZtI5T0H0nnY/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/ZtI5T0H0nnY/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1775203218522_DiWJ_RBML08",
-    "title": "I am a sinner ! Yet You Whisper Inside",
+    "title": "I Am a Sinner, Yet You Whisper Inside",
     "slug": "i-am-a-sinner-yet-you-whisper-inside",
     "youtubeId": "DiWJ_RBML08",
     "youtubeUrl": "https://www.youtube.com/watch?v=DiWJ_RBML08",
@@ -10194,11 +10887,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "I Am a Sinner, Yet You Whisper Inside",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Divine Mercy and Repentance",
+    "youtubeTitle": "I am a sinner ! Yet You Whisper Inside",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/DiWJ_RBML08/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/DiWJ_RBML08/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218524_M4QhdhZPeTg",
-    "title": "O Shah e Hamadan - We owe you all, Our roots, our way",
+    "title": "O Shah-e-Hamadan – We Owe You All",
     "slug": "o-shah-e-hamadan-we-owe-you-all-our-roots-our-way",
     "youtubeId": "M4QhdhZPeTg",
     "youtubeUrl": "https://www.youtube.com/watch?v=M4QhdhZPeTg",
@@ -10319,11 +11021,20 @@
     },
     "views": 99,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "O Shah-e-Hamadan – We Owe You All",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Our Roots, Our Way",
+    "youtubeTitle": "O Shah e Hamadan - We owe you all, Our roots, our way",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/M4QhdhZPeTg/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/M4QhdhZPeTg/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218525_8yL--I2zeDE",
-    "title": "I am Sufi I am You | Interfaith Sufi Song",
+    "title": "I Am Sufi, I Am You",
     "slug": "i-am-sufi-i-am-you-interfaith-sufi-song",
     "youtubeId": "8yL--I2zeDE",
     "youtubeUrl": "https://www.youtube.com/watch?v=8yL--I2zeDE",
@@ -10444,11 +11155,20 @@
     },
     "views": 158,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "I Am Sufi, I Am You",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Universal Unity Anthem",
+    "youtubeTitle": "I am Sufi I am You | Interfaith Sufi Song",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/8yL--I2zeDE/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/8yL--I2zeDE/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218527_Sibgklh-W5g",
-    "title": "Dr Gulam Mohamad Kumar   |  Sufi Legend of Kashmir",
+    "title": "Dr. Gulam Mohamad Kumar – Sufi Legend of Kashmir",
     "slug": "dr-gulam-mohamad-kumar-sufi-legend-of-kashmir",
     "youtubeId": "Sibgklh-W5g",
     "youtubeUrl": "https://www.youtube.com/watch?v=Sibgklh-W5g",
@@ -10566,7 +11286,16 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Dr. Gulam Mohamad Kumar – Sufi Legend of Kashmir",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Documentary Tribute",
+    "youtubeTitle": "Dr Gulam Mohamad Kumar   |  Sufi Legend of Kashmir",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/Sibgklh-W5g/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/Sibgklh-W5g/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1775203218529_a1wCTXlmlb4",
@@ -10691,11 +11420,20 @@
     },
     "views": 318,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "The Saints Still Walk",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Living Tradition of Kashmir",
+    "youtubeTitle": "The Saints Still Walk",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/a1wCTXlmlb4/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/a1wCTXlmlb4/hqdefault.jpg",
+    "metadataStatus": "synced"
   },
   {
     "id": "release_1777974043319_D7hvqyQYJrk",
-    "title": "Kemis Taani Chhu Aav Aav I  A Kashmiri English Sufi Kalam",
+    "title": "Kemis Taani Chhu Aav Aav",
     "slug": "kemis-taani-chhu-aav-aav-i-a-kashmiri-english-sufi-kalam",
     "youtubeId": "D7hvqyQYJrk",
     "youtubeUrl": "https://www.youtube.com/watch?v=D7hvqyQYJrk",
@@ -10836,11 +11574,20 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Kemis Taani Chhu Aav Aav",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Kashmiri-English Sufi Kalam",
+    "youtubeTitle": "Kemis Taani Chhu Aav Aav I  A Kashmiri English Sufi Kalam",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/D7hvqyQYJrk/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/D7hvqyQYJrk/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1777974043322_UcV7rMQ7XGg",
-    "title": "Phir Likh Zarf-e-Noori | Faith Does Not Fear Critics | Sufi Rebuttal Song",
+    "title": "Phir Likh Zarf-e-Noori",
     "slug": "phir-likh-zarf-e-noori-faith-does-not-fear-critics-sufi-rebuttal-song",
     "youtubeId": "UcV7rMQ7XGg",
     "youtubeUrl": "https://www.youtube.com/watch?v=UcV7rMQ7XGg",
@@ -10951,14 +11698,23 @@
     },
     "views": 85,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Phir Likh Zarf-e-Noori",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Faith Does Not Fear Critics • Sufi Rebuttal",
+    "youtubeTitle": "Phir Likh Zarf-e-Noori | Faith Does Not Fear Critics | Sufi Rebuttal Song",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/UcV7rMQ7XGg/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/UcV7rMQ7XGg/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "LjmOxu1AVAg",
     "slug": "raazdaar-i-official-teaser-2",
     "youtubeId": "LjmOxu1AVAg",
     "youtubeUrl": "https://www.youtube.com/watch?v=LjmOxu1AVAg",
-    "title": "RAAZDAAR I official Teaser 2",
+    "title": "Raazdaar – Official Teaser II",
     "thumbnailUrl": "https://i.ytimg.com/vi/LjmOxu1AVAg/maxresdefault.jpg",
     "description": "RAAZDAAR | Official Teaser\n\nA glimpse into a mystical sama‘ journey of hidden secrets, Divine light, surrender, and sacred longing.\n\n“Khuda, raaz walon ka bhi raazdaar...”\n\nThis is not merely music.\nIt is an unfolding for seekers.\n\nFull Mystical Sama‘ Experience Releasing Worldwide on 05/10/26.\n\nSufiPulse USA\nSufi Science Center USA\n\nWWW.SUFIPULSE.COM",
     "viewCount": 99,
@@ -11122,14 +11878,23 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Raazdaar – Official Teaser II",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Cinematic Teaser",
+    "youtubeTitle": "RAAZDAAR I official Teaser 2",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/LjmOxu1AVAg/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/LjmOxu1AVAg/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1778705546287_q58mRXIsi-Y",
     "slug": "lord-of-the-mysteries-i",
     "youtubeId": "q58mRXIsi-Y",
     "youtubeUrl": "https://www.youtube.com/watch?v=q58mRXIsi-Y",
-    "title": "Lord of the Mysteries I خداوندانِ اسرار",
+    "title": "Lord of the Mysteries (خداوندانِ اسرار)",
     "thumbnailUrl": "https://i.ytimg.com/vi/q58mRXIsi-Y/hqdefault.jpg",
     "description": "An immersive Sufi musical experience inspired by the sacred atmosphere of Persian mysticism, sama‘, and the timeless tradition of seekers journeying through Divine remembrance.\n\nBuilt around the recurring invocation:\n\n“Khuda, raazdaraan-e-raazdaaran…”\nGod, Keeper of the keepers of secrets.\n\nThis composition travels through the language of:\nNoor within Noor,\nhidden celestial gatherings,\nthe silence of inward longing,\nthe dissolution of ego,\nand the eternal orbit of lovers around the Muhammadan Light ﷺ.\n\nAt the spiritual center of the kalam stands:\n“Aaftaab-e-Noor”\nThe Sun of Divine Light ﷺ\n\nA symbolic reflection of Noor-e-Muhammadi ﷺ:\nthe primordial light carried through Prophets, saints, seekers, and hearts awakened through remembrance.\n\nBlending Persian spiritual poetry, cinematic soundscapes, meditative repetition, and mystical symbolism, Khudawand-e-Asraar unfolds as both a musical composition and an inward spiritual journey.\n\n“Raaz-e-nihaani-e dar seena-am furood aawar…\nKe dil bar aahang-e-aan, baarahaa be raqs aayad…”\n\n“Place within my chest a hidden mystery,\nwhose rhythm makes this heart dance again and again.”\n\nThis release is presented in two interconnected movements:\n\nPart I\nThe awakening of longing, hidden mysteries, and Divine Light.\n\nPart II\nA Sama‘ experience for seekers entering the hidden realms of spiritual remembrance.\n\nInspired by the spirit of:\nJalal al-Din Rumi,\nShams-e-Tabriz,\nclassical Persian irfaan,\nand the sacred traditions of zikr and sama‘.\n\nLanguages:\nFarsi • Urdu • Roman Urdu • Mystical English Translation\n\nKalam & Creative Direction\nDr. Zarf-e-Noori\n\nProduced By\nSufiPulse SufiTube Studio\n\nPresented By\nSufiPulse-USA\nSufi Science Center USA\nDr Kumar Foundation USA",
     "viewCount": 78,
@@ -11216,14 +11981,23 @@
     },
     "views": 78,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "Lord of the Mysteries (خداوندانِ اسرار)",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sacred Composition",
+    "youtubeTitle": "Lord of the Mysteries I خداوندانِ اسرار",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/q58mRXIsi-Y/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/q58mRXIsi-Y/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1778705546287_wMxWfsst48Q",
     "slug": "raazdaar-i-official-teaser",
     "youtubeId": "wMxWfsst48Q",
     "youtubeUrl": "https://www.youtube.com/watch?v=wMxWfsst48Q",
-    "title": "RAAZDAAR I Official Teaser",
+    "title": "Raazdaar – Official Teaser I",
     "thumbnailUrl": "https://i.ytimg.com/vi/wMxWfsst48Q/maxresdefault.jpg",
     "description": "RAAZDAAR | Official Teaser\n\nA glimpse into a mystical sama‘ journey of hidden secrets, Divine light, surrender, and sacred longing.\n\n“Khuda, raaz walon ka bhi raazdaar...”\n\nThis is not merely music.\nIt is an unfolding for seekers.\n\nFull Mystical Sama‘ Experience Releasing Worldwide on 05/10/26.\n\nSufiPulse USA\nSufi Science Center USA\n\nWWW.SUFIPULSE.COM",
     "viewCount": 32,
@@ -11396,14 +12170,23 @@
         "isVerified": false,
         "isVisible": true
       }
-    }
+    },
+    "canonicalTitle": "Raazdaar – Official Teaser I",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Cinematic Teaser",
+    "youtubeTitle": "RAAZDAAR I Official Teaser",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/wMxWfsst48Q/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/wMxWfsst48Q/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1778705546288_kX2g8o2uEGw",
     "slug": "the-next-generation-sufi-way-forward-i-website-inaugural-promo-sufi-science-center",
     "youtubeId": "kX2g8o2uEGw",
     "youtubeUrl": "https://www.youtube.com/watch?v=kX2g8o2uEGw",
-    "title": "The Next Generation Sufi Way Forward I Website Inaugural Promo | Sufi Science Center",
+    "title": "The Next Generation Sufi Way Forward",
     "thumbnailUrl": "https://i.ytimg.com/vi/kX2g8o2uEGw/maxresdefault.jpg",
     "description": "Sufi Science Center USA is an upcoming platform initiative within the wider Sufi Science vision of Dr. Kumar Foundation USA. \n\nThis pre-launch video offers an early introduction to its direction, purpose, and evolving role.\n\nThe platform is being developed as a future-facing space for:\n\nconsciousness research\ncontemplative knowledge systems\ninner development\nscholarly dialogue\nmeaningful public engagement\n\nRooted in the wider vision of Dr. Kumar Foundation USA, it represents an expanded phase of inquiry designed to deepen engagement with spiritual wisdom, knowledge systems, interdisciplinary reflection, and human transformation.",
     "viewCount": 86,
@@ -11490,14 +12273,23 @@
     },
     "views": 86,
     "viewCountSource": "youtube_manual_snapshot",
-    "viewCountSnapshotDate": "2026-06-25"
+    "viewCountSnapshotDate": "2026-06-25",
+    "canonicalTitle": "The Next Generation Sufi Way Forward",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Sufi Science Center Inaugural",
+    "youtubeTitle": "Website Inaugural Promo | Sufi Science Center",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/kX2g8o2uEGw/maxresdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/kX2g8o2uEGw/maxresdefault.jpg",
+    "metadataStatus": "drift_detected"
   },
   {
     "id": "release_1779542779861_4HZbA2sfGmY",
     "slug": "aahista-aahista-aahista-i-teach-your-soul-how-to-flow",
     "youtubeId": "4HZbA2sfGmY",
     "youtubeUrl": "https://www.youtube.com/watch?v=4HZbA2sfGmY",
-    "title": "Aahista Aahista Aahista I Teach Your Soul How to Flow",
+    "title": "Aahista Aahista Aahista",
     "thumbnailUrl": "https://i.ytimg.com/vi/4HZbA2sfGmY/hqdefault.jpg",
     "description": "Aahista, Aahista\nTeach Your Soul How to Flow\n\n“Aahista, Aahista” is a contemplative Kashmiri Sufi journey inspired by the mystical traditions of Kashmir and Kishtwar, where kalam is not merely sung, but carried as remembrance across generations of seekers.\n\nAt its poetic heart stands Janbaz Kishtwari (Ghulam Nabi Doolwal), whose words guide the seeker through longing, surrender, silence, and the slow opening of the soul.\n\nIts old musical breath honors Ustad Abdul Samad Sofi, lovingly remembered as Samad Saib, whose Chalant-style voice, rhythmic depth, and spiritual fire carried this kalam into a living echo of Kashmiri Sufi remembrance, a flame that still travels through generations.\n\nSufiPulse adopts only the line:\n\n“Aahista, Aahista, Madanwar Yokun, Kadam Akh Traav”\nas a humble bridge carrying Kashmiri Sufi kalam into the global heart.\n\n━━━━━━━━━━━━━━━━━━\n\nWhat This Kalam Asks the Seeker\n\nWhere is the hidden secret?\nWhy does the soul still feel restless?\nWhy does love burn before it heals?\nWho is speaking from within me?\nWhy must the seeker walk slowly?\n\nThis song moves through silence, surrender, longing, remembrance, and inward awakening, reminding the listener that spiritual truth is never forced.\n\nThe path opens gently.\nThe soul ripens slowly.\nThe Beloved is approached… aahista.\n\n━━━━━━━━━━━━━━━━━━\n\nFeatured Mystical Lines\n\n“Madanwar Yokun, Kadam Akh Traav”\n“O wandering seeker, place one step gently.”\n\n“Rooh ko behna seekh zara”\n“Teach your soul how to flow.”\n\n━━━━━━━━━━━━━━━━━━\n\nThe Hidden Message of Aahista\n\n• The path was never far, only hidden beneath the self\n• The Beloved was never silent, only covered by inner noise\n• Every wound was asking to become a doorway\n• Every veil was waiting for sincerity to touch it\n\n“Aahista” is the moment the soul stops searching outside and begins dissolving within.\n\n━━━━━━━━━━━━━━━━━━\n\nSpiritual Themes\n\n• Kashmiri Sufi Kalam\n• Mystical Longing\n• Silence & Surrender\n• Inner Awakening\n• The Journey of the Seeker\n• Divine Love & Dissolution\n• Meditative Reflection\n• Sacred Remembrance\n\n━━━━━━━━━━━━━━━━━━\n\nVisit SufiPulse\n\nFor full lyrics, subtitles, translations, official credits, streaming links, adoption campaigns, and multilingual access, credits visit:\n\nsufipulse.com\n\nSubtitled, credited, and connecting 7.4 billion hearts across 17 languages.\n\n━━━━━━━━━━━━━━━━━━\n\nOfficial Credits & Spiritual Lineage\n\nInspired by the mystical poetic traditions of Kashmir & Kishtwar\n\nPoetic inspiration honoring:\nJanbaz Kishtwari (Ghulam Nabi Doolwal)\n\nMusical inspiration honoring:\nUstad Abdul Samad Sofi (Samad Saib)\n\nPresented with humility by:\nSufiPulse USA\n\n━━━━━━━━━━━━━━━━━━\n\nA Note to the Seeker\n\nThis is not a song of performance.\nIt is a song of return.\n\nWalk gently.\nListen deeply.\nLet the soul flow.\n\n━━━━━━━━━━━━━━━━━━\n\n🌐 Dr. Kumar Foundation  USA\nhttps://dkf.sufisciencecenter.info/\n\n▶️ SufiPulse-SufiTube\nhttps://www.youtube.com/@SufiPulse-USA\n\n🌐 Sufi Science Center USA\nhttps://sufisciencecenter.info/\n\n🌐 Interfaith Peace Bridge USA\nhttps://ifpb.sufisciencecenter.info/",
     "viewCount": 7,
@@ -11644,6 +12436,15 @@
     "lyricsStructure": {},
     "youtubeChannelId": "UCraDr3i5A3k0j7typ6tOOsQ",
     "youtubeChannelUrl": "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
-    "chorusVocalists": []
+    "chorusVocalists": [],
+    "canonicalTitle": "Aahista Aahista Aahista",
+    "canonicalStatus": "verified",
+    "governanceOrigin": "native_governed",
+    "govType": "native_governed",
+    "subtitle": "Teach Your Soul How to Flow",
+    "youtubeTitle": "Aahista Aahista Aahista I Teach Your Soul How to Flow",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/4HZbA2sfGmY/hqdefault.jpg",
+    "youtubeThumbnailUrl": "https://i.ytimg.com/vi/4HZbA2sfGmY/hqdefault.jpg",
+    "metadataStatus": "drift_detected"
   }
 ]

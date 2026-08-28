@@ -371,17 +371,19 @@ export default function Releases() {
                 const source = r.source || 'native';
                 const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
                 const durationFormatted = r.durationFormatted || r.duration || formatSeconds(durationSecs);
-                const canonicalTitle = getCanonicalTitle(r);
-                const displayTitle = cleanDisplayTitle(canonicalTitle);
-                const youtubeTitle = getYoutubeTitle(r);
+                const canonicalTitle = r.canonicalTitle || r.title || 'Untitled Release';
+                const youtubeTitle = r.youtubeTitle || r.youtubeStats?.title || '';
+                const govType = r.governanceOrigin || (r.source === 'native' ? 'native_governed' : (r.govType || 'native_governed'));
                 return {
                     id: r.youtubeId || r.id,
                     slug: r.slug,
-                    title: displayTitle,
+                    title: canonicalTitle,
+                    canonicalTitle: canonicalTitle,
+                    subtitle: r.subtitle || '',
                     rawTitle: canonicalTitle,
                     youtubeTitle: youtubeTitle,
                     description: r.description || '',
-                    thumbnailUrl: r.thumbnail || r.thumbnailUrl || '',
+                    thumbnailUrl: r.canonicalThumbnail || r.thumbnail || r.thumbnailUrl || '',
                     publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
                     publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
                     durationSeconds: durationSecs,
@@ -389,7 +391,7 @@ export default function Releases() {
                     views: Number(r.views || r.viewCount || 0),
                     source: source,
                     format: r.format || 'video',
-                    govType: source === 'youtube' ? 'legacy_registry' : 'native_governed',
+                    govType: govType,
                     vocalist: typeof r.vocalist === 'string' 
                         ? r.vocalist 
                         : [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),

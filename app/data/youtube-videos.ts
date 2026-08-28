@@ -1,1090 +1,1527 @@
 /**
- * Static video registry — all published SufiPulse releases.
- * Used when YouTube API is unavailable or CMS volume is empty.
- * Generated from cms-releases.json.
+ * Static video registry — all published SufiPulse releases with Canonical Authority.
+ * Generated from migrated cms-releases.json.
  */
 
 export const STATIC_YOUTUBE_VIDEOS = [
   {
-    id: 'aMzdiIuYgK4',
-    title: `Take Control – A Ramadan Prayer | English & Urdu | Ramadan Reset Reflection | SufiPulse USA`,
-    description: `Take Control – A Ramadan Prayer
-
-English & Urdu | SufiPulse USA
-
-Ramadan is not only a month of fasting.
-It is a sacred interruption.
-
-A pause in time`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/aMzdiIuYgK4/hqdefault.jpg',
-    publishedDate: '2026-02-20',
-    durationSeconds: 617,
-    durationFormatted: '10:17',
-    views: 18352,
-    source: 'native'
-  },
-  {
-    id: 'g9VGzWRHZ0g',
-    title: `SufiPulse Studio I Aaja Sufi Banja I Step Away From Ego`,
-    description: `“Aaja Sufi Ban Ja” is an inward call. It speaks to the restlessness that survives beneath rituals, identities, and borrowed certainty. It does not rej`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/g9VGzWRHZ0g/hqdefault.jpg',
-    publishedDate: '2026-02-07',
-    durationSeconds: 816,
-    durationFormatted: '13:36',
-    views: 69131,
-    source: 'native'
-  },
-  {
-    id: '_zx1N_xZzys',
-    title: `SufiPulse Studio I Nazar e karam kar de Thori si to lift kar de (A Prayer for Inner Elevation)`,
-    description: `This is not a rebuttal of old prayers, " Lift Karadey" it’s a refinement of intention. The song respects the instinct to ask, but gently turns the dir`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/_zx1N_xZzys/hqdefault.jpg',
-    publishedDate: '2026-01-24',
-    durationSeconds: 517,
-    durationFormatted: '8:37',
-    views: 37504,
-    source: 'native'
-  },
-  {
-    id: 'n6q_g4bY_sA',
-    title: `SufiPusle Studio  I Main Hoon Sufi Researcher | A Sufi Reflection for Those Who Study the World`,
-    description: `Sharing this song may open a question someone has been carrying
-
-Main Hoon Sufi Researcher | Kainaat Ki Ayat Reader
-A Sufi Reflection for Those Who St`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/n6q_g4bY_sA/hqdefault.jpg',
-    publishedDate: '2026-01-18',
-    durationSeconds: 694,
-    durationFormatted: '11:34',
-    views: 41017,
-    source: 'native'
-  },
-  {
-    id: 'lMxb4Dk-n0Y',
-    title: `SufiPusle Studio  I  Ya Dost I Asma se Qalb Tak I How Divine Names Shape Responsibility,`,
-    description: `Ya Dost (Asma se Qalb Tak) is a reflective spiritual composition that explores the relationship between the Divine Names (Asma) and the human heart (Q`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/lMxb4Dk-n0Y/hqdefault.jpg',
-    publishedDate: '2026-01-11',
-    durationSeconds: 648,
-    durationFormatted: '10:48',
-    views: 70159,
-    source: 'native'
-  },
-  {
-    id: 'QkGzXGrEllo',
-    title: `SufiPusle Studio  I  Haji Naam Mila, Par Badla Kya ? I The Journey Ended. Did the Ego?`,
-    description: `This song is not a rejection of Hajj.
-It is a reflection on what is expected to change after it.
-
-Titles don’t humble.
- Names don’t purify.
- Only meet`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/QkGzXGrEllo/hqdefault.jpg',
-    publishedDate: '2026-01-07',
-    durationSeconds: 643,
-    durationFormatted: '10:43',
-    views: 68003,
-    source: 'native'
-  },
-  {
-    id: 'FelED4DBHCk',
-    title: `SufiPusle Studio  I  Zair-o-Zabar ka Jalwa | Qira’at-e-Qur’an That Outlived the Fire`,
-    description: `This is not a historical defense.
-It is a moral mirror.
-
-“Zair–Zabar” explores a difficult paradox in Islamic history:
-how Divine preservation sometim`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/FelED4DBHCk/hqdefault.jpg',
-    publishedDate: '2026-01-05',
-    durationSeconds: 813,
-    durationFormatted: '13:33',
-    views: 35164,
-    source: 'native'
-  },
-  {
-    id: 'k0D188oBZ1Y',
-    title: `Khwaja Mere Khwaja | A Devotional Adaptation | SufiPulse`,
-    description: `This offering is a humble adaptation inspired by the eternal presence of Khwaja Moinuddin Hasan Chishti (RA), known across the Indian Subcontinent as `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/k0D188oBZ1Y/hqdefault.jpg',
-    publishedDate: '2026-01-03',
-    durationSeconds: 682,
-    durationFormatted: '11:22',
-    views: 40540,
-    source: 'native'
-  },
-  {
-    id: 'sPOY59RAkAU',
-    title: `A-las-tu Ki Goonj | Rab Ki Khamoshi Mein Rooh I Song for abled children & those who stand with them`,
-    description: `This song is dedicated to abled children — children whose abilities are expressed differently, whose silence carries meaning, and whose presence resha`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/sPOY59RAkAU/hqdefault.jpg',
-    publishedDate: '2025-12-25',
-    durationSeconds: 896,
-    durationFormatted: '14:56',
-    views: 59267,
-    source: 'native'
-  },
-  {
-    id: '24SrdzzLYus',
-    title: `Gardish I Rab Ki Khamosh Daleel I The Inescapable Cycle`,
-    description: `You never arrived. You never left. You are in the cycle.
-
-There is no escape from His cycle.
-Not because it traps you,
-but because there was never an `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/24SrdzzLYus/hqdefault.jpg',
-    publishedDate: '2025-12-20',
-    durationSeconds: 896,
-    durationFormatted: '14:56',
-    views: 45254,
-    source: 'native'
-  },
-  {
-    id: 'XPaJu3lHd5Y',
-    title: `Ye Lakeerein Nahi, Lauh e Mehfooz Ki Tahrirein I Sufi reflection on destiny & trust`,
-    description: `Subtitles are available in 17 languages to make the message accessible across cultures. A Sufi Song for those who have outgrown fortune-telling and su`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/XPaJu3lHd5Y/hqdefault.jpg',
-    publishedDate: '2025-12-14',
-    durationSeconds: 874,
-    durationFormatted: '14:34',
-    views: 9571,
-    source: 'native'
-  },
-  {
-    id: 'LwnPXSEJJHI',
-    title: `Sufi Hacker | Dil Ka Code Reader - A SufiPulse Original (For Developers & Thinkers)`,
-    description: `Sufi Hacker enters the hidden system beneath your thoughts.
-It reveals the source code of the heart, the firewalls of ego, the glitches of memory, and`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/LwnPXSEJJHI/hqdefault.jpg',
-    publishedDate: '2025-12-09',
-    durationSeconds: 785,
-    durationFormatted: '13:05',
-    views: 46827,
-    source: 'native'
-  },
-  {
-    id: 'be6GFwGpobw',
-    title: `“Needle to Noor | سادۂ نجات | Saada-e-Najaat” ( Voice for the Mubtala, the one caught in addiction)`,
-    description: `“Needle to Noor” is not just a song.
-It is a voice for the Mubtala , the one caught in drug addiction, and a reminder that life is more important than`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/be6GFwGpobw/hqdefault.jpg',
-    publishedDate: '2025-11-28',
-    durationSeconds: 657,
-    durationFormatted: '10:57',
-    views: 63568,
-    source: 'native'
-  },
-  {
-    id: '8nmW-vJbwMA',
-    title: `13 January 2026`,
-    description: ``,
-    thumbnailUrl: 'https://i.ytimg.com/vi/8nmW-vJbwMA/maxresdefault.jpg',
-    publishedDate: '2026-01-13',
-    durationSeconds: 161,
-    durationFormatted: '2:41',
-    views: 71449,
-    source: 'native'
-  },
-  {
-    id: 'X_7bA19M1E8',
-    title: `ShortNeedle to Noor | سادۂ نجات | Saada-e-Najaat`,
-    description: `“Needle to Noor” is not just a song.
-It is a voice for the Mubtala , the one caught in drug addiction, and a reminder that life is more important than`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/X_7bA19M1E8/maxresdefault.jpg',
-    publishedDate: '2025-11-28',
-    durationSeconds: 60,
-    durationFormatted: '1:00',
-    views: 36522,
-    source: 'native'
-  },
-  {
-    id: 'vKVAKJgOa5I',
-    title: `Ya Ghaus ul Azam | Madad Ban Kar Aaja | Come as My Helper`,
-    description: `This kalam is a call from the heart toward the one who spent his life pointing humanity back to Allah Ghaus-ul-Azam Sayyid Abdul Qadir Jilani (Rahmatu`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/vKVAKJgOa5I/hqdefault.jpg',
-    publishedDate: '2025-11-23',
-    durationSeconds: 741,
-    durationFormatted: '12:21',
-    views: 43733,
-    source: 'native'
-  },
-  {
-    id: 'BFG-8G3-thY',
-    title: `Main Habba Hoon | Meri Kahani Dilon Mein Hai | Kagazon Mein Nahi`,
-    description: `This is not a song. It’s a rebuttal.A rebuttal to those who try to bury Habba Khatoon under papers, proofs, and pride. A reminder that truth was never`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/BFG-8G3-thY/hqdefault.jpg',
-    publishedDate: '2025-11-11',
-    durationSeconds: 1010,
-    durationFormatted: '16:50',
-    views: 51015,
-    source: 'native'
-  },
-  {
-    id: 'jV-f1b_qSYU',
-    title: `Khaaki Banda | Satrangi | Manrangi | Zaat Magar Faani Teri`,
-    description: `A soulful reflection on man’s ego, illusion, and divine dust.
-Khaaki Banda — The Dust That Forgot Its Source.
-
-A Song originally written by Bulleh Sha`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/jV-f1b_qSYU/hqdefault.jpg',
-    publishedDate: '2025-11-07',
-    durationSeconds: 619,
-    durationFormatted: '10:19',
-    views: 29090,
-    source: 'native'
-  },
-  {
-    id: 'zFD8rHYcx-w',
-    title: `Agar Mohammad ﷺ Na Hotay | Subtitled in 17 Languages`,
-    description: `The song asks question too many avoid, may call for a fatwa after hearing this, and that’s fine. Let it come. This song is revelation. A reminder that`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/zFD8rHYcx-w/hqdefault.jpg',
-    publishedDate: '2025-10-16',
-    durationSeconds: 731,
-    durationFormatted: '12:11',
-    views: 63862,
-    source: 'native'
-  },
-  {
-    id: 'A0Xrk-Jp9OI',
-    title: `RANGDAY YA-ALLAH | The Color of Return`,
-    description: `"Color me again, O Allah — before the world paints me wrong."
-Rangday Ya-Allah is not just a song, it’s a spiritual reawakening.
-It calls every heart `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/A0Xrk-Jp9OI/hqdefault.jpg',
-    publishedDate: '2025-10-10',
-    durationSeconds: 918,
-    durationFormatted: '15:18',
-    views: 25845,
-    source: 'native'
-  },
-  {
-    id: 'QrNA31-s8u0',
-    title: `Bulla Ki Jaana Main Kaun | Find Who You Are`,
-    description: `Who are you, beyond your name, religion, and nation?
-
-In a divided world, Bulleh Shaha’s voice reminds us: We are not Hindu, Muslim, Sikh, or Christia`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/QrNA31-s8u0/hqdefault.jpg',
-    publishedDate: '2025-10-01',
-    durationSeconds: 527,
-    durationFormatted: '8:47',
-    views: 7615,
-    source: 'native'
-  },
-  {
-    id: 'lqMkErpT3dQ',
-    title: `Bas Karjee Hun Bas Karjee | Bulleh Shah Adaptation Version`,
-    description: `A devotional Sufi anthem adapted from Bulleh Shah’s timeless kalam, where longing turns into dialogue between the seeker and the Creator. This adaptat`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/lqMkErpT3dQ/hqdefault.jpg',
-    publishedDate: '2025-09-29',
-    durationSeconds: 327,
-    durationFormatted: '5:27',
-    views: 64524,
-    source: 'native'
-  },
-  {
-    id: 'jdGv8DEu4pE',
-    title: `सूफ़ीपल्स | सूफ़ी कविता और संगीत का एक वैश्विक आंदोलन – आज ही रजिस्टर करें।`,
-    description: `चाहे आप एक सूफ़ी लेखक हों, गायक हों या श्रोता — यह आपका स्थान है जहाँ आप अमर कविताओं और संगीत को खोज सकते हैं, साझा कर सकते हैं और उनसे जुड़ सकते हैं।`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/jdGv8DEu4pE/maxresdefault.jpg',
-    publishedDate: '2025-09-24',
-    durationSeconds: 311,
-    durationFormatted: '5:11',
-    views: 49345,
-    source: 'native'
-  },
-  {
-    id: 'Sp4cG8TI7i8',
-    title: `SufiPulse | A Global Movement of Sufi Poetry & Music – Register Today.`,
-    description: `Whether you’re a Sufi writer, singer, or listener, this is your space to discover, share, and resonate with timeless poetry and music. Every pen finds`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/Sp4cG8TI7i8/maxresdefault.jpg',
-    publishedDate: '2025-09-24',
-    durationSeconds: 311,
-    durationFormatted: '5:11',
-    views: 75155,
-    source: 'native'
-  },
-  {
-    id: 'nn3gXZQqX84',
-    title: `صوفی پلس | صوفی شاعری اور موسیقی کی ایک عالمی تحریک – آج ہی رجسٹر کریں`,
-    description: `چاہے آپ ایک صوفی شاعر ہوں، گلوکار ہوں یا سامع، یہ آپ کی جگہ ہے جہاں آپ لازوال شاعری اور موسیقی کو دریافت کریں، بانٹیں اور محسوس کریں۔
-
-ہر قلم کو آواز `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/nn3gXZQqX84/maxresdefault.jpg',
-    publishedDate: '2025-09-24',
-    durationSeconds: 311,
-    durationFormatted: '5:11',
-    views: 50440,
-    source: 'native'
-  },
-  {
-    id: '_BxraDL7kS0',
-    title: `Korthas Aye Sanam | Breaking All Measures of Longing.`,
-    description: `This song is carried by the verse of Nyam Saeb (Nyam Sahib, 1782–1854) — known as the Sufi Shair-e-Muntazir and a spiritual transmitter of Kashmir.
-
-N`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/_BxraDL7kS0/hqdefault.jpg',
-    publishedDate: '2025-09-09',
-    durationSeconds: 614,
-    durationFormatted: '10:14',
-    views: 50222,
-    source: 'native'
-  },
-  {
-    id: 'kVtYDOa5hPs',
-    title: `I Told My Beloved, Let’s Begin A Friendship | Dapyomas Baalyaaras Yaaer Laagav`,
-    description: `171 Years Old Sufi Song  Adaptation Version
-
-The Eternal Dialogue Between Creator and Creation
-
-A mystic flame from Kashmir (1782–1854), still burning`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/kVtYDOa5hPs/hqdefault.jpg',
-    publishedDate: '2025-09-07',
-    durationSeconds: 620,
-    durationFormatted: '10:20',
-    views: 23993,
-    source: 'native'
-  },
-  {
-    id: 'Ykx2PwA4mOk',
-    title: `Al-Razzāq | Rozi Sirf Tujh Se Hai`,
-    description: `A devotional song that reminds us Rizq comes only from Allah, Al-Razzāq.
-
-This piece moves through Qur’anic reflections, Prophetic teachings, and Sufi`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/Ykx2PwA4mOk/maxresdefault.jpg',
-    publishedDate: '2025-09-06',
-    durationSeconds: 788,
-    durationFormatted: '13:08',
-    views: 62874,
-    source: 'native'
-  },
-  {
-    id: 'srM451HZEOE',
-    title: `Yeh Ummat Hai | Ya Khwaab Ka Dhoka? #shorts #SufiPullseUSA`,
-    description: `A haunting reflection on the state of the ummah.
-⚡ Yeh Ummat Hai – Ya Khwaab Ka Dhoka?
-✨ Full version on our channel – don’t miss it.
-🎶 Subscribe for`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/srM451HZEOE/maxresdefault.jpg',
-    publishedDate: '2025-09-04',
-    durationSeconds: 32,
-    durationFormatted: '0:32',
-    views: 13601,
-    source: 'native'
-  },
-  {
-    id: 'p2SWi4XduOU',
-    title: `Mansur | Jala! Mita! Bana! Saja! #shorts #SufiPulse`,
-    description: `📄 Description
-
-A powerful verse inspired by Mansur’s eternal call.
-🔥 Jala! Mita! Bana! Saja!
-✨ Full version on our channel – don’t miss it.
-🎶 Subsc`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/p2SWi4XduOU/maxresdefault.jpg',
-    publishedDate: '2025-09-04',
-    durationSeconds: 44,
-    durationFormatted: '0:44',
-    views: 66460,
-    source: 'native'
-  },
-  {
-    id: 'CcCVyM3G7JE',
-    title: `Dapyomas Baleyaaras Yaar Laagav #shorts #sufiPulse`,
-    description: `'A soulful Kashmiri verse from SufiPulse.
-✨ Full version on our channel – don’t miss it.
-🎶 Subscribe for more Kashmiri & Sufi music.
-
-#shorts #SufiPu`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/CcCVyM3G7JE/maxresdefault.jpg',
-    publishedDate: '2025-09-04',
-    durationSeconds: 61,
-    durationFormatted: '1:01',
-    views: 72417,
-    source: 'native'
-  },
-  {
-    id: 'BzcmOqiIHck',
-    title: `SUFIPULSE | YouTube Insights & Global Reach`,
-    description: `📊 SufiPulse | Dr Kumar Foundation USA – YouTube Insights
-
-In just 2 months, our channel has grown into a global voice for Sufi heritage and Kashmiri `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/BzcmOqiIHck/hqdefault.jpg',
-    publishedDate: '2025-09-04',
-    durationSeconds: 311,
-    durationFormatted: '5:11',
-    views: 23741,
-    source: 'native'
-  },
-  {
-    id: 'hbe-e1x1yAU',
-    title: `Dapyomas  Baleyaaras Yaar Laagav | Sung by Non-Kashmiri Singers, Vessels of the Soch Kral’s flame.`,
-    description: `171 years after his passing, the mystic potter of Kashmir still speaks.
-Soch Kral RA’s voice rises again — not in the soil of Kashmir alone, but acros`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/hbe-e1x1yAU/hqdefault.jpg',
-    publishedDate: '2025-09-02',
-    durationSeconds: 524,
-    durationFormatted: '8:44',
-    views: 7918,
-    source: 'native'
-  },
-  {
-    id: 'tNttnPKjdPg',
-    title: `Yeh Ummat Hai? Ya Khwaab Ka Dhoka? | Forgotten Last Sermon`,
-    description: `⚡ A cry against forgetfulness. A remembrance of Muhammad’s last sermon. Yeh Ummat Hai? Ya Khwaab Ka Dhoka?
-
-It asks a piercing question:
-👉 “Is this t`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/tNttnPKjdPg/hqdefault.jpg',
-    publishedDate: '2025-08-25',
-    durationSeconds: 601,
-    durationFormatted: '10:01',
-    views: 56225,
-    source: 'native'
-  },
-  {
-    id: 'LMen31sMjMg',
-    title: `Kumar – Qalandar e Zaman | Tribute to Caravan of Sufi Scientists`,
-    description: `This song is subtitled in 14 global languages, carrying Kashmir’s Sufi pulse to seekers across the world. For all seekers of truth who believe that Su`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/LMen31sMjMg/hqdefault.jpg',
-    publishedDate: '2025-08-23',
-    durationSeconds: 611,
-    durationFormatted: '10:11',
-    views: 51043,
-    source: 'native'
-  },
-  {
-    id: '_5a7HNedpUw',
-    title: `Main Silsila e  Owais Hoon | A  Soul-Call.`,
-    description: `This song is not entertainment. It is a zikr, a lesson, a soul-call.
-It follows the hidden saint Owais Qarni (RA) — the son who served his mother unti`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/_5a7HNedpUw/hqdefault.jpg',
-    publishedDate: '2025-08-20',
-    durationSeconds: 871,
-    durationFormatted: '14:31',
-    views: 41041,
-    source: 'native'
-  },
-  {
-    id: 'NfFq4qjiWDA',
-    title: `Ya Rab Mujhe Rizq-e Halaal De | A Dua in the Spirit of Iqbal (RA)`,
-    description: `Ya Rab – A Dua in the Spirit of Iqbal
-
-This qawwali is more than a song — it is a living prayer. Every verse is a heartfelt plea to Allah: for purity,`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/NfFq4qjiWDA/hqdefault.jpg',
-    publishedDate: '2025-08-19',
-    durationSeconds: 704,
-    durationFormatted: '11:44',
-    views: 68440,
-    source: 'native'
-  },
-  {
-    id: '3axIOaWesf0',
-    title: `Teri Mitti… Mera Kashmir | Sufi Anthem for Kashmir’s Soul`,
-    description: `Sufi Message
-
-Inspired by Lal Ded and Nund Rishi’s eternal bond — the milk of one soul nourishing another. A reminder that no stone, flower, or drop o`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/3axIOaWesf0/hqdefault.jpg',
-    publishedDate: '2025-08-18',
-    durationSeconds: 669,
-    durationFormatted: '11:09',
-    views: 72675,
-    source: 'native'
-  },
-  {
-    id: '3JmvkoRwM-0',
-    title: `Mansoor! Jala! Mita! Bana! Saja!`,
-    description: `Jala! Mita! Bana! Saja!  Burn falsehood, Erase the ego, Create truth, Adorn the soul.
-
-Performed in URDU , with multi-subtitles available in Roman Urd`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/3JmvkoRwM-0/hqdefault.jpg',
-    publishedDate: '2025-08-09',
-    durationSeconds: 636,
-    durationFormatted: '10:36',
-    views: 34211,
-    source: 'native'
-  },
-  {
-    id: 'hXAJUFwEuGk',
-    title: `Sheikh! Sheikh! Noorani (RA) | Father of Sustainable Development`,
-    description: `An Anthem for Kashmir, For the Earth, and For the Soul
-Presented by Dr. Kumar Foundation USA  | SufiPulse Collaboration
-
-About the Song
-“Sheikh! Sheik`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/hXAJUFwEuGk/hqdefault.jpg',
-    publishedDate: '2025-08-05',
-    durationSeconds: 506,
-    durationFormatted: '8:26',
-    views: 28072,
-    source: 'native'
-  },
-  {
-    id: 'cYAxRG1ESbo',
-    title: `SufiPulse - A Universal Sufi Call - Kashmir’s Voice in Every Tongue`,
-    description: `SufiPulse – Kashmir’s Voice in Every Tongue
-A Melodic Global Chant | A Universal Sufi Call
-
-For the first time in history, Kashmiri Sufi Kalam is echo`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/cYAxRG1ESbo/hqdefault.jpg',
-    publishedDate: '2025-08-01',
-    durationSeconds: 323,
-    durationFormatted: '5:23',
-    views: 48320,
-    source: 'native'
-  },
-  {
-    id: 'n56tjt8uSjM',
-    title: `LA KE BINA — KALIMA JHOOTI HAI`,
-    description: `RAAZ-E-KALIMA – Naujawan Rooh Ka Nara
-La Ilāha Illallah… Muhammadur Rasūlullāh
-
-✍️ Lyrics & Concept: Dr. Zarf-e-Noori
-🎧 Presented by SufiPulse
-🕋 In `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/n56tjt8uSjM/hqdefault.jpg',
-    publishedDate: '2025-07-28',
-    durationSeconds: 643,
-    durationFormatted: '10:43',
-    views: 70500,
-    source: 'native'
-  },
-  {
-    id: 'jChUc58CZyw',
-    title: `Main Habba Hoon    |   Aaj Ke Habba Hoon`,
-    description: `🎵 Title: Main Bhi Habba Hoon | A SufiPulse USA Studio Original
-Lyrics by Dr. Zeenat Ara & Dr. Zarf-e-Noori
-Kashmir ki Roohani Aurat ki Aawaaz 
-📅 Rel`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/jChUc58CZyw/hqdefault.jpg',
-    publishedDate: '2025-07-27',
-    durationSeconds: 942,
-    durationFormatted: '15:42',
-    views: 19821,
-    source: 'native'
-  },
-  {
-    id: 'BMqHN5Uon_k',
-    title: `Lalla – Noor Ki Maadar | Har Kashmiri Faqeer Uske Dhoodh Ke Qarzdaar Hain ?`,
-    description: `🎵 Lalla – Noor Ki Maadar
-✍️ Written by Zarf-e-Noori, from the soul of Lal Ded — the eternal Maadar of Kashmiri Faqeeri.
-🗓️ Issued: 7/19/2025 | Dr. K`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/BMqHN5Uon_k/hqdefault.jpg',
-    publishedDate: '2025-07-26',
-    durationSeconds: 688,
-    durationFormatted: '11:28',
-    views: 46124,
-    source: 'native'
-  },
-  {
-    id: 'eEwA-LGF7uo',
-    title: `Saaz Mein Bhi Tu Hi Hai   |   Song defends spiritual music in Islam with poetic resistance`,
-    description: `🎵 Saaz Mein Bhi Tu Hi Hai – A Soul’s Dialogue with As-Samīʿ
-Lyrics & Concept: Zarf-e-Noori
-A Remote Sensing Interpreter • Env. Scientist • Emergency `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/eEwA-LGF7uo/hqdefault.jpg',
-    publishedDate: '2025-07-24',
-    durationSeconds: 721,
-    durationFormatted: '12:01',
-    views: 8263,
-    source: 'native'
-  },
-  {
-    id: 'najlQsUlBiw',
-    title: `Yeh Dargah Mera Lahu Hai  Ab Tu Le Is Amaanat  | Ko Har Lafz Mein Jagaa !  Khwab Maa Ki Zubaan Se`,
-    description: `🎵 Yeh Dargah Mera Lahu Hai — Ab Tu Le Is Amaanat Ko
-(A Mother’s Dream to Her Sufi Son) 
- 
-✨ Lyrics & Concept: Written by Zarf-e-Noor
-Kashmiri-America`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/najlQsUlBiw/hqdefault.jpg',
-    publishedDate: '2025-07-22',
-    durationSeconds: 728,
-    durationFormatted: '12:08',
-    views: 50190,
-    source: 'native'
-  },
-  {
-    id: 'i8cES7Ce_BU',
-    title: `Baad Az Khuda Buzurg To Hai Qissa Mukhtasar | Mid-Song Rebuttal`,
-    description: `🌀 Mid-Song Rebuttal
-For the One Whose Ears Couldn’t Bear the Truth in the Song . Let These Words Now Speak in Text Format. 
-
-✍️ Lyrics & Concept
-Writ`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/i8cES7Ce_BU/hqdefault.jpg',
-    publishedDate: '2025-07-21',
-    durationSeconds: 790,
-    durationFormatted: '13:10',
-    views: 10978,
-    source: 'native'
-  },
-  {
-    id: 'iVBX2ODmOLM',
-    title: `Sufi Ban   |   Darood Ke Saath Farz Nibha`,
-    description: `🎵 Sufi Ban – Darood Ke Saath Farz Nibha
-Released: July 19, 2025 | A SufiPulse Studio USA
-
-Concept & Message
-This is not just a song—it’s a spiritual `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/iVBX2ODmOLM/maxresdefault.jpg',
-    publishedDate: '2025-07-20',
-    durationSeconds: 599,
-    durationFormatted: '9:59',
-    views: 44474,
-    source: 'native'
-  },
-  {
-    id: 'eL00_rtDWrE',
-    title: `MERA WALID WALI THA AUR MAIN US SABR KA SUFI HOON`,
-    description: `🎵 MERA WALID WALI THA – AUR MAIN US SABR KA SUFI HOON
-(Urdu | Rhythmic | Daf + Zikr + Sufi Chant)
-📅 Release Date: July 19, 2025 | Powered by SufiPul`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/eL00_rtDWrE/hqdefault.jpg',
-    publishedDate: '2025-07-19',
-    durationSeconds: 610,
-    durationFormatted: '10:10',
-    views: 48151,
-    source: 'native'
-  },
-  {
-    id: 'CsgGFTd8iLI',
-    title: `Sajda Mohammad Ka Tha | Na Adam Ka`,
-    description: `Sajda Mohammad Ka Tha | Na Adam Ka
-(Urdu Remix Series | Sufi Chant | Noor-e-Muhammad ﷺ | Ishq + Sirr)
-
-📝 Video Description:
-🔥 Ghalti thi Iblees ki!
-`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/CsgGFTd8iLI/hqdefault.jpg',
-    publishedDate: '2025-07-17',
-    durationSeconds: 572,
-    durationFormatted: '9:32',
-    views: 6579,
-    source: 'native'
-  },
-  {
-    id: 'a_MynvITxO4',
-    title: `Pehla Sufi Mohammad ﷺ I Khuda ne Noor e Muhammad se ki ibtidaa`,
-    description: `✨ YouTube Description — "Pehla Sufi – Muhammad ﷺ"
-A New Age SufiPulse Anthem | Sufi Chant × Spoken Word × Spiritual Rebellion
-
-🎵 Title: Pehla Sufi — `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/a_MynvITxO4/hqdefault.jpg',
-    publishedDate: '2025-07-16',
-    durationSeconds: 603,
-    durationFormatted: '10:03',
-    views: 34160,
-    source: 'native'
-  },
-  {
-    id: 'qodWD6igLEE',
-    title: `Shikwa Jawab e Shikwa I                      Sawaal Jawaab Bhi Tu`,
-    description: `🕊️ A SufiPulse Presentation | In Collaboration with Dr. Kumar Foundation & SSC Kashmir Chapter
-🗓️ Released: 21 June, 2025
-
-🔍 Spiritual Insight Behi`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/qodWD6igLEE/hqdefault.jpg',
-    publishedDate: '2025-07-14',
-    durationSeconds: 567,
-    durationFormatted: '9:27',
-    views: 39400,
-    source: 'native'
-  },
-  {
-    id: 'OzqO23dy2GM',
-    title: `Murshid Ke Qadmon Mein Noor Hai Main Murīd hoon, Meri Rooh Us Ki Nazar Mein Hai`,
-    description: `🎵 Murshid ke Qadmon Mein Noor Hai
-A Sufi Chant of Light, Surrender, and Annihilation
-Presented by Dr. Kumar Foundation USA | SufiPulse Studios
-
-🎼 Ly`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/OzqO23dy2GM/hqdefault.jpg',
-    publishedDate: '2025-07-12',
-    durationSeconds: 403,
-    durationFormatted: '6:43',
-    views: 31724,
-    source: 'native'
-  },
-  {
-    id: 'sDmCLoHeWeQ',
-    title: `Main Iqbal Hoon  Main Sawal Hoon`,
-    description: `Main Iqbal Hoon | A Sufi Testimony, Not a Tribute
-Presented by SufiPulse Studios | In Eternal Honor of Dr. Muhammad Iqbal (RA)
-
-✨ ABOUT THIS SONG
-This`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/sDmCLoHeWeQ/hqdefault.jpg',
-    publishedDate: '2025-07-12',
-    durationSeconds: 375,
-    durationFormatted: '6:15',
-    views: 10767,
-    source: 'native'
-  },
-  {
-    id: 'Erl0JDrRbHw',
-    title: `Manzil e Maqām - Labbaik Ya Rabb  (A Sufi Soul of a Traveler)`,
-    description: `“Manzil-e-Maqām” – A Sufi Drive Through the Soul
-A SufiPulse Original | Produced by the Dr. Kumar Foundation USA
-Genre: Sufi Fusion • Road Poetry • Sp`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/Erl0JDrRbHw/hqdefault.jpg',
-    publishedDate: '2025-07-09',
-    durationSeconds: 451,
-    durationFormatted: '7:31',
-    views: 75172,
-    source: 'native'
-  },
-  {
-    id: 'ChLkFuhUISA',
-    title: `Har Daur Ka Karbala — Aur Tu? (Every Era Has Its Karbala — And You?)`,
-    description: `🎧 Presented by:
-🌍 Dr. Kumar Foundation USA
-🕊 Sufi Science Center — Kashmir Chapter
-🎵 SufiPulse – New Age Spiritual Sound
-_________________________`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/ChLkFuhUISA/hqdefault.jpg',
-    publishedDate: '2025-07-07',
-    durationSeconds: 456,
-    durationFormatted: '7:36',
-    views: 47885,
-    source: 'native'
-  },
-  {
-    id: '8rjuc2GBAns',
-    title: `Main Bilāl Hoon – Mera Ānsū Azān Ban Gayā`,
-    description: `**(Main Bilāl Hoon – Mera Ānsū Azān Ban Gayā)**
-*A sacred scream. A slave’s sajdah. A voice that cracked the sky.*
-
----
-
-### 🌑 **About the Song:**
-
-T`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/8rjuc2GBAns/hqdefault.jpg',
-    publishedDate: '2025-07-06',
-    durationSeconds: 372,
-    durationFormatted: '6:12',
-    views: 40505,
-    source: 'native'
-  },
-  {
-    id: 'gtT_l6AH7Rc',
-    title: `Ya Ali, Ya Ali, Ya Ali…  | When the Soul Calls Its Master`,
-    description: `🕊️ YA ALI, YA ALI, YA ALI…
-(The refuge of every soul – the secret of every saint)
-Presented by SufiPulse in partnership with Dr. Kumar Foundation USA`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/gtT_l6AH7Rc/hqdefault.jpg',
-    publishedDate: '2025-07-04',
-    durationSeconds: 543,
-    durationFormatted: '9:03',
-    views: 12172,
-    source: 'native'
-  },
-  {
-    id: 'NBZKTYqQDQA',
-    title: `Main Hoon Sufi Tabeeb`,
-    description: `"Main Hoon Sufi Tabeeb" is a soul-stirring Sufi nazm dedicated to those who heal not just bodies, but souls — with zikr, sabr, and divine love. Inspir`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/NBZKTYqQDQA/hqdefault.jpg',
-    publishedDate: '2025-07-04',
-    durationSeconds: 372,
-    durationFormatted: '6:12',
-    views: 68759,
-    source: 'native'
-  },
-  {
-    id: 'VKDBw6TiRC0',
-    title: `Meri Khamoshi Teri Saza Banegi`,
-    description: `🎵 Meri Khamoshi Teri Saza Banegi
-A Sufi Rebellion of Silence, Fire, and Divine Testimony
-
-This is not just a song. It is a spiritual trial.
-A whisper`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/VKDBw6TiRC0/hqdefault.jpg',
-    publishedDate: '2025-07-04',
-    durationSeconds: 472,
-    durationFormatted: '7:52',
-    views: 63452,
-    source: 'native'
-  },
-  {
-    id: '3UwkaoS9xr4',
-    title: `Woh Meri Kaaba Thi, Main Qibla Se Fisal Gaya`,
-    description: `Woh Meri Kaaba Thi, Main Qibla Se Fisal Gaya
-A Sufi Cry for a Generation That Lost Its First Kaaba — Mother We Abandoned
-
-
-Lyrics 
-
-🎵 Woh Meri Kaaba `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/3UwkaoS9xr4/hqdefault.jpg',
-    publishedDate: '2025-06-26',
-    durationSeconds: 437,
-    durationFormatted: '7:17',
-    views: 54499,
-    source: 'native'
-  },
-  {
-    id: 'k9nznafeQ60',
-    title: `Hu… Hu…  (Har Girah Ki Kunji)`,
-    description: `🎼 Hu… Hu… Har Girah Ki Kunji
-________________________________________
-🎙️ Official Song Description
-Track Title: Hu… Hu… Har Girah Ki Kunji
-Genre: Su`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/k9nznafeQ60/hqdefault.jpg',
-    publishedDate: '2025-06-23',
-    durationSeconds: 418,
-    durationFormatted: '6:58',
-    views: 49025,
-    source: 'native'
-  },
-  {
-    id: 'uk22wyFlRFk',
-    title: `Zameen Badli, Rooh Juda Nahin Hua`,
-    description: `Zameen Badli, Rooh Juda Nahin Hua
-A Kashmiri soul walks in America… still waiting for a saint.
-
-This song is born from a wound that sings.
-From the qu`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/uk22wyFlRFk/hqdefault.jpg',
-    publishedDate: '2025-06-22',
-    durationSeconds: 193,
-    durationFormatted: '3:13',
-    views: 52834,
-    source: 'native'
-  },
-  {
-    id: 'cz9BhrPKoBc',
-    title: `Shah e Hamdan Jaanta Hai Tu Kaun Hai`,
-    description: `🎧 Title: Shah-e-Hamdan Knows Who You Are
-🕊️ A Sufi Cry Against Middleman Exploitation in Kashmir’s Handicrafts
-
-📍 Presented by SufiPluse • Dr. Kuma`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/cz9BhrPKoBc/hqdefault.jpg',
-    publishedDate: '2025-06-21',
-    durationSeconds: 364,
-    durationFormatted: '6:04',
-    views: 55224,
-    source: 'native'
-  },
-  {
-    id: 'Qn0j9rNPAkI',
-    title: `🎧 “Jawān o Kashmir Se: Khitāb Qabl-e-Awliya”`,
-    description: `A Sufi Anthem of Youth, Saints, and Survival
-📍 Presented by SufiPluse • Dr. Kumar Foundation USA • Sufi Science Center – Kashmir Chapter
-
-🎧 [Youth A`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/Qn0j9rNPAkI/hqdefault.jpg',
-    publishedDate: '2025-06-18',
-    durationSeconds: 383,
-    durationFormatted: '6:23',
-    views: 35401,
-    source: 'native'
-  },
-  {
-    id: '8qyLuPGLx7w',
-    title: `Sufi Cry for A River`,
-    description: `🎵 **Sufi Cry for A River – A Song of Betrayal and Redemption on the Banks of Jehlum**  
-A bold, mystical outcry from Kashmir’s sacred spine – Jehlum.`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/8qyLuPGLx7w/hqdefault.jpg',
-    publishedDate: '2025-06-17',
-    durationSeconds: 658,
-    durationFormatted: '10:58',
-    views: 52632,
-    source: 'native'
-  },
-  {
-    id: '_6pVqwZSQIE',
-    title: `SHAH E HAMDAN RETURN`,
-    description: `🧵 Shah-e-Hamdan Walks Again ; To Lift the Middleman Veil
-Cry of Counterfeits: The Theft of Kashmir’s Soul
-🎥 A Sufi Exposé on the Crisis in Kashmir’s`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/_6pVqwZSQIE/hqdefault.jpg',
-    publishedDate: '2025-06-16',
-    durationSeconds: 409,
-    durationFormatted: '6:49',
-    views: 14324,
-    source: 'native'
-  },
-  {
-    id: 'nFAGGKia4aU',
-    title: `Mirror of Hazratbal, Wound of Dal`,
-    description: `🎵 Mirror of Hazratbal, Wound of Dal
-A New-Age Sufi Anthem — In the voice of lakes, faith, and loss.
-
-“And what reflects this holy flame?
-The Dal. The`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/nFAGGKia4aU/hqdefault.jpg',
-    publishedDate: '2025-06-13',
-    durationSeconds: 460,
-    durationFormatted: '7:40',
-    views: 12898,
-    source: 'native'
-  },
-  {
-    id: 'ZxgCJ1fXrKc',
-    title: `Needle's Hell to Noor's Bright Dawn`,
-    description: `🎵 Official Anthem: “Needle's Hell to Noor's Bright Dawn”
-A soul-stirring American–Kashmiri fusion song from the Drug-Free Kashmir movement under SSC `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/ZxgCJ1fXrKc/hqdefault.jpg',
-    publishedDate: '2025-06-11',
-    durationSeconds: 559,
-    durationFormatted: '9:19',
-    views: 47722,
-    source: 'native'
-  },
-  {
-    id: 'J0Vbn5XuVoc',
-    title: `Allah in the Algorithm`,
-    description: `🎵 Title: Allah in the Algorithm
-*🕊️ A Digital Dervish Anthem from Kashmir to the Cloud
-
-🎙️ Vocals: Isaiah Cole, Zayd Malik, Taylor Reyes
-✍️ Lyrics:`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/J0Vbn5XuVoc/hqdefault.jpg',
-    publishedDate: '2025-06-09',
-    durationSeconds: 307,
-    durationFormatted: '5:07',
-    views: 25212,
-    source: 'native'
-  },
-  {
-    id: 'Aa-T-aA3kpk',
-    title: `New Age Sufi on Highway to Haqq`,
-    description: `🎵 Highway to Haqq: The Emergency Seeker
-
-A high-energy Sufi song written by unknown Sufi Seeker,  US-based Kashmiri environmental scientist, remote s`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/Aa-T-aA3kpk/hqdefault.jpg',
-    publishedDate: '2025-06-09',
-    durationSeconds: 301,
-    durationFormatted: '5:01',
-    views: 61538,
-    source: 'native'
-  },
-  {
-    id: 'EtehDd3oUVc',
-    title: `Cry of the Kashmir Valley | Come Light The Mystic Lamp`,
-    description: `🕊️ Cry of the Valley: Come Light the Lamp
-🎧 A Mystic Rap-Rock Anthem from the Valley of Saints
-💽 Powered by: SufiPulse | Dr. Kumar Foundation – USA`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/EtehDd3oUVc/hqdefault.jpg',
-    publishedDate: '2025-05-25',
-    durationSeconds: 480,
-    durationFormatted: '8:00',
-    views: 34082,
-    source: 'native'
-  },
-  {
-    id: 'U6uT9yaQy0Y',
-    title: `let Mansur Speak`,
-    description: `🔥 Let Mansur Speak – A Rebel's Anthem for Truth and Light
-A fierce spiritual uprising in honor of the martyred mystic Al-Hallaj Mansur — the saint wh`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/U6uT9yaQy0Y/hqdefault.jpg',
-    publishedDate: '2025-05-25',
-    durationSeconds: 435,
-    durationFormatted: '7:15',
-    views: 18713,
-    source: 'native'
-  },
-  {
-    id: 'tFpnzwapo1A',
-    title: `Sultan – The Spiritual King of Kashmir`,
-    description: `🎵 Song Title: Sultan – The Spiritual King of Kashmir
-🕊️ Presented by: Sufi Science Center & Dr. Kumar Foundation USA
-📍 Uploaded on: SufiPulse Chann`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/tFpnzwapo1A/hqdefault.jpg',
-    publishedDate: '2025-05-24',
-    durationSeconds: 404,
-    durationFormatted: '6:44',
-    views: 66637,
-    source: 'native'
-  },
-  {
-    id: 'I1b9QtSmRAQ',
-    title: `Dr  Kumar ! Kashmir Calling Me`,
-    description: `Here’s a compelling song description along with integrated information about the **Sufi Science Center**, the **Dr. Kumar Foundation USA**, and the **`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/I1b9QtSmRAQ/hqdefault.jpg',
-    publishedDate: '2025-05-24',
-    durationSeconds: 339,
-    durationFormatted: '5:39',
-    views: 53889,
-    source: 'native'
-  },
-  {
-    id: 'ZtI5T0H0nnY',
-    title: `Seeker to Sufi – Divine Homecoming`,
-    description: `🕊️ "I Am Finally a Sufi" – A Song of Arrival, Liberation, and Divine Belonging 🕊️
-
-Welcome to a sacred journey through words and music—a journey fro`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/ZtI5T0H0nnY/hqdefault.jpg',
-    publishedDate: '2025-05-23',
-    durationSeconds: 371,
-    durationFormatted: '6:11',
-    views: 64414,
-    source: 'native'
-  },
-  {
-    id: 'DiWJ_RBML08',
-    title: `I am a sinner ! Yet You Whisper Inside`,
-    description: `A whispered dialogue between the broken and the Divine. This piece explores sacred love, divine mercy, and the quiet embrace that calls even the furth`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/DiWJ_RBML08/hqdefault.jpg',
-    publishedDate: '2025-05-23',
-    durationSeconds: 400,
-    durationFormatted: '6:40',
-    views: 62798,
-    source: 'native'
-  },
-  {
-    id: 'M4QhdhZPeTg',
-    title: `O Shah e Hamadan - We owe you all, Our roots, our way`,
-    description: `🕯️ O Shah-e-Hamdan – We Owe You All, Our Roots, Our Way
-A Sacred Tribute to the Soul Architect of Kashmir
-Presented by the Sufi Science Center & Dr. `,
-    thumbnailUrl: 'https://i.ytimg.com/vi/M4QhdhZPeTg/hqdefault.jpg',
-    publishedDate: '2025-05-23',
-    durationSeconds: 391,
-    durationFormatted: '6:31',
-    views: 70825,
-    source: 'native'
-  },
-  {
-    id: '8yL--I2zeDE',
-    title: `I am Sufi I am You | Interfaith Sufi Song`,
-    description: `🎶 “I Am Sufi, I Am You”
-A Sacred Anthem of Unity Through the Prophets, Through the Heart, Through the Truth
-Presented by the Sufi Science Center & Ku`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/8yL--I2zeDE/hqdefault.jpg',
-    publishedDate: '2025-05-22',
-    durationSeconds: 414,
-    durationFormatted: '6:54',
-    views: 65013,
-    source: 'native'
-  },
-  {
-    id: 'Sibgklh-W5g',
-    title: `Dr Gulam Mohamad Kumar   |  Sufi Legend of Kashmir`,
-    description: `🎼 Dr. Kumar – Sufi Legend
-
-A spiritual anthem in tribute to a living mystic of Kashmir.
-Presented by Sufi Science Center  &  Kumar Foundation USA
-
---`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/Sibgklh-W5g/hqdefault.jpg',
-    publishedDate: '2025-05-21',
-    durationSeconds: 404,
-    durationFormatted: '6:44',
-    views: 55234,
-    source: 'native'
-  },
-  {
-    id: 'a1wCTXlmlb4',
-    title: `The Saints Still Walk`,
-    description: `Song Description: “I Am Kashmiri Sufi – The Saints Still Walk”
-Genre: Sufi Anthem / Mystic Spoken Word Fusion
-Mood: Fierce, reverent, and electrifying`,
-    thumbnailUrl: 'https://i.ytimg.com/vi/a1wCTXlmlb4/hqdefault.jpg',
-    publishedDate: '2025-05-21',
-    durationSeconds: 391,
-    durationFormatted: '6:31',
-    views: 8662,
-    source: 'native'
+    "id": "Dbd0fhJty4A",
+    "title": "Ik Khamoshi, Tu Aur Main",
+    "canonicalTitle": "Ik Khamoshi, Tu Aur Main",
+    "youtubeTitle": "Ik Khamoshi, Tu Aur Main | Ishq • Fanā • Baqā | SufiPulse USA",
+    "subtitle": "Mystical Kalam • Ishq • Fanā • Baqā",
+    "description": "Ik Khamoshi, Tu Aur Main | Original Mystical Sufi Kalam | Ishq • Fanā • Baqā | Dr. Zarf-e-Noori | SufiPulse USA\n\nIk Khamoshi, Tu Aur Main is an original mystical Sufi kalam written by Dr. Zarf-e-Noori and presented by SufiPulse USA.\n\nEvery spiritual journey begins with a question.\n\nSome seek knowledge.\n\nSome seek peace.\n\nSome seek the Beloved.\n\nThis kalam begins with silence and follows the inward journey of a seeker who slowly discovers that the greatest distance is not between two people, but between the ego and the heart. What begins as \"Tu Aur Main\" gradually unfolds into a deeper realization where separation fades, veils disappear, and only Divine Presence remains.\n\nDrawing upon the timeless language of Sufi spirituality while speaking through a contemporary musical expression, this original composition explores longing, remembrance, surrender, unveiling, silence, Noor, Fanā, Baqā, and the mystery that exists beyond words. Each verse is written as a step upon the path, each chorus as a remembrance, and each silence as an invitation to listen inward.\n\nThis kalam is not intended as entertainment alone. It is written for reflection, contemplation, and the inner journey. Whether you are listening during prayer, meditation, travel, study, or moments of solitude, may these words become a companion on your own path.\n\nThe recurring phrase \"Tu Aur Main\" carries more than poetic meaning. At the beginning it reflects duality, the apparent distance between the seeker and the Beloved. As the journey progresses, the distinction becomes thinner, the identities become lighter, and finally even the words themselves are unable to contain the experience. What remains cannot be fully described. It can only be lived.\n\nThroughout history, generations of Sufi masters have spoken of longing, remembrance, annihilation of the ego, and abiding in Divine Presence. This kalam follows that timeless current while remaining an original literary work created for today's listener.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\nTitle: Ik Khamoshi, Tu Aur Main\n\nOriginal Sufi Mystical Kalam\n\nWritten & Composed by: Dr. Zarf-e-Noori\n\nPresented by: SufiPulse USA\n\nGenre: Modern Mystical Sufi\n\nLanguage: Urdu\n\nSubtitle : English\n\nTheme: Divine Love • Inner Journey • Ishq • Fanā • Baqā • Noor • Silence • Remembrance • Contemplation\n\n━━━━━━━━━━━━━━━━━━━━━━\n\nAbout Dr. Zarf-e-Noori\n\nDr. Zarf-e-Noori writes original mystical poetry inspired by the enduring language of Sufi spirituality, seeking to express timeless themes through contemporary artistic forms. His work explores Divine Love, self-discovery, contemplation, remembrance, compassion, silence, and the transformative journey of the human soul.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\nAbout SufiPulse USA\n\nSufiPulse USA is an independent platform dedicated to producing original mystical music, Sufi poetry, spiritual storytelling, contemplative art, and educational content for audiences around the world.\n\nOur vision is to preserve and renew the living tradition of sacred expression by creating original works that transcend geography, language, culture, and musical style while remaining rooted in sincerity, beauty, and reflection.\n\nEvery kalam published by SufiPulse USA is part of a growing collection that explores the timeless themes of Divine Love, inner transformation, remembrance, and the search for truth.\n\nVisit us:\n🌐 [www.sufipulse.com] (http://www.sufipulse.com)\n\n━━━━━━━━━━━━━━━━━━━━━━\n\nIf this kalam resonates with your heart,\n\n❤️ Like this video\n\n💬 Share your reflections in the comments\n\n🔔 Subscribe to SufiPulse USA\n\n📤 Share this kalam with fellow seekers, lovers of Sufi music, Urdu poetry, spiritual literature, meditation, and contemplative music.\n\nYour support helps preserve original mystical poetry and brings authentic Sufi expression to listeners across the world.\n\n\"Jo Bach Gaya... Woh Ishq Tha.\"\n\n━━━━━━━━━━━━━━━━━━━━━━\n\nKeywords\n\nOriginal Sufi Kalam, Sufi Music, Urdu Sufi Poetry, Mystical Music, Divine Love, Ishq, Fanā, Baqā, Noor, Zikr, Spiritual Music, Meditation Music, Soul Music, Contemplative Music, Islamic Spirituality, Sufi Poetry, Urdu Kalam, Original Urdu Song, Mystical Journey, Inner Peace, Silence, Sacred Music, Spiritual Awakening, Dr. Zarf-e-Noori, SufiPulse USA.\n\n#IkKhamoshi #TuAurMain #SufiPulseUSA #OriginalSufiKalam #DrZarfENoori #SufiMusic #SufiSongs #MysticalPoetry #UrduPoetry #Ishq #DivineLove #Fana #Baqa #Noor #SoulMusic #MeditationMusic #SpiritualMusic #Mysticism #SufiPoetry #UrduMusic #OriginalMusic #SpiritualJourney #SacredMusic #InnerPeace",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Dbd0fhJty4A/hqdefault.jpg",
+    "publishedDate": "2026-07-26",
+    "durationSeconds": 810,
+    "durationFormatted": "13:30",
+    "views": 314,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "aMzdiIuYgK4",
+    "title": "Take Control – A Ramadan Prayer",
+    "canonicalTitle": "Take Control – A Ramadan Prayer",
+    "youtubeTitle": "Take Control | A Ramadan Prayer | SufiPulse USA",
+    "subtitle": "Ramadan Reset Reflection",
+    "description": "Take Control – A Ramadan Prayer\n\nEnglish & Urdu | SufiPulse USA\n\nRamadan is not only a month of fasting.\nIt is a sacred interruption.\n\nA pause in time",
+    "thumbnailUrl": "https://i.ytimg.com/vi/aMzdiIuYgK4/hqdefault.jpg",
+    "publishedDate": "2026-02-20",
+    "durationSeconds": 617,
+    "durationFormatted": "10:17",
+    "views": 134,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "g9VGzWRHZ0g",
+    "title": "Aaja Sufi Ban Ja",
+    "canonicalTitle": "Aaja Sufi Ban Ja",
+    "youtubeTitle": "Aaja Sufi Banja | Step Away From Ego | SufiPulse USA",
+    "subtitle": "Step Away From Ego",
+    "description": "“Aaja Sufi Ban Ja” is an inward call. It speaks to the restlessness that survives beneath rituals, identities, and borrowed certainty. It does not rej",
+    "thumbnailUrl": "https://i.ytimg.com/vi/g9VGzWRHZ0g/hqdefault.jpg",
+    "publishedDate": "2026-02-07",
+    "durationSeconds": 816,
+    "durationFormatted": "13:36",
+    "views": 133,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "_zx1N_xZzys",
+    "title": "Nazar-e-Karam Kar De",
+    "canonicalTitle": "Nazar-e-Karam Kar De",
+    "youtubeTitle": "Nazar-e-Karam Kar De | A Prayer for Inner Elevation | SufiPulse USA",
+    "subtitle": "A Prayer for Inner Elevation",
+    "description": "This is not a rebuttal of old prayers, \" Lift Karadey\" it’s a refinement of intention. The song respects the instinct to ask, but gently turns the dir",
+    "thumbnailUrl": "https://i.ytimg.com/vi/_zx1N_xZzys/hqdefault.jpg",
+    "publishedDate": "2026-01-24",
+    "durationSeconds": 517,
+    "durationFormatted": "8:37",
+    "views": 322,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "n6q_g4bY_sA",
+    "title": "Main Hoon Sufi Researcher",
+    "canonicalTitle": "Main Hoon Sufi Researcher",
+    "youtubeTitle": "Main Hoon Sufi Researcher | A Reflection for Those Who Study the World | SufiPulse USA",
+    "subtitle": "A Sufi Reflection for Those Who Study the World",
+    "description": "Sharing this song may open a question someone has been carrying\n\nMain Hoon Sufi Researcher | Kainaat Ki Ayat Reader\nA Sufi Reflection for Those Who St",
+    "thumbnailUrl": "https://i.ytimg.com/vi/n6q_g4bY_sA/hqdefault.jpg",
+    "publishedDate": "2026-01-18",
+    "durationSeconds": 694,
+    "durationFormatted": "11:34",
+    "views": 75,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "lMxb4Dk-n0Y",
+    "title": "Ya Dost – Asma Se Qalb Tak",
+    "canonicalTitle": "Ya Dost – Asma Se Qalb Tak",
+    "youtubeTitle": "Ya Dost | Asma Se Qalb Tak | Divine Names & Responsibility | SufiPulse USA",
+    "subtitle": "How Divine Names Shape the Heart",
+    "description": "Ya Dost (Asma se Qalb Tak) is a reflective spiritual composition that explores the relationship between the Divine Names (Asma) and the human heart (Q",
+    "thumbnailUrl": "https://i.ytimg.com/vi/lMxb4Dk-n0Y/hqdefault.jpg",
+    "publishedDate": "2026-01-11",
+    "durationSeconds": 648,
+    "durationFormatted": "10:48",
+    "views": 329,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "QkGzXGrEllo",
+    "title": "Haji Naam Mila, Par Badla Kya?",
+    "canonicalTitle": "Haji Naam Mila, Par Badla Kya?",
+    "youtubeTitle": "Haji Naam Mila, Par Badla Kya? | The Journey Ended. Did the Ego? | SufiPulse USA",
+    "subtitle": "The Journey Within",
+    "description": "This song is not a rejection of Hajj.\nIt is a reflection on what is expected to change after it.\n\nTitles don’t humble.\n Names don’t purify.\n Only meet",
+    "thumbnailUrl": "https://i.ytimg.com/vi/QkGzXGrEllo/hqdefault.jpg",
+    "publishedDate": "2026-01-07",
+    "durationSeconds": 643,
+    "durationFormatted": "10:43",
+    "views": 279,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "FelED4DBHCk",
+    "title": "Zair-o-Zabar Ka Jalwa",
+    "canonicalTitle": "Zair-o-Zabar Ka Jalwa",
+    "youtubeTitle": "Zair-o-Zabar ka Jalwa | Qira’at-e-Qur’an That Outlived the Fire | SufiPulse USA",
+    "subtitle": "Qira'at-e-Qur'an That Awakens the Soul",
+    "description": "This is not a historical defense.\nIt is a moral mirror.\n\n“Zair–Zabar” explores a difficult paradox in Islamic history:\nhow Divine preservation sometim",
+    "thumbnailUrl": "https://i.ytimg.com/vi/FelED4DBHCk/hqdefault.jpg",
+    "publishedDate": "2026-01-05",
+    "durationSeconds": 813,
+    "durationFormatted": "13:33",
+    "views": 713,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "k0D188oBZ1Y",
+    "title": "Khwaja Mere Khwaja",
+    "canonicalTitle": "Khwaja Mere Khwaja",
+    "youtubeTitle": "Khwaja Mere Khwaja | A Devotional Adaptation | SufiPulse USA",
+    "subtitle": "A Devotional Adaptation",
+    "description": "This offering is a humble adaptation inspired by the eternal presence of Khwaja Moinuddin Hasan Chishti (RA), known across the Indian Subcontinent as ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/k0D188oBZ1Y/hqdefault.jpg",
+    "publishedDate": "2026-01-03",
+    "durationSeconds": 682,
+    "durationFormatted": "11:22",
+    "views": 543,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "sPOY59RAkAU",
+    "title": "A-las-tu Ki Goonj",
+    "canonicalTitle": "A-las-tu Ki Goonj",
+    "youtubeTitle": "A-lastu Ki Goonj | Rab Ki Khamoshi Mein Rooh | SufiPulse USA",
+    "subtitle": "Rab Ki Khamoshi Mein Rooh",
+    "description": "This song is dedicated to abled children — children whose abilities are expressed differently, whose silence carries meaning, and whose presence resha",
+    "thumbnailUrl": "https://i.ytimg.com/vi/sPOY59RAkAU/hqdefault.jpg",
+    "publishedDate": "2025-12-25",
+    "durationSeconds": 896,
+    "durationFormatted": "14:56",
+    "views": 1080,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "24SrdzzLYus",
+    "title": "Gardish",
+    "canonicalTitle": "Gardish",
+    "youtubeTitle": "Gardish | Rab Ki Khamosh Daleel | The Inescapable Cycle | SufiPulse USA",
+    "subtitle": "Rab Ki Khamosh Daleel • The Inescapable Cycle",
+    "description": "You never arrived. You never left. You are in the cycle.\n\nThere is no escape from His cycle.\nNot because it traps you,\nbut because there was never an ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/24SrdzzLYus/hqdefault.jpg",
+    "publishedDate": "2025-12-20",
+    "durationSeconds": 896,
+    "durationFormatted": "14:56",
+    "views": 3664,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "XPaJu3lHd5Y",
+    "title": "Ye Lakeerein Nahi, Lauh-e-Mehfooz Ki Tahrirein",
+    "canonicalTitle": "Ye Lakeerein Nahi, Lauh-e-Mehfooz Ki Tahrirein",
+    "youtubeTitle": "Ye Lakeerein Nahi | Lauh-e-Mehfooz Ki Tahrirein | SufiPulse USA",
+    "subtitle": "A Sufi Reflection on Destiny",
+    "description": "Subtitles are available in 17 languages to make the message accessible across cultures. A Sufi Song for those who have outgrown fortune-telling and su",
+    "thumbnailUrl": "https://i.ytimg.com/vi/XPaJu3lHd5Y/hqdefault.jpg",
+    "publishedDate": "2025-12-14",
+    "durationSeconds": 874,
+    "durationFormatted": "14:34",
+    "views": 1542,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "LwnPXSEJJHI",
+    "title": "Sufi Hacker – Dil Ka Code Reader",
+    "canonicalTitle": "Sufi Hacker – Dil Ka Code Reader",
+    "youtubeTitle": "Sufi Hacker | Dil Ka Code Reader | For Developers & Thinkers | SufiPulse USA",
+    "subtitle": "For Developers and Seekers",
+    "description": "Sufi Hacker enters the hidden system beneath your thoughts.\nIt reveals the source code of the heart, the firewalls of ego, the glitches of memory, and",
+    "thumbnailUrl": "https://i.ytimg.com/vi/LwnPXSEJJHI/hqdefault.jpg",
+    "publishedDate": "2025-12-09",
+    "durationSeconds": 785,
+    "durationFormatted": "13:05",
+    "views": 1877,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "be6GFwGpobw",
+    "title": "Needle to Noor (Saada-e-Najaat)",
+    "canonicalTitle": "Needle to Noor (Saada-e-Najaat)",
+    "youtubeTitle": "Needle to Noor | Saada-e-Najaat | Voice for Those Facing Addiction | SufiPulse USA",
+    "subtitle": "Voice for the Mubtala",
+    "description": "“Needle to Noor” is not just a song.\nIt is a voice for the Mubtala , the one caught in drug addiction, and a reminder that life is more important than",
+    "thumbnailUrl": "https://i.ytimg.com/vi/be6GFwGpobw/hqdefault.jpg",
+    "publishedDate": "2025-11-28",
+    "durationSeconds": 657,
+    "durationFormatted": "10:57",
+    "views": 2189,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "8nmW-vJbwMA",
+    "title": "SufiPulse Studio Session – 13 January 2026",
+    "canonicalTitle": "SufiPulse Studio Session – 13 January 2026",
+    "youtubeTitle": "13 January 2026",
+    "subtitle": "Sacred Recording Session",
+    "description": "KASHMIR",
+    "thumbnailUrl": "https://i.ytimg.com/vi/8nmW-vJbwMA/maxresdefault.jpg",
+    "publishedDate": "2026-01-13",
+    "durationSeconds": 161,
+    "durationFormatted": "2:41",
+    "views": 40840,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "X_7bA19M1E8",
+    "title": "ShortNeedle to Noor | سادۂ نجات | Saada-e-Najaat",
+    "canonicalTitle": "ShortNeedle to Noor | سادۂ نجات | Saada-e-Najaat",
+    "youtubeTitle": "ShortNeedle to Noor | سادۂ نجات | Saada-e-Najaat",
+    "subtitle": "",
+    "description": "“Needle to Noor” is not just a song.\nIt is a voice for the Mubtala , the one caught in drug addiction, and a reminder that life is more important than",
+    "thumbnailUrl": "https://i.ytimg.com/vi/X_7bA19M1E8/maxresdefault.jpg",
+    "publishedDate": "2025-11-28",
+    "durationSeconds": 60,
+    "durationFormatted": "1:00",
+    "views": 251,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "vKVAKJgOa5I",
+    "title": "Ya Ghaus ul Azam | Madad Ban Kar Aaja | Come as My Helper",
+    "canonicalTitle": "Ya Ghaus ul Azam | Madad Ban Kar Aaja | Come as My Helper",
+    "youtubeTitle": "Ya Ghaus-ul-Azam | Madad Ban Kar Aaja | Come as My Helper | SufiPulse USA",
+    "subtitle": "",
+    "description": "This kalam is a call from the heart toward the one who spent his life pointing humanity back to Allah Ghaus-ul-Azam Sayyid Abdul Qadir Jilani (Rahmatu",
+    "thumbnailUrl": "https://i.ytimg.com/vi/vKVAKJgOa5I/hqdefault.jpg",
+    "publishedDate": "2025-11-23",
+    "durationSeconds": 741,
+    "durationFormatted": "12:21",
+    "views": 470,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "BFG-8G3-thY",
+    "title": "Main Habba Hoon | Meri Kahani Dilon Mein Hai | Kagazon Mein Nahi",
+    "canonicalTitle": "Main Habba Hoon | Meri Kahani Dilon Mein Hai | Kagazon Mein Nahi",
+    "youtubeTitle": "Main Habba Hoon | Meri Kahani Dilon Mein Hai, Kagazon Mein Nahi | SufiPulse USA",
+    "subtitle": "",
+    "description": "This is not a song. It’s a rebuttal.A rebuttal to those who try to bury Habba Khatoon under papers, proofs, and pride. A reminder that truth was never",
+    "thumbnailUrl": "https://i.ytimg.com/vi/BFG-8G3-thY/hqdefault.jpg",
+    "publishedDate": "2025-11-11",
+    "durationSeconds": 1010,
+    "durationFormatted": "16:50",
+    "views": 1551,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "jV-f1b_qSYU",
+    "title": "Khaaki Banda (Updated via Legacy Save)",
+    "canonicalTitle": "Khaaki Banda (Updated via Legacy Save)",
+    "youtubeTitle": "Khaaki Banda | Satrangi | Manrangi | Zaat Magar Faani Teri | SufiPulse USA",
+    "subtitle": "",
+    "description": "A soulful reflection on man’s ego, illusion, and divine dust.\nKhaaki Banda — The Dust That Forgot Its Source.\n\nA Song originally written by Bulleh Sha",
+    "thumbnailUrl": "https://i.ytimg.com/vi/jV-f1b_qSYU/hqdefault.jpg",
+    "publishedDate": "2025-11-07",
+    "durationSeconds": 619,
+    "durationFormatted": "10:19",
+    "views": 1519,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "zFD8rHYcx-w",
+    "title": "Agar Mohammad ﷺ Na Hotay | Subtitled in 17 Languages",
+    "canonicalTitle": "Agar Mohammad ﷺ Na Hotay | Subtitled in 17 Languages",
+    "youtubeTitle": "Agar Mohammad ﷺ Na Hotay | Subtitled in 17 Languages | SufiPulse USA",
+    "subtitle": "",
+    "description": "The song asks question too many avoid, may call for a fatwa after hearing this, and that’s fine. Let it come. This song is revelation. A reminder that",
+    "thumbnailUrl": "https://i.ytimg.com/vi/zFD8rHYcx-w/hqdefault.jpg",
+    "publishedDate": "2025-10-16",
+    "durationSeconds": 731,
+    "durationFormatted": "12:11",
+    "views": 664,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "A0Xrk-Jp9OI",
+    "title": "RANGDAY YA-ALLAH | The Color of Return",
+    "canonicalTitle": "RANGDAY YA-ALLAH | The Color of Return",
+    "youtubeTitle": "RANGDAY YA-ALLAH | The Color of Return | SufiPulse USA",
+    "subtitle": "",
+    "description": "\"Color me again, O Allah — before the world paints me wrong.\"\nRangday Ya-Allah is not just a song, it’s a spiritual reawakening.\nIt calls every heart ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/A0Xrk-Jp9OI/hqdefault.jpg",
+    "publishedDate": "2025-10-10",
+    "durationSeconds": 918,
+    "durationFormatted": "15:18",
+    "views": 1151,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "QrNA31-s8u0",
+    "title": "Bulla Ki Jaana Main Kaun | Find Who You Are",
+    "canonicalTitle": "Bulla Ki Jaana Main Kaun | Find Who You Are",
+    "youtubeTitle": "Bulla Ki Jaana Main Kaun | Find Who You Are | SufiPulse USA",
+    "subtitle": "",
+    "description": "Who are you, beyond your name, religion, and nation?\n\nIn a divided world, Bulleh Shaha’s voice reminds us: We are not Hindu, Muslim, Sikh, or Christia",
+    "thumbnailUrl": "https://i.ytimg.com/vi/QrNA31-s8u0/hqdefault.jpg",
+    "publishedDate": "2025-10-01",
+    "durationSeconds": 527,
+    "durationFormatted": "8:47",
+    "views": 1986,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "lqMkErpT3dQ",
+    "title": "Bas Karjee Hun Bas Karjee | Bulleh Shah Adaptation Version",
+    "canonicalTitle": "Bas Karjee Hun Bas Karjee | Bulleh Shah Adaptation Version",
+    "youtubeTitle": "Bas Karjee Hun Bas Karjee | Bulleh Shah Adaptation | SufiPulse USA",
+    "subtitle": "",
+    "description": "A devotional Sufi anthem adapted from Bulleh Shah’s timeless kalam, where longing turns into dialogue between the seeker and the Creator. This adaptat",
+    "thumbnailUrl": "https://i.ytimg.com/vi/lqMkErpT3dQ/hqdefault.jpg",
+    "publishedDate": "2025-09-29",
+    "durationSeconds": 327,
+    "durationFormatted": "5:27",
+    "views": 481,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "jdGv8DEu4pE",
+    "title": "सूफ़ीपल्स | सूफ़ी कविता और संगीत का एक वैश्विक आंदोलन – आज ही रजिस्टर करें।",
+    "canonicalTitle": "सूफ़ीपल्स | सूफ़ी कविता और संगीत का एक वैश्विक आंदोलन – आज ही रजिस्टर करें।",
+    "youtubeTitle": "सूफ़ीपल्स | सूफ़ी कविता और संगीत का वैश्विक आंदोलन | SufiPulse USA",
+    "subtitle": "",
+    "description": "चाहे आप एक सूफ़ी लेखक हों, गायक हों या श्रोता — यह आपका स्थान है जहाँ आप अमर कविताओं और संगीत को खोज सकते हैं, साझा कर सकते हैं और उनसे जुड़ सकते हैं।",
+    "thumbnailUrl": "https://i.ytimg.com/vi/jdGv8DEu4pE/maxresdefault.jpg",
+    "publishedDate": "2025-09-24",
+    "durationSeconds": 311,
+    "durationFormatted": "5:11",
+    "views": 187,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "Sp4cG8TI7i8",
+    "title": "A Global Movement of Sufi Poetry & Music",
+    "canonicalTitle": "A Global Movement of Sufi Poetry & Music",
+    "youtubeTitle": "SufiPulse | A Global Movement of Sufi Poetry & Music | SufiPulse USA",
+    "subtitle": "Institutional Movement Anthem",
+    "description": "Whether you’re a Sufi writer, singer, or listener, this is your space to discover, share, and resonate with timeless poetry and music. Every pen finds",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Sp4cG8TI7i8/maxresdefault.jpg",
+    "publishedDate": "2025-09-24",
+    "durationSeconds": 311,
+    "durationFormatted": "5:11",
+    "views": 206,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "nn3gXZQqX84",
+    "title": "صوفی پلس | عالمی تحریک",
+    "canonicalTitle": "صوفی پلس | عالمی تحریک",
+    "youtubeTitle": "SufiPulse USA صوفی پلس | صوفی شاعری اور موسیقی کی ایک عالمی تحریک",
+    "subtitle": "عالمی صوفی تحریک",
+    "description": "چاہے آپ ایک صوفی شاعر ہوں، گلوکار ہوں یا سامع، یہ آپ کی جگہ ہے جہاں آپ لازوال شاعری اور موسیقی کو دریافت کریں، بانٹیں اور محسوس کریں۔\n\nہر قلم کو آواز ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/nn3gXZQqX84/maxresdefault.jpg",
+    "publishedDate": "2025-09-24",
+    "durationSeconds": 311,
+    "durationFormatted": "5:11",
+    "views": 160,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "_BxraDL7kS0",
+    "title": "Korthas Aye Sanam",
+    "canonicalTitle": "Korthas Aye Sanam",
+    "youtubeTitle": "Korthas Aye Sanam | Breaking All Measures of Longing | SufiPulse USA",
+    "subtitle": "Breaking All Measures of Longing",
+    "description": "This song is carried by the verse of Nyam Saeb (Nyam Sahib, 1782–1854) — known as the Sufi Shair-e-Muntazir and a spiritual transmitter of Kashmir.\n\nN",
+    "thumbnailUrl": "https://i.ytimg.com/vi/_BxraDL7kS0/hqdefault.jpg",
+    "publishedDate": "2025-09-09",
+    "durationSeconds": 614,
+    "durationFormatted": "10:14",
+    "views": 1151,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "kVtYDOa5hPs",
+    "title": "Dapyomas Baalyaaras Yaaer Laagav",
+    "canonicalTitle": "Dapyomas Baalyaaras Yaaer Laagav",
+    "youtubeTitle": "Dapyomas Baelyaaras Yaar Laagav | I Told My Beloved, Let’s Begin a Friendship | SufiPulse USA",
+    "subtitle": "I Told My Beloved, Let's Begin A Friendship",
+    "description": "171 Years Old Sufi Song  Adaptation Version\n\nThe Eternal Dialogue Between Creator and Creation\n\nA mystic flame from Kashmir (1782–1854), still burning",
+    "thumbnailUrl": "https://i.ytimg.com/vi/kVtYDOa5hPs/hqdefault.jpg",
+    "publishedDate": "2025-09-07",
+    "durationSeconds": 620,
+    "durationFormatted": "10:20",
+    "views": 1125,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "Ykx2PwA4mOk",
+    "title": "Al-Razzāq",
+    "canonicalTitle": "Al-Razzāq",
+    "youtubeTitle": "Al-Razzāq | Rozi Sirf Tujh Se Hai | SufiPulse USA",
+    "subtitle": "Rozi Sirf Tujh Se Hai",
+    "description": "A devotional song that reminds us Rizq comes only from Allah, Al-Razzāq.\n\nThis piece moves through Qur’anic reflections, Prophetic teachings, and Sufi",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Ykx2PwA4mOk/maxresdefault.jpg",
+    "publishedDate": "2025-09-06",
+    "durationSeconds": 788,
+    "durationFormatted": "13:08",
+    "views": 1085,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "srM451HZEOE",
+    "title": "Yeh Ummat Hai Ya Khwaab Ka Dhoka?",
+    "canonicalTitle": "Yeh Ummat Hai Ya Khwaab Ka Dhoka?",
+    "youtubeTitle": "Yeh Ummat Hai | Ya Khwaab Ka Dhoka? #shorts #SufiPullseUSA",
+    "subtitle": "Sacred Reflection",
+    "description": "A haunting reflection on the state of the ummah.\n⚡ Yeh Ummat Hai – Ya Khwaab Ka Dhoka?\n✨ Full version on our channel – don’t miss it.\n🎶 Subscribe for",
+    "thumbnailUrl": "https://i.ytimg.com/vi/srM451HZEOE/maxresdefault.jpg",
+    "publishedDate": "2025-09-04",
+    "durationSeconds": 32,
+    "durationFormatted": "0:32",
+    "views": 161,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "p2SWi4XduOU",
+    "title": "Mansur – Jala! Mita! Bana! Saja!",
+    "canonicalTitle": "Mansur – Jala! Mita! Bana! Saja!",
+    "youtubeTitle": "Mansur | Jala! Mita! Bana! Saja! #shorts #SufiPulse",
+    "subtitle": "Sacred Kalam",
+    "description": "📄 Description\n\nA powerful verse inspired by Mansur’s eternal call.\n🔥 Jala! Mita! Bana! Saja!\n✨ Full version on our channel – don’t miss it.\n🎶 Subsc",
+    "thumbnailUrl": "https://i.ytimg.com/vi/p2SWi4XduOU/maxresdefault.jpg",
+    "publishedDate": "2025-09-04",
+    "durationSeconds": 44,
+    "durationFormatted": "0:44",
+    "views": 58,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "CcCVyM3G7JE",
+    "title": "Dapyomas Baleyaaras Yaar Laagav",
+    "canonicalTitle": "Dapyomas Baleyaaras Yaar Laagav",
+    "youtubeTitle": "Dapyomas Baleyaaras Yaar Laagav #shorts #sufiPulse",
+    "subtitle": "Kashmiri Sacred Kalam",
+    "description": "'A soulful Kashmiri verse from SufiPulse.\n✨ Full version on our channel – don’t miss it.\n🎶 Subscribe for more Kashmiri & Sufi music.\n\n#shorts #SufiPu",
+    "thumbnailUrl": "https://i.ytimg.com/vi/CcCVyM3G7JE/maxresdefault.jpg",
+    "publishedDate": "2025-09-04",
+    "durationSeconds": 61,
+    "durationFormatted": "1:01",
+    "views": 17,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "BzcmOqiIHck",
+    "title": "SufiPulse Global Reach & YouTube Intelligence",
+    "canonicalTitle": "SufiPulse Global Reach & YouTube Intelligence",
+    "youtubeTitle": "YouTube Insights & Global Reach | SufiPulse USA",
+    "subtitle": "Audience Insight Overview",
+    "description": "📊 SufiPulse | Dr Kumar Foundation USA – YouTube Insights\n\nIn just 2 months, our channel has grown into a global voice for Sufi heritage and Kashmiri ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/BzcmOqiIHck/hqdefault.jpg",
+    "publishedDate": "2025-09-04",
+    "durationSeconds": 311,
+    "durationFormatted": "5:11",
+    "views": 104,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "hbe-e1x1yAU",
+    "title": "Dapyomas Baleyaaras Yaar Laagav",
+    "canonicalTitle": "Dapyomas Baleyaaras Yaar Laagav",
+    "youtubeTitle": "Dapyomas Baelyaaras Yaar Laagav | Non-Kashmiri Vocal Adaptation | SufiPulse USA",
+    "subtitle": "Vessels of the Soch Kral's Flame",
+    "description": "171 years after his passing, the mystic potter of Kashmir still speaks.\nSoch Kral RA’s voice rises again — not in the soil of Kashmir alone, but acros",
+    "thumbnailUrl": "https://i.ytimg.com/vi/hbe-e1x1yAU/hqdefault.jpg",
+    "publishedDate": "2025-09-02",
+    "durationSeconds": 525,
+    "durationFormatted": "8:45",
+    "views": 231,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "tNttnPKjdPg",
+    "title": "Yeh Ummat Hai? Ya Khwaab Ka Dhoka?",
+    "canonicalTitle": "Yeh Ummat Hai? Ya Khwaab Ka Dhoka?",
+    "youtubeTitle": "Yeh Ummat Hai? Ya Khwaab Ka Dhoka? | Forgotten Last Sermon | SufiPulse USA",
+    "subtitle": "The Forgotten Last Sermon",
+    "description": "⚡ A cry against forgetfulness. A remembrance of Muhammad’s last sermon. Yeh Ummat Hai? Ya Khwaab Ka Dhoka?\n\nIt asks a piercing question:\n👉 “Is this t",
+    "thumbnailUrl": "https://i.ytimg.com/vi/tNttnPKjdPg/hqdefault.jpg",
+    "publishedDate": "2025-08-25",
+    "durationSeconds": 601,
+    "durationFormatted": "10:01",
+    "views": 881,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "LMen31sMjMg",
+    "title": "Kumar – Qalandar-e-Zaman",
+    "canonicalTitle": "Kumar – Qalandar-e-Zaman",
+    "youtubeTitle": "Kumar Ganderbal | Qalandar-e-Zaman | Tribute to the Caravan of Sufi Scientists | SufiPulse USA",
+    "subtitle": "Tribute to Caravan of Sufi Scientists",
+    "description": "This song is subtitled in 14 global languages, carrying Kashmir’s Sufi pulse to seekers across the world. For all seekers of truth who believe that Su",
+    "thumbnailUrl": "https://i.ytimg.com/vi/LMen31sMjMg/hqdefault.jpg",
+    "publishedDate": "2025-08-23",
+    "durationSeconds": 611,
+    "durationFormatted": "10:11",
+    "views": 2181,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "_5a7HNedpUw",
+    "title": "Main Silsila-e-Owais Hoon",
+    "canonicalTitle": "Main Silsila-e-Owais Hoon",
+    "youtubeTitle": "Main Silsila-e-Owais Hoon | A Soul-Call | SufiPulse USA",
+    "subtitle": "A Soul-Call",
+    "description": "This song is not entertainment. It is a zikr, a lesson, a soul-call.\nIt follows the hidden saint Owais Qarni (RA) — the son who served his mother unti",
+    "thumbnailUrl": "https://i.ytimg.com/vi/_5a7HNedpUw/hqdefault.jpg",
+    "publishedDate": "2025-08-20",
+    "durationSeconds": 871,
+    "durationFormatted": "14:31",
+    "views": 1602,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "NfFq4qjiWDA",
+    "title": "Ya Rab Mujhe Rizq-e-Halaal De",
+    "canonicalTitle": "Ya Rab Mujhe Rizq-e-Halaal De",
+    "youtubeTitle": "Ya Rab Mujhe Rizq-e-Halaal De | A Dua in the Spirit of Iqbal (RA) | SufiPulse USA",
+    "subtitle": "A Dua in the Spirit of Allama Iqbal",
+    "description": "Ya Rab – A Dua in the Spirit of Iqbal\n\nThis qawwali is more than a song — it is a living prayer. Every verse is a heartfelt plea to Allah: for purity,",
+    "thumbnailUrl": "https://i.ytimg.com/vi/NfFq4qjiWDA/hqdefault.jpg",
+    "publishedDate": "2025-08-19",
+    "durationSeconds": 704,
+    "durationFormatted": "11:44",
+    "views": 2190,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "3axIOaWesf0",
+    "title": "Teri Mitti… Mera Kashmir",
+    "canonicalTitle": "Teri Mitti… Mera Kashmir",
+    "youtubeTitle": "Teri Mitti... Mera Kashmir | Sufi Anthem for Kashmir’s Soul | SufiPulse USA",
+    "subtitle": "Sufi Anthem for Kashmir's Soul",
+    "description": "Sufi Message\n\nInspired by Lal Ded and Nund Rishi’s eternal bond — the milk of one soul nourishing another. A reminder that no stone, flower, or drop o",
+    "thumbnailUrl": "https://i.ytimg.com/vi/3axIOaWesf0/hqdefault.jpg",
+    "publishedDate": "2025-08-18",
+    "durationSeconds": 669,
+    "durationFormatted": "11:09",
+    "views": 1572,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "3JmvkoRwM-0",
+    "title": "Mansoor! Jala! Mita! Bana! Saja!",
+    "canonicalTitle": "Mansoor! Jala! Mita! Bana! Saja!",
+    "youtubeTitle": "Mansoor! Jala! Mita! Bana! Saja! | Burn Falsehood, Adorn the Soul | SufiPulse USA",
+    "subtitle": "Ecstatic Remembrance",
+    "description": "Jala! Mita! Bana! Saja!  Burn falsehood, Erase the ego, Create truth, Adorn the soul.\n\nPerformed in URDU , with multi-subtitles available in Roman Urd",
+    "thumbnailUrl": "https://i.ytimg.com/vi/3JmvkoRwM-0/hqdefault.jpg",
+    "publishedDate": "2025-08-09",
+    "durationSeconds": 636,
+    "durationFormatted": "10:36",
+    "views": 1563,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "hXAJUFwEuGk",
+    "title": "Sheikh Noorani (RA) – Alamdar-e-Kashmir",
+    "canonicalTitle": "Sheikh Noorani (RA) – Alamdar-e-Kashmir",
+    "youtubeTitle": "Sheikh! Sheikh! Noorani (RA) | Father of Sustainable Development | SufiPulse USA",
+    "subtitle": "Father of Sustainable Devotion",
+    "description": "An Anthem for Kashmir, For the Earth, and For the Soul\nPresented by Dr. Kumar Foundation USA  | SufiPulse Collaboration\n\nAbout the Song\n“Sheikh! Sheik",
+    "thumbnailUrl": "https://i.ytimg.com/vi/hXAJUFwEuGk/hqdefault.jpg",
+    "publishedDate": "2025-08-05",
+    "durationSeconds": 506,
+    "durationFormatted": "8:26",
+    "views": 550,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "cYAxRG1ESbo",
+    "title": "A Universal Sufi Call",
+    "canonicalTitle": "A Universal Sufi Call",
+    "youtubeTitle": "SufiPulse | A Universal Sufi Call | Kashmir’s Voice in Every Tongue | SufiPulse USA",
+    "subtitle": "Kashmir's Voice in Every Tongue",
+    "description": "SufiPulse – Kashmir’s Voice in Every Tongue\nA Melodic Global Chant | A Universal Sufi Call\n\nFor the first time in history, Kashmiri Sufi Kalam is echo",
+    "thumbnailUrl": "https://i.ytimg.com/vi/cYAxRG1ESbo/hqdefault.jpg",
+    "publishedDate": "2025-08-01",
+    "durationSeconds": 323,
+    "durationFormatted": "5:23",
+    "views": 111,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "n56tjt8uSjM",
+    "title": "La Ke Bina Kalima Jhooti Hai",
+    "canonicalTitle": "La Ke Bina Kalima Jhooti Hai",
+    "youtubeTitle": "La Ke Bina Kalima Jhooti Hai | Sufi Reflection on Tawheed | SufiPulse USA",
+    "subtitle": "Tawheed & Annihilation",
+    "description": "RAAZ-E-KALIMA – Naujawan Rooh Ka Nara\nLa Ilāha Illallah… Muhammadur Rasūlullāh\n\n✍️ Lyrics & Concept: Dr. Zarf-e-Noori\n🎧 Presented by SufiPulse\n🕋 In ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/n56tjt8uSjM/hqdefault.jpg",
+    "publishedDate": "2025-07-28",
+    "durationSeconds": 643,
+    "durationFormatted": "10:43",
+    "views": 1559,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "jChUc58CZyw",
+    "title": "Main Habba Hoon",
+    "canonicalTitle": "Main Habba Hoon",
+    "youtubeTitle": "Main Habba Hoon | Aaj Ke Habba Hoon | SufiPulse USA",
+    "subtitle": "Aaj Ki Habba Khatoon",
+    "description": "🎵 Title: Main Bhi Habba Hoon | A SufiPulse USA Studio Original\nLyrics by Dr. Zeenat Ara & Dr. Zarf-e-Noori\nKashmir ki Roohani Aurat ki Aawaaz \n📅 Rel",
+    "thumbnailUrl": "https://i.ytimg.com/vi/jChUc58CZyw/hqdefault.jpg",
+    "publishedDate": "2025-07-27",
+    "durationSeconds": 942,
+    "durationFormatted": "15:42",
+    "views": 2457,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "BMqHN5Uon_k",
+    "title": "Lalla – Noor Ki Maadar",
+    "canonicalTitle": "Lalla – Noor Ki Maadar",
+    "youtubeTitle": "Lalla | Noor Ki Maadar | Har Kashmiri Faqeer Uske Dhoodh Ka Qarzdaar | SufiPulse USA",
+    "subtitle": "Kashmiri Mystic Heritage",
+    "description": "🎵 Lalla – Noor Ki Maadar\n✍️ Written by Zarf-e-Noori, from the soul of Lal Ded — the eternal Maadar of Kashmiri Faqeeri.\n🗓️ Issued: 7/19/2025 | Dr. K",
+    "thumbnailUrl": "https://i.ytimg.com/vi/BMqHN5Uon_k/hqdefault.jpg",
+    "publishedDate": "2025-07-26",
+    "durationSeconds": 688,
+    "durationFormatted": "11:28",
+    "views": 2034,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "eEwA-LGF7uo",
+    "title": "Saaz Mein Bhi Tu Hi Hai",
+    "canonicalTitle": "Saaz Mein Bhi Tu Hi Hai",
+    "youtubeTitle": "Saaz Mein Bhi Tu Hi Hai | Spiritual Music in Islam | SufiPulse USA",
+    "subtitle": "Spiritual Music & Poetic Resistance",
+    "description": "🎵 Saaz Mein Bhi Tu Hi Hai – A Soul’s Dialogue with As-Samīʿ\nLyrics & Concept: Zarf-e-Noori\nA Remote Sensing Interpreter • Env. Scientist • Emergency ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/eEwA-LGF7uo/hqdefault.jpg",
+    "publishedDate": "2025-07-24",
+    "durationSeconds": 721,
+    "durationFormatted": "12:01",
+    "views": 1963,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "najlQsUlBiw",
+    "title": "Yeh Dargah Mera Lahu Hai",
+    "canonicalTitle": "Yeh Dargah Mera Lahu Hai",
+    "youtubeTitle": "Yeh Dargah Mera Lahu Hai | Ab Tu Le Is Amaanat Ko | SufiPulse USA",
+    "subtitle": "Amaanat Har Lafz Mein Jagaa",
+    "description": "🎵 Yeh Dargah Mera Lahu Hai — Ab Tu Le Is Amaanat Ko\n(A Mother’s Dream to Her Sufi Son) \n \n✨ Lyrics & Concept: Written by Zarf-e-Noor\nKashmiri-America",
+    "thumbnailUrl": "https://i.ytimg.com/vi/najlQsUlBiw/hqdefault.jpg",
+    "publishedDate": "2025-07-22",
+    "durationSeconds": 728,
+    "durationFormatted": "12:08",
+    "views": 1358,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "i8cES7Ce_BU",
+    "title": "Baad Az Khuda Buzurg To Hai Qissa Mukhtasar",
+    "canonicalTitle": "Baad Az Khuda Buzurg To Hai Qissa Mukhtasar",
+    "youtubeTitle": "Baad Az Khuda Buzurg To Hai | Qissa Mukhtasar | SufiPulse USA",
+    "subtitle": "Mid-Song Rebuttal",
+    "description": "🌀 Mid-Song Rebuttal\nFor the One Whose Ears Couldn’t Bear the Truth in the Song . Let These Words Now Speak in Text Format. \n\n✍️ Lyrics & Concept\nWrit",
+    "thumbnailUrl": "https://i.ytimg.com/vi/i8cES7Ce_BU/hqdefault.jpg",
+    "publishedDate": "2025-07-21",
+    "durationSeconds": 790,
+    "durationFormatted": "13:10",
+    "views": 2239,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "iVBX2ODmOLM",
+    "title": "Sufi Ban",
+    "canonicalTitle": "Sufi Ban",
+    "youtubeTitle": "Sufi Ban | Darood Ke Saath Farz Nibha | SufiPulse USA",
+    "subtitle": "Darood Ke Saath Farz Nibha",
+    "description": "🎵 Sufi Ban – Darood Ke Saath Farz Nibha\nReleased: July 19, 2025 | A SufiPulse Studio USA\n\nConcept & Message\nThis is not just a song—it’s a spiritual ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/iVBX2ODmOLM/maxresdefault.jpg",
+    "publishedDate": "2025-07-20",
+    "durationSeconds": 599,
+    "durationFormatted": "9:59",
+    "views": 1617,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "eL00_rtDWrE",
+    "title": "Mera Walid Wali Tha",
+    "canonicalTitle": "Mera Walid Wali Tha",
+    "youtubeTitle": "Mera Walid Wali Tha | Aur Main Us Sabr Ka Sufi Hoon | SufiPulse USA",
+    "subtitle": "Us Sabr Ka Sufi Hoon",
+    "description": "🎵 MERA WALID WALI THA – AUR MAIN US SABR KA SUFI HOON\n(Urdu | Rhythmic | Daf + Zikr + Sufi Chant)\n📅 Release Date: July 19, 2025 | Powered by SufiPul",
+    "thumbnailUrl": "https://i.ytimg.com/vi/eL00_rtDWrE/hqdefault.jpg",
+    "publishedDate": "2025-07-19",
+    "durationSeconds": 610,
+    "durationFormatted": "10:10",
+    "views": 2266,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "CsgGFTd8iLI",
+    "title": "Sajda Mohammad Ka Tha, Na Adam Ka",
+    "canonicalTitle": "Sajda Mohammad Ka Tha, Na Adam Ka",
+    "youtubeTitle": "Sajda Mohammad Ka Tha | Na Adam Ka | SufiPulse USA",
+    "subtitle": "Spiritual Realization",
+    "description": "Sajda Mohammad Ka Tha | Na Adam Ka\n(Urdu Remix Series | Sufi Chant | Noor-e-Muhammad ﷺ | Ishq + Sirr)\n\n📝 Video Description:\n🔥 Ghalti thi Iblees ki!\n",
+    "thumbnailUrl": "https://i.ytimg.com/vi/CsgGFTd8iLI/hqdefault.jpg",
+    "publishedDate": "2025-07-17",
+    "durationSeconds": 572,
+    "durationFormatted": "9:32",
+    "views": 3080,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "a_MynvITxO4",
+    "title": "Pehla Sufi Mohammad ﷺ",
+    "canonicalTitle": "Pehla Sufi Mohammad ﷺ",
+    "youtubeTitle": "Pehla Sufi Mohammad ﷺ | Noor-e-Muhammad Se Ibtida | SufiPulse USA",
+    "subtitle": "Noor-e-Muhammad Se Ibtidaa",
+    "description": "✨ YouTube Description — \"Pehla Sufi – Muhammad ﷺ\"\nA New Age SufiPulse Anthem | Sufi Chant × Spoken Word × Spiritual Rebellion\n\n🎵 Title: Pehla Sufi — ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/a_MynvITxO4/hqdefault.jpg",
+    "publishedDate": "2025-07-16",
+    "durationSeconds": 603,
+    "durationFormatted": "10:03",
+    "views": 1669,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "qodWD6igLEE",
+    "title": "Shikwa Jawab-e-Shikwa",
+    "canonicalTitle": "Shikwa Jawab-e-Shikwa",
+    "youtubeTitle": "Shikwa, Jawab-e-Shikwa | Sawaal, Jawaab Bhi Tu | SufiPulse USA",
+    "subtitle": "Sawaal Jawaab Bhi Tu",
+    "description": "🕊️ A SufiPulse Presentation | In Collaboration with Dr. Kumar Foundation & SSC Kashmir Chapter\n🗓️ Released: 21 June, 2025\n\n🔍 Spiritual Insight Behi",
+    "thumbnailUrl": "https://i.ytimg.com/vi/qodWD6igLEE/hqdefault.jpg",
+    "publishedDate": "2025-07-14",
+    "durationSeconds": 567,
+    "durationFormatted": "9:27",
+    "views": 854,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "OzqO23dy2GM",
+    "title": "Murshid Ke Qadmon Mein Noor Hai",
+    "canonicalTitle": "Murshid Ke Qadmon Mein Noor Hai",
+    "youtubeTitle": "Main Murid Hoon | Meri Rooh Us Ki Nazar Mein Hai | SufiPulse USA",
+    "subtitle": "Main Murīd Hoon, Meri Rooh Nazar Mein Hai",
+    "description": "🎵 Murshid ke Qadmon Mein Noor Hai\nA Sufi Chant of Light, Surrender, and Annihilation\nPresented by Dr. Kumar Foundation USA | SufiPulse Studios\n\n🎼 Ly",
+    "thumbnailUrl": "https://i.ytimg.com/vi/OzqO23dy2GM/hqdefault.jpg",
+    "publishedDate": "2025-07-12",
+    "durationSeconds": 403,
+    "durationFormatted": "6:43",
+    "views": 1420,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "sDmCLoHeWeQ",
+    "title": "Main Iqbal Hoon, Main Sawal Hoon",
+    "canonicalTitle": "Main Iqbal Hoon, Main Sawal Hoon",
+    "youtubeTitle": "Main Iqbal Hoon | Main Sawal Hoon | SufiPulse USA",
+    "subtitle": "Philosophical Inward Inquiry",
+    "description": "Main Iqbal Hoon | A Sufi Testimony, Not a Tribute\nPresented by SufiPulse Studios | In Eternal Honor of Dr. Muhammad Iqbal (RA)\n\n✨ ABOUT THIS SONG\nThis",
+    "thumbnailUrl": "https://i.ytimg.com/vi/sDmCLoHeWeQ/hqdefault.jpg",
+    "publishedDate": "2025-07-12",
+    "durationSeconds": 375,
+    "durationFormatted": "6:15",
+    "views": 737,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "Erl0JDrRbHw",
+    "title": "Manzil-e-Maqām – Labbaik Ya Rabb",
+    "canonicalTitle": "Manzil-e-Maqām – Labbaik Ya Rabb",
+    "youtubeTitle": "Manzil-e-Maqām | Labbaik Ya Rabb | A Sufi Soul of a Traveler | SufiPulse USA",
+    "subtitle": "The Soul of a Traveler",
+    "description": "“Manzil-e-Maqām” – A Sufi Drive Through the Soul\nA SufiPulse Original | Produced by the Dr. Kumar Foundation USA\nGenre: Sufi Fusion • Road Poetry • Sp",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Erl0JDrRbHw/hqdefault.jpg",
+    "publishedDate": "2025-07-09",
+    "durationSeconds": 451,
+    "durationFormatted": "7:31",
+    "views": 1612,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "ChLkFuhUISA",
+    "title": "Har Daur Ka Karbala — Aur Tu?",
+    "canonicalTitle": "Har Daur Ka Karbala — Aur Tu?",
+    "youtubeTitle": "Har Daur Ka Karbala | Aur Tu? | Every Era Has Its Karbala | SufiPulse USA",
+    "subtitle": "Every Era Has Its Karbala",
+    "description": "🎧 Presented by:\n🌍 Dr. Kumar Foundation USA\n🕊 Sufi Science Center — Kashmir Chapter\n🎵 SufiPulse – New Age Spiritual Sound\n_________________________",
+    "thumbnailUrl": "https://i.ytimg.com/vi/ChLkFuhUISA/hqdefault.jpg",
+    "publishedDate": "2025-07-07",
+    "durationSeconds": 456,
+    "durationFormatted": "7:36",
+    "views": 1417,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "8rjuc2GBAns",
+    "title": "Main Bilāl Hoon",
+    "canonicalTitle": "Main Bilāl Hoon",
+    "youtubeTitle": "Main Bilal Hoon | Mera Aansu Azaan Ban Gaya | SufiPulse USA",
+    "subtitle": "Mera Ānsū Azān Ban Gayā",
+    "description": "**(Main Bilāl Hoon – Mera Ānsū Azān Ban Gayā)**\n*A sacred scream. A slave’s sajdah. A voice that cracked the sky.*\n\n---\n\n### 🌑 **About the Song:**\n\nT",
+    "thumbnailUrl": "https://i.ytimg.com/vi/8rjuc2GBAns/hqdefault.jpg",
+    "publishedDate": "2025-07-06",
+    "durationSeconds": 372,
+    "durationFormatted": "6:12",
+    "views": 856,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "gtT_l6AH7Rc",
+    "title": "Ya Ali, Ya Ali, Ya Ali",
+    "canonicalTitle": "Ya Ali, Ya Ali, Ya Ali",
+    "youtubeTitle": "Ya Ali, Ya Ali, Ya Ali | When the Soul Calls Its Master | SufiPulse USA",
+    "subtitle": "When the Soul Calls Its Master",
+    "description": "🕊️ YA ALI, YA ALI, YA ALI…\n(The refuge of every soul – the secret of every saint)\nPresented by SufiPulse in partnership with Dr. Kumar Foundation USA",
+    "thumbnailUrl": "https://i.ytimg.com/vi/gtT_l6AH7Rc/hqdefault.jpg",
+    "publishedDate": "2025-07-04",
+    "durationSeconds": 543,
+    "durationFormatted": "9:03",
+    "views": 7250,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "NBZKTYqQDQA",
+    "title": "Main Hoon Sufi Tabeeb",
+    "canonicalTitle": "Main Hoon Sufi Tabeeb",
+    "youtubeTitle": "Main Hoon Sufi Tabeeb | Healing Body and Soul | SufiPulse USA",
+    "subtitle": "Healer of the Inner Spirit",
+    "description": "\"Main Hoon Sufi Tabeeb\" is a soul-stirring Sufi nazm dedicated to those who heal not just bodies, but souls — with zikr, sabr, and divine love. Inspir",
+    "thumbnailUrl": "https://i.ytimg.com/vi/NBZKTYqQDQA/hqdefault.jpg",
+    "publishedDate": "2025-07-04",
+    "durationSeconds": 372,
+    "durationFormatted": "6:12",
+    "views": 563,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "VKDBw6TiRC0",
+    "title": "Meri Khamoshi Teri Saza Banegi",
+    "canonicalTitle": "Meri Khamoshi Teri Saza Banegi",
+    "youtubeTitle": "Meri Khamoshi Teri Saza Banegi | SufiPulse USA",
+    "subtitle": "Silence as Witness",
+    "description": "🎵 Meri Khamoshi Teri Saza Banegi\nA Sufi Rebellion of Silence, Fire, and Divine Testimony\n\nThis is not just a song. It is a spiritual trial.\nA whisper",
+    "thumbnailUrl": "https://i.ytimg.com/vi/VKDBw6TiRC0/hqdefault.jpg",
+    "publishedDate": "2025-07-04",
+    "durationSeconds": 472,
+    "durationFormatted": "7:52",
+    "views": 507,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "3UwkaoS9xr4",
+    "title": "Woh Meri Kaaba Thi",
+    "canonicalTitle": "Woh Meri Kaaba Thi",
+    "youtubeTitle": "Woh Meri Kaaba Thi | Main Qibla Se Fisal Gaya | SufiPulse USA",
+    "subtitle": "Spiritual Contemplation",
+    "description": "Woh Meri Kaaba Thi, Main Qibla Se Fisal Gaya\nA Sufi Cry for a Generation That Lost Its First Kaaba — Mother We Abandoned\n\n\nLyrics \n\n🎵 Woh Meri Kaaba ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/3UwkaoS9xr4/hqdefault.jpg",
+    "publishedDate": "2025-06-26",
+    "durationSeconds": 437,
+    "durationFormatted": "7:17",
+    "views": 726,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "k9nznafeQ60",
+    "title": "Hu… Hu…",
+    "canonicalTitle": "Hu… Hu…",
+    "youtubeTitle": "Hu... Hu... | Har Girah Ki Kunji | SufiPulse USA",
+    "subtitle": "Har Girah Ki Kunji",
+    "description": "🎼 Hu… Hu… Har Girah Ki Kunji\n________________________________________\n🎙️ Official Song Description\nTrack Title: Hu… Hu… Har Girah Ki Kunji\nGenre: Su",
+    "thumbnailUrl": "https://i.ytimg.com/vi/k9nznafeQ60/hqdefault.jpg",
+    "publishedDate": "2025-06-23",
+    "durationSeconds": 418,
+    "durationFormatted": "6:58",
+    "views": 247,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "uk22wyFlRFk",
+    "title": "Zameen Badli, Rooh Juda Nahin Hui",
+    "canonicalTitle": "Zameen Badli, Rooh Juda Nahin Hui",
+    "youtubeTitle": "Zameen Badli, Rooh Juda Nahin Hui | SufiPulse USA",
+    "subtitle": "Eternal Spiritual Bond",
+    "description": "Zameen Badli, Rooh Juda Nahin Hua\nA Kashmiri soul walks in America… still waiting for a saint.\n\nThis song is born from a wound that sings.\nFrom the qu",
+    "thumbnailUrl": "https://i.ytimg.com/vi/uk22wyFlRFk/hqdefault.jpg",
+    "publishedDate": "2025-06-22",
+    "durationSeconds": 193,
+    "durationFormatted": "3:13",
+    "views": 939,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "cz9BhrPKoBc",
+    "title": "Shah-e-Hamdan Jaanta Hai Tu Kaun Hai",
+    "canonicalTitle": "Shah-e-Hamdan Jaanta Hai Tu Kaun Hai",
+    "youtubeTitle": "Shah-e-Hamdan Jaanta Hai Tu Kaun Hai | SufiPulse USA",
+    "subtitle": "Kashmiri Spiritual Lineage",
+    "description": "🎧 Title: Shah-e-Hamdan Knows Who You Are\n🕊️ A Sufi Cry Against Middleman Exploitation in Kashmir’s Handicrafts\n\n📍 Presented by SufiPluse • Dr. Kuma",
+    "thumbnailUrl": "https://i.ytimg.com/vi/cz9BhrPKoBc/hqdefault.jpg",
+    "publishedDate": "2025-06-21",
+    "durationSeconds": 364,
+    "durationFormatted": "6:04",
+    "views": 87,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "Qn0j9rNPAkI",
+    "title": "Jawān-o-Kashmir Se: Khitāb Qabl-e-Awliya",
+    "canonicalTitle": "Jawān-o-Kashmir Se: Khitāb Qabl-e-Awliya",
+    "youtubeTitle": "Jawan-o-Kashmir Se | Khitab Qabl-e-Awliya | SufiPulse USA",
+    "subtitle": "Address to Kashmiri Youth",
+    "description": "A Sufi Anthem of Youth, Saints, and Survival\n📍 Presented by SufiPluse • Dr. Kumar Foundation USA • Sufi Science Center – Kashmir Chapter\n\n🎧 [Youth A",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Qn0j9rNPAkI/hqdefault.jpg",
+    "publishedDate": "2025-06-18",
+    "durationSeconds": 383,
+    "durationFormatted": "6:23",
+    "views": 507,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "8qyLuPGLx7w",
+    "title": "Sufi Cry for a River",
+    "canonicalTitle": "Sufi Cry for a River",
+    "youtubeTitle": "Sufi Cry for a River | A Cry for the Jhelum | SufiPulse USA",
+    "subtitle": "Environmental & Spiritual Lament",
+    "description": "🎵 **Sufi Cry for A River – A Song of Betrayal and Redemption on the Banks of Jehlum**  \nA bold, mystical outcry from Kashmir’s sacred spine – Jehlum.",
+    "thumbnailUrl": "https://i.ytimg.com/vi/8qyLuPGLx7w/hqdefault.jpg",
+    "publishedDate": "2025-06-17",
+    "durationSeconds": 658,
+    "durationFormatted": "10:58",
+    "views": 1790,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "_6pVqwZSQIE",
+    "title": "Shah-e-Hamdan: The Eternal Presence",
+    "canonicalTitle": "Shah-e-Hamdan: The Eternal Presence",
+    "youtubeTitle": "Shah-e-Hamdan Returns | SufiPulse USA",
+    "subtitle": "Sacred Heritage Return",
+    "description": "🧵 Shah-e-Hamdan Walks Again ; To Lift the Middleman Veil\nCry of Counterfeits: The Theft of Kashmir’s Soul\n🎥 A Sufi Exposé on the Crisis in Kashmir’s",
+    "thumbnailUrl": "https://i.ytimg.com/vi/_6pVqwZSQIE/hqdefault.jpg",
+    "publishedDate": "2025-06-16",
+    "durationSeconds": 409,
+    "durationFormatted": "6:49",
+    "views": 154,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "nFAGGKia4aU",
+    "title": "Mirror of Hazratbal, Wound of Dal",
+    "canonicalTitle": "Mirror of Hazratbal, Wound of Dal",
+    "youtubeTitle": "Mirror of Hazratbal, Wound of Dal | SufiPulse USA",
+    "subtitle": "Sacred Geography of Kashmir",
+    "description": "🎵 Mirror of Hazratbal, Wound of Dal\nA New-Age Sufi Anthem — In the voice of lakes, faith, and loss.\n\n“And what reflects this holy flame?\nThe Dal. The",
+    "thumbnailUrl": "https://i.ytimg.com/vi/nFAGGKia4aU/hqdefault.jpg",
+    "publishedDate": "2025-06-13",
+    "durationSeconds": 460,
+    "durationFormatted": "7:40",
+    "views": 260,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "ZxgCJ1fXrKc",
+    "title": "Needle's Hell to Noor's Bright Dawn",
+    "canonicalTitle": "Needle's Hell to Noor's Bright Dawn",
+    "youtubeTitle": "Needle’s Hell to Noor’s Bright Dawn | SufiPulse USA",
+    "subtitle": "From Darkness to Divine Radiance",
+    "description": "🎵 Official Anthem: “Needle's Hell to Noor's Bright Dawn”\nA soul-stirring American–Kashmiri fusion song from the Drug-Free Kashmir movement under SSC ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/ZxgCJ1fXrKc/hqdefault.jpg",
+    "publishedDate": "2025-06-11",
+    "durationSeconds": 559,
+    "durationFormatted": "9:19",
+    "views": 210,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "J0Vbn5XuVoc",
+    "title": "Allah in the Algorithm",
+    "canonicalTitle": "Allah in the Algorithm",
+    "youtubeTitle": "Allah in the Algorithm | SufiPulse USA",
+    "subtitle": "Sacred Presence in the Digital Age",
+    "description": "🎵 Title: Allah in the Algorithm\n*🕊️ A Digital Dervish Anthem from Kashmir to the Cloud\n\n🎙️ Vocals: Isaiah Cole, Zayd Malik, Taylor Reyes\n✍️ Lyrics:",
+    "thumbnailUrl": "https://i.ytimg.com/vi/J0Vbn5XuVoc/hqdefault.jpg",
+    "publishedDate": "2025-06-09",
+    "durationSeconds": 307,
+    "durationFormatted": "5:07",
+    "views": 127,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "Aa-T-aA3kpk",
+    "title": "New Age Sufi on the Highway to Haqq",
+    "canonicalTitle": "New Age Sufi on the Highway to Haqq",
+    "youtubeTitle": "New Age Sufi on Highway to Haqq | SufiPulse USA",
+    "subtitle": "Modern Spiritual Seeker",
+    "description": "🎵 Highway to Haqq: The Emergency Seeker\n\nA high-energy Sufi song written by unknown Sufi Seeker,  US-based Kashmiri environmental scientist, remote s",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Aa-T-aA3kpk/hqdefault.jpg",
+    "publishedDate": "2025-06-09",
+    "durationSeconds": 302,
+    "durationFormatted": "5:02",
+    "views": 87,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "EtehDd3oUVc",
+    "title": "Cry of the Kashmir Valley",
+    "canonicalTitle": "Cry of the Kashmir Valley",
+    "youtubeTitle": "Cry of the Kashmir Valley | Come Light the Mystic Lamp | SufiPulse USA",
+    "subtitle": "Come Light the Mystic Lamp",
+    "description": "🕊️ Cry of the Valley: Come Light the Lamp\n🎧 A Mystic Rap-Rock Anthem from the Valley of Saints\n💽 Powered by: SufiPulse | Dr. Kumar Foundation – USA",
+    "thumbnailUrl": "https://i.ytimg.com/vi/EtehDd3oUVc/hqdefault.jpg",
+    "publishedDate": "2025-05-25",
+    "durationSeconds": 480,
+    "durationFormatted": "8:00",
+    "views": 104,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "U6uT9yaQy0Y",
+    "title": "Let Mansur Speak",
+    "canonicalTitle": "Let Mansur Speak",
+    "youtubeTitle": "Let Mansur Speak | SufiPulse USA",
+    "subtitle": "The Martyrdom of Divine Truth",
+    "description": "🔥 Let Mansur Speak – A Rebel's Anthem for Truth and Light\nA fierce spiritual uprising in honor of the martyred mystic Al-Hallaj Mansur — the saint wh",
+    "thumbnailUrl": "https://i.ytimg.com/vi/U6uT9yaQy0Y/hqdefault.jpg",
+    "publishedDate": "2025-05-25",
+    "durationSeconds": 435,
+    "durationFormatted": "7:15",
+    "views": 103,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "tFpnzwapo1A",
+    "title": "Sultan – The Spiritual King of Kashmir",
+    "canonicalTitle": "Sultan – The Spiritual King of Kashmir",
+    "youtubeTitle": "Sultan | The Spiritual King of Kashmir | SufiPulse USA",
+    "subtitle": "Sacred Saint History",
+    "description": "🎵 Song Title: Sultan – The Spiritual King of Kashmir\n🕊️ Presented by: Sufi Science Center & Dr. Kumar Foundation USA\n📍 Uploaded on: SufiPulse Chann",
+    "thumbnailUrl": "https://i.ytimg.com/vi/tFpnzwapo1A/hqdefault.jpg",
+    "publishedDate": "2025-05-24",
+    "durationSeconds": 404,
+    "durationFormatted": "6:44",
+    "views": 131,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "I1b9QtSmRAQ",
+    "title": "Dr. Kumar – Kashmir Calling Me",
+    "canonicalTitle": "Dr. Kumar – Kashmir Calling Me",
+    "youtubeTitle": "Dr. Kumar Faqeer | Kashmir Calling Me | SufiPulse USA",
+    "subtitle": "The Calling of the Valley",
+    "description": "Here’s a compelling song description along with integrated information about the **Sufi Science Center**, the **Dr. Kumar Foundation USA**, and the **",
+    "thumbnailUrl": "https://i.ytimg.com/vi/I1b9QtSmRAQ/hqdefault.jpg",
+    "publishedDate": "2025-05-24",
+    "durationSeconds": 339,
+    "durationFormatted": "5:39",
+    "views": 121,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "ZtI5T0H0nnY",
+    "title": "Seeker to Sufi – Divine Homecoming",
+    "canonicalTitle": "Seeker to Sufi – Divine Homecoming",
+    "youtubeTitle": "Seeker to Sufi | Divine Homecoming | SufiPulse USA",
+    "subtitle": "The Spiritual Transformation",
+    "description": "🕊️ \"I Am Finally a Sufi\" – A Song of Arrival, Liberation, and Divine Belonging 🕊️\n\nWelcome to a sacred journey through words and music—a journey fro",
+    "thumbnailUrl": "https://i.ytimg.com/vi/ZtI5T0H0nnY/hqdefault.jpg",
+    "publishedDate": "2025-05-23",
+    "durationSeconds": 371,
+    "durationFormatted": "6:11",
+    "views": 72,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "DiWJ_RBML08",
+    "title": "I Am a Sinner, Yet You Whisper Inside",
+    "canonicalTitle": "I Am a Sinner, Yet You Whisper Inside",
+    "youtubeTitle": "I Am a Sinner | Yet You Whisper Inside | SufiPulse USA",
+    "subtitle": "Divine Mercy and Repentance",
+    "description": "A whispered dialogue between the broken and the Divine. This piece explores sacred love, divine mercy, and the quiet embrace that calls even the furth",
+    "thumbnailUrl": "https://i.ytimg.com/vi/DiWJ_RBML08/hqdefault.jpg",
+    "publishedDate": "2025-05-23",
+    "durationSeconds": 400,
+    "durationFormatted": "6:40",
+    "views": 41,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "M4QhdhZPeTg",
+    "title": "O Shah-e-Hamadan – We Owe You All",
+    "canonicalTitle": "O Shah-e-Hamadan – We Owe You All",
+    "youtubeTitle": "O Shah-e-Hamdan | We Owe You All, Our Roots, Our Way | SufiPulse USA",
+    "subtitle": "Our Roots, Our Way",
+    "description": "🕯️ O Shah-e-Hamdan – We Owe You All, Our Roots, Our Way\nA Sacred Tribute to the Soul Architect of Kashmir\nPresented by the Sufi Science Center & Dr. ",
+    "thumbnailUrl": "https://i.ytimg.com/vi/M4QhdhZPeTg/hqdefault.jpg",
+    "publishedDate": "2025-05-23",
+    "durationSeconds": 391,
+    "durationFormatted": "6:31",
+    "views": 99,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "8yL--I2zeDE",
+    "title": "I Am Sufi, I Am You",
+    "canonicalTitle": "I Am Sufi, I Am You",
+    "youtubeTitle": "I Am Sufi, I Am You | Interfaith Sufi Song | SufiPulse USA",
+    "subtitle": "Universal Unity Anthem",
+    "description": "🎶 “I Am Sufi, I Am You”\nA Sacred Anthem of Unity Through the Prophets, Through the Heart, Through the Truth\nPresented by the Sufi Science Center & Ku",
+    "thumbnailUrl": "https://i.ytimg.com/vi/8yL--I2zeDE/hqdefault.jpg",
+    "publishedDate": "2025-05-22",
+    "durationSeconds": 414,
+    "durationFormatted": "6:54",
+    "views": 158,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "Sibgklh-W5g",
+    "title": "Dr. Gulam Mohamad Kumar – Sufi Legend of Kashmir",
+    "canonicalTitle": "Dr. Gulam Mohamad Kumar – Sufi Legend of Kashmir",
+    "youtubeTitle": "Dr. Ghulam Mohammad Kumar Faqeer | Sufi Legend of Kashmir | SufiPulse USA",
+    "subtitle": "Documentary Tribute",
+    "description": "🎼 Dr. Kumar – Sufi Legend\n\nA spiritual anthem in tribute to a living mystic of Kashmir.\nPresented by Sufi Science Center  &  Kumar Foundation USA\n\n--",
+    "thumbnailUrl": "https://i.ytimg.com/vi/Sibgklh-W5g/hqdefault.jpg",
+    "publishedDate": "2025-05-21",
+    "durationSeconds": 404,
+    "durationFormatted": "6:44",
+    "views": 159,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "a1wCTXlmlb4",
+    "title": "The Saints Still Walk",
+    "canonicalTitle": "The Saints Still Walk",
+    "youtubeTitle": "I Am Kashmiri Sufi | The Saints Still Walk | SufiPulse USA",
+    "subtitle": "Living Tradition of Kashmir",
+    "description": "Song Description: “I Am Kashmiri Sufi – The Saints Still Walk”\nGenre: Sufi Anthem / Mystic Spoken Word Fusion\nMood: Fierce, reverent, and electrifying",
+    "thumbnailUrl": "https://i.ytimg.com/vi/a1wCTXlmlb4/hqdefault.jpg",
+    "publishedDate": "2025-05-21",
+    "durationSeconds": 391,
+    "durationFormatted": "6:31",
+    "views": 318,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "D7hvqyQYJrk",
+    "title": "Kemis Taani Chhu Aav Aav",
+    "canonicalTitle": "Kemis Taani Chhu Aav Aav",
+    "youtubeTitle": "Kemis Taani Chhu Aav Aav | A Kashmiri-English Sufi Kalam | SufiPulse USA",
+    "subtitle": "Kashmiri-English Sufi Kalam",
+    "description": "Kemis Taani Chhu Aav Aav — A Kashmiri Sufi Kalam | Dr. Zarf-e-Noori\nA SufiPulse Studio Production | USA\n\nVisit us for Subtitled, Connecting 7.4 Billion Hearts in 17 Languages\nwww.sufipulse.com\n\nAdoption Note\nBulbul chhu baraan – Majhoor\n\nThis English kalam carries two adopted Kashmiri verses from Mahjoor’s kalam, included on demand for Western Sufi seekers.\n\nThese Kashmiri lines were preserved so their sound, rhythm, and spiritual weight could bring the listener closer to the original Kashmiri Sufi feeling.\n\nThey are not used as decoration.\nThey act as the spiritual anchor of the song.\n\nThe English verses open the meaning.\nThe Kashmiri verses carry the presence.\n\nAbout This Kalam\n\nThis is not a song built on explanation.\nIt is built on a call.\n\n“Kemis taani chhu aav aav”\n\nA question that echoes through the entire composition:\n\nFor whom has the presence arrived?\nFor whom does the call come?\n\nThis kalam does not answer.\nIt turns the listener inward.\n\nCore Message\n\nThe call you hear is not outside.\nIt is rising from within.\n\nEverything in this composition moves toward that realization\n\nCredits\n\nDr. Zarf-e-Noori\nWriter | Lyricist | Composer | Music Director\n\nProduction: SufiPulse Studio USA\n\nWords begin to fall away\nSilence begins to speak\nThe seeker begins to listen",
+    "thumbnailUrl": "https://i.ytimg.com/vi/D7hvqyQYJrk/hqdefault.jpg",
+    "publishedDate": "2026-05-05",
+    "durationSeconds": 989,
+    "durationFormatted": "16:29",
+    "views": 100,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "UcV7rMQ7XGg",
+    "title": "Phir Likh Zarf-e-Noori",
+    "canonicalTitle": "Phir Likh Zarf-e-Noori",
+    "youtubeTitle": "Phir Likh Zarf-e-Noori | Faith Does Not Fear Critics | SufiPulse USA",
+    "subtitle": "Faith Does Not Fear Critics • Sufi Rebuttal",
+    "description": "A SufiPulse Studio Production USA | Vocals Dubbed in Toronto, Canada\n\nThis is not just a song.\nIt is a rebuttal.\n\nAfter a period of 1 month silence, this expression returns — not as reaction, but as clarity. What was questioned became the reason to write.\n\nWhat was challenged\n\nGrammar was questioned.\nMusic was questioned.\nSufi meaning was questioned.\nThe right to express was questioned.\n\nThese were not the real objections.\nThey were excuses.\n\nExpression Beyond Ownership: \nThe Dr. Zarf-e-Noori has no formal Urdu training\nThe words still arrived in Urdu\nThe expression did not wait for academic permission\nWhat came through had to be written\n\nThe response could no longer remain inside.\nThe thought became pressure.\nThe pressure became again same language.\nThe language became again song.\n\n\nThe real discomfort was this:\nthe expression continued without permission.\n\nWhat this song says\n\nIt does not argue.\nIt does not defend ego.\n\nIt continues.\n\nExpression is a rebuttal, not ego.\n\n“Jo likhwaata hai woh jaane”\nThe one who makes it written knows.\n\nOn faith and expression\n\nFaith does not fear critics.\n\nDepth does not weaken it.\nExpression does not break it.\nSincerity does not threaten it.\n\nWhat you hear\n\nNot performance.\nNot rebellion.\n\nContinuation.\n\nFrom:\nYou bring words\n\nTo:\nYou bring words. I bring fire.\n\nFinal position\n\nThe expression continues because it does not belong to the writer alone.\n\nCredits\n\nA SufiPulse Studio Production USA\nVocals Dubbed in Toronto, Canada\n\nA modern Sufi expression shaped for the next generation of seekers.\n\nConnect\n\nVisit us for subtitled content connecting 7.4 billion hearts in 17 languages:\n👉 www.sufipulse.com",
+    "thumbnailUrl": "https://i.ytimg.com/vi/UcV7rMQ7XGg/hqdefault.jpg",
+    "publishedDate": "2026-05-03",
+    "durationSeconds": 952,
+    "durationFormatted": "15:52",
+    "views": 90,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "LjmOxu1AVAg",
+    "title": "Raazdaar – Official Teaser II",
+    "canonicalTitle": "Raazdaar – Official Teaser II",
+    "youtubeTitle": "RAAZDAAR I official Teaser 2",
+    "subtitle": "Cinematic Teaser",
+    "description": "RAAZDAAR | Official Teaser\n\nA glimpse into a mystical sama‘ journey of hidden secrets, Divine light, surrender, and sacred longing.\n\n“Khuda, raaz walon ka bhi raazdaar...”\n\nThis is not merely music.\nIt is an unfolding for seekers.\n\nFull Mystical Sama‘ Experience Releasing Worldwide on 05/10/26.\n\nSufiPulse USA\nSufi Science Center USA\n\nWWW.SUFIPULSE.COM",
+    "thumbnailUrl": "https://i.ytimg.com/vi/LjmOxu1AVAg/maxresdefault.jpg",
+    "publishedDate": "2026-05-11",
+    "durationSeconds": 76,
+    "durationFormatted": "1:16",
+    "views": 104,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "q58mRXIsi-Y",
+    "title": "Lord of the Mysteries (خداوندانِ اسرار)",
+    "canonicalTitle": "Lord of the Mysteries (خداوندانِ اسرار)",
+    "youtubeTitle": "Lord of the Mysteries | خداوندانِ اسرار | SufiPulse USA",
+    "subtitle": "Sacred Composition",
+    "description": "An immersive Sufi musical experience inspired by the sacred atmosphere of Persian mysticism, sama‘, and the timeless tradition of seekers journeying through Divine remembrance.\n\nBuilt around the recurring invocation:\n\n“Khuda, raazdaraan-e-raazdaaran…”\nGod, Keeper of the keepers of secrets.\n\nThis composition travels through the language of:\nNoor within Noor,\nhidden celestial gatherings,\nthe silence of inward longing,\nthe dissolution of ego,\nand the eternal orbit of lovers around the Muhammadan Light ﷺ.\n\nAt the spiritual center of the kalam stands:\n“Aaftaab-e-Noor”\nThe Sun of Divine Light ﷺ\n\nA symbolic reflection of Noor-e-Muhammadi ﷺ:\nthe primordial light carried through Prophets, saints, seekers, and hearts awakened through remembrance.\n\nBlending Persian spiritual poetry, cinematic soundscapes, meditative repetition, and mystical symbolism, Khudawand-e-Asraar unfolds as both a musical composition and an inward spiritual journey.\n\n“Raaz-e-nihaani-e dar seena-am furood aawar…\nKe dil bar aahang-e-aan, baarahaa be raqs aayad…”\n\n“Place within my chest a hidden mystery,\nwhose rhythm makes this heart dance again and again.”\n\nThis release is presented in two interconnected movements:\n\nPart I\nThe awakening of longing, hidden mysteries, and Divine Light.\n\nPart II\nA Sama‘ experience for seekers entering the hidden realms of spiritual remembrance.\n\nInspired by the spirit of:\nJalal al-Din Rumi,\nShams-e-Tabriz,\nclassical Persian irfaan,\nand the sacred traditions of zikr and sama‘.\n\nLanguages:\nFarsi • Urdu • Roman Urdu • Mystical English Translation\n\nKalam & Creative Direction\nDr. Zarf-e-Noori\n\nProduced By\nSufiPulse SufiTube Studio\n\nPresented By\nSufiPulse-USA\nSufi Science Center USA\nDr Kumar Foundation USA",
+    "thumbnailUrl": "https://i.ytimg.com/vi/q58mRXIsi-Y/hqdefault.jpg",
+    "publishedDate": "2026-05-13",
+    "durationSeconds": 1115,
+    "durationFormatted": "18:35",
+    "views": 84,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "wMxWfsst48Q",
+    "title": "Raazdaar – Official Teaser I",
+    "canonicalTitle": "Raazdaar – Official Teaser I",
+    "youtubeTitle": "RAAZDAAR I Official Teaser",
+    "subtitle": "Cinematic Teaser",
+    "description": "RAAZDAAR | Official Teaser\n\nA glimpse into a mystical sama‘ journey of hidden secrets, Divine light, surrender, and sacred longing.\n\n“Khuda, raaz walon ka bhi raazdaar...”\n\nThis is not merely music.\nIt is an unfolding for seekers.\n\nFull Mystical Sama‘ Experience Releasing Worldwide on 05/10/26.\n\nSufiPulse USA\nSufi Science Center USA\n\nWWW.SUFIPULSE.COM",
+    "thumbnailUrl": "https://i.ytimg.com/vi/wMxWfsst48Q/maxresdefault.jpg",
+    "publishedDate": "2026-05-13",
+    "durationSeconds": 101,
+    "durationFormatted": "1:41",
+    "views": 35,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "kX2g8o2uEGw",
+    "title": "The Next Generation Sufi Way Forward",
+    "canonicalTitle": "The Next Generation Sufi Way Forward",
+    "youtubeTitle": "Laut A | Sufi Science Center USA Inaugural Anthem | SufiPulse USA",
+    "subtitle": "Sufi Science Center Inaugural",
+    "description": "Sufi Science Center USA is an upcoming platform initiative within the wider Sufi Science vision of Dr. Kumar Foundation USA. \n\nThis pre-launch video offers an early introduction to its direction, purpose, and evolving role.\n\nThe platform is being developed as a future-facing space for:\n\nconsciousness research\ncontemplative knowledge systems\ninner development\nscholarly dialogue\nmeaningful public engagement\n\nRooted in the wider vision of Dr. Kumar Foundation USA, it represents an expanded phase of inquiry designed to deepen engagement with spiritual wisdom, knowledge systems, interdisciplinary reflection, and human transformation.",
+    "thumbnailUrl": "https://i.ytimg.com/vi/kX2g8o2uEGw/maxresdefault.jpg",
+    "publishedDate": "2026-05-13",
+    "durationSeconds": 669,
+    "durationFormatted": "11:09",
+    "views": 97,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "4HZbA2sfGmY",
+    "title": "Aahista Aahista Aahista",
+    "canonicalTitle": "Aahista Aahista Aahista",
+    "youtubeTitle": "Aahista Aahista | Teach Your Soul How to Flow | SufiPulse USA",
+    "subtitle": "Teach Your Soul How to Flow",
+    "description": "Aahista, Aahista\nTeach Your Soul How to Flow\n\n“Aahista, Aahista” is a contemplative Kashmiri Sufi journey inspired by the mystical traditions of Kashmir and Kishtwar, where kalam is not merely sung, but carried as remembrance across generations of seekers.\n\nAt its poetic heart stands Janbaz Kishtwari (Ghulam Nabi Doolwal), whose words guide the seeker through longing, surrender, silence, and the slow opening of the soul.\n\nIts old musical breath honors Ustad Abdul Samad Sofi, lovingly remembered as Samad Saib, whose Chalant-style voice, rhythmic depth, and spiritual fire carried this kalam into a living echo of Kashmiri Sufi remembrance, a flame that still travels through generations.\n\nSufiPulse adopts only the line:\n\n“Aahista, Aahista, Madanwar Yokun, Kadam Akh Traav”\nas a humble bridge carrying Kashmiri Sufi kalam into the global heart.\n\n━━━━━━━━━━━━━━━━━━\n\nWhat This Kalam Asks the Seeker\n\nWhere is the hidden secret?\nWhy does the soul still feel restless?\nWhy does love burn before it heals?\nWho is speaking from within me?\nWhy must the seeker walk slowly?\n\nThis song moves through silence, surrender, longing, remembrance, and inward awakening, reminding the listener that spiritual truth is never forced.\n\nThe path opens gently.\nThe soul ripens slowly.\nThe Beloved is approached… aahista.\n\n━━━━━━━━━━━━━━━━━━\n\nFeatured Mystical Lines\n\n“Madanwar Yokun, Kadam Akh Traav”\n“O wandering seeker, place one step gently.”\n\n“Rooh ko behna seekh zara”\n“Teach your soul how to flow.”\n\n━━━━━━━━━━━━━━━━━━\n\nThe Hidden Message of Aahista\n\n• The path was never far, only hidden beneath the self\n• The Beloved was never silent, only covered by inner noise\n• Every wound was asking to become a doorway\n• Every veil was waiting for sincerity to touch it\n\n“Aahista” is the moment the soul stops searching outside and begins dissolving within.\n\n━━━━━━━━━━━━━━━━━━\n\nSpiritual Themes\n\n• Kashmiri Sufi Kalam\n• Mystical Longing\n• Silence & Surrender\n• Inner Awakening\n• The Journey of the Seeker\n• Divine Love & Dissolution\n• Meditative Reflection\n• Sacred Remembrance\n\n━━━━━━━━━━━━━━━━━━\n\nVisit SufiPulse\n\nFor full lyrics, subtitles, translations, official credits, streaming links, adoption campaigns, and multilingual access, credits visit:\n\nsufipulse.com\n\nSubtitled, credited, and connecting 7.4 billion hearts across 17 languages.\n\n━━━━━━━━━━━━━━━━━━\n\nOfficial Credits & Spiritual Lineage\n\nInspired by the mystical poetic traditions of Kashmir & Kishtwar\n\nPoetic inspiration honoring:\nJanbaz Kishtwari (Ghulam Nabi Doolwal)\n\nMusical inspiration honoring:\nUstad Abdul Samad Sofi (Samad Saib)\n\nPresented with humility by:\nSufiPulse USA\n\n━━━━━━━━━━━━━━━━━━\n\nA Note to the Seeker\n\nThis is not a song of performance.\nIt is a song of return.\n\nWalk gently.\nListen deeply.\nLet the soul flow.\n\n━━━━━━━━━━━━━━━━━━\n\n🌐 Dr. Kumar Foundation  USA\nhttps://dkf.sufisciencecenter.info/\n\n▶️ SufiPulse-SufiTube\nhttps://www.youtube.com/@SufiPulse-USA\n\n🌐 Sufi Science Center USA\nhttps://sufisciencecenter.info/\n\n🌐 Interfaith Peace Bridge USA\nhttps://ifpb.sufisciencecenter.info/",
+    "thumbnailUrl": "https://i.ytimg.com/vi/4HZbA2sfGmY/hqdefault.jpg",
+    "publishedDate": "2026-05-23",
+    "durationSeconds": 645,
+    "durationFormatted": "10:45",
+    "views": 283,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "dXqkrpP-41I",
+    "title": "Pani Gawah Hai",
+    "canonicalTitle": "Pani Gawah Hai",
+    "youtubeTitle": "PANI GAWAH HAI | KASHMIR WATER BEARS WITNESS | SufiPulse USA",
+    "subtitle": "Kashmir: Water Bears Witness",
+    "description": "PANI GAWAH HAI | KASHMIR WATER BEARS WITNESS\nA Contemporary Sufi Environmental Advocacy Song\nKalam by Dr. Zarf-e-Noori\n\nThere was a time when water was revered as a sacred trust.\n\nToday, rivers are dammed, lakes are encroached upon, wetlands disappear beneath concrete, springs fall silent, forests vanish, and glaciers retreat. Yet while humanity debates ownership, development, and progress, the waters continue to flow—bearing silent witness to every decision we make.\n\n\"Pani Gawah Hai | Water Bears Witness\" is a contemporary Sufi environmental odyssey that explores one timeless truth:\n\nNature never forgets.\n\nInspired by the spiritual philosophy of Sufism and rooted in the breathtaking landscapes of Kashmir, this original kalam transforms water from a physical resource into a living witness. Every river, spring, lake, wetland, glacier, snowfall, and raindrop becomes a silent recorder of human intention, compassion, greed, neglect, and hope.\n\nThe song journeys through Kashmir's ecological soul—Dal Lake, Nigeen Lake, Wular Lake, Jhelum, Hokersar, Shallabugh, Haigam, Khushal Sar, Bari Nambal, Anchar, and countless springs, forests, mountains, and wetlands that have shaped the civilization of the Himalayas for centuries.\n\nBut this is not only Kashmir's story.\n\nIt is the story of every river polluted.\nEvery forest burned.\nEvery wetland reclaimed.\nEvery glacier melting.\nEvery coastline rising.\nEvery species disappearing.\nEvery generation inheriting a quieter Earth.\n\nFrom the Sufi perspective, creation is not separate from the Creator. Every element of nature is an Ayah—a sign of the Divine. To dishonor creation is to ignore one of the greatest manifestations of Divine mercy.\n\nThis kalam asks a question that extends beyond environmentalism:\n\nIf water bears witness... what will it remember about us?\n\nWill future generations inherit rivers of life or rivers of regret?\n\nWill our conscience awaken before the last spring runs dry?\n\n🌍 About This Production\n\nUnlike traditional devotional music, Water Bears Witness combines:\n\n• Contemporary Sufi poetry\n• Environmental ethics\n• Himalayan ecology\n• Mystical symbolism\n• Cinematic orchestration\n• Spiritual reflection\n• Ecological consciousness\n\nThis is neither a protest song nor a political statement.\n\nIt is an invitation to remember that humanity is not separate from nature—we are accountable to it.\n\n🏔 Inspired by Kashmir\n\nThe imagery throughout this kalam draws inspiration from the living waters and landscapes of Kashmir, including:\n\n• Dal Lake\n• Nigeen Lake\n• Wular Lake\n• Jhelum River (Vyeth)\n• Khushal Sar\n• Bari Nambal\n• Anchar Lake\n• Hokersar Wetland\n• Shallabugh Wetland\n• Haigam Wetland\n• Himalayan springs\n• Snow-fed rivers\n• Alpine forests\n• Himalayan glaciers\n\nThese landscapes symbolize both extraordinary beauty and the urgent responsibility of stewardship.\n\n🌱 Environmental Themes\n\n• Water Conservation\n• Wetland Protection\n• Biodiversity\n• Forest Conservation\n• Climate Change\n• Glacial Retreat\n• Sustainable Development\n• Ecological Restoration\n• Human Conscience\n• Spiritual Ecology\n• Environmental Justice\n• Intergenerational Responsibility\n\n✨ Sufi Reflection\n\nWater remembers.\n\nMountains remember.\n\nForests remember.\n\nThe Earth remembers.\n\nLong after human voices fade, creation continues to testify before its Creator.\n\n🖋 Kalam\n\nDr. Zarf-e-Noori\n\n🌐 Produced by\n\nSufiPulse Studio USA\n\nA platform dedicated to preserving and reimagining the timeless wisdom of Sufism for the next generation through music, storytelling, scholarship, and contemplative media.\n\n💚 If this kalam moved you...\n\nShare it with someone who still believes that protecting nature is an act of worship.\n\nLike • Comment • Share • Subscribe\n\nEvery view helps carry the message that our relationship with nature is ultimately a relationship with ourselves—and with the One who entrusted it to us.",
+    "thumbnailUrl": "https://i.ytimg.com/vi/dXqkrpP-41I/hqdefault.jpg",
+    "publishedDate": "2026-07-24",
+    "durationSeconds": 1672,
+    "durationFormatted": "27:52",
+    "views": 83,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "1kOiOhzXtUY",
+    "title": "Husain Andar - Yazeed Be",
+    "canonicalTitle": "Husain Andar - Yazeed Be",
+    "youtubeTitle": "Husain Andar – Yazeed Andar | Kise Doon Main Aasra | SufiPulse USA",
+    "subtitle": "Kise Doon Main Aasra",
+    "description": "🕊️ Husain Andar – Yazeed Andar | The Journey of Karbala Within | Mystical Sufi Kalam | SufiPulse USA\n\nWhat if Karbala did not end in 680 CE?\nWhat if its greatest battlefield is not history, but the human heart?\nHusain Andar – Yazeed Andar is an original mystical Sufi kalam by SufiPulse USA. It is not a historical retelling of the Battle of Karbala, but a spiritual meditation on the timeless struggle that unfolds within every human being.\n\nIn this kalam, Yazeed symbolizes the crowned ego, while Husain symbolizes the awakened conscience that refuses to surrender to falsehood. Every heart becomes a battlefield. Every relationship becomes a mirror. Every day becomes an Ashura.\n\nThe journey asks:\n• Who sits upon the throne of your heart?\n• Does your ego rule your relationships?\n• How many silent Karbalas have your words, pride, anger, neglect, or arrogance created?\n• If your mother weeps because of you...\n• If your father suffers in silence...\n• If your siblings become strangers...\n• If your spouse loses peace...\n• If your friends lose trust...\n• If your neighbors lose compassion...\n• If those under your authority lose dignity...\n\nWho truly rules within you?\nThis kalam reminds us that Karbala is not confined to dust. It descends wherever the ego demands a crown and the conscience calls for surrender.\nThe battlefield is within.\nThe throne is within.\nThe choice is within.\nThe victory is within.\n\"Main\" Se \"Tu\" Tak... Bas Ye Safar\nFrom \"I\" to \"You\"... this is the journey.\n________________________________________\nThe Mystical Meaning\nThis kalam presents a symbolic spiritual reading:\nYazeed Andar\nThe crowned ego.\nThe \"I\" that demands obedience.\nThe self that seeks power over truth.\nHusain Andar\nThe awakened conscience.\nThe living light within.\nThe soul that refuses to bow before falsehood.\nKarbala Andar\nThe battlefield where the ego and the conscience meet.\nA struggle repeated in every generation, every family, every relationship, and every human heart.\n________________________________________\nA Quiet Editorial Choice\nWhile preparing this kalam, our editorial team paused over one question:\nShould we write Imam Husain (RA) or Imam Husain (AS)?\nAs a team rooted in the Sunni tradition, we consciously chose Imam Husain (AS), not to make a sectarian statement, but to make a spiritual one.\nIf this kalam calls us to overcome the ego, then our own knowledge must never become an ego.\nSometimes the first Karbala is not in history.\nIt is in the editor's own heart.\n________________________________________\nAbout This Production\n🎙️Lead Vocalists\nAyaan Raza, Izaan Haq & Ziyan Noor\n🤫🎶 Chorus & Whisper Interlude\nRayan Faqeer, Danish Ruhani, Adnan Sohail, Saad Hashmi & Dr. Zarf-e-Noori\n✍️ Lyrics, Concept & Creative Direction\nDr. Zarf-e-Noori\n🎼 Original Production\nSufiPulse USA\n________________________________________\nIf This Kalam Touched Your Heart\n❤️ Like this video\n💬 Share your reflections in the comments.\n📤 Share it with someone whose heart may need this reminder.\n🔔 Subscribe to SufiPulse USA for original mystical Sufi music, spiritual reflections, and contemporary kalams exploring the journey from \"Main\" to \"Tu.\"\n________________________________________\n\"Main\" Mita To Noor Mila\nYahi Husain... Yahi Karbala\n#HusainAndar #YazeedAndar #KarbalaAndar #KarbalaWithin #ImamHusain #Ashura #SufiPulse USA #SufiMusic #MysticalSufism #SufiKalam #SpiritualJourney #InnerJourney #Conscience #Ego #Noor #Qalb #Rooh #Zameer #IslamicPoetry #UrduPoetry #SoulAwakening #Mysticism #ContemporarySufi #spiritualmusic #drZarf-e-Noori\n\nImportant Lines Only\n\nEvery ego faces a trial\nWho will adorn the highest throne?\nOne voice says, \"I... I... I...\"\nOne voice says, \"You... only You...\"\nWho will ascend the throne of the heart?\nWho will bow upon the path of Truth?\nKarbala... Karbala... Karbala within\nYazid within... Husayn within\nKarbala is not confined to dust\nWhere the ego demands a crown\nAnd conscience asks for surrender\nYazid is the highest throne of the ego\nHusayn is the Light of the living conscience\nIf I make my mother weep... who truly lived?\nIf I break my father... who truly survived?\nEvery relationship carries a decision\nWhen the ego makes a mother weep\nWhen pride makes a father bend\nThere Karbala awakens again\nI am my own Karbala\nWhen the ego falls... the soul rises\nEvery morning a Yazid rises\nEvery morning a Husayn awakens\nWho is the king of your heart today?\nFrom \"I\" to \"You\"... this is the journey\nWhen the \"I\" dissolved... the Light appeared\nThis is Husayn... This is Karbala",
+    "thumbnailUrl": "https://i.ytimg.com/vi/1kOiOhzXtUY/hqdefault.jpg",
+    "publishedDate": "2026-07-08",
+    "durationSeconds": 1178,
+    "durationFormatted": "19:38",
+    "views": 89,
+    "source": "youtube_data_api",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "ooxUUEsh5Kg",
+    "title": "Rehmat Se Likha Khwaab",
+    "canonicalTitle": "Rehmat Se Likha Khwaab",
+    "youtubeTitle": "Rehmat Se Likha Khwaab Na Meri Quwwat | SufiPulse USA",
+    "subtitle": "Na Meri Quwwat",
+    "description": "REHMAT SE LIKHA KHWAAB NA MERI QUWWAT\nA Dream Written by Mercy — Not by My Strength\n\nAn original Sufi reflection by Dr. Zarf-e-Noori, presented by SufiPulse USA.\n\nRehmat Se Likha Khwaab Na Meri Quwwat emerges from a dream connected with Prophet Muhammad ﷺ.\n\nThe work reflects upon the dream’s impression: presence, countenance, bearing, beauty, and the emotional memory that remained after waking.\n\nIts central confession is contained in the title:\n\n“Rehmat se likha khwaab, na meri quwwat.”\n\nA dream written by mercy — not by my strength.\n\nThe kalam does not present the experience as spiritual accomplishment. Whatever was recognized was received, not earned. Its purpose is remembrance, love, reverence, humility, and gratitude.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ WHY THIS WORK\n\nSufiPulse USA creates sacred media for remembrance, reflection, and awakening.\n\nSome spiritual experiences are too intimate for ordinary narration yet too meaningful for silence. This kalam preserves such an experience without trying to prove it.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ EDITORIAL NOTE\n\nThe physical and noble qualities associated with Prophet Muhammad ﷺ belong to the revered tradition of Shamā’il-e-Muhammadiyya — the inherited body of transmitted descriptions.\n\nThis kalam draws upon that devotional vocabulary while remaining an artistic work.\n\nIt does not manufacture a visual portrait or turn a private dream into religious evidence.\n\nReverence before spectacle.\nTransmission before invention.\nHumility before claim.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ WRITER’S NOTE\n\nWhat is expressed here is transmission, not testimony.\n\nThe lyrics arise from mercy — a dream, not sight.\n\nNo claim is made of authoritative vision, proximity, spiritual rank, or worth.\n\nThe dream is remembered as a personal devotional experience, approached through inherited Shamā’il language and the dreamer’s emotional recognition.\n\nA private spiritual experience may inspire poetry and remembrance without becoming proof for anyone else.\n\nRecognition itself is mercy.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ RELEASE RECORD\n\nTitle: Rehmat Se Likha Khwaab Na Meri Quwwat\nForm: Original Devotional Mystical Sufi Kalam\nWritten by: Dr. Zarf-e-Noori\nPresented by: SufiPulse USA\nProduction: SufiPulse Studio USA\nLanguage: Urdu / Hindustani\nGenre: Devotional Mystical Sufi\nThemes: Prophet Muhammad ﷺ • Rehmat • Shamā’il • Dream • Love • Reverence • Gratitude • Humility\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ OFFICIAL CREDITS\n\nLiterary Concept & Kalam: Dr. Zarf-e-Noori\nPresented by: SufiPulse USA\nProduction: SufiPulse Studio USA\n\nComplete verified credits are maintained in the release archive.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ LYRICS • LANGUAGES • COMMENTARY\n\nOfficial lyrics, transliterations, translations, commentary, and thematic interpretation are maintained through the SufiPulse USA release archive.\n\nLanguage modules vary by release and may include Roman Urdu, Urdu, English, Hindi, Arabic, Turkish, and more.\n\nSufiPulse.com/releases\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ RELEASE & RIGHTS\n\nPublished by: SufiPulse USA\nPlatform: SufiTube\nCopyright Holder: SufiPulse USA\nLicensing: Standard SufiPulse License\n\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ CREATOR & SPIRITUAL CONTEXT\n\nDr. Zarf-e-Noori is the principal literary and creative voice behind SufiPulse USA, exploring Divine Love, remembrance, silence, consciousness, and the inward journey through contemporary sacred media.\n\nThis release is devotional art inspired by a personal dream and Shamā’il tradition — not a claim of religious authority.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ SUFIPULSE USA\n\nSufiPulse USA is a global sacred-media platform creating original Sufi music, mystical poetry, sacred storytelling, contemplative cinema, spiritual reflection, and digital archives inspired by Kashmir and the wider heritage of Sufi civilization.\n\nSufiTube and SufiPulse Studio are official brands of SufiPulse USA.\n\nWe exist to awaken — not to commercialize the sacred.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ ACKNOWLEDGMENTS\n\nWith gratitude to the wider ecosystem supporting this mission:\n\nDr. Kumar Foundation USA • Sufi Science Center USA • ArtStay • Craftlore • De Koshur Crafts • DKC B2B Connect • Hamadan Craft Revival Foundation • Kashmir EcoWatch • Purple Soul • Prime Logic Solutions USA • We Are One Community • Interfaith Peace Bridge\n\nTheir support turns vision into voice — and voice into light.\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ ADOPT THIS SONG\n\nHelp this kalam reach hearts that may find meaning in its remembrance.\n\nWhere available, the release page provides SufiPulse-managed campaign support or direct Google Ads participation.\n\nSufiPulse.com/releases\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n◆ OFFICIAL IDENTITY\n\nSufiPulse USA\n@SufiPulseUSA\nSufiPulse.com\n\nFor authentic releases, official affiliations, and verified resources, refer to SufiPulse.com.\n\n© 2025–2026 SufiPulse USA. All rights reserved.\n\n#SufiPulseUSA #RehmatSeLikhaKhwaab #Shamail #ProphetMuhammad #SufiPoetry",
+    "thumbnailUrl": "https://i.ytimg.com/vi/ooxUUEsh5Kg/maxresdefault.jpg",
+    "publishedDate": "2026-08-16",
+    "durationSeconds": 726,
+    "durationFormatted": "12:06",
+    "views": 21,
+    "source": "youtube",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "ffTfCn8N0hk",
+    "title": "Wanun Traav Hunar Haav",
+    "canonicalTitle": "Wanun Traav Hunar Haav",
+    "youtubeTitle": "Wanun Traav Hunar Haav | Kashmiri Sufi Poetry | SufiPulse USA",
+    "subtitle": "Kashmiri Devotional Poetry",
+    "description": "Mehjoor - Wordsworth of Kashmirof Kashmir ( 1887-1952).\nBorn in Mitrigam, Pulwama, Jammu & Kashmir India\n\n\nMehjoor is not just the historical poet. He becomes the addressed self , the inward witness , the one to whom the Secret is spoken , the poet as the site of Divine self-disclosure\n\nSo in this poem, Mehjoor can be read at three levels:\nthe poet by name\nthe soul being addressed from within\nthe self in which God speaks to Himself\n\n\nMehjoor is the poet, but mystically he is the inner self being addressed by the Divine",
+    "thumbnailUrl": "https://i.ytimg.com/vi/ffTfCn8N0hk/maxresdefault.jpg",
+    "publishedDate": "2026-04-17",
+    "durationSeconds": 655,
+    "durationFormatted": "10:55",
+    "views": 4,
+    "source": "youtube",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "RJeRdBuRto0",
+    "title": "Dr. Kumar Foundation USA Launch",
+    "canonicalTitle": "Dr. Kumar Foundation USA Launch",
+    "youtubeTitle": "SufiPulse Studio I Dr Kumar Foundation USA is live!",
+    "subtitle": "Institutional Global Announcement",
+    "description": "",
+    "thumbnailUrl": "https://i.ytimg.com/vi/RJeRdBuRto0/maxresdefault_live.jpg",
+    "publishedDate": "2026-02-20",
+    "durationSeconds": 0,
+    "durationFormatted": "0:00",
+    "views": 0,
+    "source": "youtube",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
+  },
+  {
+    "id": "1iSM-HieULM",
+    "title": "Thori Si Toh Lift Kar De",
+    "canonicalTitle": "Thori Si Toh Lift Kar De",
+    "youtubeTitle": "Thori Si Toh Lift Kar De",
+    "subtitle": "Prayer for Inner Upliftment",
+    "description": "",
+    "thumbnailUrl": "https://i9.ytimg.com/vi/1iSM-HieULM/maxresdefault.jpg?sqp=CNScw9QG&rs=AOn4CLBvRfZX5IaUw1rTJqrTec0u_cKryg",
+    "publishedDate": "2026-01-24",
+    "durationSeconds": 60,
+    "durationFormatted": "1:00",
+    "views": 4,
+    "source": "youtube",
+    "governanceOrigin": "native_governed",
+    "canonicalStatus": "verified"
   }
 ];

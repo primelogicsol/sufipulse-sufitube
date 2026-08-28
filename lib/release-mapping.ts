@@ -76,14 +76,19 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
     
     // Canonical identity: strictly preserve existing Registry Authority if present
-    title: existing?.title || title,
+    title: existing?.canonicalTitle || existing?.title || title,
     canonicalTitle: existing?.canonicalTitle || existing?.title || title,
-    thumbnailUrl: existing?.thumbnailUrl || thumbnailUrl,
+    canonicalStatus: existing?.canonicalStatus || (existing ? 'verified' : 'inferred'),
+    governanceOrigin: existing?.governanceOrigin || (existing?.source === 'native' ? 'native_governed' : 'native_governed'),
+    thumbnailUrl: existing?.canonicalThumbnail || existing?.thumbnailUrl || thumbnailUrl,
     canonicalThumbnail: existing?.canonicalThumbnail || existing?.thumbnailUrl || thumbnailUrl,
     
     // YouTube distribution packaging: recorded dynamically from latest sync
     youtubeTitle: title,
     youtubeThumbnailUrl: thumbnailUrl,
+    metadataStatus: existing?.canonicalTitle && existing.canonicalTitle.trim().toLowerCase() !== title.trim().toLowerCase() 
+      ? 'drift_detected' 
+      : 'synced',
     description: existing?.description || video.description || video.snippet?.description || '',
     
     viewCount: youtubeStats.viewCount,

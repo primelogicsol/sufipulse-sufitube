@@ -32,6 +32,10 @@ export interface CMSRelease {
   id: string;
   title: string; // Canonical Release Title (Registry Authority)
   canonicalTitle?: string;
+  canonicalStatus?: 'verified' | 'inferred' | 'unresolved';
+  governanceOrigin?: 'native_governed' | 'legacy_registry';
+  govType?: 'native_governed' | 'legacy_registry';
+  metadataStatus?: 'synced' | 'drift_detected' | 'overridden';
   subtitle?: string;
   slug: string;
   youtubeId: string;

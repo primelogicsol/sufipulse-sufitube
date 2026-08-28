@@ -601,12 +601,15 @@ export default function AdminDashboard() {
             <p className="text-sm text-[var(--dash-text-secondary)] mb-4">
               Review and approve submitted content for publication
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link href="/admin/kalams" className="dashboard-btn-secondary text-sm">
                 Review Kalams
               </Link>
               <Link href="/admin/cms-releases" className="dashboard-btn-secondary text-sm">
                 Review Releases
+              </Link>
+              <Link href="/admin/metadata-authority" className="dashboard-btn-primary text-sm">
+                Metadata Authority
               </Link>
             </div>
           </div>
