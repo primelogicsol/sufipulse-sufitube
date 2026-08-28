@@ -25,7 +25,7 @@ export function projectRelease(release: any): ReleaseProjection {
 
     status: release.status || 'published',
     visibility: release.visibility || 'public',
-    format: release.format || ((release.durationSeconds as any) <= 60 ? 'short' : 'video'),
+    format: release.format || 'video',
     releaseType: release.releaseType || 'studio-release',
     category: release.category ?? null,
     source: release.source ?? null,

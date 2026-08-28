@@ -55,6 +55,8 @@ export interface CMSRelease {
   youtubeTitleVariantC?: string;
   youtubeWinningVariant?: 'A' | 'B' | 'C' | 'pending';
   youtubeTitleLastSyncedAt?: string;
+  youtubeContentType?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'UNSPECIFIED';
+  formatClassificationSource?: 'youtube_analytics' | 'youtube_shorts_surface' | 'dashboard' | 'legacy' | 'inferred';
   youtubeThumbnailUrl?: string; // Current YouTube thumbnail
   posterUrl?: string;
   description: string;
@@ -550,7 +552,7 @@ class CMSStorage {
       ...r,
       status: r.status || 'published',
       visibility: r.visibility || 'public',
-      format: r.format || (r.durationSeconds <= 60 ? 'short' : 'video'),
+      format: r.format || 'video',
       releaseType: r.releaseType || 'studio-release',
       publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
       registryOrder: index
@@ -578,7 +580,7 @@ class CMSStorage {
         ...r,
         status: r.status || 'published',
         visibility: r.visibility || 'public',
-        format: r.format || (r.durationSeconds <= 60 ? 'short' : 'video'),
+        format: r.format || 'video',
         releaseType: r.releaseType || 'studio-release',
         // Ensure we have a valid date for sorting
         publishedAt: r.publishedAt || r.releaseDate || r.createdAt,

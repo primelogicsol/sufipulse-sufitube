@@ -14,7 +14,7 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   
   // Normalization logic for dynamically generated defaults
   canonical.visibility = canonical.visibility || 'public';
-  canonical.format = canonical.format || ((canonical.durationSeconds as any) <= 60 ? 'short' : 'video');
+  canonical.format = canonical.format || 'video';
   canonical.releaseType = canonical.releaseType || 'studio-release';
   canonical.publishedAt = canonical.publishedAt || canonical.releaseDate || canonical.createdAt || canonical.created_at;
 

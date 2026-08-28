@@ -248,6 +248,8 @@ export interface CMSRelease {
   youtube_title_variant_c?: string;
   youtube_winning_variant?: 'A' | 'B' | 'C' | 'pending';
   youtube_title_last_synced_at?: string;
+  youtube_content_type?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'UNSPECIFIED';
+  format_classification_source?: 'youtube_analytics' | 'youtube_shorts_surface' | 'dashboard' | 'legacy' | 'inferred';
   youtube_url?: string;
   thumbnail_url?: string;
   description?: string;
