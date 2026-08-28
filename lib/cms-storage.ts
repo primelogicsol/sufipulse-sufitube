@@ -28,13 +28,15 @@ export interface PlatformDistribution {
   isVisible: boolean;
 }
 
+export type GovernanceOrigin = 'native_governed' | 'legacy_registry' | 'unresolved';
+
 export interface CMSRelease {
   id: string;
   title: string; // Canonical Release Title (Registry Authority)
   canonicalTitle?: string;
   canonicalStatus?: 'verified' | 'inferred' | 'unresolved';
-  governanceOrigin?: 'native_governed' | 'legacy_registry';
-  govType?: 'native_governed' | 'legacy_registry';
+  governanceOrigin?: GovernanceOrigin;
+  govType?: GovernanceOrigin;
   metadataStatus?: 'synced' | 'drift_detected' | 'overridden';
   subtitle?: string;
   slug: string;
