@@ -1,4 +1,4 @@
-﻿import * as fs from 'fs';
+import * as fs from 'fs';
 import * as path from 'path';
 import { DATA_DIR } from './server-data-dir';
 
@@ -27,6 +27,20 @@ export interface SyncAuditRun {
   errors: string[];
 }
 
+function requireValidCheckpointTimestamp(data: unknown): string {
+  if (!data || typeof data !== 'object' || !('lastSuccessfulYouTubeSyncAt' in data)) {
+    throw new Error('SyncCheckpoint: Missing checkpoint timestamp.');
+  }
+
+  const value = (data as Record<string, unknown>).lastSuccessfulYouTubeSyncAt;
+
+  if (typeof value !== 'string' || !value.trim() || Number.isNaN(Date.parse(value))) {
+    throw new Error('SyncCheckpoint: Invalid checkpoint timestamp.');
+  }
+
+  return value;
+}
+
 export const syncCheckpointService = {
   getCheckpoint(): string {
     if (!fs.existsSync(CHECKPOINT_FILE)) {
@@ -40,14 +54,11 @@ export const syncCheckpointService = {
       throw new Error('SyncCheckpoint: Checkpoint file exists but is unreadable or corrupted JSON.');
     }
     
-    if (!data || typeof data !== 'object') {
-      throw new Error('SyncCheckpoint: Checkpoint data is invalid.');
-    }
-    
-    return data.lastSuccessfulYouTubeSyncAt || '';
+    return requireValidCheckpointTimestamp(data);
   },
 
   advanceCheckpoint(isoDate: string): void {
+    requireValidCheckpointTimestamp({ lastSuccessfulYouTubeSyncAt: isoDate });
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
@@ -60,6 +71,6 @@ export const syncCheckpointService = {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    fs.appendFileSync(AUDIT_FILE, JSON.stringify(run) + '\n', 'utf8');
+    fs.appendFileSync(AUDIT_FILE, JSON.stringify(run) + "\n", 'utf8');
   }
 };
