@@ -6,7 +6,7 @@ import { FileText, Archive, BookOpen, Star, TriangleAlert as AlertTriangle, Exte
 
 export default function ReleasePolicy() {
     return (
-        <Layout>
+        <>
             <Section className="pt-24 pb-8">
                 <PageContainer>
                     <div className="max-w-4xl">
@@ -230,6 +230,6 @@ export default function ReleasePolicy() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

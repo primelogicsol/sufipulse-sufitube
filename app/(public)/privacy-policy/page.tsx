@@ -5,7 +5,7 @@ import { Shield, Database, Lock, FileText } from 'lucide-react';
 
 export default function PrivacyPolicy() {
     return (
-        <Layout>
+        <>
             <Section className="pt-24 pb-8">
                 <PageContainer>
                     <div className="max-w-4xl">
@@ -326,6 +326,6 @@ export default function PrivacyPolicy() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

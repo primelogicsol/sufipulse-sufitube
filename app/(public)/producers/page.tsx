@@ -1,7 +1,6 @@
 "use client";
 import { Music2, Layers, Users, ArrowRight, Shield, CircleCheck as CheckCircle2, ChevronLeft, ChevronRight, Disc3, FileCheck, Mic, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
-import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Badge } from '../../components/primitives/Badge';
@@ -71,7 +70,7 @@ export default function Producers() {
     ];
 
     return (
-        <Layout>
+        <>
             {/* Cinematic Hero Section with /banner6.png */}
             <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
                 {/* Cinematic Background Banner */}
@@ -311,6 +310,6 @@ export default function Producers() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

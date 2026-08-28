@@ -69,7 +69,7 @@ function VocalistApplyContent() {
 
 export default function VocalistApply() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="spacious" className="min-h-screen">
         <PageContainer>
           <Suspense fallback={
@@ -97,6 +97,6 @@ export default function VocalistApply() {
           </div>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

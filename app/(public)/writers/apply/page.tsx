@@ -68,7 +68,7 @@ function WriterApplyContent() {
 
 export default function WriterApply() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="spacious" className="min-h-screen">
         <PageContainer>
           <Suspense fallback={
@@ -96,6 +96,6 @@ export default function WriterApply() {
           </div>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

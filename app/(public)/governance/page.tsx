@@ -75,7 +75,7 @@ export default function GovernanceOverview() {
     ];
 
     return (
-        <Layout>
+        <>
             <StudioHero 
                 badge="Institutional Framework"
                 title="Governance"
@@ -203,7 +203,7 @@ export default function GovernanceOverview() {
                         inset 0 1px 1px rgba(255,255,255,0.02);
                 }
             `}</style>
-        </Layout>
+        </>
     );
 }
 

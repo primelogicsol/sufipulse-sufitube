@@ -7,7 +7,7 @@ import { Feather, Mic, Music, BookOpen, FileText, TriangleAlert as AlertTriangle
 
 export default function ContributorPolicy() {
     return (
-        <Layout>
+        <>
             <Section className="pt-24 pb-8">
                 <PageContainer>
                     <div className="max-w-4xl">
@@ -313,6 +313,6 @@ export default function ContributorPolicy() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

@@ -96,7 +96,7 @@ function SubmittedContent() {
 
 export default function VocalistSubmitted() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="spacious" className="min-h-screen">
         <PageContainer>
           <Suspense fallback={
@@ -109,6 +109,6 @@ export default function VocalistSubmitted() {
           </Suspense>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

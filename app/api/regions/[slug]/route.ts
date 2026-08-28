@@ -15,10 +15,6 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    
-    registriesStorage.forceHydrate();
-    cmsServerStorage.forceHydrate();
-    graphResolver.forceHydrate();
 
     const region = registriesStorage.getItem('regions', slug);
     if (!region || !region.isActive || !region.isPublic) {

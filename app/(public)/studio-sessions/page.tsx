@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Building2, Radio, FileCheck, UserCheck, Settings, Database, ArrowRight, KeyRound, ChevronDown, ChevronUp, ShieldCheck, Shield } from 'lucide-react';
 import Image from 'next/image';
-import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Badge } from '../../components/primitives/Badge';
@@ -76,7 +75,7 @@ export default function StudioSessions() {
     ];
 
     return (
-        <Layout>
+        <>
             {/* Cinematic Hero Section with /banner11.png */}
             <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
                 {/* Cinematic Background Banner */}
@@ -347,6 +346,6 @@ export default function StudioSessions() {
                     box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.02);
                 }
             `}</style>
-        </Layout>
+        </>
     );
 }

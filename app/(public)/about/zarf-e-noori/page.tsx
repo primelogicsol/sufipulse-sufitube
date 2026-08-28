@@ -1,6 +1,5 @@
 "use client";
 
-import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { Feather, Heart, Briefcase, PenTool, Sparkles, User, Globe, Library, Music, BookOpen, Layers } from 'lucide-react';
@@ -31,7 +30,7 @@ export default function ZarfENooriPage() {
     ];
 
     return (
-        <Layout>
+        <>
             <StudioHero 
                 badge="Entity Authority"
                 title="Dr. Zarf-e-Noori"
@@ -345,6 +344,6 @@ export default function ZarfENooriPage() {
                         inset 0 1px 1px rgba(255,255,255,0.02);
                 }
             `}</style>
-        </Layout>
+        </>
     );
 }

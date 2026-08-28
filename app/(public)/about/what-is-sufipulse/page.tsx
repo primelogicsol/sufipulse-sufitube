@@ -1,7 +1,6 @@
 "use client";
 import { Shield, BookOpen, Users, Globe, CircleHelp as HelpCircle, ChevronDown, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
-import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
 import { Badge } from '../../../components/primitives/Badge';
@@ -112,7 +111,7 @@ export default function AboutSufiPulse() {
     ];
 
     return (
-        <Layout>
+        <>
             {/* Cinematic Hero Section with /banner20.png */}
             <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
                 {/* Cinematic Background Banner */}
@@ -300,6 +299,6 @@ export default function AboutSufiPulse() {
                         inset 0 1px 1px rgba(255,255,255,0.02);
                 }
             `}</style>
-        </Layout>
+        </>
     );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Database, Link as LinkIcon, Network } from 'lucide-react';
@@ -49,7 +48,7 @@ const knowledgeGraphSchema = {
 
 export default function KnowledgeGraph() {
   return (
-    <Layout>
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(knowledgeGraphSchema) }}
@@ -128,6 +127,6 @@ export default function KnowledgeGraph() {
           </PageContainer>
         </Section>
       </div>
-    </Layout>
+    </>
   );
 }

@@ -97,10 +97,10 @@ function SubmittedContent() {
 
 export default function WriterSubmitted() {
   return (
-    <Layout>
+    <>
       <Suspense fallback={<Section background="midnight"><PageContainer><div className="text-center text-white py-20 italic">Loading registry...</div></PageContainer></Section>}>
         <SubmittedContent />
       </Suspense>
-    </Layout>
+    </>
   );
 }

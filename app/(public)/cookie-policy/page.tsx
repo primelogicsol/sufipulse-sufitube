@@ -5,7 +5,7 @@ import { Shield, ChartBar as BarChart3, Youtube, FileSliders as Sliders } from '
 
 export default function CookiePolicy() {
     return (
-        <Layout>
+        <>
             <Section className="pt-24 pb-8">
                 <PageContainer>
                     <div className="max-w-4xl">
@@ -264,6 +264,6 @@ export default function CookiePolicy() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

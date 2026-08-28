@@ -80,7 +80,7 @@ function UnsubscribeContent() {
 
 export default function UnsubscribePage() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="normal" className="pt-20">
         <PageContainer>
           <Suspense fallback={
@@ -93,6 +93,6 @@ export default function UnsubscribePage() {
           </Suspense>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

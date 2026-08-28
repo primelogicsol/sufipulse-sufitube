@@ -1,7 +1,6 @@
 "use client";
 import { Settings, FileSliders as Sliders, CircleCheck as CheckCircle2, Calendar, Mic as Mic2, Radio, Globe as Globe2, Sparkles, Award, Music, Shield } from 'lucide-react';
 import Image from 'next/image';
-import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Badge } from '../../components/primitives/Badge';
@@ -152,7 +151,7 @@ export default function StudioEngineers() {
     ];
 
     return (
-        <Layout>
+        <>
             {/* Cinematic Hero Section with /banner10.png */}
             <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
                 {/* Cinematic Background Banner */}
@@ -429,6 +428,6 @@ export default function StudioEngineers() {
                 shieldText="Technical Fidelity Mandatory"
                 background="midnight"
             />
-        </Layout>
+        </>
     );
 }

@@ -242,7 +242,7 @@ function StatusBadge({ status }: { status: 'verified' | 'unverified' | 'independ
 
 export default function VerificationCenter() {
   return (
-    <Layout>
+    <>
       {/* Structured Data */}
       <script
         type="application/ld+json"
@@ -1031,6 +1031,6 @@ export default function VerificationCenter() {
           </PageContainer>
         </Section>
       </div>
-    </Layout>
+    </>
   );
 }

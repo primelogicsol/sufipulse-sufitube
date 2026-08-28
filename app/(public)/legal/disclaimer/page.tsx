@@ -7,7 +7,7 @@ import { Shield, BookOpen, Palette, MessageSquare, ExternalLink, Server, Triangl
 
 export default function Disclaimer() {
     return (
-        <Layout>
+        <>
             <Section className="pt-24 pb-8">
                 <PageContainer>
                     <div className="max-w-4xl">
@@ -228,6 +228,6 @@ export default function Disclaimer() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

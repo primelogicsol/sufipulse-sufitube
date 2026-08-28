@@ -15,10 +15,6 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    
-    registriesStorage.forceHydrate();
-    cmsServerStorage.forceHydrate();
-    graphResolver.forceHydrate();
 
     const mood = registriesStorage.getItem('moods', slug);
     if (!mood || !mood.isActive || !mood.isPublic) {

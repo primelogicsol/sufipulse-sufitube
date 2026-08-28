@@ -5,7 +5,7 @@ import { Users, FileCheck, Handshake, KeyRound } from 'lucide-react';
 
 export default function TermsOfService() {
     return (
-        <Layout>
+        <>
             <Section className="pt-24 pb-8">
                 <PageContainer>
                     <div className="max-w-4xl">
@@ -396,6 +396,6 @@ export default function TermsOfService() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

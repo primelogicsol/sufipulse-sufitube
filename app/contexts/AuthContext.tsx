@@ -35,6 +35,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .then(async res => {
                 if (res.ok) return res.json();
                 if (res.status === 401) {
+                    const errorData = await res.json().catch(() => null);
+                    if (errorData?.code === 'NO_TOKEN') return null;
                     // Access token expired — attempt silent refresh
                     const refreshRes = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
                     if (refreshRes.ok) {

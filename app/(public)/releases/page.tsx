@@ -1,5 +1,4 @@
 "use client";
-import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { PrimaryButton } from '../../components/primitives/PrimaryButton';
@@ -358,7 +357,7 @@ export default function Releases() {
     const fetchVideos = async (silent = false, refresh = false) => {
         if (!silent) setLoading(true);
         try {
-            const url = `/api/releases?status=published&t=${Date.now()}${refresh ? '&refresh=1' : ''}`;
+            const url = `/api/releases?status=published${refresh ? '&forceHydrate=1' : ''}`;
             const cmsRes = await fetch(url, { cache: 'no-store' });
             if (!cmsRes.ok) throw new Error('Failed to fetch releases');
             const responseData = await cmsRes.json();
@@ -604,7 +603,7 @@ export default function Releases() {
     ];
 
     return (
-        <Layout>
+        <>
             {/* ── 01. Dedicated ReleaseArchiveHero with banner28.png ── */}
             <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
                 {/* Cinematic Background Banner */}
@@ -1165,6 +1164,6 @@ export default function Releases() {
                         inset 0 1px 1px rgba(255,255,255,0.02);
                 }
             `}</style>
-        </Layout>
+        </>
     );
 }

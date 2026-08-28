@@ -315,7 +315,7 @@ function ApplicationStatusContent() {
 
 export default function ApplicationStatus() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="spacious">
         <PageContainer>
           <Suspense fallback={
@@ -328,7 +328,7 @@ export default function ApplicationStatus() {
           </Suspense>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }
 

@@ -11,7 +11,6 @@ const cacheHeaders = {
 // Public endpoint to fetch all active and public taxonomy items
 export async function GET(request: NextRequest) {
   try {
-    registriesStorage.forceHydrate();
     const raw = registriesStorage.getRawData();
 
     const publicData = {

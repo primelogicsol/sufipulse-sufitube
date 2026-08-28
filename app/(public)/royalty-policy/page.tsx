@@ -6,7 +6,7 @@ import { Feather, Mic, Music, Award, TriangleAlert as AlertTriangle, ExternalLin
 
 export default function RoyaltyPolicy() {
     return (
-        <Layout>
+        <>
             <Section className="pt-24 pb-8">
                 <PageContainer>
                     <div className="max-w-4xl">
@@ -202,6 +202,6 @@ export default function RoyaltyPolicy() {
                     </div>
                 </PageContainer>
             </Section>
-        </Layout>
+        </>
     );
 }

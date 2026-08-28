@@ -69,7 +69,7 @@ function LiteraryApplyContent() {
 
 export default function LiteraryApply() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="spacious" className="min-h-screen">
         <PageContainer>
           <Suspense fallback={
@@ -97,6 +97,6 @@ export default function LiteraryApply() {
           </div>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

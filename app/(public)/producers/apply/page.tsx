@@ -69,7 +69,7 @@ function ProducerApplyContent() {
 
 export default function ProducerApply() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="spacious" className="min-h-screen">
         <PageContainer>
           <Suspense fallback={
@@ -97,6 +97,6 @@ export default function ProducerApply() {
           </div>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

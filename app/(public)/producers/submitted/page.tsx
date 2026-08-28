@@ -96,7 +96,7 @@ function SubmittedContent() {
 
 export default function ProducerSubmitted() {
   return (
-    <Layout>
+    <>
       <Section background="midnight" spacing="spacious" className="min-h-screen">
         <PageContainer>
           <Suspense fallback={
@@ -109,6 +109,6 @@ export default function ProducerSubmitted() {
           </Suspense>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

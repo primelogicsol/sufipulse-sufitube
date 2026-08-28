@@ -15,10 +15,6 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    
-    registriesStorage.forceHydrate();
-    cmsServerStorage.forceHydrate();
-    graphResolver.forceHydrate();
 
     const theme = registriesStorage.getItem('themes', slug);
     if (!theme || !theme.isActive || !theme.isPublic) {

@@ -17,9 +17,6 @@ export async function GET(
     const { slug } = await params;
     
     // Force re-hydration to read fresh data
-    registriesStorage.forceHydrate();
-    cmsServerStorage.forceHydrate();
-    graphResolver.forceHydrate();
 
     const concept = registriesStorage.getItem('concepts', slug);
     if (!concept || !concept.isActive || !concept.isPublic) {

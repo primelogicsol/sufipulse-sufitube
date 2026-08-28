@@ -1780,7 +1780,7 @@ function Release() {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <PageContainer>
           <div className="max-w-7xl mx-auto animate-pulse">
             {/* Title skeleton */}
@@ -1827,13 +1827,13 @@ function Release() {
             </div>
           </div>
         </PageContainer>
-      </Layout>
+      </>
     );
   }
 
   if (releaseError || !release) {
     return (
-      <Layout>
+      <>
         <PageContainer>
           <div className="max-w-5xl mx-auto flex items-center justify-center min-h-96">
             <div className="text-neutral-500">
@@ -1841,7 +1841,7 @@ function Release() {
             </div>
           </div>
         </PageContainer>
-      </Layout>
+      </>
     );
   }
 
@@ -2036,7 +2036,7 @@ function Release() {
   };
 
   return (
-    <Layout>
+    <>
       <PageContainer>
         <div className="max-w-7xl mx-auto">
           <div
@@ -5344,7 +5344,7 @@ function Release() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

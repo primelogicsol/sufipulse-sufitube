@@ -53,8 +53,9 @@ export async function requireAuth(
 ): Promise<AuthUser | NextResponse> {
   const user = await getAuthUser(req);
   if (!user) {
+    const token = extractToken(req);
     return NextResponse.json(
-      { error: 'Not authenticated' },
+      { error: 'Not authenticated', code: token ? 'INVALID_TOKEN' : 'NO_TOKEN' },
       { status: 401 }
     );
   }

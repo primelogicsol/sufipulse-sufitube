@@ -180,21 +180,21 @@ export default function LiteraryArticleClient() {
   // Loading state
   if (loading) {
     return (
-      <Layout>
+      <>
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div className="w-10 h-10 border-2 border-[var(--color-gold)]/30 border-t-[var(--color-gold)] rounded-full animate-spin mx-auto mb-4" />
             <p style={{ color: 'var(--color-text-secondary)' }}>Loading article…</p>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   // Article not found
   if (!article) {
     return (
-      <Layout>
+      <>
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)', color: 'var(--color-gold)', opacity: 0.4 }}>✦</div>
@@ -204,7 +204,7 @@ export default function LiteraryArticleClient() {
             </Link>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
@@ -217,7 +217,7 @@ export default function LiteraryArticleClient() {
   })();
 
   return (
-    <Layout>
+    <>
       {/* Sticky reading progress bar */}
       <ReadingProgress />
 
@@ -589,6 +589,6 @@ export default function LiteraryArticleClient() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }

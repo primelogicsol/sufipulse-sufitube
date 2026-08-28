@@ -216,7 +216,7 @@ export default function GlobalReachStrip() {
     try {
       const url = isManualRefresh 
         ? `/api/public/youtube/global-reach?refresh=1&t=${Date.now()}` 
-        : `/api/public/youtube/global-reach?t=${Date.now()}`;
+        : `/api/public/youtube/global-reach`;
       const r = await fetch(url, { cache: 'no-store' });
       const d = await r.json();
       if (d && !d.error) setData(d);
