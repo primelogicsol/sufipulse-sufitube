@@ -17,11 +17,17 @@ const PORT = process.argv[2] || '3000';
 const BASE = `http://localhost:${PORT}`;
 const SAMPLES = 25; // >= 20 required; 25 for margin
 
-async function time(url) {
+async function time(url, label) {
   const t0 = performance.now();
   const res = await fetch(url, { cache: 'no-store' });
   const ms = performance.now() - t0;
-  return { ms: Math.round(ms), status: res.status };
+  if (res.status !== 200) {
+    throw new Error(
+      `${label}: expected HTTP 200, received ${res.status}. ` +
+      `Latency gate requires valid responses — a fast 404/401 is not evidence of a working route.`
+    );
+  }
+  return { ms: Math.round(ms) };
 }
 
 function p50(arr) {
@@ -39,13 +45,13 @@ async function warmThenMeasure(label, url, n = SAMPLES, warmupCount = 3) {
   }
   const results = [];
   for (let i = 0; i < n; i++) {
-    const { ms, status } = await time(url);
+    const { ms } = await time(url, label); // throws on non-200
     results.push(ms);
-    if (status >= 500) console.warn(`  ⚠️  ${label}: sample ${i+1} returned HTTP ${status}`);
     await new Promise(r => setTimeout(r, 30));
   }
   return { label, p50: p50(results), max: max(results), samples: results };
 }
+
 
 async function run() {
   console.log(`\nSufiPulse P0 Gate Measurement — production server at ${BASE}`);
