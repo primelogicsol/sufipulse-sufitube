@@ -15,6 +15,10 @@ const migrations = [
   {
     version: '002_nullable_historical_timestamps',
     file: 'db/migrations/002_nullable_historical_timestamps.sql'
+  },
+  {
+    version: '003_registry_order',
+    file: 'db/migrations/003_registry_order.sql'
   }
 ];
 
@@ -166,6 +170,10 @@ async function run() {
     
     if (!getCol('db_updated_at').column_default.includes('now()')) throw new Error('db_updated_at default invalid');
     console.log(`db_updated_at default:           PASS`);
+
+    // 003 Assertions
+    if (!getCol('registry_order')) throw new Error('registry_order column missing');
+    console.log(`registry_order column:           PASS`);
 
     console.log('\n✅ P2-G1 — Schema migration applies cleanly to empty PostgreSQL: PASS');
   } catch (err) {
