@@ -1,5 +1,6 @@
 "use client";
 import { Music2, Layers, Users, ArrowRight, Shield, CircleCheck as CheckCircle2, ChevronLeft, ChevronRight, Disc3, FileCheck, Mic, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
@@ -71,24 +72,76 @@ export default function Producers() {
 
     return (
         <Layout>
-            <Section background="midnight" spacing="spacious">
-                <PageContainer>
-                    <div className="max-w-4xl mx-auto text-center">
-                        <div className="mb-6">
-                            <Badge variant="gold">Creative Division</Badge>
+            {/* Cinematic Hero Section with /banner6.png */}
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+                {/* Cinematic Background Banner */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <Image
+                        src="/banner6.png"
+                        alt="SufiPulse Producers & Sound Architecture Session"
+                        fill
+                        priority
+                        quality={95}
+                        className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+                    />
+                    {/* Layered brand gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+                </div>
+
+                {/* Hero Content */}
+                <div className="relative z-10">
+                    <PageContainer>
+                        <div className="max-w-5xl mx-auto text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+                                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
+                                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
+                                    SufiPulse USA — Sound Architecture
+                                </span>
+                            </div>
+
+                            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
+                                Producers & Composition<br className="hidden md:block" />{" "}
+                                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
+                                    {roleDisplayMap.engineer.mystical}
+                                </span>
+                            </h1>
+
+                            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
+                                Producers operate as musical architects within the SufiPulse framework. They structure composition, direct sonic development, and ensure rigorous alignment with approved kalam before master studio capture.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <Link href="/producers/apply">
+                                    <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
+                                        Apply as Producer
+                                    </PrimaryButton>
+                                </Link>
+                                <Link href="/governance">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        Production Governance
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            {/* Responsibilities Strip */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {producerResponsibilities.map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <item.icon className="w-7 h-7 text-[var(--color-gold)] mx-auto mb-2 opacity-90" />
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">
+                                            {item.title}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">
+                                            {item.description}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <h1 className="text-[var(--text-4xl)] md:text-[64px] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight">
-                            Producers
-                        </h1>
-                        <p className="text-[var(--text-xl)] text-[var(--color-gold)] font-medium mb-10 tracking-wide uppercase">
-                            {roleDisplayMap.engineer.mystical}
-                        </p>
-                        <p className="text-[var(--text-lg)] text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto">
-                            Producers operate as musical architects within the SufiPulse framework. They structure composition, direct sonic development, and ensure alignment with approved kalam before studio execution.
-                        </p>
-                    </div>
-                </PageContainer>
-            </Section>
+                    </PageContainer>
+                </div>
+            </section>
 
             <Section background="slate" spacing="normal">
                 <PageContainer>
@@ -239,12 +292,12 @@ export default function Producers() {
                         </div>
 
                         <div className="flex flex-col items-center gap-8">
-              <Link href="/producers/apply" className="w-full md:w-auto">
-                <PrimaryButton className="w-full md:w-auto min-w-[240px]">
-                  Apply as Producer
-                </PrimaryButton>
-              </Link>
-            </div>
+                            <Link href="/producers/apply" className="w-full md:w-auto">
+                                <PrimaryButton className="w-full md:w-auto min-w-[240px]">
+                                    Apply as Producer
+                                </PrimaryButton>
+                            </Link>
+                        </div>
 
                         <div className="mt-16 pt-8 border-t border-[var(--color-text-tertiary)]/10 flex flex-col md:flex-row items-center justify-between gap-6">
                             <div className="flex items-center gap-3">
@@ -261,4 +314,3 @@ export default function Producers() {
         </Layout>
     );
 }
-
