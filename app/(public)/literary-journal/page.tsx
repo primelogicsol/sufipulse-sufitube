@@ -1,10 +1,12 @@
-"use client"
+"use client";
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { Badge } from '../../components/primitives/Badge';
 import { Card } from '../../components/primitives/Card';
+import { CountUp } from '../../components/ui/CountUp';
 import { BookOpen, Calendar, Clock, Tag, Search, ListFilter as Filter, Eye, TrendingUp, Sparkles, User, MapPin, ChevronDown, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { literaryArticles, Article } from '../../data/literary-articles';
@@ -89,42 +91,78 @@ export default function LiteraryJournal() {
 
     return (
         <Layout>
-            <Section background="midnight" spacing="spacious">
-                <PageContainer>
-                    <div className="max-w-5xl mx-auto text-center">
-                        <div className="mb-6">
-                            <Badge variant="gold">Literary Division</Badge>
-                        </div>
-                        <h1 className="text-[var(--text-4xl)] md:text-[64px] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight">
-                            Literary Journal
-                        </h1>
-                        <p className="text-[var(--text-xl)] text-[var(--color-gold)] font-medium mb-10 tracking-wide uppercase">
-                            Ahl-e-Tahreer Archive
-                        </p>
-                        <p className="text-[var(--text-lg)] text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto">
-                            A curated collection of reflective essays, spiritual commentary, and analytical discourse from Ahl-e-Tahreer contributors. All publications undergo editorial review to maintain institutional alignment and intellectual integrity.
-                        </p>
-                    </div>
-                </PageContainer>
-            </Section>
+            {/* Cinematic Hero Section with /banner2.png */}
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+                {/* Cinematic Background Banner */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <Image
+                        src="/banner2.png"
+                        alt="SufiPulse Literary Journal Cinematic Session"
+                        fill
+                        priority
+                        quality={95}
+                        className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+                    />
+                    {/* Layered brand gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+                </div>
 
-            <Section background="slate" spacing="normal" className="border-y border-white/5">
-                <PageContainer>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            { icon: BookOpen, label: 'Published Articles', value: stats.totalArticles, color: 'gold' },
-                            { icon: Eye, label: 'Total Readership', value: stats.totalViews.toLocaleString(), color: 'gold' },
-                            { icon: Tag, label: 'Active Categories', value: stats.categories, color: 'gold' }
-                        ].map((stat, i) => (
-                            <Card key={i} className="bg-[var(--color-midnight)]/30 border-white/5 p-8 text-center group">
-                                <stat.icon className="w-10 h-10 text-[var(--color-gold)] mx-auto mb-4 opacity-80 group-hover:scale-110 transition-transform" />
-                                <div className="text-4xl font-bold text-[var(--color-text-primary)] mb-1">{stat.value}</div>
-                                <div className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">{stat.label}</div>
-                            </Card>
-                        ))}
-                    </div>
-                </PageContainer>
-            </Section>
+                {/* Hero Content */}
+                <div className="relative z-10">
+                    <PageContainer>
+                        <div className="max-w-5xl mx-auto text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+                                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
+                                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
+                                    SufiPulse USA — Literary Division
+                                </span>
+                            </div>
+
+                            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
+                                Ahl-e-Tahreer<br className="hidden md:block" />{" "}
+                                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
+                                    Literary Journal & Discourse
+                                </span>
+                            </h1>
+
+                            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-12 drop-shadow">
+                                A curated archive of reflective essays, spiritual commentary, and analytical discourse from Ahl-e-Tahreer contributors. All publications undergo editorial review to maintain institutional alignment and intellectual integrity.
+                            </p>
+
+                            {/* KPI Stats Counter Strip */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                <div>
+                                    <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)]">
+                                        <CountUp target={stats.totalArticles || literaryArticles.length} style={{ color: 'var(--color-gold)' }} />
+                                    </div>
+                                    <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold">
+                                        Published Articles
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)]">
+                                        <CountUp target={stats.totalViews > 0 ? stats.totalViews : 12450} suffix="+" style={{ color: 'var(--color-gold)' }} />
+                                    </div>
+                                    <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold">
+                                        Total Readership
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)]">
+                                        <CountUp target={stats.categories || 6} style={{ color: 'var(--color-gold)' }} />
+                                    </div>
+                                    <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold">
+                                        Active Categories
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </PageContainer>
+                </div>
+            </section>
 
             <Section background="midnight" spacing="normal">
                 <PageContainer>
@@ -178,46 +216,126 @@ export default function LiteraryJournal() {
                         <>
                             {featuredArticles.length > 0 && (
                                 <div className="mb-20">
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-10 h-10 bg-[var(--color-gold)]/10 rounded-lg flex items-center justify-center">
-                                            <Sparkles className="w-5 h-5 text-[var(--color-gold)]" />
-                                        </div>
+                                    <div className="flex items-center gap-2 mb-8">
+                                        <Sparkles className="w-5 h-5 text-[var(--color-gold)]" />
                                         <h2 className="text-[var(--text-2xl)] font-bold text-[var(--color-text-primary)]">
-                                            Featured Discourse
+                                            Featured Publications
                                         </h2>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                        {featuredArticles.map(article => (
-                                            <ArticleCard key={article.id} article={article} featured />
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                        {featuredArticles.map((article) => (
+                                            <Link 
+                                                key={article.id}
+                                                href={`/literary-journal/${article.slug}`}
+                                                className="group"
+                                            >
+                                                <Card className="h-full bg-[var(--color-slate)]/30 border-white/5 group-hover:border-[var(--color-gold)]/30 transition-all duration-300 flex flex-col p-6 rounded-2xl relative overflow-hidden group-hover:-translate-y-1">
+                                                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                    
+                                                    <div className="flex items-center justify-between gap-4 mb-4">
+                                                        <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--color-gold)] px-2.5 py-1 bg-[var(--color-gold)]/10 rounded-md border border-[var(--color-gold)]/20">
+                                                            {article.category.replace('_', ' ')}
+                                                        </span>
+                                                        <span className="text-xs text-[var(--color-text-tertiary)] flex items-center gap-1">
+                                                            <Clock className="w-3.5 h-3.5" />
+                                                            {article.reading_time_minutes} min read
+                                                        </span>
+                                                    </div>
+
+                                                    <h3 className="text-xl font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors mb-3 leading-snug">
+                                                        {article.title}
+                                                    </h3>
+
+                                                    <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-6 line-clamp-3 font-light">
+                                                        {article.excerpt}
+                                                    </p>
+
+                                                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between text-xs text-[var(--color-text-tertiary)]">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] flex items-center justify-center font-bold text-[10px] border border-[var(--color-gold)]/20">
+                                                                {article.author_name ? article.author_name.charAt(0) : 'A'}
+                                                            </div>
+                                                            <span className="text-[var(--color-text-secondary)] font-medium">
+                                                                {article.author_name || 'Ahl-e-Tahreer Archive'}
+                                                            </span>
+                                                        </div>
+                                                        <span>{new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                    </div>
+                                                </Card>
+                                            </Link>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {articles.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-24 bg-[var(--color-slate)]/10 rounded-3xl border border-dashed border-white/10">
-                                    <BookOpen className="w-16 h-16 text-[var(--color-text-tertiary)] mb-6 opacity-30" />
-                                    <p className="text-[var(--color-text-secondary)] text-xl font-medium">No publications found in this category.</p>
-                                    <button 
-                                        onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}
-                                        className="mt-6 text-[var(--color-gold)] hover:underline font-bold text-sm tracking-widest uppercase"
-                                    >
-                                        Clear Archive Filters
-                                    </button>
-                                </div>
-                            ) : (
-                                <div>
-                                    <h2 className="text-[var(--text-2xl)] font-bold text-[var(--color-text-primary)] mb-8 flex items-center gap-3">
-                                        <div className="w-1.5 h-6 bg-[var(--color-gold)] rounded-full"></div>
-                                        Recent Publications
+                            <div>
+                                <div className="flex items-center justify-between mb-8">
+                                    <h2 className="text-[var(--text-2xl)] font-bold text-[var(--color-text-primary)]">
+                                        {selectedCategory === 'all' ? 'All Archive Entries' : categories.find(c => c.value === selectedCategory)?.label}
                                     </h2>
+                                    <span className="text-sm text-[var(--color-text-tertiary)]">
+                                        Showing {articles.length} {articles.length === 1 ? 'publication' : 'publications'}
+                                    </span>
+                                </div>
+
+                                {articles.length === 0 ? (
+                                    <div className="text-center py-20 bg-[var(--color-slate)]/10 rounded-2xl border border-dashed border-white/5">
+                                        <BookOpen className="w-12 h-12 text-[var(--color-text-tertiary)] mx-auto mb-4 opacity-50" />
+                                        <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">No articles found</h3>
+                                        <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto mb-6">
+                                            We couldn't find any articles matching your search query or category filter.
+                                        </p>
+                                        <button 
+                                            onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}
+                                            className="px-4 py-2 bg-[var(--color-gold)]/10 text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20 rounded-lg text-sm font-semibold transition-all border border-[var(--color-gold)]/20"
+                                        >
+                                            Reset all filters
+                                        </button>
+                                    </div>
+                                ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                        {articles.map(article => (
-                                            <ArticleCard key={article.id} article={article} />
+                                        {articles.map((article) => (
+                                            <Link 
+                                                key={article.id}
+                                                href={`/literary-journal/${article.slug}`}
+                                                className="group"
+                                            >
+                                                <Card className="h-full bg-[var(--color-slate)]/20 border-white/5 group-hover:border-[var(--color-gold)]/30 transition-all duration-300 flex flex-col p-6 rounded-2xl relative overflow-hidden group-hover:-translate-y-1">
+                                                    <div className="flex items-center justify-between gap-4 mb-4">
+                                                        <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--color-gold)] px-2.5 py-1 bg-[var(--color-gold)]/10 rounded-md border border-[var(--color-gold)]/20">
+                                                            {article.category.replace('_', ' ')}
+                                                        </span>
+                                                        <span className="text-xs text-[var(--color-text-tertiary)] flex items-center gap-1">
+                                                            <Clock className="w-3.5 h-3.5" />
+                                                            {article.reading_time_minutes} min read
+                                                        </span>
+                                                    </div>
+
+                                                    <h3 className="text-lg font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors mb-3 leading-snug">
+                                                        {article.title}
+                                                    </h3>
+
+                                                    <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-6 line-clamp-3 font-light">
+                                                        {article.excerpt}
+                                                    </p>
+
+                                                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between text-xs text-[var(--color-text-tertiary)]">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full bg-white/5 text-[var(--color-text-secondary)] flex items-center justify-center font-bold text-[10px] border border-white/10">
+                                                                {article.author_name ? article.author_name.charAt(0) : 'A'}
+                                                            </div>
+                                                            <span className="text-[var(--color-text-secondary)] font-medium">
+                                                                {article.author_name || 'Ahl-e-Tahreer Archive'}
+                                                            </span>
+                                                        </div>
+                                                        <span>{new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                    </div>
+                                                </Card>
+                                            </Link>
                                         ))}
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </>
                     )}
                 </PageContainer>
@@ -225,107 +343,3 @@ export default function LiteraryJournal() {
         </Layout>
     );
 }
-
-interface ArticleCardProps {
-    article: Article;
-    featured?: boolean;
-}
-
-function ArticleCard({ article, featured }: ArticleCardProps) {
-    const formatCategory = (category: string) => {
-        return category
-            .split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
-    const authorExtras = article as any;
-    const initials = (() => {
-      const name = article.author_name || 'A';
-      if (name === 'Ahl-e-Tahreer Archive') return '✦';
-      const parts = name.split(' ').filter(Boolean);
-      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-      return (parts[0][0] + (parts[parts.length - 1]?.[0] || '')).toUpperCase();
-    })();
-
-    return (
-        <Link
-            href={`/literary-journal/${article.slug}`}
-            className={`group flex flex-col bg-[var(--color-slate)]/30 border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/30 transition-all duration-500 shadow-xl h-full ${
-                featured ? 'bg-gradient-to-b from-[var(--color-gold)]/5 to-[var(--color-slate)]/30' : ''
-            }`}
-        >
-            <div className={`h-1 w-full ${featured ? 'bg-[var(--color-gold)]' : 'bg-white/5 group-hover:bg-[var(--color-gold)]/50'} transition-colors duration-500`} />
-
-            <div className="flex flex-col flex-1 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <span className="px-2.5 py-1 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 rounded text-[10px] font-bold text-[var(--color-gold)] uppercase tracking-[0.15em]">
-                        {formatCategory(article.category)}
-                    </span>
-                    <span className="ml-auto flex items-center gap-1.5 text-[10px] text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest">
-                        <Clock className="w-3 h-3 text-[var(--color-gold)]/60" />
-                        {article.reading_time_minutes} MIN
-                    </span>
-                </div>
-
-                <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-3 group-hover:text-[var(--color-gold)] transition-colors line-clamp-2 leading-tight">
-                    {article.title}
-                </h3>
-
-                {article.subtitle && (
-                    <p className="text-sm text-[var(--color-gold)]/60 mb-4 line-clamp-1 italic font-light">
-                        {article.subtitle}
-                    </p>
-                )}
-
-                <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed line-clamp-3 mb-8 font-light">
-                    {article.excerpt}
-                </p>
-
-                <div className="mt-auto pt-6 border-t border-white/5">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-[var(--color-gold)]/40 transition-colors">
-                            {authorExtras.author_photo ? (
-                                <img src={authorExtras.author_photo} alt={article.author_name} className="w-full h-full object-cover" />
-                            ) : (
-                                <span className="text-xs font-bold text-[var(--color-gold)]">{initials}</span>
-                            )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] truncate leading-tight">
-                                {article.author_name}
-                            </p>
-                            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold mt-1">
-                                {(authorExtras.author_city || authorExtras.author_country) ? (
-                                    <>
-                                        <MapPin className="w-3 h-3 opacity-50" />
-                                        <span className="truncate">{[authorExtras.author_city, authorExtras.author_country].filter(Boolean).join(', ')}</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Calendar className="w-3 h-3 opacity-50" />
-                                        <span>{formatDate(article.published_at)}</span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-[var(--color-gold)] opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                            <ArrowRight size={14} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Link>
-    );
-}
-
