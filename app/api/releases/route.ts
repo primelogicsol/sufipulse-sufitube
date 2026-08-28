@@ -15,114 +15,140 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const validationResult = validateQueryParams(searchParams, releasesQuerySchema);
-    
+
     if (!validationResult.success) {
       return NextResponse.json(validationResult.error, { status: 400 });
     }
 
-    const { status, type, search, key, slug, youtubeId, t, forceHydrate } = validationResult.data;
-    
-    // 0) Handle cache busting and re-hydration
-    // Unconditionally re-check disk if t or forceHydrate is present
-    if (forceHydrate || t) {
-      console.log(`[API /api/releases] Forcing disk re-hydration check (t=${t})`);
-      cmsServerStorage.forceHydrate();
-    }
+    // NOTE: t and forceHydrate are not in the schema and will not be present.
+    // Public GET endpoints must never trigger storage hydration.
+    const { status, type, search, key, slug, youtubeId, governance, format, duration, year, sort } = validationResult.data;
 
-    const allReleases = cmsServerStorage.getAllReleases();
-    const headers = new Headers();
-    headers.set('X-Registry-Count', allReleases.length.toString());
-    headers.set('Cache-Control', 'no-store, must-revalidate');
-    // This is used by the release-detail page for fast CMS lookup
+    // ── Single-record lookup path ──────────────────────────────────────────
+    // Resolution precedence: slug > youtubeId > key (slug/youtubeId/id fallback)
     const lookupKey = key || slug || youtubeId;
     if (lookupKey) {
-      // PHASE 1: Contract Hardening - Resolution precedence
-      // 1. Explicit slug lookup
       if (slug) {
         const release = cmsServerStorage.getReleaseBySlug(slug);
         if (release) return NextResponse.json({ ...release, resolution_source: 'cms_slug' }, { headers: cacheHeaders });
       }
-      
-      // 2. Explicit youtubeId lookup
       if (youtubeId) {
         const release = cmsServerStorage.getReleaseByYoutubeId(youtubeId);
         if (release) return NextResponse.json({ ...release, resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
       }
-
-      // 3. Fallback: try key as slug then youtubeId then ID
       const releaseBySlug = cmsServerStorage.getReleaseBySlug(lookupKey);
       if (releaseBySlug) return NextResponse.json({ ...releaseBySlug, resolution_source: 'cms_slug' }, { headers: cacheHeaders });
-
       const releaseByYoutubeId = cmsServerStorage.getReleaseByYoutubeId(lookupKey);
       if (releaseByYoutubeId) return NextResponse.json({ ...releaseByYoutubeId, resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
-
       const releaseById = cmsServerStorage.getRelease(lookupKey);
       if (releaseById) return NextResponse.json({ ...releaseById, resolution_source: 'cms_key' }, { headers: cacheHeaders });
-      
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
 
-    // 2) Fetch releases based on status if provided
-    let releases = status 
-      ? cmsServerStorage.getAllReleases({ status }) 
+    // ── Collection filter pipeline ─────────────────────────────────────────
+    // Order: status → type → governance → search → format → duration → year → sort → COUNT → paginate
+
+    // 1. status
+    let releases = status
+      ? cmsServerStorage.getAllReleases({ status })
       : cmsServerStorage.getAllReleases();
 
-    // Filter by type (releaseType) if provided
+    // 2. type (legacy compat: matches releaseType field)
     if (type && type !== 'all') {
       releases = releases.filter(r => r.releaseType === type);
     }
 
-    // Filter by search query if provided
-    if (search) {
-      const query = search.toLowerCase();
-      releases = releases.filter(r => 
-        r.title.toLowerCase().includes(query) || 
-        r.description?.toLowerCase().includes(query) ||
-        r.slug.toLowerCase().includes(query) ||
-        r.youtubeId?.toLowerCase().includes(query)
-      );
-    }
-    
-    // Handle sort (default: newest)
-    const sort = searchParams.get('sort') || 'newest';
-    if (sort === 'newest') {
-      releases.sort((a, b) => new Date(b.releaseDate || b.createdAt).getTime() - new Date(a.releaseDate || a.createdAt).getTime());
-    } else if (sort === 'oldest') {
-      releases.sort((a, b) => new Date(a.releaseDate || a.createdAt).getTime() - new Date(b.releaseDate || b.createdAt).getTime());
-    } else if (sort === 'popular') {
-      releases.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+    // 3. governance (governanceOrigin / govType)
+    if (governance && governance !== 'all') {
+      releases = releases.filter(r => {
+        const govType = (r as any).governanceOrigin || (r as any).govType || (r as any).source;
+        return govType === governance;
+      });
     }
 
-    const pageParam = searchParams.get('page');
+    // 4. search — full parity: canonical title, YouTube title, description, vocalist, writer, tags, youtubeId, slug
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      releases = releases.filter(r => {
+        const canonical = ((r as any).canonicalTitle || r.title || '').toLowerCase();
+        const youtube  = ((r as any).youtubeTitle || (r as any).youtubeStats?.title || '').toLowerCase();
+        const desc     = (r.description || '').toLowerCase();
+        const vocalist = typeof (r as any).vocalist === 'string'
+          ? (r as any).vocalist.toLowerCase()
+          : ([(r as any).vocalist?.name, (r as any).vocalist?.nameUrdu].filter(Boolean).join(' ').toLowerCase());
+        const writer   = typeof (r as any).writer === 'string'
+          ? (r as any).writer.toLowerCase()
+          : ([(r as any).writer?.name, (r as any).writer?.nameUrdu].filter(Boolean).join(' ').toLowerCase());
+        const tags     = Array.isArray((r as any).tags)
+          ? (r as any).tags.join(' ').toLowerCase()
+          : '';
+        const ytId     = (r.youtubeId || '').toLowerCase();
+        const slug     = (r.slug || '').toLowerCase();
+        return canonical.includes(q) || youtube.includes(q) || desc.includes(q) ||
+               vocalist.includes(q) || writer.includes(q) || tags.includes(q) ||
+               ytId.includes(q) || slug.includes(q);
+      });
+    }
+
+    // 5. format
+    if (format && format !== 'all') {
+      releases = releases.filter(r => (r as any).format === format);
+    }
+
+    // 6. duration (in seconds)
+    if (duration && duration !== 'all' && duration !== 'default') {
+      releases = releases.filter(r => {
+        const secs = (r as any).durationSeconds || 0;
+        if (duration === 'short')    return secs > 0 && secs < 180;
+        if (duration === 'standard') return secs >= 180 && secs <= 480;
+        if (duration === 'long')     return secs > 480;
+        return true;
+      });
+    }
+
+    // 7. year
+    if (year && year !== 'all') {
+      const y = parseInt(year, 10);
+      releases = releases.filter(r => {
+        const d = new Date((r as any).releaseDate || (r as any).publishedAt || (r as any).createdAt);
+        return d.getFullYear() === y;
+      });
+    }
+
+    // 8. sort
+    const sortParam = sort || (searchParams.get('sort') as string | null) || 'newest';
+    if (sortParam === 'newest') {
+      releases.sort((a, b) => new Date((b as any).releaseDate || (b as any).createdAt).getTime() - new Date((a as any).releaseDate || (a as any).createdAt).getTime());
+    } else if (sortParam === 'oldest') {
+      releases.sort((a, b) => new Date((a as any).releaseDate || (a as any).createdAt).getTime() - new Date((b as any).releaseDate || (b as any).createdAt).getTime());
+    } else if (sortParam === 'popular') {
+      releases.sort((a, b) => ((b as any).viewCount || 0) - ((a as any).viewCount || 0));
+    }
+
+    // 9. COUNT (filtered total before pagination)
+    const count = releases.length;
+
+    // 10. paginate
+    const pageParam    = searchParams.get('page');
     const pageSizeParam = searchParams.get('pageSize') || searchParams.get('limit');
-    
-    // Use dynamic headers if t is present, otherwise standard cache
-    const finalHeaders = t ? Object.fromEntries(headers.entries()) : cacheHeaders;
 
     if (pageParam || pageSizeParam) {
-      const page = parseInt(pageParam || '1', 10) || 1;
-      const pageSize = parseInt(pageSizeParam || '12', 10) || 12;
-      const offset = parseInt(searchParams.get('offset') || '0', 10) || (page - 1) * pageSize;
-      
-      const count = releases.length;
+      const page     = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+      const pageSize = Math.max(1, parseInt(pageSizeParam || '12', 10) || 12);
+      const offset   = parseInt(searchParams.get('offset') || '0', 10) || (page - 1) * pageSize;
       const totalPages = Math.ceil(count / pageSize);
-      const items = releases.slice(offset, offset + pageSize);
-      
-      return NextResponse.json({
-        items,
-        count,
-        page,
-        pageSize,
-        totalPages
-      }, { headers: finalHeaders });
+      const items    = releases.slice(offset, offset + pageSize);
+
+      return NextResponse.json({ items, count, page, pageSize, totalPages }, { headers: cacheHeaders });
     }
-    
-    return NextResponse.json(releases, { headers: finalHeaders });
+
+    return NextResponse.json(releases, { headers: cacheHeaders });
   } catch (err: any) {
     console.error('[API /api/releases] GET ERROR:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(request);

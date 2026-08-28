@@ -308,21 +308,24 @@ export const adoptionsQuerySchema = z.object({
 export const releasesQuerySchema = z.object({
   status: z.string().optional(),
   type: z.string().optional(),
-  search: z.string().optional(),
+  search: z.string().max(200).optional(),
   key: z.string().optional(),
   slug: z.string().optional(),
   youtubeId: z.string().optional(),
-  // Server-side filter pipeline
-  governance: z.string().optional(),  // 'native_governed' | 'legacy_registry' | 'all'
-  format: z.string().optional(),      // 'video' | 'audio' | 'short' | 'live' | 'playlist' | 'all'
-  duration: z.string().optional(),    // 'short' | 'standard' | 'long' | 'default' | 'all'
-  year: z.string().optional(),        // '2024' | '2025' | '2026' | 'all'
-  sort: z.string().optional(),        // 'newest' | 'oldest' | 'popular'
+  // Server-side filter pipeline — applied in order before pagination
+  governance: z.enum(['native_governed', 'legacy_registry', 'all']).optional(),
+  format: z.enum(['video', 'audio', 'short', 'live', 'playlist', 'all']).optional(),
+  duration: z.enum(['short', 'standard', 'long', 'default', 'all']).optional(),
+  year: z.string().regex(/^\d{4}$|^all$/).optional(),
+  sort: z.enum(['newest', 'oldest', 'popular', 'default']).optional(),
   page: z.string().optional(),
   pageSize: z.string().optional(),
   limit: z.string().optional(),
   offset: z.string().optional(),
-}).passthrough();
+  // NOTE: t and forceHydrate intentionally absent.
+  // Public GET endpoints must never trigger storage hydration.
+  // Hydration belongs only in authorized mutation/import code paths.
+});
 
 /**
  * Contact Form Schema (Institutional Inquiry)
