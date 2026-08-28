@@ -16,9 +16,33 @@ interface HeroSectionProps {
 
 export function HeroSection({ kpiStats }: HeroSectionProps) {
   return (
-    <Section background="midnight" spacing="normal" className="pt-20 md:pt-32">
+    <Section
+      background="midnight"
+      spacing="normal"
+      className="relative isolate overflow-hidden pt-20 md:pt-32"
+    >
+      <div className="absolute inset-0 -z-20" aria-hidden="true">
+        <Image
+          src="/sufipulse-home-hero-studio.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      </div>
+
+      <div
+        className="absolute inset-0 -z-10 bg-[#0b1528]/65"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-[#0b1528]/55 via-[#0b1528]/45 to-[#0b1528]/90"
+        aria-hidden="true"
+      />
+
       <PageContainer>
-        <div className="max-w-5xl mx-auto text-center">
+        <div className="relative z-10 max-w-5xl mx-auto text-center">
           <div className="mb-4">
             <span className="inline-block px-4 py-1 border border-[var(--color-gold)]/30 rounded-full text-[var(--text-xs)] md:text-[var(--text-sm)] text-[var(--color-gold)] uppercase tracking-wider font-medium">
               Institutional Archive
