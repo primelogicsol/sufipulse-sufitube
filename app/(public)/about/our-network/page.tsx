@@ -3,8 +3,12 @@ import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
+import { Badge } from '../../../components/primitives/Badge';
+import { PrimaryButton } from '../../../components/primitives/PrimaryButton';
 import { MapPin, Globe, Shield, Settings, Mic, Network, Users, Activity } from 'lucide-react';
+import Image from 'next/image';
 import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
+import Link from 'next/link';
 
 export default function OurNetwork() {
     const centralAuthorityPoints = [
@@ -68,12 +72,76 @@ export default function OurNetwork() {
 
     return (
         <Layout>
-            <StudioHero 
-                badge="Global Infrastructure"
-                title="Our Network"
-                mysticalName={roleDisplayMap.our_network.mystical}
-                description="SufiPulse operates through a centralized governance framework supported by distributed studio and collaborative networks across regions."
-            />
+            {/* Cinematic Hero Section with /banner22.png */}
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+                {/* Cinematic Background Banner */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <Image
+                        src="/banner22.png"
+                        alt="SufiPulse Global Studio & Distribution Network"
+                        fill
+                        priority
+                        quality={95}
+                        className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+                    />
+                    {/* Layered brand gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+                </div>
+
+                {/* Hero Content */}
+                <div className="relative z-10">
+                    <PageContainer>
+                        <div className="max-w-5xl mx-auto text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+                                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
+                                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
+                                    SufiPulse USA — Global Infrastructure
+                                </span>
+                            </div>
+
+                            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
+                                Our Global Network<br className="hidden md:block" />{" "}
+                                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
+                                    {roleDisplayMap.our_network.mystical}
+                                </span>
+                            </h1>
+
+                            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
+                                SufiPulse operates through a centralized governance framework supported by distributed studio hubs, regional affiliates, and collaborative networks worldwide.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <Link href="/studio">
+                                    <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
+                                        Studio Network
+                                    </PrimaryButton>
+                                </Link>
+                                <Link href="/governance/mithaq">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        Constitutional Mithaq
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            {/* Collaboration Nodes Strip */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {collaborationNodes.map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <item.icon className="w-7 h-7 text-[var(--color-gold)] mx-auto mb-2 opacity-90" />
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">
+                                            {item.title}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">
+                                            {item.description}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </PageContainer>
+                </div>
+            </section>
 
             <Section background="slate" spacing="normal">
                 <PageContainer>
@@ -123,7 +191,7 @@ export default function OurNetwork() {
                             ))}
                         </StudioCardGrid>
 
-                        <div className="mt-12 elite-card p-10 bg-linear-to-br from-amber-400/5 to-transparent border-none">
+                        <div className="mt-12 elite-card p-10 bg-gradient-to-br from-amber-400/5 to-transparent border-none">
                             <h4 className="text-[10px] font-black text-amber-400 uppercase tracking-[0.4em] mb-6 text-center">Network Protocol</h4>
                             <div className="grid md:grid-cols-3 gap-8">
                                 {[
