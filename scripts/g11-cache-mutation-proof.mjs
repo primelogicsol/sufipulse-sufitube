@@ -57,7 +57,7 @@ async function getRelease() {
   // Ordinary GET — no cache-busting parameters whatsoever
   const url = `${BASE}/api/releases/${RELEASE_ID}`;
   const res = await fetch(url);
-  if (!res.status === 200) throw new Error(`GET failed: ${res.status}`);
+  if (res.status !== 200) throw new Error(`GET failed: ${res.status}`);
   return { body: await res.json(), status: res.status, url };
 }
 
@@ -73,6 +73,11 @@ async function putRelease(body) {
     body: JSON.stringify(body),
   });
   const data = await res.json();
+  if (res.status !== 200) {
+    throw new Error(
+      `PUT failed: HTTP ${res.status} — ${JSON.stringify(data)}`
+    );
+  }
   return { body: data, status: res.status, url };
 }
 
