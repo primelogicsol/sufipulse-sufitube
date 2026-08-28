@@ -314,7 +314,10 @@ export const releasesQuerySchema = z.object({
   youtubeId: z.string().optional(),
   t: z.string().optional(),
   forceHydrate: z.string().optional(),
-});
+  limit: z.string().optional(),
+  offset: z.string().optional(),
+  refresh: z.string().optional(),
+}).passthrough();
 
 /**
  * Contact Form Schema (Institutional Inquiry)

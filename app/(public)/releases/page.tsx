@@ -747,7 +747,7 @@ export default function Releases() {
                                 onClick={() => {
                                     setFilterType('all');
                                     setFilterFormat('all');
-                                    setDurationFilter('default');
+                                    setDurationFilter('all');
                                     setYearFilter('all');
                                     setSearchQuery('');
                                     setSortOrder('newest');
@@ -763,10 +763,11 @@ export default function Releases() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {paginatedReleases.map((release) => {
                                     const thumbCandidates = buildYouTubeThumbnailCandidates(release.youtubeId || release.id, [release.thumbnailUrl]);
+                                    const releaseYear = release.publishedDate ? new Date(release.publishedDate).getFullYear() : 2026;
                                     return (
                                         <Link 
-                                            key={release.id + release.slug} 
-                                            href={`/release-detail/${release.slug || release.id}`}
+                                            key={release.id || release.slug || release.title} 
+                                            href={`/release-detail/${release.slug || release.youtubeId || release.id}`}
                                             className="group flex flex-col bg-[#101a33] border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/40 transition-all duration-300 shadow-xl min-h-[420px]"
                                         >
                                             <div className="relative aspect-video overflow-hidden bg-black">
@@ -808,9 +809,9 @@ export default function Releases() {
 
                                                 {(() => {
                                                     const vocalistMatch = release.vocalist && knowledgeData?.nodes?.find(
-                                                        (n: any) => n.class === 'singer' && (
-                                                            n.name.toLowerCase() === release.vocalist.toLowerCase() || 
-                                                            (n.nameUrdu && n.nameUrdu === release.vocalist)
+                                                        (n: any) => n && n.class === 'singer' && (
+                                                            (typeof n.name === 'string' && n.name.toLowerCase() === release.vocalist.toLowerCase()) || 
+                                                            (typeof n.nameUrdu === 'string' && n.nameUrdu === release.vocalist)
                                                         )
                                                     );
                                                     if (!vocalistMatch) return null;
@@ -833,11 +834,11 @@ export default function Releases() {
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-1.5">
                                                             <Calendar className="w-4 h-4 opacity-50" />
-                                                            <span>{new Date(release.publishedDate).getFullYear()}</span>
+                                                            <span>{!isNaN(releaseYear) ? releaseYear : 2026}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1.5">
                                                             <Eye className="w-4 h-4 opacity-50" />
-                                                            <span>{release.views.toLocaleString()}</span>
+                                                            <span>{(Number(release.views) || 0).toLocaleString()}</span>
                                                         </div>
                                                     </div>
                                                     {release.source === 'youtube' && (
