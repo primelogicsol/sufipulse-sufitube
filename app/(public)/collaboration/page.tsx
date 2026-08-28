@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
+import { Badge } from '../../components/primitives/Badge';
+import { PrimaryButton } from '../../components/primitives/PrimaryButton';
 import { Globe, BookOpen, Video, Shield, User, Mail, Building2, Briefcase, Link as LinkIcon, FileText, Calendar, Target, CheckCircle, ArrowRight, Loader as Loader2, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { IconInput } from '../../components/ui/IconInput';
 import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
@@ -126,12 +130,77 @@ export default function InstitutionalCollaboration() {
 
     return (
         <Layout>
-            <StudioHero 
-                badge="Institutional Engagement"
-                title="Institutional Collaboration"
-                mysticalName="Sacred Partnership Proposal"
-                description="SufiPulse engages with institutions aligned in spiritual, cultural, educational, interfaith, and research service. All proposals are evaluated within our non-commercial charter."
-            />
+            {/* Cinematic Hero Section with /banner25.png */}
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+                {/* Cinematic Background Banner */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <Image
+                        src="/banner25.png"
+                        alt="SufiPulse Institutional Collaboration & Strategic Engagement"
+                        fill
+                        priority
+                        quality={95}
+                        className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+                    />
+                    {/* Layered brand gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+                </div>
+
+                {/* Hero Content */}
+                <div className="relative z-10">
+                    <PageContainer>
+                        <div className="max-w-5xl mx-auto text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+                                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
+                                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
+                                    SufiPulse USA — Strategic Engagement
+                                </span>
+                            </div>
+
+                            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
+                                Institutional Collaboration<br className="hidden md:block" />{" "}
+                                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
+                                    Ittihad (Strategic Harmony)
+                                </span>
+                            </h1>
+
+                            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
+                                SufiPulse engages with institutions aligned in spiritual, cultural, educational, interfaith, and research service. All proposals are evaluated within our non-commercial constitutional charter.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <a 
+                                    href="#proposal-form"
+                                    className="px-8 py-3.5 bg-[var(--color-gold)] hover:bg-[#FDE68A] text-[var(--color-midnight)] font-bold rounded-[var(--radius-sm)] shadow-xl transition-all uppercase tracking-wider text-sm flex items-center gap-2"
+                                >
+                                    Submit Proposal
+                                </a>
+                                <Link href="/about/institutional-partners">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        Institutional Partners
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            {/* Collaboration Mandates Strip */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {collaborationMandates.map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <item.icon className="w-7 h-7 text-[var(--color-gold)] mx-auto mb-2 opacity-90" />
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">
+                                            {item.title}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">
+                                            {item.description}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </PageContainer>
+                </div>
+            </section>
 
             <Section background="slate" spacing="normal">
                 <PageContainer>
@@ -209,7 +278,8 @@ export default function InstitutionalCollaboration() {
                 </PageContainer>
             </Section>
 
-            <Section background="slate" spacing="normal">
+            <div id="proposal-form">
+                <Section background="slate" spacing="normal">
                 <PageContainer>
                     <div className="max-w-4xl mx-auto text-center mb-16">
                         <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">Sacred Alignment</h2>
@@ -407,7 +477,7 @@ export default function InstitutionalCollaboration() {
                                         <button
                                             type="submit"
                                             disabled={submitting}
-                                            className="w-full py-8 bg-linear-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
+                                            className="w-full py-8 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
                                         >
                                             {submitting ? <Loader2 className="w-6 h-6 animate-spin text-black" /> : <Sparkles size={24} className="group-hover:scale-110 transition-transform" />}
                                             {submitting ? 'Authenticating Proposal...' : 'Submit Partnership Proposal'}
@@ -419,6 +489,7 @@ export default function InstitutionalCollaboration() {
                     </div>
                 </PageContainer>
             </Section>
+            </div>
 
             <Section background="midnight" spacing="normal">
                 <PageContainer>
