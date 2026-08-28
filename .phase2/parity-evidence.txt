@@ -1,0 +1,7 @@
+﻿=== Phase 2 PostgreSQL Parity Evidence ===
+Commit: 62b0e3dee6e7a90592d7f50849ef973481f57164
+Timestamp: 2026-08-28 15:41:53
+Mapper: server/db/release-mapper.ts (after duration fallback fix)
+Dataset: .phase2/reconciled-cms-releases.json
+
+=== Phase 2 HTTP GET Cutover ===  FILESYSTEM BASELINE HTTP scenarios:       432 Passed:               432 Failed:               0  POSTGRES CANDIDATE HTTP scenarios:       432 Passed:               432 Failed:               0  PARITY STRICT HTTP ORDERING: Γ£à PASS STRICT HTTP BODY:     Γ£à PASS LEGACY HYDRATION DELTA AUDIT Differences restricted to legacy hydration fields: Γ£à PASS  HTTP READ CUTOVER CANARY: PASS
