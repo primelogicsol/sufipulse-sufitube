@@ -60,23 +60,28 @@ export class PostgresReleaseRepository {
     const row = toRow(release);
     const sql = `
       INSERT INTO releases (
-        id, slug, title, canonical_title, canonical_status, governance_origin, 
-        canonical_thumbnail, thumbnail_url, youtube_id, youtube_title, youtube_thumbnail_url, 
-        status, visibility, format, release_type, source, content_readiness_state, 
+        id, slug, title, canonical_title, canonical_status, governance_origin, metadata_status,
+        canonical_thumbnail, thumbnail_url, youtube_id, youtube_title, youtube_thumbnail_url,
+        youtube_url, youtube_channel_id, youtube_channel_url, youtube_playlist_id,
+        status, visibility, format, release_type, category, source, content_readiness_state, web_only,
         description, writer_name, writer_name_urdu, vocalist_name, vocalist_name_urdu, producer_name, tags,
-        release_date, published_at, duration_seconds, view_count, like_count, 
+        release_date, published_at, duration_seconds, duration_formatted, view_count, like_count,
+        available_languages, default_language, enable_lyrics, enable_commentary, enable_sponsors, enable_adoption, enable_credits,
         created_at, updated_at, registry_order, payload
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, 
-        $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33
+        $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33,
+        $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48
       ) RETURNING *
     `;
     const values = [
-      row.id, row.slug, row.title, row.canonical_title, row.canonical_status, row.governance_origin,
+      row.id, row.slug, row.title, row.canonical_title, row.canonical_status, row.governance_origin, row.metadata_status,
       row.canonical_thumbnail, row.thumbnail_url, row.youtube_id, row.youtube_title, row.youtube_thumbnail_url,
-      row.status, row.visibility, row.format, row.release_type, row.source, row.content_readiness_state,
+      row.youtube_url, row.youtube_channel_id, row.youtube_channel_url, row.youtube_playlist_id,
+      row.status, row.visibility, row.format, row.release_type, row.category, row.source, row.content_readiness_state, row.web_only,
       row.description, row.writer_name, row.writer_name_urdu, row.vocalist_name, row.vocalist_name_urdu, row.producer_name, row.tags,
-      row.release_date, row.published_at, row.duration_seconds, row.view_count, row.like_count,
+      row.release_date, row.published_at, row.duration_seconds, row.duration_formatted, row.view_count, row.like_count,
+      row.available_languages, row.default_language, row.enable_lyrics, row.enable_commentary, row.enable_sponsors, row.enable_adoption, row.enable_credits,
       row.created_at, row.updated_at, row.registry_order, row.payload
     ];
     const res = await this.pool.query<ReleaseRow>(sql, values);
@@ -87,22 +92,26 @@ export class PostgresReleaseRepository {
     const row = toRow(release);
     const sql = `
       UPDATE releases SET
-        slug = $2, title = $3, canonical_title = $4, canonical_status = $5, governance_origin = $6, 
-        canonical_thumbnail = $7, thumbnail_url = $8, youtube_id = $9, youtube_title = $10, youtube_thumbnail_url = $11, 
-        status = $12, visibility = $13, format = $14, release_type = $15, source = $16, content_readiness_state = $17, 
-        description = $18, writer_name = $19, writer_name_urdu = $20, vocalist_name = $21, vocalist_name_urdu = $22, producer_name = $23, tags = $24,
-        release_date = $25, published_at = $26, duration_seconds = $27, view_count = $28, like_count = $29, 
-        created_at = $30, updated_at = $31, registry_order = $32, payload = $33,
+        slug = $2, title = $3, canonical_title = $4, canonical_status = $5, governance_origin = $6, metadata_status = $7,
+        canonical_thumbnail = $8, thumbnail_url = $9, youtube_id = $10, youtube_title = $11, youtube_thumbnail_url = $12,
+        youtube_url = $13, youtube_channel_id = $14, youtube_channel_url = $15, youtube_playlist_id = $16,
+        status = $17, visibility = $18, format = $19, release_type = $20, category = $21, source = $22, content_readiness_state = $23, web_only = $24,
+        description = $25, writer_name = $26, writer_name_urdu = $27, vocalist_name = $28, vocalist_name_urdu = $29, producer_name = $30, tags = $31,
+        release_date = $32, published_at = $33, duration_seconds = $34, duration_formatted = $35, view_count = $36, like_count = $37,
+        available_languages = $38, default_language = $39, enable_lyrics = $40, enable_commentary = $41, enable_sponsors = $42, enable_adoption = $43, enable_credits = $44,
+        created_at = $45, updated_at = $46, registry_order = $47, payload = $48,
         db_updated_at = now()
       WHERE id = $1
       RETURNING *
     `;
     const values = [
-      id, row.slug, row.title, row.canonical_title, row.canonical_status, row.governance_origin,
+      id, row.slug, row.title, row.canonical_title, row.canonical_status, row.governance_origin, row.metadata_status,
       row.canonical_thumbnail, row.thumbnail_url, row.youtube_id, row.youtube_title, row.youtube_thumbnail_url,
-      row.status, row.visibility, row.format, row.release_type, row.source, row.content_readiness_state,
+      row.youtube_url, row.youtube_channel_id, row.youtube_channel_url, row.youtube_playlist_id,
+      row.status, row.visibility, row.format, row.release_type, row.category, row.source, row.content_readiness_state, row.web_only,
       row.description, row.writer_name, row.writer_name_urdu, row.vocalist_name, row.vocalist_name_urdu, row.producer_name, row.tags,
-      row.release_date, row.published_at, row.duration_seconds, row.view_count, row.like_count,
+      row.release_date, row.published_at, row.duration_seconds, row.duration_formatted, row.view_count, row.like_count,
+      row.available_languages, row.default_language, row.enable_lyrics, row.enable_commentary, row.enable_sponsors, row.enable_adoption, row.enable_credits,
       row.created_at, row.updated_at, row.registry_order, row.payload
     ];
     const res = await this.pool.query<ReleaseRow>(sql, values);

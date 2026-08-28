@@ -19,6 +19,14 @@ const migrations = [
   {
     version: '003_registry_order',
     file: 'db/migrations/003_registry_order.sql'
+  },
+  {
+    version: '004_relax_missing_fields',
+    file: 'db/migrations/004_relax_missing_fields.sql'
+  },
+  {
+    version: '005_relax_description',
+    file: 'db/migrations/005_relax_description.sql'
   }
 ];
 

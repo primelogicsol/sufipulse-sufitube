@@ -1,0 +1,3 @@
+ALTER TABLE releases
+  ALTER COLUMN description DROP NOT NULL,
+  ALTER COLUMN category DROP NOT NULL;

@@ -1,0 +1,12 @@
+ALTER TABLE releases
+  ALTER COLUMN duration_seconds DROP NOT NULL,
+  ALTER COLUMN view_count DROP NOT NULL,
+  ALTER COLUMN like_count DROP NOT NULL,
+  ALTER COLUMN tags DROP NOT NULL,
+  ALTER COLUMN available_languages DROP NOT NULL,
+  ALTER COLUMN enable_lyrics DROP NOT NULL,
+  ALTER COLUMN enable_commentary DROP NOT NULL,
+  ALTER COLUMN enable_sponsors DROP NOT NULL,
+  ALTER COLUMN enable_adoption DROP NOT NULL,
+  ALTER COLUMN enable_credits DROP NOT NULL,
+  ALTER COLUMN web_only DROP NOT NULL;
