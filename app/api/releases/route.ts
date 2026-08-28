@@ -96,9 +96,12 @@ export async function GET(request: NextRequest) {
     }
 
     // 6. duration (in seconds)
-    if (duration && duration !== 'all' && duration !== 'default') {
+    // 'default' = Standard + Long only (>= 180s and not a 'short' format)
+    // 'all' / absent = no filter
+    if (duration && duration !== 'all') {
       releases = releases.filter(r => {
         const secs = (r as any).durationSeconds || 0;
+        if (duration === 'default')  return secs >= 180 && (r as any).format !== 'short';
         if (duration === 'short')    return secs > 0 && secs < 180;
         if (duration === 'standard') return secs >= 180 && secs <= 480;
         if (duration === 'long')     return secs > 480;
@@ -128,6 +131,17 @@ export async function GET(request: NextRequest) {
     // 9. COUNT (filtered total before pagination)
     const count = releases.length;
 
+    // 9b. FACETS — computed from full filtered set, before pagination
+    // Year facets let the client show correct year choices regardless of current page
+    const yearFacets: number[] = Array.from(new Set(
+      releases.map(r => {
+        const d = new Date((r as any).releaseDate || (r as any).publishedAt || (r as any).createdAt);
+        const y = d.getFullYear();
+        return isNaN(y) ? null : y;
+      }).filter((y): y is number => y !== null)
+    )).sort((a, b) => b - a);
+    const facets = { years: yearFacets };
+
     // 10. paginate
     const pageParam    = searchParams.get('page');
     const pageSizeParam = searchParams.get('pageSize') || searchParams.get('limit');
@@ -139,10 +153,11 @@ export async function GET(request: NextRequest) {
       const totalPages = Math.ceil(count / pageSize);
       const items    = releases.slice(offset, offset + pageSize);
 
-      return NextResponse.json({ items, count, page, pageSize, totalPages }, { headers: cacheHeaders });
+      return NextResponse.json({ items, count, page, pageSize, totalPages, facets }, { headers: cacheHeaders });
     }
 
     return NextResponse.json(releases, { headers: cacheHeaders });
+
   } catch (err: any) {
     console.error('[API /api/releases] GET ERROR:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -346,6 +346,9 @@ export default function Releases() {
     const [currentPage, setCurrentPage] = useState(1);
     const [serverTotalPages, setServerTotalPages] = useState(1);
     const [serverCount, setServerCount] = useState(0);
+    // Server-returned year facets — covers full filtered catalogue, not just current page
+    const [facetYears, setFacetYears] = useState<number[]>([]);
+
 
     const formatSeconds = (totalSeconds: number): string => {
         if (!totalSeconds) return '0:00';
@@ -443,9 +446,13 @@ export default function Releases() {
 
             setReleases(mappedData);
 
-            // Capture server-reported totals from paginated response
+            // Capture server-reported totals and facets from paginated response
             if (!Array.isArray(responseData) && responseData.count !== undefined) {
                 setServerTotalPages(responseData.totalPages ?? 1);
+                // Use server-computed year facets (full filtered catalogue, not just this page)
+                if (Array.isArray(responseData.facets?.years)) {
+                    setFacetYears(responseData.facets.years as number[]);
+                }
             } else {
                 setServerTotalPages(1);
             }
@@ -483,31 +490,36 @@ export default function Releases() {
         }
     };
 
-    // Initial load on mount
+    // Knowledge data — loaded once on mount, independent of release fetching
     useEffect(() => {
-        fetchVideos();
         fetch('/api/knowledge')
             .then(res => res.json())
             .then(data => setKnowledgeData(data))
             .catch(err => console.error('Failed to load knowledge data:', err));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Filter changes: reset page to 1 and re-fetch with all current filters server-side
+    // ── SINGLE consolidated fetch effect ──────────────────────────────────────
+    // Replaces three separate effects (initial-load, filter-change, page-change).
+    // React 18 automatic batching ensures that filter-change handlers calling
+    // both setFilter(x) AND setCurrentPage(1) in the same event cause only one
+    // render and therefore only one effect invocation → one fetch.
+    //
+    // Search changes are debounced 350ms. All other dependency changes are immediate.
+    // Initial mount naturally triggers one fetch with the default filter state.
     useEffect(() => {
+        const isSearchActive = searchQuery.length > 0;
+        const delay = isSearchActive ? 350 : 0;
+
         const timer = setTimeout(() => {
-            setCurrentPage(1);
-            fetchVideos({ filterType, filterFormat, durationFilter, yearFilter, sortOrder, searchQuery, page: 1 }, true);
-        }, searchQuery ? 350 : 0);
+            fetchVideos(
+                { filterType, filterFormat, durationFilter, yearFilter, sortOrder, searchQuery, page: currentPage },
+                /* silent = */ loading === false
+            );
+        }, delay);
+
         return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filterType, filterFormat, durationFilter, yearFilter, sortOrder, searchQuery]);
-
-    // Page change: fetch the new page with current filters
-    useEffect(() => {
-        fetchVideos({ page: currentPage }, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage]);
+    }, [filterType, filterFormat, durationFilter, yearFilter, sortOrder, searchQuery, currentPage]);
 
     // Server-driven: paginatedReleases is exactly what the server returned for this page
     const paginatedReleases = releases;
@@ -519,15 +531,20 @@ export default function Releases() {
         return releases.find(r => r.govType === 'native_governed') || releases[0];
     }, [releases]);
 
-    // Year options: derived from current page (best effort; server holds full year data)
+    // Year options: sourced from server facets (full filtered catalogue, not just current page)
+    // Falls back to extracting from current page only if server has not yet returned facets
     const years = useMemo(() => {
+        if (facetYears.length > 0) return facetYears;
+        // Fallback: derive from current page (pre-facet or non-paginated response)
         const yearSet = new Set<number>();
         releases.forEach(r => {
             const year = new Date(r.publishedDate).getFullYear();
             if (!isNaN(year)) yearSet.add(year);
         });
         return Array.from(yearSet).sort((a, b) => b - a);
-    }, [releases]);
+    }, [facetYears, releases]);
+
+
 
 
 
