@@ -4,10 +4,8 @@ import { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
-
-const DesktopNav = dynamic(() => import('./header/DesktopNav').then(m => m.DesktopNav), { ssr: false });
-const MobileMenu = dynamic(() => import('./header/MobileMenu').then(m => m.MobileMenu), { ssr: false });
+import { DesktopNav } from './header/DesktopNav';
+import { MobileMenu } from './header/MobileMenu';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -15,9 +13,10 @@ export function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 30);
     };
 
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -30,42 +29,52 @@ export function Header() {
           top-0
           left-0
           right-0
-          h-28
-          py-8
+          h-20
+          md:h-24
           transition-all
           duration-300
           z-50
+          flex
+          items-center
           ${isScrolled
-            ? 'bg-black/80 backdrop-blur-xl border-b border-white/5 shadow-2xl'
-            : 'bg-transparent'
+            ? 'bg-neutral-950/90 backdrop-blur-xl border-b border-white/10 shadow-2xl'
+            : 'bg-gradient-to-b from-neutral-950/90 via-neutral-950/60 to-transparent backdrop-blur-sm'
           }
         `.trim()}
       >
-        <div className="h-full max-w-[1400px] mx-auto px-6 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* Main Nav (Desktop) */}
-          <div className="hidden xl:block flex-1">
+          <div className="hidden xl:flex items-center justify-between w-full">
             <DesktopNav />
           </div>
 
-          {/* Mobile View */}
+          {/* Mobile & Tablet View */}
           <div className="xl:hidden flex items-center justify-between w-full">
-            <Link href="/" className="shrink-0">
-              <Image src="/sufipulse-logo-v5.png" alt="SufiPulse" width={40} height={40} className="h-10 w-auto" />
+            <Link href="/" className="shrink-0 flex items-center gap-2">
+              <Image
+                src="/sufipulse-logo-v5.png"
+                alt="SufiPulse"
+                width={120}
+                height={36}
+                className="h-8 sm:h-9 w-auto object-contain"
+                priority
+              />
             </Link>
-            
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)} 
-              className="p-2 text-white hover:text-[#C8A75E] transition-colors"
+
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 text-white hover:text-[var(--color-gold)] transition-colors rounded-lg hover:bg-white/5 cursor-pointer"
+              aria-label="Open Navigation Menu"
             >
-              <Menu size={28} />
+              <Menu size={26} />
             </button>
           </div>
         </div>
       </header>
 
-      <MobileMenu 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)} 
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
     </>
   );
