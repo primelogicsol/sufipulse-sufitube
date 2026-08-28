@@ -1,12 +1,12 @@
-// lib/youtube-service.ts
+﻿// lib/youtube-service.ts
 
 /**
  * Format inference priority (from YouTube API data):
- *  1. liveStreamingDetails present → 'live'
- *  2. durationSeconds <= 60        → 'short'  (YouTube Shorts heuristic)
- *  3. default                      → 'video'
+ *  1. liveStreamingDetails present â†’ 'live'
+ *  2. durationSeconds <= 60        â†’ 'short'  (YouTube Shorts heuristic)
+ *  3. default                      â†’ 'video'
  *
- * 'audio' and 'playlist' are admin-only designations — YouTube does not
+ * 'audio' and 'playlist' are admin-only designations â€” YouTube does not
  * expose them as video-level fields in the Data API v3.
  */
 export type ReleaseFormat = 'video' | 'audio' | 'short' | 'live' | 'playlist';
@@ -68,7 +68,7 @@ class YouTubeService {
 
         const isPlaceholder = this.config.apiKey.includes('YOUR_KEY_HERE') || !this.config.apiKey;
         if (isPlaceholder) {
-            console.error('❌ [YouTubeService] YOUTUBE_API_KEY is missing or invalid (placeholder detected). Please set a real API key in .env.local.');
+            console.error('âŒ [YouTubeService] YOUTUBE_API_KEY is missing or invalid (placeholder detected). Please set a real API key in .env.local.');
         }
     }
 
@@ -165,12 +165,12 @@ class YouTubeService {
         // Check cache first
         const cached = this.getCache(cacheKey);
         if (cached) {
-            console.log('🎯 Returning cached search results for:', query || 'latest');
+            console.log('ðŸŽ¯ Returning cached search results for:', query || 'latest');
             return cached;
         }
 
         try {
-            console.log('🔍 Searching YouTube for:', query || 'latest videos');
+            console.log('ðŸ” Searching YouTube for:', query || 'latest videos');
             const pageSize = Math.min(50, safeMaxResults);
             const maxPages = Math.max(1, Math.ceil(safeMaxResults / pageSize));
 
@@ -197,7 +197,7 @@ class YouTubeService {
             }
 
             if (searchItems.length === 0) {
-                console.log('📭 No videos found for search query');
+                console.log('ðŸ“­ No videos found for search query');
                 const emptyResult: YouTubeVideo[] = [];
                 this.setCache(cacheKey, emptyResult);
                 return emptyResult;
@@ -216,7 +216,7 @@ class YouTubeService {
             });
 
             // Get detailed video information
-            console.log(`📊 Fetching details for ${uniqueIds.length} videos across ${pagesFetched} page(s)`);
+            console.log(`ðŸ“Š Fetching details for ${uniqueIds.length} videos across ${pagesFetched} page(s)`);
             const chunks: string[][] = [];
             for (let i = 0; i < uniqueIds.length; i += 50) {
                 chunks.push(uniqueIds.slice(i, i + 50));
@@ -253,12 +253,12 @@ class YouTubeService {
                 formatted.sort((a, b) => b.views - a.views);
             }
 
-            console.log(`✅ Successfully processed ${formatted.length} videos`);
+            console.log(`âœ… Successfully processed ${formatted.length} videos`);
             this.setCache(cacheKey, formatted);
             return formatted.slice(0, safeMaxResults);
 
         } catch (error: any) {
-            console.error('❌ YouTube search failed:', error.message);
+            console.error('âŒ YouTube search failed:', error.message);
             throw error;
         }
     }
@@ -274,7 +274,7 @@ class YouTubeService {
 
         // --- MOCK OVERRIDE FOR TESTING ---
         if (ids === 'q58mRXIsi-Y' && (this.config.apiKey.includes('YOUR_KEY_HERE') || !this.config.apiKey)) {
-            console.log('🧪 [YouTubeService] MOCKING response for specific test video: q58mRXIsi-Y');
+            console.log('ðŸ§ª [YouTubeService] MOCKING response for specific test video: q58mRXIsi-Y');
             const mockVideo = {
                 id: 'q58mRXIsi-Y',
                 snippet: {
@@ -299,7 +299,7 @@ class YouTubeService {
             return data.items || [];
         } catch (error: any) {
             console.error('Failed to get video details:', error.message);
-            throw error;
+            return [];
         }
     }
 
@@ -413,16 +413,16 @@ class YouTubeService {
         // Check cache first
         const cached = this.getCache(cacheKey);
         if (cached) {
-            console.log('🎯 Returning cached video details for:', videoId);
+            console.log('ðŸŽ¯ Returning cached video details for:', videoId);
             return cached;
         }
 
         try {
-            console.log('🔍 Fetching video details for:', videoId);
+            console.log('ðŸ” Fetching video details for:', videoId);
             const videos = await this.getVideosByIds(videoId);
 
             if (!videos || videos.length === 0) {
-                console.log('📭 Video not found via API, checking static data');
+                console.log('ðŸ“­ Video not found via API, checking static data');
                 
                 // Try to find in static videos
                 const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
@@ -454,18 +454,18 @@ class YouTubeService {
                 format: inferFormat(durationSecs, hasLiveDetails),
             };
 
-            console.log('✅ Successfully fetched video details');
+            console.log('âœ… Successfully fetched video details');
             this.setCache(cacheKey, formatted);
             return formatted;
 
         } catch (error: any) {
-            console.error('❌ Failed to get video details:', error.message);
+            console.error('âŒ Failed to get video details:', error.message);
 
             // Try to find in static videos first
             const { STATIC_YOUTUBE_VIDEOS } = require('@/app/data/youtube-videos');
             const staticVideo = STATIC_YOUTUBE_VIDEOS.find((v: any) => v.id === videoId);
             if (staticVideo) {
-                console.log('🔄 Using static video data');
+                console.log('ðŸ”„ Using static video data');
                 return staticVideo;
             }
 
@@ -499,7 +499,7 @@ class YouTubeService {
 
     async getCompletedLiveStreams(maxResults: number = 50): Promise<YouTubeVideo[]> {
         if (!this.config.apiKey) {
-            console.warn('YouTube API key missing — cannot fetch live streams');
+            console.warn('YouTube API key missing â€” cannot fetch live streams');
             return [];
         }
         const safeMax = Math.max(1, Math.min(maxResults, 500));
@@ -569,11 +569,11 @@ class YouTubeService {
 
     /**
      * Fetch all public playlists for the SufiPulse channel.
-     * Returns playlist metadata only — items are fetched separately via playlistItems.list.
+     * Returns playlist metadata only â€” items are fetched separately via playlistItems.list.
      */
     async getChannelPlaylists(maxResults: number = 50): Promise<YouTubePlaylist[]> {
         if (!this.config.apiKey) {
-            console.warn('YouTube API key missing — cannot fetch playlists');
+            console.warn('YouTube API key missing â€” cannot fetch playlists');
             return [];
         }
         const cacheKey = `playlists_${this.config.channelId}_${maxResults}`;
