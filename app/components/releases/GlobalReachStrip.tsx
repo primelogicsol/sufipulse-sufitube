@@ -248,9 +248,9 @@ export default function GlobalReachStrip() {
       } else {
         throw new Error(result.error || "Refresh failed");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Refresh failed:", err);
-      const msg = err.message || "";
+      const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("token exchange failed") || msg.includes("Bad Request") || msg.includes("credentials missing")) {
         alert("YouTube API connection notice:\n\nThe current YouTube OAuth refresh token is expired or missing. Please authenticate through YouTube Studio / Admin Settings or update your environment variables to enable live sync.");
       } else {

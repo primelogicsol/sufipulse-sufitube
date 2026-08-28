@@ -241,11 +241,11 @@ export async function GET(request: NextRequest) {
       getChannelStatistics().catch(() => ({ subscriberCount: null, videoCount: null, viewCount: null })),
     ]);
 
-    const videoIds = (json.rows ?? []).map((row: any[]) => String(row[0]));
+    const videoIds = (json.rows ?? []).map(row => String(row[0]));
     const unresolvedTitleIds = videoIds.filter(id => !studioByVideoId.get(id)?.title || studioByVideoId.get(id)?.title === id);
     const { titles, warnings } = await getYouTubeVideoTitleMap(unresolvedTitleIds);
 
-    const data: VideoImpression[] = (json.rows ?? []).map((row: any[]) => {
+    const data: VideoImpression[] = (json.rows ?? []).map(row => {
       const videoId = String(row[0]);
       const imported = studioByVideoId.get(videoId);
       return {
@@ -347,8 +347,8 @@ export async function GET(request: NextRequest) {
     };
 
     // ── Traffic Sources (Top 5) ────────────────────────────────────────────────
-    const totalTrafficViews = (trafficJson?.rows ?? []).reduce((sum: number, r: any[]) => sum + (Number(r[1]) || 0), 0) || liveTotalViews || 1;
-    const trafficSources: TrafficSourceMetric[] = (trafficJson?.rows ?? []).slice(0, 5).map((row: any[], i: number) => {
+    const totalTrafficViews: number = (trafficJson?.rows ?? []).reduce<number>((sum, r) => sum + (Number(r[1]) || 0), 0) || liveTotalViews || 1;
+    const trafficSources: TrafficSourceMetric[] = (trafficJson?.rows ?? []).slice(0, 5).map((row, i) => {
       const raw = String(row[0] || '');
       const views = Number(row[1]) || 0;
       const watchMinutes = Number(row[2]) || 0;
@@ -369,8 +369,8 @@ export async function GET(request: NextRequest) {
       regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
     } catch {}
 
-    const totalGeoViews = (geoJson?.rows ?? []).reduce((sum: number, r: any[]) => sum + (Number(r[1]) || 0), 0) || liveTotalViews || 1;
-    const geographies: GeographyMetric[] = (geoJson?.rows ?? []).slice(0, 5).map((row: any[], i: number) => {
+    const totalGeoViews: number = (geoJson?.rows ?? []).reduce<number>((sum, r) => sum + (Number(r[1]) || 0), 0) || liveTotalViews || 1;
+    const geographies: GeographyMetric[] = (geoJson?.rows ?? []).slice(0, 5).map((row, i) => {
       const code = String(row[0] || '').toUpperCase();
       let countryName = code;
       try {
@@ -413,7 +413,7 @@ export async function GET(request: NextRequest) {
         : 'Studio thumbnail impressions and Impressions CTR are not exposed by this channel Analytics API report. Import a YouTube Studio Advanced Mode CSV for those fields.',
       warnings,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof YouTubeAnalyticsUpstreamError) {
       console.warn('[youtube-analytics/impressions] Google API returned error status:', error.status, error.body);
       const fallback = studioFallbackResponse(
@@ -433,17 +433,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const message = error?.message || 'YouTube Analytics is not connected.';
-    const fallback = studioFallbackResponse(message, true);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const fallback = studioFallbackResponse(
+      `Live YouTube Analytics query failed: ${errorMessage}`,
+      true
+    );
     if (fallback) return fallback;
 
     return NextResponse.json(
       {
-        error: 'not_connected',
-        message,
+        error: 'youtube_analytics_query_failed',
+        message: errorMessage,
         reconnectRequired: true,
       },
-      { status: 401 }
+      { status: 500 }
     );
   }
 }

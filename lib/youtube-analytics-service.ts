@@ -71,7 +71,7 @@ export const youtubeAnalyticsService = {
       const lifetimeAvgDurationSecs = Number(br[2]) || 0;
 
       let recommendationViews = 0;
-      (trafficRaw.rows ?? []).forEach((row: any[]) => {
+      (trafficRaw.rows ?? []).forEach(row => {
         const source = String(row[0]);
         const views = Number(row[1]) || 0;
         if (RECOMMENDATION_SOURCES.has(source)) recommendationViews += views;
@@ -83,7 +83,7 @@ export const youtubeAnalyticsService = {
 
       const topTrafficSources = (trafficRaw.rows ?? [])
         .slice(0, 5)
-        .map((row: any[]) => ({
+        .map(row => ({
           source: String(row[0]),
           views: Number(row[1]) || 0,
         }));
@@ -133,15 +133,16 @@ export const youtubeAnalyticsService = {
 
       analyticsStorage.saveSnapshot(updatedSnapshot);
       return updatedSnapshot;
-    } catch (error: any) {
-      console.error('[youtubeAnalyticsService] API health check failed:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown refresh error';
+      console.error('[youtubeAnalyticsService] API health check failed:', errorMessage);
 
       // Preserve the last successfully verified snapshot as cached historical data,
       // but mark the live API state as error. Never substitute generated telemetry.
       const errorSnapshot: AnalyticsSnapshot = {
         ...current,
         status: 'error',
-        errorMessage: error.message || 'Unknown refresh error',
+        errorMessage,
         lastUpdated: current.lastUpdated,
         lifetimeSnapshot: current.lifetimeSnapshot || DEFAULT_PAYLOAD.lifetimeSnapshot,
         apiStatus: {
@@ -149,7 +150,7 @@ export const youtubeAnalyticsService = {
           lastCheck,
           availableLiveMetrics: [],
           restrictedMetrics: ['impressions', 'ctr'],
-          lastError: error.message || 'Unknown refresh error',
+          lastError: errorMessage,
         },
       };
 
