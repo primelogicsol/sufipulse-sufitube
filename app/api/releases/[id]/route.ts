@@ -1,3 +1,5 @@
+import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
+import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
@@ -79,7 +81,8 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const release = cmsServerStorage.getRelease(id);
+    const store = getReleaseReadStore();
+      const release = await store.getById(id);
     if (!release) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
@@ -96,24 +99,23 @@ export async function GET(
       if (!isAdmin) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(release);
+      return NextResponse.json(toCanonicalCMSRelease(release));
     }
 
     if (isAdmin) {
-      return NextResponse.json(release, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
+      return NextResponse.json(toCanonicalCMSRelease(release), { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
     }
 
-    return NextResponse.json(release, { headers: cacheHeaders });
+    return NextResponse.json(toCanonicalCMSRelease(release), { headers: cacheHeaders });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 // PUT /api/releases/[id] (update or upsert for admins)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (getReleaseStorageBackend() === 'postgres') return NextResponse.json({ error: 'Release mutations are temporarily disabled during PostgreSQL read-cutover validation.' }, { status: 503 });
+
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -300,10 +302,9 @@ export async function PUT(
 }
 
 // DELETE /api/releases/[id]
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (getReleaseStorageBackend() === 'postgres') return NextResponse.json({ error: 'Release mutations are temporarily disabled during PostgreSQL read-cutover validation.' }, { status: 503 });
+
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 

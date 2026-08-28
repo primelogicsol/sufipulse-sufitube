@@ -19,6 +19,7 @@ export interface ReleaseQuery {
   offset?: number;
   limit?: number;
   facets?: boolean;
+  paginate?: boolean;
 }
 
 export interface ReleaseQueryResult {
@@ -26,7 +27,7 @@ export interface ReleaseQueryResult {
   count: number;
   page: number;
   pageSize: number;
-  limit: number;
+  limit?: number;
   totalPages: number;
   facets?: any;
 }
@@ -216,7 +217,11 @@ export class PostgresReleaseRepository {
     const total = parseInt(countRes.rows[0].total, 10);
     const totalPages = Math.ceil(total / limit);
 
-    const dataSql = `SELECT * FROM releases WHERE ${whereSql} ORDER BY ${orderBy} LIMIT ${limit} OFFSET ${offset}`;
+    let dataSql = `SELECT * FROM releases WHERE ${whereSql} ORDER BY ${orderBy}`;
+    if (query.paginate !== false) {
+      dataSql += ` LIMIT ${limit} OFFSET ${offset}`;
+    }
+
     const dataRes = await this.pool.query<ReleaseRow>(dataSql, values);
     
     let facets = undefined;
@@ -237,10 +242,10 @@ export class PostgresReleaseRepository {
     return {
       items: dataRes.rows.map(row => fromRow(row)),
       count: total,
-      page,
-      pageSize: limit,
-      limit, // keeping limit for backward compatibility just in case
-      totalPages,
+      page: query.paginate === false ? 1 : page,
+      pageSize: query.paginate === false ? total : limit,
+      limit: query.paginate === false ? undefined : limit,
+      totalPages: query.paginate === false ? 1 : totalPages,
       facets
     };
   }

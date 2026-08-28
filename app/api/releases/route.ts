@@ -1,3 +1,5 @@
+import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
+import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { type CMSRelease } from '@/lib/cms-storage';
@@ -13,6 +15,7 @@ const cacheHeaders = {
 
 export async function GET(request: NextRequest) {
   try {
+    const backend = getReleaseStorageBackend();
     const { searchParams } = new URL(request.url);
     const validationResult = validateQueryParams(searchParams, releasesQuerySchema);
 
@@ -20,35 +23,67 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(validationResult.error, { status: 400 });
     }
 
-    // NOTE: t and forceHydrate are not in the schema and will not be present.
-    // Public GET endpoints must never trigger storage hydration.
     const { status, type, search, key, slug, youtubeId, governance, format, duration, year, sort } = validationResult.data;
 
-    // ── Single-record lookup path ──────────────────────────────────────────
-    // Resolution precedence: slug > youtubeId > key (slug/youtubeId/id fallback)
     const lookupKey = key || slug || youtubeId;
     if (lookupKey) {
+      const store = getReleaseReadStore();
       if (slug) {
-        const release = cmsServerStorage.getReleaseBySlug(slug);
-        if (release) return NextResponse.json({ ...release, resolution_source: 'cms_slug' }, { headers: cacheHeaders });
+        const release = await store.getBySlug(slug);
+        if (release) return NextResponse.json({ ...toCanonicalCMSRelease(release), resolution_source: 'cms_slug' }, { headers: cacheHeaders });
       }
       if (youtubeId) {
-        const release = cmsServerStorage.getReleaseByYoutubeId(youtubeId);
-        if (release) return NextResponse.json({ ...release, resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
+        const release = await store.getByYoutubeId(youtubeId);
+        if (release) return NextResponse.json({ ...toCanonicalCMSRelease(release), resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
       }
-      const releaseBySlug = cmsServerStorage.getReleaseBySlug(lookupKey);
-      if (releaseBySlug) return NextResponse.json({ ...releaseBySlug, resolution_source: 'cms_slug' }, { headers: cacheHeaders });
-      const releaseByYoutubeId = cmsServerStorage.getReleaseByYoutubeId(lookupKey);
-      if (releaseByYoutubeId) return NextResponse.json({ ...releaseByYoutubeId, resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
-      const releaseById = cmsServerStorage.getRelease(lookupKey);
-      if (releaseById) return NextResponse.json({ ...releaseById, resolution_source: 'cms_key' }, { headers: cacheHeaders });
+      const releaseBySlug = await store.getBySlug(lookupKey);
+      if (releaseBySlug) return NextResponse.json({ ...toCanonicalCMSRelease(releaseBySlug), resolution_source: 'cms_slug' }, { headers: cacheHeaders });
+      const releaseByYoutubeId = await store.getByYoutubeId(lookupKey);
+      if (releaseByYoutubeId) return NextResponse.json({ ...toCanonicalCMSRelease(releaseByYoutubeId), resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
+      const releaseById = await store.getById(lookupKey);
+      if (releaseById) return NextResponse.json({ ...toCanonicalCMSRelease(releaseById), resolution_source: 'cms_key' }, { headers: cacheHeaders });
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
 
-    // ── Collection filter pipeline ─────────────────────────────────────────
-    // Order: status → type → governance → search → format → duration → year → sort → COUNT → paginate
+    if (backend === 'postgres') {
+      const store = getReleaseReadStore();
+      const paginationRequested = searchParams.has('page') || searchParams.has('pageSize') || searchParams.has('limit');
+      
+      const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+      const pageSize = Math.max(1, parseInt(searchParams.get('pageSize') || searchParams.get('limit') || '12', 10) || 12);
+      const offset = searchParams.has('offset') ? parseInt(searchParams.get('offset') || '0', 10) : undefined;
+      
+      const result = await store.query({
+        q: search || undefined,
+        status: status || undefined,
+        type: type || undefined,
+        format: format || undefined,
+        duration: duration || undefined,
+        year: year || undefined,
+        governance: governance || undefined,
+        sort: sort || undefined,
+        page,
+        pageSize,
+        offset,
+        paginate: paginationRequested,
+        facets: paginationRequested,
+      });
 
-    // 1. status
+      if (!paginationRequested) {
+        return NextResponse.json(result.items.map(toCanonicalCMSRelease), { headers: cacheHeaders });
+      }
+
+      return NextResponse.json({
+        items: result.items.map(toCanonicalCMSRelease),
+        count: result.count,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
+        facets: result.facets || { years: [] }
+      }, { headers: cacheHeaders });
+    }
+
+// 1. status
     let releases = status
       ? cmsServerStorage.getAllReleases({ status })
       : cmsServerStorage.getAllReleases();
@@ -155,12 +190,12 @@ export async function GET(request: NextRequest) {
       const pageSize = Math.max(1, parseInt(pageSizeParam || '12', 10) || 12);
       const offset   = parseInt(searchParams.get('offset') || '0', 10) || (page - 1) * pageSize;
       const totalPages = Math.ceil(count / pageSize);
-      const items    = releases.slice(offset, offset + pageSize);
+      const items = releases.slice(offset, offset + pageSize).map(toCanonicalCMSRelease);
 
       return NextResponse.json({ items, count, page, pageSize, totalPages, facets }, { headers: cacheHeaders });
     }
 
-    return NextResponse.json(releases, { headers: cacheHeaders });
+    return NextResponse.json(releases.map(toCanonicalCMSRelease), { headers: cacheHeaders });
 
   } catch (err: any) {
     console.error('[API /api/releases] GET ERROR:', err);
@@ -170,6 +205,10 @@ export async function GET(request: NextRequest) {
 
 
 export async function POST(request: NextRequest) {
+  if (getReleaseStorageBackend() === 'postgres') {
+    return NextResponse.json({ error: "Release mutations are temporarily disabled during PostgreSQL read-cutover validation." }, { status: 503 });
+  }
+
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 

@@ -502,9 +502,9 @@ class CMSStorage {
     const releaseData: CMSRelease = {
       ...release,
       distribution,
-      updatedAt: now,
-      createdAt: release.createdAt || now,
-      ...(release.status === 'published' && { publishedAt: release.publishedAt || now })
+      updatedAt: release.updatedAt || now, // Keep existing updatedAt or set once
+      ...(release.createdAt && { createdAt: release.createdAt }),
+      ...(release.status === 'published' && release.publishedAt && { publishedAt: release.publishedAt })
     };
 
     this.releases.set(release.id, releaseData);
