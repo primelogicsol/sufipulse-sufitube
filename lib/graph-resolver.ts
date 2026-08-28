@@ -218,6 +218,7 @@ class GraphResolver {
   /**
    * Persists joins list to disk
    */
+  public forcePersist(): void { this.persist(); }
   private persist(): void {
     try {
       const serialized = JSON.stringify(this.joins, null, 2);
@@ -445,7 +446,17 @@ class GraphResolver {
   /**
    * Synchronizes all joins for a release based on the release's list arrays
    */
-  public syncReleaseJoins(release: CMSRelease): void {
+  
+  public exportJoins(): GraphJoin[] {
+    return JSON.parse(JSON.stringify(this.joins));
+  }
+  
+  public restoreJoins(snapshot: GraphJoin[]): void {
+    this.joins = JSON.parse(JSON.stringify(snapshot));
+    this.persist();
+  }
+
+  public syncReleaseJoins(release: CMSRelease, skipPersist: boolean = false): void {
     this.init();
     const releaseId = release.id;
     const now = new Date().toISOString();
@@ -508,7 +519,7 @@ class GraphResolver {
       }
     });
 
-    if (this.joins.length !== initialLength || desiredJoins.length > 0) {
+    if ((this.joins.length !== initialLength || desiredJoins.length > 0) && !skipPersist) {
       this.persist();
     }
   }
