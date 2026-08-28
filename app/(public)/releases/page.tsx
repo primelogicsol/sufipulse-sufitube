@@ -666,12 +666,7 @@ export default function Releases() {
                 </div>
             </section>
 
-            {/* ── 02. Global Reach Strip (Repositioned as evidence) ── */}
-            <div className="bg-[var(--color-midnight)] border-b border-white/5">
-                <GlobalReachStrip />
-            </div>
-
-            {/* ── 03. Featured Release Spotlight ── */}
+            {/* ── 02. Featured Release Spotlight ── */}
             {featuredRelease && (
                 <section className="py-16 bg-gradient-to-b from-[var(--color-midnight)] to-[var(--color-slate)] border-b border-white/5">
                     <PageContainer>
@@ -1120,7 +1115,14 @@ export default function Releases() {
                 </PageContainer>
             </Section>
 
-            {/* ── 07. Official Listening Destinations Panel ── */}
+            {/* ── 07. SufiPulse Global Reach Intelligence Strip ── */}
+            <div className="bg-[var(--color-midnight)] border-t border-b border-white/5 py-12">
+                <PageContainer>
+                    <GlobalReachStrip />
+                </PageContainer>
+            </div>
+
+            {/* ── 08. Official Listening Destinations Panel ── */}
             <StudioGovernancePanel 
                 title="Official Broadcast Endpoints"
                 description="Stream authentic SufiPulse master releases 24/7 across our verified streaming platforms, continuous radio service, and official YouTube channel."
