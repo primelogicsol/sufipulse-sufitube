@@ -179,6 +179,22 @@ export const lyricsRequestSchema = z.object({
   releaseId: z.string().min(1, 'Release ID is required').max(100),
   releaseSlug: z.string().min(1, 'Release slug is required').max(100),
   releaseTitle: z.string().min(1, 'Release title is required').max(200),
+  youtubeId: z.string().max(100).optional(),
+  languageCode: z.string().min(2).max(10),
+  languageName: z.string().min(2).max(100),
+  requesterName: z.string().max(120).optional(),
+  requesterEmail: z.string().email().max(254).optional(),
+  note: z.string().max(1000).optional(),
+  notifyWhenPublished: z.boolean().optional(),
+});
+
+/**
+ * CMS Release Schemas
+ */
+export const cmsReleaseSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(3, 'Title must be at least 3 characters').max(500, 'Title is too long'),
+  slug: z.string().min(3, 'Slug must be at least 3 characters').max(500).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, and hyphens'),
   canonicalTitle: z.string().max(500).optional().or(z.literal('')),
   youtubeTitle: z.string().max(500).optional().or(z.literal('')),
   youtubeTitleVariantA: z.string().max(500).optional(),
@@ -202,22 +218,6 @@ export const lyricsRequestSchema = z.object({
   youtubeChannelId: z.string().optional(),
   youtubeChannelUrl: z.string().optional(),
   youtubePlaylistId: z.string().optional(),
-  youtubeId: z.string().max(100).optional(),
-  languageCode: z.string().min(2).max(10),
-  languageName: z.string().min(2).max(100),
-  requesterName: z.string().max(120).optional(),
-  requesterEmail: z.string().email().max(254).optional(),
-  note: z.string().max(1000).optional(),
-  notifyWhenPublished: z.boolean().optional(),
-});
-
-/**
- * CMS Release Schemas
- */
-export const cmsReleaseSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(3, 'Title must be at least 3 characters').max(500, 'Title is too long'),
-  slug: z.string().min(3, 'Slug must be at least 3 characters').max(500).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, and hyphens'),
   youtubeId: z.string().max(100).optional().or(z.literal('')),
   youtubeUrl: z.string().url('Invalid URL').max(500).optional().or(z.literal('')),
   description: z.string().max(10000).optional(),

@@ -84,3 +84,6 @@ youtubeTitleLastSyncedAt
 - SufiPulse.com release card, H1, SEO <title>, OpenGraph, JSON-LD, internal search, and slug identity MUST use `canonicalTitle` / Variant A identity.
 - YouTube experiments with A/B/C variants.
 - The Winning YouTube variant updates `youtubeTitle` but **DOES NOT** overwrite `canonicalTitle`.
+
+
+The title-governance architecture is a frozen governance invariant requiring an explicit architecture revision to change.

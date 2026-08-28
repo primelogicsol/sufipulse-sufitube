@@ -168,8 +168,8 @@ export interface Kalam {
   themes: string[];
   notes?: string;
   writing_style?: string;
-  youtube_content_type?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'STORY' | 'UNSPECIFIED';
-  format_classification_source?: 'youtube_analytics' | 'channel_surface' | 'dashboard' | 'duration_heuristic';
+  youtube_content_type?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'UNSPECIFIED';
+  format_classification_source?: 'youtube_analytics' | 'youtube_shorts_surface' | 'dashboard' | 'legacy' | 'inferred';
   status: 'pending' | 'approved' | 'revision' | 'rejected';
   admin_feedback?: string;
   revision_notes?: string;

@@ -1,11 +1,7 @@
-const fs = require('fs');
-let content = fs.readFileSync('server/storage/release-dto.ts', 'utf8');
+﻿const fs = require('fs');
+const file = 'server/storage/release-dto.ts';
+let content = fs.readFileSync(file, 'utf8');
 
-const injection = if (canonical.published_at && !canonical.publishedAt) canonical.publishedAt = canonical.published_at;
-  canonical.visibility = canonical.visibility || 'public';
-  canonical.format = canonical.format || ((canonical.durationSeconds || 0) <= 60 ? 'short' : 'video');
-  canonical.releaseType = canonical.releaseType || 'studio-release';
-  canonical.publishedAt = canonical.publishedAt || canonical.releaseDate || canonical.createdAt || canonical.created_at;;
+content = content.replace(/  delete canonical\.youtubeTitle;\s+delete canonical\.canonicalTitle;\s+delete canonical\.metadataStatus;\s+delete canonical\.canonicalStatus;\s+delete canonical\.canonicalThumbnail;\s+delete canonical\.youtubeThumbnailUrl;/g, '  // Preserved A/B and canonical fields for architecture round-trip');
 
-content = content.replace('if (canonical.published_at && !canonical.publishedAt) canonical.publishedAt = canonical.published_at;', injection);
-fs.writeFileSync('server/storage/release-dto.ts', content);
+fs.writeFileSync(file, content);

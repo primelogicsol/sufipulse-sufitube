@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { PrimaryButton } from '../../components/primitives/PrimaryButton';
@@ -214,7 +214,7 @@ function SyncResultModal({
                                             </h4>
                                             <div className="flex items-center gap-3 text-[10px] text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest">
                                                 <span>Published {new Date(result.diagnostic.publishedAt).toLocaleDateString()}</span>
-                                                <span className="text-white/10">â€¢</span>
+                                                <span className="text-white/10">•</span>
                                                 <span className="flex items-center gap-1">
                                                     ID: {result.diagnostic.youtubeId}
                                                     <a href={`https://youtube.com/watch?v=${result.diagnostic.youtubeId}`} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">
@@ -272,11 +272,11 @@ function SyncResultModal({
                                         }`}>
                                             <p className="text-xs font-medium leading-relaxed">
                                                 {result.diagnostic.publicVisibleAfterSync && result.diagnostic.visibleUnderCurrentFilters ? (
-                                                    <span className="text-emerald-200/70">âœ“ Latest upload is imported and visible on this page.</span>
+                                                    <span className="text-emerald-200/70">✓ Latest upload is imported and visible on this page.</span>
                                                 ) : !result.diagnostic.publicVisibleAfterSync ? (
-                                                    <span className="text-amber-200/70">âš  Imported successfully, but restricted. Reason: {result.diagnostic.reasonHiddenAfterSync}.</span>
+                                                    <span className="text-amber-200/70">⚠ Imported successfully, but restricted. Reason: {result.diagnostic.reasonHiddenAfterSync}.</span>
                                                 ) : (
-                                                    <span className="text-amber-200/70">âš  Imported successfully, but hidden by active UI filters: {result.diagnostic.activeFilters?.length ? result.diagnostic.activeFilters.join(', ') : 'None'}.</span>
+                                                    <span className="text-amber-200/70">⚠ Imported successfully, but hidden by active UI filters: {result.diagnostic.activeFilters?.length ? result.diagnostic.activeFilters.join(', ') : 'None'}.</span>
                                                 )}
                                             </p>
                                         </div>
@@ -346,7 +346,7 @@ export default function Releases() {
     const [currentPage, setCurrentPage] = useState(1);
     const [serverTotalPages, setServerTotalPages] = useState(1);
     const [serverCount, setServerCount] = useState(0);
-    // Server-returned year facets â€” covers full filtered catalogue, not just current page
+    // Server-returned year facets — covers full filtered catalogue, not just current page
     const [facetYears, setFacetYears] = useState<number[]>([]);
 
 
@@ -362,7 +362,7 @@ export default function Releases() {
     /**
      * Builds the API query URL from filter state and fetches paginated results.
      * ALL filtering, sorting, and pagination happen server-side.
-     * Server applies: status â†’ governance â†’ search â†’ format â†’ duration â†’ year â†’ sort â†’ THEN paginate.
+     * Server applies: status → governance → search → format → duration → year → sort → THEN paginate.
      * Count and totalPages reflect the filtered total, not the full registry.
      */
     const fetchVideos = async (
@@ -411,9 +411,6 @@ export default function Releases() {
                 const source = r.source || 'native';
                 const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
                 const durationFormatted = r.durationFormatted || r.duration || formatSeconds(durationSecs);
-                const effectiveDate = r.governanceOrigin === 'native_governed' || r.govType === 'native_governed'
-                        ? (r.publishedAt || r.releaseDate || r.createdAt)
-                        : (r.releaseDate || r.publishedAt || r.createdAt);
                 const canonicalTitle = r.canonicalTitle || r.title || 'Untitled Release';
                 const youtubeTitle = r.youtubeTitle || r.youtubeStats?.title || '';
                 const govType = r.governanceOrigin || (r.source === 'native' ? 'native_governed' : (r.govType || 'native_governed'));
@@ -427,8 +424,8 @@ export default function Releases() {
                     youtubeTitle: youtubeTitle,
                     description: r.description || '',
                     thumbnailUrl: r.canonicalThumbnail || r.thumbnail || r.thumbnailUrl || '',
-                    publishedAt: effectiveDate,
-                    publishedDate: effectiveDate,
+                    publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
+                    publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
                     durationSeconds: durationSecs,
                     durationFormatted: durationFormatted,
                     views: Number(r.views || r.viewCount || 0),
@@ -480,7 +477,7 @@ export default function Releases() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
-            // import-youtube route calls revalidatePath('/releases') â€” re-fetch via normal GET
+            // import-youtube route calls revalidatePath('/releases') — re-fetch via normal GET
             await fetchVideos({}, true);
             setSyncResult(data);
             setSyncModalOpen(true);
@@ -493,7 +490,7 @@ export default function Releases() {
         }
     };
 
-    // Knowledge data â€” loaded once on mount, independent of release fetching
+    // Knowledge data — loaded once on mount, independent of release fetching
     useEffect(() => {
         fetch('/api/knowledge')
             .then(res => res.json())
@@ -501,11 +498,11 @@ export default function Releases() {
             .catch(err => console.error('Failed to load knowledge data:', err));
     }, []);
 
-    // â”€â”€ SINGLE consolidated fetch effect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── SINGLE consolidated fetch effect ──────────────────────────────────────
     // Replaces three separate effects (initial-load, filter-change, page-change).
     // React 18 automatic batching ensures that filter-change handlers calling
     // both setFilter(x) AND setCurrentPage(1) in the same event cause only one
-    // render and therefore only one effect invocation â†’ one fetch.
+    // render and therefore only one effect invocation → one fetch.
     //
     // Search changes are debounced 350ms. All other dependency changes are immediate.
     // Initial mount naturally triggers one fetch with the default filter state.
@@ -576,7 +573,7 @@ export default function Releases() {
 
     return (
         <>
-            {/* â”€â”€ 01. Dedicated ReleaseArchiveHero with banner28.png â”€â”€ */}
+            {/* ── 01. Dedicated ReleaseArchiveHero with banner28.png ── */}
             <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
                 {/* Cinematic Background Banner */}
                 <div className="absolute inset-0 z-0 pointer-events-none">
@@ -600,7 +597,7 @@ export default function Releases() {
                             <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
                                 <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
                                 <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                                    SufiPulse USA â€” Official Release Archive
+                                    SufiPulse USA — Official Release Archive
                                 </span>
                             </div>
 
@@ -648,7 +645,7 @@ export default function Releases() {
                 </div>
             </section>
 
-            {/* â”€â”€ 02. Featured Release Spotlight â”€â”€ */}
+            {/* ── 02. Featured Release Spotlight ── */}
             {featuredRelease && (
                 <section className="py-16 bg-gradient-to-b from-[var(--color-midnight)] to-[var(--color-slate)] border-b border-white/5">
                     <PageContainer>
@@ -696,9 +693,9 @@ export default function Releases() {
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-3 text-xs text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest">
                                                 <span>{new Date(featuredRelease.publishedDate).getFullYear() || 2026}</span>
-                                                <span>â€¢</span>
+                                                <span>•</span>
                                                 <span>{featuredRelease.format.toUpperCase()}</span>
-                                                <span>â€¢</span>
+                                                <span>•</span>
                                                 <span>{(Number(featuredRelease.views) || 0).toLocaleString()} Views</span>
                                             </div>
                                             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
@@ -751,7 +748,7 @@ export default function Releases() {
                 </section>
             )}
 
-            {/* â”€â”€ 04. Browse the Archive (Search + Filters Toolbar) â”€â”€ */}
+            {/* ── 04. Browse the Archive (Search + Filters Toolbar) ── */}
             <div id="browse-releases">
                 <Section background="midnight" spacing="normal">
                     <PageContainer>
@@ -820,7 +817,7 @@ export default function Releases() {
                                                 onChange={(e) => { setFilterType(e.target.value as FilterType); setCurrentPage(1); }}
                                                 className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
                                             >
-                                                <option value="all">All Releases</option>
+                                                <option value="all">All Statuses</option>
                                                 <option value="native_governed">Governed Release</option>
                                                 <option value="legacy_registry">Legacy Registry</option>
                                             </select>
@@ -847,26 +844,19 @@ export default function Releases() {
                                             </select>
                                         </div>
 
-                                                                                {/* Duration */}
+                                        {/* Duration */}
                                         <div className="flex flex-col gap-1.5">
                                             <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Duration</label>
                                             <select 
-                                                value={filterFormat === 'short' ? 'not_applicable' : durationFilter} 
+                                                value={durationFilter} 
                                                 onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
-                                                disabled={filterFormat === 'short'}
-                                                className={`bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none transition-colors w-full text-[var(--color-text-primary)] ${filterFormat === 'short' ? 'opacity-50 cursor-not-allowed' : 'focus:border-[var(--color-gold)]/50 cursor-pointer'}`}
+                                                className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
                                             >
-                                                {filterFormat === 'short' ? (
-                                                    <option value="not_applicable">Not applicable to Shorts</option>
-                                                ) : (
-                                                    <>
-                                                        <option value="default">Default (Standard/Long)</option>
-                                                        <option value="all">Any Duration</option>
-                                                        <option value="short">Brief (&lt; 3m)</option>
-                                                        <option value="standard">Standard (3-8m)</option>
-                                                        <option value="long">Long (&gt; 8m)</option>
-                                                    </>
-                                                )}
+                                                <option value="default">Default (Standard/Long)</option>
+                                                <option value="all">Any Duration</option>
+                                                <option value="short">Short (&lt; 3m)</option>
+                                                <option value="standard">Standard (3-8m)</option>
+                                                <option value="long">Long (&gt; 8m)</option>
                                             </select>
                                         </div>
 
@@ -902,7 +892,7 @@ export default function Releases() {
                             </div>
                         </div>
 
-                        {/* â”€â”€ 05. Release Catalogue Grid â”€â”€ */}
+                        {/* ── 05. Release Catalogue Grid ── */}
                         {loading ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {[...Array(8)].map((_, i) => (
@@ -1058,7 +1048,7 @@ export default function Releases() {
                 </Section>
             </div>
 
-            {/* â”€â”€ 06. Archive & Governance Explanation â”€â”€ */}
+            {/* ── 06. Archive & Governance Explanation ── */}
             <Section background="slate" spacing="normal">
                 <PageContainer>
                     <div className="max-w-6xl mx-auto">
@@ -1087,14 +1077,14 @@ export default function Releases() {
                 </PageContainer>
             </Section>
 
-            {/* â”€â”€ 07. SufiPulse Global Reach Intelligence Strip â”€â”€ */}
+            {/* ── 07. SufiPulse Global Reach Intelligence Strip ── */}
             <div className="bg-[var(--color-midnight)] border-t border-b border-white/5 py-12">
                 <PageContainer>
                     <GlobalReachStrip />
                 </PageContainer>
             </div>
 
-            {/* â”€â”€ 08. Official Listening Destinations Panel â”€â”€ */}
+            {/* ── 08. Official Listening Destinations Panel ── */}
             <StudioGovernancePanel 
                 title="Official Broadcast Endpoints"
                 description="Stream authentic SufiPulse master releases 24/7 across our verified streaming platforms, continuous radio service, and official YouTube channel."

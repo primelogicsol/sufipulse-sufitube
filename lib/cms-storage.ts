@@ -19,8 +19,8 @@ export type DistributionStatus =
 
 export interface PlatformDistribution {
   platform: 'sufipulse_radio' | 'youtube' | 'spotify' | 'apple_music' | 'instagram' | 'x' | 'facebook';
-  youtubeContentType?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'STORY' | 'UNSPECIFIED';
-  formatClassificationSource?: 'youtube_analytics' | 'channel_surface' | 'dashboard' | 'duration_heuristic';
+  youtubeContentType?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'UNSPECIFIED';
+  formatClassificationSource?: 'youtube_analytics' | 'youtube_shorts_surface' | 'dashboard' | 'legacy' | 'inferred';
   status: DistributionStatus;
   url?: string;
   publishedAt?: string;

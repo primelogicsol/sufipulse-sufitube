@@ -46,12 +46,7 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   delete canonical.show_views;
   
   // Strip transient resolution properties from DB mapper
-  delete canonical.youtubeTitle;
-  delete canonical.canonicalTitle;
-  delete canonical.metadataStatus;
-  delete canonical.canonicalStatus;
-  delete canonical.canonicalThumbnail;
-  delete canonical.youtubeThumbnailUrl;
+  // Preserved A/B and canonical fields for architecture round-trip
   
   // Apply standard business defaults for missing fields deterministically
   if (canonical.status === 'published' && canonical.youtubeId && !canonical.format) {
