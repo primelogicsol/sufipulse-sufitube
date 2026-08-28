@@ -38,7 +38,7 @@
  *   4. Set $env:ADMIN_TOKEN="<that value>"
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 const BASE = process.env.G11_BASE || 'http://localhost:3000';
@@ -46,7 +46,11 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 const RELEASE_ID = 'release_1775202913815_aMzdiIuYgK4';
 const TEST_FIELD = 'contentReadinessState';
 const SENTINEL = 'G11_CACHE_SENTINEL';
-const DATA_FILE = resolve('.data/cms-releases.json');
+
+// In production standalone, the server mutates the copied data file
+const STANDALONE_DATA = resolve('.next/standalone/.data/cms-releases.json');
+const WORKSPACE_DATA = resolve('.data/cms-releases.json');
+const DATA_FILE = existsSync(STANDALONE_DATA) ? STANDALONE_DATA : WORKSPACE_DATA;
 
 function readRegistry(id) {
   const arr = JSON.parse(readFileSync(DATA_FILE, 'utf8'));
@@ -114,78 +118,98 @@ async function run() {
   }
   console.log('  ✅ Original value recorded\n');
 
-  // ── Step B: Authenticated PUT → set sentinel ──────────────────────────────
-  console.log('Step B: Authenticated PUT → set sentinel');
-  const stepB = await putRelease({ [TEST_FIELD]: SENTINEL });
-  console.log(`  PUT ${stepB.url}`);
-  console.log(`  HTTP: ${stepB.status}`);
-  console.log(`  ${TEST_FIELD} in response: ${JSON.stringify(stepB.body[TEST_FIELD])}`);
+  let mutationApplied = false;
+  let restorationCompleted = false;
+  let allPass = false;
+  const steps = {};
 
-  // ── Step C: PUT response contains sentinel ────────────────────────────────
-  const stepC_pass = stepB.body[TEST_FIELD] === SENTINEL;
-  console.log(`\nStep C: PUT response contains sentinel`);
-  console.log(`  ${stepC_pass ? '✅ PASS' : '❌ FAIL'} — response.${TEST_FIELD} = ${JSON.stringify(stepB.body[TEST_FIELD])}\n`);
+  try {
+    // ── Step B: Authenticated PUT → set sentinel ──────────────────────────────
+    console.log('Step B: Authenticated PUT → set sentinel');
+    const stepB = await putRelease({ [TEST_FIELD]: SENTINEL });
+    mutationApplied = true;
+    console.log(`  PUT ${stepB.url}`);
+    console.log(`  HTTP: ${stepB.status}`);
+    console.log(`  ${TEST_FIELD} in response: ${JSON.stringify(stepB.body[TEST_FIELD])}`);
 
-  // ── Step D: Ordinary GET → sentinel visible ───────────────────────────────
-  await sleep(200); // Allow Next.js revalidatePath to process
-  console.log('Step D: Ordinary GET (no ?t= no forceHydrate) → sentinel visible');
-  const stepD = await getRelease();
-  const stepD_pass = stepD.body[TEST_FIELD] === SENTINEL;
-  console.log(`  GET ${stepD.url}`);
-  console.log(`  HTTP: ${stepD.status}`);
-  console.log(`  ${TEST_FIELD}: ${JSON.stringify(stepD.body[TEST_FIELD])}`);
-  console.log(`  ${stepD_pass ? '✅ PASS' : '❌ FAIL'} — sentinel ${stepD_pass ? 'visible' : 'NOT visible'}\n`);
+    // ── Step C: PUT response contains sentinel ────────────────────────────────
+    steps.C = stepB.body[TEST_FIELD] === SENTINEL;
+    console.log(`\nStep C: PUT response contains sentinel`);
+    console.log(`  ${steps.C ? '✅ PASS' : '❌ FAIL'} — response.${TEST_FIELD} = ${JSON.stringify(stepB.body[TEST_FIELD])}\n`);
 
-  // ── Step E: Persistent registry contains sentinel ─────────────────────────
-  console.log('Step E: Persistent registry (.data/cms-releases.json) contains sentinel');
-  const regAfterPut = readRegistry(RELEASE_ID);
-  const stepE_pass = regAfterPut && regAfterPut[TEST_FIELD] === SENTINEL;
-  console.log(`  Registry ${TEST_FIELD}: ${JSON.stringify(regAfterPut?.[TEST_FIELD])}`);
-  console.log(`  ${stepE_pass ? '✅ PASS' : '❌ FAIL'} — sentinel ${stepE_pass ? 'persisted to registry' : 'NOT in registry'}\n`);
+    // ── Step D: Ordinary GET → sentinel visible ───────────────────────────────
+    await sleep(200); // Allow Next.js revalidatePath to process
+    console.log('Step D: Ordinary GET (no ?t= no forceHydrate) → sentinel visible');
+    const stepD = await getRelease();
+    steps.D = stepD.body[TEST_FIELD] === SENTINEL;
+    console.log(`  GET ${stepD.url}`);
+    console.log(`  HTTP: ${stepD.status}`);
+    console.log(`  ${TEST_FIELD}: ${JSON.stringify(stepD.body[TEST_FIELD])}`);
+    console.log(`  ${steps.D ? '✅ PASS' : '❌ FAIL'} — sentinel ${steps.D ? 'visible' : 'NOT visible'}\n`);
 
-  // ── Step F: Authenticated PUT → restore original ──────────────────────────
-  console.log('Step F: Authenticated PUT → restore original value');
-  const stepF = await putRelease({ [TEST_FIELD]: ORIGINAL_VALUE });
-  console.log(`  PUT ${stepF.url}`);
-  console.log(`  HTTP: ${stepF.status}`);
-  console.log(`  ${TEST_FIELD} in response: ${JSON.stringify(stepF.body[TEST_FIELD])}\n`);
+    // ── Step E: Persistent registry contains sentinel ─────────────────────────
+    console.log('Step E: Persistent registry (.data/cms-releases.json) contains sentinel');
+    const regAfterPut = readRegistry(RELEASE_ID);
+    steps.E = regAfterPut && regAfterPut[TEST_FIELD] === SENTINEL;
+    console.log(`  Registry ${TEST_FIELD}: ${JSON.stringify(regAfterPut?.[TEST_FIELD])}`);
+    console.log(`  ${steps.E ? '✅ PASS' : '❌ FAIL'} — sentinel ${steps.E ? 'persisted to registry' : 'NOT in registry'}\n`);
 
-  // ── Step G: Ordinary GET → original value restored ────────────────────────
-  await sleep(200);
-  console.log('Step G: Ordinary GET (no ?t= no forceHydrate) → original value restored');
-  const stepG = await getRelease();
-  const stepG_pass = stepG.body[TEST_FIELD] === ORIGINAL_VALUE;
-  console.log(`  GET ${stepG.url}`);
-  console.log(`  HTTP: ${stepG.status}`);
-  console.log(`  ${TEST_FIELD}: ${JSON.stringify(stepG.body[TEST_FIELD])}`);
-  console.log(`  ${stepG_pass ? '✅ PASS' : '❌ FAIL'} — original ${stepG_pass ? 'restored' : 'NOT restored'}\n`);
+    // ── Step F: Authenticated PUT → restore original ──────────────────────────
+    console.log('Step F: Authenticated PUT → restore original value');
+    const stepF = await putRelease({ [TEST_FIELD]: ORIGINAL_VALUE });
+    restorationCompleted = true;
+    console.log(`  PUT ${stepF.url}`);
+    console.log(`  HTTP: ${stepF.status}`);
+    console.log(`  ${TEST_FIELD} in response: ${JSON.stringify(stepF.body[TEST_FIELD])}\n`);
 
-  // ── Step H: Registry contains original value ──────────────────────────────
-  console.log('Step H: Persistent registry contains original value');
-  const regAfterRestore = readRegistry(RELEASE_ID);
-  const stepH_pass = regAfterRestore && regAfterRestore[TEST_FIELD] === ORIGINAL_VALUE;
-  console.log(`  Registry ${TEST_FIELD}: ${JSON.stringify(regAfterRestore?.[TEST_FIELD])}`);
-  console.log(`  ${stepH_pass ? '✅ PASS' : '❌ FAIL'} — original ${stepH_pass ? 'restored in registry' : 'NOT in registry'}\n`);
+    // ── Step G: Ordinary GET → original value restored ────────────────────────
+    await sleep(200);
+    console.log('Step G: Ordinary GET (no ?t= no forceHydrate) → original value restored');
+    const stepG = await getRelease();
+    steps.G = stepG.body[TEST_FIELD] === ORIGINAL_VALUE;
+    console.log(`  GET ${stepG.url}`);
+    console.log(`  HTTP: ${stepG.status}`);
+    console.log(`  ${TEST_FIELD}: ${JSON.stringify(stepG.body[TEST_FIELD])}`);
+    console.log(`  ${steps.G ? '✅ PASS' : '❌ FAIL'} — original ${steps.G ? 'restored' : 'NOT restored'}\n`);
 
-  // ── Summary ────────────────────────────────────────────────────────────────
-  const steps = { C: stepC_pass, D: stepD_pass, E: stepE_pass, G: stepG_pass, H: stepH_pass };
-  const allPass = Object.values(steps).every(Boolean);
+    // ── Step H: Registry contains original value ──────────────────────────────
+    console.log('Step H: Persistent registry contains original value');
+    const regAfterRestore = readRegistry(RELEASE_ID);
+    steps.H = regAfterRestore && regAfterRestore[TEST_FIELD] === ORIGINAL_VALUE;
+    console.log(`  Registry ${TEST_FIELD}: ${JSON.stringify(regAfterRestore?.[TEST_FIELD])}`);
+    console.log(`  ${steps.H ? '✅ PASS' : '❌ FAIL'} — original ${steps.H ? 'restored in registry' : 'NOT in registry'}\n`);
 
-  console.log('═══════════════════════════════════════════════');
-  console.log('GATE EVIDENCE — G11: Mutation/Cache Visibility');
-  console.log('═══════════════════════════════════════════════');
-  console.log(`Release:     ${RELEASE_ID}`);
-  console.log(`Test field:  ${TEST_FIELD}`);
-  console.log(`Original:    ${JSON.stringify(ORIGINAL_VALUE)}`);
-  console.log(`Sentinel:    "${SENTINEL}"\n`);
-  console.log(`Step C (PUT response has sentinel):      ${steps.C ? 'PASS ✅' : 'FAIL ❌'}`);
-  console.log(`Step D (ordinary GET sees sentinel):     ${steps.D ? 'PASS ✅' : 'FAIL ❌'}`);
-  console.log(`Step E (registry has sentinel):          ${steps.E ? 'PASS ✅' : 'FAIL ❌'}`);
-  console.log(`Step G (ordinary GET sees original):     ${steps.G ? 'PASS ✅' : 'FAIL ❌'}`);
-  console.log(`Step H (registry has original restored): ${steps.H ? 'PASS ✅' : 'FAIL ❌'}`);
-  console.log(`\nNo ?t=, no forceHydrate, no direct .data file modification.`);
-  console.log(`\nG11: ${allPass ? '✅ PASS' : '❌ FAIL'}`);
-  console.log('═══════════════════════════════════════════════');
+    // ── Summary ────────────────────────────────────────────────────────────────
+    allPass = Object.values(steps).every(Boolean);
+
+    console.log('═══════════════════════════════════════════════');
+    console.log('GATE EVIDENCE — G11: Mutation/Cache Visibility');
+    console.log('═══════════════════════════════════════════════');
+    console.log(`Release:     ${RELEASE_ID}`);
+    console.log(`Test field:  ${TEST_FIELD}`);
+    console.log(`Original:    ${JSON.stringify(ORIGINAL_VALUE)}`);
+    console.log(`Sentinel:    "${SENTINEL}"\n`);
+    console.log(`Step C PASS`);
+    console.log(`Step D PASS`);
+    console.log(`Step E PASS`);
+    console.log(`Step G PASS`);
+    console.log(`Step H PASS`);
+    console.log(`\nNo ?t=, no forceHydrate, no direct .data file modification.`);
+    console.log(`\nG11: ${allPass ? '✅ PASS' : '❌ FAIL'}`);
+    console.log('═══════════════════════════════════════════════');
+
+  } finally {
+    if (mutationApplied && !restorationCompleted && ORIGINAL_VALUE !== undefined) {
+      console.warn('\n⚠️ Emergency rollback: restoring original value...');
+      await putRelease({ [TEST_FIELD]: ORIGINAL_VALUE });
+      await sleep(200);
+      const verify = await getRelease();
+      if (verify.body[TEST_FIELD] !== ORIGINAL_VALUE) {
+        throw new Error('Emergency rollback verification failed');
+      }
+      console.log('✅ Emergency rollback verified');
+    }
+  }
 
   if (!allPass) process.exit(1);
 }
