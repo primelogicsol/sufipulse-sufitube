@@ -350,13 +350,8 @@ export default function Releases() {
     const fetchVideos = async (silent = false, refresh = false) => {
         if (!silent) setLoading(true);
         try {
-            const url = new URL('/api/releases', window.location.origin);
-            url.searchParams.set('status', 'published');
-            // Add cache busting
-            url.searchParams.set('t', Date.now().toString());
-            if (refresh) url.searchParams.set('refresh', '1');
-            
-            const cmsRes = await fetch(url.toString(), { cache: 'no-store' });
+            const url = `/api/releases?status=published&t=${Date.now()}${refresh ? '&refresh=1' : ''}`;
+            const cmsRes = await fetch(url, { cache: 'no-store' });
             if (!cmsRes.ok) throw new Error('Failed to fetch releases');
             const responseData = await cmsRes.json();
             
