@@ -465,13 +465,19 @@ class CMSStorage {
     const now = new Date().toISOString();
 
     // Narrow Policy Exception for YouTube ID enforcement
+    const LEGACY_YOUTUBE_EXEMPT_IDS = new Set([
+      'rel_8202cfce-1a16-415b-acf6-92d0dec7b1f3',
+      'rel_03cb7141-2051-431c-8997-57552d9dba1b',
+      'rel_05dfe093-88ad-4cfc-9cfa-7c4308a353af'
+    ]);
+
     const requiresYoutubeDelivery = (): boolean => {
       if (release.status !== 'published') return false;
       if (release.webOnly) return false;
-      // Editorial/textual records without a formal media format do not require video delivery
-      if (!release.format || release.format === 'article') return false;
-      // Legacy seed anomaly: allow the 3 foundation flagship videos (which lack a source) to bypass
-      if (release.format === 'video' && release.releaseType === 'flagship' && !release.source) return false;
+      // Editorial/textual legacy records have no media format.
+      if (!release.format) return false;
+      // Explicitly grandfather only known historical anomalies.
+      if (LEGACY_YOUTUBE_EXEMPT_IDS.has(release.id)) return false;
       return true;
     };
 
