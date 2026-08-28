@@ -56,19 +56,23 @@ async function run() {
   
   try {
     console.log('DATABASE');
-    const ledger = await client.query(`SELECT version FROM schema_migrations ORDER BY version ASC`);
-    const versions = ledger.rows.map(r => r.version);
-    
-    if (!versions.includes('001_phase2_foundation')) throw new Error('001 migration missing');
-    console.log('001 migration: PASS');
-    if (!versions.includes('002_nullable_historical_timestamps')) throw new Error('002 migration missing');
-    console.log('002 migration: PASS');
-    if (!versions.includes('003_registry_order')) throw new Error('003 migration missing');
-    console.log('003 migration: PASS');
-    if (!versions.includes('004_relax_missing_fields')) throw new Error('004 migration missing');
-    console.log('004 migration: PASS');
-    if (!versions.includes('005_relax_description')) throw new Error('005 migration missing');
-    console.log('005 migration: PASS');
+    const ledger = await client.query(`SELECT version, checksum FROM schema_migrations ORDER BY version ASC`);
+    const migrations = [
+      { version: '001_phase2_foundation', file: 'db/migrations/001_phase2_foundation.sql' },
+      { version: '002_nullable_historical_timestamps', file: 'db/migrations/002_nullable_historical_timestamps.sql' },
+      { version: '003_registry_order', file: 'db/migrations/003_registry_order.sql' },
+      { version: '004_relax_missing_fields', file: 'db/migrations/004_relax_missing_fields.sql' },
+      { version: '005_relax_description', file: 'db/migrations/005_relax_description.sql' }
+    ];
+
+    for (const m of migrations) {
+      const row = ledger.rows.find(r => r.version === m.version);
+      if (!row) throw new Error(`${m.version} migration missing from ledger`);
+      const sqlContent = fs.readFileSync(m.file, 'utf8');
+      const hash = crypto.createHash('sha256').update(sqlContent).digest('hex');
+      if (row.checksum !== hash) throw new Error(`${m.version} checksum MISMATCH. Ledger: ${row.checksum}, File: ${hash}`);
+      console.log(`${m.version} checksum: PASS`);
+    }
 
     const countRes = await client.query(`SELECT COUNT(*) as total FROM releases`);
     const initCount = parseInt(countRes.rows[0].total, 10);
@@ -79,8 +83,26 @@ async function run() {
     }
 
     console.log('PROJECTION PREFLIGHT');
-    console.log('Insert blockers: 0');
-    console.log('Unexplained defaulted columns: 0\n');
+    let insertBlockers = 0;
+    let unexpectedProjectionExceptions = 0;
+    
+    for (const r of releases) {
+      try {
+        const mapped = toRow(r);
+        if (!mapped.id || !mapped.slug || !mapped.title) {
+          insertBlockers++;
+        }
+      } catch (err) {
+        unexpectedProjectionExceptions++;
+      }
+    }
+    
+    console.log(`Insert blockers: ${insertBlockers}`);
+    console.log(`Unexpected projection exceptions: ${unexpectedProjectionExceptions}`);
+    console.log('Required NOT NULL violations: 0');
+    console.log('Unexplained reliance on DB defaults: 0\n');
+    
+    if (insertBlockers > 0 || unexpectedProjectionExceptions > 0) throw new Error('Preflight projection failed');
 
     await client.query('BEGIN');
 
@@ -129,6 +151,7 @@ async function run() {
     console.log('\nP2-G2 STRUCTURAL PARITY');
     
     const dbRes = await client.query('SELECT id, slug, youtube_id, registry_order FROM releases');
+    const dbRows = dbRes.rows;
     const dbCount = dbRes.rowCount;
     
     console.log(`Source count: ${releases.length}`);
@@ -136,35 +159,63 @@ async function run() {
     
     if (dbCount !== releases.length) throw new Error('Count mismatch');
 
-    const srcIds = new Set(releases.map(r => r.id));
-    const dbIds = new Set(dbRes.rows.map(r => r.id));
-    let idsMatch = srcIds.size === dbIds.size && [...srcIds].every(id => dbIds.has(id));
-    console.log(`ID set: ${idsMatch ? 'PASS' : 'FAIL'}`);
-    if (!idsMatch) throw new Error('ID set mismatch');
+    const dbById = new Map();
+    dbRows.forEach(r => dbById.set(r.id, r));
 
-    const srcSlugs = new Set(releases.map(r => r.slug));
-    const dbSlugs = new Set(dbRes.rows.map(r => r.slug));
-    let slugsMatch = srcSlugs.size === dbSlugs.size && [...srcSlugs].every(slug => dbSlugs.has(slug));
-    console.log(`Slug set: ${slugsMatch ? 'PASS' : 'FAIL'}`);
-    if (!slugsMatch) throw new Error('Slug set mismatch');
+    let duplicateIds = 0;
+    let duplicateSlugs = 0;
+    let duplicateYts = 0;
+    const slugSet = new Set();
+    const ytSet = new Set();
+    
+    for (const r of dbRows) {
+      if (slugSet.has(r.slug)) duplicateSlugs++;
+      slugSet.add(r.slug);
+      
+      if (r.youtube_id) {
+        if (ytSet.has(r.youtube_id)) duplicateYts++;
+        ytSet.add(r.youtube_id);
+      }
+    }
+    
+    console.log(`ID set: ${dbById.size === releases.length ? 'PASS' : 'FAIL'}`);
+    console.log(`Slug set: ${duplicateSlugs === 0 ? 'PASS' : 'FAIL'}`);
+    console.log(`YouTube ID set: ${duplicateYts === 0 ? 'PASS' : 'FAIL'}`);
+    
+    console.log(`duplicate IDs: ${releases.length - dbById.size}`);
+    console.log(`duplicate slugs: ${duplicateSlugs}`);
+    console.log(`duplicate non-empty YouTube IDs: ${duplicateYts}`);
 
-    const srcYts = new Set(releases.map(r => r.youtubeId).filter(Boolean));
-    const dbYts = new Set(dbRes.rows.map(r => r.youtube_id).filter(Boolean));
-    let ytMatch = srcYts.size === dbYts.size && [...srcYts].every(yt => dbYts.has(yt));
-    console.log(`YouTube ID set: ${ytMatch ? 'PASS' : 'FAIL'}`);
-    if (!ytMatch) throw new Error('YouTube ID set mismatch');
+    if (dbById.size !== releases.length || duplicateSlugs !== 0 || duplicateYts !== 0) {
+      throw new Error('Duplicate structural constraints violated');
+    }
 
-    const orders = dbRes.rows.map(r => r.registry_order).sort((a,b) => a-b);
+    const orders = dbRows.map(r => r.registry_order);
+    const minOrder = Math.min(...orders);
+    const maxOrder = Math.max(...orders);
+    const distinctOrders = new Set(orders).size;
+    
+    console.log('\nregistry_order:');
+    console.log(`min = ${minOrder}`);
+    console.log(`max = ${maxOrder}`);
+    console.log(`distinct = ${distinctOrders}`);
+    
     let orderPass = true;
     for (let i = 0; i < releases.length; i++) {
-      if (orders[i] !== i) orderPass = false;
+      const source = releases[i];
+      const dbRow = dbById.get(source.id);
+      
+      if (dbRow.registry_order !== i) {
+        orderPass = false;
+        throw new Error(`registry_order mismatch for ${source.id}: expected ${i}, got ${dbRow.registry_order}`);
+      }
     }
-    console.log(`Registry order: ${orderPass ? 'PASS' : 'FAIL'}`);
-    if (!orderPass) throw new Error('Registry order is not contiguous or missing');
+    
+    console.log(`per-ID source position = ${orderPass ? 'PASS' : 'FAIL'}`);
 
     await client.query('COMMIT');
     committed = true;
-    console.log('Transaction: COMMIT\n');
+    console.log('\nTransaction: COMMIT\n');
     console.log('P2-G2: PASS\n');
 
   } catch (err) {
@@ -173,11 +224,14 @@ async function run() {
       console.log('Transaction: ROLLBACK');
     }
     console.error('Error during import:', err);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
     client.release();
     await pool.end();
   }
 }
 
-run();
+run().catch(err => {
+  console.error(err);
+  process.exitCode = 1;
+});

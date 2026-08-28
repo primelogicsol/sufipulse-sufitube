@@ -45,7 +45,8 @@ async function run() {
   let projectionMatches = 0;
   let mismatches = 0;
 
-  for (const source of releases) {
+  for (let i = 0; i < releases.length; i++) {
+    const source = releases[i];
     const dbRow = dbRows.find(r => r.id === source.id);
     if (!dbRow) {
       console.error(`Missing ID in DB: ${source.id}`);
@@ -117,13 +118,19 @@ async function run() {
     compare(projected.youtubeId, dbRow.youtube_id, 'youtubeId');
     compare(projected.youtubeTitle, dbRow.youtube_title, 'youtubeTitle');
     compare(projected.youtubeThumbnailUrl, dbRow.youtube_thumbnail_url, 'youtubeThumbnailUrl');
+    compare(projected.youtubeUrl, dbRow.youtube_url, 'youtubeUrl');
+    compare(projected.youtubeChannelId, dbRow.youtube_channel_id, 'youtubeChannelId');
+    compare(projected.youtubeChannelUrl, dbRow.youtube_channel_url, 'youtubeChannelUrl');
+    compare(projected.youtubePlaylistId, dbRow.youtube_playlist_id, 'youtubePlaylistId');
 
     compare(projected.status, dbRow.status, 'status');
     compare(projected.visibility, dbRow.visibility, 'visibility');
     compare(projected.format, dbRow.format, 'format');
     compare(projected.releaseType, dbRow.release_type, 'releaseType');
+    compare(projected.category, dbRow.category, 'category');
     compare(projected.source, dbRow.source, 'source');
     compare(projected.contentReadinessState, dbRow.content_readiness_state, 'contentReadinessState');
+    compare(projected.webOnly, dbRow.web_only, 'webOnly');
     compare(projected.description, dbRow.description, 'description');
 
     compare(projected.writerName, dbRow.writer_name, 'writerName');
@@ -136,10 +143,22 @@ async function run() {
     compare(projected.releaseDate, dbRow.release_date, 'releaseDate');
     compare(projected.publishedAt, dbRow.published_at, 'publishedAt');
     compare(projected.durationSeconds, dbRow.duration_seconds, 'durationSeconds');
+    compare(projected.durationFormatted, dbRow.duration_formatted, 'durationFormatted');
     compare(projected.viewCount, dbRow.view_count, 'viewCount');
     compare(projected.likeCount, dbRow.like_count, 'likeCount');
+    
+    compare(projected.availableLanguages, dbRow.available_languages, 'availableLanguages');
+    compare(projected.defaultLanguage, dbRow.default_language, 'defaultLanguage');
+    compare(projected.enableLyrics, dbRow.enable_lyrics, 'enableLyrics');
+    compare(projected.enableCommentary, dbRow.enable_commentary, 'enableCommentary');
+    compare(projected.enableSponsors, dbRow.enable_sponsors, 'enableSponsors');
+    compare(projected.enableAdoption, dbRow.enable_adoption, 'enableAdoption');
+    compare(projected.enableCredits, dbRow.enable_credits, 'enableCredits');
+
     compare(projected.createdAt, dbRow.created_at, 'createdAt');
     compare(projected.updatedAt, dbRow.updated_at, 'updatedAt');
+
+    compare(i, dbRow.registry_order, 'registry_order (source index)');
 
     if (projMismatch) mismatches++;
     else projectionMatches++;
@@ -148,7 +167,7 @@ async function run() {
   console.log(`Payload canonical hashes:\n${hashMatches} / 101 MATCH\n`);
   console.log(`Projection parity:\n${projectionMatches} / 101 PASS\n`);
 
-  // Extra Semantic Checks (inherited from roundtrip test)
+  // Extra Semantic Checks
   const legacyReady = releases.filter(r => r.contentReadinessState === 'ready');
   const missingTimestamps = releases.filter(r => !r.createdAt);
   console.log(`Legacy ready preservation:\n${legacyReady.length} / 3 PASS\n`);
@@ -158,13 +177,16 @@ async function run() {
 
   console.log(`Mismatches:\n${mismatches}\n`);
 
-  if (mismatches === 0 && hashMatches === 101 && projectionMatches === 101) {
-    console.log('P2-G3: PASS');
-  } else {
-    console.log('P2-G3: FAIL');
+  if (mismatches !== 0 || hashMatches !== 101 || projectionMatches !== 101) {
+    throw new Error('P2-G3 parity failed');
   }
 
+  console.log('P2-G3: PASS');
+  
   await pool.end();
 }
 
-run().catch(console.error);
+run().catch(err => {
+  console.error(err);
+  process.exitCode = 1;
+});
