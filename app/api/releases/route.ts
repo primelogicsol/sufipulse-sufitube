@@ -160,9 +160,17 @@ export async function GET(request: NextRequest) {
     // 8. sort
     const sortParam = sort || (searchParams.get('sort') as string | null) || 'newest';
     if (sortParam === 'newest') {
-      releases.sort((a, b) => new Date((b as any).releaseDate || (b as any).createdAt).getTime() - new Date((a as any).releaseDate || (a as any).createdAt).getTime());
+      releases.sort((a, b) => {
+        const ta = (a as any).releaseDate || ((a as any).publishedAt || (a as any).published_at) || ((a as any).createdAt || (a as any).created_at) ? new Date((a as any).releaseDate || ((a as any).publishedAt || (a as any).published_at) || ((a as any).createdAt || (a as any).created_at)).getTime() : -Infinity;
+        const tb = (b as any).releaseDate || ((b as any).publishedAt || (b as any).published_at) || ((b as any).createdAt || (b as any).created_at) ? new Date((b as any).releaseDate || ((b as any).publishedAt || (b as any).published_at) || ((b as any).createdAt || (b as any).created_at)).getTime() : -Infinity;
+        return ta === tb ? ((a as any).registryOrder || 0) - ((b as any).registryOrder || 0) : tb - ta;
+      });
     } else if (sortParam === 'oldest') {
-      releases.sort((a, b) => new Date((a as any).releaseDate || (a as any).createdAt).getTime() - new Date((b as any).releaseDate || (b as any).createdAt).getTime());
+      releases.sort((a, b) => {
+        const ta = (a as any).releaseDate || ((a as any).publishedAt || (a as any).published_at) || ((a as any).createdAt || (a as any).created_at) ? new Date((a as any).releaseDate || ((a as any).publishedAt || (a as any).published_at) || ((a as any).createdAt || (a as any).created_at)).getTime() : Infinity;
+        const tb = (b as any).releaseDate || ((b as any).publishedAt || (b as any).published_at) || ((b as any).createdAt || (b as any).created_at) ? new Date((b as any).releaseDate || ((b as any).publishedAt || (b as any).published_at) || ((b as any).createdAt || (b as any).created_at)).getTime() : Infinity;
+        return ta === tb ? ((a as any).registryOrder || 0) - ((b as any).registryOrder || 0) : ta - tb;
+      });
     } else if (sortParam === 'popular') {
       releases.sort((a, b) => ((b as any).viewCount || 0) - ((a as any).viewCount || 0));
     }

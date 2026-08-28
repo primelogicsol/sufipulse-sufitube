@@ -502,7 +502,7 @@ class CMSStorage {
     const releaseData: CMSRelease = {
       ...release,
       distribution,
-      updatedAt: release.updatedAt || now, // Keep existing updatedAt or set once
+      updatedAt: release.updatedAt || (release as any).updated_at || now, // Keep existing updatedAt or set once
       ...(release.createdAt && { createdAt: release.createdAt }),
       ...(release.status === 'published' && release.publishedAt && { publishedAt: release.publishedAt })
     };
@@ -539,13 +539,14 @@ class CMSStorage {
     let releases = Array.from(this.releases.values());
     
     // Normalize fields for consistent filtering/rendering
-    const normalized = releases.map(r => ({
+    const normalized = releases.map((r, index) => ({
       ...r,
       status: r.status || 'published',
       visibility: r.visibility || 'public',
       format: r.format || (r.durationSeconds <= 60 ? 'short' : 'video'),
       releaseType: r.releaseType || 'studio-release',
-      publishedAt: r.publishedAt || r.releaseDate || r.createdAt || r.updatedAt || new Date().toISOString(),
+      publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
+      registryOrder: index
     }));
 
     let filtered = normalized;
@@ -565,18 +566,16 @@ class CMSStorage {
   }
 
   getPublicReleases(limit?: number): CMSRelease[] {
-    const releases = Array.from(this.releases.values());
-    
-    // Normalize and Filter
-    const publicReleases = releases
-      .map(r => ({
+    const publicReleases = Array.from(this.releases.values())
+      .map((r, index) => ({
         ...r,
         status: r.status || 'published',
         visibility: r.visibility || 'public',
         format: r.format || (r.durationSeconds <= 60 ? 'short' : 'video'),
         releaseType: r.releaseType || 'studio-release',
         // Ensure we have a valid date for sorting
-        publishedAt: r.publishedAt || r.releaseDate || r.createdAt || r.updatedAt || new Date().toISOString(),
+        publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
+        registryOrder: index
       }))
       .filter(r => r.status === 'published' && r.visibility === 'public');
 

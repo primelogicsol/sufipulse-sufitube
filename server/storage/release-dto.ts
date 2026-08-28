@@ -6,8 +6,30 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   // Clone to avoid mutating in-memory cache or DB row directly
   const canonical = { ...release };
   
-  // Strip legacy snake_case fields that were accidentally preserved during DB migration
-  // and in the filesystem JSON.
+  // Map legacy snake_case fields that were accidentally preserved during DB migration
+  // and in the filesystem JSON, to ensure both backends output camelCase.
+  if (canonical.created_at && !canonical.createdAt) canonical.createdAt = canonical.created_at;
+  if (canonical.updated_at && !canonical.updatedAt) canonical.updatedAt = canonical.updated_at;
+  if (canonical.published_at && !canonical.publishedAt) canonical.publishedAt = canonical.published_at;
+  
+  // Normalization logic for dynamically generated defaults
+  canonical.visibility = canonical.visibility || 'public';
+  canonical.format = canonical.format || ((canonical.durationSeconds as any) <= 60 ? 'short' : 'video');
+  canonical.releaseType = canonical.releaseType || 'studio-release';
+  canonical.publishedAt = canonical.publishedAt || canonical.releaseDate || canonical.createdAt || canonical.created_at;
+
+  if (canonical.youtube_id && !canonical.youtubeId) canonical.youtubeId = canonical.youtube_id;
+  if (canonical.youtube_url && !canonical.youtubeUrl) canonical.youtubeUrl = canonical.youtube_url;
+  if (canonical.view_count && !canonical.viewCount) canonical.viewCount = canonical.view_count;
+  if (canonical.like_count && !canonical.likeCount) canonical.likeCount = canonical.like_count;
+  if (canonical.enable_lyrics && canonical.enableLyrics === undefined) canonical.enableLyrics = canonical.enable_lyrics;
+  if (canonical.enable_commentary && canonical.enableCommentary === undefined) canonical.enableCommentary = canonical.enable_commentary;
+  if (canonical.enable_sponsors && canonical.enableSponsors === undefined) canonical.enableSponsors = canonical.enable_sponsors;
+  if (canonical.enable_adoption && canonical.enableAdoption === undefined) canonical.enableAdoption = canonical.enable_adoption;
+  if (canonical.enable_credits && canonical.enableCredits === undefined) canonical.enableCredits = canonical.enable_credits;
+  if (canonical.show_views && canonical.showViews === undefined) canonical.showViews = canonical.show_views;
+  if (canonical.show_likes && canonical.showLikes === undefined) canonical.showLikes = canonical.show_likes;
+
   delete canonical.created_at;
   delete canonical.updated_at;
   delete canonical.published_at;
@@ -56,6 +78,15 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
 
   // Ensure dates that were previously initialized dynamically remain undefined if not in source data
   // (Handled by removing dynamic date fallback in lib/cms-storage.ts)
+
+  // Attach deterministic tie-breaker for strict API parity
+  if (typeof (release as any).registry_order === 'number') {
+    (canonical as any).registryOrder = (release as any).registry_order;
+    delete (canonical as any).registry_order;
+  }
+  if (typeof canonical.registryOrder === 'number') {
+    // If it was already added as registryOrder (e.g. from FS), just keep it.
+  }
 
   return canonical as CMSRelease;
 }

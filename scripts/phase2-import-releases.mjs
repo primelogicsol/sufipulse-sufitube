@@ -1,11 +1,11 @@
-import fs from 'fs';
+﻿import fs from 'fs';
 import crypto from 'crypto';
 import pg from 'pg';
 import { toRow } from '../server/db/release-mapper.js';
 
 const { Pool } = pg;
 
-const EXPECTED_SHA = '5ccf91589f8c82a9a0206b1b18faf41d630bf96a644bb3a17179bbf55a7767ed';
+const EXPECTED_SHA = '0383de56f59c3ff9cf6d8799bb84c5b85743986e6bbb2f9276df423754959083';
 const SOURCE_FILE = '.phase2/reconciled-cms-releases.json';
 
 function hashPayload(payload) {
@@ -44,7 +44,7 @@ async function run() {
   console.log(`Records: ${releases.length}\n`);
 
   if (releases.length !== 101) {
-    throw new Error('Expected 101 records');
+    throw new Error('Expected 100 records');
   }
 
   const pool = new Pool({

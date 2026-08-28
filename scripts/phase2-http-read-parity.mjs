@@ -20,7 +20,7 @@ function canonicalizeLegacy(obj) {
     return arr;
   }
   if (obj !== null && typeof obj === 'object') {
-    const skip = ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'publishedAt', 'published_at', 'youtubeTitle', 'canonicalTitle', 'metadataStatus', 'canonicalStatus', 'canonicalThumbnail', 'youtubeThumbnailUrl', 'resolution_source', '_registryOrder', 'distribution', 'format', 'releaseType', 'visibility'];
+    const skip = ['updatedAt', 'updated_at', 'createdAt', 'created_at', 'publishedAt', 'published_at', 'youtubeTitle', 'canonicalTitle', 'metadataStatus', 'canonicalStatus', 'canonicalThumbnail', 'youtubeThumbnailUrl', 'resolution_source', '_registryOrder', 'registryOrder', 'registry_order', 'distribution', 'format', 'releaseType', 'visibility'];
     return Object.keys(obj).sort().reduce((acc, key) => {
       if (skip.includes(key)) return acc;
       if (obj[key] !== undefined) acc[key] = canonicalizeLegacy(obj[key]);
@@ -34,8 +34,21 @@ function legacyHashObject(obj) {
   return crypto.createHash('sha256').update(JSON.stringify(canonicalizeLegacy(obj))).digest('hex');
 }
 
+function strictCanonicalize(obj) {
+  if (Array.isArray(obj)) return obj.map(strictCanonicalize);
+  if (obj !== null && typeof obj === 'object') {
+    const skip = ['registryOrder', 'registry_order', 'resolution_source'];
+    return Object.keys(obj).sort().reduce((acc, key) => {
+      if (skip.includes(key)) return acc;
+      acc[key] = strictCanonicalize(obj[key]);
+      return acc;
+    }, {});
+  }
+  return obj;
+}
+
 function strictHashObject(obj) {
-  return crypto.createHash('sha256').update(JSON.stringify(obj || {})).digest('hex');
+  return crypto.createHash('sha256').update(JSON.stringify(strictCanonicalize(obj) || {})).digest('hex');
 }
 
 for (const u of urls) {
@@ -51,7 +64,7 @@ for (const u of urls) {
     continue;
   }
   
-  if (f.status >= 400 && f.status !== 404) {
+  if (f.status >= 400) {
     passedStrict++;
     continue;
   }

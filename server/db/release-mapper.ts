@@ -23,10 +23,10 @@ export function projectRelease(release: any): ReleaseProjection {
     youtubeChannelUrl: release.youtubeChannelUrl ?? null,
     youtubePlaylistId: release.youtubePlaylistId ?? null,
 
-    status: release.status,
-    visibility: release.visibility ?? null,
-    format: release.format ?? null,
-    releaseType: release.releaseType ?? null,
+    status: release.status || 'published',
+    visibility: release.visibility || 'public',
+    format: release.format || ((release.durationSeconds as any) <= 60 ? 'short' : 'video'),
+    releaseType: release.releaseType || 'studio-release',
     category: release.category ?? null,
     source: release.source ?? null,
 
@@ -41,8 +41,8 @@ export function projectRelease(release: any): ReleaseProjection {
     producerName: release.producer?.name ?? null,
     tags: Array.isArray(release.tags) ? release.tags : null,
 
-    releaseDate: release.releaseDate ?? null,
-    publishedAt: release.publishedAt ?? null,
+    releaseDate: (release.releaseDate || release.release_date) ?? null,
+    publishedAt: (release.publishedAt || release.published_at) ?? null,
 
     durationSeconds: release.durationSeconds ?? null,
     durationFormatted: release.durationFormatted ?? null,
@@ -57,8 +57,8 @@ export function projectRelease(release: any): ReleaseProjection {
     enableAdoption: release.enableAdoption ?? null,
     enableCredits: release.enableCredits ?? null,
 
-    createdAt: release.createdAt ?? null,
-    updatedAt: release.updatedAt ?? null,
+    createdAt: (release.createdAt || release.created_at) ?? null,
+    updatedAt: (release.updatedAt || release.updated_at) ?? null,
     
     registryOrder: release.registryOrder ?? null,
   };
@@ -99,7 +99,7 @@ export function toRow(release: any): Omit<ReleaseRow, 'db_created_at' | 'db_upda
     producer_name: p.producerName,
     tags: p.tags,
     release_date: p.releaseDate ? new Date(p.releaseDate) : null,
-    published_at: p.publishedAt ? new Date(p.publishedAt) : null,
+    published_at: (p.publishedAt || release.published_at) ? new Date(p.publishedAt || release.published_at) : null,
     duration_seconds: p.durationSeconds,
     duration_formatted: p.durationFormatted,
     view_count: p.viewCount,
@@ -111,8 +111,8 @@ export function toRow(release: any): Omit<ReleaseRow, 'db_created_at' | 'db_upda
     enable_sponsors: p.enableSponsors,
     enable_adoption: p.enableAdoption,
     enable_credits: p.enableCredits,
-    created_at: p.createdAt ? new Date(p.createdAt) : null,
-    updated_at: p.updatedAt ? new Date(p.updatedAt) : null,
+    created_at: (p.createdAt || release.created_at) ? new Date(p.createdAt || release.created_at) : null,
+    updated_at: (p.updatedAt || release.updated_at) ? new Date(p.updatedAt || release.updated_at) : null,
     registry_order: p.registryOrder,
     payload: structuredClone(release),
   };
@@ -121,5 +121,9 @@ export function toRow(release: any): Omit<ReleaseRow, 'db_created_at' | 'db_upda
 export function fromRow(row: ReleaseRow): PersistedCMSRelease {
   // Rely purely on the exact preserved payload, do not reconstruct from columns
   // This preserves exact original representation of undefined vs null etc.
-  return structuredClone(row.payload);
+  const obj = structuredClone(row.payload);
+  if (typeof row.registry_order === 'number') {
+    (obj as any).registry_order = row.registry_order;
+  }
+  return obj;
 }

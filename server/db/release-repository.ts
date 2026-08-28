@@ -195,15 +195,21 @@ export class PostgresReleaseRepository {
     }
 
     // Sorting
-    let orderBy = 'COALESCE(release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
+    // Default base order matches cmsStorage.ts sortReleases('all') which prefers publishedAt
+    let orderBy = 'COALESCE(published_at, release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
+    
     if (query.sort === 'newest' || !query.sort) {
-      orderBy = 'COALESCE(release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
+      // route.ts specifically overrides newest to prefer releaseDate and strips time tiebreaker
+      orderBy = 'COALESCE(release_date, published_at, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
     } else if (query.sort === 'oldest') {
-      orderBy = 'COALESCE(release_date, created_at) ASC NULLS LAST, registry_order ASC NULLS LAST';
+      // route.ts specifically overrides oldest to prefer releaseDate
+      orderBy = 'COALESCE(release_date, published_at, created_at) ASC NULLS LAST, registry_order ASC NULLS LAST';
     } else if (query.sort === 'popular') {
-      orderBy = 'COALESCE(view_count, 0) DESC, registry_order ASC NULLS LAST';
+      // route.ts sorts by viewCount, relying on stable sort from cmsStorage.ts (prefers publishedAt)
+      orderBy = 'COALESCE(view_count, 0) DESC, COALESCE(published_at, release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
     } else if (query.sort === 'default') {
-      orderBy = 'registry_order ASC NULLS LAST';
+      // sort=default ignores route.ts sorting and relies entirely on cmsStorage.ts sortReleases('all')
+      orderBy = 'COALESCE(published_at, release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
     }
 
     // Pagination

@@ -1,0 +1,66 @@
+{
+  "createdAt": "2026-08-28T16:20:33.547Z",
+  "created_at": "2026-06-06T09:34:01.664Z",
+  "distribution": {
+    "apple_music": {
+      "isVerified": false,
+      "isVisible": true,
+      "platform": "apple_music",
+      "status": "not_started"
+    },
+    "facebook": {
+      "isVerified": false,
+      "isVisible": true,
+      "platform": "facebook",
+      "status": "not_started"
+    },
+    "instagram": {
+      "isVerified": false,
+      "isVisible": true,
+      "platform": "instagram",
+      "status": "not_started"
+    },
+    "spotify": {
+      "isVerified": false,
+      "isVisible": true,
+      "platform": "spotify",
+      "status": "not_started"
+    },
+    "sufipulse_radio": {
+      "isVerified": false,
+      "isVisible": true,
+      "platform": "sufipulse_radio",
+      "status": "not_started"
+    },
+    "x": {
+      "isVerified": false,
+      "isVisible": true,
+      "platform": "x",
+      "status": "not_started"
+    },
+    "youtube": {
+      "isVerified": false,
+      "isVisible": true,
+      "platform": "youtube",
+      "status": "not_started"
+    }
+  },
+  "enable_adoption": false,
+  "enable_commentary": true,
+  "enable_credits": true,
+  "enable_lyrics": true,
+  "enable_sponsors": true,
+  "govType": "native_governed",
+  "governanceOrigin": "native_governed",
+  "like_count": 191,
+  "publishedAt": "2026-08-28T16:20:33.547Z",
+  "published_at": "2026-06-06T09:34:01.663Z",
+  "show_likes": true,
+  "show_views": true,
+  "status": "published",
+  "title": "Nund Rishi: The Voice of Kashmir's Spiritual Conscience",
+  "updated_at": "2026-06-06T09:34:01.664Z",
+  "view_count": 3520,
+  "youtube_id": "xVz_4h8oJ11",
+  "youtube_url": "https://www.youtube.com/watch?v=xVz_4h8oJ11"
+}
