@@ -1,7 +1,6 @@
 ﻿import * as fs from 'fs';
 import * as path from 'path';
-
-export const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), '.data');
+import { DATA_DIR } from './server-data-dir';
 
 const CHECKPOINT_FILE = path.join(DATA_DIR, 'youtube-release-sync-checkpoint.json');
 const AUDIT_FILE = path.join(DATA_DIR, 'youtube-release-sync-audit.jsonl');
@@ -51,13 +50,9 @@ export const syncCheckpointService = {
   },
 
   appendAudit(run: SyncAuditRun): void {
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      fs.appendFileSync(AUDIT_FILE, JSON.stringify(run) + '\n', 'utf8');
-    } catch (e) {
-      console.error('[SyncAudit] Failed to write audit log', e);
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
     }
+    fs.appendFileSync(AUDIT_FILE, JSON.stringify(run) + '\n', 'utf8');
   }
 };

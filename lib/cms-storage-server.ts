@@ -5,26 +5,7 @@ import { cmsStorage, type CMSRelease } from '@/lib/cms-storage';
 import { getBestReleaseDate } from './release-utils';
 import { graphResolver } from './graph-resolver';
 
-/**
- * Robust Data Directory Resolution
- * We MUST use the absolute path /app/.data in production (Docker)
- * to ensure data is written to the persistent volume.
- */
-const resolveDataDir = () => {
-  // 1. Environment variable override
-  if (process.env.DATA_DIR) return process.env.DATA_DIR;
-  
-  // 2. Explicit Docker persistent volume path (Highest priority in production)
-  // We check /app/.data which is where the volume is mounted in docker-compose.yml
-  if (fs.existsSync('/app/.data')) {
-    return '/app/.data';
-  }
-  
-  // 3. Fallback to local root
-  return path.join(process.cwd(), '.data');
-};
-
-const SERVER_DATA_DIR = resolveDataDir();
+import { DATA_DIR as SERVER_DATA_DIR } from './server-data-dir';
 const SERVER_DATA_FILE = path.join(SERVER_DATA_DIR, 'cms-releases.json');
 const REQUESTS_DATA_FILE = path.join(SERVER_DATA_DIR, 'lyrics-requests.json');
 const SEED_FILE = path.join(process.cwd(), 'lib', 'cms-seed-releases.json');

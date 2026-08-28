@@ -3,7 +3,9 @@ import { cmsServerStorage } from './cms-storage-server';
 
 
 export function initializeCanonicalTitle(youtubeTitle: string): string {
-  if (!youtubeTitle) return 'Untitled Release';
+  if (!youtubeTitle || !youtubeTitle.trim()) {
+    throw new Error('Release validation failed: Missing canonical title');
+  }
   
   // 1. Normalize whitespace
   let title = youtubeTitle.replace(/\s+/g, ' ').trim();
@@ -15,7 +17,13 @@ export function initializeCanonicalTitle(youtubeTitle: string): string {
   
   // 3. Take leading identity segment before first spaced pipe separator
   const parts = title.split(' | ');
-  return parts[0].trim() || 'Untitled Release';
+  const finalTitle = parts[0].trim();
+  
+  if (!finalTitle) {
+    throw new Error('Release validation failed: Missing canonical title after normalization');
+  }
+  
+  return finalTitle;
 }
 
 export const slugify = (value: string): string => {
@@ -48,12 +56,13 @@ export const buildUniqueSlug = (title: string, youtubeId: string, currentRelease
 };
 
 export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease => {
-  // Standardize ID: Use existing or create with prefix to match local convention
-  const id = existing?.id || `release_${Date.now()}_${video.id}`;
-  const slug = existing?.slug || buildUniqueSlug(video.title || video.snippet?.title || 'Untitled', video.id, existing?.id);
-  const now = new Date().toISOString();
-  
-  const title = video.title || video.snippet?.title || '';
+    const rawTitle = video.title || video.snippet?.title || '';
+    const governedCanonicalTitle = existing?.canonicalTitle || existing?.title || initializeCanonicalTitle(rawTitle);
+    
+    const id = existing?.id || `release_${Date.now()}_${video.id}`;
+    const slug = existing?.slug || buildUniqueSlug(governedCanonicalTitle, video.id, existing?.id);
+    const now = new Date().toISOString();
+    const title = rawTitle;
   const thumbnailUrl = video.thumbnailUrl || video.snippet?.thumbnails?.maxres?.url || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || '';
   const durationFormatted = video.durationFormatted || '0:00';
   const durationSeconds = Number(video.durationSeconds || 0);
@@ -93,9 +102,9 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
     
     // Canonical identity: strictly preserve existing Registry Authority if present
-    title: existing?.canonicalTitle || existing?.title || initializeCanonicalTitle(title),
-    canonicalTitle: existing?.canonicalTitle || existing?.title || initializeCanonicalTitle(title),
-    canonicalStatus: existing?.canonicalStatus || 'inferred',
+    title: governedCanonicalTitle,
+    canonicalTitle: governedCanonicalTitle,
+    canonicalStatus: existing?.canonicalStatus || (existing ? 'verified' : 'inferred'),
     governanceOrigin: existing?.governanceOrigin || 'native_governed',
     youtubeTitleVariantA: existing?.youtubeTitleVariantA,
     youtubeTitleVariantB: existing?.youtubeTitleVariantB,
