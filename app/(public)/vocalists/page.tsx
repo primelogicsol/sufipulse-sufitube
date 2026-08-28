@@ -71,12 +71,12 @@ export default function Vocalists() {
 
   return (
     <Layout>
-      {/* Cinematic Hero Section with /banner4.png */}
+      {/* Cinematic Hero Section with /banner5.png */}
       <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
         {/* Cinematic Background Banner */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
-            src="/banner4.png"
+            src="/banner5.png"
             alt="SufiPulse Vocalists & Sacred Vocal Recording Session"
             fill
             priority
