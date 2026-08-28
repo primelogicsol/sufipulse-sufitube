@@ -123,7 +123,7 @@ function formatDuration(seconds: number): string {
 
 function inferFormat(durationSeconds: number, hasLiveDetails: boolean): ReadOnlyYouTubeVideo['format'] {
   if (hasLiveDetails) return 'live';
-  if (durationSeconds > 0 && durationSeconds <= 180) return 'short';
+  // Removed duration-based short inference
   return 'video';
 }
 

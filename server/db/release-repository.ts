@@ -163,17 +163,17 @@ export class PostgresReleaseRepository {
       if (query.duration === 'default') {
         whereSql += ` AND duration_seconds >= 180 AND format IS DISTINCT FROM 'short'`;
       } else if (query.duration === 'short') {
-        whereSql += ` AND duration_seconds > 0 AND duration_seconds < 180`;
+        whereSql += ` AND duration_seconds > 0 AND duration_seconds < 180 AND format IS DISTINCT FROM 'short'`;
       } else if (query.duration === 'standard') {
-        whereSql += ` AND duration_seconds >= 180 AND duration_seconds <= 480`;
+        whereSql += ` AND duration_seconds >= 180 AND duration_seconds <= 480 AND format IS DISTINCT FROM 'short'`;
       } else if (query.duration === 'long') {
-        whereSql += ` AND duration_seconds > 480`;
+        whereSql += ` AND duration_seconds > 480 AND format IS DISTINCT FROM 'short'`;
       }
     }
 
     // Year
     if (query.year && query.year.toLowerCase() !== 'all') {
-      whereSql += ` AND EXTRACT(YEAR FROM COALESCE(release_date, published_at, created_at)) = $${paramIndex++}`;
+      whereSql += ` AND EXTRACT(YEAR FROM (CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END)) = $${paramIndex++}`;
       values.push(parseInt(query.year, 10));
     }
 
@@ -196,20 +196,20 @@ export class PostgresReleaseRepository {
 
     // Sorting
     // Default base order matches cmsStorage.ts sortReleases('all') which prefers publishedAt
-    let orderBy = 'COALESCE(published_at, release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
+    let orderBy = `(CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END) DESC NULLS LAST, registry_order ASC NULLS LAST`;
     
     if (query.sort === 'newest' || !query.sort) {
       // route.ts specifically overrides newest to prefer releaseDate and strips time tiebreaker
-      orderBy = 'COALESCE(release_date, published_at, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
+      orderBy = `(CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END) DESC NULLS LAST, registry_order ASC NULLS LAST`;
     } else if (query.sort === 'oldest') {
       // route.ts specifically overrides oldest to prefer releaseDate
-      orderBy = 'COALESCE(release_date, published_at, created_at) ASC NULLS LAST, registry_order ASC NULLS LAST';
+      orderBy = `(CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END) ASC NULLS LAST, registry_order ASC NULLS LAST`;
     } else if (query.sort === 'popular') {
       // route.ts sorts by viewCount, relying on stable sort from cmsStorage.ts (prefers publishedAt)
-      orderBy = 'COALESCE(view_count, 0) DESC, COALESCE(published_at, release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
+      orderBy = `COALESCE(view_count, 0) DESC, (CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END) DESC NULLS LAST, registry_order ASC NULLS LAST`;
     } else if (query.sort === 'default') {
       // sort=default ignores route.ts sorting and relies entirely on cmsStorage.ts sortReleases('all')
-      orderBy = 'COALESCE(published_at, release_date, created_at) DESC NULLS LAST, registry_order ASC NULLS LAST';
+      orderBy = `(CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END) DESC NULLS LAST, registry_order ASC NULLS LAST`;
     }
 
     // Pagination
@@ -233,9 +233,9 @@ export class PostgresReleaseRepository {
     let facets = undefined;
     if (query.facets) {
       const facetSql = `
-        SELECT EXTRACT(YEAR FROM COALESCE(release_date, published_at, created_at)) as year, COUNT(*) as count 
+        SELECT EXTRACT(YEAR FROM (CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END)) as year, COUNT(*) as count 
         FROM releases 
-        WHERE ${whereSql} AND COALESCE(release_date, published_at, created_at) IS NOT NULL
+        WHERE ${whereSql} AND (CASE WHEN governance_origin = 'native_governed' THEN COALESCE(published_at, release_date, created_at) ELSE COALESCE(release_date, published_at, created_at) END) IS NOT NULL
         GROUP BY year 
         ORDER BY year DESC
       `;

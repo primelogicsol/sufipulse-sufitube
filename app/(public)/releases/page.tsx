@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { PrimaryButton } from '../../components/primitives/PrimaryButton';
@@ -214,7 +214,7 @@ function SyncResultModal({
                                             </h4>
                                             <div className="flex items-center gap-3 text-[10px] text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest">
                                                 <span>Published {new Date(result.diagnostic.publishedAt).toLocaleDateString()}</span>
-                                                <span className="text-white/10">•</span>
+                                                <span className="text-white/10">â€¢</span>
                                                 <span className="flex items-center gap-1">
                                                     ID: {result.diagnostic.youtubeId}
                                                     <a href={`https://youtube.com/watch?v=${result.diagnostic.youtubeId}`} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">
@@ -272,11 +272,11 @@ function SyncResultModal({
                                         }`}>
                                             <p className="text-xs font-medium leading-relaxed">
                                                 {result.diagnostic.publicVisibleAfterSync && result.diagnostic.visibleUnderCurrentFilters ? (
-                                                    <span className="text-emerald-200/70">✓ Latest upload is imported and visible on this page.</span>
+                                                    <span className="text-emerald-200/70">âœ“ Latest upload is imported and visible on this page.</span>
                                                 ) : !result.diagnostic.publicVisibleAfterSync ? (
-                                                    <span className="text-amber-200/70">⚠ Imported successfully, but restricted. Reason: {result.diagnostic.reasonHiddenAfterSync}.</span>
+                                                    <span className="text-amber-200/70">âš  Imported successfully, but restricted. Reason: {result.diagnostic.reasonHiddenAfterSync}.</span>
                                                 ) : (
-                                                    <span className="text-amber-200/70">⚠ Imported successfully, but hidden by active UI filters: {result.diagnostic.activeFilters?.length ? result.diagnostic.activeFilters.join(', ') : 'None'}.</span>
+                                                    <span className="text-amber-200/70">âš  Imported successfully, but hidden by active UI filters: {result.diagnostic.activeFilters?.length ? result.diagnostic.activeFilters.join(', ') : 'None'}.</span>
                                                 )}
                                             </p>
                                         </div>
@@ -346,7 +346,7 @@ export default function Releases() {
     const [currentPage, setCurrentPage] = useState(1);
     const [serverTotalPages, setServerTotalPages] = useState(1);
     const [serverCount, setServerCount] = useState(0);
-    // Server-returned year facets — covers full filtered catalogue, not just current page
+    // Server-returned year facets â€” covers full filtered catalogue, not just current page
     const [facetYears, setFacetYears] = useState<number[]>([]);
 
 
@@ -362,7 +362,7 @@ export default function Releases() {
     /**
      * Builds the API query URL from filter state and fetches paginated results.
      * ALL filtering, sorting, and pagination happen server-side.
-     * Server applies: status → governance → search → format → duration → year → sort → THEN paginate.
+     * Server applies: status â†’ governance â†’ search â†’ format â†’ duration â†’ year â†’ sort â†’ THEN paginate.
      * Count and totalPages reflect the filtered total, not the full registry.
      */
     const fetchVideos = async (
@@ -394,7 +394,7 @@ export default function Releases() {
 
             if (ft && ft !== 'all') params.set('governance', ft);
             if (ff && ff !== 'all') params.set('format', ff);
-            if (df && df !== 'all') params.set('duration', df);
+            if (ff !== 'short' && df && df !== 'all') params.set('duration', df);
             if (yf && yf !== 'all') params.set('year', yf);
             if (so && so !== 'default') params.set('sort', so);
             if (sq && sq.trim()) params.set('search', sq.trim());
@@ -411,6 +411,9 @@ export default function Releases() {
                 const source = r.source || 'native';
                 const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
                 const durationFormatted = r.durationFormatted || r.duration || formatSeconds(durationSecs);
+                const effectiveDate = r.governanceOrigin === 'native_governed' || r.govType === 'native_governed'
+                        ? (r.publishedAt || r.releaseDate || r.createdAt)
+                        : (r.releaseDate || r.publishedAt || r.createdAt);
                 const canonicalTitle = r.canonicalTitle || r.title || 'Untitled Release';
                 const youtubeTitle = r.youtubeTitle || r.youtubeStats?.title || '';
                 const govType = r.governanceOrigin || (r.source === 'native' ? 'native_governed' : (r.govType || 'native_governed'));
@@ -424,8 +427,8 @@ export default function Releases() {
                     youtubeTitle: youtubeTitle,
                     description: r.description || '',
                     thumbnailUrl: r.canonicalThumbnail || r.thumbnail || r.thumbnailUrl || '',
-                    publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
-                    publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
+                    publishedAt: effectiveDate,
+                    publishedDate: effectiveDate,
                     durationSeconds: durationSecs,
                     durationFormatted: durationFormatted,
                     views: Number(r.views || r.viewCount || 0),
@@ -477,7 +480,7 @@ export default function Releases() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
-            // import-youtube route calls revalidatePath('/releases') — re-fetch via normal GET
+            // import-youtube route calls revalidatePath('/releases') â€” re-fetch via normal GET
             await fetchVideos({}, true);
             setSyncResult(data);
             setSyncModalOpen(true);
@@ -490,7 +493,7 @@ export default function Releases() {
         }
     };
 
-    // Knowledge data — loaded once on mount, independent of release fetching
+    // Knowledge data â€” loaded once on mount, independent of release fetching
     useEffect(() => {
         fetch('/api/knowledge')
             .then(res => res.json())
@@ -498,11 +501,11 @@ export default function Releases() {
             .catch(err => console.error('Failed to load knowledge data:', err));
     }, []);
 
-    // ── SINGLE consolidated fetch effect ──────────────────────────────────────
+    // â”€â”€ SINGLE consolidated fetch effect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Replaces three separate effects (initial-load, filter-change, page-change).
     // React 18 automatic batching ensures that filter-change handlers calling
     // both setFilter(x) AND setCurrentPage(1) in the same event cause only one
-    // render and therefore only one effect invocation → one fetch.
+    // render and therefore only one effect invocation â†’ one fetch.
     //
     // Search changes are debounced 350ms. All other dependency changes are immediate.
     // Initial mount naturally triggers one fetch with the default filter state.
@@ -573,7 +576,7 @@ export default function Releases() {
 
     return (
         <>
-            {/* ── 01. Dedicated ReleaseArchiveHero with banner28.png ── */}
+            {/* â”€â”€ 01. Dedicated ReleaseArchiveHero with banner28.png â”€â”€ */}
             <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
                 {/* Cinematic Background Banner */}
                 <div className="absolute inset-0 z-0 pointer-events-none">
@@ -597,7 +600,7 @@ export default function Releases() {
                             <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
                                 <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
                                 <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                                    SufiPulse USA — Official Release Archive
+                                    SufiPulse USA â€” Official Release Archive
                                 </span>
                             </div>
 
@@ -645,7 +648,7 @@ export default function Releases() {
                 </div>
             </section>
 
-            {/* ── 02. Featured Release Spotlight ── */}
+            {/* â”€â”€ 02. Featured Release Spotlight â”€â”€ */}
             {featuredRelease && (
                 <section className="py-16 bg-gradient-to-b from-[var(--color-midnight)] to-[var(--color-slate)] border-b border-white/5">
                     <PageContainer>
@@ -693,9 +696,9 @@ export default function Releases() {
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-3 text-xs text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest">
                                                 <span>{new Date(featuredRelease.publishedDate).getFullYear() || 2026}</span>
-                                                <span>•</span>
+                                                <span>â€¢</span>
                                                 <span>{featuredRelease.format.toUpperCase()}</span>
-                                                <span>•</span>
+                                                <span>â€¢</span>
                                                 <span>{(Number(featuredRelease.views) || 0).toLocaleString()} Views</span>
                                             </div>
                                             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
@@ -748,7 +751,7 @@ export default function Releases() {
                 </section>
             )}
 
-            {/* ── 04. Browse the Archive (Search + Filters Toolbar) ── */}
+            {/* â”€â”€ 04. Browse the Archive (Search + Filters Toolbar) â”€â”€ */}
             <div id="browse-releases">
                 <Section background="midnight" spacing="normal">
                     <PageContainer>
@@ -817,7 +820,7 @@ export default function Releases() {
                                                 onChange={(e) => { setFilterType(e.target.value as FilterType); setCurrentPage(1); }}
                                                 className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
                                             >
-                                                <option value="all">All Statuses</option>
+                                                <option value="all">All Releases</option>
                                                 <option value="native_governed">Governed Release</option>
                                                 <option value="legacy_registry">Legacy Registry</option>
                                             </select>
@@ -828,7 +831,12 @@ export default function Releases() {
                                             <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Format</label>
                                             <select 
                                                 value={filterFormat} 
-                                                onChange={(e) => { setFilterFormat(e.target.value as FormatFilter); setCurrentPage(1); }}
+                                                onChange={(e) => { 
+                                                    const val = e.target.value as FormatFilter;
+                                                    setFilterFormat(val); 
+                                                    if (val === 'short') setDurationFilter('all');
+                                                    setCurrentPage(1); 
+                                                }}
                                                 className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
                                             >
                                                 <option value="all">All Formats</option>
@@ -839,19 +847,26 @@ export default function Releases() {
                                             </select>
                                         </div>
 
-                                        {/* Duration */}
+                                                                                {/* Duration */}
                                         <div className="flex flex-col gap-1.5">
                                             <label className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold ml-1">Duration</label>
                                             <select 
-                                                value={durationFilter} 
+                                                value={filterFormat === 'short' ? 'not_applicable' : durationFilter} 
                                                 onChange={(e) => { setDurationFilter(e.target.value as DurationFilter); setCurrentPage(1); }}
-                                                className="bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none focus:border-[var(--color-gold)]/50 transition-colors cursor-pointer w-full text-[var(--color-text-primary)]"
+                                                disabled={filterFormat === 'short'}
+                                                className={`bg-[var(--color-midnight)] border border-white/10 text-xs rounded-xl px-3 py-3 outline-none transition-colors w-full text-[var(--color-text-primary)] ${filterFormat === 'short' ? 'opacity-50 cursor-not-allowed' : 'focus:border-[var(--color-gold)]/50 cursor-pointer'}`}
                                             >
-                                                <option value="default">Default (Standard/Long)</option>
-                                                <option value="all">Any Duration</option>
-                                                <option value="short">Short (&lt; 3m)</option>
-                                                <option value="standard">Standard (3-8m)</option>
-                                                <option value="long">Long (&gt; 8m)</option>
+                                                {filterFormat === 'short' ? (
+                                                    <option value="not_applicable">Not applicable to Shorts</option>
+                                                ) : (
+                                                    <>
+                                                        <option value="default">Default (Standard/Long)</option>
+                                                        <option value="all">Any Duration</option>
+                                                        <option value="short">Brief (&lt; 3m)</option>
+                                                        <option value="standard">Standard (3-8m)</option>
+                                                        <option value="long">Long (&gt; 8m)</option>
+                                                    </>
+                                                )}
                                             </select>
                                         </div>
 
@@ -887,7 +902,7 @@ export default function Releases() {
                             </div>
                         </div>
 
-                        {/* ── 05. Release Catalogue Grid ── */}
+                        {/* â”€â”€ 05. Release Catalogue Grid â”€â”€ */}
                         {loading ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {[...Array(8)].map((_, i) => (
@@ -941,7 +956,7 @@ export default function Releases() {
                                             <Link 
                                                 key={release.id || release.slug || release.title} 
                                                 href={`/release-detail/${release.slug || release.youtubeId || release.id}`}
-                                                className="group flex flex-col bg-[#101a33] border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/40 transition-all duration-300 shadow-xl min-h-[440px]"
+                                                className="group flex flex-col bg-[#101a33] border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/40 transition-all duration-300 shadow-xl"
                                             >
                                                 <div className="relative aspect-video overflow-hidden bg-black">
                                                     <img 
@@ -965,17 +980,16 @@ export default function Releases() {
                                                     )}
                                                 </div>
                                                 
-                                                <div className="p-5 flex flex-col flex-1 gap-3">
-                                                    <div className="flex items-center gap-2 shrink-0">
-                                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded ${
+                                                <div className="p-5 flex flex-col gap-5">
+                                                    <div className="flex justify-between items-center shrink-0">
+                                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full ${
                                                             release.govType === 'native_governed' 
-                                                                ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20' 
-                                                                : 'bg-white/5 text-zinc-400 border border-white/10'
+                                                                ? 'text-[var(--color-gold)] border border-[var(--color-gold)]/40' 
+                                                                : 'text-zinc-400 border border-white/20'
                                                         }`}>
                                                             {release.govType === 'native_governed' ? 'Governed Release' : 'Legacy Registry'}
                                                         </span>
-                                                        <span className="text-[10px] text-white/20">•</span>
-                                                        <span className="text-[10px] text-white/40 uppercase tracking-[0.2em]">
+                                                        <span className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em]">
                                                             {release.format}
                                                         </span>
                                                     </div>
@@ -984,33 +998,12 @@ export default function Releases() {
                                                         {release.title}
                                                     </h3>
 
-                                                    {/* Authorship Chain line */}
-                                                    {(release.vocalist || release.writer) && (
-                                                        <div className="text-xs text-[var(--color-text-tertiary)] space-y-1 line-clamp-2 pt-1 border-t border-white/5">
-                                                            {release.vocalist && (
-                                                                <div className="flex items-center gap-1.5 truncate">
-                                                                    <Mic className="w-3 h-3 text-[var(--color-gold)] shrink-0 opacity-75" />
-                                                                    <span className="truncate text-white/80">{release.vocalist}</span>
-                                                                </div>
-                                                            )}
-                                                            {release.writer && (
-                                                                <div className="flex items-center gap-1.5 truncate">
-                                                                    <Feather className="w-3 h-3 text-amber-300 shrink-0 opacity-75" />
-                                                                    <span className="truncate text-zinc-400">{release.writer}</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                    
-                                                    <div className="mt-auto flex items-center justify-between pt-3 text-xs text-zinc-400 font-medium shrink-0 border-t border-white/5">
-                                                        <div className="flex items-center gap-3">
+                                                    <div className="flex items-center justify-between text-[11px] text-white/40 font-bold uppercase tracking-wider mt-1">
+                                                        <div className="flex items-center gap-4">
+                                                            <span>{new Date(release.publishedDate || new Date().toISOString()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                                                             <div className="flex items-center gap-1.5">
-                                                                <Calendar className="w-3.5 h-3.5 opacity-50" />
-                                                                <span>{!isNaN(releaseYear) ? releaseYear : 2026}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5">
-                                                                <Eye className="w-3.5 h-3.5 opacity-50" />
-                                                                <span>{(Number(release.views) || 0).toLocaleString()}</span>
+                                                                <div className="w-1 h-1 rounded-full bg-[var(--color-gold)]" />
+                                                                <span>{(Number(release.views) || 0).toLocaleString()} views</span>
                                                             </div>
                                                         </div>
                                                         {release.source === 'youtube' && (
@@ -1065,7 +1058,7 @@ export default function Releases() {
                 </Section>
             </div>
 
-            {/* ── 06. Archive & Governance Explanation ── */}
+            {/* â”€â”€ 06. Archive & Governance Explanation â”€â”€ */}
             <Section background="slate" spacing="normal">
                 <PageContainer>
                     <div className="max-w-6xl mx-auto">
@@ -1094,14 +1087,14 @@ export default function Releases() {
                 </PageContainer>
             </Section>
 
-            {/* ── 07. SufiPulse Global Reach Intelligence Strip ── */}
+            {/* â”€â”€ 07. SufiPulse Global Reach Intelligence Strip â”€â”€ */}
             <div className="bg-[var(--color-midnight)] border-t border-b border-white/5 py-12">
                 <PageContainer>
                     <GlobalReachStrip />
                 </PageContainer>
             </div>
 
-            {/* ── 08. Official Listening Destinations Panel ── */}
+            {/* â”€â”€ 08. Official Listening Destinations Panel â”€â”€ */}
             <StudioGovernancePanel 
                 title="Official Broadcast Endpoints"
                 description="Stream authentic SufiPulse master releases 24/7 across our verified streaming platforms, continuous radio service, and official YouTube channel."

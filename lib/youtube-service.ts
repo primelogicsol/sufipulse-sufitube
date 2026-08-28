@@ -3,7 +3,7 @@
 /**
  * Format inference priority (from YouTube API data):
  *  1. liveStreamingDetails present â†’ 'live'
- *  2. durationSeconds <= 60        â†’ 'short'  (YouTube Shorts heuristic)
+ *  2. Removed duration-based short inference (must be governed or explicitly parsed)
  *  3. default                      â†’ 'video'
  *
  * 'audio' and 'playlist' are admin-only designations â€” YouTube does not
@@ -13,7 +13,7 @@ export type ReleaseFormat = 'video' | 'audio' | 'short' | 'live' | 'playlist';
 
 function inferFormat(durationSeconds: number, hasLiveDetails: boolean): ReleaseFormat {
     if (hasLiveDetails) return 'live';
-    if (durationSeconds > 0 && durationSeconds <= 180) return 'short';
+    // Removed duration-based short inference per governance rule
     return 'video';
 }
 

@@ -168,6 +168,8 @@ export interface Kalam {
   themes: string[];
   notes?: string;
   writing_style?: string;
+  youtube_content_type?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'STORY' | 'UNSPECIFIED';
+  format_classification_source?: 'youtube_analytics' | 'channel_surface' | 'dashboard' | 'duration_heuristic';
   status: 'pending' | 'approved' | 'revision' | 'rejected';
   admin_feedback?: string;
   revision_notes?: string;
@@ -240,6 +242,12 @@ export interface CMSRelease {
   title: string;
   slug: string;
   youtube_id?: string;
+  youtube_title?: string;
+  youtube_title_variant_a?: string;
+  youtube_title_variant_b?: string;
+  youtube_title_variant_c?: string;
+  youtube_winning_variant?: 'A' | 'B' | 'C' | 'pending';
+  youtube_title_last_synced_at?: string;
   youtube_url?: string;
   thumbnail_url?: string;
   description?: string;

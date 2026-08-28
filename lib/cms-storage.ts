@@ -19,6 +19,8 @@ export type DistributionStatus =
 
 export interface PlatformDistribution {
   platform: 'sufipulse_radio' | 'youtube' | 'spotify' | 'apple_music' | 'instagram' | 'x' | 'facebook';
+  youtubeContentType?: 'SHORTS' | 'VIDEO_ON_DEMAND' | 'LIVE_STREAM' | 'STORY' | 'UNSPECIFIED';
+  formatClassificationSource?: 'youtube_analytics' | 'channel_surface' | 'dashboard' | 'duration_heuristic';
   status: DistributionStatus;
   url?: string;
   publishedAt?: string;
@@ -48,6 +50,11 @@ export interface CMSRelease {
   thumbnailUrl?: string; // Canonical Artwork (Registry Authority)
   canonicalThumbnail?: string;
   youtubeTitle?: string; // Current YouTube packaging title
+  youtubeTitleVariantA?: string;
+  youtubeTitleVariantB?: string;
+  youtubeTitleVariantC?: string;
+  youtubeWinningVariant?: 'A' | 'B' | 'C' | 'pending';
+  youtubeTitleLastSyncedAt?: string;
   youtubeThumbnailUrl?: string; // Current YouTube thumbnail
   posterUrl?: string;
   description: string;

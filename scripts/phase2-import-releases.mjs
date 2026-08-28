@@ -5,7 +5,7 @@ import { toRow } from '../server/db/release-mapper.js';
 
 const { Pool } = pg;
 
-const EXPECTED_SHA = '2d3d591d167231f16d6532d96aa45e5dff2fd4df18b11ad99559859ff10f2509';
+const EXPECTED_SHA = '1a60146e972370bc610c0f0d272e4045ece5347a35dbde528f53cb2fb4a86b0e';
 const SOURCE_FILE = '.phase2/reconciled-cms-releases.json';
 
 function hashPayload(payload) {
@@ -43,8 +43,8 @@ async function run() {
   const releases = JSON.parse(fileBuffer.toString());
   console.log(`Records: ${releases.length}\n`);
 
-  if (releases.length !== 88) {
-    throw new Error('Expected 88 records');
+  if (releases.length !== 95) {
+    throw new Error('Expected 95 records');
   }
 
   const pool = new Pool({

@@ -141,9 +141,9 @@ export async function GET(request: NextRequest) {
       releases = releases.filter(r => {
         const secs = (r as any).durationSeconds || 0;
         if (duration === 'default')  return secs >= 180 && (r as any).format !== 'short';
-        if (duration === 'short')    return secs > 0 && secs < 180;
-        if (duration === 'standard') return secs >= 180 && secs <= 480;
-        if (duration === 'long')     return secs > 480;
+        if (duration === 'short')    return secs > 0 && secs < 180 && (r as any).format !== 'short';
+        if (duration === 'standard') return secs >= 180 && secs <= 480 && (r as any).format !== 'short';
+        if (duration === 'long')     return secs > 480 && (r as any).format !== 'short';
         return true;
       });
     }
