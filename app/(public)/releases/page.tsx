@@ -15,7 +15,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { buildYouTubeThumbnailCandidates, advanceThumbnailFallback } from '@/lib/youtube-thumbnails';
 import GlobalReachStrip from '@/app/components/releases/GlobalReachStrip';
-import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
+import { getBestReleaseDate, sortReleases, cleanDisplayTitle, getCanonicalTitle, getYoutubeTitle } from '@/lib/release-utils';
 import { canAccessAdmin } from '@/app/lib/role-access';
 import { StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
@@ -44,6 +44,8 @@ interface YouTubeRelease {
     writer: string;
     tags: string;
     youtubeId: string;
+    rawTitle?: string;
+    youtubeTitle?: string;
 }
 
 interface SyncResult {
@@ -369,10 +371,15 @@ export default function Releases() {
                 const source = r.source || 'native';
                 const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
                 const durationFormatted = r.durationFormatted || r.duration || formatSeconds(durationSecs);
+                const canonicalTitle = getCanonicalTitle(r);
+                const displayTitle = cleanDisplayTitle(canonicalTitle);
+                const youtubeTitle = getYoutubeTitle(r);
                 return {
                     id: r.youtubeId || r.id,
                     slug: r.slug,
-                    title: r.title,
+                    title: displayTitle,
+                    rawTitle: canonicalTitle,
+                    youtubeTitle: youtubeTitle,
                     description: r.description || '',
                     thumbnailUrl: r.thumbnail || r.thumbnailUrl || '',
                     publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
@@ -527,6 +534,8 @@ export default function Releases() {
                 const query = searchQuery.toLowerCase();
                 return (
                     release.title.toLowerCase().includes(query) ||
+                    (Boolean(release.rawTitle) && release.rawTitle!.toLowerCase().includes(query)) ||
+                    (Boolean(release.youtubeTitle) && release.youtubeTitle!.toLowerCase().includes(query)) ||
                     release.description.toLowerCase().includes(query) ||
                     release.vocalist.toLowerCase().includes(query) ||
                     release.writer.toLowerCase().includes(query) ||

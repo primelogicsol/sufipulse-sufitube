@@ -30,7 +30,8 @@ export interface PlatformDistribution {
 
 export interface CMSRelease {
   id: string;
-  title: string;
+  title: string; // Canonical Release Title (Registry Authority)
+  canonicalTitle?: string;
   subtitle?: string;
   slug: string;
   youtubeId: string;
@@ -38,7 +39,10 @@ export interface CMSRelease {
   youtubeChannelId?: string;
   youtubeChannelUrl?: string;
   youtubePlaylistId?: string;
-  thumbnailUrl?: string;
+  thumbnailUrl?: string; // Canonical Artwork (Registry Authority)
+  canonicalThumbnail?: string;
+  youtubeTitle?: string; // Current YouTube packaging title
+  youtubeThumbnailUrl?: string; // Current YouTube thumbnail
   posterUrl?: string;
   description: string;
   releaseDate: string;

@@ -75,8 +75,15 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     youtubeId: video.id,
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
     
+    // Canonical identity: strictly preserve existing Registry Authority if present
     title: existing?.title || title,
+    canonicalTitle: existing?.canonicalTitle || existing?.title || title,
     thumbnailUrl: existing?.thumbnailUrl || thumbnailUrl,
+    canonicalThumbnail: existing?.canonicalThumbnail || existing?.thumbnailUrl || thumbnailUrl,
+    
+    // YouTube distribution packaging: recorded dynamically from latest sync
+    youtubeTitle: title,
+    youtubeThumbnailUrl: thumbnailUrl,
     description: existing?.description || video.description || video.snippet?.description || '',
     
     viewCount: youtubeStats.viewCount,

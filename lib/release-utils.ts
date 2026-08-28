@@ -1,5 +1,5 @@
 /**
- * Shared Release Utilities
+ * Shared Release Utilities & Metadata Authority Framework
  */
 
 export function getBestReleaseDate(r: any): string {
@@ -48,3 +48,73 @@ export function sortReleases(releases: any[], sortOrder: string = 'all') {
   return sorted;
 }
 
+/**
+ * Strips promotional channel branding suffixes/prefixes while preserving
+ * the authentic devotional, artistic, and thematic name of the release.
+ */
+export function cleanDisplayTitle(rawTitle: string): string {
+  if (!rawTitle) return 'Untitled Release';
+  
+  let title = rawTitle.trim();
+
+  // Strip leading channel identifiers (e.g. "SufiPulse Studio I", "SufiPusle Studio I")
+  title = title.replace(/^SufiPu?lse\s+Studio\s+[I|—|-]\s*/i, '');
+  
+  // Strip trailing channel markers (e.g. "| SufiPulse USA", "| SufiPulse", "I SufiPulse USA")
+  title = title.replace(/[\s|I—–-]+\s*SufiPu?lse\s*(USA)?\s*$/i, '');
+  
+  // Clean trailing pipes or hyphens left over
+  title = title.replace(/[\s|I—–-]+$/, '').trim();
+
+  return title || rawTitle;
+}
+
+/**
+ * Returns the stable canonical title from the SufiPulse Registry
+ */
+export function getCanonicalTitle(release: any): string {
+  if (!release) return 'Untitled Release';
+  return release.canonicalTitle || release.title || 'Untitled Release';
+}
+
+/**
+ * Returns the current YouTube packaging title recorded from YouTube sync
+ */
+export function getYoutubeTitle(release: any): string {
+  if (!release) return '';
+  return release.youtubeTitle || release.youtubeStats?.title || release.title || '';
+}
+
+/**
+ * Compares Registry vs YouTube packaging to detect metadata drift
+ */
+export function checkMetadataDrift(release: any): {
+  hasTitleDrift: boolean;
+  hasThumbnailDrift: boolean;
+  canonicalTitle: string;
+  youtubeTitle: string;
+} {
+  const canonicalTitle = getCanonicalTitle(release);
+  const youtubeTitle = getYoutubeTitle(release);
+  const canonicalThumb = release.canonicalThumbnail || release.thumbnailUrl || '';
+  const youtubeThumb = release.youtubeThumbnailUrl || release.youtubeStats?.thumbnailUrl || '';
+
+  const hasTitleDrift = Boolean(
+    youtubeTitle && 
+    canonicalTitle && 
+    youtubeTitle.trim().toLowerCase() !== canonicalTitle.trim().toLowerCase()
+  );
+
+  const hasThumbnailDrift = Boolean(
+    youtubeThumb && 
+    canonicalThumb && 
+    youtubeThumb !== canonicalThumb
+  );
+
+  return {
+    hasTitleDrift,
+    hasThumbnailDrift,
+    canonicalTitle,
+    youtubeTitle,
+  };
+}
