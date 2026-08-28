@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
+import { Badge } from '../../components/primitives/Badge';
+import { PrimaryButton } from '../../components/primitives/PrimaryButton';
 import { Mail, MapPin, Globe, Send, CheckCircle, User, MessageSquare, Info, Shield, HelpCircle, Loader as Loader2, ArrowRight, Tag } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useFormSecurity } from '../../hooks/useFormSecurity';
 import { contactFormSchema, validateSchema } from '../../lib/validation-schemas';
 import { sanitizeObject } from '../../lib/sanitize';
@@ -125,152 +129,219 @@ export default function Contact() {
 
     return (
         <Layout>
-            <StudioHero 
-                badge="Communication"
-                title="Contact"
-                mysticalName="Institutional Communication Channels"
-                description="SufiPulse operates through structured communication protocols aligned with institutional governance and charter authority."
-            />
+            {/* Cinematic Hero Section with /banner27.png */}
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+                {/* Cinematic Background Banner */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <Image
+                        src="/banner27.png"
+                        alt="SufiPulse Official Contact & Institutional Inquiries"
+                        fill
+                        priority
+                        quality={95}
+                        className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+                    />
+                    {/* Layered brand gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+                </div>
 
-            <Section background="slate" spacing="normal">
-                <PageContainer>
-                    <div className="max-w-4xl mx-auto text-center mb-16">
-                        <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">Institutional Message Intake</h2>
-                        <p className="text-neutral-400 text-lg leading-relaxed font-light">
-                            All formal correspondence is logged and processed according to the SufiPulse Standard Response Protocol.
-                        </p>
-                    </div>
-
-                    <div className="max-w-5xl mx-auto">
-                        <div className="elite-card overflow-hidden shadow-2xl">
-                            <div className="border-b border-white/5 px-8 py-8 bg-white/[0.02]">
-                                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Inquiry Submission</h3>
-                                <p className="text-[10px] text-amber-400 font-black uppercase tracking-[0.3em]">Institutional Service Pipeline</p>
+                {/* Hero Content */}
+                <div className="relative z-10">
+                    <PageContainer>
+                        <div className="max-w-5xl mx-auto text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+                                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
+                                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
+                                    SufiPulse USA — Institutional Communications
+                                </span>
                             </div>
 
-                            {submitted ? (
-                                <div className="p-16 text-center animate-in fade-in zoom-in duration-700">
-                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(16,185,129,0.1)]">
-                                        <CheckCircle className="w-10 h-10 text-emerald-500 stroke-[2.5]" />
+                            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
+                                Official Communications<br className="hidden md:block" />{" "}
+                                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
+                                    Ittisal (Direct Connection)
+                                </span>
+                            </h1>
+
+                            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
+                                SufiPulse operates through structured communication protocols. All inquiries, submissions, coordination requests, and partnership proposals are logged and routed under institutional governance.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <a 
+                                    href="#contact-form"
+                                    className="px-8 py-3.5 bg-[var(--color-gold)] hover:bg-[#FDE68A] text-[var(--color-midnight)] font-bold rounded-[var(--radius-sm)] shadow-xl transition-all uppercase tracking-wider text-sm flex items-center gap-2"
+                                >
+                                    Send Message
+                                </a>
+                                <Link href="/studio">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        Studio Network
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            {/* Specialized Channels Strip */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {specializedChannels.map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <item.icon className="w-7 h-7 text-[var(--color-gold)] mx-auto mb-2 opacity-90" />
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">
+                                            {item.title}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">
+                                            {item.description}
+                                        </div>
                                     </div>
-                                    <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">Inquiry Submitted</h3>
-                                    <p className="text-amber-400/80 text-[10px] font-black uppercase tracking-[0.3em] mb-6">Institutional Service Pipeline</p>
-                                    <p className="text-neutral-400 text-base leading-relaxed mb-10 max-w-lg mx-auto font-light">
-                                        Your inquiry has been received and entered into the institutional response workflow. Relevant teams may review, classify, and coordinate responses based on the nature of the request.
-                                    </p>
-                                    <button
-                                        onClick={() => setSubmitted(false)}
-                                        className="px-10 py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
-                                    >
-                                        Send Another Message
-                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </PageContainer>
+                </div>
+            </section>
+
+            <div id="contact-form">
+                <Section background="slate" spacing="normal">
+                    <PageContainer>
+                        <div className="max-w-4xl mx-auto text-center mb-16">
+                            <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">Institutional Message Intake</h2>
+                            <p className="text-neutral-400 text-lg leading-relaxed font-light">
+                                All formal correspondence is logged and processed according to the SufiPulse Standard Response Protocol.
+                            </p>
+                        </div>
+
+                        <div className="max-w-5xl mx-auto">
+                            <div className="elite-card overflow-hidden shadow-2xl">
+                                <div className="border-b border-white/5 px-8 py-8 bg-white/[0.02]">
+                                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Inquiry Submission</h3>
+                                    <p className="text-[10px] text-amber-400 font-black uppercase tracking-[0.3em]">Institutional Service Pipeline</p>
                                 </div>
-                            ) : (
-                                <form onSubmit={handleSubmit} className="p-10 md:p-16 space-y-12">
-                                    <input
-                                        type="text"
-                                        name="_bot_check"
-                                        value={botCheck}
-                                        onChange={(e) => setBotCheck(e.target.value)}
-                                        style={{ display: 'none' }}
-                                        tabIndex={-1}
-                                        autoComplete="off"
-                                    />
 
-                                    <div className="grid md:grid-cols-2 gap-8">
-                                        <IconInput icon={User} label="Your Name" error={fieldErrors.name}>
-                                            <input
-                                                type="text"
-                                                id="name"
-                                                required
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                placeholder="Enter your full name"
-                                                className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
-                                            />
-                                        </IconInput>
-
-                                        <IconInput icon={Mail} label="Email Address" error={fieldErrors.email}>
-                                            <input
-                                                type="email"
-                                                id="email"
-                                                required
-                                                value={formData.email}
-                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                placeholder="your.email@example.com"
-                                                className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
-                                            />
-                                        </IconInput>
+                                {submitted ? (
+                                    <div className="p-16 text-center animate-in fade-in zoom-in duration-700">
+                                        <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(16,185,129,0.1)]">
+                                            <CheckCircle className="w-10 h-10 text-emerald-500 stroke-[2.5]" />
+                                        </div>
+                                        <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">Inquiry Submitted</h3>
+                                        <p className="text-amber-400/80 text-[10px] font-black uppercase tracking-[0.3em] mb-6">Institutional Service Pipeline</p>
+                                        <p className="text-neutral-400 text-base leading-relaxed mb-10 max-w-lg mx-auto font-light">
+                                            Your inquiry has been received and entered into the institutional response workflow. Relevant teams may review, classify, and coordinate responses based on the nature of the request.
+                                        </p>
+                                        <button
+                                            onClick={() => setSubmitted(false)}
+                                            className="px-10 py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all shadow-xl"
+                                        >
+                                            Send Another Message
+                                        </button>
                                     </div>
+                                ) : (
+                                    <form onSubmit={handleSubmit} className="p-10 md:p-16 space-y-12">
+                                        <input
+                                            type="text"
+                                            name="_bot_check"
+                                            value={botCheck}
+                                            onChange={(e) => setBotCheck(e.target.value)}
+                                            style={{ display: 'none' }}
+                                            tabIndex={-1}
+                                            autoComplete="off"
+                                        />
 
-                                    <div className="space-y-8">
                                         <div className="grid md:grid-cols-2 gap-8">
-                                            <IconInput icon={Tag} label="Inquiry Category" error={fieldErrors.category} rightIcon>
-                                                <select
-                                                    id="category"
-                                                    required
-                                                    value={formData.category}
-                                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                    className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
-                                                >
-                                                    {categoryOptions.map((option) => (
-                                                        <option key={option.value} value={option.value} className="bg-neutral-900">{option.label}</option>
-                                                    ))}
-                                                </select>
-                                            </IconInput>
-
-                                            <IconInput icon={Info} label="Subject" error={fieldErrors.subject}>
+                                            <IconInput icon={User} label="Your Name" error={fieldErrors.name}>
                                                 <input
                                                     type="text"
-                                                    id="subject"
+                                                    id="name"
                                                     required
-                                                    value={formData.subject}
-                                                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                                                    placeholder="Brief description"
+                                                    value={formData.name}
+                                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                    placeholder="Enter your full name"
+                                                    className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                />
+                                            </IconInput>
+
+                                            <IconInput icon={Mail} label="Email Address" error={fieldErrors.email}>
+                                                <input
+                                                    type="email"
+                                                    id="email"
+                                                    required
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                    placeholder="your.email@example.com"
                                                     className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
                                                 />
                                             </IconInput>
                                         </div>
 
-                                        <div className="space-y-2 group">
-                                            <label htmlFor="message" className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">
-                                                Detailed Message <span className="text-amber-400">*</span>
-                                            </label>
-                                            <textarea
-                                                id="message"
-                                                required
-                                                value={formData.message}
-                                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                                placeholder="Please share your message, questions, or how we can assist you..."
-                                                rows={6}
-                                                className={`w-full h-48 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none ${fieldErrors.message ? 'border-red-500' : ''}`}
-                                            />
-                                            {fieldErrors.message && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1 ml-1">{fieldErrors.message}</p>}
-                                        </div>
-                                    </div>
+                                        <div className="space-y-8">
+                                            <div className="grid md:grid-cols-2 gap-8">
+                                                <IconInput icon={Tag} label="Inquiry Category" error={fieldErrors.category} rightIcon>
+                                                    <select
+                                                        id="category"
+                                                        required
+                                                        value={formData.category}
+                                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                                        className="w-full appearance-none rounded-2xl bg-black/40 border border-white/10 pl-16 pr-14 py-5 text-white focus:border-amber-400 focus:outline-none transition-all cursor-pointer"
+                                                    >
+                                                        {categoryOptions.map((option) => (
+                                                            <option key={option.value} value={option.value} className="bg-neutral-900">{option.label}</option>
+                                                        ))}
+                                                    </select>
+                                                </IconInput>
 
-                                    {error && (
-                                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6 text-red-400 text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
-                                            {error}
-                                        </div>
-                                    )}
+                                                <IconInput icon={Info} label="Subject" error={fieldErrors.subject}>
+                                                    <input
+                                                        type="text"
+                                                        id="subject"
+                                                        required
+                                                        value={formData.subject}
+                                                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                                        placeholder="Brief description"
+                                                        className="w-full rounded-2xl bg-black/40 border border-white/10 pl-16 pr-6 py-5 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all"
+                                                    />
+                                                </IconInput>
+                                            </div>
 
-                                    <div className="pt-6">
-                                        <button
-                                            type="submit"
-                                            disabled={submitting}
-                                            className="w-full py-8 bg-linear-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
-                                        >
-                                            {submitting ? <Loader2 className="w-6 h-6 animate-spin text-black" /> : <Send size={24} className="group-hover:scale-110 transition-transform" />}
-                                            {submitting ? 'Transmitting Message...' : 'Send Message'}
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
+                                            <div className="space-y-2 group">
+                                                <label htmlFor="message" className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-amber-400">
+                                                    Detailed Message <span className="text-amber-400">*</span>
+                                                </label>
+                                                <textarea
+                                                    id="message"
+                                                    required
+                                                    value={formData.message}
+                                                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                                    placeholder="Please share your message, questions, or how we can assist you..."
+                                                    rows={6}
+                                                    className={`w-full h-48 rounded-2xl bg-black/40 border border-white/10 px-8 py-6 text-white placeholder:text-white/45 focus:border-amber-400 focus:outline-none transition-all resize-none ${fieldErrors.message ? 'border-red-500' : ''}`}
+                                                />
+                                                {fieldErrors.message && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-1 ml-1">{fieldErrors.message}</p>}
+                                            </div>
+                                        </div>
+
+                                        {error && (
+                                            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6 text-red-400 text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
+                                                {error}
+                                            </div>
+                                        )}
+
+                                        <div className="pt-6">
+                                            <button
+                                                type="submit"
+                                                disabled={submitting}
+                                                className="w-full py-8 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-black rounded-[32px] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] transition-all duration-500 disabled:opacity-30 disabled:cursor-not-allowed uppercase text-[12px] tracking-[0.5em] flex items-center justify-center gap-5 group shadow-2xl"
+                                            >
+                                                {submitting ? <Loader2 className="w-6 h-6 animate-spin text-black" /> : <Send size={24} className="group-hover:scale-110 transition-transform" />}
+                                                {submitting ? 'Transmitting Message...' : 'Send Message'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </PageContainer>
-            </Section>
+                    </PageContainer>
+                </Section>
+            </div>
 
             <Section background="midnight" spacing="normal">
                 <PageContainer>
