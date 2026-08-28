@@ -29,15 +29,22 @@ export interface SyncAuditRun {
 
 export const syncCheckpointService = {
   getCheckpoint(): string {
-    try {
-      if (fs.existsSync(CHECKPOINT_FILE)) {
-        const data = JSON.parse(fs.readFileSync(CHECKPOINT_FILE, 'utf8'));
-        return data.lastSuccessfulYouTubeSyncAt || '';
-      }
-    } catch (e) {
-      console.warn('[SyncCheckpoint] Failed to read checkpoint', e);
+    if (!fs.existsSync(CHECKPOINT_FILE)) {
+      return '';
     }
-    return '';
+    let data;
+    try {
+      const raw = fs.readFileSync(CHECKPOINT_FILE, 'utf8');
+      data = JSON.parse(raw);
+    } catch (e) {
+      throw new Error('SyncCheckpoint: Checkpoint file exists but is unreadable or corrupted JSON.');
+    }
+    
+    if (!data || typeof data !== 'object') {
+      throw new Error('SyncCheckpoint: Checkpoint data is invalid.');
+    }
+    
+    return data.lastSuccessfulYouTubeSyncAt || '';
   },
 
   advanceCheckpoint(isoDate: string): void {

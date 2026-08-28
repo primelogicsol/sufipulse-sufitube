@@ -14,7 +14,7 @@ export class SyncLockManager {
     
     try {
       this.client = await db.connect();
-      const res = await this.client.query('SELECT pg_try_advisory_lock(::bigint) AS acquired', [YOUTUBE_SYNC_LOCK_KEY]);
+      const res = await this.client.query('SELECT pg_try_advisory_lock($1::bigint) AS acquired', [YOUTUBE_SYNC_LOCK_KEY]);
       if (res.rows[0]?.acquired) {
         return { acquired: true };
       }
@@ -34,13 +34,16 @@ export class SyncLockManager {
   async release(): Promise<void> {
     if (!this.client) return;
     
+    const client = this.client;
+    this.client = null;
+    
     try {
-      await this.client.query('SELECT pg_advisory_unlock(::bigint)', [YOUTUBE_SYNC_LOCK_KEY]);
-    } catch (e) {
-      // Ignore unlock failure
-    } finally {
-      this.client.release();
-      this.client = null;
+      await client.query('SELECT pg_advisory_unlock($1::bigint) AS released', [YOUTUBE_SYNC_LOCK_KEY]);
+      client.release();
+    } catch (e: any) {
+      // Pass truthy/error to destroy connection rather than returning to pool
+      client.release(e instanceof Error ? e : true as any);
+      throw e;
     }
   }
 }
