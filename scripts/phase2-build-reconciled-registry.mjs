@@ -40,6 +40,10 @@ function run() {
     }
   }
 
+  if (identityConflicts !== 0) {
+    throw new Error(`Reconciliation aborted: ${identityConflicts} identity conflicts`);
+  }
+
   const seedOnly = seed.filter(s => !rMap.has(s.id)).map(s => s.id);
 
   let restoredCounts = {
