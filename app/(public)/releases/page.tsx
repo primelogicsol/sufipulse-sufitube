@@ -356,18 +356,54 @@ export default function Releases() {
         return `${m}:${s.toString().padStart(2, '0')}`;
     };
 
-    const fetchVideos = async (silent = false, refresh = false) => {
+    /**
+     * Builds the API query URL from filter state and fetches paginated results.
+     * ALL filtering, sorting, and pagination happen server-side.
+     * Server applies: status → governance → search → format → duration → year → sort → THEN paginate.
+     * Count and totalPages reflect the filtered total, not the full registry.
+     */
+    const fetchVideos = async (
+        overrides: {
+            filterType?: FilterType;
+            filterFormat?: FormatFilter;
+            durationFilter?: DurationFilter;
+            yearFilter?: string;
+            sortOrder?: SortOrder;
+            searchQuery?: string;
+            page?: number;
+        } = {},
+        silent = false
+    ) => {
         if (!silent) setLoading(true);
         try {
-            const url = `/api/releases?status=published${refresh ? '&forceHydrate=1' : ''}`;
-            const cmsRes = await fetch(url, { cache: 'no-store' });
+            const ft = overrides.filterType !== undefined ? overrides.filterType : filterType;
+            const ff = overrides.filterFormat !== undefined ? overrides.filterFormat : filterFormat;
+            const df = overrides.durationFilter !== undefined ? overrides.durationFilter : durationFilter;
+            const yf = overrides.yearFilter !== undefined ? overrides.yearFilter : yearFilter;
+            const so = overrides.sortOrder !== undefined ? overrides.sortOrder : sortOrder;
+            const sq = overrides.searchQuery !== undefined ? overrides.searchQuery : searchQuery;
+            const pg = overrides.page !== undefined ? overrides.page : currentPage;
+
+            const params = new URLSearchParams();
+            params.set('status', 'published');
+            params.set('page', String(pg));
+            params.set('pageSize', String(ITEMS_PER_PAGE));
+
+            if (ft && ft !== 'all') params.set('governance', ft);
+            if (ff && ff !== 'all') params.set('format', ff);
+            if (df && df !== 'all') params.set('duration', df);
+            if (yf && yf !== 'all') params.set('year', yf);
+            if (so && so !== 'default') params.set('sort', so);
+            if (sq && sq.trim()) params.set('search', sq.trim());
+
+            const cmsRes = await fetch(`/api/releases?${params.toString()}`);
             if (!cmsRes.ok) throw new Error('Failed to fetch releases');
             const responseData = await cmsRes.json();
-            
-            const cmsData = Array.isArray(responseData) 
-                ? responseData 
+
+            const cmsData: any[] = Array.isArray(responseData)
+                ? responseData
                 : (responseData.items || []);
-            
+
             const mappedData = cmsData.map((r: any) => {
                 const source = r.source || 'native';
                 const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
@@ -393,8 +429,8 @@ export default function Releases() {
                     source: source,
                     format: r.format || 'video',
                     govType: govType,
-                    vocalist: typeof r.vocalist === 'string' 
-                        ? r.vocalist 
+                    vocalist: typeof r.vocalist === 'string'
+                        ? r.vocalist
                         : [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
                     writer: typeof r.writer === 'string'
                         ? r.writer
@@ -406,6 +442,14 @@ export default function Releases() {
             });
 
             setReleases(mappedData);
+
+            // Capture server-reported totals from paginated response
+            if (!Array.isArray(responseData) && responseData.count !== undefined) {
+                setServerTotalPages(responseData.totalPages ?? 1);
+            } else {
+                setServerTotalPages(1);
+            }
+
             setError(null);
         } catch (err: any) {
             console.error("Error fetching releases:", err);
@@ -419,74 +463,15 @@ export default function Releases() {
         setSyncing(true);
         setSyncError(null);
         try {
-            const res = await fetch('/api/releases/import-youtube', { 
+            const res = await fetch('/api/releases/import-youtube', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videoIds: [], lookbackDays: 1000 }) 
+                body: JSON.stringify({ videoIds: [], lookbackDays: 1000 })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Sync failed');
-            
-            await fetchVideos(false);
-            
-            if (data.diagnostic) {
-                const d = data.diagnostic;
-                const govType = 'legacy_registry';
-                const activeFilters: string[] = [];
-                let visibleUnderCurrentFilters = true;
-
-                if (filterType !== 'all' && govType !== filterType) {
-                    visibleUnderCurrentFilters = false;
-                    activeFilters.push(`Governance: ${filterType}`);
-                }
-                if (filterFormat !== 'all' && d.format !== filterFormat) {
-                    visibleUnderCurrentFilters = false;
-                    activeFilters.push(`Format: ${filterFormat}`);
-                }
-                if (durationFilter !== 'all') {
-                    const seconds = d.durationSeconds || 0;
-                    let hiddenByDuration = false;
-                    
-                    if (durationFilter === 'default') {
-                        if ((seconds > 0 && seconds < 180) || d.format === 'short') hiddenByDuration = true;
-                    } else if (durationFilter === 'short' && seconds >= 180) {
-                        hiddenByDuration = true;
-                    } else if (durationFilter === 'standard' && (seconds < 180 || seconds > 480) && seconds !== 0) {
-                        hiddenByDuration = true;
-                    } else if (durationFilter === 'long' && seconds <= 480 && seconds !== 0) {
-                        hiddenByDuration = true;
-                    }
-                    
-                    if (hiddenByDuration) {
-                        visibleUnderCurrentFilters = false;
-                        activeFilters.push(`Length: ${
-                            durationFilter === 'default' ? 'Default (Standard/Long only)' :
-                            durationFilter === 'long' ? 'Long (> 8m)' : 
-                            durationFilter === 'standard' ? 'Standard (3-8m)' : 
-                            'Short (< 3m)'
-                        }`);
-                    }
-                }
-                if (yearFilter !== 'all') {
-                    const pubYear = new Date(d.publishedAt).getFullYear();
-                    if (pubYear !== parseInt(yearFilter)) {
-                        visibleUnderCurrentFilters = false;
-                        activeFilters.push(`Year: ${yearFilter}`);
-                    }
-                }
-                if (searchQuery) {
-                    const query = searchQuery.toLowerCase();
-                    const title = (d.title || '').toLowerCase();
-                    if (!title.includes(query)) {
-                        visibleUnderCurrentFilters = false;
-                        activeFilters.push(`Search: "${searchQuery}"`);
-                    }
-                }
-
-                d.visibleUnderCurrentFilters = visibleUnderCurrentFilters;
-                d.activeFilters = activeFilters;
-            }
-
+            // import-youtube route calls revalidatePath('/releases') — re-fetch via normal GET
+            await fetchVideos({}, true);
             setSyncResult(data);
             setSyncModalOpen(true);
         } catch (err: any) {
@@ -498,80 +483,43 @@ export default function Releases() {
         }
     };
 
+    // Initial load on mount
     useEffect(() => {
         fetchVideos();
         fetch('/api/knowledge')
             .then(res => res.json())
             .then(data => setKnowledgeData(data))
             .catch(err => console.error('Failed to load knowledge data:', err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const filteredReleases = useMemo(() => {
-        let filtered = releases.filter(release => {
-            if (filterType !== 'all') {
-                if (filterType === 'native_governed' && release.govType !== 'native_governed') return false;
-                if (filterType === 'legacy_registry' && release.govType !== 'legacy_registry') return false;
-            }
+    // Filter changes: reset page to 1 and re-fetch with all current filters server-side
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setCurrentPage(1);
+            fetchVideos({ filterType, filterFormat, durationFilter, yearFilter, sortOrder, searchQuery, page: 1 }, true);
+        }, searchQuery ? 350 : 0);
+        return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filterType, filterFormat, durationFilter, yearFilter, sortOrder, searchQuery]);
 
-            if (filterFormat !== 'all' && release.format !== filterFormat) return false;
+    // Page change: fetch the new page with current filters
+    useEffect(() => {
+        fetchVideos({ page: currentPage }, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
 
-            if (durationFilter !== 'all') {
-                const seconds = release.durationSeconds || 0;
-                if (durationFilter === 'default') {
-                    if (seconds < 180 || release.format === 'short') return false;
-                } else if (durationFilter === 'short' && seconds >= 180) {
-                    return false;
-                } else if (durationFilter === 'standard' && (seconds < 180 || seconds > 480)) {
-                    return false;
-                } else if (durationFilter === 'long' && seconds <= 480) {
-                    return false;
-                }
-            }
+    // Server-driven: paginatedReleases is exactly what the server returned for this page
+    const paginatedReleases = releases;
+    const totalPages = serverTotalPages;
 
-            if (yearFilter !== 'all') {
-                const releaseYear = new Date(release.publishedDate).getFullYear();
-                if (releaseYear !== parseInt(yearFilter)) return false;
-            }
-
-            if (searchQuery) {
-                const query = searchQuery.toLowerCase();
-                return (
-                    release.title.toLowerCase().includes(query) ||
-                    (Boolean(release.rawTitle) && release.rawTitle!.toLowerCase().includes(query)) ||
-                    (Boolean(release.youtubeTitle) && release.youtubeTitle!.toLowerCase().includes(query)) ||
-                    release.description.toLowerCase().includes(query) ||
-                    release.vocalist.toLowerCase().includes(query) ||
-                    release.writer.toLowerCase().includes(query) ||
-                    release.tags.toLowerCase().includes(query) ||
-                    release.youtubeId.toLowerCase().includes(query) ||
-                    release.slug.toLowerCase().includes(query)
-                );
-            }
-            return true;
-        });
-
-        const internalSortMap: Record<string, string> = {
-            default: 'all',
-            newest: 'new',
-            oldest: 'old',
-            popular: 'popular'
-        };
-
-        return sortReleases(filtered as any, internalSortMap[sortOrder]) as unknown as YouTubeRelease[];
-    }, [releases, filterType, filterFormat, durationFilter, yearFilter, searchQuery, sortOrder]);
-    
-    // Featured flagship release (first governed release or highest views)
+    // Featured flagship: first governed release from current page
     const featuredRelease = useMemo(() => {
         if (!releases || releases.length === 0) return null;
         return releases.find(r => r.govType === 'native_governed') || releases[0];
     }, [releases]);
 
-    const totalPages = serverTotalPages;
-    const paginatedReleases = useMemo(() => {
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredReleases.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-    }, [filteredReleases, currentPage]);
-
+    // Year options: derived from current page (best effort; server holds full year data)
     const years = useMemo(() => {
         const yearSet = new Set<number>();
         releases.forEach(r => {
@@ -580,6 +528,8 @@ export default function Releases() {
         });
         return Array.from(yearSet).sort((a, b) => b - a);
     }, [releases]);
+
+
 
     const cataloguePrinciples = [
         {
@@ -945,7 +895,7 @@ export default function Releases() {
                                     Retry
                                 </button>
                             </div>
-                        ) : filteredReleases.length === 0 ? (
+                        ) : releases.length === 0 ? (
                             <div className="py-24 text-center">
                                 <Music className="w-16 h-16 text-[var(--color-border)] mx-auto mb-4" />
                                 <p className="text-[var(--color-text-secondary)] text-xl mb-4">No releases found matching your criteria.</p>
@@ -1150,7 +1100,7 @@ export default function Releases() {
                 result={syncResult}
                 error={syncError}
                 onRefresh={() => {
-                    fetchVideos(false);
+                    fetchVideos({}, true);
                     setSyncModalOpen(false);
                 }}
             />
