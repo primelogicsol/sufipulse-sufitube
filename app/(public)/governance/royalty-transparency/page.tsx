@@ -1,10 +1,14 @@
 "use client";
 import { Users, ArrowRight, FileText, Lock, Database, ShieldCheck, Scale, DollarSign } from 'lucide-react';
+import Image from 'next/image';
 import { Layout } from '../../../components/layout/Layout';
 import { PageContainer } from '../../../components/layout/PageContainer';
 import { Section } from '../../../components/layout/Section';
+import { Badge } from '../../../components/primitives/Badge';
+import { PrimaryButton } from '../../../components/primitives/PrimaryButton';
 import { roleDisplayMap } from '@/app/components/lib/roleDisplayMap';
 import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
+import Link from 'next/link';
 
 export default function RoyaltyTransparency() {
     const allocationPrinciples = [
@@ -89,12 +93,76 @@ export default function RoyaltyTransparency() {
 
     return (
         <Layout>
-            <StudioHero 
-                badge="Economic Framework"
-                title="Royalty Transparency"
-                mysticalName={roleDisplayMap.royalty_transparency.mystical}
-                description="Royalty allocation within SufiPulse follows documented institutional protocol. All economic distributions are confirmed prior to publication and recorded through registry validation."
-            />
+            {/* Cinematic Hero Section with /banner18.png */}
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+                {/* Cinematic Background Banner */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <Image
+                        src="/banner18.png"
+                        alt="SufiPulse Royalty Transparency & Economic Governance"
+                        fill
+                        priority
+                        quality={95}
+                        className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+                    />
+                    {/* Layered brand gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+                </div>
+
+                {/* Hero Content */}
+                <div className="relative z-10">
+                    <PageContainer>
+                        <div className="max-w-5xl mx-auto text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+                                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
+                                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
+                                    SufiPulse USA — Economic Governance
+                                </span>
+                            </div>
+
+                            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
+                                Royalty Transparency & Justice<br className="hidden md:block" />{" "}
+                                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
+                                    {roleDisplayMap.royalty_transparency.mystical}
+                                </span>
+                            </h1>
+
+                            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
+                                Royalty allocation within SufiPulse follows documented institutional protocols. All economic distributions are locked prior to publication and recorded immutably through registry validation.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <Link href="/governance/diwan-e-amanat">
+                                    <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
+                                        Registry Authority
+                                    </PrimaryButton>
+                                </Link>
+                                <Link href="/governance/mithaq">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        Constitutional Mithaq
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            {/* Allocation Principles Strip */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {allocationPrinciples.map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <item.icon className="w-7 h-7 text-[var(--color-gold)] mx-auto mb-2 opacity-90" />
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">
+                                            {item.title}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">
+                                            {item.description}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </PageContainer>
+                </div>
+            </section>
 
             <Section background="slate" spacing="normal">
                 <PageContainer>
