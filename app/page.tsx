@@ -43,7 +43,7 @@ export default function Home() {
   const [latestPublications, setLatestPublications] = useState<Publication[]>([]);
   const [recentReleases, setRecentReleases] = useState<Publication[]>([]);
   const [pubsLoading, setPubsLoading] = useState(true);
-  const [kpiStats, setKpiStats] = useState({ releases: 81, writers: literaryArticles.length, institutions: 4 });
+  const [kpiStats, setKpiStats] = useState({ releases: 91, writers: literaryArticles.length, institutions: 4 });
 
   useEffect(() => {
     fetch('/api/stats')
@@ -52,7 +52,7 @@ export default function Home() {
       .then(data => {
         if (!data) return;
         setKpiStats({
-          releases: data.releases > 0 ? data.releases : 81,
+          releases: data.releases > 0 ? data.releases : 91,
           writers: data.writers > 0 ? data.writers : literaryArticles.length,
           institutions: data.institutions > 0 ? data.institutions : 4,
         });
@@ -73,57 +73,34 @@ export default function Home() {
     // Latest publications
     const fetchLatestPublications = async () => {
       try {
-        // Institutional Filter: Exclude Shorts, vertical teasers, and content under 90s from homepage
-        const isOfficialLongForm = (r: any) => {
-          if (r.format === 'short') return false;
-          const duration = r.durationSeconds || (r.youtubeStats?.durationSeconds) || 0;
-          if (duration > 0 && duration < 90) return false;
-          
-          const title = (r.title || '').toLowerCase();
-          if (title.includes('teaser') || title.includes('teaser 2')) return false;
-          if (title.includes('youtube short') || title.includes('short-form')) return false;
-          
-          return true;
-        };
-
         const toPublication = (r: any): Publication => {
           const videoId = r.youtubeId || r.youtube_video_id || r.videoId || '';
           return {
-            id: r.id,
+            id: r.id || videoId,
             type: 'music' as const,
             title: r.title,
-            slug: videoId,
+            slug: r.slug || videoId,
             published_at: getBestReleaseDate(r),
             description: r.description,
-            artwork_url: r.thumbnail || r.thumbnail_url || r.thumbnailUrl,
+            artwork_url: r.thumbnail || r.thumbnail_url || r.thumbnailUrl || (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : ''),
             youtube_video_id: videoId,
           };
         };
 
-        // Fetch a substantial pool to ensure high-quality filtering
-        const res = await fetch('/api/releases?status=published&limit=100&t=' + Date.now());
+        const res = await fetch('/api/releases?status=published&t=' + Date.now(), { cache: 'no-store' });
         
         if (res.ok) {
           const json = await res.json();
-          const data = Array.isArray(json) ? json : json.items || [];
+          const data = Array.isArray(json) ? json : (json.items || []);
           
-          if (Array.isArray(data)) {
-            // 1. Filter for institutional long-form content
-            // 2. Sort strictly by date descending
+          if (Array.isArray(data) && data.length > 0) {
             const allMusic = data
-              .filter((r: any) => (r.youtubeId || r.youtube_video_id) && isOfficialLongForm(r));
-            
-            const sortedMusic = sortReleases(allMusic, 'newest').map(toPublication);
+              .filter((r: any) => Boolean(r.youtubeId || r.youtube_video_id || r.id))
+              .map(toPublication);
 
-            if (sortedMusic.length > 0) {
-              // Featured Carousel: Top 5 absolute newest releases
-              setLatestPublications(sortedMusic.slice(0, 5));
-              
-              // Recent Entries Grid: Next 8 releases
-              // We use an offset if possible, or just the same pool if small
-              const recent = sortedMusic.length > 5 ? sortedMusic.slice(0, 8) : sortedMusic;
-              setRecentReleases(recent);
-              
+            if (allMusic.length > 0) {
+              setLatestPublications(allMusic.slice(0, 5));
+              setRecentReleases(allMusic.slice(0, 8));
               setPubsLoading(false);
               return;
             }

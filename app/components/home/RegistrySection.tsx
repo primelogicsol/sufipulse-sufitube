@@ -57,9 +57,13 @@ export function RegistrySection({ featuredReleases, recentReleases, loading }: R
     });
   };
 
-  const activeRelease = featuredReleases[currentSlide];
+  const activeRelease = featuredReleases[currentSlide] || featuredReleases[0];
   const activeVideoId = activeRelease?.youtube_video_id || activeRelease?.slug;
-  const activeThumbnailCandidates = buildYouTubeThumbnailCandidates(activeVideoId, [activeRelease?.artwork_url]);
+  const activeSlug = activeRelease?.slug || activeVideoId;
+  const activeThumbnailCandidates = buildYouTubeThumbnailCandidates(activeRelease?.youtube_video_id || activeVideoId, [
+    activeRelease?.artwork_url,
+    activeVideoId ? `https://i.ytimg.com/vi/${activeVideoId}/hqdefault.jpg` : undefined
+  ]);
 
   return (
     <>
@@ -93,7 +97,7 @@ export function RegistrySection({ featuredReleases, recentReleases, loading }: R
           ) : (
             <div className="relative max-w-4xl mx-auto">
               <Link
-                href={`/release-detail/${activeVideoId}`}
+                href={`/release-detail/${activeSlug}`}
                 className="group block"
               >
                 <div className="relative">
@@ -172,7 +176,7 @@ export function RegistrySection({ featuredReleases, recentReleases, loading }: R
               {recentReleases.map((pub) => (
                 <Link
                   key={pub.id}
-                  href={pub.type === 'music' ? `/release-detail/${pub.youtube_video_id}` : `/literary-journal/${pub.slug}`}
+                  href={pub.type === 'music' ? `/release-detail/${pub.slug || pub.youtube_video_id}` : `/literary-journal/${pub.slug}`}
                   className="group block"
                 >
                   <Card hoverable className="bg-[var(--color-midnight)]/40 border-[var(--color-text-tertiary)]/10 p-4">
