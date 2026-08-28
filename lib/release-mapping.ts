@@ -1,6 +1,23 @@
 import { type CMSRelease, getDefaultDistribution } from './cms-storage';
 import { cmsServerStorage } from './cms-storage-server';
 
+
+export function initializeCanonicalTitle(youtubeTitle: string): string {
+  if (!youtubeTitle) return 'Untitled Release';
+  
+  // 1. Normalize whitespace
+  let title = youtubeTitle.replace(/\s+/g, ' ').trim();
+  
+  // 2. Remove exact terminal channel branding
+  if (title.endsWith(' | SufiPulse USA')) {
+    title = title.replace(' | SufiPulse USA', '');
+  }
+  
+  // 3. Take leading identity segment before first spaced pipe separator
+  const parts = title.split(' | ');
+  return parts[0].trim() || 'Untitled Release';
+}
+
 export const slugify = (value: string): string => {
   const base = String(value || '')
     .toLowerCase()
@@ -76,10 +93,15 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
     
     // Canonical identity: strictly preserve existing Registry Authority if present
-    title: existing?.canonicalTitle || existing?.title || title,
-    canonicalTitle: existing?.canonicalTitle || existing?.title || title,
-    canonicalStatus: existing?.canonicalStatus || (existing ? 'verified' : 'inferred'),
-    governanceOrigin: existing?.governanceOrigin || (existing?.source === 'native' ? 'native_governed' : 'native_governed'),
+    title: existing?.canonicalTitle || existing?.title || initializeCanonicalTitle(title),
+    canonicalTitle: existing?.canonicalTitle || existing?.title || initializeCanonicalTitle(title),
+    canonicalStatus: existing?.canonicalStatus || 'inferred',
+    governanceOrigin: existing?.governanceOrigin || 'native_governed',
+    youtubeTitleVariantA: existing?.youtubeTitleVariantA,
+    youtubeTitleVariantB: existing?.youtubeTitleVariantB,
+    youtubeTitleVariantC: existing?.youtubeTitleVariantC,
+    youtubeWinningVariant: existing?.youtubeWinningVariant,
+    youtubeTitleLastSyncedAt: now,
     thumbnailUrl: existing?.canonicalThumbnail || existing?.thumbnailUrl || thumbnailUrl,
     canonicalThumbnail: existing?.canonicalThumbnail || existing?.thumbnailUrl || thumbnailUrl,
     
