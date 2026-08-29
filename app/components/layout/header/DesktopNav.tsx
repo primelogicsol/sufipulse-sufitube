@@ -52,19 +52,19 @@ export function DesktopNav() {
           Sufi Songs
         </Link>
         <Link
-          href="/literary-journal"
+          href="/release-premieres"
           className={`
             text-nowrap
             transition-colors
             duration-[var(--transition-base)]
             font-medium
-            ${pathname.startsWith('/literary-journal') || pathname.startsWith('/literary-')
+            ${pathname.startsWith('/release-premieres')
               ? 'text-[var(--color-gold)] font-semibold'
               : 'text-[var(--color-text-primary)] hover:text-[var(--color-gold)]'
             }
           `.trim()}
         >
-          Literary Journal
+          Premieres
         </Link>
         <DualNameDropdownMenu className="text-nowrap" label="Creative Contributors" items={CONTRIBUTORS_ITEMS} isActive={false} />
         <DualNameDropdownMenu className="text-nowrap" label="Production Infrastructure" items={PRODUCTION_ITEMS} isActive={false} />

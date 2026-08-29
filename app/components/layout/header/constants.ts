@@ -25,6 +25,18 @@ export const CONTRIBUTORS_ITEMS = [
     href: '/literary-contributors',
     ariaLabel: 'Literary Contributors'
   },
+  {
+    public: 'Literary Journal',
+    mystical: 'Ahl-e-Tahreer Publications',
+    href: '/literary-journal',
+    ariaLabel: 'Literary Journal'
+  },
+  {
+    public: 'Literary Journal',
+    mystical: 'Ahl-e-Tahreer Publications',
+    href: '/literary-journal',
+    ariaLabel: 'Literary Journal'
+  },
 ];
 
 export const PRODUCTION_ITEMS = [
@@ -63,7 +75,7 @@ export const PRODUCTION_ITEMS = [
 export const GOVERNANCE_ITEMS = [
   {
     public: 'Institutional Framework',
-    mystical: 'Mithaq — Constitutional Charter',
+    mystical: 'Mithaq â€” Constitutional Charter',
     href: '/governance/mithaq',
     ariaLabel: 'Mithaq Constitutional Charter'
   },

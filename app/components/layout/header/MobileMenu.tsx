@@ -200,12 +200,12 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </Link>
 
           <Link
-            href="/literary-journal"
+            href="/release-premieres"
             className="flex flex-col items-start p-3 bg-white/5 rounded-lg border border-transparent hover:border-[var(--color-gold)]/20 transition-all mb-2"
             onClick={onClose}
           >
             <span className="text-[var(--color-text-primary)] hover:text-[var(--color-gold)] font-bold text-[10px] uppercase tracking-widest transition-colors text-left">
-              Literary Journal
+              Premieres
             </span>
           </Link>
 
