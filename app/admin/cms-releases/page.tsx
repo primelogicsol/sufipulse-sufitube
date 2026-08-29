@@ -579,8 +579,7 @@ export default function CMSReleasesPage() {
             ) : (
               <div className="max-h-80 overflow-auto border rounded-lg" style={{ borderColor: 'var(--dash-border)' }}>
                 {youtubeVideos.map((video) => (
-                  <label
-                    key={video.id}
+                  <div key={video.id}
                     className="flex items-start gap-3 p-3 cursor-pointer"
                     style={{ borderBottom: '1px solid var(--dash-border)' }}
                   >
@@ -618,8 +617,8 @@ export default function CMSReleasesPage() {
                         </div>
                       )}
                     </div>
-                  </label>
-                ))}
+                  </div>
+                  ))}
               </div>
             )}
           </div>
@@ -658,7 +657,7 @@ export default function CMSReleasesPage() {
             ) : (
               <div className="max-h-80 overflow-auto border rounded-lg" style={{ borderColor: 'var(--dash-border)' }}>
                 {liveStreams.map((video) => (
-                  <label key={video.id} className="flex items-start gap-3 p-3 cursor-pointer" style={{ borderBottom: '1px solid var(--dash-border)' }}>
+                  <div key={video.id} className="flex items-start gap-3 p-3 cursor-pointer" style={{ borderBottom: '1px solid var(--dash-border)' }}>
                     <input type="checkbox" checked={selectedLiveIds.has(video.id)} onChange={() => setSelectedLiveIds(prev => { const next = new Set(prev); next.has(video.id) ? next.delete(video.id) : next.add(video.id); return next; })} style={{ marginTop: 6, accentColor: 'var(--dash-accent)' }} />
                     <img src={video.thumbnailUrl || ''} alt={video.title} style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--dash-border)' }} />
                     <div className="min-w-0">
@@ -666,8 +665,8 @@ export default function CMSReleasesPage() {
                       <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>ID: {video.id} | {video.durationFormatted || '—'} | {video.views?.toLocaleString?.() || 0} views</p>
                       {video.alreadyImported && <p className="text-xs mt-1" style={{ color: 'var(--dash-status-approved)' }}>Already in CMS (re-import updates format to live)</p>}
                     </div>
-                  </label>
-                ))}
+                  </div>
+                  ))}
               </div>
             )}
           </div>
@@ -739,8 +738,7 @@ export default function CMSReleasesPage() {
             ) : (
               <div className="max-h-80 overflow-auto border rounded-lg" style={{ borderColor: 'var(--dash-border)' }}>
                 {playlists.map((pl) => (
-                  <label
-                    key={pl.id}
+                  <div key={pl.id}
                     className="flex items-start gap-3 p-3 cursor-pointer"
                     style={{ borderBottom: '1px solid var(--dash-border)' }}
                   >
@@ -772,8 +770,8 @@ export default function CMSReleasesPage() {
                         </p>
                       )}
                     </div>
-                  </label>
-                ))}
+                  </div>
+                  ))}
               </div>
             )}
           </div>
