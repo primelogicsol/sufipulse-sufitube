@@ -18,7 +18,7 @@ type YouTubeImportVideo = {
   durationFormatted?: string;
   views?: number;
   alreadyImported?: boolean;
-  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate';
+  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'canonical_override';
   cmsReleaseId?: string;
   cmsData?: { title: string; description: string; youtubeTitle?: string };
 };
@@ -31,7 +31,7 @@ type YouTubeImportPlaylist = {
   publishedDate?: string;
   itemCount?: number;
   alreadyImported?: boolean;
-  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate';
+  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'canonical_override';
   cmsReleaseId?: string;
   cmsData?: { title: string; description: string; youtubeTitle?: string };
 };
@@ -328,12 +328,13 @@ export default function CMSReleasesPage() {
     const youtubeCount = youtubeVideos.length;
   const newVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'youtube_only' || !v.alreadyImported);
   const updateVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'metadata_mismatch');
+  const overrideVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'canonical_override');
   const upToDateVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'matched');
   const selectedCount = selectedVideoIds.size;
   
   const unresolvedConflicts = youtubeVideos.filter(v => 
     selectedVideoIds.has(v.id) && 
-    v.reconciliationStatus === 'metadata_mismatch' && 
+    (v.reconciliationStatus === 'metadata_mismatch' || v.reconciliationStatus === 'canonical_override') && 
     !resolutions[v.id]
   ).length;
 
@@ -556,7 +557,7 @@ export default function CMSReleasesPage() {
                   <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 mb-4">
                     <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">YouTube Reconciliation</h3>
                     
-                    <div className="grid grid-cols-5 gap-4 mb-4 font-mono text-sm">
+                    <div className="grid grid-cols-6 gap-4 mb-4 font-mono text-sm">
                       <div className="flex flex-col">
                         <span className="text-neutral-500 text-xs">Fetched</span>
                         <span className="text-white text-lg">{youtubeCount}</span>
@@ -566,11 +567,15 @@ export default function CMSReleasesPage() {
                         <span className="text-amber-400 text-lg">{newVideos.length}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-neutral-500 text-xs">Updates</span>
+                        <span className="text-neutral-500 text-xs">YT Updates</span>
                         <span className="text-blue-400 text-lg">{updateVideos.length}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-neutral-500 text-xs">Up to Date</span>
+                        <span className="text-neutral-500 text-xs">Overrides</span>
+                        <span className="text-purple-400 text-lg">{overrideVideos.length}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-neutral-500 text-xs">Fully Aligned</span>
                         <span className="text-emerald-400 text-lg">{upToDateVideos.length}</span>
                       </div>
                       <div className="flex flex-col border-l border-neutral-800 pl-4">
@@ -579,9 +584,9 @@ export default function CMSReleasesPage() {
                       </div>
                     </div>
                     
-                    {newVideos.length === 0 && updateVideos.length === 0 && (
+                    {newVideos.length === 0 && updateVideos.length === 0 && overrideVideos.length === 0 && (
                       <div className="text-emerald-400 text-sm font-mono mb-4">
-                        ✓ All {youtubeCount} fetched YouTube videos are already synchronized with CMS. Nothing currently requires import or update.
+                        ✓ All {youtubeCount} YouTube videos are fully aligned with CMS. Nothing currently requires import or update.
                       </div>
                     )}
                     
@@ -711,7 +716,7 @@ export default function CMSReleasesPage() {
                         </div>
                       ) : (
                         <div className="mt-1 flex items-center gap-3">
-                          <p className="text-xs font-bold text-emerald-400">✓ SAVED IN CMS (Up to Date)</p>
+                          <p className="text-xs font-bold text-emerald-400">✓ FULLY ALIGNED (YouTube & CMS match)</p>
                           {video.cmsReleaseId && (
                             <a href={`/admin/cms-releases/${video.cmsReleaseId}`} target="_blank" rel="noreferrer" className="text-xs underline text-neutral-400 hover:text-white" onClick={e => e.stopPropagation()}>View CMS Record</a>
                           )}
@@ -929,10 +934,20 @@ export default function CMSReleasesPage() {
                   >
                     <td className="px-4 py-3">
                       <Link href={`/admin/cms-releases/${release.id}`}>
-                        <span className="font-medium hover:underline" style={{ color: 'var(--dash-text-primary)' }}>
+                        <span className="font-medium hover:underline block" style={{ color: 'var(--dash-text-primary)' }}>
                           {release.title}
                         </span>
                       </Link>
+                      
+                      {release.youtubeTitle && release.youtubeTitle !== release.title && (
+                        <div className="mt-1">
+                          <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-1 rounded mr-2">CMS Canonical</span>
+                          <p className="text-xs mt-1 text-neutral-500 line-clamp-1">
+                            <strong className="font-mono text-neutral-400">YouTube:</strong> {release.youtubeTitle}
+                          </p>
+                        </div>
+                      )}
+
                       {release.vocalist?.name && (
                         <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-muted)' }}>
                           {release.vocalist.name}
