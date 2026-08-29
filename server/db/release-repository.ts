@@ -191,7 +191,13 @@ export class PostgresReleaseRepository {
     let paramIndex = 1;
 
     if (query.requirePublicEligibility) {
-      whereSql += ` AND visibility = 'public' AND (release_lifecycle NOT IN ('upcoming', 'teaser_live', 'premiere_scheduled') OR premiere_visibility = 'public')`;
+      whereSql += ` AND visibility = 'public' AND (` +
+        `COALESCE(payload->>'releaseLifecycle', '') NOT IN ('upcoming', 'teaser_live', 'premiere_scheduled')` +
+        ` OR (` +
+        `payload->>'releaseLifecycle' IN ('upcoming', 'teaser_live', 'premiere_scheduled')` +
+        ` AND payload->>'premiereVisibility' = 'public'` +
+        `))`;
+
     }
 
     // Status
