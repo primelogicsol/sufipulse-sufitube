@@ -78,6 +78,7 @@ export default function CMSReleasesPage() {
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
   const [youtubePanelOpen, setYoutubePanelOpen] = useState(false);
   const [resolutions, setResolutions] = useState<Record<string, 'youtube' | 'cms'>>({});
+  const [youtubeLastRefreshed, setYoutubeLastRefreshed] = useState<string | null>(null);
   const [youtubeMessage, setYoutubeMessage] = useState<React.ReactNode | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -199,10 +200,12 @@ export default function CMSReleasesPage() {
     }
   };
 
-  const fetchYouTubeVideos = async () => {
+  const fetchYouTubeVideos = async (options?: { preserveMessage?: boolean }) => {
     try {
       setLoadingYouTube(true);
-      setYoutubeMessage(null);
+      if (!options?.preserveMessage) {
+        setYoutubeMessage(null);
+      }
       const res = await fetch('/api/releases/import-youtube?fetchAll=1');
       const data = await res.json();
       if (!res.ok) {
@@ -210,8 +213,12 @@ export default function CMSReleasesPage() {
       }
       setYoutubeVideos(Array.isArray(data.items) ? data.items : []);
       setYoutubePanelOpen(true);
-      setSelectedVideoIds(new Set());
-      setYoutubeMessage(`Fetched ${data.count || 0} videos from YouTube (large channel scan).`);
+      if (!options?.preserveMessage) {
+        setSelectedVideoIds(new Set());
+        setResolutions({});
+        setYoutubeMessage(`Fetched ${data.count || 0} videos from YouTube (large channel scan).`);
+        setYoutubeLastRefreshed(new Date().toLocaleTimeString());
+      }
     } catch (error: any) {
       setYoutubeMessage(`Fetch failed: ${error?.message || 'Unknown error'}`);
     } finally {
@@ -254,9 +261,11 @@ export default function CMSReleasesPage() {
         throw new Error(data?.error || 'Import failed');
       }
 
-      setYoutubeMessage(formatVerificationMessage(data, ids.length));
       await loadReleases();
-      await fetchYouTubeVideos();
+        await fetchYouTubeVideos({ preserveMessage: true });
+        setYoutubeMessage(formatVerificationMessage(data, ids.length));
+        setSelectedVideoIds(new Set());
+        setResolutions({});
     } catch (error: any) {
       setYoutubeMessage(`Import failed: ${error?.message || 'Unknown error'}`);
     } finally {
@@ -316,16 +325,36 @@ export default function CMSReleasesPage() {
     }
   };
 
+    const youtubeCount = youtubeVideos.length;
+  const newVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'youtube_only' || !v.alreadyImported);
+  const updateVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'metadata_mismatch');
+  const upToDateVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'matched');
+  const selectedCount = selectedVideoIds.size;
+  
+  const unresolvedConflicts = youtubeVideos.filter(v => 
+    selectedVideoIds.has(v.id) && 
+    v.reconciliationStatus === 'metadata_mismatch' && 
+    !resolutions[v.id]
+  ).length;
+
   const selectAllUnsaved = () => {
-    setSelectedVideoIds(new Set(youtubeVideos.filter(v => v.reconciliationStatus === 'youtube_only' || !v.alreadyImported).map(v => v.id)));
+    setSelectedVideoIds(new Set(newVideos.map(v => v.id)));
   };
 
   const selectMetadataUpdates = () => {
-    setSelectedVideoIds(new Set(youtubeVideos.filter(v => v.reconciliationStatus === 'metadata_mismatch').map(v => v.id)));
+    setSelectedVideoIds(new Set(updateVideos.map(v => v.id)));
   };
 
   const clearSelectedVideos = () => {
     setSelectedVideoIds(new Set());
+    setResolutions({});
+  };
+  
+  const forceResyncAll = () => {
+    if (confirm("Re-fetch current YouTube packaging for all " + youtubeCount + " records while preserving governed CMS fields?")) {
+      const allIds = youtubeVideos.map(v => v.id);
+      setSelectedVideoIds(new Set(allIds));
+    }
   };
 
   const fetchLiveStreams = async () => {
@@ -479,7 +508,7 @@ export default function CMSReleasesPage() {
             </button>
           </Link>
           <button
-            onClick={fetchYouTubeVideos}
+            onClick={() => fetchYouTubeVideos()}
             disabled={loadingYouTube}
             className="flex items-center gap-2 px-4 py-2 rounded-lg dashboard-btn-secondary font-medium text-sm disabled:opacity-60"
           >
@@ -502,54 +531,126 @@ export default function CMSReleasesPage() {
         </div>
 
         {youtubePanelOpen && (
-          <div className="mb-6 dashboard-card p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-              <div>
-                <h2 className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>YouTube Video Picker</h2>
-                <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>
-                  Select real YouTube videos and import them as editable CMS releases.
-                </p>
+            <div className="mb-6 dashboard-card p-4">
+              <div className="w-full mb-3">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold" style={{ color: 'var(--dash-text-primary)' }}>YouTube Video Picker</h2>
+                    <p className="text-xs text-neutral-400 mt-1">Select real YouTube videos and import them as editable CMS releases.</p>
+                  </div>
+                  {youtubeLastRefreshed && !loadingYouTube && (
+                    <div className="text-xs text-emerald-400 font-mono text-right">
+                      ✓ Refreshed from YouTube<br/>
+                      {youtubeCount} videos<br/>
+                      Last refreshed: {youtubeLastRefreshed}
+                    </div>
+                  )}
+                  {loadingYouTube && (
+                    <div className="text-xs text-amber-400 font-mono animate-pulse text-right">
+                      Refreshing...
+                    </div>
+                  )}
+                </div>
+
+                {youtubeCount > 0 && (
+                  <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 mb-4">
+                    <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">YouTube Reconciliation</h3>
+                    
+                    <div className="grid grid-cols-5 gap-4 mb-4 font-mono text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-neutral-500 text-xs">Fetched</span>
+                        <span className="text-white text-lg">{youtubeCount}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-neutral-500 text-xs">New</span>
+                        <span className="text-amber-400 text-lg">{newVideos.length}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-neutral-500 text-xs">Updates</span>
+                        <span className="text-blue-400 text-lg">{updateVideos.length}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-neutral-500 text-xs">Up to Date</span>
+                        <span className="text-emerald-400 text-lg">{upToDateVideos.length}</span>
+                      </div>
+                      <div className="flex flex-col border-l border-neutral-800 pl-4">
+                        <span className="text-neutral-500 text-xs">Selected</span>
+                        <span className="text-white text-lg">{selectedCount}</span>
+                      </div>
+                    </div>
+                    
+                    {newVideos.length === 0 && updateVideos.length === 0 && (
+                      <div className="text-emerald-400 text-sm font-mono mb-4">
+                        ✓ All {youtubeCount} fetched YouTube videos are already synchronized with CMS. Nothing currently requires import or update.
+                      </div>
+                    )}
+                    
+                    <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={selectAllUnsaved}
+                        disabled={newVideos.length === 0}
+                        className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <CheckSquare size={14} /> Select New ({newVideos.length})
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={selectMetadataUpdates}
+                        disabled={updateVideos.length === 0}
+                        className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <RefreshCw size={14} /> Select Updates ({updateVideos.length})
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={clearSelectedVideos}
+                        disabled={selectedCount === 0}
+                        className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <Square size={14} /> Clear ({selectedCount})
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => fetchYouTubeVideos()}
+                        disabled={loadingYouTube}
+                        className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <RefreshCw size={14} className={loadingYouTube ? 'animate-spin' : ''} /> {loadingYouTube ? 'Refreshing...' : 'Refresh'}
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={forceResyncAll}
+                        className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 text-neutral-400"
+                      >
+                        Advanced: Force Re-sync All
+                      </button>
+
+                      <div className="flex-grow"></div>
+
+                      <div className="flex items-center gap-3">
+                        {unresolvedConflicts > 0 && (
+                          <span className="text-rose-400 text-sm font-mono font-bold">
+                            {unresolvedConflicts} conflicts unresolved
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={importSelectedFromYouTube}
+                          disabled={importingYouTube || selectedCount === 0 || unresolvedConflicts > 0}
+                          className="dashboard-btn-primary px-4 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
+                        >
+                          <Download size={14} /> {importingYouTube ? 'Importing...' : `Import & Save Selected (${selectedCount})`}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={selectAllUnsaved}
-                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"
-                >
-                  <CheckSquare size={14} /> Select All Unsaved
-                </button>
-                <button
-                  type="button"
-                  onClick={selectMetadataUpdates}
-                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"
-                >
-                  <RefreshCw size={14} /> Select Updates
-                </button>
-                <button
-                  type="button"
-                  onClick={clearSelectedVideos}
-                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"
-                >
-                  <Square size={14} /> Clear
-                </button>
-                <button
-                  type="button"
-                  onClick={fetchYouTubeVideos}
-                  disabled={loadingYouTube}
-                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"
-                >
-                  <RefreshCw size={14} /> Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={importSelectedFromYouTube}
-                  disabled={importingYouTube || selectedVideoIds.size === 0}
-                  className="dashboard-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"
-                >
-                  <Download size={14} /> {importingYouTube ? 'Importing...' : `Import & Save Selected (${selectedVideoIds.size})`}
-                </button>
-              </div>
-            </div>
 
             <div className="mb-4 flex items-center gap-2 bg-neutral-900/50 p-3 rounded-lg border border-neutral-800">
                 <input 
