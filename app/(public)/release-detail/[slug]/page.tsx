@@ -11,6 +11,8 @@ import {
 import { trackEvent } from "@/app/lib/analytics";
 import dynamic from "next/dynamic";
 import { Layout } from "../../../components/layout/Layout";
+import SufiPulsePlayer from "@/components/SufiPulsePlayer";
+import ReleaseRecommendations from "@/components/ReleaseRecommendations";
 import { AuthContext } from "@/app/contexts/AuthContext";
 import { PageContainer } from "../../../components/layout/PageContainer";
 import { Badge } from "../../../components/primitives/Badge";
@@ -2354,18 +2356,7 @@ function Release() {
                     </>
                   ) : resolvedVideoId ? (
                     <div className="w-full h-full relative">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${resolvedVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
-                        title={release.release_title || release.title}
-                        className="w-full h-full aspect-video border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        allowFullScreen
-                        onLoad={() => {
-                          setVideoReady(true);
-                          setIsPlaying(true);
-                        }}
-                      />
+                      <SufiPulsePlayer youtubeId={resolvedVideoId} releaseId={release.id} />
                       {videoReady && activeOverlayTrack && (
                         <VideoOverlay
                           track={activeOverlayTrack}
@@ -5315,8 +5306,10 @@ function Release() {
           handleShareMoment={handleShareMoment}
           handleCopyLink={handleCopyLink}
           handleShare={handleShare}
-        />
-      </PageContainer>
+          />
+
+          <ReleaseRecommendations currentId={release.id} />
+        </PageContainer>
       <LyricsRequestModal
         isOpen={isLyricsRequestModalOpen}
         onClose={() => setIsLyricsRequestModalOpen(false)}

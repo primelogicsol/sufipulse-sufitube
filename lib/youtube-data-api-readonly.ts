@@ -54,6 +54,10 @@ type YouTubeApiItem = {
     publishedAt?: string;
     channelId?: string;
     liveBroadcastContent?: string;
+    defaultLanguage?: string;
+    defaultAudioLanguage?: string;
+    categoryId?: string;
+    channelTitle?: string;
     thumbnails?: {
       maxres?: YouTubeThumbnail;
       high?: YouTubeThumbnail;
@@ -63,6 +67,9 @@ type YouTubeApiItem = {
   contentDetails?: {
     duration?: string;
     videoId?: string;
+    caption?: string;
+    licensedContent?: boolean;
+    regionRestriction?: any;
     relatedPlaylists?: { uploads?: string };
   };
   statistics?: {
@@ -70,6 +77,16 @@ type YouTubeApiItem = {
     likeCount?: string;
     commentCount?: string;
   };
+  
+  status?: {
+    license?: string;
+    privacyStatus?: string;
+    embeddable?: boolean;
+  };
+  recordingDetails?: {
+    recordingDate?: string;
+  };
+
   liveStreamingDetails?: {
     actualStartTime?: string;
     scheduledStartTime?: string;
