@@ -10,7 +10,7 @@ import { cmsReleaseSchema, releasesQuerySchema } from '@/app/lib/validation-sche
 
 
 const cacheHeaders = {
-  'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=3600',
+  'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=2592000',
 };
 
 export async function GET(request: NextRequest) {
@@ -256,9 +256,7 @@ export async function GET(request: NextRequest) {
 
 
 export async function POST(request: NextRequest) {
-  if (getReleaseStorageBackend() === 'postgres') {
-    return NextResponse.json({ error: "Release mutations are temporarily disabled during PostgreSQL read-cutover validation." }, { status: 503 });
-  }
+  // Note: Mutations are enabled. Postgres replication is handled after canonical mutation.
 
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -317,7 +315,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate social share kit whenever status becomes published
+    if (release.status === 'published' && release.youtubeId) {
+      const { generateSocialShareKit } = await import('@/lib/social-share-generator');
+      release.socialShareKit = generateSocialShareKit(release as any);
+    }
+
     const saved = cmsServerStorage.saveRelease(release);
+
+    // --- Postgres Replication ---
+    if (process.env.RELEASE_STORAGE_BACKEND === 'postgres') {
+      try {
+        const { PostgresReleaseRepository } = await import('@/server/db/release-repository');
+        const repo = new PostgresReleaseRepository();
+        await repo.insert(saved as any);
+      } catch (err) {
+        cmsServerStorage.deleteRelease(saved.id);
+        console.error('Postgres replication failed, rolled back registry', { err: String(err) });
+        throw new Error('Postgres replication failed: ' + String(err));
+      }
+    }
 
     // --- CACHE INVALIDATION ---
     try {
@@ -327,6 +344,46 @@ export async function POST(request: NextRequest) {
       revalidatePath('/release-detail/[slug]', 'page');
     } catch (cacheErr) {
       console.warn('Cache revalidation failed during POST:', cacheErr);
+    }
+
+    // Auto-notify subscribers when a release is first published
+    if (saved.status === 'published' && saved.youtubeId) {
+      const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      fetch(`${base}/api/admin/notify-subscribers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', cookie: request.headers.get('cookie') || '' },
+        body: JSON.stringify({
+          title: saved.title,
+          youtubeId: saved.youtubeId,
+          youtubePlaylistId: saved.youtubePlaylistId,
+          slug: saved.slug,
+          releaseId: saved.id,
+        }),
+      }).catch((err) => console.warn('Subscriber notification failed', { err: String(err) }));
+    }
+
+    // --- LYRICS REQUEST NOTIFICATIONS ---
+    const newlyPublishedLanguages: string[] = [];
+    if (body.subtitleLanguageStatuses) {
+      for (const [lang, status] of Object.entries(body.subtitleLanguageStatuses)) {
+        if (status === 'published') {
+          newlyPublishedLanguages.push(lang);
+        }
+      }
+    }
+
+    if (newlyPublishedLanguages.length > 0) {
+      const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      for (const langCode of newlyPublishedLanguages) {
+        fetch(`${base}/api/admin/notify-lyrics-requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', cookie: request.headers.get('cookie') || '' },
+          body: JSON.stringify({
+            releaseId: saved.id,
+            languageCode: langCode,
+          }),
+        }).catch((err) => console.warn(`Lyrics request notification failed for ${langCode}`, { err: String(err) }));
+      }
     }
 
     return NextResponse.json(saved, { status: 201 });

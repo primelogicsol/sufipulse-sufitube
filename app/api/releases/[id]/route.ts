@@ -14,7 +14,7 @@ import { cmsReleaseSchema } from '@/app/lib/validation-schemas';
 export const dynamic = 'force-dynamic';
 
 const cacheHeaders = {
-  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=300',
+  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=2592000',
 };
 
 const apiLogger = logger.api;
@@ -369,6 +369,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       revalidatePath('/releases');
       revalidatePath('/release-premieres');
       if (existing.slug) revalidatePath(`/release-detail/${existing.slug}`);
+      revalidatePath('/release-detail/[slug]', 'page');
     } catch (cacheErr) {
       apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
     }
