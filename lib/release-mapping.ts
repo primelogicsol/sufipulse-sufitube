@@ -65,8 +65,10 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
   // If resolution is used from the UI (legacy, or if they force 'youtube')
   if (resolution === 'youtube') { titleOverride = false; descriptionOverride = false; }
   
-  const finalTitle = titleOverride ? (existing?.title || liveTitle) : liveTitle;
-  const finalCanonicalTitle = titleOverride ? (existing?.canonicalTitle || liveTitle) : liveTitle;
+  const initialCanonical = initializeCanonicalTitle(liveTitle);
+  const finalCanonicalTitle = existing?.canonicalTitle || existing?.title || initialCanonical;
+  const finalTitle = existing?.title || finalCanonicalTitle;
+  
   const finalDescriptionText = descriptionOverride ? (existing?.description || liveDescription) : liveDescription;
 
   const id = existing?.id || `release_${Date.now()}_${video.id}`;
@@ -114,6 +116,8 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     licensedContent: video.licensedContent ?? existing?.licensedContent,
     recordingDate: existing?.recordingDate || video.recordingDate,
     recordingLocation: existing?.recordingLocation,
+    releaseDate: existing?.releaseDate || (publishedAt ? publishedAt.slice(0, 10) : undefined),
+    publishedAt: existing?.publishedAt || publishedAt,
     defaultAudioLanguage: video.defaultAudioLanguage ?? existing?.defaultAudioLanguage,
     
     youtubeCaptionTracks: (() => {
@@ -180,7 +184,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     visibility: existing?.visibility || 'public',
     source: existing?.source || 'youtube',
     releaseType,
-    format: existing?.format || (video.formatClassificationSource === 'youtube_shorts_surface' ? 'short' : video.liveBroadcastContent === 'none' ? 'video' : 'live'),
+    format: existing?.format || (video.youtubeContentType === 'SHORTS' ? 'short' : video.youtubeContentType === 'LIVE_STREAM' ? 'live' : 'video'),
     formatClassificationSource: existing?.formatClassificationSource || video.formatClassificationSource || 'inferred',
     
     availableLanguages: existing?.availableLanguages || ['en', 'ur'],
@@ -188,7 +192,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     createdAt: existing?.createdAt || now,
     updatedAt: now,
     
-    enableLyrics: false,
+    enableLyrics: existing?.enableLyrics || false,
     enableCommentary: existing?.enableCommentary !== false,
     enableSponsors: !!existing?.enableSponsors,
     enableAdoption: existing?.enableAdoption !== false,
@@ -235,7 +239,7 @@ export const mapPlaylistToRelease = (playlist: any, existing?: CMSRelease | null
         defaultLanguage: existing?.defaultLanguage || 'en',
         createdAt: existing?.createdAt || now,
         updatedAt: now,
-        enableLyrics: false,
+        enableLyrics: existing?.enableLyrics || false,
         enableCommentary: existing?.enableCommentary !== false,
         enableSponsors: !!existing?.enableSponsors,
         enableAdoption: existing?.enableAdoption !== false,
