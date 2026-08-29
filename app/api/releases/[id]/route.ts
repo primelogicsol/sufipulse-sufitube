@@ -1,5 +1,5 @@
 import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
-import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { toCanonicalCMSRelease, toPublicPremiereRelease } from '@/server/storage/release-dto';
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
@@ -30,7 +30,7 @@ function normalizeFieldNames(body: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(body)) {
-    // Map known snake_case → camelCase fields from the public page
+    // Map known snake_case â†’ camelCase fields from the public page
     const fieldMap: Record<string, string> = {
       release_title: 'title',
       subtitle_cues: 'subtitleCues',
@@ -82,7 +82,13 @@ export async function GET(
   const { id } = await params;
   try {
     const store = getReleaseReadStore();
-      const release = await store.getById(id);
+      let release = await store.getById(id);
+      if (!release) {
+        release = await store.getBySlug(id);
+      }
+      if (!release) {
+        release = await store.getByYoutubeId(id);
+      }
     if (!release) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
@@ -95,18 +101,27 @@ export async function GET(
       release.thumbnailUrl = `https://i.ytimg.com/vi/${release.youtubeId}/maxresdefault.jpg`;
     }
 
-    if (release.status !== 'published') {
+    const canonical = toCanonicalCMSRelease(release);
+
+    if (canonical.status !== 'published') {
       if (!isAdmin) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(toCanonicalCMSRelease(release));
+      return NextResponse.json(canonical);
+    }
+
+    if (!isAdmin && ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(canonical.releaseLifecycle || '')) {
+      if (canonical.visibility !== 'public' || canonical.premiereVisibility !== 'public') {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      return NextResponse.json(toPublicPremiereRelease(canonical), { headers: cacheHeaders });
     }
 
     if (isAdmin) {
-      return NextResponse.json(toCanonicalCMSRelease(release), { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
+      return NextResponse.json(canonical, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
     }
 
-    return NextResponse.json(toCanonicalCMSRelease(release), { headers: cacheHeaders });
+    return NextResponse.json(canonical, { headers: cacheHeaders });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -128,7 +143,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // If it doesn't exist, we'll create it (upsert)
     // This happens when an admin edits a "legacy" YouTube release from the public page
     const nextYoutubeId = String(body.youtubeId || (existing?.youtubeId) || (id.length === 11 ? id : '')).trim();
-    
+
     // Check if this YouTube ID already exists under a different CMS ID
     if (!existing && nextYoutubeId) {
       const youtubeOwner = cmsServerStorage.getReleaseByYoutubeId(nextYoutubeId);
@@ -193,10 +208,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         enableSponsors: false,
         enableAdoption: true,
         enableCredits: true,
-      }) as CMSRelease, 
-      ...body, 
+      }) as CMSRelease,
+      ...body,
       id: existing?.id || id, // Always enforce the correct ID
-      slug: nextSlug, 
+      slug: nextSlug,
       youtubeId: nextYoutubeId,
       updatedAt: now,
     };
@@ -233,7 +248,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         const repo = new PostgresReleaseRepository();
         await repo.bulkUpsert([updated as any]);
       } catch (err) {
-        apiLogger.error('Postgres replication failed', { err: String(err) });
+        if (existing) {
+          cmsServerStorage.saveRelease(existing);
+        } else {
+          cmsServerStorage.deleteRelease(updated.id);
+        }
+        apiLogger.error('Postgres replication failed, rolled back registry', { err: String(err) });
+        throw new Error('Postgres replication failed: ' + String(err));
       }
     }
 
@@ -285,7 +306,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       for (const [lang, status] of Object.entries(body.subtitleLanguageStatuses)) {
         const isNowPublished = status === 'published';
         const wasNotPublished = !existing?.subtitleLanguageStatuses || existing.subtitleLanguageStatuses[lang] !== 'published';
-        
+
         if (isNowPublished && wasNotPublished) {
           newlyPublishedLanguages.push(lang);
         }
@@ -336,6 +357,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         await repo.delete(id);
       } catch (err) {
         apiLogger.error('Postgres deletion replication failed', { err: String(err) });
+        throw new Error('Postgres deletion replication failed: ' + String(err));
       }
     }
 

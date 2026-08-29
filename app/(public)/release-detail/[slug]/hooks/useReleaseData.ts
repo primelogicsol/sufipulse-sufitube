@@ -96,7 +96,7 @@ export function useReleaseData(slug: string) {
         let resolvedSource: string | null = null;
 
         try {
-          const keyRes = await fetch(`/api/releases?key=${encodeURIComponent(slug)}&nocache=1`);
+          const keyRes = await fetch(`/api/releases/${encodeURIComponent(slug)}?nocache=1`);
           if (keyRes.ok) {
             const data = await keyRes.json();
             if (data && !data.error) {

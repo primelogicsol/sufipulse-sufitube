@@ -28,7 +28,7 @@ async function getPremieres() {
   }
 
   const now = new Date().getTime();
-  const SEVEN_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
   const eligibleReleases = allReleases.filter(r => {
     if (r.status !== 'published') return false;
@@ -39,7 +39,8 @@ async function getPremieres() {
     if (lifecycle === 'released') {
       if (r.officialReleaseAt) {
         const releaseTime = new Date(r.officialReleaseAt).getTime();
-        if (now - releaseTime > SEVEN_DAYS_MS) {
+        // Keep if it was released within the last 30 days or is scheduled for the future
+        if (now - releaseTime > THIRTY_DAYS_MS) {
           return false;
         }
       } else {
@@ -58,7 +59,7 @@ async function getPremieres() {
   if (explicitFeatured) {
     featured = explicitFeatured;
   } else {
-    const withLiveTeaser = eligibleReleases.filter(r => 
+    const withLiveTeaser = eligibleReleases.filter(r =>
       r.preReleaseAssets?.some(a => a.type === 'premium_teaser' && a.status === 'live')
     );
     if (withLiveTeaser.length > 0) {
@@ -140,14 +141,14 @@ export default async function ReleasePremieresPage() {
               <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-bold text-[var(--color-gold)] leading-[1.1] tracking-tight drop-shadow-lg mb-8 italic">
                 First Listen Before Release
               </h2>
-              
+
               <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-12 leading-relaxed font-light drop-shadow px-4">
                 Discover forthcoming SufiPulse works before their official release. Experience governed premium teasers, scheduled premieres, and first-listen previews from SufiPulse Studio USA.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <a href="#premieres-content" className="px-8 py-4 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm hover:bg-[#FDE68A] transition-all rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:-translate-y-0.5">EXPLORE PREMIERES</a>
-                <Link 
+                <Link
                   href="/governance"
                   className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-sm hover:bg-white/10 transition-all rounded-full backdrop-blur-sm"
                 >
@@ -209,7 +210,7 @@ export default async function ReleasePremieresPage() {
                         View Released Catalog →
                       </Link>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {upcoming.map((release) => (
                         <UpcomingPremiereCard key={release.id} release={release} />

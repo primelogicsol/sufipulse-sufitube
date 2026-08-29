@@ -8,15 +8,15 @@ async function migrate() {
     console.log('Skipping migration: RELEASE_STORAGE_BACKEND is not postgres');
     return;
   }
-  
+
   const pool = new Pool({
-    connectionString: process.env.POSTGRES_URL,
+    connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
   });
-  
+
   const migrationsDir = path.join(__dirname, '../server/db/migrations');
   const files = fs.readdirSync(migrationsDir).sort();
-  
+
   for (const file of files) {
     if (file.endsWith('.sql')) {
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
@@ -24,9 +24,12 @@ async function migrate() {
       await pool.query(sql);
     }
   }
-  
+
   await pool.end();
   console.log('Migrations complete.');
 }
 
-migrate().catch(console.error);
+migrate().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

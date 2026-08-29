@@ -1,6 +1,6 @@
 /**
  * SufiPulse Database Schema Definitions
- * 
+ *
  * Type-safe schema definitions for all database tables.
  * Used with the file-based database system.
  */
@@ -261,7 +261,7 @@ export interface CMSRelease {
   show_likes: boolean;
   release_date?: string;
   published_at?: string;
-  
+
   // Premiere Room & Pre-Release Lifecycle fields
   release_lifecycle?: 'upcoming' | 'teaser_live' | 'premiere_scheduled' | 'released' | 'archived';
   official_release_at?: string;
@@ -510,15 +510,11 @@ export interface YouTubeAnalyticsSnapshot {
 export interface ReleaseNotificationSubscription {
   id: string;
   release_id: string;
-  email: string;
   normalized_email: string;
-  status: 'pending' | 'confirmed' | 'unsubscribed';
-  confirmation_token: string;
-  unsubscribe_token: string;
+  status: 'subscribed' | 'unsubscribed';
+  token: string;
   created_at: string;
-  confirmed_at?: string;
   notified_at?: string;
-  updated_at: string;
 }
 
 /**
@@ -582,11 +578,11 @@ export function getTable<T extends { id: string }>(tableName: keyof DatabaseSche
  */
 export async function seedDatabase(): Promise<void> {
   const users = getTable<User>('users');
-  
+
   // Only seed if no users exist
   if (users.count() === 0) {
     const now = new Date().toISOString();
-    
+
     // Create admin user
     users.insert({
       id: generateId(),

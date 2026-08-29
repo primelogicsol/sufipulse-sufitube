@@ -12,13 +12,13 @@ import { useRouter } from 'next/navigation';
 export function UpcomingPremiereCard({ release }: { release: any }) {
   const [showShare, setShowShare] = useState(false);
   const router = useRouter();
-  
+
   const title = release.canonicalTitle || release.title;
-  
+
   const liveTeaser = release.preReleaseAssets?.find(
     (a: any) => a.type === 'premium_teaser' && a.status === 'live'
   );
-  
+
   const artworkUrl = liveTeaser?.thumbnailUrl || release.canonicalThumbnail || release.thumbnailUrl || '/empty-artwork.png';
   const isReleased = release.releaseLifecycle === 'released';
 
@@ -44,17 +44,14 @@ export function UpcomingPremiereCard({ release }: { release: any }) {
 
   return (
     <>
-      <div 
-        onClick={handleCardClick}
-        onKeyDown={handleKeyDown}
-        role="link"
-        tabIndex={0}
+      <Link
+        href={`/release-detail/${release.slug}`}
         aria-label={`View details for ${title}`}
-        className="bg-[var(--color-midnight)]/60 border border-[var(--color-border-strong)] rounded-xl overflow-hidden hover:border-[var(--color-gold)]/50 transition-colors backdrop-blur-md cursor-pointer flex flex-col h-full group relative focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]"
+        className="bg-[var(--color-midnight)]/60 border border-[var(--color-border-strong)] rounded-xl overflow-hidden hover:border-[var(--color-gold)]/50 transition-colors backdrop-blur-md flex flex-col h-full group relative focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]"
       >
         <div className="aspect-video bg-[#0a0f1c] relative border-b border-[var(--color-border)] overflow-hidden">
-          <Image 
-            src={artworkUrl} 
+          <Image
+            src={artworkUrl}
             alt={title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
@@ -70,7 +67,7 @@ export function UpcomingPremiereCard({ release }: { release: any }) {
             <span className="text-[10px] text-[var(--color-gold)] uppercase tracking-widest font-bold">
               {statusBadge}
             </span>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -83,7 +80,7 @@ export function UpcomingPremiereCard({ release }: { release: any }) {
             </button>
           </div>
           <h4 className="text-lg font-bold text-white mb-2 leading-tight">{title}</h4>
-          
+
           {release.vocalist && (
             <p className="text-sm text-neutral-400 mb-4 line-clamp-1">
               Vocals: {typeof release.vocalist === 'string' ? release.vocalist : release.vocalist.name}
@@ -96,7 +93,7 @@ export function UpcomingPremiereCard({ release }: { release: any }) {
             </span>
           </div>
         </div>
-      </div>
+      </Link>
 
       <ShareModal
         isOpen={showShare}

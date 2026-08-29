@@ -20,7 +20,8 @@
     "env:validate": "node scripts/validate-env.mjs",
     "env:check": "node scripts/validate-env.mjs",
     "predev": "node scripts/validate-env.mjs",
-    "prebuild": "node scripts/validate-env.mjs"
+    "prebuild": "node scripts/validate-env.mjs && npm run db:migrate",
+    "db:migrate": "node scripts/migrate.js"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",

@@ -51,17 +51,16 @@ export function ShareModal({
 }: ShareModalProps) {
   if (!isOpen) return null;
 
-  const getShareUrl = (platform: string) => {
+  const getShareUrl = () => {
     if (shareContext) return shareContext.shareUrl;
-
-    let url = context === "release" && youtubeUrl ? youtubeUrl : canonicalUrl;
-    if (socialShareKit && socialShareKit[platform]) {
-      return socialShareKit[platform];
-    }
-    return url;
+    return context === "release" && youtubeUrl ? youtubeUrl : canonicalUrl;
   };
 
-  const getShareText = () => {
+  const getShareText = (platform: string) => {
+    const kit = shareContext?.socialShareKit || socialShareKit;
+    if (kit && kit[platform]) {
+      return kit[platform];
+    }
     if (shareContext) return shareContext.shareText;
 
     if (context === "premiere") return `Upcoming Premiere: ${title}`;
@@ -74,45 +73,59 @@ export function ShareModal({
       handleShare(platform);
       return;
     }
-    
-    const url = getShareUrl(platform);
-    const text = encodeURIComponent(getShareText());
+
+    const url = getShareUrl();
+    const kit = shareContext?.socialShareKit || socialShareKit;
+    const hasKitText = !!(kit && kit[platform]);
+
+    const rawText = getShareText(platform);
+    const text = encodeURIComponent(rawText);
     const encodedUrl = encodeURIComponent(url);
-    
+
     let shareIntent = "";
     switch (platform) {
       case "facebook":
+        // Facebook sharer only accepts URLs, does not pre-fill text reliably
         shareIntent = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
         break;
       case "twitter":
-        shareIntent = `https://twitter.com/intent/tweet?text=${text}&url=${encodedUrl}`;
+        shareIntent = hasKitText
+          ? `https://twitter.com/intent/tweet?text=${text}`
+          : `https://twitter.com/intent/tweet?text=${text}&url=${encodedUrl}`;
         break;
       case "whatsapp":
-        shareIntent = `https://api.whatsapp.com/send?text=${text}%20${encodedUrl}`;
+        shareIntent = hasKitText
+          ? `https://api.whatsapp.com/send?text=${text}`
+          : `https://api.whatsapp.com/send?text=${text}%20${encodedUrl}`;
         break;
       case "linkedin":
         shareIntent = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
         break;
       case "telegram":
-        shareIntent = `https://t.me/share/url?url=${encodedUrl}&text=${text}`;
+        shareIntent = hasKitText
+          ? `https://t.me/share/url?url=${encodedUrl}&text=${text}`
+          : `https://t.me/share/url?url=${encodedUrl}&text=${text}`;
         break;
       case "reddit":
         shareIntent = `https://reddit.com/submit?url=${encodedUrl}&title=${text}`;
         break;
       case "email":
-        shareIntent = `mailto:?subject=${text}&body=Check this out: ${url}`;
+        shareIntent = hasKitText
+          ? `mailto:?subject=${encodeURIComponent(title)}&body=${text}`
+          : `mailto:?subject=${text}&body=Check this out: ${url}`;
         break;
       case "native":
         if (navigator.share) {
           navigator.share({
-            title: getShareText(),
-            url: url
+            title: title,
+            text: hasKitText ? rawText : rawText,
+            url: hasKitText ? undefined : url // Don't pass URL if it's already in the text to avoid duplication
           }).catch(console.error);
           return;
         }
         break;
     }
-    
+
     if (shareIntent) {
       window.open(shareIntent, "_blank", "width=600,height=400");
     }
@@ -198,7 +211,7 @@ export function ShareModal({
       color: "#FF4500",
     },
   ];
-  
+
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
     platforms.push({
       id: "native",
@@ -241,7 +254,7 @@ export function ShareModal({
         {/* Helper text */}
         <div className="mb-6 px-1">
           <p className="text-xs text-white/50 leading-relaxed font-light text-left">
-            {context === "release" 
+            {context === "release"
               ? "Social shares use the YouTube link — helping this reach more listeners."
               : "Share this official Premiere page to build anticipation."}
           </p>

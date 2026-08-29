@@ -3,6 +3,9 @@ import { requireAdmin } from '@/server/middleware/authenticate';
 import { applyRateLimit, createRateLimiter } from '@/server/middleware/rate-limit';
 import { db } from '@/server/db/pool';
 import { sendEmail } from '@/app/lib/email';
+import { logger } from '@/app/lib/logger';
+
+const apiLogger = logger.api;
 
 const notifySubscribersLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, maxRequests: 5 });
 
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { rows: subscribers } = await db.query(
-      `SELECT id, normalized_email FROM release_notification_subscriptions 
+      `SELECT id, normalized_email FROM release_notification_subscriptions
        WHERE release_id = $1 AND status = 'subscribed' AND notified_at IS NULL`,
       [releaseId]
     );
@@ -71,11 +74,15 @@ export async function POST(request: NextRequest) {
           html,
           text: `New release on SufiPulse: "${title}"\n\nWatch on YouTube: ${ytUrl}\n\nView on site: ${siteUrl}`,
         });
-        
-        await db.query(
-          `UPDATE release_notification_subscriptions SET notified_at = CURRENT_TIMESTAMP WHERE id = $1`,
-          [sub.id]
-        );
+
+        if (process.env.EMAIL_PROVIDER && process.env.EMAIL_PROVIDER !== 'console') {
+          await db.query(
+            `UPDATE release_notification_subscriptions SET notified_at = CURRENT_TIMESTAMP WHERE id = $1`,
+            [sub.id]
+          );
+        } else {
+           apiLogger.info(`Skipped setting notified_at for ${sub.normalized_email} because EMAIL_PROVIDER is console or unconfigured.`);
+        }
         sent++;
       } catch (err: any) {
         errors.push(`${sub.normalized_email}: ${err.message}`);
