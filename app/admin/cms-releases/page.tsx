@@ -18,7 +18,7 @@ type YouTubeImportVideo = {
   durationFormatted?: string;
   views?: number;
   alreadyImported?: boolean;
-  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'canonical_override';
+  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'admin_override';
   cmsReleaseId?: string;
   cmsData?: { title: string; description: string; youtubeTitle?: string };
 };
@@ -31,7 +31,7 @@ type YouTubeImportPlaylist = {
   publishedDate?: string;
   itemCount?: number;
   alreadyImported?: boolean;
-  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'canonical_override';
+  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'admin_override';
   cmsReleaseId?: string;
   cmsData?: { title: string; description: string; youtubeTitle?: string };
 };
@@ -77,7 +77,6 @@ export default function CMSReleasesPage() {
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeImportVideo[]>([]);
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
   const [youtubePanelOpen, setYoutubePanelOpen] = useState(false);
-  const [resolutions, setResolutions] = useState<Record<string, 'youtube' | 'cms'>>({});
   const [youtubeLastRefreshed, setYoutubeLastRefreshed] = useState<string | null>(null);
   const [youtubeMessage, setYoutubeMessage] = useState<React.ReactNode | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -215,7 +214,6 @@ export default function CMSReleasesPage() {
       setYoutubePanelOpen(true);
       if (!options?.preserveMessage) {
         setSelectedVideoIds(new Set());
-        setResolutions({});
         setYoutubeMessage(`Fetched ${data.count || 0} videos from YouTube (large channel scan).`);
         setYoutubeLastRefreshed(new Date().toLocaleTimeString());
       }
@@ -254,7 +252,7 @@ export default function CMSReleasesPage() {
       const res = await fetch('/api/releases/import-youtube', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoIds: ids, resolutions }),
+        body: JSON.stringify({ videoIds: ids, resolutions: {} }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -265,8 +263,7 @@ export default function CMSReleasesPage() {
         await fetchYouTubeVideos({ preserveMessage: true });
         setYoutubeMessage(formatVerificationMessage(data, ids.length));
         setSelectedVideoIds(new Set());
-        setResolutions({});
-    } catch (error: any) {
+        } catch (error: any) {
       setYoutubeMessage(`Import failed: ${error?.message || 'Unknown error'}`);
     } finally {
       setImportingYouTube(false);
@@ -328,15 +325,11 @@ export default function CMSReleasesPage() {
     const youtubeCount = youtubeVideos.length;
   const newVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'youtube_only' || !v.alreadyImported);
   const updateVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'metadata_mismatch');
-  const overrideVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'canonical_override');
+  const overrideVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'admin_override');
   const upToDateVideos = youtubeVideos.filter(v => v.reconciliationStatus === 'matched');
   const selectedCount = selectedVideoIds.size;
   
-  const unresolvedConflicts = youtubeVideos.filter(v => 
-    selectedVideoIds.has(v.id) && 
-    (v.reconciliationStatus === 'metadata_mismatch' || v.reconciliationStatus === 'canonical_override') && 
-    !resolutions[v.id]
-  ).length;
+  const unresolvedConflicts = 0; // Resolutions removed, metadata updates are automatic based on titleSource
 
   const selectAllUnsaved = () => {
     setSelectedVideoIds(new Set(newVideos.map(v => v.id)));
@@ -348,8 +341,7 @@ export default function CMSReleasesPage() {
 
   const clearSelectedVideos = () => {
     setSelectedVideoIds(new Set());
-    setResolutions({});
-  };
+    };
   
   const forceResyncAll = () => {
     if (confirm("Re-fetch current YouTube packaging for all " + youtubeCount + " records while preserving governed CMS fields?")) {
@@ -386,7 +378,7 @@ export default function CMSReleasesPage() {
       const res = await fetch('/api/releases/import-youtube/live', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoIds: ids, resolutions }),
+        body: JSON.stringify({ videoIds: ids, resolutions: {} }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Import failed');
@@ -431,7 +423,7 @@ export default function CMSReleasesPage() {
       const res = await fetch('/api/releases/import-youtube/playlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playlistIds: ids, resolutions }),
+        body: JSON.stringify({ playlistIds: ids, resolutions: {} }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Import failed');
@@ -638,7 +630,7 @@ export default function CMSReleasesPage() {
                       <div className="flex-grow"></div>
 
                       <div className="flex items-center gap-3">
-                        {unresolvedConflicts > 0 && (
+                        {false && (
                           <span className="text-rose-400 text-sm font-mono font-bold">
                             {unresolvedConflicts} conflicts unresolved
                           </span>
@@ -646,7 +638,7 @@ export default function CMSReleasesPage() {
                         <button
                           type="button"
                           onClick={importSelectedFromYouTube}
-                          disabled={importingYouTube || selectedCount === 0 || unresolvedConflicts > 0}
+                          disabled={importingYouTube || selectedCount === 0 || false}
                           className="dashboard-btn-primary px-4 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
                         >
                           <Download size={14} /> {importingYouTube ? 'Importing...' : `Import & Save Selected (${selectedCount})`}
@@ -941,7 +933,7 @@ export default function CMSReleasesPage() {
                       
                       {release.youtubeTitle && release.youtubeTitle !== release.title && (
                         <div className="mt-1">
-                          <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-1 rounded mr-2">CMS Canonical</span>
+                          <span className="text-[10px] font-mono bg-neutral-800 text-purple-400 px-1 rounded mr-2 border border-purple-500/30">ADMIN OVERRIDE</span>
                           <p className="text-xs mt-1 text-neutral-500 line-clamp-1">
                             <strong className="font-mono text-neutral-400">YouTube:</strong> {release.youtubeTitle}
                           </p>

@@ -16,7 +16,7 @@ import { getValidYTAnalyticsAccessToken } from '@/app/lib/server/youtube-analyti
 const MAX_CHANNEL_VIDEOS = 500;
 const STALE_AFTER_DAYS = 30;
 
-type ReconciliationStatus = 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'canonical_override';
+type ReconciliationStatus = 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate' | 'admin_override';
 
 function dedupeVideos(videos: any[]): any[] {
   const byId = new Map<string, any>();
@@ -125,13 +125,8 @@ export async function GET(request: NextRequest) {
           reconciliationStatus = 'youtube_only';
         } else if (mismatchFields.length > 0) {
           reconciliationStatus = 'metadata_mismatch';
-        } else {
-          // Check for canonical override
-          const currentCanonical = existing.canonicalTitle || existing.title || '';
-          const currentYoutube = existing.youtubeTitle || '';
-          if (currentCanonical && currentYoutube && normalizeText(currentCanonical) !== normalizeText(currentYoutube)) {
-            reconciliationStatus = 'canonical_override';
-          }
+        } else if (existing.titleSource === 'admin') {
+          reconciliationStatus = 'admin_override';
         }
 
       return {
@@ -189,7 +184,7 @@ export async function GET(request: NextRequest) {
       matched: rows.filter(row => row.reconciliationStatus === 'matched').length,
       youtubeOnly: rows.filter(row => row.reconciliationStatus === 'youtube_only').length,
       metadataMismatch: rows.filter(row => row.reconciliationStatus === 'metadata_mismatch').length,
-        canonicalOverride: rows.filter(row => row.reconciliationStatus === 'canonical_override').length,
+        adminOverride: rows.filter(row => row.reconciliationStatus === 'admin_override').length,
       duplicates: rows.filter(row => row.reconciliationStatus === 'duplicate').length,
       stale: rows.filter(row => row.stale).length,
       cmsOnlyOrNonpublic: cmsOnly.length,

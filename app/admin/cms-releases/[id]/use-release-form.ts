@@ -786,11 +786,23 @@ export function useReleaseForm({
       const normalizedChorus = String((form.publicCredits as any)?.artistic?.backgroundVocals || '')
         .split(',').map((name) => name.trim()).filter(Boolean);
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, chorusVocalists: normalizedChorus }),
-      });
+      
+        // Title Governance Enforcement
+        let payload = { ...form, chorusVocalists: normalizedChorus };
+        if (payload.youtubeTitle) {
+          if (payload.title === payload.youtubeTitle) {
+            payload.titleSource = 'youtube';
+            payload.canonicalTitle = payload.youtubeTitle;
+          } else if (payload.title !== originalForm?.title || originalForm?.titleSource === 'admin') {
+            payload.titleSource = 'admin';
+          }
+        }
+        
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
 
       if (res.ok) {
         const data = await res.json();

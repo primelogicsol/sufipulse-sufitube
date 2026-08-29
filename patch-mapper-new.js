@@ -1,61 +1,10 @@
-import { type CMSRelease, getDefaultDistribution } from './cms-storage';
-import { cmsServerStorage } from './cms-storage-server';
+﻿const fs = require('fs');
+const file = 'lib/release-mapping.ts';
+let content = fs.readFileSync(file, 'utf8');
 
+const regex = /export const mapVideoToRelease = \(video: any, existing\?: CMSRelease \| null, resolution\?: 'youtube' \| 'cms'\): CMSRelease => \{[\s\S]*?return \{[\s\S]*?\} as CMSRelease;\s*\};/g;
 
-export function initializeCanonicalTitle(youtubeTitle: string): string {
-  if (!youtubeTitle || !youtubeTitle.trim()) {
-    throw new Error('Release validation failed: Missing canonical title');
-  }
-  
-  // 1. Normalize whitespace
-  let title = youtubeTitle.replace(/\s+/g, ' ').trim();
-  
-  // 2. Remove exact terminal channel branding
-  if (title.endsWith(' | SufiPulse USA')) {
-    title = title.replace(' | SufiPulse USA', '');
-  }
-  
-  // 3. Take leading identity segment before first spaced pipe separator
-  const parts = title.split(' | ');
-  const finalTitle = parts[0].trim();
-  
-  if (!finalTitle) {
-    throw new Error('Release validation failed: Missing canonical title after normalization');
-  }
-  
-  return finalTitle;
-}
-
-export const slugify = (value: string): string => {
-  const base = String(value || '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return base || 'release';
-};
-
-export const buildUniqueSlug = (title: string, youtubeId: string, currentReleaseId?: string): string => {
-  const base = slugify(title);
-  
-  // 1. Try base slug
-  const byBase = cmsServerStorage.getReleaseBySlug(base);
-  if (!byBase || byBase.id === currentReleaseId) {
-    return base;
-  }
-
-  // 2. Try base + youtubeId (canonical unique fallback)
-  const fallback = `${base}-${youtubeId.toLowerCase()}`;
-  const byFallback = cmsServerStorage.getReleaseBySlug(fallback);
-  if (!byFallback || byFallback.id === currentReleaseId) {
-    return fallback;
-  }
-
-  // 3. Absolute fallback
-  return `${fallback}-${Date.now()}`;
-};
-
-export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, resolution?: 'youtube' | 'cms'): CMSRelease => {
+const newFunction = `export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, resolution?: 'youtube' | 'cms'): CMSRelease => {
   const liveTitle = video.title || video.snippet?.title || '';
   const liveDescription = video.description || video.snippet?.description || '';
   
@@ -68,7 +17,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
   const finalCanonicalTitle = titleSource === 'admin' ? (existing?.canonicalTitle || liveTitle) : liveTitle;
   const finalDescriptionText = titleSource === 'admin' ? (existing?.description || liveDescription) : liveDescription;
 
-  const id = existing?.id || `release_${Date.now()}_${video.id}`;
+  const id = existing?.id || \`release_\${Date.now()}_\${video.id}\`;
   const slug = existing?.slug || buildUniqueSlug(finalTitle, video.id, existing?.id);
   const now = new Date().toISOString();
   
@@ -108,7 +57,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     id,
     slug,
     youtubeId: video.id,
-    youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
+    youtubeUrl: \`https://www.youtube.com/watch?v=\${video.id}\`,
     
     // Title Governance
     titleSource,
@@ -171,52 +120,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     intelligenceStatus: existing?.intelligenceStatus,
     intelligenceUpdatedAt: existing?.intelligenceUpdatedAt,
   } as CMSRelease;
-};
+};`;
 
-export const mapPlaylistToRelease = (playlist: any, existing?: CMSRelease | null): CMSRelease => {
-    const slug = existing?.slug || slugify(playlist.title);
-    const id = existing?.id || `playlist_${Date.now()}_${playlist.id}`;
-    const now = new Date().toISOString();
-
-    return {
-        ...(existing || {}),
-        id,
-        title: existing?.title || playlist.title,
-        slug,
-        youtubeId: '',
-        youtubePlaylistId: playlist.id,
-        youtubeUrl: `https://www.youtube.com/playlist?list=${playlist.id}`,
-        thumbnailUrl: existing?.thumbnailUrl || playlist.thumbnailUrl,
-        description: existing?.description || playlist.description || '',
-        releaseDate: (playlist.publishedDate || now).slice(0, 10),
-        durationSeconds: 0,
-        durationFormatted: '—',
-        viewCount: existing?.viewCount || 0,
-        likeCount: existing?.likeCount || 0,
-        status: existing?.status || 'published',
-        format: 'playlist',
-        availableLanguages: existing?.availableLanguages || ['en', 'ur'],
-        defaultLanguage: existing?.defaultLanguage || 'en',
-        createdAt: existing?.createdAt || now,
-        updatedAt: now,
-        enableLyrics: false,
-        enableCommentary: existing?.enableCommentary !== false,
-        enableSponsors: !!existing?.enableSponsors,
-        enableAdoption: existing?.enableAdoption !== false,
-        enableCredits: existing?.enableCredits !== false,
-        distribution: existing?.distribution || getDefaultDistribution(),
-
-        // Release Intelligence fields protected from YouTube Sync overwrites
-        targetRegions: existing?.targetRegions,
-        targetDiaspora: existing?.targetDiaspora,
-        targetLanguages: existing?.targetLanguages,
-        sufiConcepts: existing?.sufiConcepts,
-        themes: existing?.themes,
-        moods: existing?.moods,
-        seoKeywords: existing?.seoKeywords,
-        relatedReleases: existing?.relatedReleases,
-        relatedPlaylists: existing?.relatedPlaylists,
-        intelligenceStatus: existing?.intelligenceStatus,
-        intelligenceUpdatedAt: existing?.intelligenceUpdatedAt,
-    } as CMSRelease;
-};
+content = content.replace(regex, newFunction);
+fs.writeFileSync(file, content);

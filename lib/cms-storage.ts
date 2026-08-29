@@ -50,6 +50,7 @@ export interface CMSRelease {
   thumbnailUrl?: string; // Canonical Artwork (Registry Authority)
   canonicalThumbnail?: string;
   youtubeTitle?: string; // Current YouTube packaging title
+    titleSource?: 'youtube' | 'admin';
   youtubeDescription?: string;
   youtubeTitleVariantA?: string;
   youtubeTitleVariantB?: string;
