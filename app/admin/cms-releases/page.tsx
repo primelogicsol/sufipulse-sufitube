@@ -31,18 +31,47 @@ type YouTubeImportPlaylist = {
 };
 
 export default function CMSReleasesPage() {
+  const formatVerificationMessage = (data: any, selectedCount: number) => {
+    const savedCount = data.importedCount || 0;
+    const verifiedCount = data.verifiedCount ?? savedCount;
+    const isComplete = verifiedCount === savedCount && savedCount === selectedCount;
+    
+    if (isComplete) {
+      return (
+        <div className="bg-emerald-950/40 border border-emerald-800/50 p-4 rounded-lg text-sm text-emerald-200 font-mono mb-4">
+          <div>✓ Selected:            {selectedCount}</div>
+          <div>✓ CMS imported:        {savedCount}</div>
+          <div>✓ Persisted:           {savedCount}</div>
+          <div>✓ Read-back verified:  {verifiedCount}</div>
+          <div className="mt-3 text-emerald-400 font-bold">Registry saved successfully.</div>
+        </div>
+      );
+    } else {
+      const failed = savedCount - verifiedCount;
+      return (
+        <div className="bg-rose-950/40 border border-rose-800/50 p-4 rounded-lg text-sm text-rose-200 font-mono mb-4">
+          <div className="text-rose-400 font-bold mb-2">⚠ Import incomplete</div>
+          <div>Selected:   {selectedCount}</div>
+          <div>Saved:      {savedCount}</div>
+          <div>Verified:   {verifiedCount}</div>
+          <div className="mt-3 text-rose-400">{failed > 0 ? failed : selectedCount - savedCount} releases failed persistence verification.</div>
+        </div>
+      );
+    }
+  };
+
   const { user } = useAuth();
   const router = useRouter();
   const [releases, setReleases] = useState<CMSRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
-  const [showMenu, setShowMenu] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState<React.ReactNode | null>(null);
   const [loadingYouTube, setLoadingYouTube] = useState(false);
   const [importingYouTube, setImportingYouTube] = useState(false);
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeImportVideo[]>([]);
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
   const [youtubePanelOpen, setYoutubePanelOpen] = useState(false);
-  const [youtubeMessage, setYoutubeMessage] = useState<string | null>(null);
+  const [youtubeMessage, setYoutubeMessage] = useState<React.ReactNode | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [directUrl, setDirectUrl] = useState('');
@@ -53,7 +82,7 @@ export default function CMSReleasesPage() {
   const [importingLive, setImportingLive] = useState(false);
   const [liveStreams, setLiveStreams] = useState<YouTubeImportVideo[]>([]);
   const [selectedLiveIds, setSelectedLiveIds] = useState<Set<string>>(new Set());
-  const [liveMessage, setLiveMessage] = useState<string | null>(null);
+  const [liveMessage, setLiveMessage] = useState<React.ReactNode | null>(null);
 
   // Playlist import state
   const [playlistPanelOpen, setPlaylistPanelOpen] = useState(false);
@@ -61,7 +90,7 @@ export default function CMSReleasesPage() {
   const [importingPlaylists, setImportingPlaylists] = useState(false);
   const [playlists, setPlaylists] = useState<YouTubeImportPlaylist[]>([]);
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(new Set());
-  const [playlistMessage, setPlaylistMessage] = useState<string | null>(null);
+  const [playlistMessage, setPlaylistMessage] = useState<React.ReactNode | null>(null);
 
   useEffect(() => {
     if (!user?.role.includes('admin')) {
@@ -218,7 +247,7 @@ export default function CMSReleasesPage() {
         throw new Error(data?.error || 'Import failed');
       }
 
-      setYoutubeMessage(`Imported ${data.importedCount || 0} video(s) into CMS releases.`);
+      setYoutubeMessage(formatVerificationMessage(data, ids.length));
       await loadReleases();
       await fetchYouTubeVideos();
     } catch (error: any) {
@@ -320,7 +349,7 @@ export default function CMSReleasesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Import failed');
-      setLiveMessage(`Imported ${data.importedCount || 0} live stream(s) as CMS releases.`);
+      setLiveMessage(formatVerificationMessage(data, ids.length));
       await loadReleases();
       await fetchLiveStreams();
     } catch (error: any) {
@@ -365,7 +394,7 @@ export default function CMSReleasesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Import failed');
-      setPlaylistMessage(`Imported ${data.importedCount || 0} playlist(s) as CMS releases.`);
+      setPlaylistMessage(formatVerificationMessage(data, ids.length));
       await loadReleases();
       await fetchPlaylists();
     } catch (error: any) {
@@ -499,7 +528,7 @@ export default function CMSReleasesPage() {
                   disabled={importingYouTube || selectedVideoIds.size === 0}
                   className="dashboard-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"
                 >
-                  <Download size={14} /> {importingYouTube ? 'Importing...' : `Import Selected (${selectedVideoIds.size})`}
+                  <Download size={14} /> {importingYouTube ? 'Importing...' : `Import & Save Selected (${selectedVideoIds.size})`}
                 </button>
               </div>
             </div>
@@ -522,8 +551,10 @@ export default function CMSReleasesPage() {
             </div>
 
             {youtubeMessage && (
-              <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{youtubeMessage}</p>
-            )}
+  typeof youtubeMessage === 'string' ? 
+    <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{youtubeMessage}</p> : 
+    youtubeMessage
+)}
 
             {youtubeVideos.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No videos fetched yet.</p>
@@ -581,12 +612,16 @@ export default function CMSReleasesPage() {
                 <button type="button" onClick={() => setSelectedLiveIds(new Set())} className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"><Square size={14} /> Clear</button>
                 <button type="button" onClick={fetchLiveStreams} disabled={loadingLive} className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"><RefreshCw size={14} /> Refresh</button>
                 <button type="button" onClick={importSelectedLive} disabled={importingLive || selectedLiveIds.size === 0} className="dashboard-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60">
-                  <Download size={14} /> {importingLive ? 'Importing...' : `Import Selected (${selectedLiveIds.size})`}
+                  <Download size={14} /> {importingLive ? 'Importing...' : `Import & Save Selected (${selectedLiveIds.size})`}
                 </button>
               </div>
             </div>
 
-            {liveMessage && <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{liveMessage}</p>}
+            {liveMessage && (
+  typeof liveMessage === 'string' ? 
+    <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{liveMessage}</p> : 
+    liveMessage
+)}
 
             {liveStreams.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No completed live streams found on this channel.</p>
@@ -658,14 +693,16 @@ export default function CMSReleasesPage() {
                   disabled={importingPlaylists || selectedPlaylistIds.size === 0}
                   className="dashboard-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-2 disabled:opacity-60"
                 >
-                  <Download size={14} /> {importingPlaylists ? 'Importing...' : `Import Selected (${selectedPlaylistIds.size})`}
+                  <Download size={14} /> {importingPlaylists ? 'Importing...' : `Import & Save Selected (${selectedPlaylistIds.size})`}
                 </button>
               </div>
             </div>
 
             {playlistMessage && (
-              <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{playlistMessage}</p>
-            )}
+  typeof playlistMessage === 'string' ? 
+    <p className="text-sm mb-3" style={{ color: 'var(--dash-text-secondary)' }}>{playlistMessage}</p> : 
+    playlistMessage
+)}
 
             {playlists.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>No playlists found on this channel.</p>

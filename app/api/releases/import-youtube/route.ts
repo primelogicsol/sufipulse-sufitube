@@ -309,8 +309,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const saved = cmsServerStorage.bulkSaveReleases(toSave);
+    const saved = cmsServerStorage.bulkSaveReleasesTransactional(toSave);
     cmsServerStorage.forceHydrate();
+    
+    // Read-back verification
+    const allReleasesAfter = cmsServerStorage.getAllReleases();
+    const verifiedCount = saved.filter(s => allReleasesAfter.some(r => r.id === s.id)).length;
+
 
     revalidatePath('/');
     revalidatePath('/releases');
@@ -323,6 +328,7 @@ export async function POST(request: NextRequest) {
       importedCount: saved.length,
       imported: saved.length,
       count: saved.length,
+      verifiedCount,
       newCount,
       updatedCount,
       errorCount,
