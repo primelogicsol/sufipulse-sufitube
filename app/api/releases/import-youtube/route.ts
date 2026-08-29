@@ -31,17 +31,24 @@ function normalizeText(value: unknown): string {
 }
 
 function getMismatchFields(existing: CMSRelease, video: any): string[] {
-  const fields: string[] = [];
-  const liveTitle = video.title || video.snippet?.title || '';
-  const liveDescription = video.description || video.snippet?.description || '';
-  const liveDuration = Number(video.durationSeconds || 0);
-
-  if (normalizeText(existing.title) !== normalizeText(liveTitle)) fields.push('title');
-  if (normalizeText(existing.description) !== normalizeText(liveDescription)) fields.push('description');
-  if (liveDuration > 0 && Number(existing.durationSeconds || 0) !== liveDuration) fields.push('duration');
-
-  return fields;
-}
+    const fields: string[] = [];
+    const liveTitle = video.title || video.snippet?.title || '';
+    const liveDescription = video.description || video.snippet?.description || '';
+  
+    if (existing.youtubeTitle !== undefined) {
+      if (normalizeText(existing.youtubeTitle) !== normalizeText(liveTitle)) fields.push('title');
+    } else {
+      if (normalizeText(existing.title) !== normalizeText(liveTitle)) fields.push('title');
+    }
+    
+    if (existing.youtubeDescription !== undefined) {
+      if (normalizeText(existing.youtubeDescription) !== normalizeText(liveDescription)) fields.push('description');
+    } else {
+      if (normalizeText(existing.description) !== normalizeText(liveDescription)) fields.push('description');
+    }
+  
+    return fields;
+  }
 
 function isStale(release: CMSRelease): boolean {
   if (!release.lastYoutubeSyncAt) return true;
@@ -133,6 +140,11 @@ export async function GET(request: NextRequest) {
         reconciliationStatus,
         mismatchFields,
         cmsReleaseId: existing?.id ?? null,
+        cmsData: existing ? {
+          title: existing.title,
+          description: existing.description,
+          youtubeTitle: existing.youtubeTitle
+        } : null,
         lastYoutubeSyncAt: existing?.lastYoutubeSyncAt ?? null,
         stale: existing ? isStale(existing) : false,
       };
@@ -198,6 +210,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json().catch(() => ({}));
+      const resolutions = body.resolutions || {}; // { [videoId]: 'youtube' | 'cms' }
     const requestedIds = Array.isArray(body.videoIds)
       ? body.videoIds.map((id: unknown) => String(id).trim()).filter(Boolean)
       : [];
@@ -270,7 +283,7 @@ export async function POST(request: NextRequest) {
       }
       try {
         const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
-        const mapped = mapVideoToRelease(video, existing);
+        const mapped = mapVideoToRelease(video, existing, resolutions[video.id]);
 
         mapped.status = 'published';
         mapped.visibility = 'public';

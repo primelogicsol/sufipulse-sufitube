@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json().catch(() => ({}));
+      const resolutions = body.resolutions || {}; // { [videoId]: 'youtube' | 'cms' }
     const videoIds: string[] = Array.isArray(body.videoIds) ? body.videoIds.filter(Boolean) : [];
     if (!videoIds.length) {
       return NextResponse.json({ error: 'No videoIds provided' }, { status: 400 });
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
           video.formatClassificationSource = 'inferred';
         }
         const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
-        toSave.push(mapVideoToRelease(video, existing));
+        toSave.push(mapVideoToRelease(video, existing, resolutions[video.id]));
       }
     }
 

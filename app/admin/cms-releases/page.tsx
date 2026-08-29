@@ -20,6 +20,7 @@ type YouTubeImportVideo = {
   alreadyImported?: boolean;
   reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate';
   cmsReleaseId?: string;
+  cmsData?: { title: string; description: string; youtubeTitle?: string };
 };
 
 type YouTubeImportPlaylist = {
@@ -32,6 +33,7 @@ type YouTubeImportPlaylist = {
   alreadyImported?: boolean;
   reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate';
   cmsReleaseId?: string;
+  cmsData?: { title: string; description: string; youtubeTitle?: string };
 };
 
 export default function CMSReleasesPage() {
@@ -75,6 +77,7 @@ export default function CMSReleasesPage() {
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeImportVideo[]>([]);
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
   const [youtubePanelOpen, setYoutubePanelOpen] = useState(false);
+  const [resolutions, setResolutions] = useState<Record<string, 'youtube' | 'cms'>>({});
   const [youtubeMessage, setYoutubeMessage] = useState<React.ReactNode | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -244,7 +247,7 @@ export default function CMSReleasesPage() {
       const res = await fetch('/api/releases/import-youtube', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoIds: ids }),
+        body: JSON.stringify({ videoIds: ids, resolutions }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -353,7 +356,7 @@ export default function CMSReleasesPage() {
       const res = await fetch('/api/releases/import-youtube/live', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoIds: ids }),
+        body: JSON.stringify({ videoIds: ids, resolutions }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Import failed');
@@ -398,7 +401,7 @@ export default function CMSReleasesPage() {
       const res = await fetch('/api/releases/import-youtube/playlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playlistIds: ids }),
+        body: JSON.stringify({ playlistIds: ids, resolutions }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Import failed');

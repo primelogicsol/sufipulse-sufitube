@@ -55,9 +55,13 @@ export const buildUniqueSlug = (title: string, youtubeId: string, currentRelease
   return `${fallback}-${Date.now()}`;
 };
 
-export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMSRelease => {
+export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, resolution?: 'youtube' | 'cms'): CMSRelease => {
     const rawTitle = video.title || video.snippet?.title || '';
     const governedCanonicalTitle = existing?.canonicalTitle || existing?.title || initializeCanonicalTitle(rawTitle);
+    
+    // If the user explicitly chose to use YouTube's metadata to overwrite CMS:
+    const finalTitle = resolution === 'youtube' ? rawTitle : governedCanonicalTitle;
+    const finalDescription = resolution === 'youtube' ? (video.description || video.snippet?.description || '') : (existing?.description || video.description || video.snippet?.description || '');
     
     const id = existing?.id || `release_${Date.now()}_${video.id}`;
     const slug = existing?.slug || buildUniqueSlug(governedCanonicalTitle, video.id, existing?.id);
@@ -102,8 +106,8 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
     
     // Canonical identity: strictly preserve existing Registry Authority if present
-    title: governedCanonicalTitle,
-    canonicalTitle: governedCanonicalTitle,
+    title: finalTitle,
+    canonicalTitle: finalTitle,
     canonicalStatus: existing?.canonicalStatus || (existing ? 'verified' : 'inferred'),
     governanceOrigin: existing?.governanceOrigin || 'native_governed',
     youtubeTitleVariantA: existing?.youtubeTitleVariantA,
@@ -117,10 +121,9 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null): CMS
     // YouTube distribution packaging: recorded dynamically from latest sync
     youtubeTitle: title,
     youtubeThumbnailUrl: thumbnailUrl,
-    metadataStatus: existing?.canonicalTitle && existing.canonicalTitle.trim().toLowerCase() !== title.trim().toLowerCase() 
-      ? 'drift_detected' 
-      : 'synced',
-    description: existing?.description || video.description || video.snippet?.description || '',
+    metadataStatus: resolution === 'cms' ? 'overridden' : (resolution === 'youtube' ? 'synced' : (existing?.metadataStatus || 'synced')),
+    description: finalDescription,
+      youtubeDescription: video.description || video.snippet?.description || '',
     
     viewCount: youtubeStats.viewCount,
     likeCount: youtubeStats.likeCount,
