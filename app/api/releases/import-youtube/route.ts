@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
           reconciliationStatus = 'youtube_only';
         } else if (mismatchFields.length > 0) {
           reconciliationStatus = 'metadata_mismatch';
-        } else if (existing.titleSource === 'admin') {
+        } else if (existing.titleOverride) {
           reconciliationStatus = 'admin_override';
         }
 

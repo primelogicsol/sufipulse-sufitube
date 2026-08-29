@@ -791,10 +791,14 @@ export function useReleaseForm({
         let payload = { ...form, chorusVocalists: normalizedChorus };
         if (payload.youtubeTitle) {
           if (payload.title === payload.youtubeTitle) {
-            payload.titleSource = 'youtube';
-            payload.canonicalTitle = payload.title;
-          } else if (payload.title !== originalForm?.title || originalForm?.titleSource === 'admin') {
-            payload.titleSource = 'admin';
+            payload.titleOverride = false;
+            payload.titleOverrideAt = null;
+            payload.titleOverrideBy = null;
+            payload.canonicalTitle = payload.youtubeTitle;
+          } else if (payload.title !== originalForm?.title || originalForm?.titleOverride) {
+            payload.titleOverride = true;
+            payload.titleOverrideAt = payload.titleOverrideAt || new Date().toISOString();
+            payload.titleOverrideBy = payload.titleOverrideBy || 'admin';
             payload.canonicalTitle = payload.title;
           }
         }

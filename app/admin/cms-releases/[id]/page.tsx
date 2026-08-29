@@ -722,14 +722,14 @@ export default function EditReleasePage() {
                   />
                   {fieldErrors.title && <p className="form-error-message">{fieldErrors.title}</p>}
                   
-                  {form.titleSource === 'admin' && form.youtubeTitle && (
+                  {form.titleOverride && form.youtubeTitle && (
                     <div className="mt-3 p-3 bg-neutral-900 border border-neutral-700 rounded-lg text-sm">
                       <p className="text-amber-500 font-semibold mb-1 text-xs uppercase tracking-wide">Custom CMS title. YouTube currently uses:</p>
                       <p className="text-neutral-300 font-mono text-xs mb-3">{form.youtubeTitle}</p>
                       <button 
                         type="button" 
                         onClick={() => {
-                          setForm(prev => ({ ...prev, title: prev.youtubeTitle, canonicalTitle: prev.youtubeTitle, titleSource: 'youtube' }));
+                          setForm(prev => ({ ...prev, title: prev.youtubeTitle, canonicalTitle: prev.youtubeTitle, titleOverride: false, titleOverrideAt: null, titleOverrideBy: null }));
                         }} 
                         className="dashboard-btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-2"
                       >

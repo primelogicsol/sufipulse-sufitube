@@ -59,14 +59,14 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
   const liveTitle = video.title || video.snippet?.title || '';
   const liveDescription = video.description || video.snippet?.description || '';
   
-  let titleSource: 'youtube' | 'admin' = existing?.titleSource || 'youtube';
+  let titleOverride: boolean = !!existing?.titleOverride;
   
   // If resolution is used from the UI (legacy, or if they force 'youtube')
-  if (resolution === 'youtube') titleSource = 'youtube';
+  if (resolution === 'youtube') titleOverride = false;
   
-  const finalTitle = titleSource === 'admin' ? (existing?.title || liveTitle) : liveTitle;
-  const finalCanonicalTitle = titleSource === 'admin' ? (existing?.canonicalTitle || liveTitle) : liveTitle;
-  const finalDescriptionText = titleSource === 'admin' ? (existing?.description || liveDescription) : liveDescription;
+  const finalTitle = titleOverride ? (existing?.title || liveTitle) : liveTitle;
+  const finalCanonicalTitle = titleOverride ? (existing?.canonicalTitle || liveTitle) : liveTitle;
+  const finalDescriptionText = titleOverride ? (existing?.description || liveDescription) : liveDescription;
 
   const id = existing?.id || `release_${Date.now()}_${video.id}`;
   const slug = existing?.slug || buildUniqueSlug(finalTitle, video.id, existing?.id);
@@ -111,7 +111,9 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
     
     // Title Governance
-    titleSource,
+    titleOverride,
+    titleOverrideAt: existing?.titleOverrideAt || null,
+    titleOverrideBy: existing?.titleOverrideBy || null,
     title: finalTitle,
     canonicalTitle: finalCanonicalTitle,
     canonicalStatus: existing?.canonicalStatus || 'verified',
@@ -129,7 +131,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     youtubeThumbnailUrl: thumbnailUrl,
     youtubeDescription: liveDescription,
     
-    metadataStatus: titleSource === 'admin' ? 'overridden' : 'synced',
+    metadataStatus: titleOverride ? 'overridden' : 'synced',
     description: finalDescriptionText,
     
     viewCount: youtubeStats.viewCount,
