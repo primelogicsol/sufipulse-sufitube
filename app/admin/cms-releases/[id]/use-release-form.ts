@@ -792,9 +792,10 @@ export function useReleaseForm({
         if (payload.youtubeTitle) {
           if (payload.title === payload.youtubeTitle) {
             payload.titleSource = 'youtube';
-            payload.canonicalTitle = payload.youtubeTitle;
+            payload.canonicalTitle = payload.title;
           } else if (payload.title !== originalForm?.title || originalForm?.titleSource === 'admin') {
             payload.titleSource = 'admin';
+            payload.canonicalTitle = payload.title;
           }
         }
         
