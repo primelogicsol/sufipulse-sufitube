@@ -60,13 +60,14 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
   const liveDescription = video.description || video.snippet?.description || '';
   
   let titleOverride: boolean = !!existing?.titleOverride;
+    let descriptionOverride: boolean = !!existing?.descriptionOverride;
   
   // If resolution is used from the UI (legacy, or if they force 'youtube')
-  if (resolution === 'youtube') titleOverride = false;
+  if (resolution === 'youtube') { titleOverride = false; descriptionOverride = false; }
   
   const finalTitle = titleOverride ? (existing?.title || liveTitle) : liveTitle;
   const finalCanonicalTitle = titleOverride ? (existing?.canonicalTitle || liveTitle) : liveTitle;
-  const finalDescriptionText = titleOverride ? (existing?.description || liveDescription) : liveDescription;
+  const finalDescriptionText = descriptionOverride ? (existing?.description || liveDescription) : liveDescription;
 
   const id = existing?.id || `release_${Date.now()}_${video.id}`;
   const slug = existing?.slug || buildUniqueSlug(finalTitle, video.id, existing?.id);
@@ -144,6 +145,9 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     titleOverride,
     titleOverrideAt: existing?.titleOverrideAt || null,
     titleOverrideBy: existing?.titleOverrideBy || null,
+      descriptionOverride,
+      descriptionOverrideAt: existing?.descriptionOverrideAt || null,
+      descriptionOverrideBy: existing?.descriptionOverrideBy || null,
     title: finalTitle,
     canonicalTitle: finalCanonicalTitle,
     canonicalStatus: existing?.canonicalStatus || 'verified',

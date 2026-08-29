@@ -886,6 +886,22 @@ export default function EditReleasePage() {
                 <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Visible on the release page and used for SEO. Keep it audience-facing and concise.</p>
               </div>
 
+                {form.descriptionOverride && form.youtubeDescription && (
+                  <div className="mt-3 p-3 bg-neutral-900 border border-neutral-700 rounded-lg text-sm">
+                    <p className="text-amber-500 font-semibold mb-1 text-xs uppercase tracking-wide">Custom CMS description. YouTube currently uses:</p>
+                    <p className="text-neutral-300 font-mono text-xs mb-3 whitespace-pre-wrap max-h-40 overflow-y-auto">{form.youtubeDescription}</p>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setForm(prev => ({ ...prev, description: prev.youtubeDescription, descriptionOverride: false, descriptionOverrideAt: null, descriptionOverrideBy: null }));
+                      }} 
+                      className="dashboard-btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-2"
+                    >
+                      Reset to YouTube Description
+                    </button>
+                  </div>
+                )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>

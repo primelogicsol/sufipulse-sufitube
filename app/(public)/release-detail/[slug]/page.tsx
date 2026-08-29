@@ -1688,6 +1688,8 @@ function Release() {
         // Basic fields (camelCase to match CMS)
         title: editTitle,
         description: editDescription,
+        titleOverride: editTitle !== release?.title ? true : release?.titleOverride,
+        descriptionOverride: editDescription !== release?.description ? true : release?.descriptionOverride,
         // Feature toggles
         enableCredits: editEnableCredits,
         enableCommentary: editEnableCommentary,
@@ -2628,8 +2630,27 @@ function Release() {
               <div className="pt-8">
                 <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-8">
                   <h3 className="text-2xl font-medium text-neutral-100 mb-6">
-                    About This Release
+                    {release.canonicalTitle || release.title}
                   </h3>
+                  
+                  {/* Compact Release Facts */}
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-400 mb-8 font-medium">
+                    {release.releaseDate && (
+                      <div>Published: {new Date(release.releaseDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
+                    )}
+                    {release.youtubeId && release.viewCount !== undefined && (
+                      <div>Views: {release.viewCount.toLocaleString()}</div>
+                    )}
+                    {release.durationFormatted && (
+                      <div>Duration: {release.durationFormatted}</div>
+                    )}
+                    {(release.defaultAudioLanguage || release.defaultLanguage) && (
+                      <div>Language: {release.defaultAudioLanguage || release.defaultLanguage}</div>
+                    )}
+                    {release.youtubeCategory?.name && (
+                      <div>Category: {release.youtubeCategory.name}</div>
+                    )}
+                  </div>
                   {isEditing ? (
                     <textarea
                       className="w-full bg-neutral-950 border border-amber-800/50 rounded-lg p-4 text-sm text-neutral-200 font-serif leading-relaxed focus:outline-none focus:border-amber-600 placeholder:text-neutral-600"

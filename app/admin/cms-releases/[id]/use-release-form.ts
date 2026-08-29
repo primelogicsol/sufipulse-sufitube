@@ -802,6 +802,18 @@ export function useReleaseForm({
             payload.canonicalTitle = payload.title;
           }
         }
+        // Description Governance Enforcement
+        if (payload.youtubeDescription !== undefined) {
+          if (payload.description === payload.youtubeDescription) {
+            payload.descriptionOverride = false;
+            payload.descriptionOverrideAt = null;
+            payload.descriptionOverrideBy = null;
+          } else if (payload.description !== originalForm?.description || originalForm?.descriptionOverride) {
+            payload.descriptionOverride = true;
+            payload.descriptionOverrideAt = payload.descriptionOverrideAt || new Date().toISOString();
+            payload.descriptionOverrideBy = payload.descriptionOverrideBy || 'admin';
+          }
+        }
         
         const res = await fetch(url, {
           method,

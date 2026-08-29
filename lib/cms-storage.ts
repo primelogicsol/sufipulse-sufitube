@@ -53,6 +53,9 @@ export interface CMSRelease {
     titleOverride?: boolean;
     titleOverrideAt?: string | null;
     titleOverrideBy?: string | null;
+    descriptionOverride?: boolean;
+    descriptionOverrideAt?: string | null;
+    descriptionOverrideBy?: string | null;
   youtubeDescription?: string;
   youtubeTitleVariantA?: string;
   youtubeTitleVariantB?: string;
