@@ -29,6 +29,24 @@ interface YouTubeVideo {
     likes?: number;
     comments?: number;
     liveBroadcastContent?: string;
+    
+    defaultLanguage?: string;
+    defaultAudioLanguage?: string;
+    captionsAvailable?: boolean;
+    captionTracks?: any[];
+    recordingDate?: string;
+    categoryId?: string;
+    categoryName?: string;
+    license?: string;
+    privacyStatus?: string;
+    embeddable?: boolean;
+    licensedContent?: boolean;
+    regionRestriction?: any;
+    channelId?: string;
+    channelTitle?: string;
+    channelUrl?: string;
+    fetchedAt?: string;
+
     source: string;
     format: ReleaseFormat;
 }
@@ -232,16 +250,32 @@ class YouTubeService {
                 const hasLiveDetails = !!(video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime);
                 return {
                     id: video.id,
-                    title: video.snippet.title,
-                    description: video.snippet.description,
-                    thumbnailUrl: video.snippet.thumbnails?.maxres?.url || video.snippet.thumbnails?.high?.url || video.snippet.thumbnails?.medium?.url,
-                    publishedDate: video.snippet.publishedAt,
+                    title: video.snippet?.title || '',
+                    description: video.snippet?.description || '',
+                    thumbnailUrl: video.snippet?.thumbnails?.maxres?.url || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || '',
+                    publishedDate: video.snippet?.publishedAt || '',
                     durationSeconds: durationSecs,
                     durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
                     views: parseInt(video.statistics?.viewCount || '0'),
                     likes: parseInt(video.statistics?.likeCount || '0'),
                     comments: parseInt(video.statistics?.commentCount || '0'),
-                    liveBroadcastContent: video.snippet.liveBroadcastContent || 'none',
+                    liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
+
+                    defaultLanguage: video.snippet?.defaultLanguage,
+                    defaultAudioLanguage: video.snippet?.defaultAudioLanguage,
+                    captionsAvailable: video.contentDetails?.caption === 'true',
+                    recordingDate: video.recordingDetails?.recordingDate,
+                    categoryId: video.snippet?.categoryId,
+                    license: video.status?.license,
+                    privacyStatus: video.status?.privacyStatus,
+                    embeddable: video.status?.embeddable,
+                    licensedContent: video.contentDetails?.licensedContent,
+                    regionRestriction: video.contentDetails?.regionRestriction,
+                    channelId: video.snippet?.channelId,
+                    channelTitle: video.snippet?.channelTitle,
+                    channelUrl: video.snippet?.channelId ? `https://youtube.com/channel/${video.snippet.channelId}` : undefined,
+                    fetchedAt: new Date().toISOString(),
+
                     source: 'youtube',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };
@@ -292,7 +326,7 @@ class YouTubeService {
         }
 
         try {
-            const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,liveStreamingDetails&id=${ids}&key=${this.config.apiKey}`;
+            const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,liveStreamingDetails,status,recordingDetails&id=${ids}&key=${this.config.apiKey}`;
             const data = await this.makeRequest(videosUrl);
 
             this.setCache(cacheKey, data.items || []);
@@ -376,6 +410,22 @@ class YouTubeService {
                     likes: parseInt(video.statistics?.likeCount || '0'),
                     comments: parseInt(video.statistics?.commentCount || '0'),
                     liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
+
+                    defaultLanguage: video.snippet?.defaultLanguage,
+                    defaultAudioLanguage: video.snippet?.defaultAudioLanguage,
+                    captionsAvailable: video.contentDetails?.caption === 'true',
+                    recordingDate: video.recordingDetails?.recordingDate,
+                    categoryId: video.snippet?.categoryId,
+                    license: video.status?.license,
+                    privacyStatus: video.status?.privacyStatus,
+                    embeddable: video.status?.embeddable,
+                    licensedContent: video.contentDetails?.licensedContent,
+                    regionRestriction: video.contentDetails?.regionRestriction,
+                    channelId: video.snippet?.channelId,
+                    channelTitle: video.snippet?.channelTitle,
+                    channelUrl: video.snippet?.channelId ? `https://youtube.com/channel/${video.snippet.channelId}` : undefined,
+                    fetchedAt: new Date().toISOString(),
+
                     source: 'youtube',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };
@@ -439,20 +489,36 @@ class YouTubeService {
             const durationSecs = this.parseDuration(video.contentDetails?.duration || 'PT0S');
             const hasLiveDetails = !!(video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime);
             const formatted: YouTubeVideo = {
-                id: video.id,
-                title: video.snippet.title,
-                description: video.snippet.description,
-                thumbnailUrl: video.snippet.thumbnails?.maxres?.url || video.snippet.thumbnails?.high?.url || video.snippet.thumbnails?.medium?.url,
-                publishedDate: video.snippet.publishedAt,
-                durationSeconds: durationSecs,
-                durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
-                views: parseInt(video.statistics?.viewCount || '0'),
-                likes: parseInt(video.statistics?.likeCount || '0'),
-                comments: parseInt(video.statistics?.commentCount || '0'),
-                liveBroadcastContent: video.snippet.liveBroadcastContent || 'none',
-                source: 'youtube',
-                format: inferFormat(durationSecs, hasLiveDetails),
-            };
+                    id: video.id,
+                    title: video.snippet?.title || '',
+                    description: video.snippet?.description || '',
+                    thumbnailUrl: video.snippet?.thumbnails?.maxres?.url || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || '',
+                    publishedDate: video.snippet?.publishedAt || '',
+                    durationSeconds: durationSecs,
+                    durationFormatted: this.formatDuration(video.contentDetails?.duration || 'PT0S'),
+                    views: parseInt(video.statistics?.viewCount || '0'),
+                    likes: parseInt(video.statistics?.likeCount || '0'),
+                    comments: parseInt(video.statistics?.commentCount || '0'),
+                    liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
+
+                    defaultLanguage: video.snippet?.defaultLanguage,
+                    defaultAudioLanguage: video.snippet?.defaultAudioLanguage,
+                    captionsAvailable: video.contentDetails?.caption === 'true',
+                    recordingDate: video.recordingDetails?.recordingDate,
+                    categoryId: video.snippet?.categoryId,
+                    license: video.status?.license,
+                    privacyStatus: video.status?.privacyStatus,
+                    embeddable: video.status?.embeddable,
+                    licensedContent: video.contentDetails?.licensedContent,
+                    regionRestriction: video.contentDetails?.regionRestriction,
+                    channelId: video.snippet?.channelId,
+                    channelTitle: video.snippet?.channelTitle,
+                    channelUrl: video.snippet?.channelId ? `https://youtube.com/channel/${video.snippet.channelId}` : undefined,
+                    fetchedAt: new Date().toISOString(),
+
+                    source: 'youtube',
+                    format: inferFormat(durationSecs, hasLiveDetails),
+                };
 
             console.log('âœ… Successfully fetched video details');
             this.setCache(cacheKey, formatted);
@@ -554,6 +620,22 @@ class YouTubeService {
                     likes: parseInt(video.statistics?.likeCount || '0'),
                     comments: parseInt(video.statistics?.commentCount || '0'),
                     liveBroadcastContent: video.snippet?.liveBroadcastContent || 'none',
+
+                    defaultLanguage: video.snippet?.defaultLanguage,
+                    defaultAudioLanguage: video.snippet?.defaultAudioLanguage,
+                    captionsAvailable: video.contentDetails?.caption === 'true',
+                    recordingDate: video.recordingDetails?.recordingDate,
+                    categoryId: video.snippet?.categoryId,
+                    license: video.status?.license,
+                    privacyStatus: video.status?.privacyStatus,
+                    embeddable: video.status?.embeddable,
+                    licensedContent: video.contentDetails?.licensedContent,
+                    regionRestriction: video.contentDetails?.regionRestriction,
+                    channelId: video.snippet?.channelId,
+                    channelTitle: video.snippet?.channelTitle,
+                    channelUrl: video.snippet?.channelId ? `https://youtube.com/channel/${video.snippet.channelId}` : undefined,
+                    fetchedAt: new Date().toISOString(),
+
                     source: 'youtube',
                     format: inferFormat(durationSecs, hasLiveDetails),
                 };

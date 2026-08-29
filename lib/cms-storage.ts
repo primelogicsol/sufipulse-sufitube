@@ -267,7 +267,28 @@ export interface CMSRelease {
 
   // YouTube captions sync state
   youtubeSubtitleAutoSync?: boolean;
+  
+  youtubeCategory?: {
+    id?: string;
+    name?: string;
+  };
+  youtubeLicense?: string;
+  privacyStatus?: string;
+  embeddable?: boolean;
+  regionRestriction?: any;
+  licensedContent?: boolean;
+  recordingDate?: string;
+  recordingLocation?: string;
+  defaultAudioLanguage?: string;
+
   youtubeCaptionTracks?: Record<string, {
+    captionCertification?: {
+      youtubeStatus: string;
+      youtubeTrackKind: string;
+      sufipulseStatus: 'unreviewed' | 'verified' | 'needs_revision';
+      verifiedBy?: string;
+      verifiedAt?: string;
+    };
     captionId?: string;
     language?: string;
     lastSyncHash?: string;

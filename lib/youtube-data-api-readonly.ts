@@ -18,6 +18,24 @@ export type ReadOnlyYouTubeVideo = {
   likes?: number;
   comments?: number;
   liveBroadcastContent?: string;
+  
+  defaultLanguage?: string;
+  defaultAudioLanguage?: string;
+  captionsAvailable?: boolean;
+  captionTracks?: any[];
+  recordingDate?: string;
+  categoryId?: string;
+  categoryName?: string;
+  license?: string;
+  privacyStatus?: string;
+  embeddable?: boolean;
+  licensedContent?: boolean;
+  regionRestriction?: any;
+  channelId?: string;
+  channelTitle?: string;
+  channelUrl?: string;
+  fetchedAt?: string;
+
   source: 'youtube';
   format: 'video' | 'short' | 'live';
 };
@@ -233,6 +251,7 @@ function normalizeVideo(video: YouTubeApiItem): ReadOnlyYouTubeVideo {
   const hasLiveDetails = Boolean(
     video.liveStreamingDetails?.actualStartTime || video.liveStreamingDetails?.scheduledStartTime
   );
+  
   return {
     id: String(video.id || ''),
     title: String(video.snippet?.title || ''),
@@ -249,9 +268,26 @@ function normalizeVideo(video: YouTubeApiItem): ReadOnlyYouTubeVideo {
     likes: Number(video.statistics?.likeCount || 0),
     comments: Number(video.statistics?.commentCount || 0),
     liveBroadcastContent: String(video.snippet?.liveBroadcastContent || 'none'),
+    
+    defaultLanguage: video.snippet?.defaultLanguage,
+    defaultAudioLanguage: video.snippet?.defaultAudioLanguage,
+    captionsAvailable: video.contentDetails?.caption === 'true',
+    recordingDate: video.recordingDetails?.recordingDate,
+    categoryId: video.snippet?.categoryId,
+    license: video.status?.license,
+    privacyStatus: video.status?.privacyStatus,
+    embeddable: video.status?.embeddable,
+    licensedContent: video.contentDetails?.licensedContent,
+    regionRestriction: video.contentDetails?.regionRestriction,
+    channelId: video.snippet?.channelId,
+    channelTitle: video.snippet?.channelTitle,
+    channelUrl: video.snippet?.channelId ? `https://youtube.com/channel/${video.snippet.channelId}` : undefined,
+    fetchedAt: new Date().toISOString(),
+    
     source: 'youtube',
     format: inferFormat(durationSeconds, hasLiveDetails),
   };
+
 }
 
 async function getVideosByIdsWithCredential(ids: string[], credential: ReadCredential): Promise<ReadOnlyYouTubeVideo[]> {
@@ -265,7 +301,7 @@ async function getVideosByIdsWithCredential(ids: string[], credential: ReadCrede
     const payload = await youtubeRequest(
       'videos',
       {
-        part: 'snippet,contentDetails,statistics,liveStreamingDetails',
+        part: 'snippet,contentDetails,statistics,liveStreamingDetails,status,recordingDetails',
         id: chunk.join(','),
         maxResults: '50',
       },

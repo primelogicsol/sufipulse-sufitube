@@ -105,6 +105,36 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
 
   return {
     ...(existing || {}),
+    youtubeCategory: video.categoryId ? { id: video.categoryId, name: video.categoryName } : existing?.youtubeCategory,
+    youtubeLicense: video.license ?? existing?.youtubeLicense,
+    privacyStatus: video.privacyStatus ?? existing?.privacyStatus,
+    embeddable: video.embeddable ?? existing?.embeddable,
+    regionRestriction: video.regionRestriction ?? existing?.regionRestriction,
+    licensedContent: video.licensedContent ?? existing?.licensedContent,
+    recordingDate: existing?.recordingDate || video.recordingDate,
+    recordingLocation: existing?.recordingLocation,
+    defaultAudioLanguage: video.defaultAudioLanguage ?? existing?.defaultAudioLanguage,
+    
+    youtubeCaptionTracks: (() => {
+      const tracks = { ...(existing?.youtubeCaptionTracks || {}) };
+      if (video.captionTracks) {
+        for (const track of video.captionTracks) {
+          const lang = track.language || 'unknown';
+          tracks[lang] = {
+            ...(tracks[lang] || {}),
+            captionId: track.id,
+            language: track.language,
+            captionCertification: {
+              ...(tracks[lang]?.captionCertification || {}),
+              youtubeStatus: track.status,
+              youtubeTrackKind: track.trackKind,
+              sufipulseStatus: tracks[lang]?.captionCertification?.sufipulseStatus || 'unreviewed'
+            }
+          };
+        }
+      }
+      return tracks;
+    })(),
     id,
     slug,
     youtubeId: video.id,
