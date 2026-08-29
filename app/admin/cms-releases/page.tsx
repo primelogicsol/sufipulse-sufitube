@@ -18,6 +18,8 @@ type YouTubeImportVideo = {
   durationFormatted?: string;
   views?: number;
   alreadyImported?: boolean;
+  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate';
+  cmsReleaseId?: string;
 };
 
 type YouTubeImportPlaylist = {
@@ -28,6 +30,8 @@ type YouTubeImportPlaylist = {
   publishedDate?: string;
   itemCount?: number;
   alreadyImported?: boolean;
+  reconciliationStatus?: 'matched' | 'youtube_only' | 'metadata_mismatch' | 'duplicate';
+  cmsReleaseId?: string;
 };
 
 export default function CMSReleasesPage() {
@@ -309,8 +313,12 @@ export default function CMSReleasesPage() {
     }
   };
 
-  const selectAllFetchedVideos = () => {
-    setSelectedVideoIds(new Set(youtubeVideos.map((video) => video.id)));
+  const selectAllUnsaved = () => {
+    setSelectedVideoIds(new Set(youtubeVideos.filter(v => v.reconciliationStatus === 'youtube_only' || !v.alreadyImported).map(v => v.id)));
+  };
+
+  const selectMetadataUpdates = () => {
+    setSelectedVideoIds(new Set(youtubeVideos.filter(v => v.reconciliationStatus === 'metadata_mismatch').map(v => v.id)));
   };
 
   const clearSelectedVideos = () => {
@@ -502,10 +510,17 @@ export default function CMSReleasesPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={selectAllFetchedVideos}
+                  onClick={selectAllUnsaved}
                   className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"
                 >
-                  <CheckSquare size={14} /> Select All
+                  <CheckSquare size={14} /> Select All Unsaved
+                </button>
+                <button
+                  type="button"
+                  onClick={selectMetadataUpdates}
+                  className="dashboard-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-2"
+                >
+                  <RefreshCw size={14} /> Select Updates
                 </button>
                 <button
                   type="button"
@@ -582,10 +597,22 @@ export default function CMSReleasesPage() {
                       <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>
                         ID: {video.id} | {video.durationFormatted || '0:00'} | {video.views?.toLocaleString?.() || 0} views
                       </p>
-                      {video.alreadyImported && (
-                        <p className="text-xs mt-1" style={{ color: 'var(--dash-status-approved)' }}>
-                          Already in CMS (import will update metadata only)
-                        </p>
+                      {!video.alreadyImported || video.reconciliationStatus === 'youtube_only' ? (
+                        <p className="text-xs mt-1 font-bold text-amber-500">NEW → Select to Import</p>
+                      ) : video.reconciliationStatus === 'metadata_mismatch' ? (
+                        <div className="mt-1 flex items-center gap-3">
+                          <p className="text-xs font-bold text-blue-400">CHANGED → Update Available</p>
+                          {video.cmsReleaseId && (
+                            <a href={`/admin/cms-releases/${video.cmsReleaseId}`} target="_blank" rel="noreferrer" className="text-xs underline text-neutral-400 hover:text-white" onClick={e => e.stopPropagation()}>View CMS Record</a>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-1 flex items-center gap-3">
+                          <p className="text-xs font-bold text-emerald-400">✓ SAVED IN CMS (Up to Date)</p>
+                          {video.cmsReleaseId && (
+                            <a href={`/admin/cms-releases/${video.cmsReleaseId}`} target="_blank" rel="noreferrer" className="text-xs underline text-neutral-400 hover:text-white" onClick={e => e.stopPropagation()}>View CMS Record</a>
+                          )}
+                        </div>
                       )}
                     </div>
                   </label>
