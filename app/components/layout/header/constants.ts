@@ -31,12 +31,7 @@ export const CONTRIBUTORS_ITEMS = [
     href: '/literary-journal',
     ariaLabel: 'Literary Journal'
   },
-  {
-    public: 'Literary Journal',
-    mystical: 'Ahl-e-Tahreer Publications',
-    href: '/literary-journal',
-    ariaLabel: 'Literary Journal'
-  },
+  
 ];
 
 export const PRODUCTION_ITEMS = [
