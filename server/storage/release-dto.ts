@@ -90,3 +90,52 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
 
   return canonical as CMSRelease;
 }
+
+export type PublicPremiereRelease = Pick<
+  CMSRelease,
+  | 'id'
+  | 'title'
+  | 'description'
+  | 'vocalist'
+  | 'slug'
+  | 'canonicalTitle'
+  | 'youtubeTitle'
+  | 'thumbnailUrl'
+  | 'canonicalThumbnail'
+  | 'status'
+  | 'visibility'
+  | 'premiereVisibility'
+  | 'releaseLifecycle'
+  | 'officialReleaseAt'
+  | 'premiereAnnouncedAt'
+  | 'isFeaturedPremiere'
+  | 'preReleaseAssets'
+  | 'createdAt'
+> & {
+  // Only include safe metadata that might be needed
+};
+
+export function toPublicPremiereRelease(release: CMSRelease): PublicPremiereRelease {
+  const mapped: PublicPremiereRelease = {
+    id: release.id,
+    title: release.title,
+    description: release.description,
+    vocalist: release.vocalist,
+    slug: release.slug,
+    canonicalTitle: release.canonicalTitle,
+    youtubeTitle: release.youtubeTitle,
+    thumbnailUrl: release.thumbnailUrl,
+    canonicalThumbnail: release.canonicalThumbnail,
+    status: release.status,
+    visibility: release.visibility,
+    premiereVisibility: release.premiereVisibility,
+    releaseLifecycle: release.releaseLifecycle,
+    officialReleaseAt: release.officialReleaseAt,
+    premiereAnnouncedAt: release.premiereAnnouncedAt,
+    isFeaturedPremiere: release.isFeaturedPremiere,
+    createdAt: release.createdAt,
+    // Filter out non-live assets!
+    preReleaseAssets: release.preReleaseAssets?.filter((a) => a.status === 'live'),
+  };
+  return mapped;
+}

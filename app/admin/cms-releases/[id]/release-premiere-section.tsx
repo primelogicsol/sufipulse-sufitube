@@ -179,10 +179,13 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                       <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">YouTube ID</label>
                       <input 
                         value={asset.youtubeId || ''} 
-                        onChange={(e) => updateAsset(asset.id, 'youtubeId', e.target.value)}
-                        className="w-full bg-black border border-neutral-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder:text-neutral-600"
+                        onChange={(e) => updateAsset(asset.id, 'youtubeId', e.target.value.trim())}
+                        className={`w-full bg-black border ${asset.youtubeId && !/^[A-Za-z0-9_-]{11}$/.test(asset.youtubeId) ? 'border-red-500' : 'border-neutral-700'} text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder:text-neutral-600`}
                         placeholder="e.g. dQw4w9WgXcQ"
                       />
+                      {asset.youtubeId && !/^[A-Za-z0-9_-]{11}$/.test(asset.youtubeId) && (
+                        <p className="text-xs text-red-500">Invalid YouTube ID (must be 11 chars)</p>
+                      )}
                     </div>
 
                     <div className="space-y-2 md:col-span-2">

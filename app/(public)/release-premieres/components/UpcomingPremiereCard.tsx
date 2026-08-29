@@ -5,17 +5,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { ShareModal } from '@/app/components/share/ShareModal';
+import { buildShareContext } from '@/lib/share-context';
 import { Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export function UpcomingPremiereCard({ release }: { release: CMSRelease }) {
+export function UpcomingPremiereCard({ release }: { release: any }) {
   const [showShare, setShowShare] = useState(false);
   const router = useRouter();
   
   const title = release.canonicalTitle || release.title;
   
   const liveTeaser = release.preReleaseAssets?.find(
-    a => a.type === 'premium_teaser' && a.status === 'live'
+    (a: any) => a.type === 'premium_teaser' && a.status === 'live'
   );
   
   const artworkUrl = liveTeaser?.thumbnailUrl || release.canonicalThumbnail || release.thumbnailUrl || '/empty-artwork.png';
@@ -25,7 +26,7 @@ export function UpcomingPremiereCard({ release }: { release: CMSRelease }) {
   if (isReleased) statusBadge = "RELEASED";
   else if (liveTeaser) statusBadge = "PREMIUM TEASER LIVE";
   else if (release.releaseLifecycle === 'premiere_scheduled') statusBadge = "PREMIERE SCHEDULED";
-  else if (release.preReleaseAssets?.some(a => a.type === 'first_listen')) statusBadge = "FIRST LISTEN";
+  else if (release.preReleaseAssets?.some((a: any) => a.type === 'first_listen')) statusBadge = "FIRST LISTEN";
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Let links and buttons handle themselves
@@ -33,11 +34,23 @@ export function UpcomingPremiereCard({ release }: { release: CMSRelease }) {
     router.push(`/release-detail/${release.slug}`);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if ((e.target as HTMLElement).closest('button, a') && (e.target as HTMLElement).closest('button, a') !== e.currentTarget) return;
+      router.push(`/release-detail/${release.slug}`);
+    }
+  };
+
   return (
     <>
       <div 
         onClick={handleCardClick}
-        className="bg-[var(--color-midnight)]/60 border border-[var(--color-border-strong)] rounded-xl overflow-hidden hover:border-[var(--color-gold)]/50 transition-colors backdrop-blur-md cursor-pointer flex flex-col h-full group relative"
+        onKeyDown={handleKeyDown}
+        role="link"
+        tabIndex={0}
+        aria-label={`View details for ${title}`}
+        className="bg-[var(--color-midnight)]/60 border border-[var(--color-border-strong)] rounded-xl overflow-hidden hover:border-[var(--color-gold)]/50 transition-colors backdrop-blur-md cursor-pointer flex flex-col h-full group relative focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]"
       >
         <div className="aspect-video bg-[#0a0f1c] relative border-b border-[var(--color-border)] overflow-hidden">
           <Image 
@@ -79,7 +92,7 @@ export function UpcomingPremiereCard({ release }: { release: CMSRelease }) {
 
           <div className="mt-auto">
             <span className="text-xs font-semibold text-[var(--color-gold)]/80 group-hover:text-[var(--color-gold)] transition-colors">
-              VIEW DETAILS →
+              {isReleased ? 'WATCH OFFICIAL RELEASE' : 'VIEW DETAILS'} &rarr;
             </span>
           </div>
         </div>
@@ -92,6 +105,7 @@ export function UpcomingPremiereCard({ release }: { release: CMSRelease }) {
         canonicalUrl={`https://sufipulse.com/release-detail/${release.slug}`}
         context="premiere"
         socialShareKit={release.socialShareKit}
+        shareContext={buildShareContext(release, "premiere")}
       />
     </>
   );

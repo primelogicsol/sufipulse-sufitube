@@ -13,6 +13,7 @@ import {
   Mail,
   Share2
 } from "lucide-react";
+import { ResolvedShareContext } from "@/lib/share-context";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface ShareModalProps {
   resolvedVideoId?: string | null;
   context: "premiere" | "release" | "teaser";
   socialShareKit?: any;
+  shareContext?: ResolvedShareContext;
   // Fallbacks for backward compatibility
   handleShareMoment?: () => void;
   handleCopyLink?: () => void;
@@ -41,6 +43,7 @@ export function ShareModal({
   resolvedVideoId,
   context,
   socialShareKit,
+  shareContext,
   handleShareMoment,
   handleCopyLink,
   handleShare,
@@ -49,20 +52,18 @@ export function ShareModal({
   if (!isOpen) return null;
 
   const getShareUrl = (platform: string) => {
-    // If context is release, prefer youtube for social if it existed before, but prompt says:
-    // "DEFAULT share destination must be the canonical SufiPulse URL: https://sufipulse.com/release-detail/{slug}"
-    // "For existing released-song page behavior, preserve current functionality unless explicitly revised separately."
+    if (shareContext) return shareContext.shareUrl;
+
     let url = context === "release" && youtubeUrl ? youtubeUrl : canonicalUrl;
-    
-    // Check socialShareKit first
     if (socialShareKit && socialShareKit[platform]) {
-      return socialShareKit[platform]; // if it has a pre-generated intent url
+      return socialShareKit[platform];
     }
-    
     return url;
   };
 
   const getShareText = () => {
+    if (shareContext) return shareContext.shareText;
+
     if (context === "premiere") return `Upcoming Premiere: ${title}`;
     if (context === "teaser") return `Premium Teaser Now Live: ${title}`;
     return title;
@@ -188,6 +189,13 @@ export function ShareModal({
       desc: "Share via Email",
       icon: Mail,
       color: "#EA4335",
+    },
+    {
+      id: "reddit",
+      label: "Reddit",
+      desc: "Share on Reddit",
+      icon: MessageSquare,
+      color: "#FF4500",
     },
   ];
   

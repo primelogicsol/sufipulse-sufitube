@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PageContainer } from '@/app/components/layout/PageContainer';
 import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
-import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { toCanonicalCMSRelease, toPublicPremiereRelease } from '@/server/storage/release-dto';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { FeaturedPremiere } from './components/FeaturedPremiere';
@@ -27,9 +27,27 @@ async function getPremieres() {
     allReleases = cmsServerStorage.getAllReleases();
   }
 
+  const now = new Date().getTime();
+  const SEVEN_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
   const eligibleReleases = allReleases.filter(r => {
-    if (r.visibility !== 'public' && r.premiereVisibility !== 'public') return false;
-    if (!['upcoming', 'teaser_live', 'premiere_scheduled'].includes(r.releaseLifecycle || '')) return false;
+    if (r.status !== 'published') return false;
+    if (r.visibility !== 'public') return false;
+    if (r.premiereVisibility !== 'public') return false;
+
+    const lifecycle = r.releaseLifecycle || '';
+    if (lifecycle === 'released') {
+      if (r.officialReleaseAt) {
+        const releaseTime = new Date(r.officialReleaseAt).getTime();
+        if (now - releaseTime > SEVEN_DAYS_MS) {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } else if (!['upcoming', 'teaser_live', 'premiere_scheduled'].includes(lifecycle)) {
+      return false;
+    }
     return true;
   });
 
@@ -78,7 +96,10 @@ async function getPremieres() {
     return aCreated - bCreated;
   });
 
-  return { featured, upcoming };
+  return {
+    featured: featured ? toPublicPremiereRelease(featured) : null,
+    upcoming: upcoming.map(toPublicPremiereRelease)
+  };
 }
 
 export default async function ReleasePremieresPage() {

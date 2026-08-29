@@ -1,25 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'node:fs';
-import path from 'node:path';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { applyRateLimit, createRateLimiter } from '@/server/middleware/rate-limit';
-
-const notifySubscribersLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, maxRequests: 5 });
+import { db } from '@/server/db/pool';
 import { sendEmail } from '@/app/lib/email';
 
-const SUBSCRIBERS_FILE = path.join(process.cwd(), '.data', 'subscribers.json');
+const notifySubscribersLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, maxRequests: 5 });
 
-interface Subscriber { email: string; subscribedAt: string; }
-
-const readSubscribers = (): Subscriber[] => {
-  try {
-    if (!fs.existsSync(SUBSCRIBERS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(SUBSCRIBERS_FILE, 'utf8'));
-  } catch { return []; }
-};
-
-// POST /api/admin/notify-subscribers
-// Body: { title, youtubeId, youtubePlaylistId?, slug }
 export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -28,14 +14,23 @@ export async function POST(request: NextRequest) {
   if (rateLimited) return rateLimited;
 
   try {
-    const { title, youtubeId, youtubePlaylistId, slug } = await request.json();
-    if (!title || !youtubeId) {
-      return NextResponse.json({ error: 'title and youtubeId are required' }, { status: 400 });
+    const { title, youtubeId, youtubePlaylistId, slug, releaseId } = await request.json();
+    if (!title || !youtubeId || !releaseId) {
+      return NextResponse.json({ error: 'title, youtubeId, and releaseId are required' }, { status: 400 });
     }
 
-    const subscribers = readSubscribers();
+    if (process.env.RELEASE_STORAGE_BACKEND !== 'postgres') {
+       return NextResponse.json({ error: 'Requires postgres backend' }, { status: 503 });
+    }
+
+    const { rows: subscribers } = await db.query(
+      `SELECT id, normalized_email FROM release_notification_subscriptions 
+       WHERE release_id = $1 AND status = 'subscribed' AND notified_at IS NULL`,
+      [releaseId]
+    );
+
     if (subscribers.length === 0) {
-      return NextResponse.json({ ok: true, sent: 0, message: 'No subscribers yet' });
+      return NextResponse.json({ ok: true, sent: 0, message: 'No eligible subscribers to notify' });
     }
 
     const ytUrl = youtubePlaylistId
@@ -61,7 +56,7 @@ export async function POST(request: NextRequest) {
   </a>
   <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:24px 0;" />
   <p style="color:#475569;font-size:11px;margin:0;">
-    You are receiving this because you subscribed to SufiPulse release alerts.
+    You are receiving this because you subscribed to be notified when this premiere went live.
   </p>
 </div>`;
 
@@ -71,14 +66,19 @@ export async function POST(request: NextRequest) {
     for (const sub of subscribers) {
       try {
         await sendEmail({
-          to: sub.email,
+          to: sub.normalized_email,
           subject: `New Release: ${title} — SufiPulse`,
           html,
           text: `New release on SufiPulse: "${title}"\n\nWatch on YouTube: ${ytUrl}\n\nView on site: ${siteUrl}`,
         });
+        
+        await db.query(
+          `UPDATE release_notification_subscriptions SET notified_at = CURRENT_TIMESTAMP WHERE id = $1`,
+          [sub.id]
+        );
         sent++;
       } catch (err: any) {
-        errors.push(`${sub.email}: ${err.message}`);
+        errors.push(`${sub.normalized_email}: ${err.message}`);
       }
     }
 

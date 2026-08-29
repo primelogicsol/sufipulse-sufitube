@@ -5,11 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { ShareModal } from '@/app/components/share/ShareModal';
+import { buildShareContext } from '@/lib/share-context';
 import { Share2 } from 'lucide-react';
 import { NotifyMeModal } from './NotifyMeModal';
 import { PremiumTeaserModal } from './PremiumTeaserModal';
 
-export function FeaturedPremiere({ release }: { release: CMSRelease }) {
+export function FeaturedPremiere({ release }: { release: any }) {
   const [showShare, setShowShare] = useState(false);
   const [showNotify, setShowNotify] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
@@ -17,7 +18,7 @@ export function FeaturedPremiere({ release }: { release: CMSRelease }) {
   const title = release.canonicalTitle || release.title;
   
   const liveTeaser = release.preReleaseAssets?.find(
-    a => a.type === 'premium_teaser' && a.status === 'live'
+    (a: any) => a.type === 'premium_teaser' && a.status === 'live'
   );
   
   const artworkUrl = liveTeaser?.thumbnailUrl || release.canonicalThumbnail || release.thumbnailUrl || '/empty-artwork.png';
@@ -61,7 +62,7 @@ export function FeaturedPremiere({ release }: { release: CMSRelease }) {
                 <button onClick={() => setShowTeaser(true)} className="px-8 py-3 bg-[var(--color-gold)] text-black font-bold uppercase tracking-wider text-xs hover:bg-[#FDE68A] transition-colors rounded-full shadow-lg shadow-[var(--color-gold)]/20">
                   Watch Premium Teaser
                 </button>
-              ) : release.preReleaseAssets?.some(a => a.type === 'premium_teaser' && a.status === 'scheduled') ? (
+              ) : release.preReleaseAssets?.some((a: any) => a.type === 'premium_teaser' && a.status === 'scheduled') ? (
                 <button disabled className="px-8 py-3 bg-neutral-800 text-neutral-500 font-bold uppercase tracking-wider text-xs rounded-full cursor-not-allowed">
                   Teaser Coming Soon
                 </button>
@@ -88,6 +89,7 @@ export function FeaturedPremiere({ release }: { release: CMSRelease }) {
         canonicalUrl={`https://sufipulse.com/release-detail/${release.slug}`}
         context="premiere"
         socialShareKit={release.socialShareKit}
+        shareContext={buildShareContext(release, "premiere")}
       />
       
       {showNotify && (

@@ -8,6 +8,7 @@ import { Calendar, Clock, Share2, Play } from 'lucide-react';
 import { ShareModal } from '@/app/components/share/ShareModal';
 import { NotifyMeModal } from '@/app/(public)/release-premieres/components/NotifyMeModal';
 import { PremiumTeaserModal } from '@/app/(public)/release-premieres/components/PremiumTeaserModal';
+import { buildShareContext } from '@/lib/share-context';
 
 export function PreReleaseView({ release, isAdmin }: { release: any; isAdmin: boolean }) {
   const [showShare, setShowShare] = useState(false);
@@ -164,6 +165,7 @@ export function PreReleaseView({ release, isAdmin }: { release: any; isAdmin: bo
         canonicalUrl={`https://sufipulse.com/release-detail/${release.slug}`}
         context="premiere"
         socialShareKit={release.socialShareKit}
+        shareContext={buildShareContext(release, "premiere")}
       />
       
       {showNotify && (

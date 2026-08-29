@@ -114,7 +114,7 @@ export async function GET(
 
 // PUT /api/releases/[id] (update or upsert for admins)
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (getReleaseStorageBackend() === 'postgres') return NextResponse.json({ error: 'Release mutations are temporarily disabled during PostgreSQL read-cutover validation.' }, { status: 503 });
+  // We will handle Postgres replication after canonical mutation, so we remove the strict block here.
 
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -226,6 +226,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updated = cmsServerStorage.saveRelease(merged as any);
 
+    // --- Postgres Replication ---
+    if (process.env.RELEASE_STORAGE_BACKEND === 'postgres') {
+      try {
+        const { PostgresReleaseRepository } = await import('@/server/db/release-repository');
+        const repo = new PostgresReleaseRepository();
+        await repo.bulkUpsert([updated as any]);
+      } catch (err) {
+        apiLogger.error('Postgres replication failed', { err: String(err) });
+      }
+    }
+
     // --- CACHE INVALIDATION ---
     try {
       revalidatePath('/');
@@ -233,6 +244,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       revalidatePath(`/release-detail/${nextSlug}`);
       // Also revalidate the generic pattern
       revalidatePath('/release-detail/[slug]', 'page');
+      revalidatePath('/release-premieres');
     } catch (cacheErr) {
       apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
     }
@@ -261,6 +273,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           youtubeId: updated.youtubeId,
           youtubePlaylistId: updated.youtubePlaylistId,
           slug: updated.slug,
+          releaseId: updated.id,
         }),
       }).catch((err) => apiLogger.warn('Subscriber notification failed', { err: String(err) }));
     }
@@ -303,8 +316,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 // DELETE /api/releases/[id]
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (getReleaseStorageBackend() === 'postgres') return NextResponse.json({ error: 'Release mutations are temporarily disabled during PostgreSQL read-cutover validation.' }, { status: 503 });
-
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -317,10 +328,22 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     cmsServerStorage.deleteRelease(id);
 
+    // --- Postgres Replication ---
+    if (process.env.RELEASE_STORAGE_BACKEND === 'postgres') {
+      try {
+        const { PostgresReleaseRepository } = await import('@/server/db/release-repository');
+        const repo = new PostgresReleaseRepository();
+        await repo.delete(id);
+      } catch (err) {
+        apiLogger.error('Postgres deletion replication failed', { err: String(err) });
+      }
+    }
+
     // --- CACHE INVALIDATION ---
     try {
       revalidatePath('/');
       revalidatePath('/releases');
+      revalidatePath('/release-premieres');
       if (existing.slug) revalidatePath(`/release-detail/${existing.slug}`);
     } catch (cacheErr) {
       apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });

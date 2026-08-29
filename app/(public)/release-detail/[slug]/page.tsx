@@ -10,6 +10,7 @@ import {
 } from "react";
 import { trackEvent } from "@/app/lib/analytics";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { Layout } from "../../../components/layout/Layout";
 import SufiPulsePlayer from "@/components/SufiPulsePlayer";
 import ReleaseRecommendations from "@/components/ReleaseRecommendations";
@@ -89,6 +90,7 @@ import {
 } from "./components";
 import { PreReleaseView } from "./components/PreReleaseView";
 import { ShareModal } from '@/app/components/share/ShareModal';
+import { buildShareContext } from '@/lib/share-context';
 import type { SubtitleStatus } from "./components";
 import {
   useVideoTimeTracker,
@@ -2912,6 +2914,41 @@ function Release() {
                       </div>
                     );
                   })()}
+
+                  {/* Pre-Release Media Section */}
+                  {release.preReleaseAssets && release.preReleaseAssets.filter((a: any) => a.status === 'live' || a.status === 'archived').length > 0 && (
+                    <div className="mt-8 pt-8 border-t border-neutral-800/80">
+                      <h4 className="text-sm font-semibold tracking-widest text-[var(--color-gold)] uppercase mb-5">
+                        Pre-Release Media
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {release.preReleaseAssets.filter((a: any) => a.status === 'live' || a.status === 'archived').map((asset: any) => (
+                          <div key={asset.id} className="block overflow-hidden rounded-xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 transition group">
+                            <div className="relative aspect-video bg-neutral-950">
+                              <Image src={asset.thumbnailUrl || release.thumbnailUrl || '/empty-artwork.png'} alt={asset.title} fill className="object-cover group-hover:scale-105 transition duration-500" />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href={`https://www.youtube.com/watch?v=${asset.youtubeId}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-[var(--color-gold)] flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.5)]">
+                                  <Play className="w-5 h-5 text-black ml-1" />
+                                </a>
+                              </div>
+                            </div>
+                            <div className="p-4">
+                              <span className="text-[10px] font-bold text-[var(--color-gold)] uppercase tracking-widest bg-[var(--color-gold)]/10 px-2 py-0.5 rounded mb-2 inline-block">
+                                {asset.type.replace('_', ' ')}
+                              </span>
+                              <h5 className="text-sm font-medium text-neutral-200 line-clamp-1 group-hover:text-[var(--color-gold)] transition-colors">
+                                {asset.title}
+                              </h5>
+                              <p className="text-xs text-neutral-500 mt-1 line-clamp-2">
+                                {asset.description || 'Pre-release promotional material.'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               </div>
             )}
@@ -5314,6 +5351,7 @@ function Release() {
           youtubeUrl={release.youtube_url || (resolvedVideoId ? `https://www.youtube.com/watch?v=${resolvedVideoId}` : undefined)}
           context="release"
           socialShareKit={release.socialShareKit}
+          shareContext={buildShareContext(release, "release")}
           resolvedVideoId={resolvedVideoId}
           currentTime={currentTime}
           formatDuration={formatDuration}

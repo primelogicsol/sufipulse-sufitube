@@ -1,5 +1,5 @@
 import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
-import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { toCanonicalCMSRelease, toPublicPremiereRelease } from '@/server/storage/release-dto';
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { type CMSRelease } from '@/lib/cms-storage';
@@ -28,20 +28,40 @@ export async function GET(request: NextRequest) {
     const lookupKey = key || slug || youtubeId;
     if (lookupKey) {
       const store = getReleaseReadStore();
+      let release = null;
+      let source = '';
+
       if (slug) {
-        const release = await store.getBySlug(slug);
-        if (release) return NextResponse.json({ ...toCanonicalCMSRelease(release), resolution_source: 'cms_slug' }, { headers: cacheHeaders });
+        release = await store.getBySlug(slug);
+        source = 'cms_slug';
       }
-      if (youtubeId) {
-        const release = await store.getByYoutubeId(youtubeId);
-        if (release) return NextResponse.json({ ...toCanonicalCMSRelease(release), resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
+      if (!release && youtubeId) {
+        release = await store.getByYoutubeId(youtubeId);
+        source = 'cms_youtube_compat';
       }
-      const releaseBySlug = await store.getBySlug(lookupKey);
-      if (releaseBySlug) return NextResponse.json({ ...toCanonicalCMSRelease(releaseBySlug), resolution_source: 'cms_slug' }, { headers: cacheHeaders });
-      const releaseByYoutubeId = await store.getByYoutubeId(lookupKey);
-      if (releaseByYoutubeId) return NextResponse.json({ ...toCanonicalCMSRelease(releaseByYoutubeId), resolution_source: 'cms_youtube_compat' }, { headers: cacheHeaders });
-      const releaseById = await store.getById(lookupKey);
-      if (releaseById) return NextResponse.json({ ...toCanonicalCMSRelease(releaseById), resolution_source: 'cms_key' }, { headers: cacheHeaders });
+      if (!release) {
+        release = await store.getBySlug(lookupKey);
+        source = 'cms_slug';
+      }
+      if (!release) {
+        release = await store.getByYoutubeId(lookupKey);
+        source = 'cms_youtube_compat';
+      }
+      if (!release) {
+        release = await store.getById(lookupKey);
+        source = 'cms_key';
+      }
+
+      if (release) {
+        const canonical = toCanonicalCMSRelease(release);
+        if (['upcoming', 'teaser_live', 'premiere_scheduled'].includes(canonical.releaseLifecycle || '')) {
+          const auth = await getAuthUser(request);
+          if (auth?.role !== 'admin') {
+            return NextResponse.json({ ...toPublicPremiereRelease(canonical), resolution_source: source }, { headers: cacheHeaders });
+          }
+        }
+        return NextResponse.json({ ...canonical, resolution_source: source }, { headers: cacheHeaders });
+      }
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
 
