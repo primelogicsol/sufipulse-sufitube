@@ -10,7 +10,7 @@ import { cmsReleaseSchema, releasesQuerySchema } from '@/app/lib/validation-sche
 
 
 const cacheHeaders = {
-  'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=2592000',
+  'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=3600',
 };
 
 export async function GET(request: NextRequest) {
@@ -107,19 +107,35 @@ export async function GET(request: NextRequest) {
 
       const auth = await getAuthUser(request);
       const isAdmin = auth?.role === 'admin';
+      const headers = isAdmin ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } : cacheHeaders;
+
+      let finalItems = [];
+      if (isAdmin) {
+        finalItems = result.items.map(toCanonicalCMSRelease);
+      } else {
+        for (const r of result.items) {
+          if (r.status !== 'published' || r.visibility !== 'public') continue;
+          if (['upcoming', 'teaser_live', 'premiere_scheduled'].includes(r.releaseLifecycle || '')) {
+            if (r.premiereVisibility !== 'public') continue;
+            finalItems.push(toPublicPremiereRelease(r));
+          } else {
+            finalItems.push(toPublicRelease(r));
+          }
+        }
+      }
 
       if (!paginationRequested) {
-        return NextResponse.json(isAdmin ? result.items.map(toCanonicalCMSRelease) : result.items.map(toPublicRelease), { headers: cacheHeaders });
+        return NextResponse.json(finalItems, { headers });
       }
 
       return NextResponse.json({
-        items: isAdmin ? result.items.map(toCanonicalCMSRelease) : result.items.map(toPublicRelease),
-        count: result.count,
+        items: finalItems,
+        count: isAdmin ? result.count : finalItems.length,
         page: result.page,
         pageSize: result.pageSize,
         totalPages: result.totalPages,
         facets: result.facets || { years: [] }
-      }, { headers: cacheHeaders });
+      }, { headers });
     }
 
 // 1. status
@@ -234,20 +250,34 @@ export async function GET(request: NextRequest) {
 
     const auth = await getAuthUser(request);
     const isAdmin = auth?.role === 'admin';
+    const headers = isAdmin ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } : cacheHeaders;
+
+    let finalReleases = [];
+    if (isAdmin) {
+      finalReleases = releases.map(toCanonicalCMSRelease);
+    } else {
+      for (const r of releases) {
+        if (r.status !== 'published' || r.visibility !== 'public') continue;
+        if (['upcoming', 'teaser_live', 'premiere_scheduled'].includes((r as any).releaseLifecycle || '')) {
+          if ((r as any).premiereVisibility !== 'public') continue;
+          finalReleases.push(toPublicPremiereRelease(r));
+        } else {
+          finalReleases.push(toPublicRelease(r));
+        }
+      }
+    }
 
     if (pageParam || pageSizeParam) {
       const page     = Math.max(1, parseInt(pageParam || '1', 10) || 1);
       const pageSize = Math.max(1, parseInt(pageSizeParam || '12', 10) || 12);
       const offset   = parseInt(searchParams.get('offset') || '0', 10) || (page - 1) * pageSize;
-      const totalPages = Math.ceil(count / pageSize);
-      const sliced = releases.slice(offset, offset + pageSize);
-      const items = isAdmin ? sliced.map(toCanonicalCMSRelease) : sliced.map(toPublicRelease);
+      const totalPages = Math.ceil(finalReleases.length / pageSize);
+      const sliced = finalReleases.slice(offset, offset + pageSize);
 
-      return NextResponse.json({ items, count, page, pageSize, totalPages, facets }, { headers: cacheHeaders });
+      return NextResponse.json({ items: sliced, count: finalReleases.length, page, pageSize, totalPages, facets }, { headers });
     }
 
-    return NextResponse.json(isAdmin ? releases.map(toCanonicalCMSRelease) : releases.map(toPublicRelease), { headers: cacheHeaders });
-
+    return NextResponse.json(finalReleases, { headers });
   } catch (err: any) {
     console.error('[API /api/releases] GET ERROR:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });

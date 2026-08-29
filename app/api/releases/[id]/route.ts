@@ -14,7 +14,7 @@ import { cmsReleaseSchema } from '@/app/lib/validation-schemas';
 export const dynamic = 'force-dynamic';
 
 const cacheHeaders = {
-  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=2592000',
+  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=3600',
 };
 
 const apiLogger = logger.api;

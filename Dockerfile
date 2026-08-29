@@ -75,6 +75,9 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
 COPY --from=builder --chown=node:node /app/package.json ./package.json
 COPY --from=builder --chown=node:node /app/scripts/seed-admin.js ./scripts/seed-admin.js
+COPY --from=builder --chown=node:node /app/scripts/migrate.js ./scripts/migrate.js
+COPY --from=builder --chown=node:node /app/scripts/validate-env.mjs ./scripts/validate-env.mjs
+COPY --from=builder --chown=node:node /app/server/db/migrations ./server/db/migrations
 
 # Switch to non-root user
 USER node
@@ -88,6 +91,6 @@ ARG BUILD_TIME=unknown
 ENV APP_COMMIT=$APP_COMMIT
 ENV BUILD_TIME=$BUILD_TIME
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node scripts/migrate.js && node server.js"]
 
 
