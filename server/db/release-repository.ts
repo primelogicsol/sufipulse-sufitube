@@ -20,6 +20,7 @@ export interface ReleaseQuery {
   limit?: number;
   facets?: boolean;
   paginate?: boolean;
+  requirePublicEligibility?: boolean;
 }
 
 export interface ReleaseQueryResult {
@@ -188,6 +189,10 @@ export class PostgresReleaseRepository {
     let whereSql = `1=1`;
     const values: any[] = [];
     let paramIndex = 1;
+
+    if (query.requirePublicEligibility) {
+      whereSql += ` AND visibility = 'public' AND (release_lifecycle NOT IN ('upcoming', 'teaser_live', 'premiere_scheduled') OR premiere_visibility = 'public')`;
+    }
 
     // Status
     if (query.status && query.status !== 'all') {

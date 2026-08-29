@@ -91,6 +91,6 @@ ARG BUILD_TIME=unknown
 ENV APP_COMMIT=$APP_COMMIT
 ENV BUILD_TIME=$BUILD_TIME
 
-CMD ["sh", "-c", "node scripts/migrate.js && node server.js"]
+CMD ["sh", "-c", "node scripts/validate-env.mjs && node scripts/migrate.js && node server.js"]
 
 

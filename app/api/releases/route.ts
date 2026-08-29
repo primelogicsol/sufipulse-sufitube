@@ -89,6 +89,9 @@ export async function GET(request: NextRequest) {
       const pageSize = Math.max(1, parseInt(searchParams.get('pageSize') || searchParams.get('limit') || '12', 10) || 12);
       const offset = searchParams.has('offset') ? parseInt(searchParams.get('offset') || '0', 10) : undefined;
 
+      const auth = await getAuthUser(request);
+      const isAdmin = auth?.role === 'admin';
+
       const result = await store.query({
         q: search || undefined,
         status: status || undefined,
@@ -103,10 +106,9 @@ export async function GET(request: NextRequest) {
         offset,
         paginate: paginationRequested,
         facets: paginationRequested,
+        requirePublicEligibility: !isAdmin,
       });
 
-      const auth = await getAuthUser(request);
-      const isAdmin = auth?.role === 'admin';
       const headers = isAdmin ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } : cacheHeaders;
 
       let finalItems = [];

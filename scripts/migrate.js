@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '.env.local' });
+
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
