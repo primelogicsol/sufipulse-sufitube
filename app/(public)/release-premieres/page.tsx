@@ -125,14 +125,7 @@ export default async function ReleasePremieresPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <button 
-                  onClick={() => {
-                    document.getElementById('premieres-content')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="px-8 py-4 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm hover:bg-[#FDE68A] transition-all rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:-translate-y-0.5"
-                >
-                  EXPLORE PREMIERES
-                </button>
+                <a href="#premieres-content" className="px-8 py-4 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm hover:bg-[#FDE68A] transition-all rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:-translate-y-0.5">EXPLORE PREMIERES</a>
                 <Link 
                   href="/governance"
                   className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-sm hover:bg-white/10 transition-all rounded-full backdrop-blur-sm"
