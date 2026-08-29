@@ -10,4 +10,4 @@ export { SubtitlePasteEditor } from './SubtitlePasteEditor';
 
 export { LyricsRequestModal } from './LyricsRequestModal';
 
-export { ShareModal } from './ShareModal';
+export { useVideoTimeTracker, TimeDisplay } from './VideoTimeTracker';

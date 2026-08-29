@@ -42,6 +42,7 @@ import { SubtitleBulkControlsSection } from './subtitle-bulk-controls-section';
 import { WorkflowAssistantSection } from './workflow-assistant-section';
 import { SocialShareKitSection } from './social-share-kit-section';
 import { ReleaseStreamingSection } from './release-streaming-section';
+import { ReleasePremiereSection } from './release-premiere-section';
 import { getDefaultDistribution, type PlatformDistribution } from '@/lib/cms-storage';
 import { useReleaseForm, SAMPLE_PREVIEW_DURATION_SECONDS } from './use-release-form';
 import {
@@ -947,6 +948,12 @@ export default function EditReleasePage() {
               fieldRefs={fieldRefs}
             />
           </div>
+
+          {/* Premiere & Pre-Release */}
+          <ReleasePremiereSection
+            form={form}
+            setForm={setForm}
+          />
 
           {/* Streaming Platforms */}
           <ReleaseStreamingSection

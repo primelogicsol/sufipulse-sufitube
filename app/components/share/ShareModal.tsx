@@ -10,30 +10,141 @@ import {
   MessageSquare,
   Linkedin,
   Send,
+  Mail,
+  Share2
 } from "lucide-react";
 
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  resolvedVideoId: string | null;
-  currentTime: number;
-  formatDuration: (seconds: number) => string;
-  handleShareMoment: () => void;
-  handleCopyLink: () => void;
-  handleShare: (platform: string) => void;
+  title: string;
+  canonicalUrl: string;
+  youtubeUrl?: string;
+  currentTime?: number;
+  resolvedVideoId?: string | null;
+  context: "premiere" | "release" | "teaser";
+  socialShareKit?: any;
+  // Fallbacks for backward compatibility
+  handleShareMoment?: () => void;
+  handleCopyLink?: () => void;
+  handleShare?: (platform: string) => void;
+  formatDuration?: (seconds: number) => string;
 }
 
 export function ShareModal({
   isOpen,
   onClose,
+  title,
+  canonicalUrl,
+  youtubeUrl,
+  currentTime = 0,
   resolvedVideoId,
-  currentTime,
-  formatDuration,
+  context,
+  socialShareKit,
   handleShareMoment,
   handleCopyLink,
   handleShare,
+  formatDuration,
 }: ShareModalProps) {
   if (!isOpen) return null;
+
+  const getShareUrl = (platform: string) => {
+    // If context is release, prefer youtube for social if it existed before, but prompt says:
+    // "DEFAULT share destination must be the canonical SufiPulse URL: https://sufipulse.com/release-detail/{slug}"
+    // "For existing released-song page behavior, preserve current functionality unless explicitly revised separately."
+    let url = context === "release" && youtubeUrl ? youtubeUrl : canonicalUrl;
+    
+    // Check socialShareKit first
+    if (socialShareKit && socialShareKit[platform]) {
+      return socialShareKit[platform]; // if it has a pre-generated intent url
+    }
+    
+    return url;
+  };
+
+  const getShareText = () => {
+    if (context === "premiere") return `Upcoming Premiere: ${title}`;
+    if (context === "teaser") return `Premium Teaser Now Live: ${title}`;
+    return title;
+  };
+
+  const internalHandleShare = (platform: string) => {
+    if (handleShare) {
+      handleShare(platform);
+      return;
+    }
+    
+    const url = getShareUrl(platform);
+    const text = encodeURIComponent(getShareText());
+    const encodedUrl = encodeURIComponent(url);
+    
+    let shareIntent = "";
+    switch (platform) {
+      case "facebook":
+        shareIntent = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case "twitter":
+        shareIntent = `https://twitter.com/intent/tweet?text=${text}&url=${encodedUrl}`;
+        break;
+      case "whatsapp":
+        shareIntent = `https://api.whatsapp.com/send?text=${text}%20${encodedUrl}`;
+        break;
+      case "linkedin":
+        shareIntent = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case "telegram":
+        shareIntent = `https://t.me/share/url?url=${encodedUrl}&text=${text}`;
+        break;
+      case "reddit":
+        shareIntent = `https://reddit.com/submit?url=${encodedUrl}&title=${text}`;
+        break;
+      case "email":
+        shareIntent = `mailto:?subject=${text}&body=Check this out: ${url}`;
+        break;
+      case "native":
+        if (navigator.share) {
+          navigator.share({
+            title: getShareText(),
+            url: url
+          }).catch(console.error);
+          return;
+        }
+        break;
+    }
+    
+    if (shareIntent) {
+      window.open(shareIntent, "_blank", "width=600,height=400");
+    }
+  };
+
+  const internalHandleCopyLink = () => {
+    if (handleCopyLink) {
+      handleCopyLink();
+      return;
+    }
+    navigator.clipboard.writeText(canonicalUrl);
+    alert("Link copied to clipboard!");
+  };
+
+  const internalHandleShareMoment = () => {
+    if (handleShareMoment) {
+      handleShareMoment();
+      return;
+    }
+    if (youtubeUrl && currentTime > 0) {
+      const url = new URL(youtubeUrl);
+      url.searchParams.set("t", `${Math.floor(currentTime)}s`);
+      navigator.clipboard.writeText(url.toString());
+      alert("YouTube timestamp link copied!");
+    }
+  };
+
+  const fmtDuration = (sec: number) => {
+    if (formatDuration) return formatDuration(sec);
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const platforms = [
     {
@@ -45,8 +156,8 @@ export function ShareModal({
     },
     {
       id: "twitter",
-      label: "Twitter",
-      desc: "Share on Twitter",
+      label: "X / Twitter",
+      desc: "Share on X",
       icon: Twitter,
       color: "#1DA1F2",
     },
@@ -71,7 +182,24 @@ export function ShareModal({
       icon: Send,
       color: "#0088CC",
     },
+    {
+      id: "email",
+      label: "Email",
+      desc: "Share via Email",
+      icon: Mail,
+      color: "#EA4335",
+    },
   ];
+  
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    platforms.push({
+      id: "native",
+      label: "Native Share",
+      desc: "Share via device",
+      icon: Share2,
+      color: "#6B7280",
+    });
+  }
 
   return (
     <div
@@ -105,7 +233,9 @@ export function ShareModal({
         {/* Helper text */}
         <div className="mb-6 px-1">
           <p className="text-xs text-white/50 leading-relaxed font-light text-left">
-            Social shares use the YouTube link — helping this reach more listeners.
+            {context === "release" 
+              ? "Social shares use the YouTube link — helping this reach more listeners."
+              : "Share this official Premiere page to build anticipation."}
           </p>
         </div>
 
@@ -113,8 +243,10 @@ export function ShareModal({
           {/* Share this moment - ENTIRE group anchored left */}
           {resolvedVideoId && currentTime > 5 && (
             <button
-              onClick={() => {
-                handleShareMoment();
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                internalHandleShareMoment();
                 onClose();
               }}
               className="w-full flex items-start justify-start gap-3 px-4 py-4 bg-amber-900/10 border border-amber-800/20 hover:bg-amber-900/20 rounded-2xl transition-all text-left group"
@@ -129,15 +261,17 @@ export function ShareModal({
                   Share this moment
                 </span>
                 <span className="text-white/40 text-sm leading-tight mt-1">
-                  YouTube link at {formatDuration(Math.floor(currentTime))}
+                  YouTube link at {fmtDuration(Math.floor(currentTime))}
                 </span>
               </div>
             </button>
           )}
 
           <button
-            onClick={() => {
-              handleCopyLink();
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              internalHandleCopyLink();
               onClose();
             }}
             className="w-full flex items-start justify-start gap-3 px-4 py-4 bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 rounded-2xl transition-all text-left group"
@@ -160,8 +294,10 @@ export function ShareModal({
           {platforms.map((p) => (
             <button
               key={p.id}
-              onClick={() => {
-                handleShare(p.id);
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                internalHandleShare(p.id);
                 onClose();
               }}
               className="w-full flex items-start justify-start gap-3 px-4 py-4 bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 rounded-2xl transition-all text-left group"

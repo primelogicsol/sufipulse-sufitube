@@ -86,8 +86,9 @@ import {
   getLanguageLabel,
   LANGUAGE_OPTIONS as PAGE_LANGUAGE_OPTIONS,
   LyricsRequestModal,
-  ShareModal,
 } from "./components";
+import { PreReleaseView } from "./components/PreReleaseView";
+import { ShareModal } from '@/app/components/share/ShareModal';
 import type { SubtitleStatus } from "./components";
 import {
   useVideoTimeTracker,
@@ -1884,6 +1885,14 @@ function Release() {
           </div>
         </PageContainer>
       </>
+    );
+  }
+
+  // Pre-Release Mode Intercept
+  const isReleased = !release.releaseLifecycle || release.releaseLifecycle === 'released';
+  if (!isReleased && !isEditing) {
+    return (
+      <PreReleaseView release={release} isAdmin={isAdmin} />
     );
   }
 
@@ -5300,6 +5309,11 @@ function Release() {
         <ShareModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
+          title={release.release_title}
+          canonicalUrl={`https://sufipulse.com/release-detail/${release.slug}`}
+          youtubeUrl={release.youtube_url || (resolvedVideoId ? `https://www.youtube.com/watch?v=${resolvedVideoId}` : undefined)}
+          context="release"
+          socialShareKit={release.socialShareKit}
           resolvedVideoId={resolvedVideoId}
           currentTime={currentTime}
           formatDuration={formatDuration}

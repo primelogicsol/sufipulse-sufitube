@@ -82,6 +82,24 @@ export interface CMSRelease {
   source?: string;
   visibility?: 'public' | 'private' | 'unlisted';
 
+  // Premiere Room & Pre-Release Lifecycle fields
+  releaseLifecycle?: 'upcoming' | 'teaser_live' | 'premiere_scheduled' | 'released' | 'archived';
+  officialReleaseAt?: string;
+  premiereAnnouncedAt?: string;
+  isFeaturedPremiere?: boolean;
+  premiereVisibility?: 'private' | 'public';
+  preReleaseAssets?: Array<{
+    id: string;
+    type: 'premium_teaser' | 'first_listen' | 'trailer' | 'premiere_announcement';
+    title?: string;
+    youtubeId?: string;
+    youtubeUrl?: string;
+    thumbnailUrl?: string;
+    publishedAt?: string;
+    scheduledAt?: string;
+    status: 'draft' | 'scheduled' | 'live' | 'archived';
+  }>;
+
   // Distribution state per platform
   distribution?: Record<string, PlatformDistribution>;
   

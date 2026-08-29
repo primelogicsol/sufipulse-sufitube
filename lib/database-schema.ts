@@ -261,6 +261,24 @@ export interface CMSRelease {
   show_likes: boolean;
   release_date?: string;
   published_at?: string;
+  
+  // Premiere Room & Pre-Release Lifecycle fields
+  release_lifecycle?: 'upcoming' | 'teaser_live' | 'premiere_scheduled' | 'released' | 'archived';
+  official_release_at?: string;
+  premiere_announced_at?: string;
+  is_featured_premiere?: boolean;
+  premiere_visibility?: 'private' | 'public';
+  pre_release_assets?: Array<{
+    id: string;
+    type: 'premium_teaser' | 'first_listen' | 'trailer' | 'premiere_announcement';
+    title?: string;
+    youtube_id?: string;
+    youtube_url?: string;
+    thumbnail_url?: string;
+    published_at?: string;
+    scheduled_at?: string;
+    status: 'draft' | 'scheduled' | 'live' | 'archived';
+  }>;
   status: 'draft' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
   release_type?: string;
   category?: string;
@@ -487,6 +505,23 @@ export interface YouTubeAnalyticsSnapshot {
 }
 
 /**
+ * Release Notification Subscription Schema
+ */
+export interface ReleaseNotificationSubscription {
+  id: string;
+  release_id: string;
+  email: string;
+  normalized_email: string;
+  status: 'pending' | 'confirmed' | 'unsubscribed';
+  confirmation_token: string;
+  unsubscribe_token: string;
+  created_at: string;
+  confirmed_at?: string;
+  notified_at?: string;
+  updated_at: string;
+}
+
+/**
  * Export all schema types
  */
 /**
@@ -525,6 +560,7 @@ export type DatabaseSchema = {
   media_library: MediaLibrary;
   notifications: Notification;
   youtube_analytics_snapshots: YouTubeAnalyticsSnapshot;
+  release_notification_subscriptions: ReleaseNotificationSubscription;
 
   // ── Atlas Knowledge Graph Engine ──────────────────────────────
   atlas_entities: AtlasEntityRecord;

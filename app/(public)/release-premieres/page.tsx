@@ -1,25 +1,101 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { PageContainer } from '@/app/components/layout/PageContainer';
+import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
+import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { type CMSRelease } from '@/lib/cms-storage';
+import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { FeaturedPremiere } from './components/FeaturedPremiere';
+import { UpcomingPremiereCard } from './components/UpcomingPremiereCard';
 
 export const metadata = {
   title: 'The Premiere Room | SufiPulse Studio USA',
   description: 'Upcoming Releases, Premium Teasers, and First Listens from SufiPulse Studio.',
 };
 
-export default function ReleasePremieresPage() {
+export const revalidate = 60;
+
+async function getPremieres() {
+  const backend = getReleaseStorageBackend();
+  let allReleases: CMSRelease[] = [];
+
+  if (backend === 'postgres') {
+    const store = getReleaseReadStore();
+    const result = await store.query({ paginate: false });
+    allReleases = result.items.map(toCanonicalCMSRelease);
+  } else {
+    allReleases = cmsServerStorage.getAllReleases();
+  }
+
+  const eligibleReleases = allReleases.filter(r => {
+    if (r.visibility !== 'public' && r.premiereVisibility !== 'public') return false;
+    if (!['upcoming', 'teaser_live', 'premiere_scheduled'].includes(r.releaseLifecycle || '')) return false;
+    return true;
+  });
+
+  let featured: CMSRelease | null = null;
+  let upcoming: CMSRelease[] = [];
+
+  const explicitFeatured = eligibleReleases.find(r => r.isFeaturedPremiere);
+  if (explicitFeatured) {
+    featured = explicitFeatured;
+  } else {
+    const withLiveTeaser = eligibleReleases.filter(r => 
+      r.preReleaseAssets?.some(a => a.type === 'premium_teaser' && a.status === 'live')
+    );
+    if (withLiveTeaser.length > 0) {
+      featured = withLiveTeaser.sort((a, b) => {
+        const aDate = a.officialReleaseAt ? new Date(a.officialReleaseAt).getTime() : Infinity;
+        const bDate = b.officialReleaseAt ? new Date(b.officialReleaseAt).getTime() : Infinity;
+        return aDate - bDate;
+      })[0];
+    } else {
+      featured = eligibleReleases.sort((a, b) => {
+        const aDate = a.officialReleaseAt ? new Date(a.officialReleaseAt).getTime() : Infinity;
+        const bDate = b.officialReleaseAt ? new Date(b.officialReleaseAt).getTime() : Infinity;
+        return aDate - bDate;
+      })[0] || null;
+    }
+  }
+
+  if (featured) {
+    upcoming = eligibleReleases.filter(r => r.id !== featured!.id);
+  } else {
+    upcoming = [...eligibleReleases];
+  }
+
+  upcoming.sort((a, b) => {
+    const aOfficial = a.officialReleaseAt ? new Date(a.officialReleaseAt).getTime() : Infinity;
+    const bOfficial = b.officialReleaseAt ? new Date(b.officialReleaseAt).getTime() : Infinity;
+    if (aOfficial !== bOfficial) return aOfficial - bOfficial;
+
+    const aAnnounced = a.premiereAnnouncedAt ? new Date(a.premiereAnnouncedAt).getTime() : Infinity;
+    const bAnnounced = b.premiereAnnouncedAt ? new Date(b.premiereAnnouncedAt).getTime() : Infinity;
+    if (aAnnounced !== bAnnounced) return aAnnounced - bAnnounced;
+
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : Infinity;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : Infinity;
+    return aCreated - bCreated;
+  });
+
+  return { featured, upcoming };
+}
+
+export default async function ReleasePremieresPage() {
+  const { featured, upcoming } = await getPremieres();
+
   return (
     <>
-      <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
         {/* Cinematic Background Banner matching global hero */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
-            src="/banner2.png"
-            alt="SufiPulse Studio Cinematic Session"
+            src="/banner5.png"
+            alt="The Premiere Room"
             fill
             priority
             quality={95}
-            className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+            className="object-cover object-center scale-105 transform motion-safe:animate-fade-in opacity-60"
           />
           {/* Layered brand gradient overlays */}
           <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
@@ -27,95 +103,111 @@ export default function ReleasePremieresPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10">
+        <div className="relative z-10 flex-1 flex flex-col justify-center">
           <PageContainer>
             <div className="max-w-4xl mx-auto text-center mb-16">
-              <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+              <div className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
                 <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
-                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                  SufiPulse USA - Upcoming Archive
+                <span className="text-xs text-[var(--color-gold)] uppercase tracking-widest font-bold">
+                  SUFIPULSE USA — PREMIERE DIVISION
                 </span>
               </div>
 
-              <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md uppercase">
+              <h1 className="font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-bold text-white leading-[1.1] tracking-tight drop-shadow-lg mb-2">
                 The Premiere Room
               </h1>
+              <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-bold text-[var(--color-gold)] leading-[1.1] tracking-tight drop-shadow-lg mb-8 italic">
+                First Listen Before Release
+              </h2>
               
-              <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-10 leading-[var(--leading-relaxed)] font-light drop-shadow">
-                Upcoming Releases • Premium Teasers • First Listen
+              <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-12 leading-relaxed font-light drop-shadow px-4">
+                Discover forthcoming SufiPulse works before their official release. Experience governed premium teasers, scheduled premieres, and first-listen previews from SufiPulse Studio USA.
               </p>
-            </div>
 
-            {/* Featured Upcoming Release */}
-            <div className="relative w-full rounded-2xl overflow-hidden bg-neutral-900 border border-[var(--color-border-strong)] shadow-2xl mb-20 group">
-              <div className="absolute inset-0 z-0">
-                <Image 
-                  src="/banner1.png" 
-                  alt="Featured Premiere Background"
-                  fill
-                  className="object-cover opacity-40 group-hover:opacity-50 transition-opacity duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-              </div>
-              
-              <div className="relative z-10 flex flex-col md:flex-row items-end justify-between p-8 md:p-12 min-h-[400px]">
-                <div className="max-w-2xl">
-                  <span className="inline-block px-3 py-1 bg-[var(--color-gold)] text-black text-[10px] font-black uppercase tracking-widest rounded-sm mb-4">
-                    Premium Teaser
-                  </span>
-                  <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-                    Kemis Taani Chhu Aav Aav
-                  </h2>
-                  <div className="flex items-center gap-4 text-neutral-300 text-sm mb-6">
-                    <span className="font-semibold text-[var(--color-gold)]">Official Release:</span>
-                    <span>Upcoming</span>
-                  </div>
-                  <p className="text-neutral-400 text-base md:text-lg mb-8 max-w-xl">
-                    A Kashmiri-English Sufi Kalam bringing the spiritual weight of Mahjoor's original verses into a contemporary global interpretation.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <button className="px-8 py-3 bg-[var(--color-gold)] text-black font-bold uppercase tracking-wider text-xs hover:bg-[#FDE68A] transition-colors rounded-full shadow-lg shadow-[var(--color-gold)]/20">
-                      Watch Premium Teaser
-                    </button>
-                    <button className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded-full border border-white/20 backdrop-blur-sm">
-                      Notify Me
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Upcoming Releases Grid */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl md:text-2xl font-bold text-white tracking-wide">
-                  UPCOMING RELEASES
-                </h3>
-                <Link href="/releases" className="text-[var(--color-gold)] text-sm font-semibold hover:underline">
-                  View All Catalog →
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <button 
+                  onClick={() => {
+                    document.getElementById('premieres-content')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="px-8 py-4 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm hover:bg-[#FDE68A] transition-all rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:-translate-y-0.5"
+                >
+                  EXPLORE PREMIERES
+                </button>
+                <Link 
+                  href="/governance"
+                  className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-sm hover:bg-white/10 transition-all rounded-full backdrop-blur-sm"
+                >
+                  PREMIERE GOVERNANCE
                 </Link>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-[var(--color-midnight)]/60 border border-[var(--color-border-strong)] rounded-xl overflow-hidden hover:border-[var(--color-gold)]/50 transition-colors backdrop-blur-md">
-                    <div className="aspect-video bg-[#0a0f1c] relative border-b border-[var(--color-border)]">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-neutral-600 text-sm font-semibold uppercase tracking-widest">Coming Soon</span>
-                      </div>
-                    </div>
-                    <div className="p-5">
-                      <span className="text-[10px] text-[var(--color-gold)] uppercase tracking-widest font-bold mb-2 block">First Listen</span>
-                      <h4 className="text-lg font-bold text-white mb-2">Unannounced Title {i}</h4>
-                      <p className="text-neutral-400 text-sm">Scheduled for Q3</p>
-                    </div>
-                  </div>
-                ))}
+            </div>
+          </PageContainer>
+        </div>
+
+        {/* 4-Column Principles Strip */}
+        <div className="relative z-10 w-full bg-black/40 backdrop-blur-md border-t border-white/5 mt-8 hidden md:block">
+          <PageContainer>
+            <div className="grid grid-cols-4 divide-x divide-white/10 py-6">
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">1. PREMIUM TEASERS</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">Curated previews of forthcoming governed releases.</p>
+              </div>
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">2. FIRST LISTEN</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">Early access to selected musical excerpts.</p>
+              </div>
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">3. RELEASE ALERTS</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">Follow announced releases through their launch cycle.</p>
+              </div>
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">4. CANONICAL CONTINUITY</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">Every teaser remains attached to the same governed song identity.</p>
               </div>
             </div>
           </PageContainer>
         </div>
       </section>
+
+      <div id="premieres-content" className="w-full bg-[var(--color-midnight)] py-16 md:py-24">
+        <PageContainer>
+
+            {!featured && upcoming.length === 0 ? (
+              <div className="py-20 text-center">
+                <h3 className="text-2xl text-neutral-400 font-light">No premieres are currently announced.</h3>
+                <p className="text-neutral-500 mt-4">Check back later for upcoming releases.</p>
+              </div>
+            ) : (
+              <>
+                {/* Featured Upcoming Release */}
+                {featured && (
+                  <FeaturedPremiere release={featured} />
+                )}
+
+                {/* Upcoming Releases Grid */}
+                {upcoming.length > 0 && (
+                  <div className="mb-12">
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-xl md:text-2xl font-bold text-white tracking-wide uppercase">
+                        {featured ? "More Upcoming" : "Upcoming Releases"}
+                      </h3>
+                      <Link href="/releases" className="text-[var(--color-gold)] text-sm font-semibold hover:underline">
+                        View Released Catalog →
+                      </Link>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {upcoming.map((release) => (
+                        <UpcomingPremiereCard key={release.id} release={release} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </PageContainer>
+        </div>
     </>
+
   );
 }
