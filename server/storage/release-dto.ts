@@ -134,8 +134,65 @@ export function toPublicPremiereRelease(release: CMSRelease): PublicPremiereRele
     premiereAnnouncedAt: release.premiereAnnouncedAt,
     isFeaturedPremiere: release.isFeaturedPremiere,
     createdAt: release.createdAt,
-    // Filter out non-live assets!
     preReleaseAssets: release.preReleaseAssets?.filter((a) => a.status === 'live'),
   };
   return mapped;
+}
+
+export type PublicRelease = Pick<
+  CMSRelease,
+  | 'id'
+  | 'title'
+  | 'description'
+  | 'vocalist'
+  | 'slug'
+  | 'canonicalTitle'
+  | 'youtubeTitle'
+  | 'thumbnailUrl'
+  | 'canonicalThumbnail'
+  | 'status'
+  | 'visibility'
+  | 'youtubeId'
+  | 'durationSeconds'
+  | 'durationFormatted'
+  | 'viewCount'
+  | 'source'
+  | 'format'
+  | 'govType'
+  | 'governanceOrigin'
+  | 'publishedAt'
+  | 'releaseDate'
+  | 'writer'
+> & {
+  publishedDate?: string;
+  tags?: string[];
+};
+
+export function toPublicRelease(release: any): PublicRelease {
+  return {
+    id: release.id,
+    title: release.title,
+    description: release.description,
+    vocalist: release.vocalist,
+    slug: release.slug,
+    canonicalTitle: release.canonicalTitle,
+    youtubeTitle: release.youtubeTitle,
+    thumbnailUrl: release.thumbnailUrl,
+    canonicalThumbnail: release.canonicalThumbnail,
+    status: release.status,
+    visibility: release.visibility,
+    youtubeId: release.youtubeId,
+    durationSeconds: release.durationSeconds,
+    durationFormatted: release.durationFormatted,
+    viewCount: release.viewCount,
+    source: release.source,
+    format: release.format,
+    govType: release.govType,
+    governanceOrigin: release.governanceOrigin,
+    publishedAt: release.publishedAt,
+    publishedDate: release.publishedDate,
+    releaseDate: release.releaseDate,
+    writer: release.writer,
+    tags: release.tags,
+  };
 }

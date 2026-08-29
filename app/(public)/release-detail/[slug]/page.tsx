@@ -644,7 +644,7 @@ function Release() {
   const [knowledgeData, setKnowledgeData] = useState<any>(null);
 
   useEffect(() => {
-    fetch("/api/releases")
+    fetch("/api/releases/relationships")
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -1963,60 +1963,6 @@ function Release() {
   };
 
   const isLegacy = release.source === "youtube";
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopySuccess(true);
-    setTimeout(() => {
-      setCopySuccess(false);
-      setShowCopyModal(false);
-    }, 2000);
-  };
-
-  const getYouTubeShareUrl = (withTimestamp = false) => {
-    if (!resolvedVideoId) return window.location.href;
-    const t = withTimestamp ? Math.floor(currentTime || 0) : 0;
-    return t > 0
-      ? `https://www.youtube.com/watch?v=${resolvedVideoId}&t=${t}`
-      : `https://www.youtube.com/watch?v=${resolvedVideoId}`;
-  };
-
-  const handleShare = (platform: string) => {
-    // Social platforms: share YouTube URL so YouTube records external traffic
-    const ytUrl = encodeURIComponent(getYouTubeShareUrl());
-    const title = release?.release_title || "SufiPulse Release";
-    const shareText = encodeURIComponent(
-      `🎵 "${title}" — Sacred Sufi music with multilingual lyrics`,
-    );
-    const whatsappText = encodeURIComponent(
-      `🎵 "${title}" — Sacred Sufi kalam on SufiPulse\n\nWatch on YouTube: ${getYouTubeShareUrl()}\n\nShare the light 🌙`,
-    );
-    const hashTags = "SufiMusic,Kalam,SufiPulse";
-
-    const urls: Record<string, string> = {
-      twitter: `https://twitter.com/intent/tweet?url=${ytUrl}&text=${shareText}&hashtags=${hashTags}`,
-      whatsapp: `https://wa.me/?text=${whatsappText}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${ytUrl}`,
-      telegram: `https://t.me/share/url?url=${ytUrl}&text=${shareText}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${ytUrl}`,
-    };
-
-    if (urls[platform]) {
-      trackEvent("Share_Platform", {
-        platform,
-        videoId: resolvedVideoId || "",
-      });
-      window.open(urls[platform], "_blank", "width=600,height=400");
-    }
-  };
-
-  const handleShareMoment = () => {
-    const ytUrl = getYouTubeShareUrl(true);
-    navigator.clipboard.writeText(ytUrl);
-    setToastMessage("Timestamped YouTube link copied!");
-    setToastType("success");
-    setTimeout(() => setToastMessage(null), 3000);
-    trackEvent("Share_Timestamp", { videoId: resolvedVideoId || "" });
-  };
 
   const getAvailableLanguages = () => {
     const legacy = release.lyrics
@@ -5355,9 +5301,6 @@ function Release() {
           resolvedVideoId={resolvedVideoId}
           currentTime={currentTime}
           formatDuration={formatDuration}
-          handleShareMoment={handleShareMoment}
-          handleCopyLink={handleCopyLink}
-          handleShare={handleShare}
           />
 
           <ReleaseRecommendations currentId={release.id} />

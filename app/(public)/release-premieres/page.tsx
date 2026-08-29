@@ -40,7 +40,8 @@ async function getPremieres() {
       if (r.officialReleaseAt) {
         const releaseTime = new Date(r.officialReleaseAt).getTime();
         // Keep if it was released within the last 30 days or is scheduled for the future
-        if (now - releaseTime > THIRTY_DAYS_MS) {
+        const age = now - releaseTime;
+        if (age < 0 || age > THIRTY_DAYS_MS) {
           return false;
         }
       } else {

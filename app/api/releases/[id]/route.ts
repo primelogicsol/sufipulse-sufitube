@@ -1,5 +1,5 @@
 import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
-import { toCanonicalCMSRelease, toPublicPremiereRelease } from '@/server/storage/release-dto';
+import { toCanonicalCMSRelease, toPublicPremiereRelease, toPublicRelease } from '@/server/storage/release-dto';
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
@@ -121,7 +121,7 @@ export async function GET(
       return NextResponse.json(canonical, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
     }
 
-    return NextResponse.json(canonical, { headers: cacheHeaders });
+    return NextResponse.json(toPublicRelease(canonical), { headers: cacheHeaders });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -356,6 +356,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         const repo = new PostgresReleaseRepository();
         await repo.delete(id);
       } catch (err) {
+        // Rollback Registry deletion on PG failure
+        cmsServerStorage.saveRelease(existing);
         apiLogger.error('Postgres deletion replication failed', { err: String(err) });
         throw new Error('Postgres deletion replication failed: ' + String(err));
       }

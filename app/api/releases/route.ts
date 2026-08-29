@@ -1,5 +1,5 @@
 import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
-import { toCanonicalCMSRelease, toPublicPremiereRelease } from '@/server/storage/release-dto';
+import { toCanonicalCMSRelease, toPublicPremiereRelease, toPublicRelease } from '@/server/storage/release-dto';
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { type CMSRelease } from '@/lib/cms-storage';
@@ -75,7 +75,8 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ ...canonical, resolution_source: source }, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
         }
 
-        return NextResponse.json({ ...canonical, resolution_source: source }, { headers: cacheHeaders });
+        // Return PublicRelease for published
+        return NextResponse.json({ ...toPublicRelease(canonical), resolution_source: source }, { headers: cacheHeaders });
       }
       return NextResponse.json({ error: 'Release not found' }, { status: 404 });
     }
@@ -108,11 +109,11 @@ export async function GET(request: NextRequest) {
       const isAdmin = auth?.role === 'admin';
 
       if (!paginationRequested) {
-        return NextResponse.json(isAdmin ? result.items.map(toCanonicalCMSRelease) : result.items.map(toPublicPremiereRelease), { headers: cacheHeaders });
+        return NextResponse.json(isAdmin ? result.items.map(toCanonicalCMSRelease) : result.items.map(toPublicRelease), { headers: cacheHeaders });
       }
 
       return NextResponse.json({
-        items: isAdmin ? result.items.map(toCanonicalCMSRelease) : result.items.map(toPublicPremiereRelease),
+        items: isAdmin ? result.items.map(toCanonicalCMSRelease) : result.items.map(toPublicRelease),
         count: result.count,
         page: result.page,
         pageSize: result.pageSize,
@@ -240,12 +241,12 @@ export async function GET(request: NextRequest) {
       const offset   = parseInt(searchParams.get('offset') || '0', 10) || (page - 1) * pageSize;
       const totalPages = Math.ceil(count / pageSize);
       const sliced = releases.slice(offset, offset + pageSize);
-      const items = isAdmin ? sliced.map(toCanonicalCMSRelease) : sliced.map(toPublicPremiereRelease);
+      const items = isAdmin ? sliced.map(toCanonicalCMSRelease) : sliced.map(toPublicRelease);
 
       return NextResponse.json({ items, count, page, pageSize, totalPages, facets }, { headers: cacheHeaders });
     }
 
-    return NextResponse.json(isAdmin ? releases.map(toCanonicalCMSRelease) : releases.map(toPublicPremiereRelease), { headers: cacheHeaders });
+    return NextResponse.json(isAdmin ? releases.map(toCanonicalCMSRelease) : releases.map(toPublicRelease), { headers: cacheHeaders });
 
   } catch (err: any) {
     console.error('[API /api/releases] GET ERROR:', err);

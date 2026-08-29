@@ -26,10 +26,6 @@ interface ShareModalProps {
   context: "premiere" | "release" | "teaser";
   socialShareKit?: any;
   shareContext?: ResolvedShareContext;
-  // Fallbacks for backward compatibility
-  handleShareMoment?: () => void;
-  handleCopyLink?: () => void;
-  handleShare?: (platform: string) => void;
   formatDuration?: (seconds: number) => string;
 }
 
@@ -44,9 +40,6 @@ export function ShareModal({
   context,
   socialShareKit,
   shareContext,
-  handleShareMoment,
-  handleCopyLink,
-  handleShare,
   formatDuration,
 }: ShareModalProps) {
   if (!isOpen) return null;
@@ -69,11 +62,6 @@ export function ShareModal({
   };
 
   const internalHandleShare = (platform: string) => {
-    if (handleShare) {
-      handleShare(platform);
-      return;
-    }
-
     const url = getShareUrl();
     const kit = shareContext?.socialShareKit || socialShareKit;
     const hasKitText = !!(kit && kit[platform]);
@@ -132,19 +120,11 @@ export function ShareModal({
   };
 
   const internalHandleCopyLink = () => {
-    if (handleCopyLink) {
-      handleCopyLink();
-      return;
-    }
     navigator.clipboard.writeText(canonicalUrl);
     alert("Link copied to clipboard!");
   };
 
   const internalHandleShareMoment = () => {
-    if (handleShareMoment) {
-      handleShareMoment();
-      return;
-    }
     if (youtubeUrl && currentTime > 0) {
       const url = new URL(youtubeUrl);
       url.searchParams.set("t", `${Math.floor(currentTime)}s`);

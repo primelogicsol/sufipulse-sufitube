@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // Filter publicly eligible premieres
     const now = new Date().getTime();
-    const SEVEN_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
     const eligibleReleases = allReleases.filter(r => {
       if (r.status !== 'published') return false;
@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
       if (lifecycle === 'released') {
         if (r.officialReleaseAt) {
           const releaseTime = new Date(r.officialReleaseAt).getTime();
-          if (now - releaseTime > SEVEN_DAYS_MS) {
+          const age = now - releaseTime;
+          if (age < 0 || age > THIRTY_DAYS_MS) {
             return false;
           }
         } else {

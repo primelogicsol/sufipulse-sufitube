@@ -64,7 +64,9 @@ export async function POST(request: NextRequest) {
 </div>`;
 
     let sent = 0;
+    let skipped = 0;
     const errors: string[] = [];
+    const isMock = !process.env.EMAIL_PROVIDER || process.env.EMAIL_PROVIDER === 'console';
 
     for (const sub of subscribers) {
       try {
@@ -75,21 +77,29 @@ export async function POST(request: NextRequest) {
           text: `New release on SufiPulse: "${title}"\n\nWatch on YouTube: ${ytUrl}\n\nView on site: ${siteUrl}`,
         });
 
-        if (process.env.EMAIL_PROVIDER && process.env.EMAIL_PROVIDER !== 'console') {
+        if (!isMock) {
           await db.query(
             `UPDATE release_notification_subscriptions SET notified_at = CURRENT_TIMESTAMP WHERE id = $1`,
             [sub.id]
           );
+          sent++;
         } else {
            apiLogger.info(`Skipped setting notified_at for ${sub.normalized_email} because EMAIL_PROVIDER is console or unconfigured.`);
+           skipped++;
         }
-        sent++;
       } catch (err: any) {
         errors.push(`${sub.normalized_email}: ${err.message}`);
       }
     }
 
-    return NextResponse.json({ ok: true, sent, total: subscribers.length, errors: errors.length > 0 ? errors : undefined });
+    return NextResponse.json({
+      ok: true,
+      sent,
+      total: subscribers.length,
+      skipped,
+      providerUnavailable: isMock,
+      errors: errors.length > 0 ? errors : undefined
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
