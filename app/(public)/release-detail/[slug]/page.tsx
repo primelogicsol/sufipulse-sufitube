@@ -1681,6 +1681,40 @@ function Release() {
     setSaveSuccess(false);
 
     try {
+      const normalizeText = (value?: string | null) => (value || '').replace(/\r\n/g, '\n').trim();
+      const normalizeTitle = (value?: string | null) => (value || '').trim();
+
+      const titleWasEdited = normalizeTitle(editTitle) !== normalizeTitle(release?.title);
+      const descriptionWasEdited = normalizeText(editDescription) !== normalizeText(release?.description);
+
+      let newTitleOverride = release?.titleOverride;
+      let newTitleOverrideAt = release?.titleOverrideAt;
+      let newTitleOverrideBy = release?.titleOverrideBy;
+
+      if (normalizeTitle(editTitle) === normalizeTitle(release?.youtubeTitle)) {
+        newTitleOverride = false;
+        newTitleOverrideAt = null;
+        newTitleOverrideBy = null;
+      } else if (titleWasEdited) {
+        newTitleOverride = true;
+        newTitleOverrideAt = new Date().toISOString();
+        newTitleOverrideBy = 'admin';
+      }
+
+      let newDescriptionOverride = release?.descriptionOverride;
+      let newDescriptionOverrideAt = release?.descriptionOverrideAt;
+      let newDescriptionOverrideBy = release?.descriptionOverrideBy;
+
+      if (normalizeText(editDescription) === normalizeText(release?.youtubeDescription)) {
+        newDescriptionOverride = false;
+        newDescriptionOverrideAt = null;
+        newDescriptionOverrideBy = null;
+      } else if (descriptionWasEdited) {
+        newDescriptionOverride = true;
+        newDescriptionOverrideAt = new Date().toISOString();
+        newDescriptionOverrideBy = 'admin';
+      }
+
       const updatedRelease = {
         // Identity (required for upsert/creation of legacy releases)
         slug: release?.slug || slug,
@@ -1688,8 +1722,12 @@ function Release() {
         // Basic fields (camelCase to match CMS)
         title: editTitle,
         description: editDescription,
-        titleOverride: (editTitle || '').trim() !== (release?.title || '').trim() ? true : release?.titleOverride,
-        descriptionOverride: (editDescription || '').replace(/\r\n/g, '\n').trim() !== (release?.description || '').replace(/\r\n/g, '\n').trim() ? true : release?.descriptionOverride,
+        titleOverride: newTitleOverride,
+        titleOverrideAt: newTitleOverrideAt,
+        titleOverrideBy: newTitleOverrideBy,
+        descriptionOverride: newDescriptionOverride,
+        descriptionOverrideAt: newDescriptionOverrideAt,
+        descriptionOverrideBy: newDescriptionOverrideBy,
         // Feature toggles
         enableCredits: editEnableCredits,
         enableCommentary: editEnableCommentary,
