@@ -1688,8 +1688,8 @@ function Release() {
         // Basic fields (camelCase to match CMS)
         title: editTitle,
         description: editDescription,
-        titleOverride: editTitle !== release?.title ? true : release?.titleOverride,
-        descriptionOverride: editDescription !== release?.description ? true : release?.descriptionOverride,
+        titleOverride: (editTitle || '').trim() !== (release?.title || '').trim() ? true : release?.titleOverride,
+        descriptionOverride: (editDescription || '').replace(/\r\n/g, '\n').trim() !== (release?.description || '').replace(/\r\n/g, '\n').trim() ? true : release?.descriptionOverride,
         // Feature toggles
         enableCredits: editEnableCredits,
         enableCommentary: editEnableCommentary,

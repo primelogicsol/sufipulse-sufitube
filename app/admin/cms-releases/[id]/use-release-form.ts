@@ -789,29 +789,42 @@ export function useReleaseForm({
       
         // Title Governance Enforcement
         let payload = { ...form, chorusVocalists: normalizedChorus };
+        const normalizeTitle = (t?: string | null) => (t || '').trim();
+        
         if (payload.youtubeTitle) {
-          if (payload.title === payload.youtubeTitle) {
+          const titleWasEdited = normalizeTitle(payload.title) !== normalizeTitle(originalForm?.title);
+          
+          if (normalizeTitle(payload.title) === normalizeTitle(payload.youtubeTitle)) {
             payload.titleOverride = false;
             payload.titleOverrideAt = null;
             payload.titleOverrideBy = null;
             payload.canonicalTitle = payload.youtubeTitle;
-          } else if (payload.title !== originalForm?.title || originalForm?.titleOverride) {
+          } else if (titleWasEdited) {
             payload.titleOverride = true;
-            payload.titleOverrideAt = payload.titleOverrideAt || new Date().toISOString();
-            payload.titleOverrideBy = payload.titleOverrideBy || 'admin';
+            payload.titleOverrideAt = new Date().toISOString();
+            payload.titleOverrideBy = 'admin';
+            payload.canonicalTitle = payload.title;
+          } else if (originalForm?.titleOverride) {
+            payload.titleOverride = true;
             payload.canonicalTitle = payload.title;
           }
         }
         // Description Governance Enforcement
+        const normalizeText = (text?: string | null) => (text || '').replace(/\r\n/g, '\n').trim();
+        
         if (payload.youtubeDescription !== undefined) {
-          if (payload.description === payload.youtubeDescription) {
+          const descriptionWasEdited = normalizeText(payload.description) !== normalizeText(originalForm?.description);
+          
+          if (normalizeText(payload.description) === normalizeText(payload.youtubeDescription)) {
             payload.descriptionOverride = false;
             payload.descriptionOverrideAt = null;
             payload.descriptionOverrideBy = null;
-          } else if (payload.description !== originalForm?.description || originalForm?.descriptionOverride) {
+          } else if (descriptionWasEdited) {
             payload.descriptionOverride = true;
-            payload.descriptionOverrideAt = payload.descriptionOverrideAt || new Date().toISOString();
-            payload.descriptionOverrideBy = payload.descriptionOverrideBy || 'admin';
+            payload.descriptionOverrideAt = new Date().toISOString();
+            payload.descriptionOverrideBy = 'admin';
+          } else if (originalForm?.descriptionOverride) {
+            payload.descriptionOverride = true;
           }
         }
         
