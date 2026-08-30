@@ -339,7 +339,7 @@ export default function Releases() {
 
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-    const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
+    const [durationFilter, setDurationFilter] = useState<DurationFilter>('long');
     const [yearFilter, setYearFilter] = useState<string>('all');
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [searchQuery, setSearchQuery] = useState('');
@@ -932,7 +932,7 @@ export default function Releases() {
                                     onClick={() => {
                                         setFilterType('all');
                                         setFilterFormat('all');
-                                        setDurationFilter('all');
+                                        setDurationFilter('long');
                                         setYearFilter('all');
                                         setSearchQuery('');
                                         setSortOrder('newest');
@@ -1003,7 +1003,7 @@ export default function Releases() {
                                                                 <span>{(Number(release.views) || 0).toLocaleString()} views</span>
                                                             </div>
                                                         </div>
-                                                        {release.source === 'youtube' && (
+                                                        {Boolean(release.youtubeId) && (
                                                             <Youtube className="w-4 h-4 text-red-500/60" />
                                                         )}
                                                     </div>
