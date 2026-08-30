@@ -519,26 +519,36 @@ class CMSStorage {
   saveRelease(release: CMSRelease): CMSRelease {
     const now = new Date().toISOString();
 
-    // Narrow Policy Exception for YouTube ID enforcement
-    const LEGACY_YOUTUBE_EXEMPT_IDS = new Set([
-      'rel_8202cfce-1a16-415b-acf6-92d0dec7b1f3',
-      'rel_03cb7141-2051-431c-8997-57552d9dba1b',
-      'rel_05dfe093-88ad-4cfc-9cfa-7c4308a353af'
+    // ── YouTube ID validation ─────────────────────────────────────────────────
+    // Rule: YouTube ID is required ONLY when a YouTube-backed asset is scheduled or live.
+    // A release in any Premiere lifecycle (upcoming, teaser_live, premiere_scheduled)
+    // is a valid public announcement WITHOUT a YouTube ID.
+    // The presence of youtubeId controls whether a player renders — not whether the
+    // record is allowed to be public. This is the SufiPulse editorial-first model.
+    //
+    // The old rule (YouTube ID required for any published release) is REMOVED.
+    // It was wrong for the Premiere Room workflow.
+
+    // Premiere announcement lifecycles — never require a YouTube ID
+    const PREMIERE_ANNOUNCEMENT_LIFECYCLES = new Set([
+      'upcoming', 'teaser_live', 'premiere_scheduled'
     ]);
 
-    const requiresYoutubeDelivery = (): boolean => {
-      if (release.status !== 'published') return false;
-      if (release.webOnly) return false;
-      // Editorial/textual legacy records have no media format.
-      if (!release.format) return false;
-      // Explicitly grandfather only known historical anomalies.
-      if (LEGACY_YOUTUBE_EXEMPT_IDS.has(release.id)) return false;
-      return true;
-    };
-
-    if (requiresYoutubeDelivery() && !release.youtubeId) {
-      throw new Error('A YouTube ID is required for official published releases. Non-official media must remain in draft or unpublished status.');
+    // Check if any pre-release asset requires a YouTube ID it doesn't have
+    const invalidYouTubeAssets = (release.preReleaseAssets ?? []).filter(
+      (a: any) =>
+        a.source === 'youtube' &&
+        ['scheduled', 'live'].includes(a.status ?? '') &&
+        !a.youtubeId
+    );
+    if (invalidYouTubeAssets.length > 0) {
+      const assetLabels = invalidYouTubeAssets.map((a: any) => a.type || 'asset').join(', ');
+      throw new Error(
+        `YouTube ID is required for scheduled/live YouTube-backed assets: ${assetLabels}. ` +
+        `Add a YouTube ID or set the asset to draft status.`
+      );
     }
+
 
     // Ensure distribution is initialized
     const distribution = release.distribution || getDefaultDistribution();

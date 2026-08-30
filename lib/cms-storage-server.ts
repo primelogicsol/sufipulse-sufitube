@@ -71,8 +71,33 @@ const ensureHydrated = (force = false) => {
 
     if (releasesToImport.length > 0) {
       cmsStorage.clearAll();
-      cmsStorage.importReleases(releasesToImport);
-      console.log(`[CMS-SERVER] Hydrated ${releasesToImport.length} releases from ${sourceUsed}.`);
+
+      // ── Per-record resilient import ──────────────────────────────────────────
+      // One invalid record must NEVER abort the entire catalog.
+      // Validate each record individually; log structured warnings for failures.
+      let importedCount = 0;
+      const validationWarnings: Array<{ id: string; error: string }> = [];
+
+      for (const release of releasesToImport) {
+        try {
+          cmsStorage.saveRelease(release);
+          importedCount++;
+        } catch (recordErr: any) {
+          validationWarnings.push({ id: release.id || '(no id)', error: recordErr.message });
+          console.warn(
+            `[CMS-SERVER] Skipping invalid release "${release.id}" (${release.title || 'untitled'}): ${recordErr.message}`
+          );
+        }
+      }
+
+      if (validationWarnings.length > 0) {
+        console.warn(
+          `[CMS-SERVER] ${validationWarnings.length} record(s) skipped during hydration. ` +
+          `${importedCount} of ${releasesToImport.length} loaded.`
+        );
+      }
+
+      console.log(`[CMS-SERVER] Hydrated ${importedCount} releases from ${sourceUsed}.`);
       
       // If we used the seed because it was better, persist it to disk now
       if (sourceUsed === 'seed') {
@@ -90,8 +115,11 @@ const ensureHydrated = (force = false) => {
     hydrated = true;
     lastHydratedMtime = currentMtime;
   } catch (error: any) {
-    console.error('[CMS-SERVER] Hydration Error:', error.message);
-    hydrated = true; // Prevent loops
+    // Catastrophic failure (JSON parse error, file I/O, etc.) — do NOT mark hydrated=true.
+    // Per-record validation errors are handled above and never reach here.
+    // Leaving hydrated=false allows the next request to retry hydration.
+    console.error('[CMS-SERVER] Critical hydration failure — will retry on next request:', error.message);
+    // Do NOT set hydrated = true here. The retry on next request is correct behavior.
   }
 };
 

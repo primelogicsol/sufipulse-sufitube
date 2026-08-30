@@ -732,13 +732,28 @@ export function useReleaseForm({
     if (!form.title?.trim()) newFieldErrors.title = 'Title is required';
     if (!form.slug?.trim()) newFieldErrors.slug = 'Slug is required';
     
-    // Enforcement: Official governed releases MUST have a youtubeId to be published
-    if (form.status === 'published' && !form.youtubeId?.trim()) {
-      newFieldErrors.youtubeId = 'A YouTube ID is required for official published releases. Non-official media must remain in draft or unpublished status.';
+    // ── YouTube ID validation (mirrors server cms-storage.ts rule) ─────────────
+    // Premiere announcement lifecycles are explicitly exempt — they are editorial-only
+    // public records that do not require a YouTube ID. The presence of youtubeId
+    // controls whether a player renders, not whether the record is valid.
+    const PREMIERE_ANNOUNCEMENT_LIFECYCLES = new Set(['upcoming', 'teaser_live', 'premiere_scheduled']);
+    const isPremiereAnnouncement = PREMIERE_ANNOUNCEMENT_LIFECYCLES.has(form.releaseLifecycle ?? '');
+
+    // Only flag missing YouTube ID for YouTube-backed assets that are scheduled/live
+    const invalidYouTubeAssets = (form.preReleaseAssets ?? []).filter(
+      (a: any) =>
+        a.source === 'youtube' &&
+        ['scheduled', 'live'].includes(a.status ?? '') &&
+        !a.youtubeId?.trim()
+    );
+    if (invalidYouTubeAssets.length > 0) {
+      const labels = invalidYouTubeAssets.map((a: any) => a.type || 'asset').join(', ');
+      newFieldErrors.youtubeId = `YouTube ID required for scheduled/live YouTube assets: ${labels}. Add a YouTube ID or set the asset to draft.`;
     }
-    
-    // Senior Logic: If duration is missing, it's usually because metadata hasn't fetched yet
-    if (form.status === 'published' && (!form.durationSeconds || form.durationSeconds <= 0)) {
+
+    // Duration only required when there is an actual video
+    const hasVideo = Boolean(form.youtubeId?.trim());
+    if (form.status === 'published' && hasVideo && (!form.durationSeconds || form.durationSeconds <= 0)) {
       if (youtubeChannelLookupLoading) {
         setErrorMessage('Still fetching YouTube metadata... please wait a moment.');
         return;
