@@ -5,8 +5,6 @@ import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import {
   StudioSectionHeader,
-  StudioCardGrid,
-  StudioLinkCard,
 } from '../../components/studio/StudioLayoutComponents';
 import {
   Shield,
@@ -161,32 +159,55 @@ export default function OfficialIdentityPage() {
               title="Canonical Identity"
               subtitle="SufiPulse is an institutional and creative media identity developed for the creation, documentation, interpretation, production and public presentation of contemporary Sufi-inspired music, kalam, poetry and associated cultural discourse."
             />
-            <StudioCardGrid cols={3}>
-              <StudioLinkCard
-                icon={Layers}
-                title="SufiPulse"
-                subtitle="Institutional & Creative Media Identity"
-                description="The overarching identity through which SufiPulse creative, editorial, musical, scholarly and cultural activities are organized and presented."
-                footerTags={['Institution', 'Creative Identity']}
-              />
-              <StudioLinkCard
-                icon={Globe}
-                title="SufiPulse USA"
-                subtitle="Official Public Music & Distribution Identity"
-                description="The public-facing music identity through which official releases, video publications, premiere activity and authenticated SufiPulse media are presented."
-                footerTags={['Public Identity', 'Distribution']}
-              />
-              <StudioLinkCard
-                icon={Archive}
-                title="SufiPulse Studio USA"
-                subtitle="Production & Creative Studio Identity"
-                description="The production framework responsible for developing and coordinating authorized SufiPulse creative works, recordings, media and associated release materials."
-                footerTags={['Production', 'Studio']}
-              />
-            </StudioCardGrid>
+            {/* Inline cards — icon components rendered server-side, no prop crossing RSC boundary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: <Layers className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
+                  title: 'SufiPulse',
+                  subtitle: 'Institutional & Creative Media Identity',
+                  description: 'The overarching identity through which SufiPulse creative, editorial, musical, scholarly and cultural activities are organized and presented.',
+                  tags: ['Institution', 'Creative Identity'],
+                },
+                {
+                  icon: <Globe className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
+                  title: 'SufiPulse USA',
+                  subtitle: 'Official Public Music & Distribution Identity',
+                  description: 'The public-facing music identity through which official releases, video publications, premiere activity and authenticated SufiPulse media are presented.',
+                  tags: ['Public Identity', 'Distribution'],
+                },
+                {
+                  icon: <Archive className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
+                  title: 'SufiPulse Studio USA',
+                  subtitle: 'Production & Creative Studio Identity',
+                  description: 'The production framework responsible for developing and coordinating authorized SufiPulse creative works, recordings, media and associated release materials.',
+                  tags: ['Production', 'Studio'],
+                },
+              ].map(({ icon, title, subtitle, description, tags }) => (
+                <div
+                  key={title}
+                  className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-6 flex flex-col h-full"
+                >
+                  <div className="flex-1">
+                    {icon}
+                    <h3 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)] mb-2">{title}</h3>
+                    <p className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">{subtitle}</p>
+                    <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed">{description}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t border-white/5">
+                    {tags.map((tag) => (
+                      <span key={tag} className="text-[10px] text-amber-400/70 bg-amber-400/5 px-2 py-0.5 rounded border border-amber-400/10 uppercase font-black tracking-tighter">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </PageContainer>
       </Section>
+
 
       {/* 3. IDENTITY ARCHITECTURE */}
       <Section background="midnight" spacing="normal">
