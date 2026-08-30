@@ -253,7 +253,7 @@ export function Footer() {
         onClose={() => setPurpleSoulModalOpen(false)}
         title="Purple Soul Collectives USA Upgrade in Progress"
         initiative={PURPLE_SOUL.initiative}
-        body="Purple Soul Collectives USA is being upgraded as a dedicated platform for craftsmen, artisans and creative communities connected to Sufi-inspired craft traditions and cultural expression. The renewed platform will support artisan discovery, cultural storytelling, creative collaboration and responsible access to handmade works."
+        body="Purple Soul Collectives USA is being upgraded as a dedicated platform for craftsmen, artisans and creative communities whose work engages Abrahamic spiritual heritage, Sufi-influenced craft traditions, sacred symbolism and cultural expression. The renewed platform will support artisan discovery, provenance-rich cultural storytelling, creative collaboration and responsible access to handmade works shaped by living craft traditions and spiritual heritage."
         successMessage="We'll notify you when the upgraded Purple Soul Collectives USA platform becomes available."
         source="purple-soul-upgrade"
         triggerRef={purpleSoulTriggerRef as React.RefObject<HTMLElement>}
