@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 // Keyed on pathname + search so paginated/filtered routes are tracked independently.
-// e.g. /knowledge?page=1 and /knowledge?page=2 get separate saved positions.
 const scrollHistory = new Map();
 
 function getScrollKey() {
@@ -15,61 +14,68 @@ export function ScrollToTop() {
   const pathname = usePathname();
   const isBackForwardRef = useRef(false);
 
-  // One-time setup: disable browser scroll restoration and intercept popstate.
-  // popstate fires on Back/Forward BEFORE pathname updates — flag it so the
-  // next effect cycle can branch correctly.
   useEffect(() => {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    const onPopState = () => { isBackForwardRef.current = true; };
+    const onPopState = () => {
+      console.log('[ScrollToTop] popstate fired -- next nav classified as POP/RESTORE');
+      isBackForwardRef.current = true;
+    };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   // Save position when LEAVING the current route.
-  // Cleanup runs just before the new pathname takes effect, so window.scrollY
-  // still reflects the departing page. Key includes search params.
   useEffect(() => {
     return () => {
-      scrollHistory.set(getScrollKey(), window.scrollY);
+      const key = getScrollKey();
+      const pos = window.scrollY;
+      scrollHistory.set(key, pos);
+      console.log('[ScrollToTop] SAVE', key, '-> scrollY =', pos);
     };
   }, [pathname]);
 
   // Scroll logic on route change
   useEffect(() => {
-    // Hash / anchor — let browser handle natively.
-    if (window.location.hash) {
+    const key = getScrollKey();
+    const isBackForward = isBackForwardRef.current;
+    const savedPos = scrollHistory.get(key) ?? 0;
+    const hasHash = !!window.location.hash;
+
+    if (hasHash) {
+      console.log('[ScrollToTop] HASH nav to', key, '-- deferring to browser');
       isBackForwardRef.current = false;
       return;
     }
 
-    if (isBackForwardRef.current) {
+    if (isBackForward) {
+      console.log('[ScrollToTop] RESTORE', key, '-- saved =', savedPos, '| scrollY before =', window.scrollY);
       isBackForwardRef.current = false;
-      const key = getScrollKey();
-      const saved = scrollHistory.get(key) ?? 0;
-
-      // Attempt immediate restoration.
-      window.scrollTo({ top: saved, left: 0, behavior: 'instant' });
-
-      // For async / lazy-loaded pages: content may not be rendered at full
-      // height yet when this effect fires. Retry at 100ms, 300ms, 600ms.
-      // Stop once we are within 50px of the saved position.
-      if (saved > 0) {
+      window.scrollTo({ top: savedPos, left: 0, behavior: 'instant' });
+      if (savedPos > 0) {
         [100, 300, 600].forEach(delay => {
           setTimeout(() => {
             const pageHeight = document.body.scrollHeight;
             const currentPos = window.scrollY;
-            if (pageHeight > saved && Math.abs(currentPos - saved) > 50) {
-              window.scrollTo({ top: saved, left: 0, behavior: 'instant' });
+            if (pageHeight > savedPos && Math.abs(currentPos - savedPos) > 50) {
+              console.log('[ScrollToTop] RESTORE retry at +' + delay + 'ms, scrollY =', currentPos, '->', savedPos);
+              window.scrollTo({ top: savedPos, left: 0, behavior: 'instant' });
             }
           }, delay);
         });
       }
     } else {
-      // New primary navigation: always start at the top.
+      console.log('[ScrollToTop] TOP nav to', key, '| scrollY before =', window.scrollY, '| isBackForward was', isBackForward);
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
+
+    // Diagnostic: report scrollY at multiple points after nav
+    [50, 250, 750].forEach(delay => {
+      setTimeout(() => {
+        console.log('[ScrollToTop] scrollY at +' + delay + 'ms:', window.scrollY, '| activeElement:', document.activeElement?.tagName, document.activeElement?.id || document.activeElement?.className?.slice(0,30) || '');
+      }, delay);
+    });
   }, [pathname]);
 
   return null;
