@@ -184,16 +184,16 @@ export function UpgradeModal({
             <div className="w-5 h-px bg-[var(--color-gold)]/40 mb-3" aria-hidden="true" />
             <h2
               id="upgrade-modal-title"
-              className="font-serif text-lg font-bold text-[var(--color-text-primary)] leading-snug pr-8"
+              className="font-serif text-lg font-bold text-[var(--color-text-primary)] leading-snug max-w-[85%]"
             >
               {title}
             </h2>
             {initiative && (
-              <p className="text-xs text-[var(--color-gold)]/80 italic mt-1 font-medium">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-gold)]/75 mt-1.5">
                 {initiative}
               </p>
             )}
-            {/* Close X */}
+            {/* Close X — absolutely positioned so it never overlaps title */}
             <button
               onClick={onClose}
               aria-label="Close modal"
@@ -223,9 +223,21 @@ export function UpgradeModal({
               </div>
             ) : (
               <>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-6">
-                  {body}
-                </p>
+                {/* Body — split into paragraphs on '. ' boundary if present */}
+                {(() => {
+                  const splitIdx = body.indexOf('. ');
+                  if (splitIdx === -1) {
+                    return <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-6">{body}</p>;
+                  }
+                  const para1 = body.slice(0, splitIdx + 1);
+                  const para2 = body.slice(splitIdx + 2);
+                  return (
+                    <div className="mb-6 space-y-3">
+                      <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{para1}</p>
+                      <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{para2}</p>
+                    </div>
+                  );
+                })()}
 
                 {phase === "error" && (
                   <p role="alert" className="text-xs text-red-400 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">

@@ -36,7 +36,8 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
 const PURPLE_SOUL = {
   url: 'https://purplesoul.shop',
   status: 'upgrading' as 'upgrading' | 'live',
-  title: 'Purple Soul Collectives',
+  // FROZEN CANONICAL BRAND NAME — do not abbreviate
+  title: 'Purple Soul Collectives USA',
   initiative: 'A De Koshur Crafts USA Initiative',
   desc: 'Ethical commerce and creative expression',
 } as const;
@@ -78,7 +79,8 @@ export function Footer() {
           <FooterSection title="Production Infrastructure" padLeft>
             <FooterLink href="/studio">Studio (Karkhana-e-Sada)</FooterLink>
             <FooterLink href="/studio-engineers">Studio Engineers</FooterLink>
-            <FooterLink href="/official-channels">SufiTube</FooterLink>
+            {/* SufiTube -> dedicated brand identity page */}
+            <FooterLink href="/sufitube">SufiTube</FooterLink>
             <FooterLink href="/releases">Releases</FooterLink>
             <FooterLink href="/release-premieres">Premiere Room</FooterLink>
           </FooterSection>
@@ -215,20 +217,23 @@ export function Footer() {
                 <ExtensionLink href="https://sufisciencecenter.info/" title="Sufi Science Center USA" desc="Sacred research and contemplative inquiry" />
                 <ExtensionLink href="https://dkf.sufisciencecenter.info/" title="Dr. Kumar Foundation USA" desc="Spiritual stewardship and cultural awakening" />
 
-                {/* Purple Soul — status-controlled. Change PURPLE_SOUL.status to 'live' to restore navigation. */}
+                {/* Purple Soul Collectives USA — status-controlled.
+                    Change PURPLE_SOUL.status to 'live' to restore normal navigation.
+                    Button styled to be pixel-identical to ExtensionLink's <a> tag. */}
                 {PURPLE_SOUL.status === 'upgrading' ? (
                   <button
                     ref={purpleSoulTriggerRef as React.RefObject<HTMLButtonElement>}
                     type="button"
                     onClick={() => setPurpleSoulModalOpen(true)}
-                    className="group flex flex-col gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors text-left w-full"
+                    className="group flex flex-col items-start gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors text-left w-full bg-transparent p-0 cursor-pointer"
+                    style={{ font: 'inherit' }}
                   >
-                    <p className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors leading-tight">
+                    <span className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors leading-tight block w-full text-left">
                       {PURPLE_SOUL.title}
-                    </p>
-                    <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight">
+                    </span>
+                    <span className="text-[10px] text-[var(--color-text-tertiary)] leading-tight block w-full text-left">
                       {PURPLE_SOUL.desc}
-                    </p>
+                    </span>
                   </button>
                 ) : (
                   <ExtensionLink href={PURPLE_SOUL.url} title={PURPLE_SOUL.title} desc={PURPLE_SOUL.desc} />
@@ -242,14 +247,14 @@ export function Footer() {
 
       </div>
 
-      {/* Purple Soul Collectives — Upgrade in Progress modal */}
+      {/* Purple Soul Collectives USA — Upgrade in Progress modal */}
       <UpgradeModal
         open={purpleSoulModalOpen}
         onClose={() => setPurpleSoulModalOpen(false)}
-        title="Purple Soul Collectives Upgrade in Progress"
+        title="Purple Soul Collectives USA Upgrade in Progress"
         initiative={PURPLE_SOUL.initiative}
-        body="Purple Soul Collectives is being upgraded as a dedicated platform for craftsmen, artisans and creative communities connected to Sufi-inspired craft traditions and cultural expression. The renewed platform will support artisan discovery, cultural storytelling, creative collaboration and responsible access to handmade works."
-        successMessage="We'll notify you when the upgraded Purple Soul Collectives platform becomes available."
+        body="Purple Soul Collectives USA is being upgraded as a dedicated platform for craftsmen, artisans and creative communities connected to Sufi-inspired craft traditions and cultural expression. The renewed platform will support artisan discovery, cultural storytelling, creative collaboration and responsible access to handmade works."
+        successMessage="We'll notify you when the upgraded Purple Soul Collectives USA platform becomes available."
         source="purple-soul-upgrade"
         triggerRef={purpleSoulTriggerRef as React.RefObject<HTMLElement>}
       />
