@@ -241,7 +241,7 @@ export function ShareModal({
         </div>
 
         <div className="w-full space-y-2 max-h-[50vh] overflow-y-auto pr-1 custom-scrollbar">
-          {/* Share this moment - ENTIRE group anchored left */}
+          {/* Share this moment */}
           {resolvedVideoId && currentTime > 5 && (
             <button
               onClick={(e) => {
@@ -250,18 +250,17 @@ export function ShareModal({
                 internalHandleShareMoment();
                 onClose();
               }}
-              className="w-full flex items-start justify-start gap-3 px-4 py-4 bg-amber-900/10 border border-amber-800/20 hover:bg-amber-900/20 rounded-2xl transition-all text-left group"
+              style={{ display: "grid", gridTemplateColumns: "44px 1fr", alignItems: "center", gap: "16px", width: "100%", padding: "16px 20px", textAlign: "left" }}
+              className="bg-amber-900/10 border border-amber-800/20 hover:bg-amber-900/20 rounded-2xl transition-all group"
             >
-              <div className="shrink-0 mt-0.5">
-                <div className="w-9 h-9 bg-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-900/30">
-                  <Clock className="w-5 h-5 text-white" />
-                </div>
+              <div className="w-11 h-11 bg-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-900/30 shrink-0">
+                <Clock className="w-5 h-5 text-white" />
               </div>
-              <div className="flex flex-col items-start text-left">
-                <span className="text-white font-semibold leading-tight">
+              <div className="min-w-0 text-left">
+                <span className="block text-white font-semibold leading-tight">
                   Share this moment
                 </span>
-                <span className="text-white/40 text-sm leading-tight mt-1">
+                <span className="block text-white/40 text-sm leading-tight mt-0.5">
                   YouTube link at {fmtDuration(Math.floor(currentTime))}
                 </span>
               </div>
@@ -275,18 +274,17 @@ export function ShareModal({
               internalHandleCopyLink();
               onClose();
             }}
-            className="w-full flex items-start justify-start gap-3 px-4 py-4 bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 rounded-2xl transition-all text-left group"
+            style={{ display: "grid", gridTemplateColumns: "44px 1fr", alignItems: "center", gap: "16px", width: "100%", padding: "16px 20px", textAlign: "left" }}
+            className="bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 rounded-2xl transition-all group"
           >
-            <div className="shrink-0 mt-0.5">
-              <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20">
-                <Copy className="w-5 h-5 text-white" />
-              </div>
+            <div className="w-11 h-11 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-900/20 shrink-0">
+              <Copy className="w-5 h-5 text-white" />
             </div>
-            <div className="flex flex-col items-start text-left">
-              <span className="text-white font-semibold leading-tight">
+            <div className="min-w-0 text-left">
+              <span className="block text-white font-semibold leading-tight">
                 Copy Page Link
               </span>
-              <span className="text-white/40 text-sm leading-tight mt-1">
+              <span className="block text-white/40 text-sm leading-tight mt-0.5">
                 sufipulse.com link to clipboard
               </span>
             </div>
@@ -301,21 +299,20 @@ export function ShareModal({
                 internalHandleShare(p.id);
                 onClose();
               }}
-              className="w-full flex items-start justify-start gap-3 px-4 py-4 bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 rounded-2xl transition-all text-left group"
+              style={{ display: "grid", gridTemplateColumns: "44px 1fr", alignItems: "center", gap: "16px", width: "100%", padding: "16px 20px", textAlign: "left" }}
+              className="bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 rounded-2xl transition-all group"
             >
-              <div className="shrink-0 mt-0.5">
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center shadow-md"
-                  style={{ backgroundColor: p.color }}
-                >
-                  <p.icon className="w-5 h-5 text-white" />
-                </div>
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center shadow-md shrink-0"
+                style={{ backgroundColor: p.color }}
+              >
+                <p.icon className="w-5 h-5 text-white" />
               </div>
-              <div className="flex flex-col items-start text-left">
-                <span className="text-white font-semibold leading-tight">
+              <div className="min-w-0 text-left">
+                <span className="block text-white font-semibold leading-tight">
                   {p.label}
                 </span>
-                <span className="text-white/40 text-sm leading-tight mt-1">
+                <span className="block text-white/40 text-sm leading-tight mt-0.5">
                   {p.desc}
                 </span>
               </div>
