@@ -27,8 +27,11 @@ coverage
 .env.vps
 frontend.env
 
-# File-based database — never commit user/financial data
+# File-based database — never commit user/financial/token data
 .data/
+# EXCEPTION: knowledge-registry.json is public reference data with no secrets.
+# It must be version-controlled so production always receives the correct dataset.
+!.data/knowledge-registry.json
 
 .vscode/*
 !.vscode/extensions.json
