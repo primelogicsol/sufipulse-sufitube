@@ -1,4 +1,4 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -101,7 +101,7 @@ export default function OfficialIdentityPage() {
       <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
-            src="/banner4.png"
+            src="/banner29.png"
             alt=""
             aria-hidden="true"
             fill
