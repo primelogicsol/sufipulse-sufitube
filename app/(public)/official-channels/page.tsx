@@ -40,22 +40,25 @@ export default function OfficialChannels() {
             url: 'https://www.youtube.com/@SufiPulse-USA',
             buttonText: 'Visit Channel',
             icon: Youtube,
+            verified: true,
         },
         {
             name: 'Spotify',
             description: 'Primary streaming distribution platform for audio releases.',
             purpose: 'Structured audio access and global listener distribution.',
-            url: 'https://open.spotify.com/artist/sufipulse',
+            url: null, // Pending: confirm artist ID — placeholder path (/artist/sufipulse) is not a valid Spotify artist URI
             buttonText: 'Open Spotify',
             icon: Music2,
+            verified: false,
         },
         {
             name: 'Apple Music',
             description: 'Official audio distribution channel for Apple ecosystem users.',
             purpose: 'Curated audio releases and streaming access for Apple Music subscribers.',
-            url: 'https://music.apple.com/artist/sufipulse',
+            url: null, // Pending: confirm artist ID — placeholder path (/artist/sufipulse) is not a valid Apple Music artist URI
             buttonText: 'Open Apple Music',
             icon: Music,
+            verified: false,
         },
         {
             name: 'Instagram',
@@ -64,6 +67,7 @@ export default function OfficialChannels() {
             url: 'https://instagram.com/sufipulse',
             buttonText: 'View Instagram',
             icon: Instagram,
+            verified: false, // Pending: confirm @sufipulse handle is controlled by SufiPulse
         },
         {
             name: 'X',
@@ -72,6 +76,7 @@ export default function OfficialChannels() {
             url: 'https://x.com/sufipulse',
             buttonText: 'Visit X',
             icon: Twitter,
+            verified: false, // Pending: confirm @sufipulse handle is controlled by SufiPulse
         },
         {
             name: 'Facebook',
@@ -80,8 +85,10 @@ export default function OfficialChannels() {
             url: 'https://www.facebook.com/groups/1100263345262190',
             buttonText: 'Visit Facebook',
             icon: Facebook,
+            verified: false, // Pending: confirm this Group is the official SufiPulse presence
         }
     ];
+
 
     return (
         <>
@@ -226,7 +233,7 @@ export default function OfficialChannels() {
                                 </div>
                             </div>
 
-                            {/* ── Third-party verified platforms ────────────────────────────── */}
+                            {/* ── Third-party platforms ────────────────────────────── */}
                             <div className="grid md:grid-cols-2 gap-8">
                                 {platforms.map((platform) => (
                                     <div key={platform.name} className="elite-card p-10 flex flex-col h-full group hover:border-amber-400/30 transition-all shadow-2xl">
@@ -238,7 +245,11 @@ export default function OfficialChannels() {
                                                     </div>
                                                     <h3 className="text-xl font-bold text-white tracking-tight">{platform.name}</h3>
                                                 </div>
-                                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/10">Verified</span>
+                                                {platform.verified ? (
+                                                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/10">Verified</span>
+                                                ) : (
+                                                    <span className="text-[9px] font-black text-amber-500/70 uppercase tracking-widest bg-amber-500/5 px-3 py-1 rounded-full border border-amber-500/10">Pending Confirmation</span>
+                                                )}
                                             </div>
                                             <p className="text-neutral-400 text-base leading-relaxed mb-8">{platform.description}</p>
                                             <div className="p-6 bg-black/20 border border-white/5 rounded-2xl mb-10">
@@ -246,21 +257,26 @@ export default function OfficialChannels() {
                                                 <p className="text-neutral-300 text-xs font-medium leading-relaxed uppercase tracking-wider">{platform.purpose}</p>
                                             </div>
                                         </div>
-                                        {(() => {
+                                        {platform.url ? (() => {
                                             const platformSlug = platform.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                                             const trackUrl = `/api/track-click?type=playlist&slug=${platformSlug}&action=brand_asset_click&assetType=${platformSlug === 'youtube' ? 'youtube_channel' : platformSlug}&assetName=${encodeURIComponent(platform.name)}&sourcePage=official-channels&redirect=${encodeURIComponent(platform.url)}`;
                                             return (
-                                                <a 
-                                                    href={trackUrl} 
-                                                    target="_blank" 
+                                                <a
+                                                    href={trackUrl}
+                                                    target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="w-full py-4 bg-white/[0.03] hover:bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-all"
                                                 >
                                                     {platform.buttonText} <ExternalLink size={12} />
                                                 </a>
                                             );
-                                        })()}
+                                        })() : (
+                                            <div className="w-full py-4 bg-white/[0.02] border border-white/5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 cursor-not-allowed">
+                                                Confirmation Pending
+                                            </div>
+                                        )}
                                     </div>
+
                                 ))}
                             </div>
                         </div>

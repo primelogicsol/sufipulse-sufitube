@@ -95,15 +95,14 @@ const organizationSchema = {
     contactType: "customer support",
     url: `${BASE_URL}/contact`,
   },
+  // sameAs: ONLY genuinely verified and controlled properties.
+  // Unconfirmed social handles (Facebook, Instagram, X, LinkedIn) removed until
+  // account ownership/control can be demonstrated. Re-add with confirmed URLs only.
   sameAs: [
     "https://www.youtube.com/@SufiPulse-USA",
     "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
     "https://dkf.sufisciencecenter.info",
     `${BASE_URL}/verification`,
-    "https://www.facebook.com/SufiPulse",
-    "https://www.instagram.com/SufiPulse",
-    "https://twitter.com/SufiPulse",
-    "https://www.linkedin.com/company/sufipulse"
   ],
 };
 
