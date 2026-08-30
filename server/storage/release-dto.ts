@@ -42,6 +42,7 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   delete canonical.youtube_url;
   delete canonical.like_count;
   delete canonical.view_count;
+  delete canonical.views; // strip legacy seed snapshot — canonical field is viewCount
   delete canonical.enable_lyrics;
   delete canonical.enable_credits;
   delete canonical.enable_adoption;

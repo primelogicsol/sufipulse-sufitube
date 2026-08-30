@@ -1160,7 +1160,8 @@ function Release() {
           source: cmsRelease.source || "cms",
           duration_seconds: cmsRelease.durationSeconds,
           durationFormatted: cmsRelease.durationFormatted || cmsRelease.duration,
-          views: cmsRelease.viewCount || cmsRelease.views || 0,
+          views: Number(cmsRelease.viewCount ?? cmsRelease.views ?? 0),
+          viewCount: Number(cmsRelease.viewCount ?? cmsRelease.views ?? 0),
           likes: cmsRelease.likeCount || 0,
           youtubeId: cmsRelease.youtubeId,
           youtube_video_id: cmsRelease.youtubeId,
@@ -2189,8 +2190,7 @@ function Release() {
                     </div>
                   </>
                 )}
-                {isLegacy &&
-                  release.views !== undefined &&
+                {release.views !== undefined &&
                   release.views > 0 && (
                     <>
                       <span className="text-neutral-700">•</span>

@@ -428,7 +428,7 @@ export default function Releases() {
                     publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
                     durationSeconds: durationSecs,
                     durationFormatted: durationFormatted,
-                    views: Number(r.views || r.viewCount || 0),
+                    views: Number(r.viewCount ?? r.views ?? 0),
                     source: source,
                     format: r.format || 'video',
                     govType: govType,
