@@ -7,6 +7,11 @@
 @import './styles/admin-components.css';
 @import './styles/verification.css';
 
+/* DIAGNOSTIC — scroll-anchor test. Remove after root cause confirmed. */
+html, body {
+  overflow-anchor: none;
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
