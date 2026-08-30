@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 /**
  * UpgradeModal — reusable "Platform Upgrade in Progress" modal.
  *
@@ -20,7 +20,11 @@ interface UpgradeModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Optional gold subtitle rendered under the title — e.g. "A De Koshur Crafts USA Initiative" */
+  initiative?: string;
   body: string;
+  /** Custom success message line 2 — defaults to generic copy */
+  successMessage?: string;
   source: string;
   triggerRef?: React.RefObject<HTMLElement | null>;
 }
@@ -31,7 +35,9 @@ export function UpgradeModal({
   open,
   onClose,
   title,
+  initiative,
   body,
+  successMessage = "We'll notify you when the platform becomes available.",
   source,
   triggerRef,
 }: UpgradeModalProps) {
@@ -182,6 +188,11 @@ export function UpgradeModal({
             >
               {title}
             </h2>
+            {initiative && (
+              <p className="text-xs text-[var(--color-gold)]/80 italic mt-1 font-medium">
+                {initiative}
+              </p>
+            )}
             {/* Close X */}
             <button
               onClick={onClose}
@@ -207,7 +218,7 @@ export function UpgradeModal({
                   You&apos;re on the list.
                 </p>
                 <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  We&apos;ll notify you when Purple Soul Collective USA becomes available.
+                  {successMessage}
                 </p>
               </div>
             ) : (

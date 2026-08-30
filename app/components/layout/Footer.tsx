@@ -36,7 +36,8 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
 const PURPLE_SOUL = {
   url: 'https://purplesoul.shop',
   status: 'upgrading' as 'upgrading' | 'live',
-  title: 'Purple Soul Collective USA',
+  title: 'Purple Soul Collectives',
+  initiative: 'A De Koshur Crafts USA Initiative',
   desc: 'Ethical commerce and creative expression',
 } as const;
 
@@ -77,7 +78,9 @@ export function Footer() {
           <FooterSection title="Production Infrastructure" padLeft>
             <FooterLink href="/studio">Studio (Karkhana-e-Sada)</FooterLink>
             <FooterLink href="/studio-engineers">Studio Engineers</FooterLink>
+            <FooterLink href="/official-channels">SufiTube</FooterLink>
             <FooterLink href="/releases">Releases</FooterLink>
+            <FooterLink href="/release-premieres">Premiere Room</FooterLink>
           </FooterSection>
 
           <FooterSection title="Institutional Identity" padLeft>
@@ -93,6 +96,7 @@ export function Footer() {
             <FooterLink href="/collaboration">Institutional Collaboration</FooterLink>
             <FooterLink href="/product-infrastructure">Product Infrastructure</FooterLink>
             <FooterLink href="/governance">Governance</FooterLink>
+            <FooterLink href="/contact">Contact SufiPulse</FooterLink>
           </FooterSection>
         </div>
 
@@ -238,12 +242,14 @@ export function Footer() {
 
       </div>
 
-      {/* Purple Soul Collective USA — Upgrade in Progress modal */}
+      {/* Purple Soul Collectives — Upgrade in Progress modal */}
       <UpgradeModal
         open={purpleSoulModalOpen}
         onClose={() => setPurpleSoulModalOpen(false)}
-        title="Purple Soul Collective USA Upgrade in Progress"
-        body="Purple Soul Collective USA is currently being upgraded as part of the wider SufiPulse and institutional ecosystem. Submit your email to be notified when the updated platform becomes available."
+        title="Purple Soul Collectives Upgrade in Progress"
+        initiative={PURPLE_SOUL.initiative}
+        body="Purple Soul Collectives is being upgraded as a dedicated platform for craftsmen, artisans and creative communities connected to Sufi-inspired craft traditions and cultural expression. The renewed platform will support artisan discovery, cultural storytelling, creative collaboration and responsible access to handmade works."
+        successMessage="We'll notify you when the upgraded Purple Soul Collectives platform becomes available."
         source="purple-soul-upgrade"
         triggerRef={purpleSoulTriggerRef as React.RefObject<HTMLElement>}
       />
