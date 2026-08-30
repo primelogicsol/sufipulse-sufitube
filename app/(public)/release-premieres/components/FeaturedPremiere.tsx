@@ -16,12 +16,15 @@ export function FeaturedPremiere({ release }: { release: any }) {
   const [showTeaser, setShowTeaser] = useState(false);
 
   const title = release.canonicalTitle || release.title;
+  const tagline = release.premiereTagline || release.subtitle || null;
+  const introduction = release.premiereIntroduction || release.description || 'A SufiPulse Studio Production.';
   
   const liveTeaser = release.preReleaseAssets?.find(
     (a: any) => a.type === 'premium_teaser' && a.status === 'live'
   );
   
-  const artworkUrl = liveTeaser?.thumbnailUrl || release.canonicalThumbnail || release.thumbnailUrl || '/empty-artwork.png';
+  const rawArtwork = liveTeaser?.thumbnailUrl || release.canonicalThumbnail || release.thumbnailUrl;
+  const hasArtwork = Boolean(rawArtwork);
 
   const isReleased = release.releaseLifecycle === 'released';
 
@@ -29,12 +32,17 @@ export function FeaturedPremiere({ release }: { release: any }) {
     <>
       <div className="relative w-full rounded-2xl overflow-hidden bg-neutral-900 border border-[var(--color-border-strong)] shadow-2xl mb-20 group">
         <div className="absolute inset-0 z-0">
-          <Image 
-            src={artworkUrl} 
-            alt={title}
-            fill
-            className="object-cover opacity-40 group-hover:opacity-50 transition-opacity duration-700"
-          />
+          {hasArtwork ? (
+            <Image 
+              src={rawArtwork!} 
+              alt={title}
+              fill
+              className="object-cover opacity-40 group-hover:opacity-50 transition-opacity duration-700"
+            />
+          ) : (
+            /* No artwork yet — show a rich dark cinematic gradient */
+            <div className="absolute inset-0 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
         </div>
         
@@ -43,15 +51,20 @@ export function FeaturedPremiere({ release }: { release: any }) {
             <span className="inline-block px-3 py-1 bg-[var(--color-gold)] text-black text-[10px] font-black uppercase tracking-widest rounded-sm mb-4">
               {isReleased ? 'Official Release' : liveTeaser ? 'Premium Teaser Live' : release.releaseLifecycle === 'premiere_scheduled' ? 'Premiere Scheduled' : 'Upcoming'}
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-3">
               {title}
             </h2>
+            {tagline && (
+              <p className="text-[var(--color-gold)] italic text-base md:text-lg mb-4 font-medium">
+                {tagline}
+              </p>
+            )}
             <div className="flex items-center gap-4 text-neutral-300 text-sm mb-6">
               <span className="font-semibold text-[var(--color-gold)]">Official Release:</span>
               <span>{release.officialReleaseAt ? new Date(release.officialReleaseAt).toLocaleDateString() : 'TBA'}</span>
             </div>
             <p className="text-neutral-400 text-base md:text-lg mb-8 max-w-xl line-clamp-3">
-              {release.description || "A SufiPulse Studio Production."}
+              {introduction}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               {isReleased ? (
