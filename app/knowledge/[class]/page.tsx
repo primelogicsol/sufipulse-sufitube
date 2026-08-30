@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import fs from 'fs';
 import path from 'path';
 import KnowledgeClient from '../KnowledgeClient';
@@ -35,5 +35,9 @@ export default async function KnowledgeClassHome({ params }: { params: Promise<{
     }
   } catch (e) {}
 
-  return <KnowledgeClient entities={entities} initialClass={targetClass} />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--color-midnight)]" />}>
+      <KnowledgeClient entities={entities} initialClass={targetClass} />
+    </Suspense>
+  );
 }

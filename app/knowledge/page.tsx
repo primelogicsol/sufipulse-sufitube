@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import fs from 'fs';
 import path from 'path';
 import KnowledgeClient from './KnowledgeClient';
@@ -101,7 +101,9 @@ export default async function KnowledgeHome() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <KnowledgeClient entities={entities} stats={stats} />
+      <Suspense fallback={<div className="min-h-screen bg-[var(--color-midnight)]" />}>
+        <KnowledgeClient entities={entities} stats={stats} />
+      </Suspense>
     </Layout>
   );
 }
