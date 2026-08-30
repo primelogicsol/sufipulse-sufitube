@@ -56,12 +56,21 @@ function Bar({
   );
 }
 
-function DiscoveryCard({ p }: { p: GlobalReachPayload['performance'] & { recommendation?: number | null } }) {
+// Card 1: True Studio funnel — impressions → CTR → engaged views → avg duration → watch hrs from impressions
+// All fields come from the same YouTube Studio Advanced Mode CSV snapshot (same cohort/period).
+function StudioFunnelCard({
+  p,
+  recommendationShareOfImpressions,
+}: {
+  p: GlobalReachPayload['performance'];
+  recommendationShareOfImpressions: number | null;
+}) {
   return (
     <Card
       icon={<TrendingUp className="w-4 h-4" />}
-      title="Impressions to Watch Time"
+      title="Impressions → Watch Time (Studio Funnel)"
     >
+      {/* Step 1 → 2: Impressions → CTR → Views from impressions */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="text-center min-w-[60px]">
           <p className="text-2xl font-bold text-white tabular-nums leading-none">
@@ -71,59 +80,54 @@ function DiscoveryCard({ p }: { p: GlobalReachPayload['performance'] & { recomme
             Impressions
           </p>
         </div>
-        <ArrowRight className="w-4 h-4 text-neutral-700 shrink-0" />
-        <div className="text-center min-w-[52px]">
+        <div className="flex flex-col items-center shrink-0">
+          <ArrowRight className="w-4 h-4 text-neutral-700" />
+          {p.clickThroughRate !== null && (
+            <span className="text-[9px] text-amber-400/70 font-bold tabular-nums">{p.clickThroughRate}% CTR</span>
+          )}
+        </div>
+        <div className="text-center min-w-[60px]">
           <p className="text-2xl font-bold text-amber-400 tabular-nums leading-none">
             {fmt(p.views)}
           </p>
           <p className="text-[10px] text-neutral-500 mt-1 uppercase tracking-wide">
-            Views
-          </p>
-        </div>
-        <ArrowRight className="w-4 h-4 text-neutral-700 shrink-0" />
-        <div className="text-center min-w-[60px]">
-          <p className="text-2xl font-bold text-white tabular-nums leading-none">
-            {fmt(p.watchTimeHours)}
-            <span className="text-xs font-normal text-neutral-500 ml-1">
-              hrs
-            </span>
-          </p>
-          <p className="text-[10px] text-neutral-500 mt-1 uppercase tracking-wide">
-            Watch Time
+            Engaged Views
           </p>
         </div>
       </div>
 
+      {/* Step 3 → 4: Avg duration → Watch hrs from impressions */}
       <div className="grid grid-cols-2 gap-3 pt-3 border-t border-neutral-800/50">
         <div>
-          <p className="text-sm font-bold text-amber-400 tabular-nums">
-            {p.clickThroughRate !== null ? `${p.clickThroughRate}%` : "Unavailable"}
-          </p>
-          <p className="text-[10px] text-neutral-500 mt-0.5">
-            Click-through rate
-          </p>
-        </div>
-        <div>
           <p className="text-sm font-bold text-white tabular-nums">
-            {p.averageViewDurationFormatted || "Unavailable"}
+            {p.averageViewDurationFormatted || "—"}
           </p>
           <p className="text-[10px] text-neutral-500 mt-0.5">
             Avg view duration
           </p>
         </div>
+        <div>
+          <p className="text-sm font-bold text-teal-300 tabular-nums">
+            {fmt(p.watchTimeHours)}<span className="text-xs font-normal text-neutral-500 ml-1">hrs</span>
+          </p>
+          <p className="text-[10px] text-neutral-500 mt-0.5">
+            Watch hrs from impressions
+          </p>
+        </div>
       </div>
 
-      {p.recommendation !== null && p.recommendation !== undefined && (
+      {recommendationShareOfImpressions !== null && (
         <p className="text-[10px] text-neutral-600 pt-1 border-t border-neutral-800/40 leading-relaxed">
           <span className="text-amber-400/70 font-semibold">
-            {p.recommendation}%
+            {recommendationShareOfImpressions}%
           </span>{" "}
-          of views driven by the recommendation engine.
+          of impressions from YouTube recommending your content.
         </p>
       )}
     </Card>
   );
 }
+
 
 function AudienceCard({ a }: { a: GlobalReachPayload['ageGender'] }) {
   const ageEntries = a.ageGroups.filter(
@@ -318,7 +322,10 @@ export default function GlobalReachStrip() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AudienceCard a={data!.ageGender} />
             <div className="flex flex-col gap-6">
-              <DiscoveryCard p={{ ...data!.performance, recommendation: data!.recommendationEngine.viewsPercentage }} />
+              <StudioFunnelCard
+                p={data!.performance}
+                recommendationShareOfImpressions={data!.recommendationEngine.viewsPercentage ?? null}
+              />
               <FootprintCard g={data!.geographies} />
             </div>
           </div>
@@ -330,7 +337,11 @@ export default function GlobalReachStrip() {
             <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Data Source</span>
-                <span className="text-xs text-amber-400/90 font-medium">YouTube Analytics API / Verified Snapshot</span>
+                <span className="text-xs text-amber-400/90 font-medium">
+                  {data?.snapshotStatus?.includes('Studio')
+                    ? 'YouTube Studio CSV + Verified Snapshot'
+                    : 'YouTube Analytics API / Verified Snapshot'}
+                </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Last Sync</span>
