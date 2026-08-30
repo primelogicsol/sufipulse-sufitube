@@ -27,6 +27,10 @@
 - **Tracking Tokens:** Access to specific adoption/sponsorship requests requires a valid `trackingToken` for non-authenticated users.
 - **Stripe Safety:** `test_` payment links are strictly blocked in production but allowed in development.
 
+### Layout & Provider Hierarchy
+- **Auth Independence Rule:** Global navigation, scroll management, analytics bootstrapping, and route-state infrastructure must NOT be nested beneath `<AuthProvider>` or any other asynchronous context provider unless they explicitly require that context. Components that must fire before or independently of auth resolution (e.g. `<ScrollToTop />`) must be placed as direct children of `<body>`, above `<AuthProvider>`.
+- **Scroll Behavior Contract:** New primary navigation always starts at scroll position 0. Browser Back/Forward restores the previous scroll position. Explicit `#hash` URLs scroll to the named section. This is enforced globally by `app/components/navigation/ScrollToTop.tsx` mounted in `app/layout.tsx`.
+
 ## Strategic Direction
 - **Phase:** Production Focus (Post-Architecture Freeze).
 - **Focus:** The Discovery Engine, Authority Framework, Conversion Architecture, and Strategic Scoring System are 🏆 FROZEN. No new major architectural changes until the first 10 flagship releases, 10 flagship publications, and 10 flagship videos are fully produced.
