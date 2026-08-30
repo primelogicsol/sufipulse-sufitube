@@ -164,12 +164,38 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        {/* Kill browser scroll restoration before React hydrates — must be inline, not deferred */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `if('scrollRestoration'in history)history.scrollRestoration='manual';`,
-          }}
-        />
+        {/* DIAGNOSTIC BOOT SCRIPT — runs before React hydration */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){
+  if('scrollRestoration'in history) history.scrollRestoration='manual';
+
+  var t0 = performance.now();
+  function ms(){ return (performance.now()-t0).toFixed(1)+'ms'; }
+  function snap(){
+    return {
+      scrollY: window.scrollY,
+      docH: document.documentElement.scrollHeight,
+      navType: (performance.getEntriesByType('navigation')[0]||{}).type||'?',
+      hash: location.hash||'none',
+      sr: history.scrollRestoration,
+      active: (document.activeElement&&document.activeElement!==document.body)
+        ? document.activeElement.tagName+'#'+(document.activeElement.id||'')
+        : 'body',
+    };
+  }
+
+  console.log('[BOOT] script start', ms(), snap());
+
+  window.addEventListener('scroll', function(){ console.log('[BOOT SCROLL]', ms(), 'scrollY='+window.scrollY, 'docH='+document.documentElement.scrollHeight); }, {passive:true, capture:true});
+  document.addEventListener('focusin', function(e){ console.log('[BOOT FOCUS]', ms(), e.target&&(e.target.tagName+'#'+(e.target.id||'.'+(e.target.className||'').toString().slice(0,20)))); });
+
+  document.addEventListener('DOMContentLoaded', function(){ console.log('[BOOT] DOMContentLoaded', ms(), snap()); });
+  window.addEventListener('pageshow', function(e){ console.log('[BOOT] pageshow persisted='+e.persisted, ms(), snap()); });
+  window.addEventListener('load', function(){ console.log('[BOOT] load', ms(), snap()); });
+
+  [50,100,200,400,600,900,1200,1600,2000].forEach(function(d){
+    setTimeout(function(){ console.log('[BOOT] T+'+d+'ms', snap()); }, d);
+  });
+})();` }} />
         <Script
           defer
           data-domain="sufipulse.com"
