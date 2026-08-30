@@ -227,10 +227,15 @@ export default function OfficialIdentityPage() {
       <Section background="midnight" spacing="normal">
         <PageContainer>
           <div className="max-w-5xl mx-auto">
-            <StudioSectionHeader
-              title="How the SufiPulse Identity Is Organized"
-              subtitle="SufiPulse uses related identities for different functions. These identities should be understood as parts of a coordinated public and creative framework rather than as interchangeable account names."
-            />
+            {/* Centered header — matches the central vertical axis of the diagram below */}
+            <div className="text-center mb-14">
+              <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] max-w-[820px] mx-auto mb-4 leading-tight tracking-tight">
+                How the SufiPulse Identity Is Organized
+              </h2>
+              <p className="text-[var(--color-text-secondary)] text-base leading-relaxed max-w-[760px] mx-auto">
+                SufiPulse uses related identities for different functions. These identities should be understood as parts of a coordinated public and creative framework rather than as interchangeable account names.
+              </p>
+            </div>
 
             {/* ── Tier 1: SufiPulse ── */}
             <div className="flex flex-col items-center">
