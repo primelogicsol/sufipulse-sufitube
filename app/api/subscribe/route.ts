@@ -13,6 +13,7 @@ const SUBSCRIBERS_FILE = path.join(DATA_DIR, 'subscribers.json');
 
 interface Subscriber {
   email: string;
+  source?: string;   // e.g. 'purple-soul-upgrade', 'artstay-upgrade', undefined = general
   releaseId?: string;
   subscribedAt: string;
   token?: string;
@@ -27,11 +28,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (validation instanceof NextResponse) return validation;
-  const { email } = validation.data;
-  
-  // Hand-parse releaseId if needed as it's not in subscriptionSchema
-  // Actually I should add it to the schema if it's used.
-  // For now I'll just use email.
+  const { email, source } = validation.data;
 
   try {
     // Ensure data directory exists
@@ -69,7 +66,8 @@ export async function POST(request: NextRequest) {
     }
 
     subscribers.push({ 
-      email: normalised, 
+      email: normalised,
+      ...(source ? { source } : {}),
       subscribedAt: new Date().toISOString(),
       token
     });

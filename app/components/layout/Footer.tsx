@@ -1,6 +1,8 @@
 "use client";
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { UpgradeModal } from '@/app/components/ui/UpgradeModal';
 
 // Verified social channels — source: canonical Official Channels registry.
 // Only verified=true AND non-null url entries are rendered.
@@ -27,8 +29,21 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   YouTube: <YouTubeIcon className="w-4 h-4" />,
 };
 
+// ─── Institutional partner status config ─────────────────────────────────────
+// To restore normal navigation when Purple Soul is ready:
+//   change status from 'upgrading' to 'live'
+// No JSX changes needed.
+const PURPLE_SOUL = {
+  url: 'https://purplesoul.shop',
+  status: 'upgrading' as 'upgrading' | 'live',
+  title: 'Purple Soul Collective USA',
+  desc: 'Ethical commerce and creative expression',
+} as const;
+
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [purpleSoulModalOpen, setPurpleSoulModalOpen] = useState(false);
+  const purpleSoulTriggerRef = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
 
   return (
     <footer className="relative bg-[var(--color-midnight)] border-t border-[var(--color-border-strong)] mt-[var(--section-spacing)] overflow-hidden">
@@ -195,7 +210,26 @@ export function Footer() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
                 <ExtensionLink href="https://sufisciencecenter.info/" title="Sufi Science Center USA" desc="Sacred research and contemplative inquiry" />
                 <ExtensionLink href="https://dkf.sufisciencecenter.info/" title="Dr. Kumar Foundation USA" desc="Spiritual stewardship and cultural awakening" />
-                <ExtensionLink href="https://purplesoul.shop" title="Purple Soul Collective USA" desc="Ethical commerce and creative expression" />
+
+                {/* Purple Soul — status-controlled. Change PURPLE_SOUL.status to 'live' to restore navigation. */}
+                {PURPLE_SOUL.status === 'upgrading' ? (
+                  <button
+                    ref={purpleSoulTriggerRef as React.RefObject<HTMLButtonElement>}
+                    type="button"
+                    onClick={() => setPurpleSoulModalOpen(true)}
+                    className="group flex flex-col gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors text-left w-full"
+                  >
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors leading-tight">
+                      {PURPLE_SOUL.title}
+                    </p>
+                    <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight">
+                      {PURPLE_SOUL.desc}
+                    </p>
+                  </button>
+                ) : (
+                  <ExtensionLink href={PURPLE_SOUL.url} title={PURPLE_SOUL.title} desc={PURPLE_SOUL.desc} />
+                )}
+
                 <ExtensionLink href="https://ifpb.sufisciencecenter.info/" title="Interfaith Peace Bridge USA" desc="Peace and dialogue platform." />
               </div>
             </div>
@@ -203,6 +237,16 @@ export function Footer() {
         </div>
 
       </div>
+
+      {/* Purple Soul Collective USA — Upgrade in Progress modal */}
+      <UpgradeModal
+        open={purpleSoulModalOpen}
+        onClose={() => setPurpleSoulModalOpen(false)}
+        title="Purple Soul Collective USA Upgrade in Progress"
+        body="Purple Soul Collective USA is currently being upgraded as part of the wider SufiPulse and institutional ecosystem. Submit your email to be notified when the updated platform becomes available."
+        source="purple-soul-upgrade"
+        triggerRef={purpleSoulTriggerRef as React.RefObject<HTMLElement>}
+      />
     </footer>
   );
 }

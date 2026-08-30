@@ -469,6 +469,7 @@ export const notificationSchema = z.object({
  */
 export const subscriptionSchema = z.object({
   email: z.string().email('Invalid email address').max(254),
+  source: z.string().max(64).optional(), // e.g. 'purple-soul-upgrade', 'artstay-upgrade'
 });
 
 /**
