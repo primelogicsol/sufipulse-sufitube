@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Link from 'next/link';
@@ -51,6 +51,8 @@ export default function SufiPulsePlayer({
 
       playerRef.current = new window.YT.Player(el.id, {
         videoId: youtubeId,
+        width: "100%",
+        height: "100%",
         playerVars: {
           rel: 0,
           playsinline: 1,
@@ -130,15 +132,16 @@ export default function SufiPulsePlayer({
   }
 
   return (
-    <div className="w-full h-full relative flex flex-col group">
-      <div 
+    <div className="w-full h-full relative">
+      {/* YT.Player mount point — fills the outer aspect-video container completely */}
+      <div
         ref={containerRef}
-        className="w-full aspect-video border-0 bg-neutral-900"
+        className="absolute inset-0 w-full h-full border-0 bg-black"
       />
 
-      {/* Optional: Minimal non-intrusive continuity overlay/bar below player */}
-      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-neutral-700/50 opacity-0 group-hover:opacity-100 transition-opacity">
-        <label className="flex items-center space-x-2 cursor-pointer text-xs font-medium text-neutral-200">
+      {/* Continuous SufiPulse — absolute overlay, top-right, visible on hover */}
+      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-neutral-700/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <label className="flex items-center space-x-2 cursor-pointer text-xs font-medium text-neutral-200 pointer-events-auto">
           <input
             type="checkbox"
             className="accent-primary-500 w-3.5 h-3.5 rounded-sm"
