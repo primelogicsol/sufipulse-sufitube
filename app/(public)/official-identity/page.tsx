@@ -69,22 +69,7 @@ function VerificationCriterion({ children }: { children: React.ReactNode }) {
   );
 }
 
-function IdentityTierRow({
-  tier, name, role, description,
-}: { tier: string; name: string; role: string; description: string; }) {
-  return (
-    <div className="flex gap-4 md:gap-8 items-start py-6 border-b border-[var(--color-border)] last:border-0">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 flex items-center justify-center">
-        <span className="text-[var(--color-gold)] text-xs font-black">{tier}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-bold text-base mb-0.5">{name}</p>
-        <p className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">{role}</p>
-        <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{description}</p>
-      </div>
-    </div>
-  );
-}
+
 
 export default function OfficialIdentityPage() {
   const currentMonth = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
@@ -241,36 +226,162 @@ export default function OfficialIdentityPage() {
       {/* 3. IDENTITY ARCHITECTURE */}
       <Section background="midnight" spacing="normal">
         <PageContainer>
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <StudioSectionHeader
               title="How the SufiPulse Identity Is Organized"
               subtitle="SufiPulse uses related identities for different functions. These identities should be understood as parts of a coordinated public and creative framework rather than as interchangeable account names."
             />
-            <div className="bg-[var(--color-slate)]/30 border border-[var(--color-border-strong)] rounded-2xl overflow-hidden">
-              <IdentityTierRow tier="1" name="SufiPulse" role="Institutional Framework"
-                description="The root institutional identity governing editorial standards, release governance, contributor attribution, and cultural stewardship across all SufiPulse activities." />
-              <div className="px-8 py-2 flex items-center gap-2">
-                <ArrowRight className="w-4 h-4 text-[var(--color-gold)]/40 rotate-90" />
-                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest">Coordinates</span>
+
+            {/* ── Tier 1: SufiPulse ── */}
+            <div className="flex flex-col items-center">
+              <div className="w-full max-w-2xl">
+                <div className="bg-[var(--color-slate)]/60 border border-[var(--color-gold)]/30 rounded-2xl p-6 text-center shadow-[0_0_30px_rgba(200,167,94,0.06)]">
+                  <p className="text-[var(--color-gold)] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Root Identity</p>
+                  <p className="text-white font-bold text-xl mb-1">SufiPulse</p>
+                  <p className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-3">Institutional &amp; Creative Framework</p>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-lg mx-auto">
+                    The root identity governing editorial standards, release governance, cultural stewardship, contributor attribution and the wider SufiPulse ecosystem.
+                  </p>
+                </div>
               </div>
-              <IdentityTierRow tier="2" name="SufiPulse Studio USA" role="Production & Creative Studio"
-                description="Responsible for developing, recording and coordinating authorized SufiPulse creative works — from composition through final release materials." />
-              <div className="px-8 py-2 flex items-center gap-2">
-                <ArrowRight className="w-4 h-4 text-[var(--color-gold)]/40 rotate-90" />
-                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest">Publishes through</span>
+
+              {/* Connector + label */}
+              <div className="flex flex-col items-center py-3 gap-1">
+                <div className="w-px h-6 bg-[var(--color-gold)]/30" />
+                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest px-2 py-0.5 border border-[var(--color-border)] rounded-full bg-[var(--color-midnight)]">Operates through</span>
+                <div className="w-px h-6 bg-[var(--color-gold)]/30" />
               </div>
-              <IdentityTierRow tier="3" name="SufiPulse USA" role="Public Distribution Identity"
-                description="The authenticated public identity through which official SufiPulse releases reach audiences — via YouTube, DSPs, the Premiere Room and sufipulse.com." />
-              <div className="px-8 py-2 flex items-center gap-2">
-                <ArrowRight className="w-4 h-4 text-[var(--color-gold)]/40 rotate-90" />
-                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest">Delivered to</span>
+
+              {/* ── Tier 2: Studio ── */}
+              <div className="w-full max-w-2xl">
+                <div className="bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] rounded-2xl p-6 text-center">
+                  <p className="text-[var(--color-gold)] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Production Environment</p>
+                  <p className="text-white font-bold text-xl mb-1">SufiPulse Studio USA</p>
+                  <p className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-3">Production &amp; Creative Studio</p>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-lg mx-auto">
+                    The production environment responsible for composition, recording, music direction, creative development and preparation of authorized release materials.
+                  </p>
+                </div>
               </div>
-              <IdentityTierRow tier="↓" name="Official Releases · YouTube · DSPs · Premiere Room" role="Authenticated Public Endpoints"
-                description="All authenticated release and distribution endpoints are listed in the Official Channels registry and linked from sufipulse.com." />
+
+              {/* Connector + label */}
+              <div className="flex flex-col items-center py-3 gap-1">
+                <div className="w-px h-6 bg-[var(--color-gold)]/30" />
+                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest px-2 py-0.5 border border-[var(--color-border)] rounded-full bg-[var(--color-midnight)]">Publishes under</span>
+                <div className="w-px h-6 bg-[var(--color-gold)]/30" />
+              </div>
+
+              {/* ── Tier 3: SufiPulse USA ── */}
+              <div className="w-full max-w-2xl">
+                <div className="bg-[var(--color-slate)]/40 border border-[var(--color-border-strong)] rounded-2xl p-6 text-center">
+                  <p className="text-[var(--color-gold)] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Official Artist Identity</p>
+                  <p className="text-white font-bold text-xl mb-1">SufiPulse USA</p>
+                  <p className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-3">Official Artist &amp; Public Release Identity</p>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-lg mx-auto">
+                    The authenticated public music identity under which official SufiPulse releases, catalog records, artist metadata and distribution activities are presented.
+                  </p>
+                </div>
+              </div>
+
+              {/* Branch connector — single stem splitting into three */}
+              <div className="w-full max-w-3xl flex flex-col items-center py-3">
+                <div className="w-px h-6 bg-[var(--color-gold)]/30" />
+                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest px-2 py-0.5 border border-[var(--color-border)] rounded-full bg-[var(--color-midnight)]">Operates across</span>
+                {/* Horizontal bridge */}
+                <div className="relative w-full flex items-start justify-center mt-3">
+                  {/* left arm */}
+                  <div className="flex flex-col items-end w-1/3 pt-0">
+                    <div className="w-full h-px bg-[var(--color-gold)]/20 mt-3" />
+                  </div>
+                  {/* center stem */}
+                  <div className="w-px h-6 bg-[var(--color-gold)]/30 flex-shrink-0" />
+                  {/* right arm */}
+                  <div className="flex flex-col items-start w-1/3 pt-0">
+                    <div className="w-full h-px bg-[var(--color-gold)]/20 mt-3" />
+                  </div>
+                </div>
+                {/* three down-stems */}
+                <div className="w-full grid grid-cols-3 mt-0">
+                  <div className="flex justify-center"><div className="w-px h-5 bg-[var(--color-gold)]/20" /></div>
+                  <div className="flex justify-center"><div className="w-px h-5 bg-[var(--color-gold)]/30" /></div>
+                  <div className="flex justify-center"><div className="w-px h-5 bg-[var(--color-gold)]/20" /></div>
+                </div>
+              </div>
+
+              {/* ── Tier 4: Three branches ── */}
+              <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {/* 4A — SufiTube */}
+                <div className="bg-[var(--color-midnight)]/80 border border-[var(--color-border-strong)] rounded-2xl p-5 flex flex-col">
+                  <div className="mb-3">
+                    <span className="text-[9px] text-[var(--color-gold)]/60 font-black uppercase tracking-[0.25em]">Video &amp; Audiovisual</span>
+                    <p className="text-white font-bold text-base mt-0.5">SufiTube</p>
+                    <p className="text-[var(--color-gold)] text-[10px] font-bold uppercase tracking-widest mt-0.5">Official Video &amp; Sacred-Media Channel</p>
+                  </div>
+                  <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed flex-1 mb-4">
+                    The SufiPulse video and audiovisual publishing identity. Official music videos, kalam, premieres, visual releases and selected sacred-media programming. Operated within the SufiPulse USA public-media framework.
+                  </p>
+                  <div className="border-t border-[var(--color-border)] pt-3 space-y-1">
+                    {['YouTube', 'Video Premieres', 'Visual Releases'].map(ep => (
+                      <div key={ep} className="flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-[var(--color-gold)]/50 flex-shrink-0" />
+                        <span className="text-[11px] text-[var(--color-text-tertiary)]">{ep}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4B — DSP Distribution */}
+                <div className="bg-[var(--color-midnight)]/80 border border-[var(--color-border-strong)] rounded-2xl p-5 flex flex-col">
+                  <div className="mb-3">
+                    <span className="text-[9px] text-[var(--color-gold)]/60 font-black uppercase tracking-[0.25em]">Streaming &amp; Catalog</span>
+                    <p className="text-white font-bold text-base mt-0.5">Digital Music Distribution</p>
+                    <p className="text-[var(--color-gold)] text-[10px] font-bold uppercase tracking-widest mt-0.5">Official Streaming &amp; Catalog Endpoints</p>
+                  </div>
+                  <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed flex-1 mb-4">
+                    Authenticated SufiPulse USA releases distributed through approved DSPs and music services.
+                  </p>
+                  <div className="border-t border-[var(--color-border)] pt-3 space-y-1">
+                    {['Spotify', 'Apple Music', 'YouTube Music', 'Amazon Music', 'Other Approved DSPs'].map(ep => (
+                      <div key={ep} className="flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-[var(--color-gold)]/50 flex-shrink-0" />
+                        <span className="text-[11px] text-[var(--color-text-tertiary)]">{ep}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4C — SufiPulse.com */}
+                <div className="bg-[var(--color-midnight)]/80 border border-[var(--color-gold)]/15 rounded-2xl p-5 flex flex-col">
+                  <div className="mb-3">
+                    <span className="text-[9px] text-[var(--color-gold)]/60 font-black uppercase tracking-[0.25em]">Canonical Authority</span>
+                    <p className="text-white font-bold text-base mt-0.5">SufiPulse.com</p>
+                    <p className="text-[var(--color-gold)] text-[10px] font-bold uppercase tracking-widest mt-0.5">Canonical Digital &amp; Editorial Home</p>
+                  </div>
+                  <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed flex-1 mb-4">
+                    The authoritative web source for release provenance, Premiere Room activity, lyrics, translations, commentary, credits, institutional records and official-channel verification.
+                  </p>
+                  <div className="border-t border-[var(--color-border)] pt-3 space-y-1">
+                    {['Premiere Room', 'Releases', 'Lyrics & Commentary', 'Credits', 'Verification'].map(ep => (
+                      <div key={ep} className="flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-[var(--color-gold)]/50 flex-shrink-0" />
+                        <span className="text-[11px] text-[var(--color-text-tertiary)]">{ep}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Explanatory note */}
+              <p className="text-[var(--color-text-tertiary)] text-xs leading-relaxed text-center mt-6 max-w-2xl">
+                SufiTube is not the same identity as SufiPulse USA. SufiPulse USA is the authenticated artist and release identity. SufiTube is the branded video and audiovisual media channel operating within that public-media architecture.
+              </p>
             </div>
           </div>
         </PageContainer>
       </Section>
+
+
 
       {/* 4. VERIFICATION STANDARD */}
       <Section background="slate" spacing="normal">
