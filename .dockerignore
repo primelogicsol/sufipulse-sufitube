@@ -47,8 +47,11 @@ Thumbs.db
 logs
 *.log
 
-# Data (will be mounted as volume)
+# Runtime data (mounted as volume — user/financial/token data must not be in image)
 .data
+# EXCEPTION: knowledge-registry.json is public reference data committed to git.
+# It must be present in the build context so the Dockerfile can COPY it into the image.
+!.data/knowledge-registry.json
 
 # Tests
 __tests__

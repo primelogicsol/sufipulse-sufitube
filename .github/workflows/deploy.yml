@@ -224,6 +224,24 @@ jobs:
             # Ensure mounted volume has correct ownership so the app and seed-admin can write to it
             docker compose -p sufipulse_new exec -T -u root app chown -R node:node /app/.data
 
+            # ── SYNC KNOWLEDGE REGISTRY FROM IMAGE → VOLUME ─────────────────
+            # The volume (app-data) shadows /app/.data in the image.
+            # knowledge-registry.json is version-controlled in the image.
+            # We explicitly copy it into the volume after every deploy so the
+            # running container always serves the git-committed registry.
+            # Runtime data files (users, adoptions, tokens) are NOT touched.
+            _s="sync-knowledge-registry"
+            docker compose -p sufipulse_new exec -T -u root app \
+              cp /app/.data/knowledge-registry.json /app/.data/knowledge-registry.json \
+              2>/dev/null || true
+            # The image file is at the build path; copy from a temp container to be safe:
+            docker run --rm \
+              -v sufipulse_new_data:/target \
+              --entrypoint="" \
+              "${SUFIPULSE_IMAGE}" \
+              cp /app/.data/knowledge-registry.json /target/knowledge-registry.json
+            echo "knowledge-registry.json synced to volume"
+
             # ── HEALTH CHECK ─────────────────────────────────────────────────
             _s="health-check"
             healthy=0

@@ -78,6 +78,10 @@ COPY --from=builder --chown=node:node /app/scripts/seed-admin.js ./scripts/seed-
 COPY --from=builder --chown=node:node /app/scripts/migrate.js ./scripts/migrate.js
 COPY --from=builder --chown=node:node /app/scripts/validate-env.mjs ./scripts/validate-env.mjs
 COPY --from=builder --chown=node:node /app/server/db/migrations ./server/db/migrations
+# Knowledge registry — version-controlled public reference data.
+# This file is committed to git and must be present in the image so the
+# deploy pipeline can sync it into the persistent volume on each release.
+COPY --from=builder --chown=node:node /app/.data/knowledge-registry.json ./.data/knowledge-registry.json
 
 # Switch to non-root user
 USER node
