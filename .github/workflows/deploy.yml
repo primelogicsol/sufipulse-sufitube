@@ -193,6 +193,7 @@ jobs:
               sed -i "/^${k}=/d" .env
               printf '%s=%s\n' "$k" "$v" >> .env
             }
+            _e NEXT_PUBLIC_APP_URL          "${{ secrets.NEXT_PUBLIC_APP_URL }}"
             _e GOOGLE_ADS_CLIENT_ID         "${{ secrets.GOOGLE_ADS_CLIENT_ID }}"
             _e GOOGLE_ADS_CLIENT_SECRET     "${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}"
             _e GOOGLE_ADS_DEVELOPER_TOKEN   "${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}"
