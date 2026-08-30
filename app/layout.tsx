@@ -164,14 +164,20 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
+        {/* Kill browser scroll restoration before React hydrates — must be inline, not deferred */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('scrollRestoration'in history)history.scrollRestoration='manual';`,
+          }}
+        />
         <Script
           defer
           data-domain="sufipulse.com"
           src="https://plausible.io/js/script.js"
           strategy="afterInteractive"
         />
+        <ScrollToTop />
         <AuthProvider>
-          <ScrollToTop />
           {children}
         </AuthProvider>
       </body>
