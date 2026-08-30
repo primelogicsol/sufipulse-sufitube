@@ -63,8 +63,10 @@ export function UpgradeModal({
   }, [open]);
 
   // ── Focus management ──────────────────────────────────────────────────────
+  const wasOpenRef = useRef(false);
   useEffect(() => {
     if (open) {
+      wasOpenRef.current = true;
       // Reset state on open
       setEmail("");
       setEmailError("");
@@ -78,8 +80,9 @@ export function UpgradeModal({
           firstFocusRef.current?.focus();
         }
       });
-    } else {
-      // Return focus to trigger element
+    } else if (wasOpenRef.current) {
+      // Only return focus to trigger when modal is genuinely closing (was open).
+      // Do NOT call focus() on initial mount — that would scroll the page to the trigger element.
       triggerRef?.current?.focus();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
