@@ -228,6 +228,30 @@ export default function Disclaimer() {
                     </div>
                 </PageContainer>
             </Section>
+
+            <Section className="py-12">
+                <PageContainer>
+                    <div className="max-w-4xl">
+                        <h2 className="text-3xl font-bold text-white mb-6">
+                            Identity &amp; Affiliation Notice
+                        </h2>
+                        <div className="space-y-4 text-neutral-300 leading-relaxed">
+                            <p>
+                                &ldquo;SufiPulse&rdquo;, &ldquo;SufiPulse USA&rdquo; and &ldquo;SufiPulse Studio USA&rdquo; refer to the institutional and media identities expressly identified through SufiPulse.com.
+                            </p>
+                            <p>
+                                Use of identical or similar terminology by unrelated third parties does not itself establish affiliation, authorization, sponsorship, endorsement or catalog ownership.
+                            </p>
+                            <p>
+                                For authoritative identity verification, consult the{' '}
+                                <Link href="/official-identity" className="text-amber-400 hover:text-amber-300 transition-colors underline underline-offset-2">
+                                    Official Identity page
+                                </Link>.
+                            </p>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
         </>
     );
 }

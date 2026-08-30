@@ -309,6 +309,24 @@ export default function OfficialChannels() {
                 background="midnight"
             />
 
+            {/* Official Identity cross-link */}
+            <Section background="slate" spacing="compact">
+                <PageContainer>
+                    <div className="max-w-4xl mx-auto text-center py-4">
+                        <p className="text-[var(--color-text-tertiary)] text-sm mb-3">
+                            Want to understand how SufiPulse determines official identity and affiliation?
+                        </p>
+                        <Link
+                            href="/official-identity"
+                            className="inline-flex items-center gap-2 text-[var(--color-gold)] hover:underline text-sm font-semibold"
+                        >
+                            <Shield className="w-4 h-4" />
+                            Official Identity — Verify SufiPulse affiliation
+                        </Link>
+                    </div>
+                </PageContainer>
+            </Section>
+
             <style jsx global>{`
                 .elite-card {
                     background: rgba(18, 18, 18, 0.4);

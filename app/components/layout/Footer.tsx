@@ -41,11 +41,13 @@ export function Footer() {
           </FooterSection>
 
           <FooterSection title="Institutional Identity">
+            <FooterLink href="/official-identity">Official Identity</FooterLink>
             <FooterLink href="/about/what-is-sufipulse">What is SufiPulse</FooterLink>
             <FooterLink href="/about/founder">Founder</FooterLink>
             <FooterLink href="/about/our-network">Our Network</FooterLink>
             <FooterLink href="/about/institutional-partners">Institutional Partners</FooterLink>
           </FooterSection>
+
 
           <FooterSection title="Institutional Engagement">
             <FooterLink href="/official-channels">Official Channels</FooterLink>
