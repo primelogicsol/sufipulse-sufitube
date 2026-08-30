@@ -522,7 +522,10 @@ export default function Releases() {
     }, [filterType, filterFormat, durationFilter, yearFilter, sortOrder, searchQuery, currentPage]);
 
     // Server-driven: paginatedReleases is exactly what the server returned for this page
-    const paginatedReleases = releases;
+    // Deduplicate by id to guard against duplicate registry entries producing React key conflicts
+    const paginatedReleases = releases
+      ? Array.from(new Map(releases.map((r: any) => [r.id, r])).values())
+      : [];
     const totalPages = serverTotalPages;
 
     // Featured flagship: first governed release from current page
@@ -943,12 +946,12 @@ export default function Releases() {
                         ) : (
                             <>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {paginatedReleases.map((release) => {
+                                    {paginatedReleases.map((release: any, idx: number) => {
                                         const thumbCandidates = buildYouTubeThumbnailCandidates(release.youtubeId || release.id, [release.thumbnailUrl]);
                                         const releaseYear = release.publishedDate ? new Date(release.publishedDate).getFullYear() : 2026;
                                         return (
                                             <Link 
-                                                key={release.id || release.slug || release.title} 
+                                                key={`${release.id || release.slug || release.title}-${idx}`}
                                                 href={`/release-detail/${release.slug || release.youtubeId || release.id}`}
                                                 className="group flex flex-col bg-[#101a33] border border-white/5 rounded-2xl overflow-hidden hover:border-[var(--color-gold)]/40 transition-all duration-300 shadow-xl"
                                             >
