@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ScrollToTop } from "@/app/components/navigation/ScrollToTop";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
 
@@ -170,6 +171,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <AuthProvider>
+          <ScrollToTop />
           {children}
         </AuthProvider>
       </body>

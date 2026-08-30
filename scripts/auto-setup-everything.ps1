@@ -87,7 +87,7 @@ $secrets = @{
     "VPS_SSH_KEY"                     = $privateKey
     "NEXT_PUBLIC_YOUTUBE_API_KEY"     = "AIzaSyDZ2OHykSuPqDh7MxYN24l8uYJ9qCpkjLg"
     "NEXT_PUBLIC_YOUTUBE_CHANNEL_ID"  = "UCraDr3i5A3k0j7typ6tOOsQ"
-    "NEXT_PUBLIC_APP_URL"             = "http://$VpsHost"
+    "NEXT_PUBLIC_APP_URL"             = "https://sufipulse.com"
 }
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     WARN "GitHub CLI not found — installing it now..."

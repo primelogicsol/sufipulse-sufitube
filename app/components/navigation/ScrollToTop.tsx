@@ -1,15 +1,21 @@
-// import { useEffect } from 'react';
-// // import { useLocation } from 'react-router-dom';
-// import { usePathname, useSearchParams } from 'next/navigation';
+"use client";
 
-// export function ScrollToTop() {
-//   const { pathname, hash } = usePathname();
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
-//   useEffect(() => {
-//     if (!hash) {
-//       window.scrollTo(0, 0);
-//     }
-//   }, [pathname, hash]);
+export function ScrollToTop() {
+  const pathname = usePathname();
 
-//   return null;
-// }
+  useEffect(() => {
+    // Only scroll to top if there is no hash in the URL, to allow anchor links to work
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.body.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      const main = document.querySelector('main');
+      if (main) main.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [pathname]);
+
+  return null;
+}

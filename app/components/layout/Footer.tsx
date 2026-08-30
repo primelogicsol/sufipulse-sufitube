@@ -146,7 +146,7 @@ export function Footer() {
               { label: 'Knowledge Base', href: '/knowledge' },
             ] as const).map((item, i, arr) => (
               <span key={item.href} className="flex items-center gap-2">
-                <Link href={item.href} className="hover:text-[var(--color-gold)] transition-colors py-1 px-0.5">
+                <Link href={item.href} scroll={true} className="hover:text-[var(--color-gold)] transition-colors py-1 px-0.5">
                   {item.label}
                 </Link>
                 {i < arr.length - 1 && (
@@ -289,6 +289,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
     <li>
       <Link
         href={href}
+        scroll={true}
         className="group inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors duration-200"
       >
         <span className="w-0 group-hover:w-1.5 h-px bg-[var(--color-gold)] transition-all duration-200 flex-shrink-0 overflow-hidden" aria-hidden="true" />

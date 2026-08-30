@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -345,6 +345,10 @@ export function FeaturedPremiere({ release }: { release: any }) {
   const [showShare, setShowShare] = useState(false);
   const [showNotify, setShowNotify] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
 
   const title = release.canonicalTitle || release.title;
   const tagline = release.premiereTagline || release.subtitle || null;

@@ -44,7 +44,7 @@ COMPOSEEOF
 cat > /var/www/sufipulse-new/.env.local << 'ENVEOF'
 NODE_ENV=production
 PORT=3000
-NEXT_PUBLIC_APP_URL=https://test.sufipulse.com
+NEXT_PUBLIC_APP_URL=https://sufipulse.com
 JWT_SECRET=281e3bbb2fb4cd24711db7967e5b57ced3ea8668eb49d9c4decc33cdbd23fdc7
 JWT_REFRESH_SECRET=90010d9f00f85398164b394f972440ccb1d7144dd6dcbc55bea2df671afa058d
 ENVEOF
