@@ -95,61 +95,90 @@ export default function OfficialIdentityPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
       />
 
-      {/* 1. HERO */}
-      <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+      {/* 1. HERO — matches /release-premieres pattern */}
+      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+        {/* Cinematic background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
             src="/banner29.png"
-            alt=""
-            aria-hidden="true"
+            alt="SufiPulse Official Identity"
             fill
             priority
-            quality={90}
-            className="object-cover object-center opacity-50"
+            quality={95}
+            className="object-cover object-center scale-105 transform motion-safe:animate-fade-in opacity-60"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/85 via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/60 to-[var(--color-midnight)]" />
+          {/* Layered brand gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
         </div>
-        <div className="relative z-10">
+
+        {/* Content */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center">
           <PageContainer>
-            <div className="max-w-5xl mx-auto text-center">
-              <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
+            <div className="max-w-4xl mx-auto text-center mb-16">
+              {/* Kicker pill */}
+              <div className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
                 <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
-                <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                  Institutional Identity
+                <span className="text-xs text-[var(--color-gold)] uppercase tracking-widest font-bold">
+                  SUFIPULSE USA — INSTITUTIONAL IDENTITY
                 </span>
               </div>
-              <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
-                Official{' '}
-                <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
-                  Identity
-                </span>
+
+              <h1 className="font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-bold text-white leading-[1.1] tracking-tight drop-shadow-lg mb-2">
+                Official Identity
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-4 drop-shadow">
-                The authoritative reference for SufiPulse identity, affiliation, channels, releases and institutional relationships.
+              <h2 className="font-serif text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-[var(--color-gold)] leading-[1.1] tracking-tight drop-shadow-lg mb-8 italic">
+                The Authoritative SufiPulse Record
+              </h2>
+
+              <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-12 leading-relaxed font-light drop-shadow px-4">
+                The canonical reference for SufiPulse identity, affiliation, channels, releases and institutional relationships. Verify the source. Understand the institution. Follow only authenticated SufiPulse properties.
               </p>
-              <p className="text-sm text-[var(--color-text-tertiary)] max-w-2xl mx-auto mb-10">
-                Verify the source. Understand the institution. Follow only authenticated SufiPulse properties.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <Link
                   href="/official-channels"
-                  className="px-8 py-3.5 bg-[var(--color-gold)] hover:bg-[#FDE68A] text-[var(--color-midnight)] font-bold rounded-[var(--radius-sm)] shadow-xl transition-all uppercase tracking-wider text-sm flex items-center gap-2"
+                  className="px-8 py-4 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm hover:bg-[#FDE68A] transition-all rounded-full shadow-[0_0_20px_rgba(200,167,94,0.3)] hover:shadow-[0_0_30px_rgba(200,167,94,0.5)] transform hover:-translate-y-0.5 flex items-center gap-2"
                 >
                   <Shield className="w-4 h-4" />
-                  Verify Official Channels
+                  VERIFY OFFICIAL CHANNELS
                 </Link>
                 <Link
                   href="/about/what-is-sufipulse"
-                  className="px-8 py-3.5 border border-[var(--color-gold)]/40 hover:border-[var(--color-gold)]/70 text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] font-medium rounded-[var(--radius-sm)] transition-all text-sm backdrop-blur-md"
+                  className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-sm hover:bg-white/10 transition-all rounded-full backdrop-blur-sm"
                 >
-                  What is SufiPulse
+                  WHAT IS SUFIPULSE
                 </Link>
               </div>
             </div>
           </PageContainer>
         </div>
+
+        {/* 4-column identity pillars strip — dark glass, hidden on mobile */}
+        <div className="relative z-10 w-full bg-black/40 backdrop-blur-md border-t border-white/5 mt-8 hidden md:block">
+          <PageContainer>
+            <div className="grid grid-cols-4 divide-x divide-white/10 py-6">
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">1. CANONICAL IDENTITY</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">SufiPulse, SufiPulse USA and SufiPulse Studio USA — defined and authenticated here.</p>
+              </div>
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">2. OFFICIAL CHANNELS</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">Verified distribution and social endpoints listed in the Official Channels registry.</p>
+              </div>
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">3. RELEASE VERIFICATION</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">Authenticate any SufiPulse release through title, YouTube ID, UPC, ISRC or premiere record.</p>
+              </div>
+              <div className="px-6">
+                <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">4. AFFILIATION CLARITY</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">Similar terminology does not establish affiliation. Authentication is through SufiPulse.com only.</p>
+              </div>
+            </div>
+          </PageContainer>
+        </div>
       </section>
+
 
       {/* 2. CANONICAL IDENTITY */}
       <Section background="slate" spacing="normal">
