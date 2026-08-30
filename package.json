@@ -11,7 +11,7 @@
     "dev:stable": "node scripts/start-dev.js",
     "monitor": "node scripts/monitor-dev-server.js",
     "build": "next build",
-    "start": "node .next/standalone/server.js",
+    "start": "node scripts/validate-env.mjs && npm run db:migrate && node .next/standalone/server.js",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next node_modules/.cache",
@@ -20,7 +20,8 @@
     "env:validate": "node scripts/validate-env.mjs",
     "env:check": "node scripts/validate-env.mjs",
     "predev": "node scripts/validate-env.mjs",
-    "prebuild": "node scripts/validate-env.mjs"
+    "prebuild": "node scripts/validate-env.mjs",
+    "db:migrate": "node scripts/migrate.js"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",

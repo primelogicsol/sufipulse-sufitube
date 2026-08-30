@@ -1,8 +1,6 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -32,12 +30,13 @@ export function Footer() {
             <FooterLink href="/vocalists">Vocalists (Ahl-e-Sada)</FooterLink>
             <FooterLink href="/producers">Producers (Ahl-e-Naghma)</FooterLink>
             <FooterLink href="/literary-contributors">Literary Contributors (Ahl-e-Tahreer)</FooterLink>
+            <FooterLink href="/literary-journal">Literary Journal (Ahl-e-Tahreer Publications)</FooterLink>
           </FooterSection>
 
           <FooterSection title="Production Infrastructure">
             <FooterLink href="/studio">Studio (Karkhana-e-Sada)</FooterLink>
             <FooterLink href="/studio-engineers">Studio Engineers</FooterLink>
-            <FooterLink href="/literary-journal">Literary Journal</FooterLink>
+            
             <FooterLink href="/releases">Releases</FooterLink>
           </FooterSection>
 
@@ -176,24 +175,16 @@ export function Footer() {
 }
 
 function FooterSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
-    <div className="border-b border-white/5 md:border-none">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between py-4 md:py-0 md:mb-6 text-left md:cursor-default"
-      >
-        <h4 className="text-[var(--text-base)] font-medium uppercase tracking-widest text-[var(--color-gold)] leading-tight">
-          {title}
-        </h4>
-        <ChevronDown 
-          className={`w-4 h-4 text-[var(--color-gold)] transition-transform duration-300 md:hidden ${isOpen ? 'rotate-180' : ''}`} 
-        />
-      </button>
-      <ul className={`space-y-3 pb-6 md:pb-0 transition-all duration-300 ${isOpen ? 'block' : 'hidden md:block'}`}>
-        {children}
-      </ul>
+    <div className="footer-group text-left">
+      <h3 className="text-[var(--text-base)] font-medium uppercase tracking-widest text-[var(--color-gold)] leading-tight text-left mb-4 md:mb-6">
+        {title}
+      </h3>
+      <nav className="text-left">
+        <ul className="space-y-3 text-left">
+          {children}
+        </ul>
+      </nav>
     </div>
   );
 }

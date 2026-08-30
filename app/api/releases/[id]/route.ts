@@ -1,5 +1,5 @@
 import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
-import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { toCanonicalCMSRelease, toPublicPremiereRelease, toPublicRelease } from '@/server/storage/release-dto';
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
@@ -14,7 +14,7 @@ import { cmsReleaseSchema } from '@/app/lib/validation-schemas';
 export const dynamic = 'force-dynamic';
 
 const cacheHeaders = {
-  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=300',
+  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=3600',
 };
 
 const apiLogger = logger.api;
@@ -30,7 +30,7 @@ function normalizeFieldNames(body: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(body)) {
-    // Map known snake_case → camelCase fields from the public page
+    // Map known snake_case â†’ camelCase fields from the public page
     const fieldMap: Record<string, string> = {
       release_title: 'title',
       subtitle_cues: 'subtitleCues',
@@ -82,7 +82,13 @@ export async function GET(
   const { id } = await params;
   try {
     const store = getReleaseReadStore();
-      const release = await store.getById(id);
+      let release = await store.getById(id);
+      if (!release) {
+        release = await store.getBySlug(id);
+      }
+      if (!release) {
+        release = await store.getByYoutubeId(id);
+      }
     if (!release) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
@@ -95,18 +101,27 @@ export async function GET(
       release.thumbnailUrl = `https://i.ytimg.com/vi/${release.youtubeId}/maxresdefault.jpg`;
     }
 
-    if (release.status !== 'published') {
+    const canonical = toCanonicalCMSRelease(release);
+
+    if (canonical.status !== 'published') {
       if (!isAdmin) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(toCanonicalCMSRelease(release));
+      return NextResponse.json(canonical);
+    }
+
+    if (!isAdmin && ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(canonical.releaseLifecycle || '')) {
+      if (canonical.visibility !== 'public' || canonical.premiereVisibility !== 'public') {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      return NextResponse.json(toPublicPremiereRelease(canonical), { headers: cacheHeaders });
     }
 
     if (isAdmin) {
-      return NextResponse.json(toCanonicalCMSRelease(release), { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
+      return NextResponse.json(canonical, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
     }
 
-    return NextResponse.json(toCanonicalCMSRelease(release), { headers: cacheHeaders });
+    return NextResponse.json(toPublicRelease(canonical), { headers: cacheHeaders });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -114,7 +129,7 @@ export async function GET(
 
 // PUT /api/releases/[id] (update or upsert for admins)
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (getReleaseStorageBackend() === 'postgres') return NextResponse.json({ error: 'Release mutations are temporarily disabled during PostgreSQL read-cutover validation.' }, { status: 503 });
+  // We will handle Postgres replication after canonical mutation, so we remove the strict block here.
 
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -128,7 +143,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // If it doesn't exist, we'll create it (upsert)
     // This happens when an admin edits a "legacy" YouTube release from the public page
     const nextYoutubeId = String(body.youtubeId || (existing?.youtubeId) || (id.length === 11 ? id : '')).trim();
-    
+
     // Check if this YouTube ID already exists under a different CMS ID
     if (!existing && nextYoutubeId) {
       const youtubeOwner = cmsServerStorage.getReleaseByYoutubeId(nextYoutubeId);
@@ -193,10 +208,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         enableSponsors: false,
         enableAdoption: true,
         enableCredits: true,
-      }) as CMSRelease, 
-      ...body, 
+      }) as CMSRelease,
+      ...body,
       id: existing?.id || id, // Always enforce the correct ID
-      slug: nextSlug, 
+      slug: nextSlug,
       youtubeId: nextYoutubeId,
       updatedAt: now,
     };
@@ -226,6 +241,23 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updated = cmsServerStorage.saveRelease(merged as any);
 
+    // --- Postgres Replication ---
+    if (process.env.RELEASE_STORAGE_BACKEND === 'postgres') {
+      try {
+        const { PostgresReleaseRepository } = await import('@/server/db/release-repository');
+        const repo = new PostgresReleaseRepository();
+        await repo.bulkUpsert([updated as any]);
+      } catch (err) {
+        if (existing) {
+          cmsServerStorage.saveRelease(existing);
+        } else {
+          cmsServerStorage.deleteRelease(updated.id);
+        }
+        apiLogger.error('Postgres replication failed, rolled back registry', { err: String(err) });
+        throw new Error('Postgres replication failed: ' + String(err));
+      }
+    }
+
     // --- CACHE INVALIDATION ---
     try {
       revalidatePath('/');
@@ -233,6 +265,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       revalidatePath(`/release-detail/${nextSlug}`);
       // Also revalidate the generic pattern
       revalidatePath('/release-detail/[slug]', 'page');
+      revalidatePath('/release-premieres');
     } catch (cacheErr) {
       apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
     }
@@ -261,6 +294,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           youtubeId: updated.youtubeId,
           youtubePlaylistId: updated.youtubePlaylistId,
           slug: updated.slug,
+          releaseId: updated.id,
         }),
       }).catch((err) => apiLogger.warn('Subscriber notification failed', { err: String(err) }));
     }
@@ -272,7 +306,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       for (const [lang, status] of Object.entries(body.subtitleLanguageStatuses)) {
         const isNowPublished = status === 'published';
         const wasNotPublished = !existing?.subtitleLanguageStatuses || existing.subtitleLanguageStatuses[lang] !== 'published';
-        
+
         if (isNowPublished && wasNotPublished) {
           newlyPublishedLanguages.push(lang);
         }
@@ -303,8 +337,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 // DELETE /api/releases/[id]
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (getReleaseStorageBackend() === 'postgres') return NextResponse.json({ error: 'Release mutations are temporarily disabled during PostgreSQL read-cutover validation.' }, { status: 503 });
-
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -317,11 +349,27 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     cmsServerStorage.deleteRelease(id);
 
+    // --- Postgres Replication ---
+    if (process.env.RELEASE_STORAGE_BACKEND === 'postgres') {
+      try {
+        const { PostgresReleaseRepository } = await import('@/server/db/release-repository');
+        const repo = new PostgresReleaseRepository();
+        await repo.delete(id);
+      } catch (err) {
+        // Rollback Registry deletion on PG failure
+        cmsServerStorage.saveRelease(existing);
+        apiLogger.error('Postgres deletion replication failed', { err: String(err) });
+        throw new Error('Postgres deletion replication failed: ' + String(err));
+      }
+    }
+
     // --- CACHE INVALIDATION ---
     try {
       revalidatePath('/');
       revalidatePath('/releases');
+      revalidatePath('/release-premieres');
       if (existing.slug) revalidatePath(`/release-detail/${existing.slug}`);
+      revalidatePath('/release-detail/[slug]', 'page');
     } catch (cacheErr) {
       apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
     }

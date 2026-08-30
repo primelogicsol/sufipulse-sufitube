@@ -1,6 +1,6 @@
 /**
  * SufiPulse Database Schema Definitions
- * 
+ *
  * Type-safe schema definitions for all database tables.
  * Used with the file-based database system.
  */
@@ -261,6 +261,24 @@ export interface CMSRelease {
   show_likes: boolean;
   release_date?: string;
   published_at?: string;
+
+  // Premiere Room & Pre-Release Lifecycle fields
+  release_lifecycle?: 'upcoming' | 'teaser_live' | 'premiere_scheduled' | 'released' | 'archived';
+  official_release_at?: string;
+  premiere_announced_at?: string;
+  is_featured_premiere?: boolean;
+  premiere_visibility?: 'private' | 'public';
+  pre_release_assets?: Array<{
+    id: string;
+    type: 'premium_teaser' | 'first_listen' | 'trailer' | 'premiere_announcement';
+    title?: string;
+    youtube_id?: string;
+    youtube_url?: string;
+    thumbnail_url?: string;
+    published_at?: string;
+    scheduled_at?: string;
+    status: 'draft' | 'scheduled' | 'live' | 'archived';
+  }>;
   status: 'draft' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
   release_type?: string;
   category?: string;
@@ -487,6 +505,19 @@ export interface YouTubeAnalyticsSnapshot {
 }
 
 /**
+ * Release Notification Subscription Schema
+ */
+export interface ReleaseNotificationSubscription {
+  id: string;
+  release_id: string;
+  normalized_email: string;
+  status: 'subscribed' | 'unsubscribed';
+  token: string;
+  created_at: string;
+  notified_at?: string;
+}
+
+/**
  * Export all schema types
  */
 /**
@@ -525,6 +556,7 @@ export type DatabaseSchema = {
   media_library: MediaLibrary;
   notifications: Notification;
   youtube_analytics_snapshots: YouTubeAnalyticsSnapshot;
+  release_notification_subscriptions: ReleaseNotificationSubscription;
 
   // ── Atlas Knowledge Graph Engine ──────────────────────────────
   atlas_entities: AtlasEntityRecord;
@@ -546,11 +578,11 @@ export function getTable<T extends { id: string }>(tableName: keyof DatabaseSche
  */
 export async function seedDatabase(): Promise<void> {
   const users = getTable<User>('users');
-  
+
   // Only seed if no users exist
   if (users.count() === 0) {
     const now = new Date().toISOString();
-    
+
     // Create admin user
     users.insert({
       id: generateId(),

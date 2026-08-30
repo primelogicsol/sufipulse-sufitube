@@ -254,6 +254,24 @@ export const cmsReleaseSchema = z.object({
   relatedPlaylists: z.array(z.string().max(100)).optional(),
   intelligenceStatus: z.enum(['draft', 'reviewed', 'approved']).default('draft'),
   intelligenceUpdatedAt: z.string().max(100).optional(),
+
+  // Premiere fields
+  releaseLifecycle: z.enum(['upcoming', 'teaser_live', 'premiere_scheduled', 'released', 'archived']).optional(),
+  officialReleaseAt: z.string().optional(),
+  premiereAnnouncedAt: z.string().optional(),
+  isFeaturedPremiere: z.boolean().optional(),
+  premiereVisibility: z.enum(['public', 'private']).optional(),
+  preReleaseAssets: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['premium_teaser', 'first_listen', 'trailer', 'premiere_announcement']),
+    title: z.string().optional(),
+    youtubeId: z.string().optional(),
+    youtubeUrl: z.string().optional(),
+    thumbnailUrl: z.string().optional(),
+    publishedAt: z.string().optional(),
+    scheduledAt: z.string().optional(),
+    status: z.enum(['draft', 'scheduled', 'live', 'archived'])
+  })).optional(),
 }).refine((data) => {
   // Prevent relatedReleases from containing the current release ID
   if (data.id && data.relatedReleases && data.relatedReleases.includes(data.id)) {

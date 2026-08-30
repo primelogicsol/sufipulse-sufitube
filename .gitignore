@@ -42,3 +42,4 @@ frontend.env
 *.sw?
 deploy_key
 deploy_key.pub
+tsconfig.tsbuildinfo
