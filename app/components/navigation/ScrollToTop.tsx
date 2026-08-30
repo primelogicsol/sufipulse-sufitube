@@ -11,22 +11,43 @@ function getScrollKey() {
 }
 
 /**
- * ScrollToTop — SPA scroll contract
+ * Routes that ALWAYS start at the top — regardless of navigation type.
  *
- * PUSH navigation   → TOP
- * POP  navigation   → restore saved position (with async-content retries)
- * Hash navigation   → defer to browser anchor behaviour
+ * This includes Back/Forward. These are hero/heading-oriented pages where
+ * restoring a deep scroll position would disorient the visitor.
+ *
+ * Current always-top route family:
+ *   /
+ *   /knowledge
+ *   /knowledge/*
+ *
+ * All other routes use intelligent Back/Forward restoration.
+ */
+function shouldAlwaysStartAtTop(pathname: string): boolean {
+  return (
+    pathname === '/' ||
+    pathname === '/knowledge' ||
+    pathname.startsWith('/knowledge/')
+  );
+}
+
+/**
+ * ScrollToTop — global SPA scroll contract
+ *
+ * Decision order (evaluated top-to-bottom):
+ *   1. Explicit hash  → native anchor behaviour
+ *   2. always-top route  → TOP  (overrides Back/Forward)
+ *   3. genuine Back/Forward on other routes  → restore saved position
+ *   4. all other navigation  → TOP
  *
  * Initial page load (navigate/reload) is handled by the pre-hydration
- * inline <script> in layout.tsx — this component only manages SPA transitions.
+ * inline <script> in layout.tsx. This component manages SPA transitions only.
  */
 export function ScrollToTop() {
   const pathname = usePathname();
   const isBackForwardRef = useRef(false);
 
-  // ── One-time setup ──────────────────────────────────────────────────
-  // Re-assert manual scroll restoration (belt-and-suspenders alongside
-  // the inline <script>) and listen for genuine Back/Forward navigation.
+  // ── One-time setup ──────────────────────────────────────────────────────
   useEffect(() => {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
@@ -35,25 +56,42 @@ export function ScrollToTop() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // ── Save position when leaving a route ──────────────────────────────
+  // ── Save position when leaving a route ──────────────────────────────────
+  // Never save always-top routes — stale entries would serve no purpose
+  // and could reintroduce restoration on future changes.
   useEffect(() => {
     return () => {
-      scrollHistory.set(getScrollKey(), window.scrollY);
+      const leavingPath = window.location.pathname;
+      if (!shouldAlwaysStartAtTop(leavingPath)) {
+        scrollHistory.set(getScrollKey(), window.scrollY);
+      } else {
+        // Delete any previously stored position for this route so
+        // stale state cannot be reintroduced.
+        scrollHistory.delete(getScrollKey());
+      }
     };
   }, [pathname]);
 
-  // ── Scroll decision for the newly-active route ───────────────────────
+  // ── Scroll decision for the newly-active route ───────────────────────────
   useEffect(() => {
-    // Hash URLs: let the browser handle the anchor.
+    const isBackForward = isBackForwardRef.current;
+    isBackForwardRef.current = false;
+
+    // 1. Explicit hash — let the browser scroll to the anchor.
     if (window.location.hash) return;
 
-    if (isBackForwardRef.current) {
-      // Genuine SPA Back/Forward: restore the saved position.
-      isBackForwardRef.current = false;
+    // 2. Always-top routes — TOP unconditionally (overrides Back/Forward).
+    if (shouldAlwaysStartAtTop(pathname)) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      return;
+    }
+
+    // 3. Genuine Back/Forward on all other routes — restore saved position.
+    if (isBackForward) {
       const saved = scrollHistory.get(getScrollKey()) ?? 0;
       window.scrollTo({ top: saved, left: 0, behavior: 'instant' });
 
-      // Retry for pages whose async content inflates the DOM after mount.
+      // Retry for async-loaded pages whose content inflates the DOM post-mount.
       if (saved > 0) {
         [100, 300, 600].forEach(delay => {
           setTimeout(() => {
@@ -63,10 +101,11 @@ export function ScrollToTop() {
           }, delay);
         });
       }
-    } else {
-      // New PUSH navigation: always start at hero/top.
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      return;
     }
+
+    // 4. All other navigation (PUSH) — TOP.
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [pathname]);
 
   return null;
