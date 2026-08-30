@@ -32,6 +32,26 @@ export const buildYouTubeThumbnailCandidates = (
   videoId?: string,
   preferred: Array<string | undefined> = []
 ): string[] => {
+  // Strip signed query params from preferred URLs (i9.ytimg.com tokens expire within hours)
+  const cleanPreferred = preferred
+    .filter((url): url is string => Boolean(url))
+    .map(url => {
+      try {
+        const u = new URL(url);
+        // i9.ytimg.com (Shorts CDN) uses expiring tokens — strip them, use stable i.ytimg.com path
+        if (u.hostname === 'i9.ytimg.com' && u.pathname.includes('/vi/')) {
+          const idMatch = u.pathname.match(/\/vi\/([A-Za-z0-9_-]{11})\//);
+          if (idMatch) return `https://i.ytimg.com/vi/${idMatch[1]}/hqdefault.jpg`;
+        }
+        // Strip other signed query params
+        if (u.search.includes('sqp=') || u.search.includes('rs=')) {
+          u.search = '';
+          return u.toString();
+        }
+      } catch { /* not a valid URL, pass through */ }
+      return url;
+    });
+
   const ytCandidates = videoId
     ? [
         `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
@@ -39,10 +59,14 @@ export const buildYouTubeThumbnailCandidates = (
         `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`,
         `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
         `https://i.ytimg.com/vi/${videoId}/default.jpg`,
+        // Shorts-specific WebP path (works when standard jpg paths 404)
+        `https://i.ytimg.com/vi_webp/${videoId}/maxresdefault.webp`,
+        `https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp`,
+        `https://i.ytimg.com/vi_webp/${videoId}/mqdefault.webp`,
       ]
     : [];
 
-  const candidates = [...preferred, ...ytCandidates]
+  const candidates = [...cleanPreferred, ...ytCandidates]
     .filter((url): url is string => Boolean(url))
     .filter((url, index, arr) => arr.indexOf(url) === index);
 
