@@ -225,15 +225,15 @@ export function Footer() {
                     ref={purpleSoulTriggerRef as React.RefObject<HTMLButtonElement>}
                     type="button"
                     onClick={() => setPurpleSoulModalOpen(true)}
-                    className="group flex flex-col items-start gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors text-left w-full bg-transparent p-0 cursor-pointer"
-                    style={{ font: 'inherit' }}
+                    className="group flex flex-col gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors text-left w-full bg-transparent cursor-pointer"
+                    style={{ padding: 0, margin: 0, font: 'inherit' }}
                   >
-                    <span className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors leading-tight block w-full text-left">
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors leading-tight">
                       {PURPLE_SOUL.title}
-                    </span>
-                    <span className="text-[10px] text-[var(--color-text-tertiary)] leading-tight block w-full text-left">
+                    </p>
+                    <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight">
                       {PURPLE_SOUL.desc}
-                    </span>
+                    </p>
                   </button>
                 ) : (
                   <ExtensionLink href={PURPLE_SOUL.url} title={PURPLE_SOUL.title} desc={PURPLE_SOUL.desc} />
