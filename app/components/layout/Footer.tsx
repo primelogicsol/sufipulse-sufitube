@@ -219,14 +219,14 @@ export function Footer() {
 
                 {/* Purple Soul Collectives USA — status-controlled.
                     Change PURPLE_SOUL.status to 'live' to restore normal navigation.
-                    Button styled to be pixel-identical to ExtensionLink's <a> tag. */}
+                    Rendered as <a href="#" onClick> when upgrading — identical element type
+                    to ExtensionLink so there are zero UA padding or focus-ring differences. */}
                 {PURPLE_SOUL.status === 'upgrading' ? (
-                  <button
-                    ref={purpleSoulTriggerRef as React.RefObject<HTMLButtonElement>}
-                    type="button"
-                    onClick={() => setPurpleSoulModalOpen(true)}
-                    className="group flex flex-col gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors text-left w-full bg-transparent cursor-pointer"
-                    style={{ padding: 0, margin: 0, font: 'inherit' }}
+                  <a
+                    ref={purpleSoulTriggerRef as React.RefObject<HTMLAnchorElement>}
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); setPurpleSoulModalOpen(true); }}
+                    className="group flex flex-col gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors focus:outline-none focus-visible:outline-1 focus-visible:outline-white/40 focus-visible:outline-offset-2"
                   >
                     <p className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors leading-tight">
                       {PURPLE_SOUL.title}
@@ -234,7 +234,7 @@ export function Footer() {
                     <p className="text-[10px] text-[var(--color-text-tertiary)] leading-tight">
                       {PURPLE_SOUL.desc}
                     </p>
-                  </button>
+                  </a>
                 ) : (
                   <ExtensionLink href={PURPLE_SOUL.url} title={PURPLE_SOUL.title} desc={PURPLE_SOUL.desc} />
                 )}
@@ -305,7 +305,7 @@ function ExtensionLink({ href, title, desc }: { href: string; title: string; des
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors"
+      className="group flex flex-col gap-0.5 py-2 border-b border-[var(--color-border)] hover:border-[var(--color-gold)]/20 transition-colors focus:outline-none focus-visible:outline-1 focus-visible:outline-white/40 focus-visible:outline-offset-2"
     >
       <p className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors leading-tight">
         {title}
@@ -316,3 +316,4 @@ function ExtensionLink({ href, title, desc }: { href: string; title: string; des
     </a>
   );
 }
+
