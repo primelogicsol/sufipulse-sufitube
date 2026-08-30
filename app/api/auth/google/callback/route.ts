@@ -6,10 +6,17 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const stateParam = searchParams.get('state');
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005';
 
   const fail = (msg: string) =>
     NextResponse.redirect(`${appUrl}/login?error=${encodeURIComponent(msg)}`);
+
+  // Validate CSRF state token — must match the cookie set during initiation.
+  const stateCookie = request.cookies.get('oauth_state')?.value;
+  if (!stateParam || !stateCookie || stateParam !== stateCookie) {
+    return fail('Invalid OAuth state — please try signing in again');
+  }
 
   if (error || !code) return fail('Google sign-in was cancelled');
 
@@ -72,6 +79,8 @@ export async function GET(request: NextRequest) {
     };
     res.cookies.set('access_token', result.accessToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 });
     res.cookies.set('refresh_token', result.refreshToken, { ...cookieOpts, maxAge: 30 * 24 * 60 * 60 });
+    // Consume the one-time CSRF state cookie.
+    res.cookies.delete('oauth_state');
 
     return res;
   } catch (err: any) {
