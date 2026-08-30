@@ -7,6 +7,12 @@ export function ScrollToTop() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  useEffect(() => {
     // Only scroll to top if there is no hash in the URL, to allow anchor links to work
     if (!window.location.hash) {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
