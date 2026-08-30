@@ -37,8 +37,16 @@ const rootDir = resolve(__dirname, "..");
 const envPath = resolve(rootDir, ".env.local");
 const envDevPath = resolve(rootDir, ".env.development");
 
-if (process.env.CI || process.env.SKIP_ENV_VALIDATION === 'true') {
-  console.log(`${YELLOW}  ℹ${RESET}  CI/Docker build detected — skipping .env file check`);
+const isProduction = process.env.NODE_ENV === 'production';
+const isCI = !!process.env.CI;
+const isSkipped = process.env.SKIP_ENV_VALIDATION === 'true';
+
+if (isCI || isSkipped) {
+  console.log(`${YELLOW}  ℹ${RESET}  CI/build detected — skipping .env file check`);
+} else if (isProduction) {
+  // In production (Docker/VPS), env vars come from env_file/.env injected by
+  // the container runtime — no .env.local is written to disk. Pass through.
+  console.log(`${GREEN}  ✔${RESET}  Production environment detected — env vars injected by container runtime`);
 } else if (fs.existsSync(envPath)) {
   console.log(`${GREEN}  ✔${RESET}  .env.local file found`);
 } else if (fs.existsSync(envDevPath)) {
