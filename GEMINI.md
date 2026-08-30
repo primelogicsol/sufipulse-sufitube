@@ -29,7 +29,10 @@
 
 ### Layout & Provider Hierarchy
 - **Auth Independence Rule:** Global navigation, scroll management, analytics bootstrapping, and route-state infrastructure must NOT be nested beneath `<AuthProvider>` or any other asynchronous context provider unless they explicitly require that context. Components that must fire before or independently of auth resolution (e.g. `<ScrollToTop />`) must be placed as direct children of `<body>`, above `<AuthProvider>`.
-- **Scroll Behavior Contract:** New primary navigation always starts at scroll position 0. Browser Back/Forward restores the previous scroll position. Explicit `#hash` URLs scroll to the named section. This is enforced globally by `app/components/navigation/ScrollToTop.tsx` mounted in `app/layout.tsx`.
+- **Scroll Behavior Contract:** The global scroll position is governed by a two-layer architecture:
+  - **Layer 1 — Pre-hydration `<script>` in `app/layout.tsx`:** Runs synchronously before React boots. Reads `performance.getEntriesByType('navigation')[0].type`. On `navigate` or `reload` with no URL hash, forces `scrollY = 0` immediately and on `pageshow`. On `back_forward`, does nothing (Layer 2 handles restoration). This covers all full-page load cases including direct URL entry.
+  - **Layer 2 — `<ScrollToTop />` in `app/layout.tsx`:** Manages SPA route transitions. State machine: PUSH → TOP · POP (popstate) → restore saved position · hash → native anchor. Never calls arbitrary `setTimeout` scroll patches.
+  - **Invariant:** `navigate`/`reload`/`push` to any URL with no hash MUST reach stable state with `scrollY ≤ 5`. `back_forward` to any URL MUST restore the previously saved position. This invariant must be covered by automated Playwright tests before the scroll architecture is modified.
 
 ## Strategic Direction
 - **Phase:** Production Focus (Post-Architecture Freeze).
