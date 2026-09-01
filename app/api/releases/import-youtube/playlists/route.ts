@@ -11,9 +11,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const playlists = await youtubeService.getChannelPlaylists(50);
+    const allCmsReleases = cmsServerStorage.getAllReleases();
+    const importedPlaylistIds = new Set(
+      allCmsReleases
+        .filter(r => r.format === 'playlist' && r.youtubeId)
+        .map(r => r.youtubeId)
+    );
     const rows = (playlists || []).map((pl) => ({
       ...pl,
-      alreadyImported: !!cmsServerStorage.getReleaseBySlug(slugify(pl.title)),
+      alreadyImported: importedPlaylistIds.has(pl.id),
     }));
     return NextResponse.json({ count: rows.length, items: rows });
   } catch (error: any) {
@@ -49,14 +55,15 @@ export async function POST(request: NextRequest) {
 
     const saved = cmsServerStorage.bulkSaveReleasesTransactional(toSave);
     cmsServerStorage.forceHydrate();
-    
+
     // Read-back verification
     const allReleasesAfter = cmsServerStorage.getAllReleases();
     const verifiedCount = saved.filter(s => allReleasesAfter.some(r => r.id === s.id)).length;
     revalidatePath('/');
     revalidatePath('/releases');
+    revalidatePath('/admin/cms-releases');
 
-    return NextResponse.json({ importedCount: saved.length, items: saved });
+    return NextResponse.json({ importedCount: saved.length, verifiedCount, items: saved });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Failed to import playlists' }, { status: 500 });
   }

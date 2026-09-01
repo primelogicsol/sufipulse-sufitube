@@ -71,14 +71,15 @@ export async function POST(request: NextRequest) {
 
     const saved = cmsServerStorage.bulkSaveReleasesTransactional(toSave);
     cmsServerStorage.forceHydrate();
-    
+
     // Read-back verification
     const allReleasesAfter = cmsServerStorage.getAllReleases();
     const verifiedCount = saved.filter(s => allReleasesAfter.some(r => r.id === s.id)).length;
     revalidatePath('/');
     revalidatePath('/releases');
+    revalidatePath('/admin/cms-releases');
 
-    return NextResponse.json({ importedCount: saved.length, items: saved });
+    return NextResponse.json({ importedCount: saved.length, verifiedCount, items: saved });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Failed to import live streams' }, { status: 500 });
   }

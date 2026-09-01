@@ -22,15 +22,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'title, youtubeId, and releaseId are required' }, { status: 400 });
     }
 
-    if (process.env.RELEASE_STORAGE_BACKEND !== 'postgres') {
-       return NextResponse.json({ error: 'Requires postgres backend' }, { status: 503 });
-    }
+    // ── Subscriber lookup — Postgres or filesystem fallback ───────────────────
+    type Sub = { id: string; normalized_email: string };
+    let subscribers: Sub[] = [];
 
-    const { rows: subscribers } = await db.query(
-      `SELECT id, normalized_email FROM release_notification_subscriptions
-       WHERE release_id = $1 AND status = 'subscribed' AND notified_at IS NULL`,
-      [releaseId]
-    );
+    if (process.env.RELEASE_STORAGE_BACKEND === 'postgres') {
+      const { rows } = await db.query(
+        `SELECT id, normalized_email FROM release_notification_subscriptions
+         WHERE release_id = $1 AND status = 'subscribed' AND notified_at IS NULL`,
+        [releaseId]
+      );
+      subscribers = rows;
+    } else {
+      // Filesystem fallback: read from .data/subscribers.json
+      const fs = (await import('node:fs')).default;
+      const path = (await import('node:path')).default;
+      const file = path.join(process.cwd(), '.data', 'subscribers.json');
+      try {
+        if (fs.existsSync(file)) {
+          const all: Array<{ email: string; source?: string; releaseId?: string; token?: string }> =
+            JSON.parse(fs.readFileSync(file, 'utf8'));
+          const filtered = all.filter(
+            (s) => s.source === 'premiere-notify' && s.releaseId === releaseId
+          );
+          subscribers = filtered.map((s, i) => ({ id: String(i), normalized_email: s.email }));
+        }
+      } catch (readErr) {
+        console.error('[notify-subscribers] filesystem read error', readErr);
+      }
+    }
 
     if (subscribers.length === 0) {
       return NextResponse.json({ ok: true, sent: 0, message: 'No eligible subscribers to notify' });
