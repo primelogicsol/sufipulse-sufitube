@@ -165,24 +165,25 @@ function inferFormat(durationSeconds: number, hasLiveDetails: boolean): ReadOnly
 async function getCredential(): Promise<ReadCredential> {
   if (await hasYTAnalyticsRefreshCredential()) {
     const accessToken = await getValidYTAnalyticsAccessToken();
-    if (!accessToken) {
-      throw new YouTubeDataApiReadError(
-        'YouTube OAuth authorization is expired or revoked. Reconnect the SufiPulse YouTube account before synchronizing.',
-        { status: 401, reason: 'oauth_refresh_failed', reconnectRequired: true }
-      );
+    if (accessToken) {
+      return { mode: 'youtube-oauth-client', value: accessToken };
     }
-    return { mode: 'youtube-oauth-client', value: accessToken };
+    // OAuth refresh failed — fall through to API key fallback before giving up
+    console.warn('[youtube-data-api-readonly] OAuth token refresh failed. Falling back to YOUTUBE_API_KEY for read operations. Reconnect YouTube OAuth at /admin/youtube-analytics to restore full access.');
   }
 
-  const apiKey = normalizeSecret(process.env.YOUTUBE_API_KEY, 'YOUTUBE_API_KEY');
-  if (!apiKey || apiKey.includes('YOUR_KEY_HERE')) {
-    throw new YouTubeDataApiReadError(
-      'No read-only YouTube credential is available. Connect YouTube OAuth or configure the server-only YOUTUBE_API_KEY.',
-      { status: 503, reason: 'missing_read_credential' }
-    );
+  const apiKey = normalizeSecret(
+    process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY,
+    'YOUTUBE_API_KEY'
+  );
+  if (apiKey && !apiKey.includes('YOUR_KEY_HERE')) {
+    return { mode: 'server-api-key', value: apiKey };
   }
 
-  return { mode: 'server-api-key', value: apiKey };
+  throw new YouTubeDataApiReadError(
+    'YouTube OAuth authorization is expired or revoked. Reconnect the SufiPulse YouTube account at /admin/youtube-analytics.',
+    { status: 401, reason: 'oauth_refresh_failed', reconnectRequired: true }
+  );
 }
 
 async function youtubeRequest(
