@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { saveYTAnalyticsToken } from '@/app/lib/server/youtube-analytics-oauth-store';
+import { saveYTAnalyticsToken, normalizeYTAnalyticsCredential } from '@/app/lib/server/youtube-analytics-oauth-store';
 
 const OAUTH_STATE_COOKIE = 'sufipulse_yt_oauth_state';
 
@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
     return redirectAndClearState(`${adminUrl}?yt_auth=denied`);
   }
 
-  const clientId = process.env.YOUTUBE_CLIENT_ID;
-  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
+  const clientId = normalizeYTAnalyticsCredential(process.env.YOUTUBE_CLIENT_ID, 'YOUTUBE_CLIENT_ID');
+  const clientSecret = normalizeYTAnalyticsCredential(process.env.YOUTUBE_CLIENT_SECRET, 'YOUTUBE_CLIENT_SECRET');
   if (!clientId || !clientSecret) {
     return redirectAndClearState(`${adminUrl}?yt_auth=error&reason=missing_credentials`);
   }
