@@ -1,116 +1,116 @@
-"use client";
-import { Mic as Mic2, Radio, CircleCheck as CheckCircle2, ArrowRight, Shield, MapPin, ChevronLeft, ChevronRight, Play, Settings, HardDrive, Activity, Compass, Database } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowRight, Database, MapPin, Mic2, Music, Settings, Shield, Video } from 'lucide-react';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
-import { Badge } from '../../components/primitives/Badge';
 import { PrimaryButton } from '../../components/primitives/PrimaryButton';
-import { Card } from '../../components/primitives/Card';
-import { RegistryStatusMonitoring } from '../../components/ui/RegistryStatusMonitoring';
-import { StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
-import { useRef, useState } from 'react';
-import Link from 'next/link';
+import { StudioCardGrid, StudioGovernancePanel, StudioLinkCard, StudioSectionHeader } from '../../components/studio/StudioLayoutComponents';
+
+const operatingPillars = [
+  {
+    icon: Music,
+    title: 'Music Production & Audio Engineering',
+    description: 'Composition, arrangement, vocal production, audio mastering, and lyric-to-audio intelligence for the canonical production master.',
+    href: '/studio/music-production'
+  },
+  {
+    icon: Video,
+    title: 'Creative Asset Production',
+    description: 'Music video production, visual direction, release packaging, promotional creative, and delivery-ready video mastering.',
+    href: '/studio/creative-assets'
+  },
+  {
+    icon: Database,
+    title: 'Studio Operations',
+    description: 'Release and catalog control, metadata, lyrics, translations, captions, media versions, publishing, distribution, and delivery assurance.',
+    href: '/studio/operations'
+  },
+  {
+    icon: Settings,
+    title: 'Studio Engineers',
+    description: 'The established technical team responsible for engineering stewardship, sound architecture, vocal capture, mastering, and production coordination.',
+    href: '/studio-engineers'
+  }
+];
+
+const productionCapabilities = [
+  {
+    icon: Mic2,
+    title: 'Recording & Session Production',
+    description: 'Master-grade vocal capture, session coordination, and production support across approved studio environments.',
+    href: '/studio-sessions'
+  },
+  {
+    icon: Settings,
+    title: 'Facilities & Technology',
+    description: 'Technical environments, production equipment, studio systems, and engineering infrastructure supporting approved works.',
+    href: '/inside-studio'
+  },
+  {
+    icon: Music,
+    title: 'Music Style Selection',
+    description: 'Production-language and musical-style guidance connecting the character of the work to an appropriate sonic architecture.',
+    href: '/production/music-style-selection'
+  },
+  {
+    icon: Video,
+    title: 'Platform & Video Distribution',
+    description: 'Controlled relationship between approved SufiPulse releases and public video-distribution endpoints, including YouTube.',
+    href: '/official-channels/operations'
+  }
+];
 
 export default function Studio() {
-  const studioResponsibilities = [
-    {
-      icon: Mic2,
-      title: 'Recording Sessions',
-      description: 'Capturing vocal performances with technical precision and creative support.'
-    },
-    {
-      icon: Radio,
-      title: 'Mixing & Mastering',
-      description: 'Balancing elements and preparing final masters for distribution.'
-    },
-    {
-      icon: CheckCircle2,
-      title: 'Quality Control',
-      description: 'Ensuring audio integrity, format compatibility, and sonic consistency.'
-    },
-    {
-      icon: Shield,
-      title: 'Metadata Integrity',
-      description: 'Supporting Registry with technical documentation and file specifications.'
-    }
-  ];
-
-  const productionPath = [
-    { id: 1, title: 'Approved Kalam', desc: 'Editorial council authorization' },
-    { id: 2, title: 'Vocalist Alignment', desc: 'Matching voice to sacred text' },
-    { id: 3, title: 'Composition', desc: 'Thematic musical structuring' },
-    { id: 4, title: 'Recording', desc: 'Master-grade capture' },
-    { id: 5, title: 'Mixing & Mastering', desc: 'Technical validation' },
-    { id: 6, title: 'Registry Authorization', desc: 'Final record entry' }
-  ];
-
   return (
     <>
-      {/* Cinematic Hero Section with /banner8.png */}
       <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
-        {/* Cinematic Background Banner */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
             src="/banner8.png"
-            alt="SufiPulse Studio & Master Recording Facility"
+            alt="SufiPulse Studio USA production and release operations"
             fill
             priority
             quality={95}
-            className="object-cover object-center scale-105 transform motion-safe:animate-fade-in"
+            className="object-cover object-center scale-105"
           />
-          {/* Layered brand gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/75 to-[var(--color-midnight)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/92 via-[var(--color-midnight)]/78 to-[var(--color-midnight)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/65 to-[var(--color-midnight)]" />
         </div>
 
-        {/* Hero Content */}
         <div className="relative z-10">
           <PageContainer>
             <div className="max-w-5xl mx-auto text-center">
               <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
                 <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
                 <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                  SufiPulse USA — Institutional Studio
+                  SufiPulse Studio USA — Central Production Operations
                 </span>
               </div>
 
-              <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
-                Studio & Master Capture<br className="hidden md:block" />{" "}
+              <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.08] tracking-tight drop-shadow-md">
+                Production • Creative Assets<br className="hidden md:block" />{' '}
                 <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
-                  Karkhana-e-Sada
+                  Release Operations
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
-                The Studio operates after editorial clearance and before registry authorization. It is responsible for master-grade audio capture, technical sound engineering, and final master validation across the global SufiPulse network.
+              <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-relaxed font-light max-w-3xl mx-auto mb-9 drop-shadow">
+                SufiPulse Studio USA is the central production and release-control environment connecting the audio master, visual master, canonical release record, captions, metadata, public publishing, and platform distribution under one governed workflow.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
-                <Link href="/studio/apply">
-                  <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
-                    Submit Studio Credentials
-                  </PrimaryButton>
-                </Link>
-                <Link href="/governance">
-                  <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
-                    Studio Governance
-                  </PrimaryButton>
-                </Link>
-              </div>
+              <p className="text-[11px] uppercase tracking-[0.28em] font-black text-amber-400/75 mb-10">Karkhana-e-Sada — The Institutional Studio</p>
 
-              {/* Responsibilities Strip */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
-                {studioResponsibilities.map((item, idx) => (
-                  <div key={idx} className="text-center p-2">
-                    <item.icon className="w-7 h-7 text-[var(--color-gold)] mx-auto mb-2 opacity-90" />
-                    <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">
-                      {item.title}
-                    </div>
-                    <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">
-                      {item.description}
-                    </div>
-                  </div>
-                ))}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+                <Link href="/studio/operations">
+                  <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
+                    Studio Operations
+                  </PrimaryButton>
+                </Link>
+                <Link href="/studio-engineers">
+                  <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                    Studio Team
+                  </PrimaryButton>
+                </Link>
               </div>
             </div>
           </PageContainer>
@@ -120,124 +120,118 @@ export default function Studio() {
       <Section background="slate" spacing="normal">
         <PageContainer>
           <div className="max-w-6xl mx-auto">
-            <StudioSectionHeader 
-                title="Mandate & Responsibilities"
-                subtitle="The Studio operates after editorial approval. No recording begins without structured assignment and institutional alignment."
+            <StudioSectionHeader
+              title="SufiPulse Studio Operating Structure"
+              subtitle="Four connected operating pillars manage the journey from musical production to visual mastering, canonical release control, and technical stewardship."
             />
-
-            <StudioCardGrid cols={4}>
-              {studioResponsibilities.map((item, idx) => (
-                <StudioLinkCard 
-                    key={idx}
+            <StudioCardGrid cols={2}>
+              {operatingPillars.map((item) => (
+                <Link key={item.title} href={item.href} className="block h-full group">
+                  <StudioLinkCard
                     icon={item.icon}
                     title={item.title}
                     description={item.description}
-                />
+                    className="group-hover:border-[var(--color-gold)]/35 transition-colors"
+                  />
+                </Link>
               ))}
             </StudioCardGrid>
           </div>
         </PageContainer>
       </Section>
 
-      <StudioWorkflowRoadmap 
-        title="Sequential Workflow"
-        badge="Production Path"
-        steps={productionPath}
-        activeId={4}
-      />
+      <Section background="midnight" spacing="normal">
+        <PageContainer>
+          <div className="max-w-6xl mx-auto">
+            <StudioSectionHeader
+              title="Production Infrastructure & Distribution"
+              subtitle="Existing studio capabilities remain active within the broader operating architecture and connect directly to governed release and distribution workflows."
+            />
+            <StudioCardGrid cols={2}>
+              {productionCapabilities.map((item) => (
+                <Link key={item.title} href={item.href} className="block h-full group">
+                  <StudioLinkCard
+                    icon={item.icon}
+                    title={item.title}
+                    description={item.description}
+                    className="group-hover:border-[var(--color-gold)]/35 transition-colors"
+                  />
+                </Link>
+              ))}
+            </StudioCardGrid>
+          </div>
+        </PageContainer>
+      </Section>
 
       <Section background="slate" spacing="normal">
         <PageContainer>
           <div className="max-w-6xl mx-auto">
-            <StudioSectionHeader 
-                title="Studio Network Architecture"
+            <StudioSectionHeader
+              title="Central & Distributed Studio Architecture"
+              subtitle="Physical and distributed production environments remain coordinated through the central SufiPulse Studio USA operating and governance framework."
             />
-
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8">
-                <div className="flex items-center gap-3 mb-6 text-[var(--color-gold)]">
-                  <MapPin className="w-6 h-6" />
-                  <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Central Studio</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-[var(--color-midnight)]/40 border border-[var(--color-gold)]/20 rounded-2xl p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <MapPin className="w-6 h-6 text-[var(--color-gold)]" />
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Central Studio</h3>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-amber-400/70 mt-1">USA — Virginia</p>
+                  </div>
                 </div>
-                <div className="text-[var(--text-sm)] text-[var(--color-text-secondary)] mb-6 font-medium uppercase tracking-widest">
-                  USA — Virginia
-                </div>
-                <ul className="space-y-4">
-                  {[
-                    'Primary production oversight',
-                    'Final master validation authority',
-                    'Direct Registry coordination'
-                  ].map((text, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)] mt-2" />
-                      <span className="text-[var(--text-base)] text-[var(--color-text-secondary)]">{text}</span>
-                    </li>
-                  ))}
+                <ul className="space-y-3 text-sm text-neutral-400">
+                  <li>Production and technical oversight</li>
+                  <li>Canonical release and media-version control</li>
+                  <li>Master validation and registry coordination</li>
+                  <li>Publishing and distribution orchestration</li>
                 </ul>
               </div>
-
-              <div className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-8">
-                <div className="flex items-center gap-3 mb-6 text-[var(--color-gold)]">
-                  <MapPin className="w-6 h-6" />
-                  <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Remote Studios</h3>
+              <div className="bg-[var(--color-midnight)]/40 border border-white/10 rounded-2xl p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <MapPin className="w-6 h-6 text-[var(--color-gold)]" />
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Distributed Production Network</h3>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-500 mt-1">Regional & Remote Collaboration</p>
+                  </div>
                 </div>
-                <div className="flex gap-2 mb-6">
-                  {['Canada', 'UAE', 'India'].map((c) => (
-                    <span key={c} className="text-[var(--text-xs)] px-2 py-0.5 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 text-[var(--color-gold)] rounded font-bold uppercase tracking-widest">
-                      {c}
-                    </span>
-                  ))}
-                </div>
-                <ul className="space-y-4">
-                  {[
-                    'Regional recording environments',
-                    'Localized vocalist coordination',
-                    'Centralized review alignment'
-                  ].map((text, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)] mt-2" />
-                      <span className="text-[var(--text-base)] text-[var(--color-text-secondary)]">{text}</span>
-                    </li>
-                  ))}
+                <ul className="space-y-3 text-sm text-neutral-400">
+                  <li>Regional production environments</li>
+                  <li>Remote session and contributor coordination</li>
+                  <li>Centralized technical review and release alignment</li>
+                  <li>Consistent governance across production nodes</li>
                 </ul>
               </div>
-            </div>
-
-            <div className="bg-[var(--color-midnight)] p-6 rounded-lg border border-[var(--color-gold)]/20 text-center max-w-3xl mx-auto shadow-2xl">
-              <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed italic font-medium">
-                "Recording within the SufiPulse Studio Network is reserved for works authored by approved writers and performed by approved vocalists. Regional flexibility does not alter governance standards."
-              </p>
             </div>
           </div>
         </PageContainer>
       </Section>
 
-      <Section background="slate" spacing="normal">
+      <Section background="midnight" spacing="normal">
         <PageContainer>
-          <div className="max-w-6xl mx-auto shadow-2xl rounded-3xl overflow-hidden">
-            <RegistryStatusMonitoring 
-              division="studio"
-              title="Studio Network"
-              mysticalName="Karkhana-e-Sada"
-              steps={[
-                { label: 'Credentials Intake', desc: 'Initial technical verification of facility and equipment specifications.' },
-                { label: 'Facility Audit', desc: 'Technical review of acoustic environment and recording chain specifications.' },
-                { label: 'Master Validation Review', desc: 'Centralized review of regional master quality and technical alignment.' },
-                { label: 'Network Integration', desc: 'Operational alignment with centralized SufiPulse production standards.' },
-                { label: 'Production Authorization', desc: 'Formal institutional clearance to host SufiPulse sessions.' }
-              ]}
-            />
+          <div className="max-w-5xl mx-auto rounded-3xl border border-[var(--color-gold)]/20 bg-[var(--color-gold)]/[0.035] p-8 md:p-10">
+            <div className="flex flex-col md:flex-row gap-6 md:items-start">
+              <Shield className="w-8 h-8 text-[var(--color-gold)] shrink-0" />
+              <div>
+                <h2 className="text-2xl font-bold text-white">One Canonical Release Chain</h2>
+                <p className="mt-4 text-sm leading-relaxed text-neutral-400">
+                  Audio production, creative assets, studio operations, and platform distribution are coordinated as functions of one SufiPulse release. External production and distribution technologies do not replace SufiPulse institutional identity, master records, governance, or registry authority.
+                </p>
+                <Link href="/studio/operations" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[var(--color-gold)] hover:underline">
+                  Explore Studio Operations <ArrowRight size={15} />
+                </Link>
+              </div>
+            </div>
           </div>
         </PageContainer>
       </Section>
 
-      <StudioGovernancePanel 
-        title="Institutional Access"
-        description="Studios may request inclusion within the SufiPulse production network. Admission is evaluated on technical readiness and governance alignment."
-        primaryCTA={{ label: "Submit Studio Credentials", href: "/studio/apply" }}
-        secondaryCTA={{ label: "View Framework", href: "/governance" }}
-        shieldText="Final Registry Authorization Required"
-        background="midnight"
+      <StudioGovernancePanel
+        title="Institutional Access & Governance"
+        description="Studio participation, production functions, release controls, and distribution activity remain subject to SufiPulse governance, technical standards, and registry authorization."
+        primaryCTA={{ label: 'Submit Studio Credentials', href: '/studio/apply' }}
+        secondaryCTA={{ label: 'View Governance', href: '/governance' }}
+        shieldText="SufiPulse Studio USA — Governed Production & Release Control"
+        background="slate"
       />
     </>
   );
