@@ -1,0 +1,56 @@
+name: YouTube Metadata Self-Heal
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: sufipulse-youtube-metadata-self-heal
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  self-heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Reconcile YouTube packaging with canonical CMS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -euo pipefail
+            cd /var/www/sufipulse-new
+
+            if [ ! -f .env ]; then
+              echo 'FATAL: production .env not found' >&2
+              exit 1
+            fi
+
+            REFRESH_TOKEN=$(grep '^YOUTUBE_REFRESH_TOKEN=' .env | tail -1 | cut -d= -f2-)
+            if [ -z "${REFRESH_TOKEN}" ]; then
+              echo 'FATAL: YOUTUBE_REFRESH_TOKEN is not configured' >&2
+              exit 1
+            fi
+
+            DIGEST=$(printf '%s' "sufipulse-youtube-self-heal:v1:${REFRESH_TOKEN}" | sha256sum | awk '{print $1}')
+
+            echo 'Running SufiPulse YouTube metadata self-heal...'
+            RESPONSE=$(curl --fail --silent --show-error \
+              --connect-timeout 15 \
+              --max-time 240 \
+              -X POST \
+              -H "x-sufipulse-self-heal-token: ${DIGEST}" \
+              -H 'Accept: application/json' \
+              http://127.0.0.1:3001/api/internal/youtube-self-heal)
+
+            echo "${RESPONSE}"
+
+            # Fail the workflow if the endpoint did not report success.
+            printf '%s' "${RESPONSE}" | grep -q '"ok":true'
