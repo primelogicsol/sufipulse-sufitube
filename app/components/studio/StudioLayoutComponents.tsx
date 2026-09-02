@@ -77,11 +77,12 @@ interface StudioLinkCardProps {
   subtitle?: string;
   className?: string;
   footerTags?: string[];
+  href?: string;
 }
 
-export function StudioLinkCard({ icon: Icon, title, description, subtitle, className = "", footerTags }: StudioLinkCardProps) {
-  return (
-    <Card className={`bg-[var(--color-midnight)]/30 border-[var(--color-text-tertiary)]/10 h-full flex flex-col ${className}`}>
+export function StudioLinkCard({ icon: Icon, title, description, subtitle, className = "", footerTags, href }: StudioLinkCardProps) {
+  const content = (
+    <Card className={`bg-[var(--color-midnight)]/30 border-[var(--color-text-tertiary)]/10 h-full flex flex-col ${href ? 'hover:border-amber-400/30 transition-colors' : ''} ${className}`}>
       <div className="flex-1">
         <Icon className="w-8 h-8 text-[var(--color-gold)] mb-4" />
         <h3 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)] mb-2">{title}</h3>
@@ -97,6 +98,12 @@ export function StudioLinkCard({ icon: Icon, title, description, subtitle, class
       )}
     </Card>
   );
+
+  if (href) {
+    return <Link href={href} className="block h-full">{content}</Link>;
+  }
+
+  return content;
 }
 
 interface StudioGovernancePanelProps {
