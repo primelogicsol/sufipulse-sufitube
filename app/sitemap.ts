@@ -2,17 +2,30 @@ import { MetadataRoute } from 'next';
 import { literaryArticles } from './data/literary-articles';
 import fs from 'fs';
 import path from 'path';
+import { getReleaseReadStore } from '@/server/storage/release-read-backend';
+import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 
-function getReleases(): { slug: string; updatedAt?: string }[] {
+async function getReleases(): Promise<{ slug: string; youtubeId?: string; updatedAt?: string }[]> {
   try {
-    const file = path.join(process.cwd(), '.data', 'cms-releases.json');
-    if (!fs.existsSync(file)) return [];
-    const releases = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (!Array.isArray(releases)) return [];
-    return releases
-      .filter((r: any) => r.slug && r.contentReadinessState !== 'draft')
-      .map((r: any) => ({ slug: r.slug, updatedAt: r.updatedAt || r.createdAt }));
-  } catch {
+    const store = getReleaseReadStore();
+    const result = await store.query({
+      status: 'published',
+      page: 1,
+      pageSize: 1000,
+      paginate: false,
+      requirePublicEligibility: true,
+    });
+
+    return result.items
+      .map(toCanonicalCMSRelease)
+      .filter((r: any) => r.slug && r.status === 'published' && r.visibility === 'public')
+      .map((r: any) => ({
+        slug: r.slug,
+        youtubeId: r.youtubeId || undefined,
+        updatedAt: r.updatedAt || r.publishedAt || r.releaseDate || r.createdAt,
+      }));
+  } catch (error) {
+    console.error('[sitemap] Failed to load releases from canonical storage:', error);
     return [];
   }
 }
@@ -50,9 +63,10 @@ function getKnowledgeEntities(): { class: string; slug: string; updatedAt?: stri
   }
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
   const now = new Date().toISOString();
+  const releases = await getReleases();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl,                                    lastModified: now, changeFrequency: 'daily',   priority: 1.0 },
@@ -82,12 +96,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85,
   }));
 
-  const releaseRoutes: MetadataRoute.Sitemap = getReleases().map((r) => ({
+  const releaseRoutes: MetadataRoute.Sitemap = releases.map((r) => ({
     url: `${baseUrl}/release-detail/${r.slug}`,
     lastModified: r.updatedAt || now,
     changeFrequency: 'weekly',
     priority: 0.85,
   }));
+
+  const releaseMetadataRoutes: MetadataRoute.Sitemap = releases
+    .filter((r) => r.youtubeId)
+    .map((r) => ({
+      url: `${baseUrl}/release-metadata/${r.youtubeId}`,
+      lastModified: r.updatedAt || now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }));
 
   const articleRoutes: MetadataRoute.Sitemap = literaryArticles.map((a) => ({
     url: `${baseUrl}/literary-journal/${a.slug}`,
@@ -125,13 +148,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   return [
-    ...staticRoutes, 
+    ...staticRoutes,
     ...knowledgeRoutes,
-    ...releaseRoutes, 
-    ...articleRoutes, 
-    ...conceptRoutes, 
-    ...themeRoutes, 
-    ...moodRoutes, 
-    ...regionRoutes
+    ...releaseRoutes,
+    ...releaseMetadataRoutes,
+    ...articleRoutes,
+    ...conceptRoutes,
+    ...themeRoutes,
+    ...moodRoutes,
+    ...regionRoutes,
   ];
 }
