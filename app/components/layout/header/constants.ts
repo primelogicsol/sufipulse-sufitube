@@ -31,7 +31,6 @@ export const CONTRIBUTORS_ITEMS = [
     href: '/literary-journal',
     ariaLabel: 'Literary Journal'
   },
-  
 ];
 
 export const PRODUCTION_ITEMS = [
@@ -39,7 +38,25 @@ export const PRODUCTION_ITEMS = [
     public: roleDisplayMap.studio.public,
     mystical: roleDisplayMap.studio.mystical,
     href: '/studio',
-    ariaLabel: 'Studio'
+    ariaLabel: 'SufiPulse Studio USA'
+  },
+  {
+    public: 'Music Production & Audio Engineering',
+    mystical: 'Production Master',
+    href: '/studio/music-production',
+    ariaLabel: 'Music Production and Audio Engineering Division'
+  },
+  {
+    public: 'Creative Asset Production',
+    mystical: 'Visual Production',
+    href: '/studio/creative-assets',
+    ariaLabel: 'Creative Asset Production Division'
+  },
+  {
+    public: 'Studio Operations',
+    mystical: 'Release Control',
+    href: '/studio/operations',
+    ariaLabel: 'SufiPulse Studio Operations'
   },
   {
     public: 'Inside Studio',
@@ -70,7 +87,7 @@ export const PRODUCTION_ITEMS = [
 export const GOVERNANCE_ITEMS = [
   {
     public: 'Institutional Framework',
-    mystical: 'Mithaq â€” Constitutional Charter',
+    mystical: 'Mithaq — Constitutional Charter',
     href: '/governance/mithaq',
     ariaLabel: 'Mithaq Constitutional Charter'
   },
@@ -118,6 +135,7 @@ export const ABOUT_ITEMS = [
   { label: 'Our Network', href: '/about/our-network' },
   { label: 'Institutional Partners', href: '/about/institutional-partners' },
   { label: 'Official Channels', href: '/official-channels' },
+  { label: 'Platform & Video Distribution Operations', href: '/official-channels/operations' },
   { label: 'Institutional Collaboration', href: '/collaboration' },
   { label: 'Product Infrastructure', href: '/product-infrastructure' },
   { label: 'Contact', href: '/contact' },
