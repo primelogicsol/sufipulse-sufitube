@@ -92,6 +92,7 @@ const adminNavigation = [
       { path: '/admin/release-workflow',    label: 'Release Workflow',        icon: Globe },
       { path: '/admin/cms',                 label: 'CMS Dashboard',           icon: Globe },
       { path: '/admin/cms-releases',        label: 'CMS Releases',            icon: FileText },
+      { path: '/admin/youtube-release-candidates', label: 'YouTube Release Approvals', icon: Youtube },
       { path: '/admin/registries',          label: 'Master Registries',       icon: Settings },
       { path: '/admin/discovery-graph',     label: 'Discovery Graph',         icon: Network },
       { path: '/admin/discovery-performance', label: 'Discovery Performance', icon: BarChart2 },
@@ -241,6 +242,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [adminNotifications, setAdminNotifications] = useState<AdminNotification[]>([]);
   const [bellOpen, setBellOpen] = useState(false);
   const [profileApproved, setProfileApproved] = useState<boolean | null>(null);
+  const [pendingYoutubeReleaseCount, setPendingYoutubeReleaseCount] = useState(0);
   const bellRef = useRef<HTMLDivElement>(null);
 
   const navigationSections = getNavigationForRole(user?.role || '');
@@ -259,6 +261,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user || !ADMIN_ROLES.includes(user.role)) {
+      setPendingYoutubeReleaseCount(0);
+      return;
+    }
+
+    let cancelled = false;
+    const loadPendingYoutubeReleaseCount = async () => {
+      try {
+        const res = await fetch('/api/releases/youtube-candidates', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) {
+          setPendingYoutubeReleaseCount(Math.max(0, Number(data?.count) || 0));
+        }
+      } catch (error) {
+        console.warn('Failed to load pending YouTube release approvals:', error);
+      }
+    };
+
+    loadPendingYoutubeReleaseCount();
+    const interval = setInterval(loadPendingYoutubeReleaseCount, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [user, pathname]);
 
   // General Contributor Approval Check
   useEffect(() => {
@@ -416,6 +446,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   >
                     <Icon className="w-4 h-4" />
                     <span>{link.label}</span>
+                    {link.path === '/admin/youtube-release-candidates' && pendingYoutubeReleaseCount > 0 && (
+                      <span
+                        className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-amber-400 text-black text-[10px] font-bold flex items-center justify-center"
+                        aria-label={`${pendingYoutubeReleaseCount} pending YouTube release approvals`}
+                      >
+                        {pendingYoutubeReleaseCount > 99 ? '99+' : pendingYoutubeReleaseCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
