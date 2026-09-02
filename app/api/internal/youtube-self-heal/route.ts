@@ -7,6 +7,7 @@ import {
   fetchReadOnlyYouTubeChannelVideos,
   YouTubeDataApiReadError,
 } from '@/lib/youtube-data-api-readonly';
+import { upsertYouTubeReleaseCandidates } from '@/lib/youtube-release-candidates';
 import type { CMSRelease } from '@/lib/cms-storage';
 
 const MAX_CHANNEL_VIDEOS = 500;
@@ -97,23 +98,41 @@ export async function POST(request: NextRequest) {
       fields: string[];
       title: string;
     }> = [];
+    const newCandidates: Array<{
+      youtubeId: string;
+      title: string;
+      description: string;
+      thumbnailUrl?: string;
+      publishedDate?: string;
+      durationSeconds?: number;
+      durationFormatted?: string;
+      views?: number;
+    }> = [];
     let matched = 0;
 
     for (const video of videos) {
       if (!video?.id) continue;
       const existing = byYoutubeId.get(video.id);
-      if (!existing) continue;
-      matched += 1;
 
+      if (!existing) {
+        newCandidates.push({
+          youtubeId: video.id,
+          title: video.title || video.snippet?.title || video.id,
+          description: video.description || video.snippet?.description || '',
+          thumbnailUrl: liveThumbnail(video) || undefined,
+          publishedDate: video.publishedDate || video.snippet?.publishedAt,
+          durationSeconds: video.durationSeconds,
+          durationFormatted: video.durationFormatted,
+          views: video.views,
+        });
+        continue;
+      }
+
+      matched += 1;
       const fields = changedPackagingFields(existing, video);
       if (fields.length === 0) continue;
 
       const mapped = mapVideoToRelease(video, existing);
-
-      // Canonical title and governed CMS fields remain protected by mapVideoToRelease.
-      // The public description follows YouTube unless an explicit description override exists.
-      // A custom/canonical thumbnail is never replaced. We only follow YouTube when the
-      // existing display thumbnail was itself sourced from YouTube (or no thumbnail exists).
       const nextThumbnail = liveThumbnail(video);
       if (fields.includes('thumbnail') && nextThumbnail && shouldFollowYouTubeThumbnail(existing)) {
         (mapped as any).thumbnailUrl = nextThumbnail;
@@ -127,6 +146,10 @@ export async function POST(request: NextRequest) {
         fields,
         title: mapped.canonicalTitle || mapped.title || video.title || video.id,
       });
+    }
+
+    if (newCandidates.length > 0) {
+      upsertYouTubeReleaseCandidates(newCandidates);
     }
 
     if (toSave.length > 0) {
@@ -150,6 +173,8 @@ export async function POST(request: NextRequest) {
       matchedCms: matched,
       updated: toSave.length,
       unchanged: Math.max(0, matched - toSave.length),
+      pendingApprovalDetected: newCandidates.length,
+      candidates: newCandidates.map((item) => ({ youtubeId: item.youtubeId, title: item.title })),
       changed,
       source: 'youtube_data_api',
       credentialMode: live.credentialMode,
