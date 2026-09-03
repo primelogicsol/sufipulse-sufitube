@@ -77,6 +77,33 @@ export default function CreativeAssets() {
                             <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
                                 Transforming sonic architecture into cohesive visual experiences. This division governs all release artwork, music video sequences, and promotional packaging.
                             </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <Link href="/studio/operations">
+                                    <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
+                                        Studio Operations
+                                    </PrimaryButton>
+                                </Link>
+                                <Link href="/studio">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        ← SufiPulse Studio USA
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {[
+                                    { label: 'Music Video Production', sub: 'Scene concepts & visual storytelling' },
+                                    { label: 'Visual Direction & Art Design', sub: 'Color, typography & mood' },
+                                    { label: 'Branding & Release Packaging', sub: 'Identity & release artwork' },
+                                    { label: 'Video Post-Production', sub: 'Final edit, export & delivery master' },
+                                ].map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">{item.label}</div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">{item.sub}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </PageContainer>
                 </div>
