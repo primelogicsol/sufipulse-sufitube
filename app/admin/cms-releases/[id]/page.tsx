@@ -626,6 +626,7 @@ export default function EditReleasePage() {
             form={form}
             setForm={setForm}
             getLanguageLabel={getLanguageLabel}
+            normalizeLanguageCode={normalizeLanguageCode}
             addCustomLanguage={addCustomLanguage}
             deleteCustomLanguage={deleteCustomLanguage}
             saveLanguageLabel={saveLanguageLabel}

@@ -8,6 +8,7 @@ type Props = {
   form: Partial<CMSRelease>;
   setForm: (form: Partial<CMSRelease>) => void;
   getLanguageLabel: (code: string) => string;
+  normalizeLanguageCode: (raw: string) => string;
   addCustomLanguage: (code: string, label: string) => boolean;
   deleteCustomLanguage: (code: string) => void;
   saveLanguageLabel: (code: string, newLabel: string) => void;
@@ -19,6 +20,7 @@ export function ReleaseEditorLanguageManagementSection({
   form,
   setForm,
   getLanguageLabel,
+  normalizeLanguageCode,
   addCustomLanguage,
   deleteCustomLanguage,
   saveLanguageLabel,
@@ -31,7 +33,8 @@ export function ReleaseEditorLanguageManagementSection({
   const [customLangLabel, setCustomLangLabel] = useState('');
 
   const handleAddCustomLanguage = () => {
-    const ok = addCustomLanguage(customLangCode.trim(), customLangLabel.trim());
+    const code = normalizeLanguageCode(customLangCode);
+    const ok = addCustomLanguage(code, customLangLabel.trim());
     if (ok) {
       setCustomLangCode('');
       setCustomLangLabel('');
@@ -97,14 +100,11 @@ export function ReleaseEditorLanguageManagementSection({
                       placeholder="New label"
                       autoFocus
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          saveLanguageLabel(lang.code, editingLangNewLabel);
-                          setEditingLangCode(null);
-                        }
+                        if (e.key === 'Enter') saveLanguageLabel(lang.code, editingLangNewLabel);
                         if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                       }}
                     />
-                    <button type="button" onClick={() => { saveLanguageLabel(lang.code, editingLangNewLabel); setEditingLangCode(null); }} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
+                    <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
                     <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Cancel</button>
                   </div>
                 ) : (
@@ -172,14 +172,11 @@ export function ReleaseEditorLanguageManagementSection({
                           placeholder="New label"
                           autoFocus
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              saveLanguageLabel(lang.code, editingLangNewLabel);
-                              setEditingLangCode(null);
-                            }
+                            if (e.key === 'Enter') saveLanguageLabel(lang.code, editingLangNewLabel);
                             if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
                           }}
                         />
-                        <button type="button" onClick={() => { saveLanguageLabel(lang.code, editingLangNewLabel); setEditingLangCode(null); }} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
+                        <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
                         <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Cancel</button>
                       </>
                     ) : (
