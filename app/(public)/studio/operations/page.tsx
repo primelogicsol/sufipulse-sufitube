@@ -82,6 +82,33 @@ export default function StudioOperations() {
                             <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
                                 The command center ensuring that production outputs coalesce into a single, unified canonical release record.
                             </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+                                <Link href="/studio/music-production">
+                                    <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
+                                        Music Production
+                                    </PrimaryButton>
+                                </Link>
+                                <Link href="/studio">
+                                    <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
+                                        ← SufiPulse Studio USA
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
+                                {[
+                                    { label: 'Release & Catalog Management', sub: 'Canonical release record' },
+                                    { label: 'Metadata & Credits', sub: 'Administration & attribution' },
+                                    { label: 'Lyrics / Translation / Captions', sub: 'SRT, VTT & ASS assets' },
+                                    { label: 'Publishing & Delivery', sub: 'Platform integration & verification' },
+                                ].map((item, idx) => (
+                                    <div key={idx} className="text-center p-2">
+                                        <div className="text-sm md:text-base font-bold text-[var(--color-text-primary)] mb-1">{item.label}</div>
+                                        <div className="text-[11px] text-[var(--color-text-tertiary)] leading-snug line-clamp-2">{item.sub}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </PageContainer>
                 </div>
