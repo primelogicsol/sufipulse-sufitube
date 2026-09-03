@@ -18,10 +18,12 @@ on:
       - 'app/(public)/release-detail/[slug]/components/useRuntimeReleaseMedia.ts'
       - 'app/(public)/release-detail/[slug]/page.tsx'
       - 'server/integrations/private-audio-alignment.ts'
+      - 'server/integrations/private-audio-assembly.ts'
       - 'server/integrations/private-audio-stream.ts'
       - 'server/integrations/runtime-media-policy.ts'
       - 'server/storage/private-production-source-storage.ts'
       - 'scripts/private-audio-alignment-smoke.cjs'
+      - 'scripts/private-audio-assembly-smoke.cjs'
       - 'scripts/private-audio-stream-smoke.cjs'
       - 'scripts/private-audio-persistence-smoke.cjs'
       - 'docker-compose.yml'
@@ -62,6 +64,9 @@ jobs:
 
       - name: Alignment normalizer smoke test
         run: node scripts/private-audio-alignment-smoke.cjs
+
+      - name: Multi-source assembly smoke test
+        run: node scripts/private-audio-assembly-smoke.cjs
 
       - name: Audio relay smoke test
         run: node scripts/private-audio-stream-smoke.cjs
