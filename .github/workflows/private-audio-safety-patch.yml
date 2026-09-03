@@ -1,0 +1,95 @@
+name: Private Audio Multilingual Safety Patch
+
+on:
+  push:
+    branches:
+      - feature/private-audio-alignment-integration
+    paths:
+      - '.github/workflows/private-audio-safety-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/private-audio-alignment-integration
+          fetch-depth: 0
+
+      - name: Protect existing translated caption tracks
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/api/admin/releases/[id]/audio-alignment/route.ts')
+          text = path.read_text()
+          marker = "    let captionText: ReturnType<typeof resolveCaptionText>;\n"
+          if marker not in text:
+              raise SystemExit('caption text marker not found')
+          if 'confirmTranslationReset' in text:
+              print('multilingual safety already present')
+              raise SystemExit(0)
+
+          block = """    const existingTranslatedLanguages = Object.entries(release.subtitleTranslations || {})
+              .filter(([code, map]) =>
+                normalizeLanguage(code) !== language &&
+                map &&
+                typeof map === 'object' &&
+                Object.keys(map).length > 0
+              )
+              .map(([code]) => code);
+
+            if (
+              existingCueCount > 0 &&
+              existingTranslatedLanguages.length > 0 &&
+              body.confirmTranslationReset !== true
+            ) {
+              return NextResponse.json(
+                {
+                  error:
+                    'This release already has translated caption tracks. Replacing master timing would invalidate their cue IDs. ' +
+                    'Master timing was not changed. Use a controlled translation-remap workflow, or explicitly confirm a translation reset only if those tracks may be discarded.',
+                  existingTranslatedLanguages,
+                  existingCueCount,
+                  imported: true,
+                  appliedToMasterTiming: false,
+                  source: adminSummary(record),
+                  requiresTranslationResetConfirmation: true,
+                },
+                { status: 409 }
+              );
+            }
+
+"""
+          text = text.replace(marker, block + marker, 1)
+          path.write_text(text)
+          print('patched multilingual timing replacement safety')
+          PY
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type-check private audio integration
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+        run: npx tsc --noEmit -p tsconfig.private-audio-ci.json
+
+      - name: Commit safety patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- 'app/api/admin/releases/[id]/audio-alignment/route.ts'; then
+            echo 'No route change required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'app/api/admin/releases/[id]/audio-alignment/route.ts'
+          git diff --cached --check
+          git commit -m 'Protect translated captions during timing replacement'
+          git push origin HEAD:feature/private-audio-alignment-integration
