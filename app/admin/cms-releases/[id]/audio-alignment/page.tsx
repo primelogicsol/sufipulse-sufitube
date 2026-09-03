@@ -46,6 +46,17 @@ type PreviewLine = {
   isProductionDirection: boolean;
 };
 
+type AudioProbeResult = {
+  reachable: boolean;
+  status?: number;
+  partialContent?: boolean;
+  contentType?: string | null;
+  contentLength?: string | null;
+  contentRange?: string | null;
+  acceptRanges?: string | null;
+  checkedAt?: string;
+};
+
 export default function PrivateAudioAlignmentPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -67,6 +78,8 @@ export default function PrivateAudioAlignmentPage() {
   const [working, setWorking] = useState(false);
   const [streamWorking, setStreamWorking] = useState(false);
   const [rollbackWorking, setRollbackWorking] = useState(false);
+  const [probeWorking, setProbeWorking] = useState(false);
+  const [probeResult, setProbeResult] = useState<AudioProbeResult | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
   const [confirmRollback, setConfirmRollback] = useState(false);
   const [message, setMessage] = useState('');
@@ -178,6 +191,32 @@ export default function PrivateAudioAlignmentPage() {
       setError(String(err?.message || err || 'Private alignment import failed.'));
     } finally {
       setWorking(false);
+    }
+  };
+
+  const probeAudioStream = async () => {
+    try {
+      setProbeWorking(true);
+      setProbeResult(null);
+      setError('');
+      setMessage('');
+
+      const response = await fetch(`/api/admin/releases/${encodeURIComponent(releaseId)}/audio-probe`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `Probe failed with HTTP ${response.status}`);
+
+      setProbeResult(data);
+      setMessage(
+        data.partialContent
+          ? 'Private audio probe succeeded with HTTP byte-range support.'
+          : 'Private audio probe succeeded. Upstream was reachable; byte-range support was not confirmed by this response.'
+      );
+    } catch (err: any) {
+      setError(String(err?.message || err || 'Private audio probe failed.'));
+    } finally {
+      setProbeWorking(false);
     }
   };
 
@@ -412,6 +451,33 @@ export default function PrivateAudioAlignmentPage() {
           </div>
         </section>
 
+        {summary ? (
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="font-medium text-white">Export current CMS captions</h2>
+                <p className="mt-1 text-sm text-white/55">
+                  These exports come from the canonical CMS cue timeline. After draft timing is applied, SRT and VTT are generated from that same master rather than maintained as separate timelines.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={`/api/releases/${encodeURIComponent(releaseId)}/subtitles?format=srt&lang=${encodeURIComponent(language)}`}
+                  className="rounded-xl border border-white/15 px-4 py-2 text-sm font-medium text-white/80 hover:border-white/30 hover:text-white"
+                >
+                  Download SRT
+                </a>
+                <a
+                  href={`/api/releases/${encodeURIComponent(releaseId)}/subtitles?format=vtt&lang=${encodeURIComponent(language)}`}
+                  className="rounded-xl border border-white/15 px-4 py-2 text-sm font-medium text-white/80 hover:border-white/30 hover:text-white"
+                >
+                  Download VTT
+                </a>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {summary?.hasRollbackSnapshot ? (
           <section className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.04] p-5">
             <div className="flex items-start gap-3">
@@ -475,6 +541,33 @@ export default function PrivateAudioAlignmentPage() {
                   <div className="mt-1 text-sm font-medium text-white">{audioEligibility?.format || 'unknown'}</div>
                 </div>
               </div>
+
+              {summary && streamConfigured ? (
+                <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-medium uppercase tracking-wide text-white/45">Safe connectivity probe</div>
+                      <p className="mt-1 text-xs text-white/45">Requests only bytes=0-0, reads response headers, then cancels the body.</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={probeWorking}
+                      onClick={() => void probeAudioStream()}
+                      className="rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {probeWorking ? 'Probing…' : 'Probe one byte'}
+                    </button>
+                  </div>
+                  {probeResult ? (
+                    <div className="mt-3 grid gap-2 text-xs text-white/55 sm:grid-cols-2 lg:grid-cols-4">
+                      <div>Status: <span className="text-white/80">{probeResult.status || '—'}</span></div>
+                      <div>Range: <span className="text-white/80">{probeResult.partialContent ? 'confirmed' : 'not confirmed'}</span></div>
+                      <div>Type: <span className="text-white/80">{probeResult.contentType || '—'}</span></div>
+                      <div>Accept-Ranges: <span className="text-white/80">{probeResult.acceptRanges || '—'}</span></div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
 
               {summary && streamConfigured ? (
                 <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4">
