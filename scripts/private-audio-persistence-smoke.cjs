@@ -8,6 +8,7 @@ const assert = (condition, message) => {
 const compose = read('docker-compose.yml');
 const deploy = read('.github/workflows/deploy.yml');
 const storage = read('server/storage/private-production-source-storage.ts');
+const dataDir = read('lib/server-data-dir.ts');
 const gitignore = read('.gitignore');
 
 // The private production-source record must live under DATA_DIR, never in a
@@ -18,6 +19,13 @@ assert(
 );
 assert(!storage.includes('.mp3') && !storage.includes('.wav'), 'Private source storage must not persist MP3/WAV files.');
 assert(storage.includes('mode: 0o600'), 'Private production metadata file must be created with restrictive permissions.');
+
+// In the production container DATA_DIR must resolve to the same path mounted by
+// Compose. An explicit DATA_DIR env override remains supported for other hosts.
+assert(
+  dataDir.includes("fs.existsSync('/app/.data')") && dataDir.includes("return '/app/.data'"),
+  'Server DATA_DIR must resolve to /app/.data inside the production container.'
+);
 
 // Docker Compose must persist the entire /app/.data tree across container
 // replacement. This is what keeps private-production-sources.json alive.
