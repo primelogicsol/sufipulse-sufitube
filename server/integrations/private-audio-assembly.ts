@@ -68,6 +68,7 @@ export type CompiledPrivateAudioAssembly = {
     lineCount: number;
     publishableLineCount: number;
     productionDirectionCount: number;
+    wordCount: number;
     excludedLineCount: number;
     clippedLineCount: number;
     overlapCount: number;
@@ -137,6 +138,25 @@ const transformWord = (
   };
 };
 
+const wordsForLine = (
+  alignment: NormalizedPrivateAudioAlignment,
+  lineStartSeconds: number,
+  lineEndSeconds: number,
+  nestedWords: PrivateAlignedWord[],
+): PrivateAlignedWord[] => {
+  if (nestedWords.length) return nestedWords;
+
+  // Some providers return aligned_words only at the payload root rather than
+  // nesting them under each aligned lyric line. Associate those word timings
+  // with a line by time intersection so multi-source compilation does not lose
+  // word-level synchronization merely because the payload shape differs.
+  return alignment.words.filter(
+    (word) =>
+      word.endSeconds > lineStartSeconds + EPSILON &&
+      word.startSeconds < lineEndSeconds - EPSILON,
+  );
+};
+
 export function compilePrivateAudioAssembly(
   definition: PrivateAudioAssemblyDefinition,
   alignmentsBySourceAssetId: Record<string, NormalizedPrivateAudioAlignment>,
@@ -191,7 +211,12 @@ export function compilePrivateAudioAssembly(
       const clippedSourceEnd = Math.min(line.endSeconds, sourceOut);
       if (clippedSourceEnd <= clippedSourceStart + EPSILON) continue;
 
-      const transformedWords = line.words
+      const transformedWords = wordsForLine(
+        alignment,
+        line.startSeconds,
+        line.endSeconds,
+        line.words,
+      )
         .map((word) => transformWord(word, sourceIn, sourceOut, segment.destinationStartSeconds))
         .filter((word): word is CompiledPrivateAudioWord => Boolean(word));
 
@@ -229,6 +254,7 @@ export function compilePrivateAudioAssembly(
 
   const productionDirectionCount = lines.filter((line) => line.isProductionDirection).length;
   const clippedLineCount = lines.filter((line) => line.clippedAtStart || line.clippedAtEnd).length;
+  const wordCount = lines.reduce((total, line) => total + line.words.length, 0);
 
   return {
     assemblyVersion: definition.version,
@@ -240,6 +266,7 @@ export function compilePrivateAudioAssembly(
       lineCount: lines.length,
       publishableLineCount: lines.length - productionDirectionCount,
       productionDirectionCount,
+      wordCount,
       excludedLineCount,
       clippedLineCount,
       overlapCount,
