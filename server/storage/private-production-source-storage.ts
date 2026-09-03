@@ -26,6 +26,8 @@ export type PrivateProductionSourceRecord = {
   updatedAt: string;
   alignment: NormalizedPrivateAudioAlignment;
   rollbackSnapshot?: SubtitleRollbackSnapshot;
+  publicAudioPreviewEnabled?: boolean;
+  publicAudioPreviewUpdatedAt?: string;
 };
 
 type PrivateProductionSourceFile = {
@@ -91,6 +93,23 @@ export const privateProductionSourceStorage = {
       ...existing,
       rollbackSnapshot,
       updatedAt: new Date().toISOString(),
+    };
+    store.releases[releaseId] = next;
+    persist(store);
+    return next;
+  },
+
+  setPublicAudioPreviewEnabled(releaseId: string, enabled: boolean): PrivateProductionSourceRecord | null {
+    const store = load();
+    const existing = store.releases[releaseId];
+    if (!existing) return null;
+
+    const now = new Date().toISOString();
+    const next: PrivateProductionSourceRecord = {
+      ...existing,
+      publicAudioPreviewEnabled: enabled,
+      publicAudioPreviewUpdatedAt: now,
+      updatedAt: now,
     };
     store.releases[releaseId] = next;
     persist(store);
