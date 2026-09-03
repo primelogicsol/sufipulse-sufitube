@@ -12,6 +12,7 @@
     "app/api/releases/[id]/runtime-media/route.ts",
     "app/admin/cms-releases/new/page.tsx",
     "app/admin/cms-releases/[id]/audio-alignment/page.tsx",
+    "app/admin/cms-releases/[id]/audio-assembly/page.tsx",
     "app/components/release/TemporaryStreamAudioPlayer.tsx",
     "app/(public)/release-detail/[slug]/components/useRuntimeReleaseMedia.ts",
     "app/(public)/release-detail/[slug]/page.tsx",
