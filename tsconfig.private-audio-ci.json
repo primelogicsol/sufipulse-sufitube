@@ -11,8 +11,7 @@
     "app/components/release/TemporaryStreamAudioPlayer.tsx",
     "server/integrations/private-audio-alignment.ts",
     "server/integrations/private-audio-stream.ts",
-    "server/storage/private-production-source-storage.ts",
-    "server/storage/release-audio-runtime.ts"
+    "server/storage/private-production-source-storage.ts"
   ],
   "exclude": [
     "node_modules"
