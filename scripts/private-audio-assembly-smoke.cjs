@@ -29,22 +29,25 @@ const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 
-const alignment = (durationSeconds, lines) => ({
-  lines,
-  words: lines.flatMap((line) => line.words || []),
-  waveformData: [],
-  durationSeconds,
-  sourceMetadata: {},
-  payloadHash: 'fixture',
-  stats: {
-    lineCount: lines.length,
-    publishableLineCount: lines.filter((line) => !line.isProductionDirection).length,
-    productionDirectionCount: lines.filter((line) => line.isProductionDirection).length,
-    wordCount: lines.flatMap((line) => line.words || []).length,
-    waveformPointCount: 0,
-    overlapCount: 0,
-  },
-});
+const alignment = (durationSeconds, lines, topLevelWords) => {
+  const words = topLevelWords || lines.flatMap((line) => line.words || []);
+  return {
+    lines,
+    words,
+    waveformData: [],
+    durationSeconds,
+    sourceMetadata: {},
+    payloadHash: 'fixture',
+    stats: {
+      lineCount: lines.length,
+      publishableLineCount: lines.filter((line) => !line.isProductionDirection).length,
+      productionDirectionCount: lines.filter((line) => line.isProductionDirection).length,
+      wordCount: words.length,
+      waveformPointCount: 0,
+      overlapCount: 0,
+    },
+  };
+};
 
 const alignments = {
   clip_A: alignment(10, [
@@ -65,32 +68,41 @@ const alignments = {
       words: [],
     },
   ]),
-  clip_B: alignment(8, [
-    {
-      index: 1,
-      text: 'Shared transition line',
-      startSeconds: 0,
-      endSeconds: 2,
-      isProductionDirection: false,
-      words: [],
-    },
-    {
-      index: 2,
-      text: 'Extension lyric',
-      startSeconds: 2,
-      endSeconds: 4,
-      isProductionDirection: false,
-      words: [{ text: 'Extension', startSeconds: 2, endSeconds: 3 }],
-    },
-    {
-      index: 3,
-      text: '(Instrumental direction)',
-      startSeconds: 4,
-      endSeconds: 6,
-      isProductionDirection: true,
-      words: [],
-    },
-  ]),
+  clip_B: alignment(
+    8,
+    [
+      {
+        index: 1,
+        text: 'Shared transition line',
+        startSeconds: 0,
+        endSeconds: 2,
+        isProductionDirection: false,
+        words: [],
+      },
+      {
+        index: 2,
+        text: 'Extension lyric',
+        startSeconds: 2,
+        endSeconds: 4,
+        isProductionDirection: false,
+        words: [],
+      },
+      {
+        index: 3,
+        text: '(Instrumental direction)',
+        startSeconds: 4,
+        endSeconds: 6,
+        isProductionDirection: true,
+        words: [],
+      },
+    ],
+    [
+      { text: 'Shared', startSeconds: 0.2, endSeconds: 0.8 },
+      { text: 'transition', startSeconds: 0.8, endSeconds: 1.5 },
+      { text: 'Extension', startSeconds: 2, endSeconds: 3 },
+      { text: 'lyric', startSeconds: 3, endSeconds: 4 },
+    ],
+  ),
 };
 
 const definition = {
@@ -129,6 +141,7 @@ assert(result.stats.sourceCount === 2, 'Expected two distinct source clips');
 assert(result.stats.lineCount === 4, 'Expected four retained candidate lines');
 assert(result.stats.publishableLineCount === 3, 'Expected three publishable retained lines');
 assert(result.stats.productionDirectionCount === 1, 'Expected one retained production direction');
+assert(result.stats.wordCount === 3, 'Expected nested and top-level word timing to survive compilation');
 assert(result.stats.excludedLineCount === 1, 'Expected duplicate extension line to be explicitly excluded');
 assert(result.stats.clippedLineCount === 1, 'Expected one line clipped by the source-out edit point');
 assert(result.stats.overlapCount === 1, 'Expected crossfade timing overlap to be preserved and reported');
@@ -142,7 +155,10 @@ assert(opening && opening.startSeconds === 1 && opening.endSeconds === 3, 'Prima
 assert(shared && shared.startSeconds === 8 && shared.endSeconds === 9, 'Primary transition line should be clipped at source-out');
 assert(extension && extension.startSeconds === 8.5 && extension.endSeconds === 10.5, 'Extension timing should be transformed into master time');
 assert(extension && extension.sourceStartSeconds === 2, 'Source-local timing must remain available for provenance');
-assert(extension && extension.words[0].startSeconds === 8.5, 'Nested word timing should receive the same assembly transform');
+assert(extension && extension.words.length === 2, 'Top-level aligned words should be associated with their lyric line');
+assert(extension && extension.words[0].text === 'Extension', 'Expected the first top-level word to map to the extension line');
+assert(extension && extension.words[0].startSeconds === 8.5, 'Top-level word timing should receive the same assembly transform');
+assert(extension && extension.words[0].sourceStartSeconds === 2, 'Source-local word timing must remain available privately');
 
 assert(
   isAssemblyDirectStreamCompatible(undefined, 'clip_A', 10) === true,
@@ -181,6 +197,7 @@ console.log(JSON.stringify({
     sourceStartSeconds: line.sourceStartSeconds,
     startSeconds: line.startSeconds,
     endSeconds: line.endSeconds,
+    wordCount: line.words.length,
     text: line.text,
   })),
 }, null, 2));
