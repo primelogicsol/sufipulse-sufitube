@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - 'app/api/admin/releases/**/audio-alignment/**'
+      - 'app/api/admin/releases/**/audio-assembly/**'
       - 'app/api/admin/releases/**/audio-probe/**'
       - 'app/api/releases/**/audio/**'
       - 'app/api/releases/**/runtime-media/**'
@@ -74,9 +75,8 @@ jobs:
       - name: Private metadata persistence smoke test
         run: node scripts/private-audio-persistence-smoke.cjs
 
-      # The repository currently has unrelated baseline TypeScript errors in the
-      # YouTube self-heal route. Keep the full check visible, but do not let that
-      # pre-existing issue hide regressions in this isolated integration slice.
+      # Keep the full repository check visible. The scoped check below remains
+      # the merge gate for this isolated integration slice.
       - name: Full repository type-check (baseline informational)
         continue-on-error: true
         env:
