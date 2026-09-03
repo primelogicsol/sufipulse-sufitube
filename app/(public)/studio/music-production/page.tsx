@@ -12,32 +12,37 @@ export default function MusicProduction() {
         {
             title: 'Composition & Song Development',
             icon: Music,
-            description: 'Song architecture, hooks, sections, melodic direction, production concept, musical interpretation of approved lyrical material',
-            engineers: ['Michael "SufiPulse" Hartman', 'Arman Sayeed']
+            description: 'Song architecture, hooks, sections, melodic direction, production concept, and musical interpretation of approved lyrical material.',
+            leadLabel: 'Led by',
+            lead: 'Michael "SufiPulse" Hartman · Arman Sayeed'
         },
         {
             title: 'Arrangement & Sound Design',
             icon: Waves,
-            description: 'Instrumentation, tempo, sonic architecture, texture, dynamics, spatial production, sound design',
-            engineers: ['Ryan Cole']
+            description: 'Instrumentation, tempo, sonic architecture, texture, dynamics, spatial production, and sound design.',
+            leadLabel: 'Led by',
+            lead: 'Ryan Cole'
         },
         {
             title: 'Vocal Production',
             icon: Mic2,
-            description: 'Vocal character, performance direction, pronunciation, phrasing, interpretation, vocal processing, relationship between voice and composition',
-            engineers: ['Lucas Ray']
+            description: 'Vocal character, performance direction, pronunciation, phrasing, interpretation, vocal processing, and voice-to-composition alignment.',
+            leadLabel: 'Led by',
+            lead: 'Lucas Ray'
         },
         {
             title: 'Audio Production & Mastering',
             icon: Settings,
-            description: 'Production engineering, mixing, final technical processing, format validation, distribution-ready audio master, quality control',
-            engineers: ['Michael "SufiPulse" Hartman', 'Elijah James']
+            description: 'Production engineering, mixing, final technical processing, format validation, distribution-ready mastering, and quality control.',
+            leadLabel: 'Technical Leads',
+            lead: 'Michael "SufiPulse" Hartman · Elijah James'
         },
         {
             title: 'Lyrics Alignment & Audio Intelligence',
             icon: Radio,
-            description: 'Lyric-line timing, word-level timing/alignment, waveform analysis, synchronization, caption timing preparation, master lyric-to-audio timeline',
-            engineers: ['Studio Audio Intelligence Function']
+            description: 'Lyric-line timing, word-level alignment, waveform analysis, synchronization, caption timing preparation, and master lyric-to-audio timeline.',
+            leadLabel: 'Technical Unit',
+            lead: 'Studio Audio Intelligence'
         }
     ];
 
@@ -119,12 +124,12 @@ export default function MusicProduction() {
 
                         <StudioCardGrid cols={2}>
                             {subdivisions.map((sub, idx) => (
-                                <StudioLinkCard 
+                                <StudioLinkCard
                                     key={idx}
                                     icon={sub.icon}
                                     title={sub.title}
                                     description={sub.description}
-                                    subtitle={`Assigned: ${sub.engineers.join(', ')}`}
+                                    subtitle={`${sub.leadLabel}: ${sub.lead}`}
                                 />
                             ))}
                         </StudioCardGrid>
