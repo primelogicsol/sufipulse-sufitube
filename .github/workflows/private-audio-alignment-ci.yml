@@ -10,6 +10,7 @@ on:
     paths:
       - 'app/api/admin/releases/**/audio-alignment/**'
       - 'app/api/releases/**/audio/**'
+      - 'app/api/releases/**/runtime-media/**'
       - 'app/admin/cms-releases/**/audio-alignment/**'
       - 'app/components/release/TemporaryStreamAudioPlayer.tsx'
       - 'server/integrations/private-audio-alignment.ts'
