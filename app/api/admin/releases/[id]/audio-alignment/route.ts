@@ -6,6 +6,7 @@ import { requireAdmin } from '@/server/middleware/authenticate';
 import {
   extractSourceAssetId,
   fetchConfiguredPrivateAudioAlignment,
+  isProductionDirection,
   normalizePrivateAudioAlignment,
   type PrivateAlignedLine,
 } from '@/server/integrations/private-audio-alignment';
@@ -43,7 +44,7 @@ const cueIdForLine = (releaseId: string, sourceAssetId: string, line: PrivateAli
   return `cue_audio_${digest}`;
 };
 
-const publicSummary = (record: PrivateProductionSourceRecord) => ({
+const adminSummary = (record: PrivateProductionSourceRecord) => ({
   releaseId: record.releaseId,
   providerKey: record.providerKey,
   sourceAssetId: record.sourceAssetId,
@@ -77,6 +78,52 @@ const sanitizeSourceUrl = (input: unknown): string | undefined => {
   return parsed.toString();
 };
 
+const normalizeLanguage = (value: unknown): string => String(value || '').trim().toLowerCase();
+
+const getApprovedLyricsStructureLines = (release: any, language: string): string[] => {
+  const structures = release?.lyricsStructure || {};
+  const normalizedLanguage = normalizeLanguage(language);
+  const structureKey = Object.keys(structures).find((key) => normalizeLanguage(key) === normalizedLanguage);
+  if (!structureKey || !Array.isArray(structures[structureKey])) return [];
+
+  return [...structures[structureKey]]
+    .sort((a: any, b: any) => Number(a?.order || 0) - Number(b?.order || 0))
+    .flatMap((block: any) => Array.isArray(block?.lines) ? block.lines : [])
+    .map((line: unknown) => String(line || '').trim())
+    .filter((line: string) => Boolean(line) && !isProductionDirection(line));
+};
+
+const resolveCaptionText = (
+  release: any,
+  language: string,
+  publishableLines: PrivateAlignedLine[],
+  allowProviderTextFallback: boolean
+): { textLines: string[]; textSource: 'cms_lyrics_structure' | 'provider_alignment_draft' } => {
+  const approvedLines = getApprovedLyricsStructureLines(release, language);
+
+  if (approvedLines.length > 0) {
+    if (approvedLines.length !== publishableLines.length) {
+      throw new Error(
+        `Approved CMS lyrics contain ${approvedLines.length} publishable lines, but the imported alignment contains ${publishableLines.length}. ` +
+        'Master timing was not changed because line-by-line mapping would be ambiguous. Reconcile the approved lyrics and alignment first.'
+      );
+    }
+    return { textLines: approvedLines, textSource: 'cms_lyrics_structure' };
+  }
+
+  if (!allowProviderTextFallback) {
+    throw new Error(
+      `No approved CMS lyrics structure was found for language "${language}". ` +
+      'The provider transcription remains private. Add/approve the lyric structure first, or explicitly enable provider-text draft fallback for a controlled internal draft.'
+    );
+  }
+
+  return {
+    textLines: publishableLines.map((line) => line.text),
+    textSource: 'provider_alignment_draft',
+  };
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -100,7 +147,7 @@ export async function GET(
   const full = new URL(request.url).searchParams.get('full') === '1';
   return NextResponse.json({
     configured: Boolean(process.env.PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE),
-    source: full ? record : publicSummary(record),
+    source: full ? record : adminSummary(record),
   });
 }
 
@@ -157,7 +204,7 @@ export async function POST(
       return NextResponse.json({
         imported: true,
         appliedToMasterTiming: false,
-        source: publicSummary(record),
+        source: adminSummary(record),
         previewLines: alignment.lines.slice(0, 12).map((line) => ({
           index: line.index,
           startSeconds: line.startSeconds,
@@ -177,7 +224,7 @@ export async function POST(
           existingCueCount,
           imported: true,
           appliedToMasterTiming: false,
-          source: publicSummary(record),
+          source: adminSummary(record),
         },
         { status: 409 }
       );
@@ -188,9 +235,31 @@ export async function POST(
       return NextResponse.json({ error: 'No publishable timed lyric lines remain after direction filtering.' }, { status: 422 });
     }
 
-    const language = String(body.language || release.defaultLanguage || 'en').trim().toLowerCase();
+    const language = normalizeLanguage(body.language || release.defaultLanguage || 'en');
     if (!/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/i.test(language)) {
       return NextResponse.json({ error: 'language must be a valid language code such as en, ur, hi, or pa.' }, { status: 400 });
+    }
+
+    let captionText: ReturnType<typeof resolveCaptionText>;
+    try {
+      captionText = resolveCaptionText(
+        release,
+        language,
+        publishableLines,
+        body.allowProviderTextFallback === true
+      );
+    } catch (error: any) {
+      return NextResponse.json(
+        {
+          error: String(error?.message || error),
+          imported: true,
+          appliedToMasterTiming: false,
+          source: adminSummary(record),
+          approvedLyricsLineCount: getApprovedLyricsStructureLines(release, language).length,
+          alignmentPublishableLineCount: publishableLines.length,
+        },
+        { status: 422 }
+      );
     }
 
     record = privateProductionSourceStorage.setRollbackSnapshot(id, {
@@ -221,14 +290,15 @@ export async function POST(
     const subtitleCueMetadata: Record<string, any> = {};
     publishableLines.forEach((line, index) => {
       const cueId = subtitleCues[index].id;
-      sourceLanguageText[cueId] = line.text;
-      if (line.section) {
-        subtitleCueMetadata[cueId] = {
+      sourceLanguageText[cueId] = captionText.textLines[index];
+      subtitleCueMetadata[cueId] = {
+        ...(line.section ? {
           lineRole: ['verse', 'refrain', 'chorus', 'bridge', 'hook'].includes(line.section.toLowerCase())
             ? line.section.toLowerCase()
             : 'other',
-        };
-      }
+        } : {}),
+        sourceTextMode: captionText.textSource,
+      };
     });
 
     const updated = cmsServerStorage.saveRelease({
@@ -246,11 +316,12 @@ export async function POST(
     return NextResponse.json({
       imported: true,
       appliedToMasterTiming: true,
-      source: publicSummary(record),
+      source: adminSummary(record),
       releaseId: updated.id,
       masterTimingVersion: updated.masterTimingVersion,
       language,
       cueCount: subtitleCues.length,
+      captionTextSource: captionText.textSource,
       filteredProductionDirections: alignment.stats.productionDirectionCount,
       overlapCount: alignment.stats.overlapCount,
       subtitleStatus: 'draft',
