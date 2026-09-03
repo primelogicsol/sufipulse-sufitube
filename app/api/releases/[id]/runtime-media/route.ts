@@ -5,6 +5,11 @@ import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import { privateProductionSourceStorage } from '@/server/storage/private-production-source-storage';
 import { isPrivateAudioStreamConfigured } from '@/server/integrations/private-audio-stream';
+import {
+  hasFinalYoutubeVideo,
+  isPublicReleaseEligible,
+  isPublicTemporaryAudioEligible,
+} from '@/server/integrations/runtime-media-policy';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,9 +18,6 @@ const notFound = () =>
     { error: 'Release media not found' },
     { status: 404, headers: { 'Cache-Control': 'no-store' } },
   );
-
-const publicReleaseEligible = (release: any) =>
-  release?.status === 'published' && release?.visibility === 'public';
 
 export async function GET(
   request: NextRequest,
@@ -33,10 +35,10 @@ export async function GET(
   const auth = await getAuthUser(request);
   const isAdmin = auth?.role === 'admin';
 
-  if (!isAdmin && !publicReleaseEligible(canonical)) return notFound();
+  if (!isAdmin && !isPublicReleaseEligible(canonical)) return notFound();
 
   // Final YouTube distribution always wins once linked to the canonical release.
-  if (canonical.youtubeId) {
+  if (hasFinalYoutubeVideo(canonical)) {
     return NextResponse.json(
       {
         releaseId: canonical.id,
@@ -52,8 +54,7 @@ export async function GET(
   const source = privateProductionSourceStorage.get(canonical.id);
   const streamConfigured = isPrivateAudioStreamConfigured();
   const publicAudioEligible =
-    canonical.format === 'audio' &&
-    publicReleaseEligible(canonical) &&
+    isPublicTemporaryAudioEligible(canonical) &&
     streamConfigured &&
     source?.publicAudioPreviewEnabled === true;
 
