@@ -42,6 +42,8 @@ import { SubtitleBulkControlsSection } from './subtitle-bulk-controls-section';
 import { WorkflowAssistantSection } from './workflow-assistant-section';
 import { SocialShareKitSection } from './social-share-kit-section';
 import { ReleaseStreamingSection } from './release-streaming-section';
+import { LyricsStructureSection } from './lyrics-structure-section';
+import { LanguageManagementSection } from './language-management-section';
 import { ReleasePremiereSection } from './release-premiere-section';
 import { ReleaseCommentarySection } from './release-commentary-section';
 import { ReleaseSponsorsSection } from './release-sponsors-section';
@@ -190,16 +192,27 @@ export default function EditReleasePage() {
     onNavigate: (path) => router.push(path),
   });
 
-  // UI-only state — not persisted, not in the hook
-  const [customLangCode, setCustomLangCode] = useState('');
-  const [customLangLabel, setCustomLangLabel] = useState('');
-  const [editingLangCode, setEditingLangCode] = useState<string | null>(null);
-  const [editingLangNewLabel, setEditingLangNewLabel] = useState('');
+  const handleToggleLanguage = (code: string, active: boolean) => {
+    const current = form.availableLanguages || [];
+    const next = active ? [...current, code] : current.filter((c) => c !== code);
+    let newDefault = form.defaultLanguage;
+    if (!active && form.defaultLanguage === code) {
+      newDefault = next[0] || 'en';
+    }
+    setForm({ ...form, availableLanguages: next, defaultLanguage: newDefault });
+  };
 
-  const handleAddCustomLanguage = () => {
-    const code = normalizeLanguageCode(customLangCode);
-    const ok = addCustomLanguage(code, customLangLabel.trim());
-    if (ok) { setCustomLangCode(''); setCustomLangLabel(''); }
+  const handleSetRtl = (code: string, rtl: boolean) => {
+    setForm(f => ({
+      ...f,
+      languageStyleOverrides: {
+        ...(f.languageStyleOverrides || {}),
+        [code]: {
+          ...(f.languageStyleOverrides?.[code] || {}),
+          rtl
+        }
+      }
+    }));
   };
 
   const updateDistribution = (platformId: string, patch: Partial<PlatformDistribution>) => {
@@ -620,329 +633,30 @@ export default function EditReleasePage() {
           />
 
           {/* Structured Lyrics */}
-          <div id="lyrics-structure-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-              <div>
-                <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Lyrics System Structure</h2>
-                {!isNew && (
-                  <Link href={`/admin/cms-releases/${params.id}/lyrics`} className="text-xs mt-0.5 inline-block hover:underline" style={{ color: 'var(--dash-accent)' }}>
-                    Open Lyrics Editor →
-                  </Link>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={selectedLyricsStructureLanguage}
-                  onChange={(e) => setSelectedLyricsStructureLanguage(e.target.value)}
-                  className="form-input"
-                >
-                  {(form.availableLanguages || ['en']).map((lang) => (
-                    <option key={lang} value={lang}>{getLanguageLabel(lang)}</option>
-                  ))}
-                </select>
-                <button type="button" onClick={addLyricsBlock} className="dashboard-btn-secondary px-3 py-1 text-sm">Add Section</button>
-              </div>
-            </div>
-
-            <p className="text-sm mb-3" style={{color: 'var(--dash-text-muted)'}}>
-              Build lyrics in sections like intro, verse, chorus, bridge, and control per-block publish visibility.
-            </p>
-
-            <div className="space-y-3">
-              {getLyricsBlocks(selectedLyricsStructureLanguage).length === 0 && (
-                <div className="p-3 rounded" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)', color: 'var(--dash-text-muted)'}}>
-                  No structured lyrics blocks for this language yet.
-                </div>
-              )}
-
-              {getLyricsBlocks(selectedLyricsStructureLanguage).map((block: any, index: number) => (
-                <div key={block.id || index} className="p-4 rounded-lg" style={{border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-                    <select
-                      value={(block.type || 'verse') as LyricsSectionType}
-                      onChange={(e) => updateLyricsBlock(index, 'type', e.target.value)}
-                      className="form-input md:col-span-2"
-                    >
-                      {LYRICS_SECTION_TYPES.map((sectionType) => (
-                        <option key={sectionType} value={sectionType}>{sectionType.toUpperCase()}</option>
-                      ))}
-                    </select>
-
-                    <input
-                      type="text"
-                      value={block.heading || ''}
-                      onChange={(e) => updateLyricsBlock(index, 'heading', e.target.value)}
-                      className="form-input md:col-span-4"
-                      placeholder="Optional heading (e.g., Verse 1)"
-                    />
-
-                    <label className="md:col-span-3 inline-flex items-center gap-2 text-sm" style={{color: 'var(--dash-text-primary)'}}>
-                      <input
-                        type="checkbox"
-                        checked={block.isPublished !== false}
-                        onChange={(e) => updateLyricsBlock(index, 'isPublished', e.target.checked)}
-                        style={{accentColor: 'var(--dash-accent)'}}
-                      />
-                      Published block
-                    </label>
-
-                    <button type="button" onClick={() => removeLyricsBlock(index)} className="dashboard-btn-danger md:col-span-3 text-sm">Delete Section</button>
-
-                    <textarea
-                      value={Array.isArray(block.lines) ? block.lines.join('\n') : ''}
-                      onChange={(e) => updateLyricsBlock(index, 'lines', e.target.value)}
-                      className="form-input md:col-span-12"
-                      rows={4}
-                      placeholder="One lyric line per row"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <LyricsStructureSection
+            form={form}
+            selectedLyricsStructureLanguage={selectedLyricsStructureLanguage}
+            setSelectedLyricsStructureLanguage={setSelectedLyricsStructureLanguage}
+            addLyricsBlock={addLyricsBlock}
+            updateLyricsBlock={updateLyricsBlock}
+            removeLyricsBlock={removeLyricsBlock}
+            getLyricsBlocks={getLyricsBlocks}
+            getLanguageLabel={getLanguageLabel}
+          />
 
           {/* Language Management */}
-          <div id="language-management-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Language Management</h2>
-                <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Select active languages, add custom ones, set the master language, and configure translation tone per language.</p>
-              </div>
-              <span className="text-xs px-2 py-1 rounded" style={{backgroundColor: 'var(--dash-bg-hover)', color: 'var(--dash-text-secondary)', border: '1px solid var(--dash-border)'}}>
-                {(form.availableLanguages || []).length} active
-              </span>
-            </div>
-
-            {/* Preset languages grid */}
-            <p className="text-xs font-medium mb-2" style={{color: 'var(--dash-text-muted)'}}>PRESET LANGUAGES</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
-              {ALL_LANGUAGES.map((lang) => {
-                const isActive = (form.availableLanguages || []).includes(lang.code);
-                const displayLabel = form.languageLabels?.[lang.code] || lang.label;
-                const isEditing = editingLangCode === lang.code;
-                return (
-                  <div
-                    key={lang.code}
-                    className="flex flex-col gap-1 px-3 py-2 rounded transition"
-                    style={{
-                      border: `1px solid ${isActive ? 'var(--dash-accent)' : 'var(--dash-border)'}`,
-                      backgroundColor: isActive ? 'var(--dash-accent-muted)' : 'var(--dash-bg-secondary)',
-                    }}
-                  >
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isActive}
-                        onChange={(e) => {
-                          const current = form.availableLanguages || [];
-                          const next = e.target.checked
-                            ? [...current, lang.code]
-                            : current.filter((c) => c !== lang.code);
-                          let newDefault = form.defaultLanguage;
-                          if (!e.target.checked && form.defaultLanguage === lang.code) {
-                            newDefault = next[0] || 'en';
-                          }
-                          setForm({ ...form, availableLanguages: next, defaultLanguage: newDefault });
-                        }}
-                        style={{accentColor: 'var(--dash-accent)'}}
-                      />
-                      <span className="text-sm font-medium" style={{color: isActive ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)'}}>{displayLabel}</span>
-                      <span className="text-xs ml-auto" style={{color: 'var(--dash-text-muted)'}}>{lang.code}</span>
-                    </label>
-                    {isActive && (
-                      isEditing ? (
-                        <div className="flex gap-1 mt-1">
-                          <input
-                            type="text"
-                            value={editingLangNewLabel}
-                            onChange={(e) => setEditingLangNewLabel(e.target.value)}
-                            className="form-input text-xs flex-1"
-                            placeholder="New label"
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveLanguageLabel(lang.code, editingLangNewLabel);
-                              if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
-                            }}
-                          />
-                          <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
-                          <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Cancel</button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => { setEditingLangCode(lang.code); setEditingLangNewLabel(displayLabel); }}
-                          className="text-xs text-left mt-1"
-                          style={{color: 'var(--dash-text-muted)'}}
-                        >
-                          G�� Rename label
-                        </button>
-                      )
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Custom languages */}
-            {(form.customLanguages || []).length > 0 && (
-              <>
-                <p className="text-xs font-medium mb-2" style={{color: 'var(--dash-text-muted)'}}>CUSTOM LANGUAGES</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
-                  {(form.customLanguages || []).map((lang) => {
-                    const isActive = (form.availableLanguages || []).includes(lang.code);
-                    const displayLabel = form.languageLabels?.[lang.code] || lang.label;
-                    const isEditing = editingLangCode === lang.code;
-                    return (
-                      <div
-                        key={lang.code}
-                        className="flex flex-col gap-1 px-3 py-2 rounded transition"
-                        style={{
-                          border: `1px solid ${isActive ? 'var(--dash-accent)' : 'var(--dash-border)'}`,
-                          backgroundColor: isActive ? 'var(--dash-accent-muted)' : 'var(--dash-bg-secondary)',
-                        }}
-                      >
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={isActive}
-                            onChange={(e) => {
-                              const current = form.availableLanguages || [];
-                              const next = e.target.checked
-                                ? [...current, lang.code]
-                                : current.filter((c) => c !== lang.code);
-                              let newDefault = form.defaultLanguage;
-                              if (!e.target.checked && form.defaultLanguage === lang.code) {
-                                newDefault = next[0] || 'en';
-                              }
-                              setForm({ ...form, availableLanguages: next, defaultLanguage: newDefault });
-                            }}
-                            style={{accentColor: 'var(--dash-accent)'}}
-                          />
-                          <span className="text-sm font-medium" style={{color: isActive ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)'}}>{displayLabel}</span>
-                          <span className="text-xs ml-auto" style={{color: 'var(--dash-text-muted)'}}>{lang.code}</span>
-                        </label>
-                        <div className="flex gap-1 mt-1">
-                          {isEditing ? (
-                            <>
-                              <input
-                                type="text"
-                                value={editingLangNewLabel}
-                                onChange={(e) => setEditingLangNewLabel(e.target.value)}
-                                className="form-input text-xs flex-1"
-                                placeholder="New label"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') saveLanguageLabel(lang.code, editingLangNewLabel);
-                                  if (e.key === 'Escape') { setEditingLangCode(null); setEditingLangNewLabel(''); }
-                                }}
-                              />
-                              <button type="button" onClick={() => saveLanguageLabel(lang.code, editingLangNewLabel)} className="dashboard-btn-primary px-2 py-1 text-xs">Save</button>
-                              <button type="button" onClick={() => { setEditingLangCode(null); setEditingLangNewLabel(''); }} className="dashboard-btn-secondary px-2 py-1 text-xs">Cancel</button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => { setEditingLangCode(lang.code); setEditingLangNewLabel(displayLabel); }}
-                                className="text-xs flex-1 text-left"
-                                style={{color: 'var(--dash-text-muted)'}}
-                              >
-                                G�� Rename
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => deleteCustomLanguage(lang.code)}
-                                className="text-xs"
-                                style={{color: 'var(--dash-status-rejected)'}}
-                                title="Delete this custom language"
-                              >
-                                =���
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            {/* Add custom language */}
-            <div className="p-3 rounded-lg mb-4" style={{border: '1px dashed var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)'}}>
-              <p className="text-xs font-medium mb-2" style={{color: 'var(--dash-text-muted)'}}>ADD CUSTOM LANGUAGE</p>
-              <div className="flex flex-wrap gap-2">
-                <input
-                  type="text"
-                  value={customLangCode}
-                  onChange={(e) => setCustomLangCode(e.target.value)}
-                  className="form-input text-sm"
-                  style={{width: 120}}
-                  placeholder="Code (e.g. dg)"
-                />
-                <input
-                  type="text"
-                  value={customLangLabel}
-                  onChange={(e) => setCustomLangLabel(e.target.value)}
-                  className="form-input text-sm flex-1"
-                  placeholder="Language name (e.g. Dogri)"
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomLanguage(); } }}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCustomLanguage}
-                  disabled={!customLangCode.trim() || !customLangLabel.trim()}
-                  className="dashboard-btn-secondary px-3 py-1 text-sm disabled:opacity-50"
-                >
-                  + Add Language
-                </button>
-              </div>
-            </div>
-
-            {/* Master language + tone per active language */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Default / Master Language</label>
-                <p className="text-xs mb-2" style={{color: 'var(--dash-text-muted)'}}>The master language holds the authoritative subtitle timestamps. All other languages follow these timings.</p>
-                <select
-                  name="defaultLanguage"
-                  value={form.defaultLanguage || 'en'}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  style={{width: '100%'}}
-                >
-                  {(form.availableLanguages || ['en']).map((code) => (
-                    <option key={code} value={code}>{getLanguageLabel(code)} ({code})</option>
-                  ))}
-                </select>
-              </div>
-
-              {(form.availableLanguages || []).filter((c) => c !== form.defaultLanguage).length > 0 && (
-                <div>
-                  <label className="block text-xs font-medium mb-1" style={{color: 'var(--dash-text-muted)'}}>Translation Tone per Language</label>
-                  <p className="text-xs mb-2" style={{color: 'var(--dash-text-muted)'}}>Tone guides auto-translation style. Mystic / Poetic tones suggest reverent translations; Literal gives word-for-word accuracy.</p>
-                  <div className="space-y-2">
-                    {(form.availableLanguages || []).filter((c) => c !== form.defaultLanguage).map((code) => (
-                      <div key={code} className="flex items-center gap-2">
-                        <span className="text-sm min-w-[120px]" style={{color: 'var(--dash-text-primary)'}}>{getLanguageLabel(code)}</span>
-                        <select
-                          value={form.translationTone?.[code] || 'literal'}
-                          onChange={(e) => setLanguageTone(code, e.target.value)}
-                          className="form-input text-sm flex-1"
-                        >
-                          <option value="literal">Literal G�� word-for-word accuracy</option>
-                          <option value="mystic">Mystic G�� spiritual / Sufi essence</option>
-                          <option value="poetic">Poetic G�� lyrical and flowing</option>
-                          <option value="scholarly">Scholarly G�� academic precision</option>
-                          <option value="contemporary">Contemporary G�� modern everyday language</option>
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <LanguageManagementSection
+            form={form}
+            onToggleLanguage={handleToggleLanguage}
+            onAddCustomLanguage={addCustomLanguage}
+            deleteCustomLanguage={deleteCustomLanguage}
+            saveLanguageLabel={saveLanguageLabel}
+            setLanguageTone={setLanguageTone}
+            onSetRtl={handleSetRtl}
+            subtitleLanguageStatuses={form.subtitleLanguageStatuses}
+            onInputChange={handleInputChange}
+            getLanguageLabel={getLanguageLabel}
+          />
 
           {/* Subtitle Timeline + Language Tracks */}
           <div id="subtitle-timeline-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
