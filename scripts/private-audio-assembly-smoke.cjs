@@ -126,8 +126,8 @@ const result = compilePrivateAudioAssembly(definition, alignments);
 
 assert(result.stats.segmentCount === 2, 'Expected two enabled assembly segments');
 assert(result.stats.sourceCount === 2, 'Expected two distinct source clips');
-assert(result.stats.lineCount === 3, 'Expected three retained candidate lines');
-assert(result.stats.publishableLineCount === 2, 'Expected two publishable retained lines');
+assert(result.stats.lineCount === 4, 'Expected four retained candidate lines');
+assert(result.stats.publishableLineCount === 3, 'Expected three publishable retained lines');
 assert(result.stats.productionDirectionCount === 1, 'Expected one retained production direction');
 assert(result.stats.excludedLineCount === 1, 'Expected duplicate extension line to be explicitly excluded');
 assert(result.stats.clippedLineCount === 1, 'Expected one line clipped by the source-out edit point');
