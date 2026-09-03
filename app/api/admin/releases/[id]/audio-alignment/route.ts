@@ -10,6 +10,7 @@ import {
   normalizePrivateAudioAlignment,
   type PrivateAlignedLine,
 } from '@/server/integrations/private-audio-alignment';
+import { isPrivateAudioStreamConfigured } from '@/server/integrations/private-audio-stream';
 import {
   privateProductionSourceStorage,
   type PrivateProductionSourceRecord,
@@ -58,6 +59,18 @@ const adminSummary = (record: PrivateProductionSourceRecord) => ({
   stats: record.alignment.stats,
   hasRollbackSnapshot: Boolean(record.rollbackSnapshot),
   rollbackCapturedAt: record.rollbackSnapshot?.capturedAt,
+  publicAudioPreviewEnabled: record.publicAudioPreviewEnabled === true,
+  publicAudioPreviewUpdatedAt: record.publicAudioPreviewUpdatedAt,
+});
+
+const releaseAudioEligibility = (release: any) => ({
+  status: release?.status || 'unknown',
+  visibility: release?.visibility || 'unknown',
+  format: release?.format || 'unknown',
+  publicPlaybackEligible:
+    release?.status === 'published' &&
+    release?.visibility === 'public' &&
+    release?.format === 'audio',
 });
 
 const sanitizeProviderKey = (input: unknown): string => {
@@ -140,6 +153,8 @@ export async function GET(
     return NextResponse.json({
       releaseId: id,
       configured: Boolean(process.env.PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE),
+      streamConfigured: isPrivateAudioStreamConfigured(),
+      audioEligibility: releaseAudioEligibility(release),
       source: null,
     });
   }
@@ -147,6 +162,8 @@ export async function GET(
   const full = new URL(request.url).searchParams.get('full') === '1';
   return NextResponse.json({
     configured: Boolean(process.env.PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE),
+    streamConfigured: isPrivateAudioStreamConfigured(),
+    audioEligibility: releaseAudioEligibility(release),
     source: full ? record : adminSummary(record),
   });
 }
@@ -187,6 +204,7 @@ export async function POST(
     const payload = body.payload ?? (await fetchConfiguredPrivateAudioAlignment(sourceAssetId));
     const alignment = normalizePrivateAudioAlignment(payload);
     const now = new Date().toISOString();
+    const existingPrivateSource = privateProductionSourceStorage.get(id);
 
     let record = privateProductionSourceStorage.save({
       releaseId: id,
@@ -196,7 +214,9 @@ export async function POST(
       retrievedAt: now,
       updatedAt: now,
       alignment,
-      rollbackSnapshot: privateProductionSourceStorage.get(id)?.rollbackSnapshot,
+      rollbackSnapshot: existingPrivateSource?.rollbackSnapshot,
+      publicAudioPreviewEnabled: existingPrivateSource?.publicAudioPreviewEnabled,
+      publicAudioPreviewUpdatedAt: existingPrivateSource?.publicAudioPreviewUpdatedAt,
     });
 
     const applyToMasterTiming = body.applyToMasterTiming === true;
@@ -205,6 +225,8 @@ export async function POST(
         imported: true,
         appliedToMasterTiming: false,
         source: adminSummary(record),
+        streamConfigured: isPrivateAudioStreamConfigured(),
+        audioEligibility: releaseAudioEligibility(release),
         previewLines: alignment.lines.slice(0, 12).map((line) => ({
           index: line.index,
           startSeconds: line.startSeconds,
@@ -332,6 +354,47 @@ export async function POST(
       : String(error?.message || error || 'Private audio alignment import failed.');
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  const { id } = await params;
+  const release = cmsServerStorage.getRelease(id);
+  if (!release) return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+
+  const record = privateProductionSourceStorage.get(id);
+  if (!record) {
+    return NextResponse.json({ error: 'Import a private production source before configuring audio preview.' }, { status: 404 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  if (typeof body.publicAudioPreviewEnabled !== 'boolean') {
+    return NextResponse.json({ error: 'publicAudioPreviewEnabled must be boolean.' }, { status: 400 });
+  }
+
+  if (body.publicAudioPreviewEnabled && !isPrivateAudioStreamConfigured()) {
+    return NextResponse.json(
+      { error: 'Private audio streaming is not configured on this server.' },
+      { status: 409 }
+    );
+  }
+
+  const updated = privateProductionSourceStorage.setPublicAudioPreviewEnabled(
+    id,
+    body.publicAudioPreviewEnabled,
+  );
+
+  return NextResponse.json({
+    source: updated ? adminSummary(updated) : null,
+    streamConfigured: isPrivateAudioStreamConfigured(),
+    audioEligibility: releaseAudioEligibility(release),
+    publicAudioRoute: `/api/releases/${encodeURIComponent(id)}/audio`,
+  });
 }
 
 export async function DELETE(
