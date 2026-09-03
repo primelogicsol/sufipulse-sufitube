@@ -15,6 +15,7 @@ on:
       - 'app/api/releases/**/runtime-media/**'
       - 'app/admin/cms-releases/new/**'
       - 'app/admin/cms-releases/**/audio-alignment/**'
+      - 'app/admin/cms-releases/**/audio-assembly/**'
       - 'app/components/release/TemporaryStreamAudioPlayer.tsx'
       - 'app/(public)/release-detail/[slug]/components/useRuntimeReleaseMedia.ts'
       - 'app/(public)/release-detail/[slug]/page.tsx'
