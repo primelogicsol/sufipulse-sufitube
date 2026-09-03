@@ -52,7 +52,7 @@ import { getDefaultDistribution, type PlatformDistribution } from '@/lib/cms-sto
 import { useReleaseForm, SAMPLE_PREVIEW_DURATION_SECONDS } from './use-release-form';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 export default function EditReleasePage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const isNew = params.id === 'new';
@@ -60,8 +60,10 @@ export default function EditReleasePage() {
   const isAdmin = user?.role.includes('admin') ?? false;
 
   useEffect(() => {
-    if (!isAdmin) router.push('/admin');
-  }, [user]);
+    if (!authLoading && !isAdmin) {
+      router.push('/admin');
+    }
+  }, [authLoading, isAdmin, router]);
 
   const {
     form, setForm,
@@ -188,7 +190,7 @@ export default function EditReleasePage() {
   } = useReleaseForm({
     releaseId: params.id as string,
     isNew,
-    ready: isAdmin,
+    ready: !authLoading && isAdmin,
     onNavigate: (path) => router.push(path),
   });
 
@@ -212,8 +214,20 @@ export default function EditReleasePage() {
   // ── Import Captions modal state ───────────────────────────────────────────
   const [captionModalOpen, setCaptionModalOpen] = useState(false);
 
-  if (!user?.role.includes('admin')) {
-    return <DashboardLayout><div className="p-8 text-center">Unauthorized</div></DashboardLayout>;
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 text-center">Loading...</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 text-center">Unauthorized</div>
+      </DashboardLayout>
+    );
   }
 
   if (loading) {
