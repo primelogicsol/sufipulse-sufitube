@@ -1,0 +1,43 @@
+name: Private Audio VPS Persistence Audit
+
+on:
+  push:
+    branches:
+      - feature/private-audio-alignment-integration
+    paths:
+      - '.github/workflows/private-audio-vps-persistence-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify production data volume without reading private data
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -euo pipefail
+            echo 'CONTAINER:'
+            docker inspect sufipulse-new-app --format '{{.Name}} status={{.State.Status}} image={{.Config.Image}}'
+
+            echo 'DATA_MOUNT:'
+            docker inspect sufipulse-new-app --format '{{range .Mounts}}{{if eq .Destination "/app/.data"}}type={{.Type}} name={{.Name}} destination={{.Destination}} rw={{.RW}}{{end}}{{end}}'
+
+            echo 'NAMED_VOLUME:'
+            docker volume inspect sufipulse_new_data --format 'name={{.Name}} driver={{.Driver}} scope={{.Scope}}'
+
+            echo 'RUNTIME_DATA_DIR:'
+            docker exec sufipulse-new-app sh -c 'id && ls -ld /app/.data && test -w /app/.data && echo data_dir_writable=yes'
+
+            echo 'PRIVATE_SOURCE_FILE_STATE:'
+            docker exec sufipulse-new-app sh -c 'if [ -e /app/.data/private-production-sources.json ]; then stat -c "exists=yes mode=%a owner=%U group=%G size=%s" /app/.data/private-production-sources.json; else echo exists=no; fi'
+
+            echo 'AUDIO_FILE_GUARD:'
+            docker exec sufipulse-new-app sh -c 'count=$(find /app/.data -maxdepth 2 -type f \( -iname "*.mp3" -o -iname "*.wav" \) 2>/dev/null | wc -l); echo persisted_audio_files_in_data_dir=$count'
