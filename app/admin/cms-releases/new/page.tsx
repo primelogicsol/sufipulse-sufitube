@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, AudioLines, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
@@ -34,6 +34,10 @@ export default function NewCMSReleasePage() {
   const effectiveSlug = useMemo(() => slugTouched ? slug : slugify(title), [slug, slugTouched, title]);
   const canSubmit = title.trim().length >= 3 && effectiveSlug.length >= 3 && !submitting;
 
+  useEffect(() => {
+    if (user && !isAdmin) router.replace('/admin');
+  }, [isAdmin, router, user]);
+
   if (!user) {
     return (
       <DashboardLayout>
@@ -42,10 +46,7 @@ export default function NewCMSReleasePage() {
     );
   }
 
-  if (!isAdmin) {
-    router.push('/admin');
-    return null;
-  }
+  if (!isAdmin) return null;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
