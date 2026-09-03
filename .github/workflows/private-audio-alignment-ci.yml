@@ -16,7 +16,6 @@ on:
       - 'server/integrations/private-audio-alignment.ts'
       - 'server/integrations/private-audio-stream.ts'
       - 'server/storage/private-production-source-storage.ts'
-      - 'server/storage/release-audio-runtime.ts'
       - 'scripts/private-audio-alignment-smoke.cjs'
       - 'scripts/private-audio-stream-smoke.cjs'
       - 'tsconfig.private-audio-ci.json'
