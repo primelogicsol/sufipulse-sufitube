@@ -23,6 +23,11 @@ on:
       - 'server/storage/private-production-source-storage.ts'
       - 'scripts/private-audio-alignment-smoke.cjs'
       - 'scripts/private-audio-stream-smoke.cjs'
+      - 'scripts/private-audio-persistence-smoke.cjs'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.gitignore'
+      - '.github/workflows/deploy.yml'
       - 'tsconfig.private-audio-ci.json'
       - '.github/workflows/private-audio-alignment-ci.yml'
 
@@ -60,6 +65,9 @@ jobs:
 
       - name: Audio relay smoke test
         run: node scripts/private-audio-stream-smoke.cjs
+
+      - name: Private metadata persistence smoke test
+        run: node scripts/private-audio-persistence-smoke.cjs
 
       # The repository currently has unrelated baseline TypeScript errors in the
       # YouTube self-heal route. Keep the full check visible, but do not let that
