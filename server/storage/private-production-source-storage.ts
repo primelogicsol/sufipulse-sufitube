@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import { DATA_DIR } from '@/lib/server-data-dir';
 import type { NormalizedPrivateAudioAlignment } from '@/server/integrations/private-audio-alignment';
+import type { PrivateAudioAssemblyDefinition } from '@/server/integrations/private-audio-assembly';
 
 export type SubtitleRollbackSnapshot = {
   capturedAt: string;
@@ -17,38 +18,100 @@ export type SubtitleRollbackSnapshot = {
   defaultLanguage?: string;
 };
 
-export type PrivateProductionSourceRecord = {
-  releaseId: string;
+export type PrivateProductionSourceAsset = {
   providerKey: string;
   sourceAssetId: string;
   sourceUrl?: string;
   retrievedAt: string;
   updatedAt: string;
   alignment: NormalizedPrivateAudioAlignment;
+};
+
+export type PrivateProductionSourceRecord = {
+  releaseId: string;
+
+  // Backward-compatible primary-source view used by the existing single-source
+  // alignment/stream routes. Multi-source production data lives in `sources`.
+  providerKey: string;
+  sourceAssetId: string;
+  sourceUrl?: string;
+  retrievedAt: string;
+  updatedAt: string;
+  alignment: NormalizedPrivateAudioAlignment;
+
+  sources?: Record<string, PrivateProductionSourceAsset>;
+  assembly?: PrivateAudioAssemblyDefinition;
   rollbackSnapshot?: SubtitleRollbackSnapshot;
   publicAudioPreviewEnabled?: boolean;
   publicAudioPreviewUpdatedAt?: string;
 };
 
 type PrivateProductionSourceFile = {
+  version: 2;
+  releases: Record<string, PrivateProductionSourceRecord>;
+};
+
+type LegacyPrivateProductionSourceFile = {
   version: 1;
   releases: Record<string, PrivateProductionSourceRecord>;
 };
 
 const DATA_FILE = path.join(DATA_DIR, 'private-production-sources.json');
 
-const emptyStore = (): PrivateProductionSourceFile => ({ version: 1, releases: {} });
+const emptyStore = (): PrivateProductionSourceFile => ({ version: 2, releases: {} });
 
 const ensureDataDir = () => {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 };
 
+const assetFromRecord = (record: PrivateProductionSourceRecord): PrivateProductionSourceAsset => ({
+  providerKey: record.providerKey,
+  sourceAssetId: record.sourceAssetId,
+  sourceUrl: record.sourceUrl,
+  retrievedAt: record.retrievedAt,
+  updatedAt: record.updatedAt,
+  alignment: record.alignment,
+});
+
+const normalizeRecord = (record: PrivateProductionSourceRecord): PrivateProductionSourceRecord => ({
+  ...record,
+  sources: {
+    ...(record.sources || {}),
+    [record.sourceAssetId]: assetFromRecord(record),
+  },
+});
+
+const migrateLegacyStore = (legacy: LegacyPrivateProductionSourceFile): PrivateProductionSourceFile => ({
+  version: 2,
+  releases: Object.fromEntries(
+    Object.entries(legacy.releases || {}).map(([releaseId, record]) => [
+      releaseId,
+      normalizeRecord(record),
+    ]),
+  ),
+});
+
 const load = (): PrivateProductionSourceFile => {
   try {
     if (!fs.existsSync(DATA_FILE)) return emptyStore();
     const parsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8') || '{}');
-    if (!parsed || parsed.version !== 1 || typeof parsed.releases !== 'object') return emptyStore();
-    return parsed as PrivateProductionSourceFile;
+    if (!parsed || typeof parsed.releases !== 'object') return emptyStore();
+
+    if (parsed.version === 1) {
+      return migrateLegacyStore(parsed as LegacyPrivateProductionSourceFile);
+    }
+    if (parsed.version !== 2) return emptyStore();
+
+    const store = parsed as PrivateProductionSourceFile;
+    return {
+      version: 2,
+      releases: Object.fromEntries(
+        Object.entries(store.releases || {}).map(([releaseId, record]) => [
+          releaseId,
+          normalizeRecord(record),
+        ]),
+      ),
+    };
   } catch (error) {
     console.error('[PRIVATE-PRODUCTION] Failed to load private source store:', error);
     return emptyStore();
@@ -73,13 +136,99 @@ export const privateProductionSourceStorage = {
     return store.releases[releaseId] || null;
   },
 
+  getSource(releaseId: string, sourceAssetId: string): PrivateProductionSourceAsset | null {
+    const record = this.get(releaseId);
+    if (!record) return null;
+    return record.sources?.[sourceAssetId] || (record.sourceAssetId === sourceAssetId ? assetFromRecord(record) : null);
+  },
+
+  listSources(releaseId: string): PrivateProductionSourceAsset[] {
+    const record = this.get(releaseId);
+    if (!record) return [];
+    return Object.values(record.sources || { [record.sourceAssetId]: assetFromRecord(record) });
+  },
+
   save(record: PrivateProductionSourceRecord): PrivateProductionSourceRecord {
     const store = load();
+    const existing = store.releases[record.releaseId];
+    const now = new Date().toISOString();
+    const primaryAsset: PrivateProductionSourceAsset = {
+      providerKey: record.providerKey,
+      sourceAssetId: record.sourceAssetId,
+      sourceUrl: record.sourceUrl,
+      retrievedAt: record.retrievedAt,
+      updatedAt: now,
+      alignment: record.alignment,
+    };
+
     const next: PrivateProductionSourceRecord = {
+      ...existing,
       ...record,
-      updatedAt: new Date().toISOString(),
+      sources: {
+        ...(existing?.sources || {}),
+        ...(record.sources || {}),
+        [record.sourceAssetId]: primaryAsset,
+      },
+      assembly: record.assembly ?? existing?.assembly,
+      updatedAt: now,
     };
     store.releases[record.releaseId] = next;
+    persist(store);
+    return next;
+  },
+
+  upsertSource(releaseId: string, source: PrivateProductionSourceAsset): PrivateProductionSourceRecord | null {
+    const store = load();
+    const existing = store.releases[releaseId];
+    if (!existing) return null;
+
+    const now = new Date().toISOString();
+    const normalizedSource: PrivateProductionSourceAsset = {
+      ...source,
+      updatedAt: now,
+    };
+    const next: PrivateProductionSourceRecord = {
+      ...existing,
+      sources: {
+        ...(existing.sources || {}),
+        [source.sourceAssetId]: normalizedSource,
+      },
+      ...(existing.sourceAssetId === source.sourceAssetId
+        ? {
+            providerKey: normalizedSource.providerKey,
+            sourceUrl: normalizedSource.sourceUrl,
+            retrievedAt: normalizedSource.retrievedAt,
+            alignment: normalizedSource.alignment,
+          }
+        : {}),
+      updatedAt: now,
+    };
+    store.releases[releaseId] = next;
+    persist(store);
+    return next;
+  },
+
+  setAssembly(releaseId: string, assembly: PrivateAudioAssemblyDefinition): PrivateProductionSourceRecord | null {
+    const store = load();
+    const existing = store.releases[releaseId];
+    if (!existing) return null;
+
+    const sourceIds = new Set(Object.keys(existing.sources || {}));
+    for (const segment of assembly.segments) {
+      if (!sourceIds.has(segment.sourceAssetId)) {
+        throw new Error(`Assembly source ${segment.sourceAssetId} is not linked to release ${releaseId}.`);
+      }
+    }
+
+    const next: PrivateProductionSourceRecord = {
+      ...existing,
+      assembly: {
+        ...assembly,
+        updatedAt: new Date().toISOString(),
+      },
+      updatedAt: new Date().toISOString(),
+    };
+    store.releases[releaseId] = next;
     persist(store);
     return next;
   },
