@@ -20,7 +20,10 @@ mod.filename = sourcePath;
 mod.paths = Module._nodeModulePaths(path.dirname(sourcePath));
 mod._compile(executable, sourcePath);
 
-const { compilePrivateAudioAssembly } = mod.exports;
+const {
+  compilePrivateAudioAssembly,
+  isAssemblyDirectStreamCompatible,
+} = mod.exports;
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -141,11 +144,37 @@ assert(extension && extension.startSeconds === 8.5 && extension.endSeconds === 1
 assert(extension && extension.sourceStartSeconds === 2, 'Source-local timing must remain available for provenance');
 assert(extension && extension.words[0].startSeconds === 8.5, 'Nested word timing should receive the same assembly transform');
 
+assert(
+  isAssemblyDirectStreamCompatible(undefined, 'clip_A', 10) === true,
+  'No assembly should remain compatible with the existing direct stream path',
+);
+assert(
+  isAssemblyDirectStreamCompatible({
+    version: 1,
+    updatedAt: new Date(0).toISOString(),
+    segments: [{
+      segmentId: 'single',
+      sourceAssetId: 'clip_A',
+      role: 'primary',
+      order: 1,
+      sourceInSeconds: 0,
+      destinationStartSeconds: 0,
+      transition: { type: 'cut' },
+    }],
+  }, 'clip_A', 10) === true,
+  'One untouched primary segment should remain directly streamable',
+);
+assert(
+  isAssemblyDirectStreamCompatible(definition, 'clip_A', 10) === false,
+  'Multi-clip/crossfade assembly must not masquerade as one direct public stream',
+);
+
 console.log('Private audio assembly smoke test: PASS');
 console.log(JSON.stringify({
   assemblyVersion: result.assemblyVersion,
   durationSeconds: result.durationSeconds,
   stats: result.stats,
+  directStreamCompatible: isAssemblyDirectStreamCompatible(definition, 'clip_A', 10),
   retainedLines: result.lines.map((line) => ({
     segmentId: line.segmentId,
     sourceLineIndex: line.sourceLineIndex,
