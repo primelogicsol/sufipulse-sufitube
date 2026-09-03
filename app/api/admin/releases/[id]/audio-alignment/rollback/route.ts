@@ -41,15 +41,17 @@ export async function POST(
 
   const restored = cmsServerStorage.saveRelease({
     ...release,
-    masterTimingVersion: snapshot.masterTimingVersion,
-    subtitleCues: snapshot.subtitleCues as any,
-    subtitleTranslations: snapshot.subtitleTranslations as any,
-    subtitleLanguageStatuses: snapshot.subtitleLanguageStatuses as any,
-    subtitleCueMetadata: snapshot.subtitleCueMetadata as any,
-    availableLanguages: snapshot.availableLanguages,
-    defaultLanguage: snapshot.defaultLanguage,
+    masterTimingVersion: snapshot.masterTimingVersion ?? release.masterTimingVersion ?? 1,
+    subtitleCues: (Array.isArray(snapshot.subtitleCues) ? snapshot.subtitleCues : []) as any,
+    subtitleTranslations: (snapshot.subtitleTranslations || {}) as any,
+    subtitleLanguageStatuses: (snapshot.subtitleLanguageStatuses || {}) as any,
+    subtitleCueMetadata: (snapshot.subtitleCueMetadata || {}) as any,
+    availableLanguages: snapshot.availableLanguages || release.availableLanguages || [],
+    defaultLanguage: snapshot.defaultLanguage || release.defaultLanguage || 'en',
     updatedAt: new Date().toISOString(),
   });
+
+  const alreadyPublic = restored.status === 'published' && restored.visibility === 'public';
 
   return NextResponse.json({
     restored: true,
@@ -58,7 +60,11 @@ export async function POST(
     masterTimingVersion: restored.masterTimingVersion,
     cueCount: restored.subtitleCues?.length || 0,
     languages: restored.availableLanguages || [],
-    publicChanged: false,
+    publicationActionPerformed: false,
+    alreadyPublic,
     note: 'Only the captured subtitle/timing state was restored. The private production source remains linked.',
+    warning: alreadyPublic
+      ? 'This release is already public, so restored caption data may be visible immediately through existing public rendering. No new publish action was performed.'
+      : undefined,
   });
 }
