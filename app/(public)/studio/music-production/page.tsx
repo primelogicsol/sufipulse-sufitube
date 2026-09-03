@@ -48,7 +48,7 @@ export default function MusicProduction() {
 
     return (
         <>
-            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+            <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <Image
                         src="/banner10.png"
@@ -62,7 +62,7 @@ export default function MusicProduction() {
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
                 </div>
 
-                <div className="relative z-10">
+                <div className="relative z-10" style={{ paddingTop: 'var(--hero-content-top)' }}>
                     <PageContainer>
                         <div className="max-w-5xl mx-auto text-center">
                             <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">

@@ -109,7 +109,7 @@ export default async function ReleasePremieresPage() {
 
   return (
     <>
-      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
         {/* Cinematic Background Banner matching global hero */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image

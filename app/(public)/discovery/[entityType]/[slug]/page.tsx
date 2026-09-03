@@ -61,7 +61,7 @@ export default async function EntityIntelligenceProfile({ params }: { params: Pr
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-32">
       {/* INTELLIGENCE HERO LAYER */}
-      <section className="relative pt-24 pb-16 overflow-hidden border-b border-slate-800">
+      <section className="relative pb-16 overflow-hidden border-b border-slate-800 hero-bleed">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/10 via-[#0A0A0A] to-[#0A0A0A]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
