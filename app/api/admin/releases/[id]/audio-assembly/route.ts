@@ -158,10 +158,10 @@ const sanitizeSegment = (input: any, index: number): PrivateAudioAssemblySegment
     ? undefined
     : toFiniteNonNegative(input.sourceOutSeconds, `Segment ${segmentId} sourceOutSeconds`);
 
-  const excludedSourceLineIndexes = Array.isArray(input?.excludedSourceLineIndexes)
-    ? Array.from(new Set(
-        input.excludedSourceLineIndexes
-          .map((value: unknown) => Number(value))
+  const excludedSourceLineIndexes: number[] | undefined = Array.isArray(input?.excludedSourceLineIndexes)
+    ? Array.from(new Set<number>(
+        (input.excludedSourceLineIndexes as unknown[])
+          .map((value: unknown): number => Number(value))
           .filter((value: number) => Number.isInteger(value) && value > 0),
       )).slice(0, 10000)
     : undefined;
@@ -510,7 +510,9 @@ export async function POST(
         cueNumber: index + 1,
         startTime: secondsToTimestamp(line.startSeconds),
         endTime: secondsToTimestamp(line.endSeconds),
-        lineRef: `audio-assembly:${record.assembly!.version}:${line.segmentId}:${line.sourceLineIndex}`,
+        // Keep private clip/segment provenance only in the private production
+        // store. The canonical CMS receives an opaque, public-safe line ref.
+        lineRef: `studio-master:${index + 1}`,
         sourceType: 'audio_alignment' as any,
         active: true,
       }));
@@ -520,19 +522,15 @@ export async function POST(
       publishableLines.forEach((line, index) => {
         const cueId = subtitleCues[index].id;
         sourceLanguageText[cueId] = captionText.textLines[index];
+        // Only renderer/editor-safe semantics enter the canonical release.
+        // Source IDs, segment IDs, source line indexes, edit points and
+        // assembly version remain in privateProductionSourceStorage.
         subtitleCueMetadata[cueId] = {
           ...(line.section ? {
             lineRole: ['verse', 'refrain', 'chorus', 'bridge', 'hook'].includes(line.section.toLowerCase())
               ? line.section.toLowerCase()
               : 'other',
           } : {}),
-          sourceTextMode: captionText.textSource,
-          timingSourceMode: 'private_audio_assembly',
-          assemblyVersion: record.assembly!.version,
-          assemblySegment: line.segmentId,
-          sourceLineIndex: line.sourceLineIndex,
-          clippedAtAssemblyStart: line.clippedAtStart,
-          clippedAtAssemblyEnd: line.clippedAtEnd,
         };
       });
 
