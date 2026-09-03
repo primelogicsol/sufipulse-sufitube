@@ -7,6 +7,7 @@
     "app/api/admin/releases/[id]/audio-alignment/route.ts",
     "app/api/releases/[id]/audio/route.ts",
     "app/admin/cms-releases/[id]/audio-alignment/page.tsx",
+    "app/components/release/TemporaryStreamAudioPlayer.tsx",
     "server/integrations/private-audio-alignment.ts",
     "server/integrations/private-audio-stream.ts",
     "server/storage/private-production-source-storage.ts",
