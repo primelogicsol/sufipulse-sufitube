@@ -1,0 +1,95 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+import { getAuthUser } from '@/server/middleware/authenticate';
+import { getReleaseReadStore } from '@/server/storage/release-read-backend';
+import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { privateProductionSourceStorage } from '@/server/storage/private-production-source-storage';
+import {
+  buildSafeAudioProxyHeaders,
+  fetchConfiguredPrivateAudioStream,
+  normalizeSingleRangeHeader,
+} from '@/server/integrations/private-audio-stream';
+
+export const dynamic = 'force-dynamic';
+
+const notFound = () =>
+  NextResponse.json(
+    { error: 'Audio preview not found' },
+    { status: 404, headers: { 'Cache-Control': 'no-store' } },
+  );
+
+const isPublicAudioEligible = (release: any): boolean =>
+  release?.status === 'published' &&
+  release?.visibility === 'public' &&
+  release?.format === 'audio';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const store = getReleaseReadStore();
+
+  let release = await store.getById(id);
+  if (!release) release = await store.getBySlug(id);
+  if (!release) return notFound();
+
+  const canonical = toCanonicalCMSRelease(release);
+  const source = privateProductionSourceStorage.get(canonical.id);
+  if (!source) return notFound();
+
+  const auth = await getAuthUser(request);
+  const isAdmin = auth?.role === 'admin';
+
+  if (!isAdmin) {
+    if (!isPublicAudioEligible(canonical)) return notFound();
+    if (source.publicAudioPreviewEnabled !== true) return notFound();
+  }
+
+  let rangeHeader: string | undefined;
+  try {
+    rangeHeader = normalizeSingleRangeHeader(request.headers.get('range'));
+  } catch {
+    return new NextResponse(null, {
+      status: 416,
+      headers: {
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+
+  try {
+    const upstream = await fetchConfiguredPrivateAudioStream(source.sourceAssetId, rangeHeader);
+
+    if (upstream.status === 416) {
+      const headers = buildSafeAudioProxyHeaders(upstream);
+      return new NextResponse(null, { status: 416, headers });
+    }
+
+    if (upstream.status !== 200 && upstream.status !== 206) {
+      if (!isAdmin) return notFound();
+      return NextResponse.json(
+        { error: 'Private audio source is currently unavailable.' },
+        { status: 502, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    const headers = buildSafeAudioProxyHeaders(upstream);
+    return new Response(upstream.body, {
+      status: upstream.status,
+      headers,
+    });
+  } catch (error: any) {
+    if (!isAdmin) return notFound();
+    const timedOut = error?.name === 'AbortError';
+    return NextResponse.json(
+      {
+        error: timedOut
+          ? 'Private audio source connection timed out.'
+          : 'Private audio source could not be streamed.',
+      },
+      { status: 502, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+}
