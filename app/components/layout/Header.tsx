@@ -24,23 +24,17 @@ export function Header() {
   return (
     <>
       <header
-        className={`
-          fixed
-          top-0
-          left-0
-          right-0
-          h-20
-          md:h-24
-          transition-colors
-          duration-300
-          z-50
-          flex
-          items-center
-          ${isScrolled
-            ? 'bg-[var(--color-midnight)] backdrop-blur-md border-b border-white/10 shadow-2xl'
-            : 'bg-transparent backdrop-blur-sm'
-          }
-        `.trim()}
+        className="fixed top-0 left-0 right-0 h-20 md:h-24 z-50 flex items-center"
+        style={{
+          background: isScrolled
+            ? 'rgba(5, 12, 28, 0.92)'
+            : 'linear-gradient(to bottom, rgba(5,12,28,0.80) 0%, rgba(5,12,28,0.35) 60%, transparent 100%)',
+          backdropFilter: isScrolled ? 'blur(18px)' : 'blur(4px)',
+          WebkitBackdropFilter: isScrolled ? 'blur(18px)' : 'blur(4px)',
+          borderBottom: isScrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+          boxShadow: isScrolled ? '0 4px 32px rgba(0,0,0,0.4)' : 'none',
+          transition: 'background 0.35s ease, backdrop-filter 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
+        }}
       >
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* Main Nav (Desktop) */}
