@@ -4,6 +4,7 @@ import { getAuthUser } from '@/server/middleware/authenticate';
 import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import { privateProductionSourceStorage } from '@/server/storage/private-production-source-storage';
+import { isPublicTemporaryAudioEligible } from '@/server/integrations/runtime-media-policy';
 import {
   buildSafeAudioProxyHeaders,
   fetchConfiguredPrivateAudioStream,
@@ -17,11 +18,6 @@ const notFound = () =>
     { error: 'Audio preview not found' },
     { status: 404, headers: { 'Cache-Control': 'no-store' } },
   );
-
-const isPublicAudioEligible = (release: any): boolean =>
-  release?.status === 'published' &&
-  release?.visibility === 'public' &&
-  release?.format === 'audio';
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +38,10 @@ export async function GET(
   const isAdmin = auth?.role === 'admin';
 
   if (!isAdmin) {
-    if (!isPublicAudioEligible(canonical)) return notFound();
+    // Temporary public audio is only valid before the canonical release has a
+    // final YouTube video. Once YouTube is linked, even a bookmarked relay URL
+    // must stop exposing the temporary production stream.
+    if (!isPublicTemporaryAudioEligible(canonical)) return notFound();
     if (source.publicAudioPreviewEnabled !== true) return notFound();
   }
 
