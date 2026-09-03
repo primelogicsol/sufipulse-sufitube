@@ -246,3 +246,32 @@ export function compilePrivateAudioAssembly(
     },
   };
 }
+
+/**
+ * The current temporary relay can proxy one untouched upstream source only.
+ * Any trim, offset, repeat, crossfade, or second segment requires a rendered
+ * assembly (Canva/final master or a future virtual assembly streamer) before
+ * it is safe to expose as one public audio stream.
+ */
+export function isAssemblyDirectStreamCompatible(
+  definition: PrivateAudioAssemblyDefinition | undefined,
+  primarySourceAssetId: string,
+  primaryDurationSeconds: number,
+): boolean {
+  if (!definition?.segments?.length) return true;
+
+  const enabledSegments = definition.segments.filter((segment) => segment.enabled !== false);
+  if (enabledSegments.length !== 1) return false;
+
+  const segment = enabledSegments[0];
+  if (segment.sourceAssetId !== primarySourceAssetId) return false;
+  if (Math.abs(segment.sourceInSeconds) > EPSILON) return false;
+  if (Math.abs(segment.destinationStartSeconds) > EPSILON) return false;
+  if (segment.transition?.type === 'crossfade') return false;
+
+  if (segment.sourceOutSeconds !== undefined) {
+    if (Math.abs(segment.sourceOutSeconds - primaryDurationSeconds) > 0.25) return false;
+  }
+
+  return true;
+}
