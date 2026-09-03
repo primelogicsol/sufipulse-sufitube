@@ -262,6 +262,36 @@ export async function POST(
       return NextResponse.json({ error: 'language must be a valid language code such as en, ur, hi, or pa.' }, { status: 400 });
     }
 
+    const existingTranslatedLanguages = Object.entries(release.subtitleTranslations || {})
+      .filter(([code, map]) =>
+        normalizeLanguage(code) !== language &&
+        map &&
+        typeof map === 'object' &&
+        Object.keys(map).length > 0
+      )
+      .map(([code]) => code);
+
+    if (
+      existingCueCount > 0 &&
+      existingTranslatedLanguages.length > 0 &&
+      body.confirmTranslationReset !== true
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'This release already has translated caption tracks. Replacing master timing would invalidate their cue IDs. ' +
+            'Master timing was not changed. Use a controlled translation-remap workflow, or explicitly confirm a translation reset only if those tracks may be discarded.',
+          existingTranslatedLanguages,
+          existingCueCount,
+          imported: true,
+          appliedToMasterTiming: false,
+          source: adminSummary(record),
+          requiresTranslationResetConfirmation: true,
+        },
+        { status: 409 }
+      );
+    }
+
     let captionText: ReturnType<typeof resolveCaptionText>;
     try {
       captionText = resolveCaptionText(
