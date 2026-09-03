@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "app/api/admin/releases/[id]/audio-alignment/route.ts",
+    "app/admin/cms-releases/[id]/audio-alignment/page.tsx",
+    "server/integrations/private-audio-alignment.ts",
+    "server/storage/private-production-source-storage.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
