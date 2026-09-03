@@ -31,14 +31,14 @@ export function Header() {
           right-0
           h-20
           md:h-24
-          transition-all
+          transition-colors
           duration-300
           z-50
           flex
           items-center
           ${isScrolled
-            ? 'bg-neutral-950/90 backdrop-blur-xl border-b border-white/10 shadow-2xl'
-            : 'bg-gradient-to-b from-neutral-950/90 via-neutral-950/60 to-transparent backdrop-blur-sm'
+            ? 'bg-[var(--color-midnight)] backdrop-blur-md border-b border-white/10 shadow-2xl'
+            : 'bg-transparent backdrop-blur-sm'
           }
         `.trim()}
       >
