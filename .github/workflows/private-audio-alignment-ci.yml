@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - 'app/api/admin/releases/**/audio-alignment/**'
+      - 'app/api/admin/releases/**/audio-probe/**'
       - 'app/api/releases/**/audio/**'
       - 'app/api/releases/**/runtime-media/**'
       - 'app/admin/cms-releases/**/audio-alignment/**'
