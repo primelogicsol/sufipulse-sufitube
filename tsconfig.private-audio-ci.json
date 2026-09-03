@@ -5,6 +5,7 @@
   },
   "include": [
     "app/api/admin/releases/[id]/audio-alignment/route.ts",
+    "app/api/admin/releases/[id]/audio-probe/route.ts",
     "app/api/releases/[id]/audio/route.ts",
     "app/api/releases/[id]/runtime-media/route.ts",
     "app/admin/cms-releases/[id]/audio-alignment/page.tsx",
