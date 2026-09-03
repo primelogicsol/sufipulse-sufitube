@@ -43,7 +43,7 @@ import { WorkflowAssistantSection } from './workflow-assistant-section';
 import { SocialShareKitSection } from './social-share-kit-section';
 import { ReleaseStreamingSection } from './release-streaming-section';
 import { LyricsStructureSection } from './lyrics-structure-section';
-import { LanguageManagementSection } from './language-management-section';
+import { ReleaseEditorLanguageManagementSection } from './components/sections/ReleaseEditorLanguageManagementSection';
 import { ReleasePremiereSection } from './release-premiere-section';
 import { ReleaseCommentarySection } from './release-commentary-section';
 import { ReleaseSponsorsSection } from './release-sponsors-section';
@@ -191,29 +191,6 @@ export default function EditReleasePage() {
     ready: isAdmin,
     onNavigate: (path) => router.push(path),
   });
-
-  const handleToggleLanguage = (code: string, active: boolean) => {
-    const current = form.availableLanguages || [];
-    const next = active ? [...current, code] : current.filter((c) => c !== code);
-    let newDefault = form.defaultLanguage;
-    if (!active && form.defaultLanguage === code) {
-      newDefault = next[0] || 'en';
-    }
-    setForm({ ...form, availableLanguages: next, defaultLanguage: newDefault });
-  };
-
-  const handleSetRtl = (code: string, rtl: boolean) => {
-    setForm(f => ({
-      ...f,
-      languageStyleOverrides: {
-        ...(f.languageStyleOverrides || {}),
-        [code]: {
-          ...(f.languageStyleOverrides?.[code] || {}),
-          rtl
-        }
-      }
-    }));
-  };
 
   const updateDistribution = (platformId: string, patch: Partial<PlatformDistribution>) => {
     setForm((prev) => {
@@ -642,20 +619,18 @@ export default function EditReleasePage() {
             removeLyricsBlock={removeLyricsBlock}
             getLyricsBlocks={getLyricsBlocks}
             getLanguageLabel={getLanguageLabel}
+            editorHref={!isNew ? `/admin/cms-releases/${params.id as string}/lyrics` : undefined}
           />
 
-          {/* Language Management */}
-          <LanguageManagementSection
+          <ReleaseEditorLanguageManagementSection
             form={form}
-            onToggleLanguage={handleToggleLanguage}
-            onAddCustomLanguage={addCustomLanguage}
+            setForm={setForm}
+            getLanguageLabel={getLanguageLabel}
+            addCustomLanguage={addCustomLanguage}
             deleteCustomLanguage={deleteCustomLanguage}
             saveLanguageLabel={saveLanguageLabel}
             setLanguageTone={setLanguageTone}
-            onSetRtl={handleSetRtl}
-            subtitleLanguageStatuses={form.subtitleLanguageStatuses}
-            onInputChange={handleInputChange}
-            getLanguageLabel={getLanguageLabel}
+            handleInputChange={handleInputChange}
           />
 
           {/* Subtitle Timeline + Language Tracks */}

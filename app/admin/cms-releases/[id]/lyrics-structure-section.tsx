@@ -6,6 +6,8 @@ import {
   LYRICS_SECTION_TYPES,
 } from './release-constants';
 
+import Link from 'next/link';
+
 type Props = {
   form: Partial<CMSRelease>;
   selectedLyricsStructureLanguage: string;
@@ -15,6 +17,7 @@ type Props = {
   removeLyricsBlock: (index: number) => void;
   getLyricsBlocks: (language: string) => any[];
   getLanguageLabel: (code: string) => string;
+  editorHref?: string;
 };
 
 export function LyricsStructureSection({
@@ -26,13 +29,25 @@ export function LyricsStructureSection({
   removeLyricsBlock,
   getLyricsBlocks,
   getLanguageLabel,
+  editorHref,
 }: Props) {
   const blocks = getLyricsBlocks(selectedLyricsStructureLanguage);
 
   return (
     <div id="lyrics-structure-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-        <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Lyrics System Structure</h2>
+        <div>
+          <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Lyrics System Structure</h2>
+          {editorHref && (
+            <Link
+              href={editorHref}
+              className="text-xs mt-0.5 inline-block hover:underline"
+              style={{ color: 'var(--dash-accent)' }}
+            >
+              Open Lyrics Editor &rarr;
+            </Link>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <select
             value={selectedLyricsStructureLanguage}
