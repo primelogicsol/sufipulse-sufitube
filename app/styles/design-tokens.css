@@ -55,8 +55,8 @@
   --text-6xl: 3.75rem;     /* 60px */
 
   /* Responsive Headlines - clamp() for fluid scaling */
-  --text-hero: clamp(2.5rem, 5vw, 4.5rem);      /* 40px-72px */
-  --text-section: clamp(1.875rem, 3vw, 3rem);   /* 30px-48px */
+  --text-hero: clamp(2.5rem, 5vw, 7.5rem);      /* 40px-120px for 4K support */
+  --text-section: clamp(1.875rem, 3vw, 4rem);   /* 30px-64px for 4K support */
 
   /* Line Heights */
   --leading-tight: 1.2;

@@ -81,7 +81,10 @@ function UnsubscribeContent() {
 export default function UnsubscribePage() {
   return (
     <>
-      <Section background="midnight" spacing="normal" className="pt-20">
+      <section 
+        className="bg-[var(--color-midnight)] pb-16 min-h-[60vh] hero-bleed"
+        style={{ paddingTop: 'calc(var(--hero-content-top) + 2rem)' }}
+      >
         <PageContainer>
           <Suspense fallback={
             <div className="max-w-md mx-auto text-center py-12">
@@ -92,7 +95,7 @@ export default function UnsubscribePage() {
             <UnsubscribeContent />
           </Suspense>
         </PageContainer>
-      </Section>
+      </section>
     </>
   );
 }

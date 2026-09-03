@@ -1,4 +1,4 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -84,7 +84,7 @@ export default function SufiTubePage() {
       />
 
       {/* ═══ 1. HERO ═════════════════════════════════════════════════════════ */}
-      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
+      <section className="relative w-full min-h-[90svh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
         {/* Cinematic background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
@@ -95,11 +95,13 @@ export default function SufiTubePage() {
             quality={95}
             className="object-cover object-center scale-105 opacity-55"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/90 via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/70 to-[var(--color-midnight)]" />
+          {/* Gradients */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-midnight)]/95 via-[var(--color-midnight)]/60 to-[var(--color-midnight)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[var(--color-midnight)]/50 to-[var(--color-midnight)]" />
         </div>
 
-        <div className="relative z-10 flex-1 flex flex-col justify-center">
+        {/* Content */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center" style={{ paddingTop: 'var(--hero-content-top)' }}>
           <PageContainer>
             <div className="max-w-4xl mx-auto text-center mb-16">
               {/* Kicker */}

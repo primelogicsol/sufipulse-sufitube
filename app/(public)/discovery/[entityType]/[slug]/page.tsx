@@ -63,7 +63,7 @@ export default async function EntityIntelligenceProfile({ params }: { params: Pr
       {/* INTELLIGENCE HERO LAYER */}
       <section className="relative pb-16 overflow-hidden border-b border-slate-800 hero-bleed">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/10 via-[#0A0A0A] to-[#0A0A0A]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10" style={{ paddingTop: 'var(--hero-content-top)' }}>
           
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3 flex-wrap gap-y-3">

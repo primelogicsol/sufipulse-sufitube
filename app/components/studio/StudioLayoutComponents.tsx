@@ -19,7 +19,10 @@ interface StudioHeroProps {
 
 export function StudioHero({ badge, title, mysticalName, description, disclaimer }: StudioHeroProps) {
   return (
-    <Section background="midnight" spacing="spacious">
+    <section 
+      className="bg-[var(--color-midnight)] pb-16 md:pb-[var(--section-spacing)] hero-bleed border-b border-[var(--color-border)]"
+      style={{ paddingTop: 'var(--hero-content-top)' }}
+    >
       <PageContainer>
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-6"><Badge variant="gold">{badge}</Badge></div>
@@ -36,7 +39,7 @@ export function StudioHero({ badge, title, mysticalName, description, disclaimer
           </div>
         </div>
       </PageContainer>
-    </Section>
+    </section>
   );
 }
 

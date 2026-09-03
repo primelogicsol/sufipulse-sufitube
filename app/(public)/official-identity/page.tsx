@@ -80,8 +80,8 @@ export default function OfficialIdentityPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
       />
 
-      {/* 1. HERO — matches /release-premieres pattern */}
-      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
+      {/* 1. HERO - matches /release-premieres pattern */}
+      <section className="relative w-full min-h-[90svh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
         {/* Cinematic background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
@@ -98,7 +98,7 @@ export default function OfficialIdentityPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center">
+        <div className="relative z-10 flex-1 flex flex-col justify-center" style={{ paddingTop: 'var(--hero-content-top)' }}>
           <PageContainer>
             <div className="max-w-4xl mx-auto text-center mb-16">
               {/* Kicker pill */}
