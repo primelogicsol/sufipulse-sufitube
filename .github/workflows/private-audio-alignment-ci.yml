@@ -12,6 +12,7 @@ on:
       - 'app/admin/cms-releases/**/audio-alignment/**'
       - 'server/integrations/private-audio-alignment.ts'
       - 'server/storage/private-production-source-storage.ts'
+      - 'scripts/private-audio-alignment-smoke.cjs'
       - 'tsconfig.private-audio-ci.json'
       - '.github/workflows/private-audio-alignment-ci.yml'
 
@@ -43,6 +44,9 @@ jobs:
           echo '{}' > .data/crawler-registry.json
           echo '{}' > .data/discovery-analytics.json
           for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo '[]' > .data/$f.json; done
+
+      - name: Alignment normalizer smoke test
+        run: node scripts/private-audio-alignment-smoke.cjs
 
       # The repository currently has unrelated baseline TypeScript errors in the
       # YouTube self-heal route. Keep the full check visible, but do not let that
