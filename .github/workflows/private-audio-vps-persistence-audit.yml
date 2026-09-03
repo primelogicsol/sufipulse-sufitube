@@ -39,5 +39,5 @@ jobs:
             echo 'PRIVATE_SOURCE_FILE_STATE:'
             docker exec sufipulse-new-app sh -c 'if [ -e /app/.data/private-production-sources.json ]; then stat -c "exists=yes mode=%a owner=%U group=%G size=%s" /app/.data/private-production-sources.json; else echo exists=no; fi'
 
-            echo 'AUDIO_FILE_GUARD:'
-            docker exec sufipulse-new-app sh -c 'count=$(find /app/.data -maxdepth 2 -type f \( -iname "*.mp3" -o -iname "*.wav" \) 2>/dev/null | wc -l); echo persisted_audio_files_in_data_dir=$count'
+            echo 'EXISTING_AUDIO_FILE_INVENTORY_METADATA_ONLY:'
+            docker exec sufipulse-new-app sh -c 'find /app/.data -maxdepth 3 -type f \( -iname "*.mp3" -o -iname "*.wav" \) -printf "%p|%s bytes|%TY-%Tm-%TdT%TH:%TM:%TS\n" 2>/dev/null | sort'
