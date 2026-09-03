@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, GitMerge, Plus, Save, ShieldCheck, Trash2 } from 'lucide-react';
+import { ArrowLeft, GitMerge, Plus, Save, ShieldCheck, Trash2, Upload } from 'lucide-react';
 
 import { useAuth } from '../../../../contexts/AuthContext';
 import DashboardLayout from '../../../../components/layout/DashboardLayout';
@@ -35,12 +35,6 @@ type SegmentDraft = {
   transition: { type: 'cut' | 'crossfade'; durationSeconds?: number };
   excludedSourceLineIndexes?: number[];
   enabled?: boolean;
-};
-
-type AssemblyState = {
-  version: number;
-  updatedAt: string;
-  segments: SegmentDraft[];
 };
 
 type CompiledPreview = {
@@ -97,13 +91,17 @@ export default function PrivateAudioAssemblyPage() {
   const isAdmin = user?.role?.includes('admin') ?? false;
 
   const [releaseTitle, setReleaseTitle] = useState('Release');
+  const [language, setLanguage] = useState('en');
   const [sources, setSources] = useState<SourceSummary[]>([]);
   const [primarySourceAssetId, setPrimarySourceAssetId] = useState('');
   const [segments, setSegments] = useState<SegmentDraft[]>([]);
+  const [savedAssemblyVersion, setSavedAssemblyVersion] = useState<number | null>(null);
+  const [assemblyDirty, setAssemblyDirty] = useState(false);
   const [compiled, setCompiled] = useState<CompiledPreview | null>(null);
   const [sourceAssetId, setSourceAssetId] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [payloadJson, setPayloadJson] = useState('');
+  const [confirmApply, setConfirmApply] = useState(false);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
@@ -125,6 +123,7 @@ export default function PrivateAudioAssemblyPage() {
       if (releaseRes.ok) {
         const release = await releaseRes.json();
         setReleaseTitle(release.title || release.canonicalTitle || 'Release');
+        setLanguage(String(release.defaultLanguage || 'en').toLowerCase());
       }
 
       if (!assemblyRes.ok) {
@@ -136,6 +135,9 @@ export default function PrivateAudioAssemblyPage() {
       setSources(Array.isArray(data.sources) ? data.sources : []);
       setPrimarySourceAssetId(String(data.primarySourceAssetId || ''));
       setSegments(Array.isArray(data.assembly?.segments) ? data.assembly.segments : []);
+      setSavedAssemblyVersion(Number.isFinite(Number(data.assembly?.version)) ? Number(data.assembly.version) : null);
+      setAssemblyDirty(false);
+      setConfirmApply(false);
       setCompiled(data.compiled || null);
     } catch (err: any) {
       setError(String(err?.message || err || 'Failed to load private audio assembly.'));
@@ -213,16 +215,22 @@ export default function PrivateAudioAssemblyPage() {
         enabled: true,
       },
     ]);
+    setAssemblyDirty(true);
+    setConfirmApply(false);
     setCompiled(null);
   };
 
   const updateSegment = (index: number, patch: Partial<SegmentDraft>) => {
     setSegments((current) => current.map((segment, i) => i === index ? { ...segment, ...patch } : segment));
+    setAssemblyDirty(true);
+    setConfirmApply(false);
     setCompiled(null);
   };
 
   const removeSegment = (index: number) => {
     setSegments((current) => current.filter((_, i) => i !== index));
+    setAssemblyDirty(true);
+    setConfirmApply(false);
     setCompiled(null);
   };
 
@@ -242,12 +250,46 @@ export default function PrivateAudioAssemblyPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `Assembly request failed with HTTP ${response.status}`);
       setCompiled(data.compiled || null);
-      if (save && data.assembly) setSegments(data.assembly.segments || segments);
+      if (save && data.assembly) {
+        setSegments(data.assembly.segments || segments);
+        setSavedAssemblyVersion(Number(data.assembly.version));
+        setAssemblyDirty(false);
+        setConfirmApply(false);
+      }
       setMessage(save
         ? `Assembly v${data.assembly?.version || '?'} saved privately. Canonical caption timing has not been replaced.`
         : 'Assembly compiled for inspection only. Nothing was saved or published.');
     } catch (err: any) {
       setError(String(err?.message || err || 'Assembly could not be compiled.'));
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const applySavedAssemblyTiming = async () => {
+    try {
+      setWorking(true);
+      setError('');
+      setMessage('');
+      const response = await fetch(`/api/admin/releases/${encodeURIComponent(releaseId)}/audio-assembly`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'apply-master-timing',
+          language: language.trim().toLowerCase(),
+          confirmReplace: true,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `Master timing apply failed with HTTP ${response.status}`);
+
+      setConfirmApply(false);
+      setMessage(
+        `Saved assembly v${data.assemblyVersion || savedAssemblyVersion || '?'} applied as draft master timing: ` +
+        `${data.cueCount || 0} cues, master timing version ${data.masterTimingVersion || '?'}. Nothing was published.`,
+      );
+    } catch (err: any) {
+      setError(String(err?.message || err || 'Saved assembly timing could not be applied.'));
     } finally {
       setWorking(false);
     }
@@ -285,7 +327,7 @@ export default function PrivateAudioAssemblyPage() {
             <div>
               <h2 className="font-medium text-white">One release, multiple private clips</h2>
               <p className="mt-1 max-w-4xl text-sm leading-6 text-white/60">
-                Keep each clip's original alignment untouched. Define where each clip starts and ends in the Canva edit, then compile those local timestamps into one SufiPulse master timeline. Repeated extension lines are excluded explicitly by source line number; they are never guessed away automatically.
+                Keep each clip&apos;s original alignment untouched. Define where each clip starts and ends in the Canva edit, then compile those local timestamps into one SufiPulse master timeline. Repeated extension lines are excluded explicitly by source line number; they are never guessed away automatically.
               </p>
             </div>
           </div>
@@ -491,6 +533,59 @@ export default function PrivateAudioAssemblyPage() {
             </div>
           </section>
         ) : null}
+
+        <section className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-5">
+          <div className="flex items-start gap-3">
+            <Upload className="mt-0.5 h-5 w-5 text-amber-300" />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-medium text-white">4. Apply saved assembly to draft master timing</h2>
+              <p className="mt-1 max-w-4xl text-sm leading-6 text-white/60">
+                This uses the saved assembly only. It first requires a one-to-one match between the compiled publishable timing lines and the approved CMS master lyrics. It captures a rollback snapshot and writes draft caption timing only; it does not publish the website or YouTube.
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-end gap-4">
+                <label className="block text-xs text-white/45">
+                  Source language
+                  <input
+                    value={language}
+                    onChange={(event) => setLanguage(event.target.value)}
+                    className="mt-1 block w-28 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+                <div className="rounded-lg border border-white/10 bg-black/15 px-3 py-2 text-xs text-white/55">
+                  Saved assembly: <span className="font-semibold text-white/80">{savedAssemblyVersion ? `v${savedAssemblyVersion}` : 'none'}</span>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-black/15 px-3 py-2 text-xs text-white/55">
+                  Unsaved edits: <span className={assemblyDirty ? 'font-semibold text-amber-200' : 'font-semibold text-emerald-200'}>{assemblyDirty ? 'yes' : 'no'}</span>
+                </div>
+              </div>
+
+              <label className="mt-4 flex items-start gap-3 text-sm text-white/70">
+                <input
+                  type="checkbox"
+                  checked={confirmApply}
+                  disabled={!savedAssemblyVersion || assemblyDirty}
+                  onChange={(event) => setConfirmApply(event.target.checked)}
+                  className="mt-1"
+                />
+                <span>I reviewed the saved assembly and authorize it to replace any existing draft master timing. Existing translated tracks must not be silently discarded.</span>
+              </label>
+
+              <button
+                type="button"
+                disabled={!savedAssemblyVersion || assemblyDirty || !compiled || !confirmApply || working}
+                onClick={() => void applySavedAssemblyTiming()}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-300/30 bg-amber-300/10 px-4 py-2.5 text-sm font-semibold text-amber-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Upload className="h-4 w-4" /> Apply saved assembly as draft timing
+              </button>
+
+              {assemblyDirty ? (
+                <p className="mt-3 text-xs text-amber-200/70">Save the current assembly again before applying timing. Unsaved edit points are never applied implicitly.</p>
+              ) : null}
+            </div>
+          </div>
+        </section>
 
         {message ? <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{message}</div> : null}
         {error ? <div className="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
