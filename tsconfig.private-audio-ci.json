@@ -15,6 +15,7 @@
     "app/(public)/release-detail/[slug]/page.tsx",
     "server/integrations/private-audio-alignment.ts",
     "server/integrations/private-audio-stream.ts",
+    "server/integrations/runtime-media-policy.ts",
     "server/storage/private-production-source-storage.ts"
   ],
   "exclude": [
