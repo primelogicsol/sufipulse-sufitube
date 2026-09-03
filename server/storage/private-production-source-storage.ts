@@ -41,6 +41,7 @@ export type PrivateProductionSourceRecord = {
 
   sources?: Record<string, PrivateProductionSourceAsset>;
   assembly?: PrivateAudioAssemblyDefinition;
+  assemblyHistory?: PrivateAudioAssemblyDefinition[];
   rollbackSnapshot?: SubtitleRollbackSnapshot;
   publicAudioPreviewEnabled?: boolean;
   publicAudioPreviewUpdatedAt?: string;
@@ -57,6 +58,7 @@ type LegacyPrivateProductionSourceFile = {
 };
 
 const DATA_FILE = path.join(DATA_DIR, 'private-production-sources.json');
+const MAX_ASSEMBLY_HISTORY = 20;
 
 const emptyStore = (): PrivateProductionSourceFile => ({ version: 2, releases: {} });
 
@@ -79,6 +81,9 @@ const normalizeRecord = (record: PrivateProductionSourceRecord): PrivateProducti
     ...(record.sources || {}),
     [record.sourceAssetId]: assetFromRecord(record),
   },
+  assemblyHistory: Array.isArray(record.assemblyHistory)
+    ? record.assemblyHistory.slice(-MAX_ASSEMBLY_HISTORY)
+    : [],
 });
 
 const migrateLegacyStore = (legacy: LegacyPrivateProductionSourceFile): PrivateProductionSourceFile => ({
@@ -148,6 +153,11 @@ export const privateProductionSourceStorage = {
     return Object.values(record.sources || { [record.sourceAssetId]: assetFromRecord(record) });
   },
 
+  getAssemblyHistory(releaseId: string): PrivateAudioAssemblyDefinition[] {
+    const record = this.get(releaseId);
+    return record?.assemblyHistory ? [...record.assemblyHistory] : [];
+  },
+
   save(record: PrivateProductionSourceRecord): PrivateProductionSourceRecord {
     const store = load();
     const existing = store.releases[record.releaseId];
@@ -170,6 +180,7 @@ export const privateProductionSourceStorage = {
         [record.sourceAssetId]: primaryAsset,
       },
       assembly: record.assembly ?? existing?.assembly,
+      assemblyHistory: record.assemblyHistory ?? existing?.assemblyHistory ?? [],
       updatedAt: now,
     };
     store.releases[record.releaseId] = next;
@@ -220,13 +231,23 @@ export const privateProductionSourceStorage = {
       }
     }
 
+    const now = new Date().toISOString();
+    const normalizedAssembly: PrivateAudioAssemblyDefinition = {
+      ...assembly,
+      updatedAt: now,
+    };
+    const history = [...(existing.assemblyHistory || [])];
+    if (existing.assembly && existing.assembly.version !== normalizedAssembly.version) {
+      const withoutSameVersion = history.filter((item) => item.version !== existing.assembly!.version);
+      withoutSameVersion.push(existing.assembly);
+      history.splice(0, history.length, ...withoutSameVersion.slice(-MAX_ASSEMBLY_HISTORY));
+    }
+
     const next: PrivateProductionSourceRecord = {
       ...existing,
-      assembly: {
-        ...assembly,
-        updatedAt: new Date().toISOString(),
-      },
-      updatedAt: new Date().toISOString(),
+      assembly: normalizedAssembly,
+      assemblyHistory: history.slice(-MAX_ASSEMBLY_HISTORY),
+      updatedAt: now,
     };
     store.releases[releaseId] = next;
     persist(store);
