@@ -4,6 +4,7 @@ import { getAuthUser } from '@/server/middleware/authenticate';
 import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import { privateProductionSourceStorage } from '@/server/storage/private-production-source-storage';
+import { isAssemblyDirectStreamCompatible } from '@/server/integrations/private-audio-assembly';
 import { isPublicTemporaryAudioEligible } from '@/server/integrations/runtime-media-policy';
 import {
   buildSafeAudioProxyHeaders,
@@ -36,6 +37,11 @@ export async function GET(
 
   const auth = await getAuthUser(request);
   const isAdmin = auth?.role === 'admin';
+  const assemblyDirectStreamCompatible = isAssemblyDirectStreamCompatible(
+    source.assembly,
+    source.sourceAssetId,
+    source.alignment.durationSeconds,
+  );
 
   if (!isAdmin) {
     // Temporary public audio is only valid before the canonical release has a
@@ -43,6 +49,11 @@ export async function GET(
     // must stop exposing the temporary production stream.
     if (!isPublicTemporaryAudioEligible(canonical)) return notFound();
     if (source.publicAudioPreviewEnabled !== true) return notFound();
+
+    // The relay can proxy one untouched source only. If Studio has defined a
+    // trim, offset, repeat, crossfade, or extension assembly, exposing the
+    // primary clip would no longer represent the canonical song.
+    if (!assemblyDirectStreamCompatible) return notFound();
   }
 
   let rangeHeader: string | undefined;
@@ -75,6 +86,9 @@ export async function GET(
     }
 
     const headers = buildSafeAudioProxyHeaders(upstream);
+    if (isAdmin && !assemblyDirectStreamCompatible) {
+      headers.set('X-SufiPulse-Stream-Scope', 'primary-source-only');
+    }
     return new Response(upstream.body, {
       status: upstream.status,
       headers,
