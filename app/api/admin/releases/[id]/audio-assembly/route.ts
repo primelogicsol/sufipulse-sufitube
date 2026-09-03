@@ -1,13 +1,16 @@
+import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import {
   extractSourceAssetId,
   fetchConfiguredPrivateAudioAlignment,
+  isProductionDirection,
   normalizePrivateAudioAlignment,
 } from '@/server/integrations/private-audio-alignment';
 import {
   compilePrivateAudioAssembly,
+  type CompiledPrivateAudioLine,
   type PrivateAudioAssemblyDefinition,
   type PrivateAudioAssemblySegment,
   type PrivateAudioSourceRole,
@@ -37,6 +40,75 @@ const SOURCE_ROLES = new Set<PrivateAudioSourceRole>([
   'correction',
   'other',
 ]);
+
+const secondsToTimestamp = (seconds: number): string => {
+  const totalMs = Math.max(0, Math.round(seconds * 1000));
+  const hours = Math.floor(totalMs / 3_600_000);
+  const minutes = Math.floor((totalMs % 3_600_000) / 60_000);
+  const secs = Math.floor((totalMs % 60_000) / 1000);
+  const ms = totalMs % 1000;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+};
+
+const normalizeLanguage = (value: unknown): string => String(value || '').trim().toLowerCase();
+
+const getApprovedLyricsStructureLines = (release: any, language: string): string[] => {
+  const structures = release?.lyricsStructure || {};
+  const normalizedLanguage = normalizeLanguage(language);
+  const structureKey = Object.keys(structures).find((key) => normalizeLanguage(key) === normalizedLanguage);
+  if (!structureKey || !Array.isArray(structures[structureKey])) return [];
+
+  return [...structures[structureKey]]
+    .sort((a: any, b: any) => Number(a?.order || 0) - Number(b?.order || 0))
+    .flatMap((block: any) => Array.isArray(block?.lines) ? block.lines : [])
+    .map((line: unknown) => String(line || '').trim())
+    .filter((line: string) => Boolean(line) && !isProductionDirection(line));
+};
+
+const resolveCaptionText = (
+  release: any,
+  language: string,
+  publishableLines: CompiledPrivateAudioLine[],
+  allowProviderTextFallback: boolean,
+): { textLines: string[]; textSource: 'cms_lyrics_structure' | 'provider_alignment_draft' } => {
+  const approvedLines = getApprovedLyricsStructureLines(release, language);
+
+  if (approvedLines.length > 0) {
+    if (approvedLines.length !== publishableLines.length) {
+      throw new Error(
+        `Approved CMS lyrics contain ${approvedLines.length} publishable lines, but the compiled production assembly contains ${publishableLines.length}. ` +
+        'Master timing was not changed. Adjust source in/out points or explicitly exclude repeated extension lines until the assembly maps one-to-one to the approved lyrics.',
+      );
+    }
+    return { textLines: approvedLines, textSource: 'cms_lyrics_structure' };
+  }
+
+  if (!allowProviderTextFallback) {
+    throw new Error(
+      `No approved CMS lyrics structure was found for language "${language}". ` +
+      'Provider transcription remains private. Add/approve the master lyrics first, or explicitly allow provider-text fallback only for a controlled internal draft.',
+    );
+  }
+
+  return {
+    textLines: publishableLines.map((line) => line.text),
+    textSource: 'provider_alignment_draft',
+  };
+};
+
+const cueIdForAssemblyLine = (
+  releaseId: string,
+  assemblyVersion: number,
+  line: CompiledPrivateAudioLine,
+): string => {
+  const digest = createHash('sha1')
+    .update(
+      `${releaseId}|assembly:${assemblyVersion}|${line.segmentId}|${line.sourceAssetId}|${line.sourceLineIndex}|${line.startSeconds}|${line.endSeconds}`,
+    )
+    .digest('hex')
+    .slice(0, 16);
+  return `cue_assembly_${digest}`;
+};
 
 const sanitizeProviderKey = (input: unknown): string => {
   const value = String(input || process.env.PRIVATE_AUDIO_PROVIDER_KEY || 'configured_private_audio_source').trim();
@@ -337,8 +409,163 @@ export async function POST(
       }, { headers: { 'Cache-Control': 'no-store' } });
     }
 
+    if (action === 'apply-master-timing') {
+      const record = privateProductionSourceStorage.get(id);
+      if (!record?.assembly) {
+        return NextResponse.json(
+          { error: 'Save and review a private production assembly before applying master timing.' },
+          { status: 409 },
+        );
+      }
+
+      const compiled = compileStoredAssembly(id, record.assembly);
+      if (!compiled) {
+        return NextResponse.json({ error: 'The saved production assembly could not be compiled.' }, { status: 422 });
+      }
+
+      const publishableLines = compiled.lines.filter((line) => !line.isProductionDirection && line.text.trim());
+      if (!publishableLines.length) {
+        return NextResponse.json({ error: 'No publishable lyric lines remain after assembly filtering.' }, { status: 422 });
+      }
+
+      const language = normalizeLanguage(body.language || release.defaultLanguage || 'en');
+      if (!/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/i.test(language)) {
+        return NextResponse.json({ error: 'language must be a valid language code such as en, ur, hi, or pa.' }, { status: 400 });
+      }
+
+      const existingCueCount = release.subtitleCues?.length || 0;
+      if (existingCueCount > 0 && body.confirmReplace !== true) {
+        return NextResponse.json(
+          {
+            error: 'Master timing already exists. Re-submit with confirmReplace=true only after reviewing the compiled assembly.',
+            existingCueCount,
+            appliedToMasterTiming: false,
+          },
+          { status: 409 },
+        );
+      }
+
+      const existingTranslatedLanguages = Object.entries(release.subtitleTranslations || {})
+        .filter(([code, map]) =>
+          normalizeLanguage(code) !== language &&
+          map &&
+          typeof map === 'object' &&
+          Object.keys(map).length > 0,
+        )
+        .map(([code]) => code);
+
+      if (
+        existingCueCount > 0 &&
+        existingTranslatedLanguages.length > 0 &&
+        body.confirmTranslationReset !== true
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'This release already has translated caption tracks. Replacing master timing would invalidate their cue IDs. ' +
+              'Master timing was not changed. Use a controlled translation-remap workflow, or explicitly confirm a translation reset only if those tracks may be discarded.',
+            existingTranslatedLanguages,
+            existingCueCount,
+            appliedToMasterTiming: false,
+            requiresTranslationResetConfirmation: true,
+          },
+          { status: 409 },
+        );
+      }
+
+      let captionText: ReturnType<typeof resolveCaptionText>;
+      try {
+        captionText = resolveCaptionText(
+          release,
+          language,
+          publishableLines,
+          body.allowProviderTextFallback === true,
+        );
+      } catch (error: any) {
+        return NextResponse.json(
+          {
+            error: String(error?.message || error),
+            appliedToMasterTiming: false,
+            approvedLyricsLineCount: getApprovedLyricsStructureLines(release, language).length,
+            assemblyPublishableLineCount: publishableLines.length,
+            assemblyVersion: record.assembly.version,
+          },
+          { status: 422 },
+        );
+      }
+
+      privateProductionSourceStorage.setRollbackSnapshot(id, {
+        capturedAt: new Date().toISOString(),
+        masterTimingVersion: release.masterTimingVersion,
+        subtitleCues: release.subtitleCues,
+        subtitleTranslations: release.subtitleTranslations,
+        subtitleLanguageStatuses: release.subtitleLanguageStatuses,
+        subtitleCueMetadata: release.subtitleCueMetadata,
+        availableLanguages: release.availableLanguages,
+        defaultLanguage: release.defaultLanguage,
+      });
+
+      const subtitleCues = publishableLines.map((line, index) => ({
+        id: cueIdForAssemblyLine(id, record.assembly!.version, line),
+        cueNumber: index + 1,
+        startTime: secondsToTimestamp(line.startSeconds),
+        endTime: secondsToTimestamp(line.endSeconds),
+        lineRef: `audio-assembly:${record.assembly!.version}:${line.segmentId}:${line.sourceLineIndex}`,
+        sourceType: 'audio_alignment' as any,
+        active: true,
+      }));
+
+      const sourceLanguageText: Record<string, string> = {};
+      const subtitleCueMetadata: Record<string, any> = {};
+      publishableLines.forEach((line, index) => {
+        const cueId = subtitleCues[index].id;
+        sourceLanguageText[cueId] = captionText.textLines[index];
+        subtitleCueMetadata[cueId] = {
+          ...(line.section ? {
+            lineRole: ['verse', 'refrain', 'chorus', 'bridge', 'hook'].includes(line.section.toLowerCase())
+              ? line.section.toLowerCase()
+              : 'other',
+          } : {}),
+          sourceTextMode: captionText.textSource,
+          timingSourceMode: 'private_audio_assembly',
+          assemblyVersion: record.assembly!.version,
+          assemblySegment: line.segmentId,
+          sourceLineIndex: line.sourceLineIndex,
+          clippedAtAssemblyStart: line.clippedAtStart,
+          clippedAtAssemblyEnd: line.clippedAtEnd,
+        };
+      });
+
+      const updated = cmsServerStorage.saveRelease({
+        ...release,
+        masterTimingVersion: (release.masterTimingVersion || 0) + 1,
+        subtitleCues,
+        subtitleTranslations: { [language]: sourceLanguageText },
+        subtitleLanguageStatuses: { [language]: 'draft' },
+        subtitleCueMetadata,
+        availableLanguages: Array.from(new Set([...(release.availableLanguages || []), language])),
+        defaultLanguage: release.defaultLanguage || language,
+        updatedAt: new Date().toISOString(),
+      });
+
+      return NextResponse.json({
+        appliedToMasterTiming: true,
+        releaseId: updated.id,
+        masterTimingVersion: updated.masterTimingVersion,
+        assemblyVersion: record.assembly.version,
+        language,
+        cueCount: subtitleCues.length,
+        captionTextSource: captionText.textSource,
+        filteredProductionDirections: compiled.stats.productionDirectionCount,
+        explicitlyExcludedSourceLines: compiled.stats.excludedLineCount,
+        clippedLines: compiled.stats.clippedLineCount,
+        overlapCount: compiled.stats.overlapCount,
+        subtitleStatus: 'draft',
+      }, { headers: { 'Cache-Control': 'no-store' } });
+    }
+
     return NextResponse.json(
-      { error: 'Unsupported action. Use import-source, compile, or save-assembly.' },
+      { error: 'Unsupported action. Use import-source, compile, save-assembly, or apply-master-timing.' },
       { status: 400 },
     );
   } catch (error: any) {
