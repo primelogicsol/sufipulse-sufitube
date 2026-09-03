@@ -1,0 +1,92 @@
+name: Private Audio VPS Discovery
+
+on:
+  push:
+    branches:
+      - feature/private-audio-alignment-integration
+    paths:
+      - '.github/workflows/private-audio-vps-discovery.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  discover-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Inspect SufiPulse VPS runtime without printing secrets
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -euo pipefail
+
+            echo '=== HOST ==='
+            hostname
+            uname -a
+
+            echo '=== ACTIVE DOCKER CONTAINERS ==='
+            docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.Status}}'
+
+            echo '=== SUFIPULSE DIRECTORY ==='
+            if [ -d /var/www/sufipulse-new ]; then
+              cd /var/www/sufipulse-new
+              pwd
+              ls -lah | sed -E 's/([A-Za-z0-9_]*(PASS|TOKEN|SECRET|KEY)[A-Za-z0-9_]*)/REDACTED_NAME/gI' || true
+            else
+              echo 'missing:/var/www/sufipulse-new'
+            fi
+
+            echo '=== COMPOSE SERVICE SUMMARY ==='
+            if [ -f /var/www/sufipulse-new/docker-compose.yml ]; then
+              cd /var/www/sufipulse-new
+              docker compose -p sufipulse_new ps
+            else
+              echo 'compose file not found'
+            fi
+
+            echo '=== ENV VARIABLE NAMES ONLY ==='
+            if [ -f /var/www/sufipulse-new/.env ]; then
+              awk -F= '
+                /^[[:space:]]*#/ { next }
+                /^[[:space:]]*$/ { next }
+                /^[A-Za-z_][A-Za-z0-9_]*=/ { print $1 }
+              ' /var/www/sufipulse-new/.env | sort
+            else
+              echo '.env not found'
+            fi
+
+            echo '=== PRIVATE AUDIO / SUNO VARIABLE PRESENCE ONLY ==='
+            if [ -f /var/www/sufipulse-new/.env ]; then
+              for key in \
+                PRIVATE_AUDIO_PROVIDER_KEY \
+                PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE \
+                PRIVATE_AUDIO_ALIGNMENT_AUTHORIZATION \
+                PRIVATE_AUDIO_ALIGNMENT_EXTRA_HEADERS_JSON \
+                PRIVATE_AUDIO_STREAM_URL_TEMPLATE \
+                PRIVATE_AUDIO_STREAM_AUTHORIZATION \
+                PRIVATE_AUDIO_STREAM_EXTRA_HEADERS_JSON \
+                SUNO_API_URL \
+                SUNO_TOKEN \
+                SUNO_COOKIE \
+                SUNO_AUTHORIZATION; do
+                if grep -q "^${key}=" /var/www/sufipulse-new/.env; then
+                  echo "${key}=PRESENT"
+                else
+                  echo "${key}=ABSENT"
+                fi
+              done
+            fi
+
+            echo '=== CONTAINER ENV VARIABLE NAMES ONLY ==='
+            if docker ps --format '{{.Names}}' | grep -qx 'sufipulse-new-app'; then
+              docker exec sufipulse-new-app /bin/sh -lc 'env | cut -d= -f1 | sort | grep -E "^(PRIVATE_AUDIO|SUNO|NEXT_PUBLIC_APP_URL|RELEASE_STORAGE_BACKEND|NODE_ENV)" || true'
+            else
+              echo 'sufipulse-new-app not running'
+            fi
+
+            echo '=== DISCOVERY COMPLETE ==='
