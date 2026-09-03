@@ -3,27 +3,36 @@ const path = require('node:path');
 const Module = require('node:module');
 const swc = require('@swc/core');
 
-const sourcePath = path.join(process.cwd(), 'server', 'integrations', 'private-audio-stream.ts');
-const source = fs.readFileSync(sourcePath, 'utf8');
-const transformed = swc.transformSync(source, {
-  filename: sourcePath,
-  jsc: {
-    parser: { syntax: 'typescript' },
-    target: 'es2022',
-  },
-  module: { type: 'commonjs' },
-});
+const loadTsModule = (relativePath) => {
+  const sourcePath = path.join(process.cwd(), ...relativePath);
+  const source = fs.readFileSync(sourcePath, 'utf8');
+  const transformed = swc.transformSync(source, {
+    filename: sourcePath,
+    jsc: {
+      parser: { syntax: 'typescript' },
+      target: 'es2022',
+    },
+    module: { type: 'commonjs' },
+  });
 
-const executable = transformed.code.replace(/require\(["']server-only["']\);?/g, '');
-const mod = new Module(sourcePath, module);
-mod.filename = sourcePath;
-mod.paths = Module._nodeModulePaths(path.dirname(sourcePath));
-mod._compile(executable, sourcePath);
+  const executable = transformed.code.replace(/require\(["']server-only["']\);?/g, '');
+  const mod = new Module(sourcePath, module);
+  mod.filename = sourcePath;
+  mod.paths = Module._nodeModulePaths(path.dirname(sourcePath));
+  mod._compile(executable, sourcePath);
+  return mod.exports;
+};
 
 const {
   normalizeSingleRangeHeader,
   buildSafeAudioProxyHeaders,
-} = mod.exports;
+} = loadTsModule(['server', 'integrations', 'private-audio-stream.ts']);
+
+const {
+  hasFinalYoutubeVideo,
+  isPublicReleaseEligible,
+  isPublicTemporaryAudioEligible,
+} = loadTsModule(['server', 'integrations', 'runtime-media-policy.ts']);
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -65,5 +74,30 @@ assert(safe.get('Location') === null, 'Provider redirect location must never be 
 assert(safe.get('X-Provider-Secret') === null, 'Unknown provider headers must never be forwarded');
 assert(safe.get('Cache-Control').includes('no-store'), 'Relay response must be no-store');
 assert(safe.get('Content-Disposition') === 'inline', 'Relay response must be inline, not attachment');
+
+const temporaryAudioRelease = {
+  status: 'published',
+  visibility: 'public',
+  format: 'audio',
+  youtubeId: '',
+};
+assert(isPublicReleaseEligible(temporaryAudioRelease), 'Published/public release should be publicly eligible');
+assert(isPublicTemporaryAudioEligible(temporaryAudioRelease), 'Audio-first release without YouTube should allow temporary public audio');
+assert(!hasFinalYoutubeVideo(temporaryAudioRelease), 'Blank YouTube ID should not count as final video');
+
+const finalizedRelease = {
+  ...temporaryAudioRelease,
+  youtubeId: 'Hc1TjcyZLnM',
+};
+assert(hasFinalYoutubeVideo(finalizedRelease), 'YouTube ID should mark the release as finalized to video');
+assert(!isPublicTemporaryAudioEligible(finalizedRelease), 'Final YouTube link must disable temporary public audio, including direct relay URLs');
+
+const privateDraft = {
+  status: 'draft',
+  visibility: 'private',
+  format: 'audio',
+  youtubeId: '',
+};
+assert(!isPublicTemporaryAudioEligible(privateDraft), 'Draft/private release must never expose temporary public audio');
 
 console.log('Private audio stream smoke test: PASS');
