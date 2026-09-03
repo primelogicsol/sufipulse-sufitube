@@ -9,10 +9,14 @@ on:
       - main
     paths:
       - 'app/api/admin/releases/**/audio-alignment/**'
+      - 'app/api/releases/**/audio/**'
       - 'app/admin/cms-releases/**/audio-alignment/**'
       - 'server/integrations/private-audio-alignment.ts'
+      - 'server/integrations/private-audio-stream.ts'
       - 'server/storage/private-production-source-storage.ts'
+      - 'server/storage/release-audio-runtime.ts'
       - 'scripts/private-audio-alignment-smoke.cjs'
+      - 'scripts/private-audio-stream-smoke.cjs'
       - 'tsconfig.private-audio-ci.json'
       - '.github/workflows/private-audio-alignment-ci.yml'
 
@@ -47,6 +51,9 @@ jobs:
 
       - name: Alignment normalizer smoke test
         run: node scripts/private-audio-alignment-smoke.cjs
+
+      - name: Audio relay smoke test
+        run: node scripts/private-audio-stream-smoke.cjs
 
       # The repository currently has unrelated baseline TypeScript errors in the
       # YouTube self-heal route. Keep the full check visible, but do not let that
