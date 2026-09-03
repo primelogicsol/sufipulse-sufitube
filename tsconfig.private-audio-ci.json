@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "app/api/admin/releases/[id]/audio-alignment/route.ts",
+    "app/api/admin/releases/[id]/audio-alignment/rollback/route.ts",
+    "app/api/admin/releases/[id]/audio-assembly/route.ts",
+    "app/api/admin/releases/[id]/audio-probe/route.ts",
+    "app/api/releases/[id]/audio/route.ts",
+    "app/api/releases/[id]/runtime-media/route.ts",
+    "app/admin/cms-releases/new/page.tsx",
+    "app/admin/cms-releases/[id]/audio-alignment/page.tsx",
+    "app/admin/cms-releases/[id]/audio-assembly/page.tsx",
+    "app/components/release/TemporaryStreamAudioPlayer.tsx",
+    "app/(public)/release-detail/[slug]/components/useRuntimeReleaseMedia.ts",
+    "app/(public)/release-detail/[slug]/page.tsx",
+    "server/integrations/private-audio-alignment.ts",
+    "server/integrations/private-audio-assembly.ts",
+    "server/integrations/private-audio-stream.ts",
+    "server/integrations/runtime-media-policy.ts",
+    "server/storage/private-production-source-storage.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

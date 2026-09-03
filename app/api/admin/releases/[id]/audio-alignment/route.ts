@@ -1,0 +1,443 @@
+import { createHash } from 'node:crypto';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { requireAdmin } from '@/server/middleware/authenticate';
+import {
+  extractSourceAssetId,
+  fetchConfiguredPrivateAudioAlignment,
+  isProductionDirection,
+  normalizePrivateAudioAlignment,
+  type PrivateAlignedLine,
+} from '@/server/integrations/private-audio-alignment';
+import { isPrivateAudioStreamConfigured } from '@/server/integrations/private-audio-stream';
+import {
+  privateProductionSourceStorage,
+  type PrivateProductionSourceRecord,
+} from '@/server/storage/private-production-source-storage';
+
+export const dynamic = 'force-dynamic';
+
+const PROHIBITED_REQUEST_SECRET_KEYS = [
+  'authorization',
+  'bearerToken',
+  'accessToken',
+  'cookie',
+  'headers',
+  'deviceId',
+  'browserToken',
+];
+
+const secondsToTimestamp = (seconds: number): string => {
+  const totalMs = Math.max(0, Math.round(seconds * 1000));
+  const hours = Math.floor(totalMs / 3_600_000);
+  const minutes = Math.floor((totalMs % 3_600_000) / 60_000);
+  const secs = Math.floor((totalMs % 60_000) / 1000);
+  const ms = totalMs % 1000;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+};
+
+const cueIdForLine = (releaseId: string, sourceAssetId: string, line: PrivateAlignedLine): string => {
+  const digest = createHash('sha1')
+    .update(`${releaseId}|${sourceAssetId}|${line.index}|${line.startSeconds}|${line.endSeconds}`)
+    .digest('hex')
+    .slice(0, 16);
+  return `cue_audio_${digest}`;
+};
+
+const adminSummary = (record: PrivateProductionSourceRecord) => ({
+  releaseId: record.releaseId,
+  providerKey: record.providerKey,
+  sourceAssetId: record.sourceAssetId,
+  sourceUrl: record.sourceUrl,
+  retrievedAt: record.retrievedAt,
+  updatedAt: record.updatedAt,
+  durationSeconds: record.alignment.durationSeconds,
+  alignmentQuality: record.alignment.alignmentQuality,
+  isStreamed: record.alignment.isStreamed,
+  payloadHash: record.alignment.payloadHash,
+  stats: record.alignment.stats,
+  hasRollbackSnapshot: Boolean(record.rollbackSnapshot),
+  rollbackCapturedAt: record.rollbackSnapshot?.capturedAt,
+  publicAudioPreviewEnabled: record.publicAudioPreviewEnabled === true,
+  publicAudioPreviewUpdatedAt: record.publicAudioPreviewUpdatedAt,
+});
+
+const releaseAudioEligibility = (release: any) => ({
+  status: release?.status || 'unknown',
+  visibility: release?.visibility || 'unknown',
+  format: release?.format || 'unknown',
+  publicPlaybackEligible:
+    release?.status === 'published' &&
+    release?.visibility === 'public' &&
+    release?.format === 'audio',
+});
+
+const sanitizeProviderKey = (input: unknown): string => {
+  const value = String(input || process.env.PRIVATE_AUDIO_PROVIDER_KEY || 'configured_private_audio_source').trim();
+  if (!/^[A-Za-z0-9._-]{2,80}$/.test(value)) {
+    throw new Error('providerKey contains unsupported characters.');
+  }
+  return value;
+};
+
+const sanitizeSourceUrl = (input: unknown): string | undefined => {
+  const value = String(input || '').trim();
+  if (!value) return undefined;
+  if (value.length > 2048) throw new Error('sourceUrl is too long.');
+
+  const parsed = new URL(value);
+  if (parsed.protocol !== 'https:') throw new Error('sourceUrl must use HTTPS.');
+  return parsed.toString();
+};
+
+const normalizeLanguage = (value: unknown): string => String(value || '').trim().toLowerCase();
+
+const getApprovedLyricsStructureLines = (release: any, language: string): string[] => {
+  const structures = release?.lyricsStructure || {};
+  const normalizedLanguage = normalizeLanguage(language);
+  const structureKey = Object.keys(structures).find((key) => normalizeLanguage(key) === normalizedLanguage);
+  if (!structureKey || !Array.isArray(structures[structureKey])) return [];
+
+  return [...structures[structureKey]]
+    .sort((a: any, b: any) => Number(a?.order || 0) - Number(b?.order || 0))
+    .flatMap((block: any) => Array.isArray(block?.lines) ? block.lines : [])
+    .map((line: unknown) => String(line || '').trim())
+    .filter((line: string) => Boolean(line) && !isProductionDirection(line));
+};
+
+const resolveCaptionText = (
+  release: any,
+  language: string,
+  publishableLines: PrivateAlignedLine[],
+  allowProviderTextFallback: boolean
+): { textLines: string[]; textSource: 'cms_lyrics_structure' | 'provider_alignment_draft' } => {
+  const approvedLines = getApprovedLyricsStructureLines(release, language);
+
+  if (approvedLines.length > 0) {
+    if (approvedLines.length !== publishableLines.length) {
+      throw new Error(
+        `Approved CMS lyrics contain ${approvedLines.length} publishable lines, but the imported alignment contains ${publishableLines.length}. ` +
+        'Master timing was not changed because line-by-line mapping would be ambiguous. Reconcile the approved lyrics and alignment first.'
+      );
+    }
+    return { textLines: approvedLines, textSource: 'cms_lyrics_structure' };
+  }
+
+  if (!allowProviderTextFallback) {
+    throw new Error(
+      `No approved CMS lyrics structure was found for language "${language}". ` +
+      'The provider transcription remains private. Add/approve the lyric structure first, or explicitly enable provider-text draft fallback for a controlled internal draft.'
+    );
+  }
+
+  return {
+    textLines: publishableLines.map((line) => line.text),
+    textSource: 'provider_alignment_draft',
+  };
+};
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  const { id } = await params;
+  const release = cmsServerStorage.getRelease(id);
+  if (!release) return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+
+  const record = privateProductionSourceStorage.get(id);
+  if (!record) {
+    return NextResponse.json({
+      releaseId: id,
+      configured: Boolean(process.env.PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE),
+      streamConfigured: isPrivateAudioStreamConfigured(),
+      audioEligibility: releaseAudioEligibility(release),
+      source: null,
+    });
+  }
+
+  const full = new URL(request.url).searchParams.get('full') === '1';
+  return NextResponse.json({
+    configured: Boolean(process.env.PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE),
+    streamConfigured: isPrivateAudioStreamConfigured(),
+    audioEligibility: releaseAudioEligibility(release),
+    source: full ? record : adminSummary(record),
+  });
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  const { id } = await params;
+  const release = cmsServerStorage.getRelease(id);
+  if (!release) return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+
+  try {
+    const body = await request.json().catch(() => ({}));
+
+    for (const key of PROHIBITED_REQUEST_SECRET_KEYS) {
+      if (body?.[key] !== undefined) {
+        return NextResponse.json(
+          { error: `Do not send ${key} in this request. Provider credentials must remain server-side environment secrets.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const sourceUrl = sanitizeSourceUrl(body.sourceUrl);
+    const sourceAssetId = extractSourceAssetId(String(body.sourceAssetId || sourceUrl || ''));
+    if (!sourceAssetId) {
+      return NextResponse.json(
+        { error: 'A valid private source asset ID or HTTPS source URL containing the asset ID is required.' },
+        { status: 400 }
+      );
+    }
+
+    const providerKey = sanitizeProviderKey(body.providerKey);
+    const payload = body.payload ?? (await fetchConfiguredPrivateAudioAlignment(sourceAssetId));
+    const alignment = normalizePrivateAudioAlignment(payload);
+    const now = new Date().toISOString();
+    const existingPrivateSource = privateProductionSourceStorage.get(id);
+
+    let record = privateProductionSourceStorage.save({
+      releaseId: id,
+      providerKey,
+      sourceAssetId,
+      sourceUrl,
+      retrievedAt: now,
+      updatedAt: now,
+      alignment,
+      rollbackSnapshot: existingPrivateSource?.rollbackSnapshot,
+      publicAudioPreviewEnabled: existingPrivateSource?.publicAudioPreviewEnabled,
+      publicAudioPreviewUpdatedAt: existingPrivateSource?.publicAudioPreviewUpdatedAt,
+    });
+
+    const applyToMasterTiming = body.applyToMasterTiming === true;
+    if (!applyToMasterTiming) {
+      return NextResponse.json({
+        imported: true,
+        appliedToMasterTiming: false,
+        source: adminSummary(record),
+        streamConfigured: isPrivateAudioStreamConfigured(),
+        audioEligibility: releaseAudioEligibility(release),
+        previewLines: alignment.lines.slice(0, 12).map((line) => ({
+          index: line.index,
+          startSeconds: line.startSeconds,
+          endSeconds: line.endSeconds,
+          text: line.text,
+          section: line.section,
+          isProductionDirection: line.isProductionDirection,
+        })),
+      });
+    }
+
+    const existingCueCount = release.subtitleCues?.length || 0;
+    if (existingCueCount > 0 && body.confirmReplace !== true) {
+      return NextResponse.json(
+        {
+          error: 'Master timing already exists. Re-submit with confirmReplace=true only after reviewing the imported alignment.',
+          existingCueCount,
+          imported: true,
+          appliedToMasterTiming: false,
+          source: adminSummary(record),
+        },
+        { status: 409 }
+      );
+    }
+
+    const publishableLines = alignment.lines.filter((line) => !line.isProductionDirection && line.text.trim());
+    if (!publishableLines.length) {
+      return NextResponse.json({ error: 'No publishable timed lyric lines remain after direction filtering.' }, { status: 422 });
+    }
+
+    const language = normalizeLanguage(body.language || release.defaultLanguage || 'en');
+    if (!/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/i.test(language)) {
+      return NextResponse.json({ error: 'language must be a valid language code such as en, ur, hi, or pa.' }, { status: 400 });
+    }
+
+    const existingTranslatedLanguages = Object.entries(release.subtitleTranslations || {})
+      .filter(([code, map]) =>
+        normalizeLanguage(code) !== language &&
+        map &&
+        typeof map === 'object' &&
+        Object.keys(map).length > 0
+      )
+      .map(([code]) => code);
+
+    if (
+      existingCueCount > 0 &&
+      existingTranslatedLanguages.length > 0 &&
+      body.confirmTranslationReset !== true
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'This release already has translated caption tracks. Replacing master timing would invalidate their cue IDs. ' +
+            'Master timing was not changed. Use a controlled translation-remap workflow, or explicitly confirm a translation reset only if those tracks may be discarded.',
+          existingTranslatedLanguages,
+          existingCueCount,
+          imported: true,
+          appliedToMasterTiming: false,
+          source: adminSummary(record),
+          requiresTranslationResetConfirmation: true,
+        },
+        { status: 409 }
+      );
+    }
+
+    let captionText: ReturnType<typeof resolveCaptionText>;
+    try {
+      captionText = resolveCaptionText(
+        release,
+        language,
+        publishableLines,
+        body.allowProviderTextFallback === true
+      );
+    } catch (error: any) {
+      return NextResponse.json(
+        {
+          error: String(error?.message || error),
+          imported: true,
+          appliedToMasterTiming: false,
+          source: adminSummary(record),
+          approvedLyricsLineCount: getApprovedLyricsStructureLines(release, language).length,
+          alignmentPublishableLineCount: publishableLines.length,
+        },
+        { status: 422 }
+      );
+    }
+
+    record = privateProductionSourceStorage.setRollbackSnapshot(id, {
+      capturedAt: new Date().toISOString(),
+      masterTimingVersion: release.masterTimingVersion,
+      subtitleCues: release.subtitleCues,
+      subtitleTranslations: release.subtitleTranslations,
+      subtitleLanguageStatuses: release.subtitleLanguageStatuses,
+      subtitleCueMetadata: release.subtitleCueMetadata,
+      availableLanguages: release.availableLanguages,
+      defaultLanguage: release.defaultLanguage,
+    }) || record;
+
+    const subtitleCues = publishableLines.map((line, index) => {
+      const cueId = cueIdForLine(id, sourceAssetId, line);
+      return {
+        id: cueId,
+        cueNumber: index + 1,
+        startTime: secondsToTimestamp(line.startSeconds),
+        endTime: secondsToTimestamp(line.endSeconds),
+        lineRef: `audio-alignment:${line.index}`,
+        sourceType: 'audio_alignment' as any,
+        active: true,
+      };
+    });
+
+    const sourceLanguageText: Record<string, string> = {};
+    const subtitleCueMetadata: Record<string, any> = {};
+    publishableLines.forEach((line, index) => {
+      const cueId = subtitleCues[index].id;
+      sourceLanguageText[cueId] = captionText.textLines[index];
+      subtitleCueMetadata[cueId] = {
+        ...(line.section ? {
+          lineRole: ['verse', 'refrain', 'chorus', 'bridge', 'hook'].includes(line.section.toLowerCase())
+            ? line.section.toLowerCase()
+            : 'other',
+        } : {}),
+        sourceTextMode: captionText.textSource,
+      };
+    });
+
+    const updated = cmsServerStorage.saveRelease({
+      ...release,
+      masterTimingVersion: (release.masterTimingVersion || 0) + 1,
+      subtitleCues,
+      subtitleTranslations: { [language]: sourceLanguageText },
+      subtitleLanguageStatuses: { [language]: 'draft' },
+      subtitleCueMetadata,
+      availableLanguages: Array.from(new Set([...(release.availableLanguages || []), language])),
+      defaultLanguage: release.defaultLanguage || language,
+      updatedAt: new Date().toISOString(),
+    });
+
+    return NextResponse.json({
+      imported: true,
+      appliedToMasterTiming: true,
+      source: adminSummary(record),
+      releaseId: updated.id,
+      masterTimingVersion: updated.masterTimingVersion,
+      language,
+      cueCount: subtitleCues.length,
+      captionTextSource: captionText.textSource,
+      filteredProductionDirections: alignment.stats.productionDirectionCount,
+      overlapCount: alignment.stats.overlapCount,
+      subtitleStatus: 'draft',
+    });
+  } catch (error: any) {
+    const message = error?.name === 'AbortError'
+      ? 'Private audio alignment fetch timed out.'
+      : String(error?.message || error || 'Private audio alignment import failed.');
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  const { id } = await params;
+  const release = cmsServerStorage.getRelease(id);
+  if (!release) return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+
+  const record = privateProductionSourceStorage.get(id);
+  if (!record) {
+    return NextResponse.json({ error: 'Import a private production source before configuring audio preview.' }, { status: 404 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  if (typeof body.publicAudioPreviewEnabled !== 'boolean') {
+    return NextResponse.json({ error: 'publicAudioPreviewEnabled must be boolean.' }, { status: 400 });
+  }
+
+  if (body.publicAudioPreviewEnabled && !isPrivateAudioStreamConfigured()) {
+    return NextResponse.json(
+      { error: 'Private audio streaming is not configured on this server.' },
+      { status: 409 }
+    );
+  }
+
+  const updated = privateProductionSourceStorage.setPublicAudioPreviewEnabled(
+    id,
+    body.publicAudioPreviewEnabled,
+  );
+
+  return NextResponse.json({
+    source: updated ? adminSummary(updated) : null,
+    streamConfigured: isPrivateAudioStreamConfigured(),
+    audioEligibility: releaseAudioEligibility(release),
+    publicAudioRoute: `/api/releases/${encodeURIComponent(id)}/audio`,
+  });
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  const { id } = await params;
+  const release = cmsServerStorage.getRelease(id);
+  if (!release) return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+
+  const deleted = privateProductionSourceStorage.delete(id);
+  return NextResponse.json({ releaseId: id, deleted });
+}

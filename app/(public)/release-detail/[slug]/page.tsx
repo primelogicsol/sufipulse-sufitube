@@ -13,6 +13,8 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Layout } from "../../../components/layout/Layout";
 import SufiPulsePlayer from "@/components/SufiPulsePlayer";
+import TemporaryStreamAudioPlayer from "@/app/components/release/TemporaryStreamAudioPlayer";
+import { useRuntimeReleaseMedia } from "./components/useRuntimeReleaseMedia";
 import ReleaseRecommendations from "@/components/ReleaseRecommendations";
 import { AuthContext } from "@/app/contexts/AuthContext";
 import { PageContainer } from "../../../components/layout/PageContainer";
@@ -636,6 +638,7 @@ function Release() {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [release, setRelease] = useState<any>(null);
+  const { media: runtimeMedia } = useRuntimeReleaseMedia(release?.id);
   const [allReleases, setAllReleases] = useState<any[]>([]);
   const [resolutionSource, setResolutionSource] = useState<
    "cms_key" | "cms_slug" | "cms_youtube_compat" | "external_youtube_fallback" | null
@@ -2214,51 +2217,39 @@ function Release() {
               </div>
             </div>
 
-            {/* Audio Player — shown for audio-format releases with an audioUrl */}
-            {(release.format === "audio" || release.audioUrl) &&
-              release.audioUrl && (
-                <div className="mb-8">
-                  <div className="rounded-xl border border-neutral-800 bg-neutral-900/60 p-6">
-                    {/* Thumbnail / cover art */}
-                    {release.thumbnailUrl && (
-                      <div className="flex justify-center mb-5">
-                        <img
-                          src={release.thumbnailUrl}
-                          alt={release.release_title || release.title}
-                          className="w-48 h-48 object-cover rounded-lg border border-neutral-700 shadow-xl"
-                        />
-                      </div>
-                    )}
-                    <p className="text-xs text-neutral-500 uppercase tracking-widest text-center mb-3">
-                      Audio Release
-                    </p>
-                    <audio
-                      controls
-                      src={release.audioUrl}
-                      className="w-full"
-                      style={{ borderRadius: 8 }}
-                      preload="metadata"
+            {/* Temporary audio-first release playback. The browser only receives the
+                SufiPulse relay URL; no provider URL or downloadable audio asset is exposed. */}
+            {runtimeMedia?.mode === "audio_stream" && runtimeMedia.audioUrl && (
+              <div className="mb-8">
+                <div className="relative">
+                  <TemporaryStreamAudioPlayer
+                    title={release.release_title || release.title || "SufiPulse Audio Release"}
+                    audioUrl={runtimeMedia.audioUrl}
+                    durationLabel={release.durationFormatted || release.duration_formatted || undefined}
+                    onReady={(adapter) => {
+                      setPlayerTarget(adapter);
+                      setVideoLoaded(true);
+                      setVideoReady(true);
+                    }}
+                    onPlayingChange={(playing) => {
+                      setIsPlaying(playing);
+                      if (playing) setIsVideoEnded(false);
+                    }}
+                    onDurationChange={(duration) => setVideoDuration(duration)}
+                  />
+                  {videoReady && activeOverlayTrack && (
+                    <VideoOverlay
+                      track={activeOverlayTrack}
+                      currentTime={currentTime}
+                      captionsEnabled={captionsEnabled}
                     />
-                    <div className="flex items-center justify-between mt-3 text-xs text-neutral-500">
-                      <span>
-                        {release.durationFormatted ||
-                          release.duration_formatted ||
-                          ""}
-                      </span>
-                      <a
-                        href={release.audioUrl}
-                        download
-                        className="flex items-center gap-1 hover:text-amber-400 transition-colors"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Download
-                      </a>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
             {/* Video Player - Hero Position */}
-            {!release.audioUrl &&
+            {runtimeMedia?.mode !== "audio_stream" &&
             (resolvedVideoId ||
               (release.youtube_url &&
                 !release.youtube_url.includes("PLACEHOLDER"))) ? (

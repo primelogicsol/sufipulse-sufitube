@@ -1,0 +1,94 @@
+name: Private Audio Alignment CI
+
+on:
+  push:
+    branches:
+      - feature/private-audio-alignment-integration
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'app/api/admin/releases/**/audio-alignment/**'
+      - 'app/api/admin/releases/**/audio-assembly/**'
+      - 'app/api/admin/releases/**/audio-probe/**'
+      - 'app/api/releases/**/audio/**'
+      - 'app/api/releases/**/runtime-media/**'
+      - 'app/admin/cms-releases/new/**'
+      - 'app/admin/cms-releases/**/audio-alignment/**'
+      - 'app/admin/cms-releases/**/audio-assembly/**'
+      - 'app/components/release/TemporaryStreamAudioPlayer.tsx'
+      - 'app/(public)/release-detail/[slug]/components/useRuntimeReleaseMedia.ts'
+      - 'app/(public)/release-detail/[slug]/page.tsx'
+      - 'server/integrations/private-audio-alignment.ts'
+      - 'server/integrations/private-audio-assembly.ts'
+      - 'server/integrations/private-audio-stream.ts'
+      - 'server/integrations/runtime-media-policy.ts'
+      - 'server/storage/private-production-source-storage.ts'
+      - 'scripts/private-audio-alignment-smoke.cjs'
+      - 'scripts/private-audio-assembly-smoke.cjs'
+      - 'scripts/private-audio-assembly-privacy-smoke.cjs'
+      - 'scripts/private-audio-stream-smoke.cjs'
+      - 'scripts/private-audio-persistence-smoke.cjs'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.gitignore'
+      - '.github/workflows/deploy.yml'
+      - 'tsconfig.private-audio-ci.json'
+      - '.github/workflows/private-audio-alignment-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare data fixtures
+        run: |
+          mkdir -p .data
+          echo '{}' > .data/registries.json
+          echo '{}' > .data/brand-registry.json
+          echo '{}' > .data/crawler-registry.json
+          echo '{}' > .data/discovery-analytics.json
+          for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo '[]' > .data/$f.json; done
+
+      - name: Alignment normalizer smoke test
+        run: node scripts/private-audio-alignment-smoke.cjs
+
+      - name: Multi-source assembly smoke test
+        run: node scripts/private-audio-assembly-smoke.cjs
+
+      - name: Assembly provenance firewall smoke test
+        run: node scripts/private-audio-assembly-privacy-smoke.cjs
+
+      - name: Audio relay smoke test
+        run: node scripts/private-audio-stream-smoke.cjs
+
+      - name: Private metadata persistence smoke test
+        run: node scripts/private-audio-persistence-smoke.cjs
+
+      # Keep the full repository check visible. The scoped check below remains
+      # the merge gate for this isolated integration slice.
+      - name: Full repository type-check (baseline informational)
+        continue-on-error: true
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+        run: npm run type-check
+
+      - name: Private audio integration type-check
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+        run: npx tsc --noEmit -p tsconfig.private-audio-ci.json
