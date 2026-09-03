@@ -11,6 +11,7 @@ on:
       - 'app/api/admin/releases/**/audio-alignment/**'
       - 'app/api/releases/**/audio/**'
       - 'app/admin/cms-releases/**/audio-alignment/**'
+      - 'app/components/release/TemporaryStreamAudioPlayer.tsx'
       - 'server/integrations/private-audio-alignment.ts'
       - 'server/integrations/private-audio-stream.ts'
       - 'server/storage/private-production-source-storage.ts'
