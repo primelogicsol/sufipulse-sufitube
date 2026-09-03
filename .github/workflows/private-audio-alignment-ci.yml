@@ -26,6 +26,7 @@ on:
       - 'server/storage/private-production-source-storage.ts'
       - 'scripts/private-audio-alignment-smoke.cjs'
       - 'scripts/private-audio-assembly-smoke.cjs'
+      - 'scripts/private-audio-assembly-privacy-smoke.cjs'
       - 'scripts/private-audio-stream-smoke.cjs'
       - 'scripts/private-audio-persistence-smoke.cjs'
       - 'docker-compose.yml'
@@ -69,6 +70,9 @@ jobs:
 
       - name: Multi-source assembly smoke test
         run: node scripts/private-audio-assembly-smoke.cjs
+
+      - name: Assembly provenance firewall smoke test
+        run: node scripts/private-audio-assembly-privacy-smoke.cjs
 
       - name: Audio relay smoke test
         run: node scripts/private-audio-stream-smoke.cjs
