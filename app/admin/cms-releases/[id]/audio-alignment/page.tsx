@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Database, Download, ShieldCheck, Upload } from 'lucide-react';
+import { ArrowLeft, Database, Download, Radio, ShieldCheck, Upload } from 'lucide-react';
 
 import { useAuth } from '../../../../contexts/AuthContext';
 import DashboardLayout from '../../../../components/layout/DashboardLayout';
@@ -16,6 +16,8 @@ type AlignmentSummary = {
   durationSeconds?: number;
   alignmentQuality?: number;
   payloadHash?: string;
+  publicAudioPreviewEnabled?: boolean;
+  publicAudioPreviewUpdatedAt?: string;
   stats?: {
     lineCount: number;
     publishableLineCount: number;
@@ -24,6 +26,13 @@ type AlignmentSummary = {
     waveformPointCount: number;
     overlapCount: number;
   };
+};
+
+type AudioEligibility = {
+  status: string;
+  visibility: string;
+  format: string;
+  publicPlaybackEligible: boolean;
 };
 
 type PreviewLine = {
@@ -48,10 +57,13 @@ export default function PrivateAudioAlignmentPage() {
   const [language, setLanguage] = useState('en');
   const [payloadJson, setPayloadJson] = useState('');
   const [configured, setConfigured] = useState(false);
+  const [streamConfigured, setStreamConfigured] = useState(false);
+  const [audioEligibility, setAudioEligibility] = useState<AudioEligibility | null>(null);
   const [summary, setSummary] = useState<AlignmentSummary | null>(null);
   const [previewLines, setPreviewLines] = useState<PreviewLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+  const [streamWorking, setStreamWorking] = useState(false);
   const [confirmReplace, setConfirmReplace] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -59,6 +71,7 @@ export default function PrivateAudioAlignmentPage() {
   const hasSource = Boolean(sourceUrl.trim() || sourceAssetId.trim());
   const canInspect = hasSource && !working;
   const canApply = Boolean(summary) && confirmReplace && !working;
+  const adminAudioRoute = `/api/releases/${encodeURIComponent(releaseId)}/audio`;
 
   const timingSummary = useMemo(() => {
     if (!summary?.stats) return null;
@@ -96,6 +109,8 @@ export default function PrivateAudioAlignmentPage() {
         if (sourceRes.ok) {
           const data = await sourceRes.json();
           setConfigured(Boolean(data.configured));
+          setStreamConfigured(Boolean(data.streamConfigured));
+          setAudioEligibility(data.audioEligibility || null);
           if (data.source) {
             setSummary(data.source);
             setSourceUrl(data.source.sourceUrl || '');
@@ -146,6 +161,8 @@ export default function PrivateAudioAlignmentPage() {
       }
 
       if (data.source) setSummary(data.source);
+      if (typeof data.streamConfigured === 'boolean') setStreamConfigured(data.streamConfigured);
+      if (data.audioEligibility) setAudioEligibility(data.audioEligibility);
       if (Array.isArray(data.previewLines)) setPreviewLines(data.previewLines);
 
       if (applyToMasterTiming) {
@@ -157,6 +174,35 @@ export default function PrivateAudioAlignmentPage() {
       setError(String(err?.message || err || 'Private alignment import failed.'));
     } finally {
       setWorking(false);
+    }
+  };
+
+  const setPublicAudioPreview = async (enabled: boolean) => {
+    try {
+      setStreamWorking(true);
+      setError('');
+      setMessage('');
+
+      const response = await fetch(`/api/admin/releases/${encodeURIComponent(releaseId)}/audio-alignment`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicAudioPreviewEnabled: enabled }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `Request failed with HTTP ${response.status}`);
+
+      if (data.source) setSummary(data.source);
+      if (typeof data.streamConfigured === 'boolean') setStreamConfigured(data.streamConfigured);
+      if (data.audioEligibility) setAudioEligibility(data.audioEligibility);
+      setMessage(
+        enabled
+          ? 'Temporary web audio preview is enabled. Public playback still requires this release to be published, public, and format=audio.'
+          : 'Temporary web audio preview is disabled.',
+      );
+    } catch (err: any) {
+      setError(String(err?.message || err || 'Audio preview setting could not be updated.'));
+    } finally {
+      setStreamWorking(false);
     }
   };
 
@@ -192,7 +238,7 @@ export default function PrivateAudioAlignmentPage() {
             <div>
               <h2 className="font-medium text-white">Provider firewall</h2>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-white/60">
-                Source identity, source asset IDs, waveform data, word timing and alignment metadata remain in private server storage. Only approved draft timing and lyric text can be copied into the release caption model.
+                Source identity, source asset IDs, waveform data, word timing and alignment metadata remain in private server storage. Only approved draft timing and lyric text can be copied into the release caption model. Audio playback is relayed in memory from the private source; no MP3/WAV master is written to SufiPulse storage by this workflow.
               </p>
             </div>
           </div>
@@ -257,7 +303,7 @@ export default function PrivateAudioAlignmentPage() {
                   <Download className="h-4 w-4" /> {working ? 'Working…' : 'Inspect private alignment'}
                 </button>
                 <span className="text-xs text-white/45">
-                  Server fetch: {configured ? 'configured' : 'not configured'}
+                  Alignment fetch: {configured ? 'configured' : 'not configured'}
                 </span>
               </div>
             </div>
@@ -332,6 +378,70 @@ export default function PrivateAudioAlignmentPage() {
               >
                 <Upload className="h-4 w-4" /> Apply as draft master timing
               </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-sky-400/20 bg-sky-400/[0.04] p-5">
+          <div className="flex items-start gap-3">
+            <Radio className="mt-0.5 h-5 w-5 text-sky-300" />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-medium text-white">3. Temporary audio mode — stream, do not store</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-white/60">
+                While the final Canva video is being produced, SufiPulse can relay the private source audio through a same-origin endpoint. The server does not create or retain an MP3/WAV copy. When the final YouTube video is attached, the same CMS release can switch back to video mode.
+              </p>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl border border-white/10 bg-black/15 p-3">
+                  <div className="text-xs text-white/45">Stream adapter</div>
+                  <div className="mt-1 text-sm font-medium text-white">{streamConfigured ? 'Configured' : 'Not configured'}</div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-black/15 p-3">
+                  <div className="text-xs text-white/45">Release status</div>
+                  <div className="mt-1 text-sm font-medium text-white">{audioEligibility?.status || 'unknown'}</div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-black/15 p-3">
+                  <div className="text-xs text-white/45">Visibility</div>
+                  <div className="mt-1 text-sm font-medium text-white">{audioEligibility?.visibility || 'unknown'}</div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-black/15 p-3">
+                  <div className="text-xs text-white/45">Format</div>
+                  <div className="mt-1 text-sm font-medium text-white">{audioEligibility?.format || 'unknown'}</div>
+                </div>
+              </div>
+
+              {summary && streamConfigured ? (
+                <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="mb-2 text-xs font-medium uppercase tracking-wide text-white/45">Admin stream test</div>
+                  <audio controls src={adminAudioRoute} preload="metadata" className="w-full" />
+                  <p className="mt-2 text-xs text-white/45">This test uses the SufiPulse relay URL. The upstream provider URL and credentials are never sent to the browser.</p>
+                </div>
+              ) : null}
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  disabled={!summary || !streamConfigured || streamWorking}
+                  onClick={() => void setPublicAudioPreview(summary?.publicAudioPreviewEnabled !== true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-sky-300/30 bg-sky-300/10 px-4 py-2.5 text-sm font-semibold text-sky-100 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Radio className="h-4 w-4" />
+                  {streamWorking
+                    ? 'Updating…'
+                    : summary?.publicAudioPreviewEnabled
+                      ? 'Disable temporary web audio'
+                      : 'Enable temporary web audio'}
+                </button>
+                <span className="text-xs text-white/45">
+                  Public gate: {summary?.publicAudioPreviewEnabled ? 'enabled' : 'disabled'}
+                </span>
+              </div>
+
+              {!audioEligibility?.publicPlaybackEligible ? (
+                <p className="mt-3 text-xs leading-5 text-amber-200/70">
+                  Enabling the private-source gate alone does not expose audio. Public playback also requires the CMS release itself to be status=published, visibility=public, and format=audio. This protects draft/private releases from accidental exposure.
+                </p>
+              ) : null}
             </div>
           </div>
         </section>
