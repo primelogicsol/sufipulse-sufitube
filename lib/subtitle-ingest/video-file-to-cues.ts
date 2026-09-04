@@ -70,69 +70,110 @@ async function extractFrames(
   onProgress?: OcrProgressCallback
 ): Promise<{ dataUrl: string; timestampSec: number }[]> {
   return new Promise((resolve, reject) => {
+    onProgress?.('frames', 0, 'Loading MP4 metadata…');
+
     const video = document.createElement('video');
     video.muted = true;
-    video.preload = 'metadata';
+    video.preload = 'auto';
+    video.playsInline = true;
 
     const isFile = input instanceof File;
-
-    // canPlayType pre-check only for File inputs — converted URLs are already H.264
-    if (isFile && input.type && video.canPlayType(input.type) === '') {
-      reject(new Error(
-        `Your browser cannot play ${input.type}. Try Chrome, or re-export the video as MP4 (H.264 codec).`
-      ));
-      return;
-    }
-
     const src = isFile ? URL.createObjectURL(input) : input;
     const fileMeta = isFile
       ? `${input.name} · ${(input.size / 1024 / 1024).toFixed(1)} MB · ${input.type || 'unknown type'}`
       : input;
 
+    const rejectWithDiagnostic = (stage: string, msg: string) => {
+      const err = new Error(msg) as any;
+      err.diagnostic = {
+        stage,
+        mediaErrorCode: video.error?.code ?? null,
+        mediaErrorMessage: video.error?.message ?? null,
+        readyState: video.readyState,
+        networkState: video.networkState,
+        duration: video.duration,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        currentTime: video.currentTime
+      };
+      reject(err);
+    };
+
     const metadataTimer = setTimeout(() => {
       if (isFile) URL.revokeObjectURL(src);
-      reject(new Error(
-        `Timed out waiting for video metadata. The file may be too large or corrupted. (${fileMeta})`
-      ));
+      rejectWithDiagnostic('metadata', `Timed out waiting for video metadata. The file may be too large or corrupted. (${fileMeta})`);
     }, METADATA_TIMEOUT_MS);
 
-    video.src = src;
-
-    video.addEventListener('error', () => {
+    const cleanup = () => {
       clearTimeout(metadataTimer);
       if (isFile) URL.revokeObjectURL(src);
+    };
+
+    const decodeErrorMsg = "This MP4 cannot be decoded by your browser. Re-export it using your video editor's standard MP4 or YouTube export preset and try again.";
+
+    video.addEventListener('error', () => {
+      cleanup();
       const code = video.error?.code;
-      let msg: string;
       if (code === MediaError.MEDIA_ERR_DECODE || code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
-        msg = `Codec not supported — re-export as MP4 with H.264 codec (not H.265/HEVC). File: ${fileMeta}`;
+        rejectWithDiagnostic('playback_probe', decodeErrorMsg);
       } else if (code === MediaError.MEDIA_ERR_NETWORK) {
-        msg = `Failed to read the video file from disk. Try again. File: ${fileMeta}`;
+        rejectWithDiagnostic('playback_probe', `Failed to read the video file from disk. Try again. File: ${fileMeta}`);
       } else {
-        msg = `Could not load video file. Make sure it is a valid MP4/WebM/MOV file. File: ${fileMeta}`;
+        rejectWithDiagnostic('playback_probe', `Could not load video file. Make sure it is a valid MP4/WebM/MOV file. File: ${fileMeta}`);
       }
-      reject(new Error(msg));
     });
 
     video.addEventListener('loadedmetadata', async () => {
       clearTimeout(metadataTimer);
-      // Wrap entire async body — errors inside async event handlers are otherwise silently swallowed
       try {
-        const duration = video.duration;
-        if (!Number.isFinite(duration) || duration <= 0) {
+        if (!Number.isFinite(video.duration) || video.duration <= 0) {
           throw new Error('Could not determine video duration.');
         }
 
-        // Guard against metadata loaded but dimensions not yet available
+        onProgress?.('frames', 0, 'Testing browser playback…');
+
+        await new Promise<void>((res, rej) => {
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            video.removeEventListener('seeked', onSeeked);
+            rej(new Error('Probe seek timed out - browser cannot decode this video.'));
+          }, SEEK_TIMEOUT_MS);
+
+          const onSeeked = () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            res();
+          };
+
+          video.addEventListener('seeked', onSeeked, { once: true });
+          video.currentTime = Math.min(0.05, video.duration / 2);
+        });
+
         if (video.videoWidth === 0 || video.videoHeight === 0) {
-          throw new Error('Could not read video dimensions. The file may be corrupted or use an unsupported codec.');
+          const err = new Error(decodeErrorMsg) as any;
+          err.stageOverride = 'dimensions';
+          throw err;
         }
 
-        const interval = 1 / fps;
-        const totalFrames = Math.ceil(duration / interval);
         const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Canvas 2D context unavailable in this browser.');
+        if (!ctx) {
+          const err = new Error('Canvas 2D context unavailable in this browser.') as any;
+          err.stageOverride = 'canvas_probe';
+          throw err;
+        }
+        
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        onProgress?.('frames', 0, 'Browser playback confirmed');
 
+        const interval = 1 / fps;
+        const totalFrames = Math.ceil(video.duration / interval);
         const frames: { dataUrl: string; timestampSec: number }[] = [];
 
         const seekAndCapture = (timestamp: number): Promise<void> =>
@@ -143,7 +184,9 @@ async function extractFrames(
               if (settled) return;
               settled = true;
               video.removeEventListener('seeked', onSeeked);
-              rej(new Error(`Seek timed out at ${timestamp.toFixed(1)}s — video may be malformed.`));
+              const err = new Error(`Seek timed out at ${timestamp.toFixed(1)}s — video may be malformed.`) as any;
+              err.stageOverride = 'frame_seek';
+              rej(err);
             }, SEEK_TIMEOUT_MS);
 
             const onSeeked = () => {
@@ -167,19 +210,24 @@ async function extractFrames(
             video.currentTime = timestamp;
           });
 
-        for (let i = 0; i <= totalFrames; i++) {
-          const ts = Math.min(i * interval, duration - 0.05);
-          await seekAndCapture(ts);
-          onProgress?.('frames', Math.round((i / totalFrames) * 100), `Frame ${i + 1}/${totalFrames + 1}`);
+        for (let i = 0; i < totalFrames; i++) {
+          const t = i * interval;
+          await seekAndCapture(t);
+          if (i % 5 === 0) {
+            onProgress?.('frames', Math.round((i / totalFrames) * 100), `Extracting frames… ${i}/${totalFrames}`);
+          }
         }
 
-        if (isFile) URL.revokeObjectURL(src);
+        cleanup();
         resolve(frames);
-      } catch (err) {
-        if (isFile) URL.revokeObjectURL(src);
-        reject(err);
+      } catch (err: any) {
+        cleanup();
+        rejectWithDiagnostic(err.stageOverride || 'playback_probe', err.message);
       }
     });
+
+    video.src = src;
+    video.load();
   });
 }
 
@@ -194,33 +242,108 @@ async function ocrFrames(
   lang: string,
   onProgress?: OcrProgressCallback
 ): Promise<FrameResult[]> {
-  const { createWorker } = await import('tesseract.js');
-  const worker = await createWorker(lang);
+  onProgress?.('ocr', 0, 'Loading OCR engine…');
+
+  const safeRawValue = (err: unknown): string => {
+    try {
+      if (err instanceof Error) return err.toString();
+      if (err && typeof err === 'object') {
+        return JSON.stringify(err, Object.getOwnPropertyNames(err));
+      }
+      return String(err);
+    } catch {
+      return String(err);
+    }
+  };
+
+  const rejectWithDiagnostic = (stage: string, err: any, extra?: any) => {
+    let errorMsg = 'Unknown Tesseract error';
+    if (err instanceof Error) errorMsg = err.message;
+    else if (err && typeof err === 'string') errorMsg = err;
+    else if (err && err.message) errorMsg = err.message;
+    
+    const finalErr = new Error(errorMsg) as any;
+    finalErr.diagnostic = {
+      stage,
+      message: errorMsg,
+      rawType: typeof err,
+      rawValue: safeRawValue(err),
+      ...extra
+    };
+    throw finalErr;
+  };
+
+  let createWorker;
+  try {
+    const tesseract = await import('tesseract.js');
+    createWorker = tesseract.createWorker;
+  } catch (err: any) {
+    rejectWithDiagnostic('tesseract_import', err);
+  }
+
+  let worker;
+  try {
+    worker = await createWorker(lang, 1, {
+      workerPath: '/tesseract/worker/worker.min.js',
+      corePath: '/tesseract/core',
+      langPath: '/tesseract/lang'
+    });
+  } catch (err: any) {
+    rejectWithDiagnostic('worker_create', err, {
+      lang,
+      locationOrigin: typeof location !== 'undefined' ? location.origin : 'unknown'
+    });
+  }
 
   const results: FrameResult[] = [];
   for (let i = 0; i < frames.length; i++) {
     const frame = frames[i];
-    try {
-      const { data } = await worker.recognize(frame.dataUrl);
 
-      let text = '';
-      if ((data.confidence || 0) >= MIN_OCR_CONFIDENCE) {
-        // NFC normalization is critical for Devanagari/Arabic Unicode — ensures
-        // combining diacritics are in canonical form so text comparison works correctly.
-        text = (data.text || '')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .normalize('NFC');
+    let data;
+    try {
+      const result = await worker.recognize(frame.dataUrl);
+      data = result.data;
+    } catch (err: any) {
+      if (i === 0) {
+        rejectWithDiagnostic('recognize', err, {
+          frameIndex: i,
+          frameCount: frames.length,
+        });
       }
 
-      results.push({ timestampSec: frame.timestampSec, text });
-    } catch {
-      results.push({ timestampSec: frame.timestampSec, text: '' });
+      results.push({
+        timestampSec: frame.timestampSec,
+        text: '',
+      });
+
+      onProgress?.(
+        'ocr',
+        Math.round(((i + 1) / frames.length) * 100),
+        `OCR ${i + 1}/${frames.length}`
+      );
+
+      continue;
     }
-    onProgress?.('ocr', Math.round(((i + 1) / frames.length) * 100), `OCR ${i + 1}/${frames.length}`);
+
+    let text = '';
+    if ((data.confidence || 0) >= MIN_OCR_CONFIDENCE) {
+      text = (data.text || '').replace(/\s+/g, ' ').trim().normalize('NFC');
+    }
+
+    results.push({
+      timestampSec: frame.timestampSec,
+      text,
+    });
+
+    onProgress?.(
+      'ocr',
+      Math.round(((i + 1) / frames.length) * 100),
+      `OCR ${i + 1}/${frames.length}`
+    );
   }
 
-  await worker.terminate();
+  try { await worker.terminate(); } catch (e) {}
+
   return results;
 }
 

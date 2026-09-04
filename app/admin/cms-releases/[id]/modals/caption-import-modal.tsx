@@ -13,6 +13,26 @@ interface CaptionImportModalProps {
   onClose: () => void;
 }
 
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === 'string' && err.trim()) return err;
+  if (err && typeof err === 'object') {
+    const obj = err as any;
+    if (typeof obj.message === 'string' && obj.message.trim()) return obj.message;
+    if (typeof obj.error === 'string' && obj.error.trim()) return obj.error;
+    if (typeof obj.detail === 'string' && obj.detail.trim()) return obj.detail;
+    try {
+      const json = JSON.stringify(err);
+      if (json !== '{}') return json;
+    } catch {
+      // ignore
+    }
+  }
+  const str = String(err);
+  if (str && str !== 'undefined' && str !== 'null' && str !== '[object Object]') return str;
+  return 'Unknown OCR error';
+}
+
 export function CaptionImportModal({
   releaseId,
   form,
@@ -34,6 +54,7 @@ export function CaptionImportModal({
   const [videoOcrMode, setVideoOcrMode] = useState<'replace' | 'merge'>('replace');
   const [videoOcrProgress, setVideoOcrProgress] = useState<{ stage: string; pct: number; detail: string } | null>(null);
   const [videoOcrError, setVideoOcrError] = useState<string | null>(null);
+  const [videoOcrDiagnostic, setVideoOcrDiagnostic] = useState<any>(null);
   const [videoOcrRunning, setVideoOcrRunning] = useState(false);
 
   useEffect(() => {
@@ -107,11 +128,11 @@ export function CaptionImportModal({
       if (!ok) return;
     }
     setVideoOcrRunning(true);
-    setVideoOcrError(null);
+    setVideoOcrError(null); setVideoOcrDiagnostic(null);
     setVideoOcrProgress({ stage: 'frames', pct: 0, detail: 'Starting…' });
     try {
       const { videoFileToParsedCues, cmsLangToTesseract } = await import('@/lib/subtitle-ingest/video-file-to-cues');
-      const { browserCanPlayFile, convertVideoForOcr } = await import('@/lib/subtitle-ingest/convert-video');
+
 
       const ocrOptions = {
         fps: 2,
@@ -121,29 +142,7 @@ export function CaptionImportModal({
           setVideoOcrProgress({ stage, pct, detail: detail || '' }),
       };
 
-      let ocrInput: File | string = videoOcrFile;
-
-      if (!browserCanPlayFile(videoOcrFile)) {
-        setVideoOcrProgress({ stage: 'frames', pct: 0, detail: `Converting "${videoOcrFile.name}" to H.264…` });
-        ocrInput = await convertVideoForOcr(videoOcrFile, (msg) =>
-          setVideoOcrProgress({ stage: 'frames', pct: 0, detail: msg })
-        );
-      }
-
-      let cues: Awaited<ReturnType<typeof videoFileToParsedCues>>;
-      try {
-        cues = await videoFileToParsedCues(ocrInput, ocrOptions);
-      } catch (decodeErr: any) {
-        if (ocrInput instanceof File && /codec|unsupported|H\.265|HEVC|decode/i.test(decodeErr.message)) {
-          setVideoOcrProgress({ stage: 'frames', pct: 0, detail: `Converting to H.264 — browser cannot decode this codec…` });
-          ocrInput = await convertVideoForOcr(videoOcrFile, (msg) =>
-            setVideoOcrProgress({ stage: 'frames', pct: 0, detail: msg })
-          );
-          cues = await videoFileToParsedCues(ocrInput, ocrOptions);
-        } else {
-          throw decodeErr;
-        }
-      }
+        const cues = await videoFileToParsedCues(videoOcrFile, ocrOptions);
 
       setVideoOcrProgress({ stage: 'grouping', pct: 100, detail: `${cues.length} cues found — saving…` });
       const res = await fetch(`/api/releases/${releaseId}/import-captions/from-video`, {
@@ -163,7 +162,11 @@ export function CaptionImportModal({
       setSuccessMessage(`Imported ${data.importedCount} cues from video OCR.${statsNote}`);
       onClose();
     } catch (err: any) {
-      setVideoOcrError(err.message);
+      const msg = getErrorMessage(err);
+      setVideoOcrError(msg);
+      if (err && err.diagnostic) {
+        setVideoOcrDiagnostic(err.diagnostic);
+      }
     } finally {
       setVideoOcrRunning(false);
       setVideoOcrProgress(null);
@@ -185,7 +188,7 @@ export function CaptionImportModal({
           <button type="button" onClick={() => setCaptionSource('youtube')} className={`flex-1 px-3 py-1.5 rounded text-sm font-medium transition ${captionSource === 'youtube' ? 'dashboard-btn-primary' : ''}`} style={captionSource !== 'youtube' ? { color: 'var(--dash-text-secondary)' } : {}}>
             YouTube Captions
           </button>
-          <button type="button" onClick={() => { setCaptionSource('video'); setVideoOcrError(null); }} className={`flex-1 px-3 py-1.5 rounded text-sm font-medium transition ${captionSource === 'video' ? 'dashboard-btn-primary' : ''}`} style={captionSource !== 'video' ? { color: 'var(--dash-text-secondary)' } : {}}>
+          <button type="button" onClick={() => { setCaptionSource('video'); setVideoOcrError(null); setVideoOcrDiagnostic(null); }} className={`flex-1 px-3 py-1.5 rounded text-sm font-medium transition ${captionSource === 'video' ? 'dashboard-btn-primary' : ''}`} style={captionSource !== 'video' ? { color: 'var(--dash-text-secondary)' } : {}}>
             From Video File
           </button>
         </div>
@@ -257,16 +260,16 @@ export function CaptionImportModal({
         {/* From Video File tab */}
         {captionSource === 'video' && (
           <div className="space-y-3">
-            <p className="text-xs" style={{ color: 'var(--dash-text-muted)' }}>
-              OCR extracts burned-in subtitle text frame-by-frame in your browser. The video is never uploaded to the server.
-            </p>
+            <div className="space-y-1 text-xs" style={{ color: 'var(--dash-text-muted)' }}>
+              <p>OCR runs entirely in your browser. Your MP4 video is not uploaded.</p>
+            </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--dash-text-secondary)' }}>Video file (MP4, WebM, MOV)</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--dash-text-secondary)' }}>Video file (MP4)</label>
               <input
                 type="file"
-                accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                accept="video/mp4,.mp4"
                 className="form-input w-full text-sm"
-                onChange={(e) => { setVideoOcrFile(e.target.files?.[0] || null); setVideoOcrError(null); }}
+                onChange={(e) => { setVideoOcrFile(e.target.files?.[0] || null); setVideoOcrError(null); setVideoOcrDiagnostic(null); }}
               />
               {videoOcrFile && (
                 <p className="mt-1 text-xs font-mono" style={{ color: 'var(--dash-text-muted)' }}>
