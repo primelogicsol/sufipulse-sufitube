@@ -42,6 +42,24 @@ export const PRODUCTION_ITEMS = [
     ariaLabel: 'Studio'
   },
   {
+    public: 'Music Production',
+    mystical: 'Audio Engineering',
+    href: '/studio/music-production',
+    ariaLabel: 'Music Production'
+  },
+  {
+    public: 'Creative Asset Production',
+    mystical: 'Visual Design',
+    href: '/studio/creative-assets',
+    ariaLabel: 'Creative Asset Production'
+  },
+  {
+    public: 'Studio Operations',
+    mystical: 'Release Control',
+    href: '/studio/operations',
+    ariaLabel: 'Studio Operations'
+  },
+  {
     public: 'Inside Studio',
     mystical: 'Facilities & Technology',
     href: '/inside-studio',
@@ -118,6 +136,7 @@ export const ABOUT_ITEMS = [
   { label: 'Our Network', href: '/about/our-network' },
   { label: 'Institutional Partners', href: '/about/institutional-partners' },
   { label: 'Official Channels', href: '/official-channels' },
+  { label: 'Platform & Video Distribution', href: '/official-channels/operations' },
   { label: 'Institutional Collaboration', href: '/collaboration' },
   { label: 'Product Infrastructure', href: '/product-infrastructure' },
   { label: 'Contact', href: '/contact' },

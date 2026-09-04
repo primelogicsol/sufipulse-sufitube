@@ -81,7 +81,7 @@ export default function OfficialIdentityPage() {
       />
 
       {/* 1. HERO — matches /release-premieres pattern */}
-      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+      <section className="relative w-full min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
         {/* Cinematic background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image

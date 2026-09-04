@@ -109,7 +109,7 @@ export default async function ReleasePremieresPage() {
 
   return (
     <>
-      <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+      <section className="relative w-full min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
         {/* Cinematic Background Banner matching global hero */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
@@ -126,7 +126,7 @@ export default async function ReleasePremieresPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center">
+        <div className="relative z-10 pt-20 md:pt-32 flex-1 flex flex-col justify-center">
           <PageContainer>
             <div className="max-w-4xl mx-auto text-center mb-16">
               <div className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
