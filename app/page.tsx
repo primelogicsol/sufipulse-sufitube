@@ -1,5 +1,6 @@
 "use client";
 import { Layout } from './components/layout/Layout';
+import { FlagshipSpotlight, YouTubeRelease } from '@/app/components/releases/FlagshipSpotlight';
 import { useState, useEffect } from 'react';
 import { literaryArticles } from './data/literary-articles';
 import { getBestReleaseDate, sortReleases } from '@/lib/release-utils';
@@ -44,6 +45,7 @@ export default function Home() {
   const [recentReleases, setRecentReleases] = useState<Publication[]>([]);
   const [pubsLoading, setPubsLoading] = useState(true);
   const [kpiStats, setKpiStats] = useState({ releases: 91, writers: literaryArticles.length, institutions: 4 });
+  const [flagshipRelease, setFlagshipRelease] = useState<YouTubeRelease | null>(null);
 
   useEffect(() => {
     fetch('/api/stats')
@@ -93,7 +95,52 @@ export default function Home() {
           const json = await res.json();
           const data = Array.isArray(json) ? json : (json.items || []);
           
-          if (Array.isArray(data) && data.length > 0) {
+          
+            if (Array.isArray(data) && data.length > 0) {
+              // Find the flagship release
+              const firstGoverned = data.find((r: any) => (r.governanceOrigin || (r.source === 'native' ? 'native_governed' : (r.govType || 'native_governed'))) === 'native_governed') || data[0];
+              if (firstGoverned) {
+                const r = firstGoverned;
+                const source = r.source || 'native';
+                const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
+                const formatSeconds = (totalSeconds: number): string => {
+                    if (!totalSeconds) return '0:00';
+                    const h = Math.floor(totalSeconds / 3600);
+                    const m = Math.floor((totalSeconds % 3600) / 60);
+                    const s = totalSeconds % 60;
+                    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    return `${m}:${s.toString().padStart(2, '0')}`;
+                };
+                const durationFormatted = r.durationFormatted || r.duration || formatSeconds(durationSecs);
+                const canonicalTitle = r.canonicalTitle || r.title || 'Untitled Release';
+                const govType = r.governanceOrigin || (r.source === 'native' ? 'native_governed' : (r.govType || 'native_governed'));
+                
+                setFlagshipRelease({
+                    id: r.youtubeId || r.id,
+                    slug: r.slug,
+                    title: canonicalTitle,
+                    description: r.description || '',
+                    thumbnailUrl: r.canonicalThumbnail || r.thumbnail || r.thumbnailUrl || '',
+                    publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
+                    durationSeconds: durationSecs,
+                    durationFormatted: durationFormatted,
+                    views: Number(r.viewCount ?? r.views ?? 0),
+                    source: source,
+                    format: r.format || 'video',
+                    govType: govType,
+                    vocalist: typeof r.vocalist === 'string'
+                        ? r.vocalist
+                        : [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
+                    writer: typeof r.writer === 'string'
+                        ? r.writer
+                        : [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' '),
+                    tags: Array.isArray(r.tags) ? r.tags.join(' ') : (r.description?.match(/#\w+/g)?.join(' ') || ''),
+                    youtubeId: r.youtubeId || '',
+                    rawTitle: canonicalTitle,
+                    youtubeTitle: r.youtubeTitle || r.youtubeStats?.title || ''
+                });
+              }
+
             const allMusic = data
               .filter((r: any) => Boolean(r.youtubeId || r.youtube_video_id || r.id))
               .map(toPublication);
@@ -122,6 +169,8 @@ export default function Home() {
   return (
     <Layout>
       <HeroSection kpiStats={kpiStats} />
+      
+      {flagshipRelease && <FlagshipSpotlight release={flagshipRelease} sourcePage="home" />}
       
       <GovernanceSection />
       

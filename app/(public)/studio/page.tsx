@@ -15,39 +15,69 @@ export default function Studio() {
   const studioResponsibilities = [
     {
       icon: Mic2,
-      title: 'Recording Sessions',
-      description: 'Capturing vocal performances with technical precision and creative support.'
+      title: 'Music Production',
+      description: 'Audio Engineering, Vocals, Mastering',
+      link: '/studio/music-production'
+    },
+    {
+      icon: Database,
+      title: 'Creative Assets',
+      description: 'Visuals, Art Design, Packaging',
+      link: '/studio/creative-assets'
+    },
+    {
+      icon: Activity,
+      title: 'Studio Operations',
+      description: 'Release Control & Metadata',
+      link: '/studio/operations'
+    },
+    {
+      icon: Settings,
+      title: 'Studio Engineers',
+      description: 'Technical Stewardship',
+      link: '/studio-engineers'
     },
     {
       icon: Radio,
-      title: 'Mixing & Mastering',
-      description: 'Balancing elements and preparing final masters for distribution.'
+      title: 'Inside Studio',
+      description: 'Facilities & Technology',
+      link: '/inside-studio'
     },
     {
       icon: CheckCircle2,
-      title: 'Quality Control',
-      description: 'Ensuring audio integrity, format compatibility, and sonic consistency.'
+      title: 'Studio Sessions',
+      description: 'Recording Access Framework',
+      link: '/studio-sessions'
     },
     {
-      icon: Shield,
-      title: 'Metadata Integrity',
-      description: 'Supporting Registry with technical documentation and file specifications.'
+      icon: Compass,
+      title: 'Music Style Selection',
+      description: 'Sacred Music Theory',
+      link: '/production/music-style-selection'
+    },
+    {
+      icon: HardDrive,
+      title: 'Video Distribution',
+      description: 'Platform Operations',
+      link: '/official-channels/operations'
     }
   ];
 
   const productionPath = [
-    { id: 1, title: 'Approved Kalam', desc: 'Editorial council authorization' },
-    { id: 2, title: 'Vocalist Alignment', desc: 'Matching voice to sacred text' },
-    { id: 3, title: 'Composition', desc: 'Thematic musical structuring' },
-    { id: 4, title: 'Recording', desc: 'Master-grade capture' },
-    { id: 5, title: 'Mixing & Mastering', desc: 'Technical validation' },
-    { id: 6, title: 'Registry Authorization', desc: 'Final record entry' }
+    { id: 1, title: 'Audio Master', desc: 'Music & Vocal Production' },
+    { id: 2, title: 'Visual Master', desc: 'Creative Assets' },
+    { id: 3, title: 'Canonical Release Record', desc: 'Studio Operations lock' },
+    { id: 4, title: 'Lyrics/Captions', desc: 'Translations & formatting' },
+    { id: 5, title: 'Metadata/Credits', desc: 'Media versions setup' },
+    { id: 6, title: 'Website Publishing', desc: 'SufiPulse.com release' },
+    { id: 7, title: 'External Distribution', desc: 'YouTube & Channels' },
+    { id: 8, title: 'Verification', desc: 'Analytics & Delivery Assurance' }
   ];
 
   return (
     <>
       {/* Cinematic Hero Section with /banner8.png */}
-      <section className="relative w-full overflow-hidden bg-[var(--color-midnight)] pt-20 md:pt-32 pb-16 md:pb-24 border-b border-[var(--color-border)]">
+      <section className="relative w-full min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden bg-[var(--color-midnight)] pb-16 md:pb-24 border-b border-[var(--color-border)] hero-bleed">
         {/* Cinematic Background Banner */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
@@ -64,13 +94,13 @@ export default function Studio() {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10">
+        <div className="relative z-10 pt-20 md:pt-32">
           <PageContainer>
             <div className="max-w-5xl mx-auto text-center">
               <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
                 <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
                 <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                  SufiPulse USA — Institutional Studio
+                  SufiPulse Studio USA — Central Production & Release-Control Environment
                 </span>
               </div>
 
@@ -132,6 +162,7 @@ export default function Studio() {
                     icon={item.icon}
                     title={item.title}
                     description={item.description}
+                    href={item.link}
                 />
               ))}
             </StudioCardGrid>
