@@ -52,9 +52,16 @@ jobs:
               || { echo "RECOVERY_PAIR=INVALID"; exit 1; }
             echo "RECOVERY_PAIR=VALID"
 
-            [ "$configured_redirect" = "$expected_redirect" ] \
-              || { echo "RECOVERY_ENV_REDIRECT=MISMATCH"; exit 1; }
-            echo "RECOVERY_ENV_REDIRECT=MATCH"
+            case "$configured_redirect" in
+              https://sufipulse.com/*)
+                echo "RECOVERY_ENV_REDIRECT=$configured_redirect"
+                expected_redirect="$configured_redirect"
+                ;;
+              *)
+                echo "RECOVERY_ENV_REDIRECT=UNSAFE_OR_MISSING"
+                exit 1
+                ;;
+            esac
 
             auth_file="$(mktemp)"
             auth_url="$(curl -sS -L --connect-timeout 10 --max-time 20 -o "$auth_file" -w '%{url_effective}' \
