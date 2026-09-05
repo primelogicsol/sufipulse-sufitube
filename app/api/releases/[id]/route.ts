@@ -8,6 +8,8 @@ import { auditLog } from '@/app/lib/audit-log';
 import { logger } from '@/app/lib/logger';
 import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
 import { generateSocialShareKit } from '@/lib/social-share-generator';
+import { applyCanonicalLyricsWorkflow } from '@/server/services/canonical-lyrics-workflow';
+
 
 import { cmsReleaseSchema } from '@/app/lib/validation-schemas';
 
@@ -183,6 +185,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           { status: 409 }
         );
       }
+    }
+
+    const userId = authResult.id || (authResult as any).email || 'system';
+    if (body.canonicalLyrics !== undefined) {
+      body.canonicalLyrics = applyCanonicalLyricsWorkflow(existing?.canonicalLyrics, body.canonicalLyrics, userId, new Date().toISOString());
     }
 
     const merged: CMSRelease = {
