@@ -1,6 +1,8 @@
 import { CMSRelease } from '@/lib/cms-storage';
 
 export type TimelineBoundaryStatus = 'VERIFIED_CONTIGUOUS' | 'VERIFIED_WITH_GAP' | 'NEEDS_SONG_END' | 'NEEDS_POST_SONG_START' | 'INVALID' | 'UNRESOLVED';
+export type LyricsReadinessStatus = 'READY' | 'NEEDS_REVIEW' | 'MISSING_SOURCE' | 'NOT_APPLICABLE';
+export type AlignmentReadinessStatus = { textReady: boolean; submissionReady: boolean; };
 export type CaptionReadinessStatus = 'READY' | 'MISSING_ALIGNMENT' | 'INVALID' | 'NEEDS_REVIEW' | 'NOT_APPLICABLE';
 export type ChapterReadinessStatus = 'READY' | 'NEEDS_SONG_END' | 'NEEDS_POST_SONG_START' | 'INVALID' | 'UNVERIFIED';
 
@@ -56,6 +58,15 @@ export interface YouTubeDiscoveryPackage {
       belongsToReleaseLyrics: boolean;
     };
   };
+  lyrics: {
+    source: string | null;
+    textExists: boolean;
+    primaryLanguage: string | null;
+    languages: string[];
+    status: 'DRAFT' | 'REVIEWED' | 'APPROVED' | 'MISSING';
+    readiness: LyricsReadinessStatus;
+    alignment: AlignmentReadinessStatus;
+  };
   captions: {
     source: 'subtitleCues' | 'unknown';
     cueCount: number;
@@ -91,6 +102,7 @@ export interface YouTubeDiscoveryPackage {
     creative: string;
     language: string;
     webRelationship: string;
+    lyrics: string;
     captions: string;
     chapters: string;
     localization: string;
@@ -259,6 +271,47 @@ export function resolveYouTubeDiscoveryPackage(release: CMSRelease): YouTubeDisc
     },
   };
 
+  // 5.5 Canonical Lyrics
+  let lyricsReadiness: LyricsReadinessStatus = 'READY';
+  const canonicalLyrics = release.canonicalLyrics;
+  if (release.defaultAudioLanguage === 'zxx') {
+    lyricsReadiness = 'NOT_APPLICABLE';
+  } else if (!canonicalLyrics || !canonicalLyrics.text) {
+    lyricsReadiness = 'MISSING_SOURCE';
+    diagnostics.push({
+      code: 'CANONICAL_LYRICS_MISSING',
+      severity: 'BLOCKER_FOR_LYRICS',
+      message: 'No canonical lyrics have been defined for this release.',
+    });
+  } else if (canonicalLyrics.status === 'DRAFT') {
+    lyricsReadiness = 'NEEDS_REVIEW';
+    diagnostics.push({
+      code: 'CANONICAL_LYRICS_DRAFT',
+      severity: 'BLOCKER_FOR_LYRICS',
+      message: 'Canonical lyrics are in DRAFT state and require editorial approval.',
+    });
+  }
+
+
+  let alignmentTextReady = false;
+  if (canonicalLyrics?.status === 'APPROVED' && (canonicalLyrics?.text || '').trim().length > 0 && canonicalLyrics?.primaryLanguage) {
+    alignmentTextReady = true;
+  }
+  const alignmentSubmission = false; // Always false until Part 1 audio source is available
+
+  const lyricsObj = {
+    source: canonicalLyrics?.source || null,
+    textExists: !!(canonicalLyrics && canonicalLyrics.text),
+    primaryLanguage: canonicalLyrics?.primaryLanguage || null,
+    languages: canonicalLyrics?.languages || [],
+    status: (canonicalLyrics?.status as 'DRAFT' | 'REVIEWED' | 'APPROVED' | 'MISSING') || 'MISSING',
+    readiness: lyricsReadiness,
+    alignment: {
+      textReady: alignmentTextReady,
+      submissionReady: alignmentSubmission
+    }
+  };
+
   // 6. Captions
   let captionReadiness: CaptionReadinessStatus = 'READY';
   if (release.defaultAudioLanguage === 'zxx') {
@@ -323,6 +376,7 @@ export function resolveYouTubeDiscoveryPackage(release: CMSRelease): YouTubeDisc
     creative: 'READY',
     language: 'READY',
     webRelationship: 'READY',
+    lyrics: lyricsObj.readiness,
     captions: captions.readiness,
     chapters: chapters.readiness,
     localization: 'PENDING_REVIEW',
@@ -336,6 +390,7 @@ export function resolveYouTubeDiscoveryPackage(release: CMSRelease): YouTubeDisc
     language,
     timeline,
     segments,
+    lyrics: lyricsObj,
     captions,
     chapters,
     metadata,

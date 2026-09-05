@@ -45,6 +45,7 @@ import { ReleaseStreamingSection } from './release-streaming-section';
 import { LyricsStructureSection } from './lyrics-structure-section';
 import { ReleaseEditorLanguageManagementSection } from './components/sections/ReleaseEditorLanguageManagementSection';
 import { VideoStructureSection } from './components/sections/VideoStructureSection';
+import { CanonicalLyricsSection } from './components/sections/CanonicalLyricsSection';
 import { ReleasePremiereSection } from './release-premiere-section';
 import { ReleaseCommentarySection } from './release-commentary-section';
 import { ReleaseSponsorsSection } from './release-sponsors-section';
