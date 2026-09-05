@@ -77,7 +77,7 @@ const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": `${BASE_URL}/#organization`,
-  name: "SufiPulse",
+  name: "SufiPulse USA",
   url: BASE_URL,
   logo: `${BASE_URL}/sufipulse-logo-v5.png`,
   description: "The premier platform for authentic Sufi music, sacred poetry, and literary works from Kashmir and the Indian Subcontinent.",

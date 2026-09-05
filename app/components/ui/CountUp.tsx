@@ -10,9 +10,11 @@ interface CountUpProps {
 }
 
 export function CountUp({ target, suffix = '', duration = 1400, className, style }: CountUpProps) {
-  // Start from 50% of target if target > 10, otherwise 0
-  const initialValue = target > 10 ? Math.floor(target * 0.5) : 0;
-  const [display, setDisplay] = useState(initialValue);
+  // Start from 0 — animates to target when the element enters the viewport.
+  // Do NOT start from Math.floor(target * 0.5): that produced a stale fabricated number
+  // in SSR HTML (e.g. 45 when the real catalog count was 91 or 97).
+  const [display, setDisplay] = useState(0);
+
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
 
@@ -32,7 +34,7 @@ export function CountUp({ target, suffix = '', duration = 1400, className, style
           observer.disconnect();
 
           const start = performance.now();
-          const startValue = initialValue;
+          const startValue = 0;
           
           const tick = (now: number) => {
             const elapsed = now - start;
@@ -55,7 +57,7 @@ export function CountUp({ target, suffix = '', duration = 1400, className, style
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [target, duration, initialValue]);
+  }, [target, duration]);
 
   return (
     <span ref={ref} className={className} style={style}>
