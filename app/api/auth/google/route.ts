@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 
 export async function GET(_req: NextRequest) {
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_ADS_CLIENT_ID;
+  const clientId = process.env.GOOGLE_AUTH_CLIENT_ID;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005';
 
   if (!clientId) {

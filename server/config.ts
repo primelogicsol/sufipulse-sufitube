@@ -106,8 +106,8 @@ export const config = {
   // ─── Google ───────────────────────────────────────────────────────────────
   google: {
     adsDevToken: opt('GOOGLE_ADS_DEVELOPER_TOKEN'),
-    clientId: opt('GOOGLE_CLIENT_ID'),
-    clientSecret: opt('GOOGLE_CLIENT_SECRET'),
+    clientId: opt('GOOGLE_AUTH_CLIENT_ID'),
+    clientSecret: opt('GOOGLE_AUTH_CLIENT_SECRET'),
   },
 
   // ─── Sentry ───────────────────────────────────────────────────────────────

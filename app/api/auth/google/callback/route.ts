@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
 
   if (error || !code) return fail('Google sign-in was cancelled');
 
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_ADS_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_ADS_CLIENT_SECRET;
+  const clientId = process.env.GOOGLE_AUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_AUTH_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) return fail('Google sign-in is not configured');
 
