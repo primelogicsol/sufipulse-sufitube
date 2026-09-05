@@ -1,0 +1,100 @@
+name: Google Auth VPS Audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/google-auth-vps-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'fix/google-auth'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Audit OAuth credentials on VPS without exposing values
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -eu
+            set +x
+            cd /var/www/sufipulse-new
+            [ -r .env ] || { echo "VPS_ENV=UNAVAILABLE"; exit 1; }
+
+            get_env() {
+              awk -v key="$1" 'index($0, key "=") == 1 { print substr($0, length(key) + 2); exit }' .env
+            }
+
+            audit_pair() {
+              label="$1"
+              client_var="$2"
+              secret_var="$3"
+              client_id="$(get_env "$client_var")"
+              client_secret="$(get_env "$secret_var")"
+
+              if [ -z "$client_id" ]; then
+                echo "${label}_CLIENT=MISSING"
+                echo "${label}_PAIR=NOT_TESTED"
+                echo "${label}_REDIRECT=NOT_TESTED"
+                return
+              fi
+
+              case "$client_id" in
+                *.apps.googleusercontent.com) echo "${label}_CLIENT_SHAPE=GOOGLE_WEB" ;;
+                *) echo "${label}_CLIENT_SHAPE=INVALID" ;;
+              esac
+
+              if [ -z "$client_secret" ]; then
+                echo "${label}_SECRET=MISSING"
+                echo "${label}_PAIR=NOT_TESTED"
+              else
+                token_response="$(curl -sS --connect-timeout 10 --max-time 20 \
+                  -X POST https://oauth2.googleapis.com/token \
+                  -H 'Content-Type: application/x-www-form-urlencoded' \
+                  --data-urlencode grant_type=authorization_code \
+                  --data-urlencode code=sufipulse-diagnostic-invalid-code \
+                  --data-urlencode redirect_uri=https://sufipulse.com/api/auth/google/callback \
+                  --data-urlencode client_id="$client_id" \
+                  --data-urlencode client_secret="$client_secret" || true)"
+                token_error="$(printf '%s' "$token_response" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("error","UNKNOWN"))' 2>/dev/null || printf UNKNOWN)"
+                case "$token_error" in
+                  invalid_grant) echo "${label}_PAIR=VALID_CREDENTIALS" ;;
+                  invalid_client|unauthorized_client) echo "${label}_PAIR=INVALID_CREDENTIALS" ;;
+                  *) echo "${label}_PAIR=UNKNOWN" ;;
+                esac
+              fi
+
+              auth_file="$(mktemp)"
+              auth_url="$(curl -sS -L --connect-timeout 10 --max-time 20 -o "$auth_file" -w '%{url_effective}' \
+                -G https://accounts.google.com/o/oauth2/v2/auth \
+                --data-urlencode client_id="$client_id" \
+                --data-urlencode redirect_uri=https://sufipulse.com/api/auth/google/callback \
+                --data-urlencode response_type=code \
+                --data-urlencode scope='openid email profile' \
+                --data-urlencode state=sufipulse-diagnostic || true)"
+              if grep -Eqi 'invalid_client|OAuth client was not found' "$auth_file"; then
+                echo "${label}_REDIRECT=INVALID_CLIENT"
+              elif grep -Eqi 'redirect_uri_mismatch' "$auth_file"; then
+                echo "${label}_REDIRECT=MISMATCH"
+              elif printf '%s' "$auth_url" | grep -q '^https://accounts.google.com/'; then
+                echo "${label}_REDIRECT=ACCEPTED_OR_SIGN_IN_REQUIRED"
+              else
+                echo "${label}_REDIRECT=UNKNOWN"
+              fi
+              rm -f "$auth_file"
+            }
+
+            audit_pair GOOGLE_LOGIN GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET
+            audit_pair GOOGLE_AUTH GOOGLE_AUTH_CLIENT_ID GOOGLE_AUTH_CLIENT_SECRET
+            audit_pair YOUTUBE YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET
+            audit_pair GOOGLE_ADS GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET
+
+            echo "AUDIT_COMPLETE=YES"
