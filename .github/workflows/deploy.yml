@@ -188,24 +188,59 @@ jobs:
             # ── INJECT SECRETS ───────────────────────────────────────────────
             _s="inject-secrets"
             _e() {
-              k="$1"; v="$2"
-              [ -z "$v" ] && return 0
+              local k="$1" v="$2"
               sed -i "/^${k}=/d" .env
+              [ -z "$v" ] && return 0
               printf '%s=%s\n' "$k" "$v" >> .env
             }
-            _e NEXT_PUBLIC_APP_URL          "https://sufipulse.com"
+
+            _e NEXT_PUBLIC_APP_URL               "https://sufipulse.com"
+
+            # Legacy Google variables, temporary compatibility only
+            _e GOOGLE_CLIENT_ID                  "${{ secrets.GOOGLE_CLIENT_ID }}"
+            _e GOOGLE_CLIENT_SECRET              "${{ secrets.GOOGLE_CLIENT_SECRET }}"
+
+            # CMS Google Login
             _e GOOGLE_AUTH_CLIENT_ID             "${{ secrets.GOOGLE_AUTH_CLIENT_ID }}"
             _e GOOGLE_AUTH_CLIENT_SECRET         "${{ secrets.GOOGLE_AUTH_CLIENT_SECRET }}"
-            _e GOOGLE_ADS_CLIENT_ID         "${{ secrets.GOOGLE_ADS_CLIENT_ID }}"
-            _e GOOGLE_ADS_CLIENT_SECRET     "${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}"
-            _e GOOGLE_ADS_DEVELOPER_TOKEN   "${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}"
-            _e GOOGLE_ADS_REDIRECT_URI      "${{ secrets.GOOGLE_ADS_REDIRECT_URI }}"
-            _e GOOGLE_ADS_LOGIN_CUSTOMER_ID "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
-            _e GOOGLE_ADS_CREATE_MODE       "manual_review"
-            _e SMTP_PASS                    "${{ secrets.SMTP_PASS }}"
-            _e YOUTUBE_CLIENT_ID            "176632661339-vblolbmsu073vu0bimlprbc962cgdbh3.apps.googleusercontent.com"
-            _e YOUTUBE_CLIENT_SECRET        "${{ secrets.GOOGLE_CLIENT_SECRET }}"
-            _e YOUTUBE_REFRESH_TOKEN        "${{ secrets.YOUTUBE_REFRESH_TOKEN }}"
+
+            # Google Ads
+            _e GOOGLE_ADS_CLIENT_ID              "${{ secrets.GOOGLE_ADS_CLIENT_ID }}"
+            _e GOOGLE_ADS_CLIENT_SECRET          "${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}"
+            _e GOOGLE_ADS_DEVELOPER_TOKEN        "${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+            _e GOOGLE_ADS_REDIRECT_URI           "${{ secrets.GOOGLE_ADS_REDIRECT_URI }}"
+            _e GOOGLE_ADS_LOGIN_CUSTOMER_ID      "${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}"
+            _e GOOGLE_ADS_CREATE_MODE            "manual_review"
+
+            _e SMTP_PASS                         "${{ secrets.SMTP_PASS }}"
+
+            # YouTube
+            _e YOUTUBE_CLIENT_ID                 "${{ secrets.YOUTUBE_CLIENT_ID }}"
+            _e YOUTUBE_CLIENT_SECRET             "${{ secrets.YOUTUBE_CLIENT_SECRET }}"
+            _e YOUTUBE_REFRESH_TOKEN             "${{ secrets.YOUTUBE_REFRESH_TOKEN }}"
+
+            for k in \
+              GOOGLE_AUTH_CLIENT_ID \
+              GOOGLE_AUTH_CLIENT_SECRET \
+              YOUTUBE_CLIENT_ID \
+              YOUTUBE_CLIENT_SECRET \
+              YOUTUBE_REFRESH_TOKEN
+            do
+              if ! grep -q "^${k}=.\+" .env; then
+                echo "ERROR: required variable $k is missing"
+                exit 1
+              fi
+            done
+
+            grep '^GOOGLE_AUTH_CLIENT_ID=' .env | grep -q '\.apps\.googleusercontent\.com$' || {
+              echo "ERROR: GOOGLE_AUTH_CLIENT_ID has invalid format"
+              exit 1
+            }
+
+            grep '^YOUTUBE_CLIENT_ID=' .env | grep -q '\.apps\.googleusercontent\.com$' || {
+              echo "ERROR: YOUTUBE_CLIENT_ID has invalid format"
+              exit 1
+            }
 
             # ── GHCR AUTH ────────────────────────────────────────────────────
             _s="docker-login"
