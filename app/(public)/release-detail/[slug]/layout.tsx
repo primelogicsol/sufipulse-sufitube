@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { permanentRedirect, notFound } from 'next/navigation';
 import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 
@@ -247,10 +248,12 @@ export async function generateMetadata(
   const canonicalUrl = `${baseUrl}/release-detail/${canonicalKey}`;
 
   if (!release) {
+    // Unknown identifier: no-index and minimal metadata.
+    // The layout component will call notFound() → HTTP 404.
     return {
-      title: 'Release',
-      description: 'Discover sacred Sufi music releases on SufiPulse.',
-      alternates: { canonical: canonicalUrl },
+      title: 'Release Not Found',
+      description: 'This release could not be found on SufiPulse.',
+      robots: { index: false, follow: false },
     };
   }
 
@@ -306,11 +309,27 @@ export default async function ReleaseDetailLayout({ children, params }: LayoutPr
   const { slug } = await params;
   const release = await getReleaseByKey(slug);
 
-  if (!release) return <>{children}</>;
+  // Resolution order (per audit F-05/F-06):
+  //
+  // 1. No release found → HTTP 404 (was: HTTP 200 empty shell)
+  if (!release) {
+    notFound();
+  }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
-  const canonicalKey = release.slug || slug;
-  const canonicalUrl = `${baseUrl}/release-detail/${canonicalKey}`;
+  const canonicalSlug = release.slug;
+
+  // 2. Identifier matched a release but is NOT the canonical slug
+  //    (matched by youtubeId or internal id) → 308 permanent redirect
+  //    Preserves link equity. Consolidates Google's index on canonical URL.
+  if (canonicalSlug && canonicalSlug !== slug) {
+    permanentRedirect(`${baseUrl}/release-detail/${canonicalSlug}`);
+  }
+
+  // At this point: slug === canonicalSlug (redirect guard above ensures this).
+  // 3. Canonical slug — render the release with full structured data.
+  const canonicalUrl = `${baseUrl}/release-detail/${canonicalSlug}`;
+
   const { musicCompositionSchema, musicRecordingSchema, videoObjectSchema } = buildSchemas(release, canonicalUrl, baseUrl);
 
   return (

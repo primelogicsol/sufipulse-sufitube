@@ -10,10 +10,10 @@ interface CountUpProps {
 }
 
 export function CountUp({ target, suffix = '', duration = 1400, className, style }: CountUpProps) {
-  // Start from 0 — animates to target when the element enters the viewport.
-  // Do NOT start from Math.floor(target * 0.5): that produced a stale fabricated number
-  // in SSR HTML (e.g. 45 when the real catalog count was 91 or 97).
-  const [display, setDisplay] = useState(0);
+  // Initialize with the real target value so SSR renders the correct count.
+  // The animation still runs client-side (0 → target) once the element enters
+  // the viewport. Non-JS crawlers and SSR always see the honest catalog count.
+  const [display, setDisplay] = useState(target);
 
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
