@@ -1,40 +1,44 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { loginOrCreateGoogleUser } from '@/server/services/auth';
 import { config } from '@/server/config';
+import {
+  getGoogleAuthConfig,
+  isGoogleLoginState,
+} from '@/server/services/google-auth-config';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
   const stateParam = searchParams.get('state');
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005';
+  const authConfig = getGoogleAuthConfig();
+  const appUrl =
+    authConfig?.appUrl ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    'http://localhost:3005';
 
   const fail = (msg: string) =>
     NextResponse.redirect(`${appUrl}/login?error=${encodeURIComponent(msg)}`);
 
   // Validate CSRF state token — must match the cookie set during initiation.
   const stateCookie = request.cookies.get('oauth_state')?.value;
-  if (!stateParam || !stateCookie || stateParam !== stateCookie) {
+  if (!isGoogleLoginState(stateParam, stateCookie)) {
     return fail('Invalid OAuth state — please try signing in again');
   }
 
   if (error || !code) return fail('Google sign-in was cancelled');
-
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_ADS_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_ADS_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) return fail('Google sign-in is not configured');
+  if (!authConfig) return fail('Google sign-in is not configured');
 
   try {
-    // Exchange auth code for tokens
+    // Exchange auth code for tokens using the exact redirect URI used to initiate OAuth.
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         code,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: `${appUrl}/api/auth/google/callback`,
+        client_id: authConfig.clientId,
+        client_secret: authConfig.clientSecret,
+        redirect_uri: authConfig.redirectUri,
         grant_type: 'authorization_code',
       }),
     });
@@ -74,11 +78,17 @@ export async function GET(request: NextRequest) {
     const cookieOpts = {
       httpOnly: true,
       secure: config.app.isProduction,
-      sameSite: 'lax' as const, // lax required for cross-site OAuth redirect
+      sameSite: 'lax' as const,
       path: '/',
     };
-    res.cookies.set('access_token', result.accessToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 });
-    res.cookies.set('refresh_token', result.refreshToken, { ...cookieOpts, maxAge: 30 * 24 * 60 * 60 });
+    res.cookies.set('access_token', result.accessToken, {
+      ...cookieOpts,
+      maxAge: 7 * 24 * 60 * 60,
+    });
+    res.cookies.set('refresh_token', result.refreshToken, {
+      ...cookieOpts,
+      maxAge: 30 * 24 * 60 * 60,
+    });
     // Consume the one-time CSRF state cookie.
     res.cookies.delete('oauth_state');
 
