@@ -53,7 +53,7 @@ jobs:
             echo "RECOVERY_PAIR=VALID"
 
             case "$configured_redirect" in
-              https://sufipulse.com/*)
+              https://sufipulse.com/*|https://test.sufipulse.com/*)
                 echo "RECOVERY_ENV_REDIRECT=$configured_redirect"
                 expected_redirect="$configured_redirect"
                 ;;
@@ -81,4 +81,16 @@ jobs:
             printf '%s' "$auth_url" | grep -q '^https://accounts.google.com/' \
               || { echo "RECOVERY_REDIRECT=UNKNOWN"; exit 1; }
             echo "RECOVERY_REDIRECT=ACCEPTED_OR_SIGN_IN_REQUIRED"
+
+            production_version="$(curl -fsS --connect-timeout 10 --max-time 20 https://sufipulse.com/api/version || true)"
+            test_version="$(curl -fsS --connect-timeout 10 --max-time 20 https://test.sufipulse.com/api/version || true)"
+            production_commit="$(printf '%s' "$production_version" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' 2>/dev/null || true)"
+            test_commit="$(printf '%s' "$test_version" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' 2>/dev/null || true)"
+            if [ -n "$production_commit" ] && [ "$production_commit" = "$test_commit" ]; then
+              echo "TEST_SUBDOMAIN=SAME_APPLICATION"
+            elif [ -n "$test_commit" ]; then
+              echo "TEST_SUBDOMAIN=DIFFERENT_APPLICATION"
+            else
+              echo "TEST_SUBDOMAIN=UNAVAILABLE"
+            fi
             echo "RECOVERY_PROOF=PASS"
