@@ -58,7 +58,8 @@ jobs:
                 expected_redirect="$configured_redirect"
                 ;;
               *)
-                echo "RECOVERY_ENV_REDIRECT=UNSAFE_OR_MISSING"
+                public_redirect="$(printf '%s' "$configured_redirect" | python3 -c 'import sys; from urllib.parse import urlsplit; u=urlsplit(sys.stdin.read()); print((u.scheme + "://" + u.netloc + u.path) if u.scheme and u.netloc else "MISSING")')"
+                echo "RECOVERY_ENV_REDIRECT=$public_redirect"
                 exit 1
                 ;;
             esac
