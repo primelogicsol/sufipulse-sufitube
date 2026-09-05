@@ -131,6 +131,12 @@ export interface CMSRelease {
     logoUrl?: string;
     isPublished?: boolean;
   }>;
+  videoStructure?: {
+    songEndMs?: number | null;
+    postSongStartMs?: number | null;
+    videoEndMs?: number | null;
+  };
+
   publicCredits?: {
     artistic?: {
       leadVocalist?: string;
