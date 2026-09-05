@@ -4,8 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - '.github/workflows/google-auth-vps-audit.yml'
   workflow_dispatch:
 
 permissions:
@@ -119,3 +117,42 @@ jobs:
 
             echo "CANDIDATE_FILE_COUNT=$candidate_count"
             echo "AUDIT_COMPLETE=YES"
+
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repair branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Google auth assertions
+        run: npx swc-node test-google-auth-config.ts
+
+      - name: Build application
+        env:
+          CI: 'true'
+          SKIP_ENV_VALIDATION: 'true'
+          NEXT_TELEMETRY_DISABLED: '1'
+          SENTRY_DISABLE_AUTO_UPLOAD: 'true'
+          NODE_ENV: production
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          NEXT_PUBLIC_APP_URL: 'https://sufipulse.com'
+          NEXT_PUBLIC_API_URL: /api
+          NEXT_PUBLIC_YOUTUBE_CHANNEL_ID: 'UCraDr3i5A3k0j7typ6tOOsQ'
+          NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS: 'false'
+        run: |
+          mkdir -p .data
+          echo "{}" > .data/registries.json
+          echo "{}" > .data/brand-registry.json
+          echo "{}" > .data/crawler-registry.json
+          echo "{}" > .data/discovery-analytics.json
+          for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > ".data/$f.json"; done
+          npm run build
