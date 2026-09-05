@@ -194,8 +194,37 @@ jobs:
               printf '%s=%s\n' "$k" "$v" >> .env
             }
             _e NEXT_PUBLIC_APP_URL          "https://sufipulse.com"
-            _e GOOGLE_CLIENT_ID             "${{ secrets.GOOGLE_CLIENT_ID }}"
-            _e GOOGLE_CLIENT_SECRET         "${{ secrets.GOOGLE_CLIENT_SECRET }}"
+
+            # Google login uses dedicated runtime variables. Prefer dedicated
+            # GitHub secrets when available. Until a separate Google Cloud
+            # client is provisioned, recover the validated legacy Web client
+            # from the VPS-only .env.local without printing either value.
+            _gh_google_auth_id="${{ secrets.GOOGLE_AUTH_CLIENT_ID }}"
+            _gh_google_auth_secret="${{ secrets.GOOGLE_AUTH_CLIENT_SECRET }}"
+            _gh_google_auth_redirect="${{ secrets.GOOGLE_AUTH_REDIRECT_URI }}"
+            if [ -n "$_gh_google_auth_id" ] && [ -n "$_gh_google_auth_secret" ]; then
+              _e GOOGLE_AUTH_CLIENT_ID "$_gh_google_auth_id"
+              _e GOOGLE_AUTH_CLIENT_SECRET "$_gh_google_auth_secret"
+              _e GOOGLE_AUTH_REDIRECT_URI "${_gh_google_auth_redirect:-https://sufipulse.com/api/auth/google/callback}"
+            elif [ -r /var/www/sufipulse-new/.env.local ]; then
+              _legacy_google_auth_id="$(awk -F= '$1 == "GOOGLE_ADS_CLIENT_ID" { print substr($0, index($0, "=") + 1); exit }' /var/www/sufipulse-new/.env.local)"
+              _legacy_google_auth_secret="$(awk -F= '$1 == "GOOGLE_ADS_CLIENT_SECRET" { print substr($0, index($0, "=") + 1); exit }' /var/www/sufipulse-new/.env.local)"
+              case "$_legacy_google_auth_id" in
+                *.apps.googleusercontent.com) ;;
+                *) echo "FATAL: no valid Google login client is available" >&2; exit 1 ;;
+              esac
+              [ -n "$_legacy_google_auth_secret" ] \
+                || { echo "FATAL: no Google login secret is available" >&2; exit 1; }
+              _e GOOGLE_AUTH_CLIENT_ID "$_legacy_google_auth_id"
+              _e GOOGLE_AUTH_CLIENT_SECRET "$_legacy_google_auth_secret"
+              _e GOOGLE_AUTH_REDIRECT_URI "https://sufipulse.com/api/google-ads/oauth/callback"
+            else
+              echo "FATAL: Google login credentials are unavailable" >&2
+              exit 1
+            fi
+            unset _gh_google_auth_id _gh_google_auth_secret _gh_google_auth_redirect
+            unset _legacy_google_auth_id _legacy_google_auth_secret
+
             _e GOOGLE_ADS_CLIENT_ID         "${{ secrets.GOOGLE_ADS_CLIENT_ID }}"
             _e GOOGLE_ADS_CLIENT_SECRET     "${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}"
             _e GOOGLE_ADS_DEVELOPER_TOKEN   "${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}"
@@ -204,7 +233,7 @@ jobs:
             _e GOOGLE_ADS_CREATE_MODE       "manual_review"
             _e SMTP_PASS                    "${{ secrets.SMTP_PASS }}"
             _e YOUTUBE_CLIENT_ID            "176632661339-vblolbmsu073vu0bimlprbc962cgdbh3.apps.googleusercontent.com"
-            _e YOUTUBE_CLIENT_SECRET        "${{ secrets.GOOGLE_CLIENT_SECRET }}"
+            _e YOUTUBE_CLIENT_SECRET        "${{ secrets.YOUTUBE_CLIENT_SECRET }}"
             _e YOUTUBE_REFRESH_TOKEN        "${{ secrets.YOUTUBE_REFRESH_TOKEN }}"
 
             # ── GHCR AUTH ────────────────────────────────────────────────────

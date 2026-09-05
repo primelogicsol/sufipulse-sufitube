@@ -1,0 +1,96 @@
+name: Google Auth Recovery Proof
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  prove-recovery:
+    if: github.head_ref == 'fix/google-auth'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prove preserved VPS client accepts login bridge
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -eu
+            set +x
+            env_file=/var/www/sufipulse-new/.env.local
+            [ -r "$env_file" ] || { echo "RECOVERY_ENV=MISSING"; exit 1; }
+            get_env() {
+              awk -v key="$1" 'index($0, key "=") == 1 { print substr($0, length(key) + 2); exit }' "$env_file"
+            }
+            client_id="$(get_env GOOGLE_ADS_CLIENT_ID)"
+            client_secret="$(get_env GOOGLE_ADS_CLIENT_SECRET)"
+            configured_redirect="$(get_env GOOGLE_ADS_REDIRECT_URI)"
+            expected_redirect=https://sufipulse.com/api/google-ads/oauth/callback
+
+            case "$client_id" in
+              *.apps.googleusercontent.com) ;;
+              *) echo "RECOVERY_CLIENT=INVALID"; exit 1 ;;
+            esac
+            [ -n "$client_secret" ] || { echo "RECOVERY_SECRET=MISSING"; exit 1; }
+
+            token_response="$(curl -sS --connect-timeout 10 --max-time 20 \
+              -X POST https://oauth2.googleapis.com/token \
+              -H 'Content-Type: application/x-www-form-urlencoded' \
+              --data-urlencode grant_type=authorization_code \
+              --data-urlencode code=sufipulse-diagnostic-invalid-code \
+              --data-urlencode redirect_uri="$expected_redirect" \
+              --data-urlencode client_id="$client_id" \
+              --data-urlencode client_secret="$client_secret")"
+            token_error="$(printf '%s' "$token_response" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("error","UNKNOWN"))')"
+            [ "$token_error" = invalid_grant ] \
+              || { echo "RECOVERY_PAIR=INVALID"; exit 1; }
+            echo "RECOVERY_PAIR=VALID"
+
+            case "$configured_redirect" in
+              https://sufipulse.com/*|https://test.sufipulse.com/*)
+                echo "RECOVERY_ENV_REDIRECT=$configured_redirect"
+                expected_redirect="$configured_redirect"
+                ;;
+              *)
+                public_redirect="$(printf '%s' "$configured_redirect" | python3 -c 'import sys; from urllib.parse import urlsplit; u=urlsplit(sys.stdin.read()); print((u.scheme + "://" + u.netloc + u.path) if u.scheme and u.netloc else "MISSING")')"
+                echo "RECOVERY_ENV_REDIRECT=$public_redirect"
+                exit 1
+                ;;
+            esac
+
+            auth_file="$(mktemp)"
+            auth_url="$(curl -sS -L --connect-timeout 10 --max-time 20 -o "$auth_file" -w '%{url_effective}' \
+              -G https://accounts.google.com/o/oauth2/v2/auth \
+              --data-urlencode client_id="$client_id" \
+              --data-urlencode redirect_uri="$expected_redirect" \
+              --data-urlencode response_type=code \
+              --data-urlencode scope='openid email profile' \
+              --data-urlencode state=sufipulse-diagnostic)"
+            if grep -Eqi 'invalid_client|OAuth client was not found|redirect_uri_mismatch' "$auth_file"; then
+              echo "RECOVERY_REDIRECT=REJECTED"
+              rm -f "$auth_file"
+              exit 1
+            fi
+            rm -f "$auth_file"
+            printf '%s' "$auth_url" | grep -q '^https://accounts.google.com/' \
+              || { echo "RECOVERY_REDIRECT=UNKNOWN"; exit 1; }
+            echo "RECOVERY_REDIRECT=ACCEPTED_OR_SIGN_IN_REQUIRED"
+
+            production_version="$(curl -fsS --connect-timeout 10 --max-time 20 https://sufipulse.com/api/version || true)"
+            test_version="$(curl -fsS --connect-timeout 10 --max-time 20 https://test.sufipulse.com/api/version || true)"
+            production_commit="$(printf '%s' "$production_version" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' 2>/dev/null || true)"
+            test_commit="$(printf '%s' "$test_version" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' 2>/dev/null || true)"
+            if [ -n "$production_commit" ] && [ "$production_commit" = "$test_commit" ]; then
+              echo "TEST_SUBDOMAIN=SAME_APPLICATION"
+            elif [ -n "$test_commit" ]; then
+              echo "TEST_SUBDOMAIN=DIFFERENT_APPLICATION"
+            else
+              echo "TEST_SUBDOMAIN=UNAVAILABLE"
+            fi
+            echo "RECOVERY_PROOF=PASS"

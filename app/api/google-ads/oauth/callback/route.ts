@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { upsertGoogleAdsUserOAuth } from '@/app/lib/server/google-ads-oauth-store';
 import { getGoogleAdsConfig } from '@/lib/google-ads/config';
+import { isGoogleLoginState } from '@/server/services/google-auth-config';
 
 const ADS_API_VERSION = 'v22';
 
@@ -15,6 +16,18 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const stateStr = searchParams.get('state') || '{}';
   const error = searchParams.get('error');
+
+  // The existing Google Ads OAuth client already authorizes this callback.
+  // Login requests use an independent HttpOnly state cookie and are bridged
+  // to the login callback only when that state matches exactly.
+  const loginStateCookie = request.cookies.get('oauth_state')?.value;
+  if (isGoogleLoginState(stateStr, loginStateCookie)) {
+    const loginCallback = new URL('/api/auth/google/callback', request.url);
+    loginCallback.searchParams.set('state', stateStr);
+    if (code) loginCallback.searchParams.set('code', code);
+    if (error) loginCallback.searchParams.set('error', error);
+    return NextResponse.redirect(loginCallback);
+  }
 
   let state: any = {};
   try { state = JSON.parse(stateStr); } catch {}
