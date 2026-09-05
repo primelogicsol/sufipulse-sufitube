@@ -1,7 +1,7 @@
 import { CMSRelease } from '@/lib/cms-storage';
 
 export type TimelineBoundaryStatus = 'VERIFIED_CONTIGUOUS' | 'VERIFIED_WITH_GAP' | 'NEEDS_SONG_END' | 'NEEDS_POST_SONG_START' | 'INVALID' | 'UNRESOLVED';
-export type LyricsReadinessStatus = 'READY' | 'NEEDS_REVIEW' | 'MISSING_SOURCE' | 'NOT_APPLICABLE';
+export type LyricsReadinessStatus = 'READY' | 'NEEDS_REVIEW' | 'NEEDS_APPROVAL' | 'MISSING_SOURCE' | 'NOT_APPLICABLE';
 export type AlignmentReadinessStatus = { textReady: boolean; submissionReady: boolean; };
 export type CaptionReadinessStatus = 'READY' | 'MISSING_ALIGNMENT' | 'INVALID' | 'NEEDS_REVIEW' | 'NOT_APPLICABLE';
 export type ChapterReadinessStatus = 'READY' | 'NEEDS_SONG_END' | 'NEEDS_POST_SONG_START' | 'INVALID' | 'UNVERIFIED';
@@ -288,7 +288,14 @@ export function resolveYouTubeDiscoveryPackage(release: CMSRelease): YouTubeDisc
     diagnostics.push({
       code: 'CANONICAL_LYRICS_DRAFT',
       severity: 'BLOCKER_FOR_LYRICS',
-      message: 'Canonical lyrics are in DRAFT state and require editorial approval.',
+      message: 'Canonical lyrics are in DRAFT state and require editorial review.',
+    });
+  } else if (canonicalLyrics.status === 'REVIEWED') {
+    lyricsReadiness = 'NEEDS_APPROVAL';
+    diagnostics.push({
+      code: 'CANONICAL_LYRICS_REVIEWED',
+      severity: 'BLOCKER_FOR_LYRICS',
+      message: 'Canonical lyrics are in REVIEWED state and require final editorial approval.',
     });
   }
 

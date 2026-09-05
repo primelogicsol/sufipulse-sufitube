@@ -169,7 +169,7 @@ export function CanonicalLyricsSection({
               Mark as Reviewed
             </button>
           )}
-          {status === "REVIEWED" && (
+          {status === "REVIEWED" && initialLyrics?.status === "REVIEWED" && (
             <button
               type="button"
               onClick={handleApprove}
@@ -177,6 +177,11 @@ export function CanonicalLyricsSection({
             >
               Approve Canonical Lyrics
             </button>
+          )}
+          {status === "REVIEWED" && initialLyrics?.status !== "REVIEWED" && (
+            <span className="text-sm text-gray-500 py-2 self-center">
+              Save changes to enable approval.
+            </span>
           )}
         </div>
 
