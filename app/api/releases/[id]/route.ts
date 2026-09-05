@@ -185,7 +185,29 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
+
+    // Backend Provenance Invalidation for Canonical Lyrics
+    if (existing?.canonicalLyrics && body.canonicalLyrics) {
+      const oldL = existing.canonicalLyrics;
+      const newL = body.canonicalLyrics;
+      
+      const textChanged = oldL.text !== newL.text;
+      const primaryLangChanged = oldL.primaryLanguage !== newL.primaryLanguage;
+      const langsChanged = JSON.stringify(oldL.languages || []) !== JSON.stringify(newL.languages || []);
+      
+      if (textChanged || primaryLangChanged || langsChanged) {
+        if (oldL.status === 'APPROVED' || oldL.status === 'REVIEWED') {
+          newL.status = 'DRAFT';
+          delete newL.reviewedAt;
+          delete newL.reviewedBy;
+          delete newL.approvedAt;
+          delete newL.approvedBy;
+        }
+      }
+    }
+
     const merged: CMSRelease = {
+
       ...(existing || {
         id,
         title: body.title || 'Untitled',

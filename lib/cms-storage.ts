@@ -139,6 +139,18 @@ export interface CMSRelease {
     boundaryVerifiedBy?: string;
     postSongExperienceVersion?: string;
   };
+  canonicalLyrics?: {
+    text: string;
+    primaryLanguage: string;
+    languages: string[];
+    source: 'YOUTUBE_DESCRIPTION_EXTRACTION' | 'MANUAL' | 'IMPORT';
+    status: 'DRAFT' | 'REVIEWED' | 'APPROVED';
+    reviewedAt?: string;
+    reviewedBy?: string;
+    approvedAt?: string;
+    approvedBy?: string;
+    lyricsHashAlgorithm?: 'sha256-utf8-v1';
+  };
 
   publicCredits?: {
     artistic?: {
