@@ -29,16 +29,19 @@ jobs:
             cd /var/www/sufipulse-new
             [ -r .env ] || { echo "VPS_ENV=UNAVAILABLE"; exit 1; }
 
-            get_env() {
-              awk -v key="$1" 'index($0, key "=") == 1 { print substr($0, length(key) + 2); exit }' .env
+            get_env_from() {
+              env_file="$1"
+              env_key="$2"
+              awk -v key="$env_key" 'index($0, key "=") == 1 { print substr($0, length(key) + 2); exit }' "$env_file"
             }
 
             audit_pair() {
               label="$1"
-              client_var="$2"
-              secret_var="$3"
-              client_id="$(get_env "$client_var")"
-              client_secret="$(get_env "$secret_var")"
+              env_file="$2"
+              client_var="$3"
+              secret_var="$4"
+              client_id="$(get_env_from "$env_file" "$client_var")"
+              client_secret="$(get_env_from "$env_file" "$secret_var")"
 
               if [ -z "$client_id" ]; then
                 echo "${label}_CLIENT=MISSING"
@@ -92,9 +95,27 @@ jobs:
               rm -f "$auth_file"
             }
 
-            audit_pair GOOGLE_LOGIN GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET
-            audit_pair GOOGLE_AUTH GOOGLE_AUTH_CLIENT_ID GOOGLE_AUTH_CLIENT_SECRET
-            audit_pair YOUTUBE YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET
-            audit_pair GOOGLE_ADS GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET
+            audit_pair GOOGLE_LOGIN .env GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET
+            audit_pair GOOGLE_AUTH .env GOOGLE_AUTH_CLIENT_ID GOOGLE_AUTH_CLIENT_SECRET
+            audit_pair YOUTUBE .env YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET
+            audit_pair GOOGLE_ADS .env GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET
 
+            candidate_count=0
+            while IFS= read -r candidate_file; do
+              [ "$candidate_file" = "/var/www/sufipulse-new/.env" ] && continue
+              grep -Eq '^(GOOGLE|YOUTUBE).*CLIENT_(ID|SECRET)=' "$candidate_file" || continue
+              candidate_count=$((candidate_count + 1))
+              [ "$candidate_count" -le 10 ] || break
+              echo "CANDIDATE_${candidate_count}_PATH=$candidate_file"
+              audit_pair "CANDIDATE_${candidate_count}_GOOGLE_LOGIN" "$candidate_file" GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET
+              audit_pair "CANDIDATE_${candidate_count}_GOOGLE_AUTH" "$candidate_file" GOOGLE_AUTH_CLIENT_ID GOOGLE_AUTH_CLIENT_SECRET
+              audit_pair "CANDIDATE_${candidate_count}_YOUTUBE" "$candidate_file" YOUTUBE_CLIENT_ID YOUTUBE_CLIENT_SECRET
+              audit_pair "CANDIDATE_${candidate_count}_GOOGLE_ADS" "$candidate_file" GOOGLE_ADS_CLIENT_ID GOOGLE_ADS_CLIENT_SECRET
+            done <<CANDIDATE_FILES
+            $(find /var/www /home /opt /root -maxdepth 6 -type f \
+              \( -name '.env' -o -name '.env.local' -o -name '.env.production' -o -name '.env.prod' \) \
+              -readable 2>/dev/null | sort)
+            CANDIDATE_FILES
+
+            echo "CANDIDATE_FILE_COUNT=$candidate_count"
             echo "AUDIT_COMPLETE=YES"
