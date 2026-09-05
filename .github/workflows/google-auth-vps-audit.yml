@@ -134,7 +134,15 @@ jobs:
         run: npm install
 
       - name: Run Google auth assertions
-        run: npx swc-node test-google-auth-config.ts
+        run: |
+          npx tsc test-google-auth-config.ts server/services/google-auth-config.ts \
+            --module commonjs \
+            --target es2022 \
+            --moduleResolution node \
+            --esModuleInterop \
+            --skipLibCheck \
+            --outDir /tmp/google-auth-test
+          node /tmp/google-auth-test/test-google-auth-config.js
 
       - name: Build application
         env:
