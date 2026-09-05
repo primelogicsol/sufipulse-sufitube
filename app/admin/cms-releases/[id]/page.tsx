@@ -44,6 +44,7 @@ import { SocialShareKitSection } from './social-share-kit-section';
 import { ReleaseStreamingSection } from './release-streaming-section';
 import { LyricsStructureSection } from './lyrics-structure-section';
 import { ReleaseEditorLanguageManagementSection } from './components/sections/ReleaseEditorLanguageManagementSection';
+import { VideoStructureSection } from './components/sections/VideoStructureSection';
 import { ReleasePremiereSection } from './release-premiere-section';
 import { ReleaseCommentarySection } from './release-commentary-section';
 import { ReleaseSponsorsSection } from './release-sponsors-section';
@@ -575,6 +576,12 @@ export default function EditReleasePage() {
               fieldRefs={fieldRefs}
             />
           </div>
+          
+          <VideoStructureSection
+            durationSeconds={form.durationSeconds || 0}
+            initialStructure={form.videoStructure || {}}
+            onUpdate={(structure) => setForm((f: any) => ({ ...f, videoStructure: structure }))}
+          />
 
           {/* Premiere & Pre-Release */}
           <ReleasePremiereSection

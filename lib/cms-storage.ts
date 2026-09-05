@@ -134,7 +134,10 @@ export interface CMSRelease {
   videoStructure?: {
     songEndMs?: number | null;
     postSongStartMs?: number | null;
-    videoEndMs?: number | null;
+    boundarySource?: 'EDITOR_VERIFIED' | 'PRODUCTION_TIMELINE' | 'IMPORTED';
+    boundaryVerifiedAt?: string;
+    boundaryVerifiedBy?: string;
+    postSongExperienceVersion?: string;
   };
 
   publicCredits?: {

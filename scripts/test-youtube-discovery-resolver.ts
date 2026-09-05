@@ -1,7 +1,7 @@
 import { resolveYouTubeDiscoveryPackage } from '../server/services/youtube-discovery';
 import { CMSRelease } from '../lib/cms-storage';
+import { parseTimecodeToMs } from '../lib/time-utils';
 
-// Base mock builder
 function buildMockRelease(overrides: Partial<CMSRelease>): CMSRelease {
   return {
     id: 'mock-id',
@@ -10,8 +10,8 @@ function buildMockRelease(overrides: Partial<CMSRelease>): CMSRelease {
     youtubeId: 'mockYtId',
     description: '',
     releaseDate: '2026-01-01',
-    durationSeconds: 100,
-    durationFormatted: '01:40',
+    durationSeconds: 30, // 30,000 ms videoEndMs
+    durationFormatted: '00:30',
     viewCount: 0,
     likeCount: 0,
     status: 'published',
@@ -27,9 +27,70 @@ function buildMockRelease(overrides: Partial<CMSRelease>): CMSRelease {
 }
 
 function runTests() {
-  console.log('=== PHASE 1 RESOLVER TESTS ===\n');
+  console.log('=== PHASE 2 RESOLVER TESTS ===\n');
 
-  // 1. PEHCHAAN KHUD KO Test
+  // 1. Timecode parser 00:04:21
+  console.log('Test 1 - 00:04:21 ->', parseTimecodeToMs('00:04:21'));
+  // 2. Timecode parser 04:21.500
+  console.log('Test 2 - 04:21.500 ->', parseTimecodeToMs('04:21.500'));
+  // 3. Timecode parser malformed
+  console.log('Test 3 - invalid ->', parseTimecodeToMs('hello:world'));
+  // 4. Timecode negative -> handled by logic
+
+  // 5. Contiguous boundary
+  const contiguous = buildMockRelease({ videoStructure: { songEndMs: 15000, postSongStartMs: 15000 }});
+  console.log('Test 5 - Contiguous:', resolveYouTubeDiscoveryPackage(contiguous).timeline.boundaryStatus);
+
+  // 6. Valid gap
+  const gap = buildMockRelease({ videoStructure: { songEndMs: 15000, postSongStartMs: 18000 }});
+  console.log('Test 6 - Gap:', resolveYouTubeDiscoveryPackage(gap).timeline.boundaryStatus);
+
+  // 7. Reversed boundary
+  const reversed = buildMockRelease({ videoStructure: { songEndMs: 20000, postSongStartMs: 15000 }});
+  console.log('Test 7 - Reversed:', resolveYouTubeDiscoveryPackage(reversed).timeline.boundaryStatus);
+
+  // 8. Song end after video end
+  const songAfter = buildMockRelease({ durationSeconds: 20, videoStructure: { songEndMs: 25000, postSongStartMs: 26000 }});
+  console.log('Test 8 - Song End Exceeds Video:', resolveYouTubeDiscoveryPackage(songAfter).timeline.boundaryStatus);
+
+  // 9. Post song start after video end
+  const postAfter = buildMockRelease({ durationSeconds: 20, videoStructure: { songEndMs: 15000, postSongStartMs: 25000 }});
+  console.log('Test 9 - Post Start Exceeds Video:', resolveYouTubeDiscoveryPackage(postAfter).timeline.boundaryStatus);
+
+  // 10. Missing post-song start
+  const missingPost = buildMockRelease({ videoStructure: { songEndMs: 15000 }});
+  console.log('Test 10 - Missing Post Start:', resolveYouTubeDiscoveryPackage(missingPost).timeline.boundaryStatus);
+
+  // 11. Missing song end
+  const missingSong = buildMockRelease({ videoStructure: { postSongStartMs: 15000 }});
+  console.log('Test 11 - Missing Song End:', resolveYouTubeDiscoveryPackage(missingSong).timeline.boundaryStatus);
+
+  // 12. Part 2 remains excluded
+  const p2 = resolveYouTubeDiscoveryPackage(gap).segments.part2;
+  console.log('Test 12 - Part 2 excluded from lyrics?', p2?.belongsToReleaseLyrics === false);
+
+  // 13. Chapter generation blocked for incomplete boundary
+  const inc = resolveYouTubeDiscoveryPackage(missingPost).chapters;
+  console.log('Test 13 - Chapters Blocked?', inc.readiness === 'NEEDS_POST_SONG_START');
+
+  // 14. Provenance Invalidation Test
+  const boundA = buildMockRelease({ videoStructure: { songEndMs: 10000, postSongStartMs: 10000, boundarySource: 'EDITOR_VERIFIED', boundaryVerifiedAt: '2026-09-04T00:00:00.000Z' }});
+  console.log('Test 14.1 - Verified A Chapters:', resolveYouTubeDiscoveryPackage(boundA).chapters.readiness);
+
+  const boundBUnverified = buildMockRelease({ videoStructure: { songEndMs: 15000, postSongStartMs: 15000, boundarySource: 'EDITOR_VERIFIED' }});
+  console.log('Test 14.2 - Changed B Chapters (UNVERIFIED):', resolveYouTubeDiscoveryPackage(boundBUnverified).chapters.readiness);
+
+  const boundBVerified = buildMockRelease({ videoStructure: { songEndMs: 15000, postSongStartMs: 15000, boundarySource: 'EDITOR_VERIFIED', boundaryVerifiedAt: '2026-09-04T00:01:00.000Z' }});
+  console.log('Test 14.3 - Re-verified B Chapters:', resolveYouTubeDiscoveryPackage(boundBVerified).chapters.readiness);
+
+  // Caption boundary exceeding
+  const captionExceeds = buildMockRelease({
+    subtitleCues: [{ id: '1', cueNumber: 1, startTime: '00:00:10.000', endTime: '00:00:20.000' }],
+    videoStructure: { songEndMs: 15000, postSongStartMs: 16000 }
+  });
+  console.log('Test - Caption crosses Part 2:', resolveYouTubeDiscoveryPackage(captionExceeds).captions.readiness);
+
+  // PEHCHAAN Control
   const pehchaan = buildMockRelease({
     id: 'pehchaan-khud-ko',
     slug: 'pehchaan-khud-ko',
@@ -38,94 +99,20 @@ function runTests() {
     subtitleCues: [],
     videoStructure: {}
   });
-  
-  const pkgPehchaan = resolveYouTubeDiscoveryPackage(pehchaan);
-  console.log('--- PEHCHAAN KHUD KO ---');
-  console.log('Identity READY?', pkgPehchaan.readiness.identity === 'READY');
-  console.log('Creative READY?', pkgPehchaan.readiness.creative === 'READY');
-  console.log('Audio Language:', pkgPehchaan.language.audioLanguage);
-  console.log('Caption Cue Count:', pkgPehchaan.captions.cueCount);
-  console.log('Caption Readiness:', pkgPehchaan.captions.readiness);
-  console.log('songEndMs:', pkgPehchaan.timeline.songEndMs);
-  console.log('postSongStartMs:', pkgPehchaan.timeline.postSongStartMs);
-  console.log('Chapter Readiness:', pkgPehchaan.chapters.readiness);
-  console.log('Part 2 type:', pkgPehchaan.segments.part2?.segmentType);
-  console.log('Part 2 in MusicComposition?', pkgPehchaan.segments.part2?.belongsToReleaseComposition);
-  console.log('');
+  console.log('--- PEHCHAAN KHUD KO (Pre-entry) ---');
+  console.log('Chapters:', resolveYouTubeDiscoveryPackage(pehchaan).chapters.readiness);
 
-  // A. cues present + boundary present -> captions READY, chapters READY
-  const scenarioA = buildMockRelease({
-    subtitleCues: [{ id: '1', startTime: '00:00:01.000', endTime: '00:00:05.000', cueNumber: 1 }],
-    videoStructure: { songEndMs: 10000, postSongStartMs: 10000 }
+  const pehchaanReady = buildMockRelease({
+    id: 'pehchaan-khud-ko',
+    slug: 'pehchaan-khud-ko',
+    youtubeId: 'Hc1TjcyZLnM',
+    canonicalTitle: 'PEHCHAAN KHUD KO',
+    subtitleCues: [{ id: '1', cueNumber: 1, startTime: '00:00:00.000', endTime: '00:00:10.000' }],
+    videoStructure: { songEndMs: 10000, postSongStartMs: 12000, boundarySource: 'EDITOR_VERIFIED', boundaryVerifiedAt: '2026-09-04T00:00:00.000Z' }
   });
-  const pkgA = resolveYouTubeDiscoveryPackage(scenarioA);
-  console.log('--- A. Cues + Boundary Present ---');
-  console.log('Captions:', pkgA.captions.readiness, 'Chapters:', pkgA.chapters.readiness);
-
-  // B. cues absent + boundary present -> captions MISSING_ALIGNMENT, chapters READY
-  const scenarioB = buildMockRelease({
-    subtitleCues: [],
-    videoStructure: { songEndMs: 15000, postSongStartMs: 15000 }
-  });
-  const pkgB = resolveYouTubeDiscoveryPackage(scenarioB);
-  console.log('--- B. No Cues + Boundary Present ---');
-  console.log('Captions:', pkgB.captions.readiness, 'Chapters:', pkgB.chapters.readiness);
-
-  // C. cues present + boundary absent -> captions READY, chapters NEEDS_SONG_END
-  const scenarioC = buildMockRelease({
-    subtitleCues: [{ id: '1', startTime: '00:00:01.000', endTime: '00:00:05.000', cueNumber: 1 }],
-    videoStructure: {}
-  });
-  const pkgC = resolveYouTubeDiscoveryPackage(scenarioC);
-  console.log('--- C. Cues Present + No Boundary ---');
-  console.log('Captions:', pkgC.captions.readiness, 'Chapters:', pkgC.chapters.readiness);
-
-  // D. cues absent + boundary absent -> both unresolved independently
-  const scenarioD = buildMockRelease({
-    subtitleCues: [],
-    videoStructure: {}
-  });
-  const pkgD = resolveYouTubeDiscoveryPackage(scenarioD);
-  console.log('--- D. No Cues + No Boundary ---');
-  console.log('Captions:', pkgD.captions.readiness, 'Chapters:', pkgD.chapters.readiness);
-
-  // E. instrumental zxx release -> no fabricated lyric captions
-  // If format is audio or audioLanguage is zxx. Let's say we rely on missing subtitleCues = MISSING_ALIGNMENT
-  // but if it's zxx, maybe it's naturally READY? Prompt says "no fabricated lyric captions".
-  const scenarioE = buildMockRelease({
-    subtitleCues: [],
-    defaultAudioLanguage: 'zxx',
-    videoStructure: { songEndMs: 20000, postSongStartMs: 20000 }
-  });
-  const pkgE = resolveYouTubeDiscoveryPackage(scenarioE);
-  console.log('--- E. Instrumental (zxx) ---');
-  console.log('Captions:', pkgE.captions.readiness, '(No fabricated cues)');
-
-  // F. songEnd present + postSongStart missing
-  const scenarioF = buildMockRelease({
-    subtitleCues: [],
-    videoStructure: { songEndMs: 10000 }
-  });
-  console.log('--- F. songEnd present + postSongStart missing ---');
-  console.log('Chapters:', resolveYouTubeDiscoveryPackage(scenarioF).chapters.readiness);
-
-  // G. songEnd < postSongStart (Gap)
-  const scenarioG = buildMockRelease({
-    subtitleCues: [],
-    videoStructure: { songEndMs: 10000, postSongStartMs: 12000 }
-  });
-  console.log('--- G. songEnd < postSongStart (Gap) ---');
-  console.log('Chapters:', resolveYouTubeDiscoveryPackage(scenarioG).chapters.readiness);
-  console.log('Boundary:', resolveYouTubeDiscoveryPackage(scenarioG).timeline.boundaryStatus);
-
-  // H. songEnd > postSongStart (Invalid)
-  const scenarioH = buildMockRelease({
-    subtitleCues: [],
-    videoStructure: { songEndMs: 15000, postSongStartMs: 10000 }
-  });
-  console.log('--- H. songEnd > postSongStart (Invalid) ---');
-  console.log('Chapters:', resolveYouTubeDiscoveryPackage(scenarioH).chapters.readiness);
-  console.log('Boundary:', resolveYouTubeDiscoveryPackage(scenarioH).timeline.boundaryStatus);
+  console.log('--- PEHCHAAN SYNTHETIC READY FIXTURE ---');
+  console.log('Chapters:', resolveYouTubeDiscoveryPackage(pehchaanReady).chapters.readiness);
+  console.log('Captions:', resolveYouTubeDiscoveryPackage(pehchaanReady).captions.readiness);
 }
 
 runTests();

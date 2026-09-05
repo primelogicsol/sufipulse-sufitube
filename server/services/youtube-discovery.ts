@@ -2,7 +2,7 @@ import { CMSRelease } from '@/lib/cms-storage';
 
 export type TimelineBoundaryStatus = 'VERIFIED_CONTIGUOUS' | 'VERIFIED_WITH_GAP' | 'NEEDS_SONG_END' | 'NEEDS_POST_SONG_START' | 'INVALID' | 'UNRESOLVED';
 export type CaptionReadinessStatus = 'READY' | 'MISSING_ALIGNMENT' | 'INVALID' | 'NEEDS_REVIEW' | 'NOT_APPLICABLE';
-export type ChapterReadinessStatus = 'READY' | 'NEEDS_SONG_END' | 'NEEDS_POST_SONG_START' | 'INVALID';
+export type ChapterReadinessStatus = 'READY' | 'NEEDS_SONG_END' | 'NEEDS_POST_SONG_START' | 'INVALID' | 'UNVERIFIED';
 
 export interface YouTubeDiscoveryPackage {
   identity: {
@@ -158,16 +158,21 @@ export function resolveYouTubeDiscoveryPackage(release: CMSRelease): YouTubeDisc
   const videoStructure = release.videoStructure || {};
   const songEndMs = videoStructure.songEndMs ?? null;
   const postSongStartMs = videoStructure.postSongStartMs ?? null;
-  const videoEndMs = videoStructure.videoEndMs ?? null;
+  const videoEndMs = (release.durationSeconds && release.durationSeconds > 0) ? release.durationSeconds * 1000 : null;
+  
+  if (videoEndMs === null) {
+    diagnostics.push({
+      code: 'VIDEO_DURATION_UNKNOWN',
+      severity: 'WARNING',
+      message: 'Video duration is missing or 0. Cannot verify post-song end boundary relative to video.'
+    });
+  }
 
   let lastLyricCueEndMs: number | null = null;
   const cueCount = release.subtitleCues ? release.subtitleCues.length : 0;
   
   if (cueCount > 0 && release.subtitleCues) {
     const lastCue = release.subtitleCues[cueCount - 1];
-    // subtitleCues are usually objects with start/end in seconds or time strings, assume parsing it if it was a real impl,
-    // but here we just need the end ms if available. Let's assume end is seconds for now, or string.
-    // In our system, subtitleCues uses 'end' as string e.g., "00:04:02.500"
     if (typeof lastCue.endTime === 'string') {
       const parts = lastCue.endTime.split(':');
       if (parts.length === 3) {
@@ -187,42 +192,41 @@ export function resolveYouTubeDiscoveryPackage(release: CMSRelease): YouTubeDisc
   if (songEndMs === null && postSongStartMs === null) {
     boundaryStatus = 'NEEDS_SONG_END';
     chapterReadiness = 'NEEDS_SONG_END';
-    diagnostics.push({
-      code: 'SONG_END_UNVERIFIED',
-      severity: 'BLOCKER_FOR_CHAPTERS',
-      message: 'Part 1 end has not been verified.',
-    });
+    diagnostics.push({ code: 'SONG_END_UNVERIFIED', severity: 'BLOCKER_FOR_CHAPTERS', message: 'Part 1 end has not been verified.' });
   } else if (songEndMs !== null && postSongStartMs === null) {
     boundaryStatus = 'NEEDS_POST_SONG_START';
     chapterReadiness = 'NEEDS_POST_SONG_START';
-    diagnostics.push({
-      code: 'POST_SONG_START_UNVERIFIED',
-      severity: 'BLOCKER_FOR_CHAPTERS',
-      message: 'Part 1 end is known, but Part 2 start is unverified.',
-    });
+    diagnostics.push({ code: 'POST_SONG_START_MISSING', severity: 'BLOCKER_FOR_CHAPTERS', message: 'Part 1 end is known, but Part 2 start is unverified.' });
   } else if (songEndMs === null && postSongStartMs !== null) {
     boundaryStatus = 'INVALID';
     chapterReadiness = 'INVALID';
-    diagnostics.push({
-      code: 'INVALID_BOUNDARY_STATE',
-      severity: 'BLOCKER_FOR_CHAPTERS',
-      message: 'postSongStartMs is present but songEndMs is null.',
-    });
+    diagnostics.push({ code: 'INVALID_BOUNDARY_STATE', severity: 'BLOCKER_FOR_CHAPTERS', message: 'postSongStartMs is present but songEndMs is null.' });
   } else if (songEndMs !== null && postSongStartMs !== null) {
-    if (songEndMs > postSongStartMs) {
+    if (songEndMs < 0 || postSongStartMs < 0) {
       boundaryStatus = 'INVALID';
       chapterReadiness = 'INVALID';
-      diagnostics.push({
-        code: 'INVALID_BOUNDARY_ORDER',
-        severity: 'BLOCKER_FOR_CHAPTERS',
-        message: 'songEndMs cannot be greater than postSongStartMs.',
-      });
-    } else if (songEndMs === postSongStartMs) {
-      boundaryStatus = 'VERIFIED_CONTIGUOUS';
-      chapterReadiness = 'READY';
+      diagnostics.push({ code: 'BOUNDARY_NEGATIVE', severity: 'BLOCKER_FOR_CHAPTERS', message: 'Boundaries cannot be negative.' });
+    } else if (songEndMs > postSongStartMs) {
+      boundaryStatus = 'INVALID';
+      chapterReadiness = 'INVALID';
+      diagnostics.push({ code: 'BOUNDARY_REVERSED', severity: 'BLOCKER_FOR_CHAPTERS', message: 'songEndMs cannot be greater than postSongStartMs.' });
+    } else if (videoEndMs !== null && postSongStartMs > videoEndMs) {
+      boundaryStatus = 'INVALID';
+      chapterReadiness = 'INVALID';
+      diagnostics.push({ code: 'POST_SONG_AFTER_VIDEO_END', severity: 'BLOCKER_FOR_CHAPTERS', message: 'postSongStartMs cannot exceed videoEndMs.' });
+    } else if (videoEndMs !== null && songEndMs > videoEndMs) {
+      boundaryStatus = 'INVALID';
+      chapterReadiness = 'INVALID';
+      diagnostics.push({ code: 'SONG_END_AFTER_VIDEO_END', severity: 'BLOCKER_FOR_CHAPTERS', message: 'songEndMs cannot exceed videoEndMs.' });
     } else {
-      boundaryStatus = 'VERIFIED_WITH_GAP';
-      chapterReadiness = 'READY';
+      boundaryStatus = (songEndMs === postSongStartMs) ? 'VERIFIED_CONTIGUOUS' : 'VERIFIED_WITH_GAP';
+      
+      if (videoStructure.boundarySource === 'EDITOR_VERIFIED' && videoStructure.boundaryVerifiedAt) {
+        chapterReadiness = 'READY';
+      } else {
+        chapterReadiness = 'UNVERIFIED';
+        diagnostics.push({ code: 'BOUNDARY_UNVERIFIED', severity: 'BLOCKER_FOR_CHAPTERS', message: 'Boundary is structurally valid but lacks explicit editorial verification.' });
+      }
     }
   }
 
@@ -259,6 +263,13 @@ export function resolveYouTubeDiscoveryPackage(release: CMSRelease): YouTubeDisc
   let captionReadiness: CaptionReadinessStatus = 'READY';
   if (release.defaultAudioLanguage === 'zxx') {
     captionReadiness = 'NOT_APPLICABLE';
+  } else if (lastLyricCueEndMs !== null && songEndMs !== null && lastLyricCueEndMs > songEndMs) {
+    captionReadiness = 'INVALID';
+    diagnostics.push({
+      code: 'CAPTION_CROSSES_PART_2',
+      severity: 'BLOCKER_FOR_CAPTIONS',
+      message: 'Caption cues exceed songEndMs boundary.',
+    });
   } else if (cueCount === 0) {
     captionReadiness = 'MISSING_ALIGNMENT';
     diagnostics.push({
