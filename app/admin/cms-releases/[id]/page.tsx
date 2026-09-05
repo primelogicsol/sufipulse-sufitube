@@ -631,6 +631,14 @@ export default function EditReleasePage() {
             updatePublicCredits={updatePublicCredits}
           />
 
+          {/* Canonical Part I Lyrics */}
+          <CanonicalLyricsSection
+            initialLyrics={form.canonicalLyrics}
+            onUpdate={(canonicalLyrics) =>
+              setForm((prev) => ({ ...prev, canonicalLyrics }))
+            }
+          />
+
           {/* Structured Lyrics */}
           <LyricsStructureSection
             form={form}

@@ -28,7 +28,7 @@ const draftRelease = {
   ...baseRelease,
   canonicalLyrics: { text: 'abc', status: 'DRAFT', primaryLanguage: 'ur', languages: ['ur'], source: 'MANUAL' }
 };
-const pkg1 = resolveYouTubeDiscoveryPackage(draftRelease as any, {} as any, []);
+const pkg1 = resolveYouTubeDiscoveryPackage(draftRelease as any);
 assert.strictEqual(pkg1.lyrics.readiness, 'NEEDS_REVIEW');
 
 // 2. REVIEWED -> NEEDS_APPROVAL
@@ -36,7 +36,7 @@ const reviewedRelease = {
   ...baseRelease,
   canonicalLyrics: { text: 'abc', status: 'REVIEWED', primaryLanguage: 'ur', languages: ['ur'], source: 'MANUAL' }
 };
-const pkg2 = resolveYouTubeDiscoveryPackage(reviewedRelease as any, {} as any, []);
+const pkg2 = resolveYouTubeDiscoveryPackage(reviewedRelease as any);
 assert.strictEqual(pkg2.lyrics.readiness, 'NEEDS_APPROVAL');
 
 // 3. APPROVED -> READY
@@ -44,7 +44,7 @@ const approvedRelease = {
   ...baseRelease,
   canonicalLyrics: { text: 'abc', status: 'APPROVED', primaryLanguage: 'ur', languages: ['ur'], source: 'MANUAL' }
 };
-const pkg3 = resolveYouTubeDiscoveryPackage(approvedRelease as any, {} as any, []);
+const pkg3 = resolveYouTubeDiscoveryPackage(approvedRelease as any);
 assert.strictEqual(pkg3.lyrics.readiness, 'READY');
 
 console.log('All resolver assertions PASSED.');
