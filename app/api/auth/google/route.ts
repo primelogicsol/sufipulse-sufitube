@@ -1,12 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
+import { getGoogleAuthConfig } from '@/server/services/google-auth-config';
 
 export async function GET(_req: NextRequest) {
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_ADS_CLIENT_ID;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005';
+  const authConfig = getGoogleAuthConfig();
 
-  if (!clientId) {
-    return NextResponse.redirect(`${appUrl}/login?error=Google+sign-in+is+not+configured`);
+  if (!authConfig) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005';
+    return NextResponse.redirect(
+      `${appUrl}/login?error=Google+sign-in+is+not+configured`
+    );
   }
 
   // Generate a random state token for CSRF protection.
@@ -14,8 +17,8 @@ export async function GET(_req: NextRequest) {
   const state = randomBytes(24).toString('hex');
 
   const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: `${appUrl}/api/auth/google/callback`,
+    client_id: authConfig.clientId,
+    redirect_uri: authConfig.redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
     access_type: 'offline',
