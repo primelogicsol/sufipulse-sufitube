@@ -57,6 +57,14 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
+    // Google sign-in — optional, fails closed when either value is absent
+    GOOGLE_AUTH_CLIENT_ID: z
+      .string()
+      .endsWith('.apps.googleusercontent.com')
+      .optional(),
+    GOOGLE_AUTH_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_AUTH_REDIRECT_URI: z.string().url().optional(),
+
     // Google Ads — optional
     GOOGLE_ADS_DEVELOPER_TOKEN: z.string().optional(),
     GOOGLE_ADS_CLIENT_ID: z.string().optional(),
