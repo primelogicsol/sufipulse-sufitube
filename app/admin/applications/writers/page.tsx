@@ -564,27 +564,27 @@ export default function WriterEditorialReviewQueue() {
                                             )}
 
                                             {/* Editorial / Governance */}
-                                            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-neutral-900">
-                                                <div>
+                                            <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-6 border-t border-neutral-900 min-w-0">
+                                                <div className="min-w-0">
                                                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                         <History className="w-4 h-4" />
                                                         Editorial Review History
                                                     </h3>
-                                                    <div className="space-y-4">
+                                                    <div className="space-y-4 min-w-0">
                                                         {selectedApp.reviewed_at ? (
                                                             <div className="flex gap-4">
-                                                                <div className="w-0.5 bg-neutral-800 relative">
+                                                                <div className="w-0.5 bg-neutral-800 relative shrink-0">
                                                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-neutral-700" />
                                                                 </div>
-                                                                <div className="pb-4">
+                                                                <div className="pb-4 min-w-0 flex-1">
                                                                     <p className="text-[10px] text-neutral-600 mb-1">
                                                                         {new Date(selectedApp.reviewed_at).toLocaleString()}
                                                                     </p>
-                                                                    <p className="text-sm text-slate-100">
+                                                                    <p className="text-sm text-slate-100 break-words">
                                                                         Status updated to <span className="text-amber-400 font-medium">{(selectedApp.profile_status || '').replace(/_/g, ' ')}</span>
                                                                     </p>
                                                                     {selectedApp.admin_notes && (
-                                                                        <div className="mt-2 p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg text-xs text-neutral-500 italic">
+                                                                        <div className="mt-2 p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg text-xs text-neutral-500 italic break-words">
                                                                             &ldquo;{selectedApp.admin_notes}&rdquo;
                                                                         </div>
                                                                     )}
@@ -595,20 +595,20 @@ export default function WriterEditorialReviewQueue() {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div>
+                                                <div className="min-w-0">
                                                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Institutional Covenant</h3>
-                                                    <div className="space-y-3">
-                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex items-center justify-between">
-                                                            <span className="text-xs text-neutral-400">Editorial Covenant</span>
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Acknowledged</span>
+                                                    <div className="space-y-3 min-w-0">
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                                                            <span className="text-xs text-neutral-400 min-w-0 flex-1 break-words">Editorial Covenant</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 sm:text-right">Acknowledged</span>
                                                         </div>
-                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex items-center justify-between">
-                                                            <span className="text-xs text-neutral-400">Institutional Governance</span>
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Acknowledged</span>
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                                                            <span className="text-xs text-neutral-400 min-w-0 flex-1 break-words">Institutional Governance</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 sm:text-right">Acknowledged</span>
                                                         </div>
-                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex items-center justify-between">
-                                                            <span className="text-xs text-neutral-400">Contributor Verification</span>
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Verified</span>
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                                                            <span className="text-xs text-neutral-400 min-w-0 flex-1 break-words">Contributor Verification</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 sm:text-right">Verified</span>
                                                         </div>
                                                     </div>
                                                 </div>
