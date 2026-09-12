@@ -2,14 +2,14 @@
 
 ## Deployment Target
 - **Branch**: `main`
-- **Source SHA**: `7331ad67a837c357e32d140be5a45c726bfc1b2e`
+- **Source SHA**: `5d2f805673b80630f5af505eee7415a075ab8738` (Contains audited `7331ad67` app logic)
 - **Date**: 2026-09-12
-- **Status**: REHEARSAL COMPLETE / NOT DEPLOYED
+- **Status**: DEPLOYED / LIVE VERIFIED
 
 ## OCI Artifact Information
-- **Image Tag**: `null` (Pending real CI/CD)
-- **Image Digest**: `null` (Pending real CI/CD)
-- **Verification**: PENDING REAL CI/CD
+- **Image Tag**: `sha-5d2f805673b80630f5af505eee7415a075ab8738`
+- **Image Digest**: `sha256:42860ccb97a3bcd6dca78e71805754eaa884ca3e04673aa477fc87ef2439026a`
+- **Verification**: VPS VERSION CHECK PASS
 
 ## Active Features (Merged & Validated)
 - **Private Production Pipeline**: Audio alignment, relay, source assembly, history rollback, connection resolution.
@@ -21,3 +21,4 @@
 ## Known Limitations / Business State
 - Google Ads Managed account `9641210148` is technically connected but serving is currently suspended.
 - YouTube captions architecture is complete but `youtube.force-ssl` usage requires final Google Cloud OAuth verification.
+- **Post-Deployment Audit Needed:** `DISCOVERY-ANALYTICS` and `CRAWLER-REGISTRY` initialization `TypeError` warnings, plus 19 npm vulnerabilities.

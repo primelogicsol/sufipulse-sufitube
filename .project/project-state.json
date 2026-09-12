@@ -2,12 +2,12 @@
   "project": "SufiPulse",
   "version": "3.0.0-pro",
   "deployment": {
-    "source_sha": "7331ad67a837c357e32d140be5a45c726bfc1b2e",
-    "status": "REHEARSAL COMPLETE / NOT DEPLOYED",
+    "source_sha": "5d2f805673b80630f5af505eee7415a075ab8738",
+    "status": "DEPLOYED / LIVE VERIFIED",
     "artifact": {
-      "image_tag": null,
-      "oci_digest": null,
-      "verification": "PENDING REAL CI/CD"
+      "image_tag": "sha-5d2f805673b80630f5af505eee7415a075ab8738",
+      "oci_digest": "sha256:42860ccb97a3bcd6dca78e71805754eaa884ca3e04673aa477fc87ef2439026a",
+      "verification": "VPS VERSION CHECK PASS"
     }
   },
   "features": {
@@ -18,6 +18,7 @@
     "ahl_e_naghma": "integrated"
   },
   "live_verification": {
-    "status": "NOT RUN AGAINST PRODUCTION"
+    "status": "PASS",
+    "note": "Production currently serving audited 7331ad67 logic via 5d2f805 image."
   }
 }

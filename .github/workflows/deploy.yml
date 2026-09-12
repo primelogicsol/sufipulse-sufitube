@@ -1,9 +1,6 @@
 name: Deploy to VPS
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
@@ -100,12 +97,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
+        id: build_image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_APP_URL=https://sufipulse.com
@@ -119,6 +116,8 @@ jobs:
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.2.2
+        env:
+          IMAGE_DIGEST: ${{ steps.build_image.outputs.digest }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
@@ -145,7 +144,7 @@ jobs:
 
             services:
               app:
-                image: ${SUFIPULSE_IMAGE:-ghcr.io/primelogicsol/sufipulse-sufitube:latest}
+                image: ${SUFIPULSE_IMAGE}
                 container_name: sufipulse-new-app
                 restart: always
                 ports:
@@ -216,7 +215,7 @@ jobs:
             # ── PULL AND DEPLOY ──────────────────────────────────────────────
             _s="docker-pull"
             IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-            export SUFIPULSE_IMAGE="ghcr.io/${IMAGE_REPO}:${{ github.sha }}"
+            export SUFIPULSE_IMAGE="ghcr.io/${IMAGE_REPO}@${IMAGE_DIGEST}"
             echo "pulling: ${SUFIPULSE_IMAGE}"
             docker compose -p sufipulse_new pull app
 
@@ -282,3 +281,5 @@ jobs:
               || echo "VERSION CHECK: FAIL (may still be warming up)"
 
             echo "DEPLOY COMPLETE — ${{ github.sha }}"
+
+
