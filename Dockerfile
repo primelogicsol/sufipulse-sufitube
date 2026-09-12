@@ -45,8 +45,8 @@ ENV NEXT_PUBLIC_APP_COMMIT=$NEXT_PUBLIC_APP_COMMIT
 RUN mkdir -p .data \
     && echo "{}" > .data/registries.json \
     && echo "{}" > .data/brand-registry.json \
-    && echo "{}" > .data/crawler-registry.json \
-    && echo "{}" > .data/discovery-analytics.json \
+    && echo "[]" > .data/crawler-registry.json \
+    && echo "[]" > .data/discovery-analytics.json \
     && for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
 
 # Build the application
@@ -96,5 +96,6 @@ ENV APP_COMMIT=$APP_COMMIT
 ENV BUILD_TIME=$BUILD_TIME
 
 CMD ["sh", "-c", "node scripts/validate-env.mjs && node scripts/migrate.js && node server.js"]
+
 
 
