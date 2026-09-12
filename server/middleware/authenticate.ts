@@ -24,11 +24,31 @@ function extractToken(req: NextRequest): string | null {
   return req.cookies.get('access_token')?.value ?? null;
 }
 
+const ADMIN_ROLES = [
+  'admin',
+  'administrator',
+  'super_admin',
+  'governance_admin',
+];
+
+function effectiveRoles(user: AuthUser): string[] {
+  return Array.from(
+    new Set([
+      String(user.role || '').toLowerCase(),
+      ...(Array.isArray(user.assigned_roles)
+        ? user.assigned_roles.map(r => String(r).toLowerCase())
+        : []),
+    ])
+  );
+}
+
 /** Returns true if the user has an admin-level role. */
 export function checkIsAdmin(user: AuthUser | null | undefined): boolean {
   if (!user) return false;
-  const adminRoles = ['admin', 'administrator', 'super_admin', 'governance_admin'];
-  return adminRoles.includes(user.role);
+
+  return effectiveRoles(user).some(role =>
+    ADMIN_ROLES.includes(role)
+  );
 }
 
 /** Returns the authenticated user or null (no side effects). */
@@ -70,7 +90,18 @@ export async function requireRole(
   const result = await requireAuth(req);
   if (result instanceof NextResponse) return result;
 
-  if (!roles.includes(result.role as User['role'])) {
+  const userRoles = effectiveRoles(result);
+  
+  // admin present anywhere -> administrative access
+  const isAdmin = userRoles.some(role => ADMIN_ROLES.includes(role));
+  
+  // admin -> may access contributor functions as currently intended by frontend RBAC
+  if (isAdmin) return result;
+
+  // requested contributor role present -> contributor access
+  const hasRequestedRole = roles.some(r => userRoles.includes(String(r).toLowerCase()));
+
+  if (!hasRequestedRole) {
     return NextResponse.json(
       { error: 'Forbidden' },
       { status: 403 }
