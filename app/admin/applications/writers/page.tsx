@@ -331,57 +331,65 @@ export default function WriterEditorialReviewQueue() {
                                 <div className="border-r border-[var(--dash-border)] overflow-y-auto p-5 bg-neutral-950/20">
                                     <div className="space-y-8">
                                         <div className="pb-4 border-b border-neutral-900">
-                                            <h2 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Institutional Intake Profile</h2>
+                                            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Institutional Intake Profile</h2>
                                         </div>
 
                                         <section>
-                                            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Identity & Background</h3>
-                                            <div className="space-y-4">
+                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Identity & Background</h3>
+                                            <div className="space-y-6">
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">{selectedApp.public_name ? 'Canonical Name' : 'Full Name'}</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.public_name || selectedApp.full_name}</p>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">{selectedApp.public_name ? 'Canonical Name' : 'Full Name'}</label>
+                                                    <p className="text-base text-slate-100 font-medium">{selectedApp.public_name || selectedApp.full_name}</p>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Pen Name / Takhallus</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.pen_name || 'Not provided'}</p>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Pen Name / Takhallus</label>
+                                                    {selectedApp.pen_name ? (
+                                                        <p className="text-base text-slate-100 font-medium">{selectedApp.pen_name}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Not provided</p>
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Contact Identity</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.email || 'Internal Workflow'}</p>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Contact Identity</label>
+                                                    {selectedApp.email ? (
+                                                        <p className="text-base text-slate-100 font-medium">{selectedApp.email}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Internal Workflow</p>
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Location</label>
-                                                    <p className="text-sm text-neutral-200">{[selectedApp.city, selectedApp.country].filter(Boolean).join(', ') || 'Not provided'}</p>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Location</label>
+                                                    <p className="text-base text-slate-100 font-medium">{[selectedApp.city, selectedApp.country].filter(Boolean).join(', ') || <span className="text-sm text-slate-300 italic">Not provided</span>}</p>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Writer Type</label>
-                                                    <p className="text-sm text-neutral-200">{(selectedApp as any).writer_category || 'External Applicant'}</p>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Writer Type</label>
+                                                    <p className="text-base text-slate-100 font-medium">{(selectedApp as any).writer_category || <span className="text-sm text-slate-300 italic">External Applicant</span>}</p>
                                                 </div>
                                             </div>
                                         </section>
 
                                         <section>
-                                            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Literary & Linguistic Profile</h3>
-                                            <div className="space-y-4">
+                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Literary & Linguistic Profile</h3>
+                                            <div className="space-y-6">
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Literary Languages</label>
-                                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Literary Languages</label>
+                                                    <div className="flex flex-wrap gap-2 mt-1">
                                                         {(Array.isArray(selectedApp.primary_languages) ? selectedApp.primary_languages : ((selectedApp as any).primary_language ? [(selectedApp as any).primary_language] : [])).length > 0 
                                                             ? (Array.isArray(selectedApp.primary_languages) ? selectedApp.primary_languages : [(selectedApp as any).primary_language]).map(l => (
-                                                                <span key={l} className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400 rounded-md">{l}</span>
+                                                                <span key={l} className="px-2.5 py-1 bg-slate-900 border border-slate-700 text-xs font-medium text-slate-200 rounded-md">{l}</span>
                                                             ))
-                                                            : <span className="text-xs text-neutral-500 italic">Not provided</span>
+                                                            : <span className="text-sm text-slate-300 italic">Not provided</span>
                                                         }
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Forms & Styles</label>
-                                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Forms & Styles</label>
+                                                    <div className="flex flex-wrap gap-2 mt-1">
                                                         {selectedApp.writing_styles && selectedApp.writing_styles.length > 0
                                                             ? selectedApp.writing_styles.map(s => (
-                                                                <span key={s} className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400 rounded-md">{s}</span>
+                                                                <span key={s} className="px-2.5 py-1 bg-slate-900 border border-slate-700 text-xs font-medium text-slate-200 rounded-md">{s}</span>
                                                             ))
-                                                            : <span className="text-xs text-neutral-500 italic">Not provided</span>
+                                                            : <span className="text-sm text-slate-300 italic">Not provided</span>
                                                         }
                                                     </div>
                                                 </div>
@@ -389,20 +397,28 @@ export default function WriterEditorialReviewQueue() {
                                         </section>
 
                                         <section>
-                                            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Thematic Orientation</h3>
-                                            <div className="space-y-4">
+                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Thematic Orientation</h3>
+                                            <div className="space-y-6">
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Thematic Focus</label>
-                                                    <p className="text-xs text-neutral-400 italic leading-relaxed">{selectedApp.thematic_focus || 'Not provided'}</p>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Thematic Focus</label>
+                                                    {selectedApp.thematic_focus ? (
+                                                        <p className="text-sm text-slate-100 leading-relaxed font-medium">{selectedApp.thematic_focus}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Not provided</p>
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Conceptual Orientation</label>
-                                                    <p className="text-xs text-neutral-400 italic leading-relaxed">{(selectedApp as any).conceptual_orientation || 'Not provided'}</p>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Conceptual Orientation</label>
+                                                    {(selectedApp as any).conceptual_orientation ? (
+                                                        <p className="text-sm text-slate-100 leading-relaxed font-medium">{(selectedApp as any).conceptual_orientation}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Not provided</p>
+                                                    )}
                                                 </div>
                                                 {(selectedApp as any).creative_orientation && (
                                                     <div>
-                                                        <label className="block text-[10px] text-neutral-600 uppercase mb-1">Creative Orientation</label>
-                                                        <p className="text-xs text-neutral-400 italic leading-relaxed">{(selectedApp as any).creative_orientation}</p>
+                                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Creative Orientation</label>
+                                                        <p className="text-sm text-slate-100 leading-relaxed font-medium">{(selectedApp as any).creative_orientation}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -410,10 +426,10 @@ export default function WriterEditorialReviewQueue() {
 
                                         {selectedApp.roles && Array.isArray(selectedApp.roles) && selectedApp.roles.length > 0 && (
                                             <section>
-                                                <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Canonical Roles</h3>
+                                                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Canonical Roles</h3>
                                                 <div className="flex flex-wrap gap-2">
                                                     {selectedApp.roles.map(role => (
-                                                        <span key={role} className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded-md">
+                                                        <span key={role} className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider rounded-md">
                                                             {role}
                                                         </span>
                                                     ))}
@@ -431,7 +447,7 @@ export default function WriterEditorialReviewQueue() {
                                             {selectedApp.profile_status === 'approved_as_writer' ? (
                                                 <section>
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                                             <StickyNote className="w-4 h-4 text-emerald-400" />
                                                             Works / Kalam
                                                         </h3>
@@ -439,19 +455,19 @@ export default function WriterEditorialReviewQueue() {
                                                     </div>
                                                     <div className="grid grid-cols-4 gap-2 mb-4">
                                                         <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] text-neutral-500 uppercase">Draft</p>
-                                                            <p className="text-lg font-bold text-neutral-300">{writerKalams.filter(k => k.status === 'draft').length}</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Draft</p>
+                                                            <p className="text-lg font-bold text-slate-100">{writerKalams.filter(k => k.status === 'draft').length}</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] text-neutral-500 uppercase">Review</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Review</p>
                                                             <p className="text-lg font-bold text-amber-400">{writerKalams.filter(k => k.status === 'editorial_review').length}</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] text-neutral-500 uppercase">Approved</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Approved</p>
                                                             <p className="text-lg font-bold text-emerald-400">{writerKalams.filter(k => k.status === 'approved').length}</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] text-neutral-500 uppercase">Released</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Released</p>
                                                             <p className="text-lg font-bold text-blue-400">{writerKalams.filter(k => k.status === 'released').length}</p>
                                                         </div>
                                                     </div>
@@ -483,7 +499,7 @@ export default function WriterEditorialReviewQueue() {
                                             ) : (
                                                 <section>
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                                             <StickyNote className="w-4 h-4 text-amber-400" />
                                                             Sample Kalam Submission
                                                         </h3>
@@ -499,8 +515,8 @@ export default function WriterEditorialReviewQueue() {
                                             {/* Previous Publications */}
                                             {selectedApp.previous_publications && (
                                                 <section>
-                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3">Previous Publications</h3>
-                                                    <div className="bg-neutral-950 border border-neutral-900 rounded-lg p-4 text-sm text-neutral-400 leading-relaxed">
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Previous Publications</h3>
+                                                    <div className="bg-neutral-950 border border-neutral-900 rounded-lg p-4 text-sm text-slate-100 leading-relaxed font-medium">
                                                         {selectedApp.previous_publications}
                                                     </div>
                                                 </section>
@@ -509,8 +525,8 @@ export default function WriterEditorialReviewQueue() {
                                             {/* Literary Background */}
                                             {selectedApp.literary_background && (
                                                 <section>
-                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3">Literary Background</h3>
-                                                    <div className="bg-neutral-950 border border-neutral-900 rounded-lg p-4 text-sm text-neutral-400 leading-relaxed">
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Literary Background</h3>
+                                                    <div className="bg-neutral-950 border border-neutral-900 rounded-lg p-4 text-sm text-slate-100 leading-relaxed font-medium">
                                                         {selectedApp.literary_background}
                                                     </div>
                                                 </section>
@@ -526,7 +542,7 @@ export default function WriterEditorialReviewQueue() {
                                             {/* Editorial / Governance */}
                                             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-neutral-900">
                                                 <div>
-                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                         <History className="w-4 h-4" />
                                                         Editorial Review History
                                                     </h3>
@@ -540,7 +556,7 @@ export default function WriterEditorialReviewQueue() {
                                                                     <p className="text-[10px] text-neutral-600 mb-1">
                                                                         {new Date(selectedApp.reviewed_at).toLocaleString()}
                                                                     </p>
-                                                                    <p className="text-sm text-neutral-300">
+                                                                    <p className="text-sm text-slate-100">
                                                                         Status updated to <span className="text-amber-400 font-medium">{(selectedApp.profile_status || '').replace(/_/g, ' ')}</span>
                                                                     </p>
                                                                     {selectedApp.admin_notes && (
@@ -556,7 +572,7 @@ export default function WriterEditorialReviewQueue() {
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Institutional Covenant</h3>
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Institutional Covenant</h3>
                                                     <div className="space-y-3">
                                                         <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex items-center justify-between">
                                                             <span className="text-xs text-neutral-400">Editorial Covenant</span>
@@ -577,31 +593,31 @@ export default function WriterEditorialReviewQueue() {
                                             {/* Registry Status */}
                                             {selectedApp.profile_status === 'approved_as_writer' && (
                                                 <section className="pt-6 border-t border-neutral-900">
-                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Registry Status</h3>
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Registry Status</h3>
                                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
-                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Writer Status</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Writer Status</p>
                                                             <p className="text-xs text-emerald-400 font-bold">APPROVED</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
-                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Contributor Status</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Contributor Status</p>
                                                             <p className="text-xs text-emerald-400 font-bold">ACTIVE</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
-                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Intake Status</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Intake Status</p>
                                                             <p className="text-xs text-blue-400 font-bold">COMPLETED</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
-                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Works Count</p>
-                                                            <p className="text-xs text-neutral-300 font-bold">{writerKalams.length}</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Works Count</p>
+                                                            <p className="text-xs text-slate-100 font-bold">{writerKalams.length}</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
-                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Release Linkage</p>
-                                                            <p className="text-xs text-neutral-300 font-bold">ACTIVE</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Release Linkage</p>
+                                                            <p className="text-xs text-slate-100 font-bold">ACTIVE</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
-                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Last Activity</p>
-                                                            <p className="text-xs text-neutral-300 font-bold">{new Date(selectedApp.updated_at || Date.now()).toLocaleDateString()}</p>
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Last Activity</p>
+                                                            <p className="text-xs text-slate-100 font-bold">{new Date(selectedApp.updated_at || Date.now()).toLocaleDateString()}</p>
                                                         </div>
                                                     </div>
                                                 </section>
@@ -612,7 +628,7 @@ export default function WriterEditorialReviewQueue() {
                                     {/* Footer Actions */}
                                     <div className="shrink-0 p-5 bg-neutral-900/90 backdrop-blur-md border-t border-[var(--dash-border)]">
                                         <div className="mb-4">
-                                            <label className="block text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-2">Editorial Internal Note / Feedback to Writer</label>
+                                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Editorial Internal Note / Feedback to Writer</label>
                                             <textarea 
                                                 value={adminNote}
                                                 onChange={(e) => setAdminNote(e.target.value)}
