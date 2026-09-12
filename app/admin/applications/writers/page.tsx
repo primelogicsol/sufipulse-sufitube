@@ -36,6 +36,8 @@ interface AdminWriterProfile extends WriterFormData {
     reviewed_at?: string;
     reviewed_by?: string;
     admin_notes?: string;
+    public_name?: string;
+    roles?: string[];
 }
 
 export default function WriterEditorialReviewQueue() {
@@ -241,9 +243,9 @@ export default function WriterEditorialReviewQueue() {
                                                 </td>
                                                 <td>
                                                     <div className="flex flex-col">
-                                                        <span className="font-semibold text-[var(--dash-text-primary)]">{app.full_name}</span>
+                                                        <span className="font-semibold text-[var(--dash-text-primary)]">{app.public_name || app.full_name}</span>
                                                         <span className="text-xs text-[var(--dash-text-muted)]">{app.pen_name || 'No Pen Name'}</span>
-                                                        <span className="text-[10px] text-[var(--dash-text-tertiary)]">{app.email}</span>
+                                                        <span className="text-[10px] text-[var(--dash-text-tertiary)]">{app.email || 'Internal Workflow'}</span>
                                                     </div>
                                                 </td>
                                                 <td className="text-xs text-[var(--dash-text-secondary)] max-w-[150px] truncate">
@@ -316,8 +318,8 @@ export default function WriterEditorialReviewQueue() {
                                             <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Identity & Background</h3>
                                             <div className="space-y-4">
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Full Name</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.full_name}</p>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">{selectedApp.public_name ? 'Canonical Name' : 'Full Name'}</label>
+                                                    <p className="text-sm text-neutral-200">{selectedApp.public_name || selectedApp.full_name}</p>
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] text-neutral-600 uppercase mb-1">Pen Name</label>
@@ -325,7 +327,7 @@ export default function WriterEditorialReviewQueue() {
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] text-neutral-600 uppercase mb-1">Email</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.email}</p>
+                                                    <p className="text-sm text-neutral-200">{selectedApp.email || 'Internal Workflow'}</p>
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] text-neutral-600 uppercase mb-1">Location</label>
@@ -337,6 +339,19 @@ export default function WriterEditorialReviewQueue() {
                                                 </div>
                                             </div>
                                         </section>
+
+                                        {selectedApp.roles && Array.isArray(selectedApp.roles) && selectedApp.roles.length > 0 && (
+                                            <section>
+                                                <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Canonical Roles</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedApp.roles.map(role => (
+                                                        <span key={role} className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded-md">
+                                                            {role}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </section>
+                                        )}
 
                                         <section>
                                             <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Literary Focus</h3>
