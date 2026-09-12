@@ -2,24 +2,40 @@
   "project": "SufiPulse",
   "version": "3.0.0-pro",
   "deployment": {
-    "source_sha": "5d2f805673b80630f5af505eee7415a075ab8738",
+    "source_sha": "512edd8745b2a6bda41fa8083a9aadcc5988d558",
     "status": "DEPLOYED / LIVE VERIFIED",
+    "github_actions_run": "34702992659",
     "artifact": {
-      "image_tag": "5d2f805673b80630f5af505eee7415a075ab8738",
-      "oci_digest": "sha256:42860ccb97a3bcd6dca78e71805754eaa884ca3e04673aa477fc87ef2439026a",
-      "verification": "VPS VERSION CHECK PASS"
+      "image_tag": "512edd8745b2a6bda41fa8083a9aadcc5988d558",
+      "oci_digest": "sha256:75c4966ab1336804cb1fac427dc41bdc65eacc92427433380f5e89da069c7548",
+      "image_id": "sha256:82f6a7a6f8f55ec9534cd64c5b64142753cd93d8d85156c638bc95c69fc3fc4e",
+      "verification": "VPS /api/version exact SHA PASS; workflow strict version gate PASS"
     }
   },
   "features": {
-    "private_production": "integrated",
+    "private_production": "integrated_runtime_audit_pending",
     "premiere_room": "integrated",
-    "youtube_oauth": "integrated",
-    "google_ads": "integrated",
-    "ahl_e_naghma": "integrated"
+    "youtube_oauth": "integrated_runtime_reauth_required",
+    "google_ads": "integrated_runtime_audit_pending",
+    "ahl_e_naghma": "integrated",
+    "rbac": "effective_roles_live_verified"
+  },
+  "parity": {
+    "committed_app_source": "MATCH",
+    "repository_sha": "LIVE_DRIFT_GOVERNANCE_MAIN_MAY_ADVANCE_WITHOUT_APP_REDEPLOY",
+    "local_working_tree": "PENDING",
+    "data": "PASS",
+    "rbac": "PASS",
+    "youtube_runtime": "FAIL_REAUTH_REQUIRED",
+    "google_ads_runtime": "PENDING",
+    "private_production": "PENDING",
+    "public_ui": "PENDING",
+    "admin_ui": "PENDING",
+    "functional_regression": "PENDING",
+    "full_localhost_to_live": "FAIL"
   },
   "live_verification": {
-    "status": "PASS",
-    "note": "Production currently serving audited 7331ad67 logic via 5d2f805 image."
+    "status": "PARTIAL_PASS",
+    "note": "Production serves exact deployed SHA 512edd8745b2a6bda41fa8083a9aadcc5988d558. RBAC is PASS. YouTube runtime requires re-authorization. Private Production Runtime Parity is the active audit target."
   }
 }
-
