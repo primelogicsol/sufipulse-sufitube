@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import { AlertCircle, CheckCircle2, Server, Key, Save, Activity } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Server, Save } from 'lucide-react';
 
 export default function PrivateProductionConnectionSettings() {
   const { user } = useAuth();
@@ -12,6 +12,7 @@ export default function PrivateProductionConnectionSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   
   const [testResult, setTestResult] = useState<{
     alignment: string;
@@ -33,6 +34,8 @@ export default function PrivateProductionConnectionSettings() {
   const [status, setStatus] = useState({
     alignmentConfigured: false,
     streamConfigured: false,
+    authConfigured: false,
+    secureStorageReady: false,
   });
 
   const fetchStatus = async () => {
@@ -43,6 +46,8 @@ export default function PrivateProductionConnectionSettings() {
         setStatus({
           alignmentConfigured: data.alignmentConfigured,
           streamConfigured: data.streamConfigured,
+          authConfigured: data.authConfigured,
+          secureStorageReady: data.secureStorageReady,
         });
       }
     } finally {
@@ -56,6 +61,7 @@ export default function PrivateProductionConnectionSettings() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!status.secureStorageReady) return;
     setSaving(true);
     setTestResult(null);
     try {
@@ -105,84 +111,85 @@ export default function PrivateProductionConnectionSettings() {
   };
 
   const handleDisable = async () => {
-    if (!confirm('Are you sure you want to disable and clear the private production connection?')) return;
+    if (!confirm('Are you sure you want to clear all private production connection settings?')) return;
     setSaving(true);
-    setTestResult(null);
     try {
       const res = await fetch('/api/admin/studio-settings/private-production', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'clear' }),
       });
-      if (res.ok) {
-        await fetchStatus();
-      }
+      if (res.ok) await fetchStatus();
     } finally {
       setSaving(false);
     }
   };
 
-  if (!isAdmin) return null;
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const hasAnyConfig = status.alignmentConfigured || status.streamConfigured || status.authConfigured;
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-4xl space-y-8 px-6 py-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">Private Production Connection</h1>
-          <p className="mt-1 text-sm text-white/60">Configure the secure server-side connection for SufiPulse Studio USA.</p>
-        </div>
+      <div className="max-w-3xl mx-auto py-8">
+        <h1 className="text-2xl font-bold text-white mb-8">Private Production Connection</h1>
 
-        {/* Current Status */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="font-medium text-white mb-4 flex items-center gap-2">
-            <Activity className="h-5 w-5" /> Connection Status
-          </h2>
+        {/* Status Section */}
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#111] p-6 shadow-xl">
+          <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-6">Connection Status</h2>
+          
           {loading ? (
-            <div className="text-sm text-white/50">Loading status...</div>
+            <div className="text-white/50 text-sm animate-pulse">Loading status...</div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="text-xs text-white/50 uppercase tracking-wider mb-1">Alignment Service</div>
-                <div className="flex items-center gap-2 font-medium">
-                  {status.alignmentConfigured ? (
-                    <><CheckCircle2 className="h-4 w-4 text-emerald-400" /> <span className="text-emerald-400">Configured</span></>
-                  ) : (
-                    <><AlertCircle className="h-4 w-4 text-amber-400" /> <span className="text-amber-400">Missing</span></>
-                  )}
-                </div>
+            <div className="space-y-4 text-sm font-medium">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <span className="text-white/80">Alignment Service</span>
+                <span className={status.alignmentConfigured ? 'text-emerald-400' : 'text-amber-500'}>
+                  {status.alignmentConfigured ? 'CONFIGURED' : 'NOT CONFIGURED'}
+                </span>
               </div>
-              <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="text-xs text-white/50 uppercase tracking-wider mb-1">Studio Audio Service</div>
-                <div className="flex items-center gap-2 font-medium">
-                  {status.streamConfigured ? (
-                    <><CheckCircle2 className="h-4 w-4 text-emerald-400" /> <span className="text-emerald-400">Configured</span></>
-                  ) : (
-                    <><AlertCircle className="h-4 w-4 text-amber-400" /> <span className="text-amber-400">Missing</span></>
-                  )}
-                </div>
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <span className="text-white/80">Studio Audio Service</span>
+                <span className={status.streamConfigured ? 'text-emerald-400' : 'text-amber-500'}>
+                  {status.streamConfigured ? 'CONFIGURED' : 'NOT CONFIGURED'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pb-2">
+                <span className="text-white/80">Authentication</span>
+                <span className={status.authConfigured ? 'text-emerald-400' : 'text-amber-500'}>
+                  {status.authConfigured ? 'CONFIGURED' : 'NOT CONFIGURED'}
+                </span>
               </div>
             </div>
           )}
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap gap-4">
             <button
               onClick={handleTest}
-              disabled={testing || (!status.alignmentConfigured && !status.streamConfigured)}
-              className="rounded-lg bg-white/10 hover:bg-white/15 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
+              disabled={testing || !hasAnyConfig}
+              className="rounded-lg bg-white/10 hover:bg-white/15 px-6 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
             >
               {testing ? 'Testing...' : 'Test Connection'}
             </button>
             <button
+              onClick={scrollToForm}
+              className="rounded-lg border border-amber-400/50 hover:bg-amber-400/10 px-6 py-2.5 text-sm font-medium text-amber-400 transition"
+            >
+              Configure Connection
+            </button>
+            <button
               onClick={handleDisable}
-              disabled={saving || (!status.alignmentConfigured && !status.streamConfigured)}
-              className="rounded-lg border border-red-500/20 hover:bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition disabled:opacity-50"
+              disabled={saving || !hasAnyConfig}
+              className="ml-auto rounded-lg border border-red-500/20 hover:bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition disabled:opacity-50 disabled:hidden"
             >
               Disable Connection
             </button>
           </div>
 
           {testResult && (
-            <div className="mt-4 rounded-xl border border-white/10 bg-black/40 p-4 text-sm">
+            <div className="mt-6 rounded-xl border border-white/10 bg-black/40 p-4 text-sm">
               <div className="font-semibold text-white mb-2">Diagnostic Summary</div>
               <div className="grid grid-cols-2 gap-2 text-white/70">
                 <div>Alignment Service: <span className={testResult.alignment === 'PASS' ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>{testResult.alignment}</span></div>
@@ -198,14 +205,14 @@ export default function PrivateProductionConnectionSettings() {
 
         {/* Configuration Form */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="font-medium text-white mb-4 flex items-center gap-2">
+          <h2 className="font-medium text-white mb-2 flex items-center gap-2">
             <Server className="h-5 w-5" /> Update Configuration
           </h2>
-          <p className="text-xs text-white/50 mb-6">Values are encrypted server-side and never returned to the browser after saving. Leave fields blank to keep their existing secure values.</p>
+          <p className="text-xs text-white/50 mb-6">Leave fields blank to keep their existing secure values. Authentication is never exposed back to the browser.</p>
 
-          <form onSubmit={handleSave} className="space-y-6">
+          <form ref={formRef} onSubmit={handleSave} className="space-y-8">
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-white border-b border-white/10 pb-2">Alignment Service</h3>
+              <h3 className="text-sm font-medium text-amber-400 border-b border-white/10 pb-2">Alignment Service</h3>
               <div>
                 <label className="block text-xs font-medium text-white/70 mb-1">URL Template</label>
                 <input
@@ -238,8 +245,8 @@ export default function PrivateProductionConnectionSettings() {
               </div>
             </div>
 
-            <div className="space-y-4 pt-4">
-              <h3 className="text-sm font-medium text-white border-b border-white/10 pb-2">Studio Audio Service</h3>
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-amber-400 border-b border-white/10 pb-2">Studio Audio Service</h3>
               <div>
                 <label className="block text-xs font-medium text-white/70 mb-1">URL Template</label>
                 <input
@@ -272,15 +279,31 @@ export default function PrivateProductionConnectionSettings() {
               </div>
             </div>
 
-            <div className="pt-4 flex justify-end">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-xl bg-amber-400 hover:bg-amber-300 px-6 py-2.5 text-sm font-semibold text-black transition flex items-center gap-2 disabled:opacity-50"
-              >
-                <Save className="h-4 w-4" /> Save Configuration
-              </button>
-            </div>
+            {!loading && !status.secureStorageReady ? (
+              <div className="pt-4 border-t border-white/10">
+                <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-center">
+                  <AlertCircle className="w-5 h-5 text-red-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-red-400">Secure storage is not configured.</p>
+                  <p className="text-xs text-red-400/80 mt-1">Connection credentials cannot be saved yet. Ensure PRIVATE_PRODUCTION_ENCRYPTION_KEY is present.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-4 border-t border-white/10">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-white/90">Advanced connection settings</p>
+                  <p className="text-xs text-white/50 mt-1">Configure only after the private production connection contract has been verified. These values are encrypted server-side and apply to all Studio releases.</p>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="rounded-xl bg-amber-400 hover:bg-amber-300 px-8 py-3 text-sm font-semibold text-black transition flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Save className="h-4 w-4" /> Save Configuration
+                  </button>
+                </div>
+              </div>
+            )}
           </form>
         </section>
       </div>

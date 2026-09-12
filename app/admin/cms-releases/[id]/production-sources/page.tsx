@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, GitMerge, Plus, Save, ShieldCheck, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, GitMerge, Plus, Save, ShieldCheck, Trash2, Upload } from 'lucide-react';
 
 import { useAuth } from '../../../../contexts/AuthContext';
 import DashboardLayout from '../../../../components/layout/DashboardLayout';
@@ -199,6 +199,39 @@ export default function ProductionSourcesPage() {
     }
   };
 
+  const [injectSource, setInjectSource] = useState('');
+  const [injectRole, setInjectRole] = useState('primary');
+  const [injectWorking, setInjectWorking] = useState(false);
+  const [injectResult, setInjectResult] = useState<any>(null);
+  const [injectError, setInjectError] = useState('');
+
+  const handleInject = async () => {
+    if (!injectSource.trim()) return;
+    try {
+      setInjectWorking(true);
+      setInjectError('');
+      setInjectResult(null);
+      const res = await fetch(`/api/admin/releases/${encodeURIComponent(releaseId)}/production-sources/inject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          providerKey: 'suno',
+          source: injectSource,
+          role: injectRole
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Injection failed');
+      setInjectResult(data.summary);
+      setInjectSource('');
+      await load(); // reload sources
+    } catch (err: any) {
+      setInjectError(err.message);
+    } finally {
+      setInjectWorking(false);
+    }
+  };
+
   const addSegment = () => {
     if (!sources.length) return;
     const source = sources[Math.min(segments.length, sources.length - 1)];
@@ -370,6 +403,90 @@ export default function ProductionSourcesPage() {
               </p>
             </div>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-black/40 p-5 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-sm font-semibold text-amber-400">Inject Private Source</h2>
+            <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-amber-400">ADMIN ONLY</span>
+          </div>
+
+          {!connectionStatus?.alignmentConfigured ? (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <h3 className="text-sm font-medium text-amber-500 mb-2">Private Production Connection Required</h3>
+              <p className="text-xs text-amber-500/70 mb-4">You must configure the external provider connection before injecting sources.</p>
+              <Link href="/admin/studio-settings/private-production" className="rounded-lg bg-amber-500/20 px-4 py-2 text-xs font-medium text-amber-400 hover:bg-amber-500/30 transition">
+                Configure Connection
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-white/50">Provider</label>
+                  <input type="text" value="Suno" disabled className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white/50 cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-white/50">Role</label>
+                  <select
+                    value={injectRole}
+                    onChange={(e) => setInjectRole(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50"
+                  >
+                    <option value="primary">PRIMARY</option>
+                    <option value="extension">EXTENSION</option>
+                    <option value="alternate">ALTERNATE</option>
+                    <option value="correction">CORRECTION</option>
+                    <option value="other">OTHER</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="mb-1 block text-xs font-medium text-white/50">Source URL or Asset ID</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={injectSource}
+                    onChange={(e) => setInjectSource(e.target.value)}
+                    placeholder="https://suno.com/song/... or Asset ID"
+                    className="flex-1 rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50"
+                  />
+                  <button
+                    onClick={handleInject}
+                    disabled={injectWorking || !injectSource.trim()}
+                    className="rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-50 transition flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {injectWorking ? 'Injecting...' : 'Fetch & Inject'}
+                  </button>
+                </div>
+              </div>
+
+              {injectError && (
+                <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-400">
+                  {injectError}
+                </div>
+              )}
+
+              {injectResult && (
+                <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm">
+                  <h3 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Source Injected Successfully
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-4 text-emerald-400/80 text-xs">
+                    <div>Asset ID: <span className="text-emerald-300 font-mono">{injectResult.sourceAssetId}</span></div>
+                    <div>Role: <span className="text-emerald-300 uppercase">{injectResult.role}</span></div>
+                    <div>Duration: <span className="text-emerald-300">{formatSeconds(injectResult.durationSeconds || 0)}</span></div>
+                    <div>Lines: <span className="text-emerald-300">{injectResult.stats?.lineCount || 0}</span></div>
+                    <div>Words: <span className="text-emerald-300">{injectResult.stats?.wordCount || 0}</span></div>
+                    <div>Waveform: <span className="text-emerald-300">Available</span></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">

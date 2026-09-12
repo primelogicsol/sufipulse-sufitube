@@ -1,3 +1,4 @@
+import 'server-only';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -16,15 +17,15 @@ export interface PrivateProductionConnectionSettings {
 const STORAGE_DIR = path.join(process.cwd(), '.data');
 const SETTINGS_FILE = path.join(STORAGE_DIR, 'private-production-connection.enc');
 
-const getLegacyEncryptionKey = () => {
-  const secret = process.env.JWT_SECRET || 'fallback-insecure-secret-do-not-use-in-prod';
+const getLegacyEncryptionKey = (): Buffer | null => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
   return crypto.createHash('sha256').update(secret).digest();
 };
 
-const getPrimaryEncryptionKey = () => {
+const getPrimaryEncryptionKey = (): Buffer | null => {
   if (!process.env.PRIVATE_PRODUCTION_ENCRYPTION_KEY) {
-    console.warn('PRIVATE_PRODUCTION_ENCRYPTION_KEY is missing. Using legacy/fallback key. Please add a 32-byte key to .env.local');
-    return getLegacyEncryptionKey();
+    return null;
   }
   return crypto.createHash('sha256').update(process.env.PRIVATE_PRODUCTION_ENCRYPTION_KEY).digest();
 };
@@ -54,13 +55,22 @@ export const privateProductionConnectionStorage = {
       const encrypted = fs.readFileSync(SETTINGS_FILE);
       if (encrypted.length < 32) return null;
       
-      let decrypted = tryDecryptWithKey(encrypted, getPrimaryEncryptionKey());
-      if (!decrypted && process.env.PRIVATE_PRODUCTION_ENCRYPTION_KEY) {
-        decrypted = tryDecryptWithKey(encrypted, getLegacyEncryptionKey());
+      let decrypted: string | null = null;
+      const primaryKey = getPrimaryEncryptionKey();
+      
+      if (primaryKey) {
+        decrypted = tryDecryptWithKey(encrypted, primaryKey);
       }
       
       if (!decrypted) {
-        console.warn('Failed to decrypt private production settings. The encryption key may have changed.');
+        const legacyKey = getLegacyEncryptionKey();
+        if (legacyKey) {
+          decrypted = tryDecryptWithKey(encrypted, legacyKey);
+        }
+      }
+      
+      if (!decrypted) {
+        console.warn('Failed to decrypt private production settings. The encryption key may have changed or is missing.');
         return null;
       }
       
@@ -72,6 +82,11 @@ export const privateProductionConnectionStorage = {
   },
 
   saveSettings(settings: PrivateProductionConnectionSettings): void {
+    const primaryKey = getPrimaryEncryptionKey();
+    if (!primaryKey) {
+      throw new Error('Cannot save private production settings: PRIVATE_PRODUCTION_ENCRYPTION_KEY is missing from environment.');
+    }
+
     if (!fs.existsSync(STORAGE_DIR)) {
       fs.mkdirSync(STORAGE_DIR, { recursive: true });
     }
@@ -79,7 +94,7 @@ export const privateProductionConnectionStorage = {
     const settingsWithVersion = { ...settings, _keyVersion: 2 };
     const plaintext = JSON.stringify(settingsWithVersion);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-gcm', getPrimaryEncryptionKey(), iv);
+    const cipher = crypto.createCipheriv('aes-256-gcm', primaryKey, iv);
     
     const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
     const authTag = cipher.getAuthTag();

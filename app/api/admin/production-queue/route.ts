@@ -14,13 +14,29 @@ export async function GET(request: NextRequest) {
 
     const items = allSources.map((source) => {
       const release = map.get(source.releaseId);
-      const sourceCount = source.sources ? Object.keys(source.sources).length : 1;
-      const status = source.rollbackSnapshot ? 'Caption Ready' : source.assembly ? 'Timing Review' : source.sources ? 'Needs Assembly' : 'Needs Source';
+      
+      const sourceMap = source.sources || {};
+      const sourcesList = Object.values(sourceMap);
+      const sourceCount = sourcesList.length;
+      
+      const primarySource = sourcesList.find(s => s.sourceAssetId === source.sourceAssetId);
+      const extensionCount = sourceCount > 0 ? sourceCount - 1 : 0;
+
+      const alignmentStatus = primarySource ? 'Configured' : 'Missing';
+      const assemblyStatus = source.assembly ? 'Compiled' : (sourceCount > 1 ? 'Needs Assembly' : 'Bypass (Single Source)');
+      const masterTimingStatus = source.rollbackSnapshot ? 'Applied' : 'Pending';
+      const captionStatus = source.rollbackSnapshot ? 'Ready' : 'Pending';
+
       return {
         releaseId: source.releaseId,
         title: release?.title || 'Unknown Release',
         sourceCount,
-        status,
+        primarySourceId: primarySource?.sourceAssetId || 'None',
+        extensionCount,
+        alignmentStatus,
+        assemblyStatus,
+        masterTimingStatus,
+        captionStatus,
         updatedAt: source.updatedAt,
       };
     });
