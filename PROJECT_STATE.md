@@ -2,13 +2,14 @@
 
 ## Deployment Target
 - **Branch**: `main`
-- **SHA**: `7331ad67a837c357e32d140be5a45c726bfc1b2e`
+- **Source SHA**: `7331ad67a837c357e32d140be5a45c726bfc1b2e`
 - **Date**: 2026-09-12
-- **Status**: DEPLOYED / LIVE VERIFIED
+- **Status**: REHEARSAL COMPLETE / NOT DEPLOYED
 
 ## OCI Artifact Information
-- **Image Tag**: `sha-7331ad6` (Strict SHA-pinning, no `:latest` usage)
-- **Image Digest**: `sha256:4a1c52d43e5c7a4b0870f7e4f1a2345bd30d8905b9cdbbaf04b680798319f6a5`
+- **Image Tag**: `null` (Pending real CI/CD)
+- **Image Digest**: `null` (Pending real CI/CD)
+- **Verification**: PENDING REAL CI/CD
 
 ## Active Features (Merged & Validated)
 - **Private Production Pipeline**: Audio alignment, relay, source assembly, history rollback, connection resolution.
