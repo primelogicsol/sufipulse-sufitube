@@ -1,67 +1,76 @@
 "use client";
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-// import { supabase } from '../lib/supabase';
 import { 
     CircleCheck as CheckCircle, 
-    Circle as UncheckedCircle, 
+    Circle as XCircle, 
     Clock, 
     Eye, 
     User, 
     CircleAlert as AlertCircle, 
     RefreshCw, 
-    FileText,
-    Mic,
+    FileText, 
     Search,
-    Video,
-    XCircle
+    Copy,
+    Check,
+    Archive,
+    ShieldCheck,
+    History,
+    StickyNote
 } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { VocalistProfileType } from '@/app/types/vocalist.types';
+import { useAuth } from '@/app/contexts/AuthContext';
+type EditorialStatus = 
+    | 'pending' 
+    | 'under_editorial_screening' 
+    | 'revision_requested' 
+    | 'approved_as_vocalist' 
+    | 'archived_not_advanced';
 
-interface WriterApplication {
+interface AdminVocalistProfile {
+    [key: string]: any;
     id: string;
-    user_id: string | null;
-    email: string | null;
-    pen_name: string;
-    bio: string;
-    sample_work: string;
-    previous_publications: string | null;
-    status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'revision_requested';
-    admin_notes: string | null;
-    reviewed_by: string | null;
-    submitted_at: string;
-    reviewed_at: string | null;
-    created_at: string;
-    updated_at: string | null;
-    users: {
-        id: string;
-        email: string;
-        full_name: string | null;
-        auth_user_id: string | null;
-    } | null;
-    reviewer?: {
-        full_name: string | null;
-        email: string;
-    } | null;
+    referenceId?: string;
+    submitted_at?: string;
+    reviewed_at?: string;
+    reviewed_by?: string;
+    admin_notes?: string;
+    public_name?: string;
+    roles?: string[];
+    created_at?: string;
+    updated_at?: string;
+    joined_at?: string;
 }
 
-export default function AdminVocalistApplications() {
+export default function VocalistEditorialReviewQueue() {
     const { user, loading: authLoading } = useAuth();
-    const [applications, setApplications] = useState<any[]>([]);
+    const [applications, setApplications] = useState<AdminVocalistProfile[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedApp, setSelectedApp] = useState<any | null>(null);
-    const [adminNotes, setAdminNotes] = useState('');
-    const [filter, setFilter] = useState<'all' | 'pending_review' | 'approved' | 'rejected' | 'under_review' | 'revision_requested'>('pending_review');
+    const [selectedApp, setSelectedApp] = useState<AdminVocalistProfile | null>(null);
+    const [vocalistPerformances, setvocalistPerformances] = useState<any[]>([]);
+    const [adminNote, setAdminNote] = useState('');
+    const [filter, setFilter] = useState<EditorialStatus | 'all'>('pending');
     const [processingAction, setProcessingAction] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [actionError, setActionError] = useState<string | null>(null);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authLoading) {
             loadApplications();
         }
     }, [authLoading]);
+
+    useEffect(() => {
+        if (selectedApp) {
+            fetch('/api/kalams').then(r => r.json()).then(data => {
+                if (Array.isArray(data)) {
+                    setvocalistPerformances(data.filter(k => k.user_id === selectedApp.id));
+                }
+            }).catch(() => setvocalistPerformances([]));
+        } else {
+            setvocalistPerformances([]);
+        }
+    }, [selectedApp]);
 
     async function loadApplications() {
         try {
@@ -70,63 +79,41 @@ export default function AdminVocalistApplications() {
             const data = await res.json();
             setApplications(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error('[AdminVocalistApplications] Error loading applications:', error);
+            console.error('[WriterQueue] Error loading applications:', error);
             setApplications([]);
         } finally {
             setLoading(false);
         }
     }
 
-    const filteredApplications = applications.filter((app) => {
-        const statusMatch = app.status || app.profile_status;
-        const matchesSearch =
-            app.performance_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            app.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            app.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            app.referenceId?.toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesFilter = filter === 'all' || statusMatch === filter;
-
-        return matchesSearch && matchesFilter;
-    });
-
-    const statusCounts = {
-        all: applications.length,
-        pending: applications.filter((a) => (a.status || a.profile_status) === 'pending_review').length,
-        under_review: applications.filter((a) => (a.status || a.profile_status) === 'under_review').length,
-        revision_requested: applications.filter((a) => (a.status || a.profile_status) === 'revision_requested').length,
-        approved: applications.filter((a) => (a.status || a.profile_status) === 'approved').length,
-        rejected: applications.filter((a) => (a.status || a.profile_status) === 'rejected').length,
+    const handleCopy = (id: string) => {
+        navigator.clipboard.writeText(id);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
     };
 
-    function getStatusBadgeClass(status: string) {
-        switch (status) {
-            case 'approved': return 'dashboard-badge-success';
-            case 'rejected': return 'dashboard-badge-danger';
-            case 'pending_review': return 'dashboard-badge-pending';
-            case 'revision_requested': return 'dashboard-badge-draft';
-            case 'under_review': return 'dashboard-badge-info';
-            default: return 'dashboard-badge-draft';
-        }
-    }
-
-    const handleUpdateStatus = async (id: string | undefined, status: string) => {
-        if (!id) return;
+    const handleUpdateStatus = async (id: string, status: EditorialStatus) => {
         try {
             setProcessingAction(true);
+            setActionError(null);
+            
             const res = await fetch(`/api/vocalists/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    profile_status: status, 
-                    status,
-                    admin_note: adminNotes
+                    profile_status: status,
+                    admin_note: adminNote 
                 }),
             });
-            if (!res.ok) throw new Error('Failed to update status');
+            
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update status');
+            }
+
             setSelectedApp(null);
-            setAdminNotes('');
-            loadApplications();
+            setAdminNote('');
+            await loadApplications();
         } catch (err: any) {
             setActionError(err?.message || 'Failed to update status');
         } finally {
@@ -134,136 +121,173 @@ export default function AdminVocalistApplications() {
         }
     };
 
+    const getReferenceId = (app: AdminVocalistProfile) => {
+        if (app.referenceId) return app.referenceId;
+        return `SP-WRT-${new Date(app.created_at || Date.now()).getFullYear()}-${app.id.split('_')[1]?.slice(0, 8).toUpperCase() || 'REF'}`;
+    };
+
+    const filteredApplications = applications.filter((app) => {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+            app.pen_name?.toLowerCase().includes(query) ||
+            app.email?.toLowerCase().includes(query) ||
+            app.full_name?.toLowerCase().includes(query) ||
+            app.public_name?.toLowerCase().includes(query) ||
+            getReferenceId(app).toLowerCase().includes(query);
+
+        const matchesFilter = filter === 'all' || (app.profile_status || 'pending') === filter;
+        return matchesSearch && matchesFilter;
+    });
+
+    const statusConfig: Record<string, { label: string, color: string, icon: any }> = {
+        pending: { label: 'Submitted', color: 'amber', icon: Clock },
+        under_editorial_screening: { label: 'Under Editorial Screening', color: 'blue', icon: Search },
+        revision_requested: { label: 'Revision Requested', color: 'orange', icon: RefreshCw },
+        approved_as_vocalist: { label: 'Approved as Vocalist', color: 'emerald', icon: CheckCircle },
+        archived_not_advanced: { label: 'Archived / Not Advanced', color: 'slate', icon: Archive },
+        // Compat mappings
+        under_review: { label: 'Under Editorial Screening', color: 'blue', icon: Search },
+        approved: { label: 'Approved as Vocalist', color: 'emerald', icon: CheckCircle },
+        rejected: { label: 'Archived / Not Advanced', color: 'slate', icon: Archive },
+    };
+
+    function StatusBadge({ status }: { status: string }) {
+        const config = statusConfig[status] || statusConfig.pending;
+        const Icon = config.icon;
+        
+        const colorClasses: Record<string, string> = {
+            amber: 'bg-amber-500/10 border-amber-500/20 text-amber-500',
+            blue: 'bg-blue-500/10 border-blue-500/20 text-blue-500',
+            orange: 'bg-orange-500/10 border-orange-500/20 text-orange-500',
+            emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500',
+            slate: 'bg-slate-500/10 border-slate-500/20 text-slate-400',
+        };
+
+        return (
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${colorClasses[config.color]}`}>
+                <Icon className="w-3 h-3" />
+                {config.label}
+            </span>
+        );
+    }
+
+    const finalCounts = {
+        observedLegacy: selectedApp?.legacy_appearances || 0,
+        confirmedCms: vocalistPerformances.length,
+    };
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">Ahl-e-Sada Registry</h1>
-                        <p className="text-neutral-500 text-sm">Manage institutional vocalist applications and performance credentials.</p>
+                        <h1 className="text-2xl font-bold text-[var(--dash-text-primary)]">Ahl-e-Sada Vocalist Registry</h1>
+                        <p className="text-sm text-[var(--dash-text-muted)]">Manage vocalist intake and institutional production profiles.</p>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-400/10 border border-amber-400/20 rounded-lg">
-                        <Mic className="w-4 h-4 text-amber-400" />
-                        <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">{applications.length} Registry Entries</span>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-400/10 border border-emerald-400/20 rounded-lg max-w-md">
+                        <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                        <p className="text-[10px] leading-tight text-emerald-200/80">
+                            Vocalist approval confirms identity verification and institutional production eligibility. 
+                            It does not constitute performance assignments or royalty commitments.
+                        </p>
                     </div>
                 </div>
 
                 {actionError && (
-                    <div className="p-4 rounded-xl text-sm flex items-center justify-between gap-3 bg-red-500/10 border border-red-500/20 text-red-400">
-                        <div className="flex items-center gap-3">
+                    <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
+                        <div className="flex items-center gap-2">
                             <AlertCircle className="w-4 h-4" />
-                            <span className="font-bold uppercase tracking-wider">{actionError}</span>
+                            {actionError}
                         </div>
-                        <button type="button" onClick={() => setActionError(null)} className="opacity-50 hover:opacity-100 text-lg">×</button>
+                        <button onClick={() => setActionError(null)} className="hover:text-white">×</button>
                     </div>
                 )}
 
                 <div className="dashboard-card">
+                    {/* Filters & Search */}
                     <div className="flex flex-col gap-6 mb-8">
                         <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]" />
                             <input
                                 type="text"
-                                placeholder="Search by Reference ID, Performance Name, or Email..."
+                                placeholder="Search by name, email, or reference ID..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="dashboard-input pl-12 h-14 bg-neutral-900/50 border-white/5 rounded-xl"
+                                className="dashboard-input has-icon w-full"
                             />
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                            {[
-                                { id: 'pending_review', label: 'New Intake', count: statusCounts.pending },
-                                { id: 'under_review', label: 'Under Review', count: statusCounts.under_review },
-                                { id: 'revision_requested', label: 'Revision', count: statusCounts.revision_requested },
-                                { id: 'approved', label: 'Approved', count: statusCounts.approved },
-                                { id: 'rejected', label: 'Rejected', count: statusCounts.rejected },
-                                { id: 'all', label: 'All Entries', count: statusCounts.all },
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setFilter(tab.id as any)}
-                                    className={`px-5 py-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all ${
-                                        filter === tab.id 
-                                            ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/10' 
-                                            : 'bg-white/5 text-neutral-500 hover:text-white hover:bg-white/10 border border-white/5'
-                                    }`}
-                                >
-                                    {tab.label} ({tab.count})
-                                </button>
-                            ))}
+                            <button onClick={() => setFilter('all')} className={`dashboard-tab ${filter === 'all' ? 'active' : ''}`}>All</button>
+                            <button onClick={() => setFilter('pending')} className={`dashboard-tab ${filter === 'pending' ? 'active' : ''}`}>Submitted</button>
+                            <button onClick={() => setFilter('under_editorial_screening')} className={`dashboard-tab ${filter === 'under_editorial_screening' ? 'active' : ''}`}>Screening</button>
+                            <button onClick={() => setFilter('revision_requested')} className={`dashboard-tab ${filter === 'revision_requested' ? 'active' : ''}`}>Revision</button>
+                            <button onClick={() => setFilter('approved_as_vocalist')} className={`dashboard-tab ${filter === 'approved_as_vocalist' ? 'active' : ''}`}>Approved</button>
+                            <button onClick={() => setFilter('archived_not_advanced')} className={`dashboard-tab ${filter === 'archived_not_advanced' ? 'active' : ''}`}>Archived</button>
                         </div>
                     </div>
 
+                    {/* Applications Table */}
                     {loading ? (
-                        <div className="py-20 text-center flex flex-col items-center gap-4">
-                            <div className="w-10 h-10 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
-                            <p className="text-neutral-500 font-bold uppercase tracking-widest text-[10px]">Accessing Registry...</p>
+                        <div className="py-20 text-center">
+                            <RefreshCw className="w-8 h-8 text-[var(--dash-accent)] animate-spin mx-auto mb-4" />
+                            <p className="text-[var(--dash-text-muted)]">Loading submissions...</p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
+                        <div className="dashboard-table-container">
+                            <table className="dashboard-table">
                                 <thead>
-                                    <tr className="border-b border-white/5">
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-neutral-500 uppercase tracking-widest">Ahl-e-Sada Contributor</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-neutral-500 uppercase tracking-widest">Experience / Range</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-neutral-500 uppercase tracking-widest">Languages</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-neutral-500 uppercase tracking-widest">Status</th>
-                                        <th className="px-6 py-4 text-right text-[10px] font-black text-neutral-500 uppercase tracking-widest">Actions</th>
+                                    <tr>
+                                        <th>Reference ID</th>
+                                        <th>Vocalist</th>
+                                        <th>Vocal Profile / Languages</th>
+                                        <th>Country</th>
+                                        <th>Joined / Created</th>
+                                        <th>Status</th>
+                                        <th className="text-right">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
+                                <tbody>
                                     {filteredApplications.length === 0 ? (
                                         <tr>
-                                            <td colSpan={5} className="px-6 py-20 text-center">
-                                                <p className="text-neutral-600 font-bold uppercase tracking-widest text-xs">No records found in registry.</p>
+                                            <td colSpan={7} className="text-center py-20 text-[var(--dash-text-muted)]">
+                                                No submissions found in this category.
                                             </td>
                                         </tr>
                                     ) : (
                                         filteredApplications.map((app) => (
-                                            <tr key={app.id} className="group hover:bg-white/[0.02] transition-colors">
-                                                <td className="px-6 py-5">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400">
-                                                            <Mic size={18} />
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-bold text-white text-sm tracking-tight">{app.performance_name || app.full_name}</div>
-                                                            <div className="text-[10px] text-neutral-500 font-mono tracking-wider mt-0.5">{app.referenceId || app.id}</div>
-                                                        </div>
+                                            <tr key={app.id}>
+                                                <td className="font-mono text-xs text-[var(--dash-accent)]">
+                                                    {getReferenceId(app)}
+                                                </td>
+                                                <td>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-[var(--dash-text-primary)]">{app.stage_name || app.public_name || app.full_name}</span>
+                                                        <span className="text-[10px] text-[var(--dash-text-tertiary)]">{app.identity_type === 'STUDIO_PSEUDONYM' ? 'Internal Workflow' : (app.email || '—')}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="text-xs text-neutral-300 font-bold uppercase tracking-wider">{app.years_experience} Years Exp.</div>
-                                                    <div className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">{app.vocal_range || 'Unknown Range'}</div>
+                                                <td className="text-xs text-[var(--dash-text-secondary)] max-w-[150px] truncate">
+                                                    {Array.isArray(app.primary_languages) && app.primary_languages.length > 0 ? app.primary_languages.join(', ') : 'Not provided'}
                                                 </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {(Array.isArray(app.languages_performed) ? app.languages_performed : []).slice(0, 2).map((l: string) => (
-                                                            <span key={l} className="px-2 py-0.5 bg-white/5 rounded-md text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{l}</span>
-                                                        ))}
-                                                        {(app.languages_performed?.length > 2) && <span className="text-[9px] text-neutral-600 ml-1">+{app.languages_performed.length - 2} more</span>}
-                                                    </div>
+                                                <td className="text-xs text-[var(--dash-text-secondary)]">
+                                                    {app.country || '—'}
                                                 </td>
-                                                <td className="px-6 py-5">
-                                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                                                        (app.status || app.profile_status) === 'approved' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                                                        (app.status || app.profile_status) === 'rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
-                                                        (app.status || app.profile_status) === 'revision_requested' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' :
-                                                        'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                                                    }`}>
-                                                        {(app.status || app.profile_status)?.replace(/_/g, ' ')}
-                                                    </span>
+                                                <td className="text-[10px] text-[var(--dash-text-muted)]">
+                                                    {new Date(app.joined_at || app.submitted_at || app.created_at || '').toLocaleDateString('en-US', { timeZone: 'UTC' })}
                                                 </td>
-                                                <td className="px-6 py-5 text-right">
-                                                    <button
+                                                <td>
+                                                    <StatusBadge status={app.profile_status || 'pending'} />
+                                                </td>
+                                                <td className="text-right">
+                                                    <button 
                                                         onClick={() => {
                                                             setSelectedApp(app);
-                                                            setAdminNotes(app.admin_notes || '');
+                                                            setAdminNote(app.admin_notes || '');
                                                         }}
-                                                        className="px-4 py-2 bg-white/5 hover:bg-amber-400 hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
+                                                        className="dashboard-btn-secondary py-1 text-xs"
                                                     >
-                                                        Review Dossier
+                                                        {app.profile_status === 'approved_as_vocalist' ? 'View Profile' : 'Review'}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -275,159 +299,388 @@ export default function AdminVocalistApplications() {
                     )}
                 </div>
 
+                {/* Profile Detail Modal */}
                 {selectedApp && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
-                        <div className="absolute inset-0 bg-[#050505]/95 backdrop-blur-xl" onClick={() => !processingAction && setSelectedApp(null)} />
-                        
-                        <div className="relative w-full max-w-5xl bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-                            {/* Modal Header */}
-                            <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400">
-                                        <Mic size={24} />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold text-white tracking-tight">Performance Profile Dossier</h2>
-                                        <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold mt-1">
-                                            {selectedApp.referenceId} • {selectedApp.email}
-                                        </p>
+                    <div className="dashboard-modal-overlay flex items-center justify-center p-4" onClick={() => !processingAction && setSelectedApp(null)}>
+                        <div className="dashboard-modal flex flex-col" style={{ width: '94vw', maxWidth: '1500px', maxHeight: '92vh', padding: 0, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+                            <div className="dashboard-modal-header border-b border-[var(--dash-border)] shrink-0 sticky top-0 z-10 bg-[#0a0a0a] rounded-t-xl relative flex p-6">
+                                <div className="flex items-start sm:items-center justify-between gap-4 w-full pr-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center shrink-0">
+                                            <FileText className="w-6 h-6 text-amber-400" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-3">
+                                                <h2 className="text-lg font-bold text-white mb-0">{selectedApp.profile_status === 'approved_as_vocalist' ? 'Profile:' : 'Editorial Review:'} {selectedApp.public_name || selectedApp.full_name}</h2>
+                                                <StatusBadge status={selectedApp.profile_status || 'pending'} />
+                                            </div>
+                                            <div className="flex items-center gap-3 mt-1.5">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-mono text-xs text-amber-400/80">{getReferenceId(selectedApp)}</span>
+                                                    <button 
+                                                        onClick={() => handleCopy(getReferenceId(selectedApp))}
+                                                        className="p-1 hover:bg-white/5 rounded transition-colors -ml-1"
+                                                    >
+                                                        {copiedId === getReferenceId(selectedApp) ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-neutral-500" />}
+                                                    </button>
+                                                </div>
+                                                <span className="text-neutral-600 text-xs">•</span>
+                                                <span className="text-xs text-slate-400 font-medium">
+                                                    Member Since: {selectedApp.joined_at 
+                                                        ? new Date(selectedApp.joined_at).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' })
+                                                        : new Date(selectedApp.updated_at || selectedApp.created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <button 
-                                    onClick={() => setSelectedApp(null)}
-                                    className="p-2 hover:bg-white/5 rounded-xl text-neutral-500 hover:text-white transition-all"
-                                >
-                                    <XCircle size={24} />
+                                <button onClick={() => setSelectedApp(null)} className="absolute top-5 right-5 p-2 hover:bg-white/5 rounded-lg text-neutral-500 hover:text-white transition-colors">
+                                    <XCircle className="w-6 h-6" />
                                 </button>
                             </div>
 
-                            {/* Modal Body */}
-                            <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                    
-                                    {/* Left: Metadata */}
-                                    <div className="lg:col-span-2 space-y-8">
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Legal Full Name</p>
-                                                <p className="text-white font-bold">{selectedApp.full_name}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Performance Name</p>
-                                                <p className="text-white font-bold">{selectedApp.performance_name || '—'}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Location</p>
-                                                <p className="text-white font-bold">{selectedApp.city}, {selectedApp.country}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Experience / Range</p>
-                                                <p className="text-white font-bold uppercase text-xs">{selectedApp.years_experience} Years • {selectedApp.vocal_range}</p>
-                                            </div>
+                            <div className="dashboard-modal-body p-0 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+                                <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,0.34fr)_minmax(0,0.66fr)] xl:grid-cols-[minmax(260px,28%)_minmax(420px,42%)_minmax(300px,30%)] h-full min-h-max">
+                                    {/* Left Panel: Institutional Intake Profile */}
+                                    <div className="lg:border-r border-[var(--dash-border)] p-6 xl:p-8 bg-neutral-950/20 lg:row-span-2 xl:row-span-1 min-w-0">
+                                    <div className="space-y-6">
+                                        <div className="pb-3 border-b border-neutral-900">
+                                            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Institutional Intake Profile</h2>
                                         </div>
 
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Languages Performed</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {(Array.isArray(selectedApp.languages_performed) ? selectedApp.languages_performed : []).map((l: string) => (
-                                                    <span key={l} className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-neutral-300 uppercase tracking-wider">{l}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Performance Styles</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {(Array.isArray(selectedApp.performance_styles) ? selectedApp.performance_styles : []).map((s: string) => (
-                                                    <span key={s} className="px-3 py-1 bg-amber-400/5 border border-amber-400/10 rounded-lg text-[10px] font-bold text-amber-400 uppercase tracking-wider">{s}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Performance Sample</p>
-                                            <div className="p-4 bg-neutral-900 border border-white/5 rounded-2xl flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <Video className="text-neutral-500" size={18} />
-                                                    <span className="text-xs font-mono text-neutral-400 truncate max-w-md">{selectedApp.sample_link}</span>
+                                        <section>
+                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3">Identity & Background</h3>
+                                            <div className="space-y-5">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Stage Name</label>
+                                                    <p className="text-base text-slate-100 font-medium">{selectedApp.stage_name || selectedApp.public_name}</p>
                                                 </div>
-                                                <a href={selectedApp.sample_link} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-white border border-white/10 transition-all">
-                                                    Launch Sample
-                                                </a>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Public Name Type</label>
+                                                    <p className="text-base text-slate-100 font-medium">{selectedApp.public_name_type || <span className="text-sm text-slate-300 italic">Not provided</span>}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Contact Identity</label>
+                                                    <p className="text-base text-slate-100 font-medium">{selectedApp.email || <span className="text-sm text-slate-300 italic">Internal Workflow</span>}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Location</label>
+                                                    <p className="text-base text-slate-100 font-medium">{[selectedApp.city, selectedApp.country].filter(Boolean).join(', ') || <span className="text-sm text-slate-300 italic">Not provided</span>}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Vocalist Type</label>
+                                                    <p className="text-base text-slate-100 font-medium">{selectedApp.vocalist_type || <span className="text-sm text-slate-300 italic">Studio / Internal Vocalist</span>}</p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </section>
 
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Training & Heritage</p>
-                                            <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
-                                                <p className="text-sm text-neutral-300 leading-relaxed italic">&ldquo;{selectedApp.musical_training || "No training data provided."}&rdquo;</p>
+                                        <section>
+                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Vocal & Performance Profile</h3>
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Primary Languages</label>
+                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                        {(Array.isArray(selectedApp.primary_languages) ? selectedApp.primary_languages : []).length > 0 
+                                                            ? (Array.isArray(selectedApp.primary_languages) ? selectedApp.primary_languages : []).map((l: string) => (
+                                                                <span key={l} className="px-2.5 py-1 bg-slate-900 border border-slate-700 text-xs font-medium text-slate-200 rounded-md">{l}</span>
+                                                            ))
+                                                            : <span className="text-sm text-slate-300 italic">Not provided</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Styles / Genres</label>
+                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                        {selectedApp.styles_genres && selectedApp.styles_genres.length > 0
+                                                            ? selectedApp.styles_genres.map((s: string) => (
+                                                                <span key={s} className="px-2.5 py-1 bg-slate-900 border border-slate-700 text-xs font-medium text-slate-200 rounded-md">{s}</span>
+                                                            ))
+                                                            : <span className="text-sm text-slate-300 italic">Not provided</span>
+                                                        }
+                                                    </div>
+                                                </div>
                                             </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Vocal Characteristics</h3>
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Performance Character</label>
+                                                    {selectedApp.performance_character ? (
+                                                        <p className="text-sm text-slate-100 leading-relaxed font-medium">{selectedApp.performance_character}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Not provided</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Vocal Range</label>
+                                                    {selectedApp.vocal_range ? (
+                                                        <p className="text-sm text-slate-100 leading-relaxed font-medium">{selectedApp.vocal_range}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Not provided</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Vocal Register</label>
+                                                    {selectedApp.vocal_register ? (
+                                                        <p className="text-sm text-slate-100 leading-relaxed font-medium">{selectedApp.vocal_register}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Not provided</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Tone / Timbre</label>
+                                                    {selectedApp.tone_timbre ? (
+                                                        <p className="text-sm text-slate-100 leading-relaxed font-medium">{selectedApp.tone_timbre}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-slate-300 italic">Not provided</p>
+                                                    )}
+                                                </div>
+                                                {selectedApp.special_characteristics && selectedApp.special_characteristics.length > 0 && (
+                                                    <div>
+                                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Special Characteristics</label>
+                                                        <div className="flex flex-wrap gap-2 mt-1">
+                                                            {selectedApp.special_characteristics.map((s: string) => (
+                                                                <span key={s} className="px-2.5 py-1 bg-slate-900 border border-slate-700 text-xs font-medium text-slate-200 rounded-md">{s}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </section>
+
+                                        {selectedApp.roles && Array.isArray(selectedApp.roles) && selectedApp.roles.length > 0 && (
+                                            <section>
+                                                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Canonical Roles</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedApp.roles.map(role => (
+                                                        <span key={role} className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider rounded-md">
+                                                            {role}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </section>
+                                        )}
+                                    </div>
+                                </div>
+                                    
+                                {/* Center Panel: Works & Production */}
+                                <div className="p-6 xl:p-8 bg-[#0a0a0a] border-b lg:border-b-0 xl:border-r border-[var(--dash-border)] min-w-0">
+                                    <div className="space-y-6">
+                                            {selectedApp.profile_status === 'approved_as_vocalist' ? (
+                                                <section>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                            <StickyNote className="w-4 h-4 text-emerald-400" />
+                                                            Performances / Catalog
+                                                        </h3>
+                                                    </div>
+                                                    <div className="space-y-2 mb-6 p-4 bg-neutral-900/30 border border-neutral-800/50 rounded-lg font-mono">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Observed Legacy References</span>
+                                                            <span className="text-sm font-bold text-amber-400/90">{finalCounts.observedLegacy}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Total Confirmed Assignments</span>
+                                                            <span className="text-sm font-bold text-emerald-400/90">{finalCounts.confirmedCms}</span>
+                                                        </div>
+                                                    </div>
+                                                    {vocalistPerformances.length > 0 ? (
+                                                        <div className="space-y-2">
+                                                            {vocalistPerformances.slice(0, 5).map((k: any) => (
+                                                                <div key={k.id} className="p-3 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-between">
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-sm text-neutral-200 font-medium truncate">{k.title}</p>
+                                                                        <p className="text-[10px] text-neutral-500 font-mono mt-0.5">{k.id}</p>
+                                                                    </div>
+                                                                    <div className="shrink-0 ml-4">
+                                                                        <span className="px-2 py-1 text-[10px] uppercase font-bold rounded-full bg-neutral-800 text-neutral-400">
+                                                                            {k.status?.replace(/_/g, ' ') || 'Unknown'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            {vocalistPerformances.length > 5 && (
+                                                                <p className="text-xs text-neutral-500 text-center py-2">+ {vocalistPerformances.length - 5} more performances in catalog</p>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-[#111] border border-neutral-800 rounded-xl p-8 shadow-inner flex items-center justify-center">
+                                                            <p className="text-xs text-neutral-500 italic">No confirmed assignments yet</p>
+                                                        </div>
+                                                    )}
+                                                </section>
+                                            ) : (
+                                                <section>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                            <StickyNote className="w-4 h-4 text-amber-400" />
+                                                            Sample Performance Submission
+                                                        </h3>
+                                                    </div>
+                                                    <div className="bg-[#111] border border-neutral-800 rounded-xl p-8 shadow-inner overflow-x-auto">
+                                                        <pre className="text-base text-neutral-200 font-mono whitespace-pre-wrap leading-loose">
+                                                            {selectedApp.sample_performance || 'Not provided'}
+                                                        </pre>
+                                                    </div>
+                                                </section>
+                                            )}
+
+
                                         </div>
                                     </div>
 
-                                    {/* Right: Governance */}
-                                    <div className="space-y-8 lg:border-l lg:border-white/5 lg:pl-8">
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Registry Controls</p>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                                                    <CheckCircle size={14} className={selectedApp.worked_in_studio ? 'text-emerald-500' : 'text-neutral-700'} />
-                                                    Studio Ready: {selectedApp.worked_in_studio ? 'Yes' : 'No'}
+                                    {/* Right Panel: Governance & Registry */}
+                                    <div className="p-6 xl:p-8 bg-neutral-950/40 flex flex-col h-full min-w-0">
+                                        <div className="space-y-6 flex-1 flex flex-col min-w-0">
+                                            {/* Editorial / Governance */}
+                                            <section className="flex flex-col gap-6 min-w-0">
+                                                <div className="min-w-0">
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                        <History className="w-4 h-4" />
+                                                        Editorial Review History
+                                                    </h3>
+                                                    <div className="space-y-4 min-w-0">
+                                                        {selectedApp.reviewed_at ? (
+                                                            <div className="flex gap-4">
+                                                                <div className="w-0.5 bg-neutral-800 relative shrink-0">
+                                                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-neutral-700" />
+                                                                </div>
+                                                                <div className="pb-4 min-w-0 flex-1">
+                                                                    <p className="text-[10px] text-neutral-600 mb-1">
+                                                                        {new Date(selectedApp.reviewed_at).toLocaleString()}
+                                                                    </p>
+                                                                    <p className="text-sm text-slate-100 break-words">
+                                                                        {selectedApp.identity_type === 'STUDIO_PSEUDONYM' ? (
+                                                                            <>Canonical Vocalist Status <span className="text-amber-400 font-medium">synchronized with institutional registry</span></>
+                                                                        ) : (
+                                                                            <>Status updated to <span className="text-amber-400 font-medium">{(selectedApp.profile_status || '').replace(/_/g, ' ')}</span></>
+                                                                        )}
+                                                                    </p>
+                                                                    {selectedApp.admin_notes && (
+                                                                        <div className="mt-2 p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg text-xs text-neutral-500 italic break-words">
+                                                                            &ldquo;{selectedApp.admin_notes}&rdquo;
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-xs text-neutral-600 italic">No previous review activity recorded.</p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                                                    <CheckCircle size={14} className={selectedApp.accept_producer_coordination ? 'text-emerald-500' : 'text-neutral-700'} />
-                                                    Producer Framework Accepted
+                                                <div className="min-w-0">
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Institutional Covenant</h3>
+                                                    <div className="space-y-3 min-w-0">
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                                                            <span className="text-xs text-neutral-400 min-w-0 flex-1 break-words">Performance Review Process</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 sm:text-right">Acknowledged</span>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                                                            <span className="text-xs text-neutral-400 min-w-0 flex-1 break-words">Institutional Production Discretion</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 sm:text-right">Acknowledged</span>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                                                            <span className="text-xs text-neutral-400 min-w-0 flex-1 break-words">Contributor Verification</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 sm:text-right">{selectedApp.identity_type === 'STUDIO_PSEUDONYM' ? 'Internal Canonical State' : 'Verified'}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
+                                            </section>
 
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">Governance Decision Notes</label>
-                                            <textarea
-                                                value={adminNotes}
-                                                onChange={(e) => setAdminNotes(e.target.value)}
-                                                placeholder="Add internal institutional notes or revision instructions..."
-                                                className="w-full h-40 bg-neutral-900 border border-white/5 rounded-2xl p-4 text-xs text-white placeholder:text-neutral-700 outline-none focus:border-amber-400/30 transition-all"
-                                            />
-                                            <p className="text-[9px] text-neutral-600 uppercase font-bold tracking-widest leading-relaxed">
-                                                Notes marked as 'Revision Instructions' will be visible to the applicant in their status portal.
-                                            </p>
+                                            {/* Registry Status */}
+                                            {selectedApp.profile_status === 'approved_as_vocalist' && (
+                                                <section className="pt-6 border-t border-neutral-900">
+                                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Registry Status</h3>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Vocalist Status</p>
+                                                            <p className="text-xs text-emerald-400 font-bold">APPROVED</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Contributor Status</p>
+                                                            <p className="text-xs text-emerald-400 font-bold">{selectedApp.contributor_status || 'ACTIVE'}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Intake Status</p>
+                                                            <p className="text-xs text-blue-400 font-bold">{selectedApp.identity_type === 'STUDIO_PSEUDONYM' ? 'INTERNAL' : 'COMPLETED'}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Legacy Appearances</p>
+                                                            <p className="text-xs text-slate-100 font-bold">{finalCounts.observedLegacy}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Catalog Assignment</p>
+                                                            <p className="text-[10px] text-slate-100 font-bold">{selectedApp.catalog_assignment?.replace(/_/g, ' ') || 'PENDING'}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Last Activity</p>
+                                                            <p className="text-xs text-slate-100 font-bold">{new Date(selectedApp.updated_at || Date.now()).toLocaleDateString()}</p>
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                            )}
+
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Modal Footer */}
-                            <div className="px-8 py-6 border-t border-white/5 bg-white/[0.01]">
-                                <div className="flex flex-wrap items-center justify-end gap-3">
-                                    <button
-                                        onClick={() => handleUpdateStatus(selectedApp.id, 'revision_requested')}
-                                        disabled={processingAction}
-                                        className="px-6 py-3 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/20 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30"
-                                    >
-                                        Request Revision
-                                    </button>
-                                    <button
-                                        onClick={() => confirm('Reject this application from the registry?') && handleUpdateStatus(selectedApp.id, 'rejected')}
-                                        disabled={processingAction}
-                                        className="px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30"
-                                    >
-                                        Reject Entry
-                                    </button>
-                                    <div className="w-px h-8 bg-white/5 mx-2" />
-                                    <button
-                                        onClick={() => handleUpdateStatus(selectedApp.id, 'approved')}
-                                        disabled={processingAction || (selectedApp.status || selectedApp.profile_status) === 'approved'}
-                                        className="px-8 py-3 bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all disabled:opacity-30"
-                                    >
-                                        Authorize Registry Admission
-                                    </button>
-                                </div>
+                            {/* Full-Width Sticky Footer Actions */}
+                            <div className="shrink-0 p-6 lg:px-8 bg-neutral-900 border-t border-[var(--dash-border)] sticky bottom-0 z-20 rounded-b-xl">
+                                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-end">
+                                    <div className="min-w-0">
+                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Editorial Internal Note / Feedback to Writer</label>
+                                        <textarea 
+                                            value={adminNote}
+                                            onChange={(e) => setAdminNote(e.target.value)}
+                                            placeholder="Add internal evaluation or feedback for revision request..."
+                                            className="dashboard-textarea w-full min-h-[80px] text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        {selectedApp.profile_status !== 'approved_as_vocalist' && selectedApp.identity_type !== 'STUDIO_PSEUDONYM' && (
+                                            <>
+                                                <button 
+                                                    onClick={() => handleUpdateStatus(selectedApp.id, 'under_editorial_screening')}
+                                                    disabled={processingAction}
+                                                    className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold min-w-[120px]"
+                                                >
+                                                    Screening
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleUpdateStatus(selectedApp.id, 'revision_requested')}
+                                                    disabled={processingAction}
+                                                    className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold text-orange-400 border-orange-500/20 min-w-[120px]"
+                                                >
+                                                    Req Revision
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleUpdateStatus(selectedApp.id, 'approved_as_vocalist')}
+                                                    disabled={processingAction}
+                                                    className="dashboard-btn-primary bg-emerald-600 hover:bg-emerald-500 text-[11px] h-11 uppercase tracking-wider font-bold min-w-[120px]"
+                                                >
+                                                    Approve
+                                                </button>
+                                            </>
+                                        )}
+                                        <button 
+                                            onClick={() => handleUpdateStatus(selectedApp.id, 'archived_not_advanced')}
+                                            disabled={processingAction}
+                                            className="dashboard-btn-danger text-[11px] h-11 uppercase tracking-wider font-bold opacity-60 hover:opacity-100 min-w-[120px]"
+                                        >
+                                            Archive
+                                        </button>
+                                    </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 )}
             </div>
         </DashboardLayout>
     );
 }
+
