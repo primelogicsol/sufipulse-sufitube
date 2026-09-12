@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { WriterFormData } from '@/app/types/writer.types';
+import { ZarfImportTool } from './zarf-import';
 
 type EditorialStatus = 
     | 'pending' 
@@ -412,6 +413,11 @@ export default function WriterEditorialReviewQueue() {
                                                         {selectedApp.literary_background}
                                                     </div>
                                                 </section>
+                                            )}
+
+                                            {/* Privileged Workflow for Zarf-e-Noori */}
+                                            {selectedApp.id === 'writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9' && (
+                                                <ZarfImportTool writerId={selectedApp.id} />
                                             )}
 
                                             {/* Review History */}
