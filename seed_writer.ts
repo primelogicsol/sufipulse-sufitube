@@ -12,6 +12,8 @@ if (!existing) {
     affiliation: 'SufiPulse Studio USA',
     roles: ['Writer', 'Lyricist', 'Composer', 'Music Director'],
     primary_languages: ['Urdu', 'English', 'Persian', 'Kashmiri'],
+    thematic_focus: 'Modern Sufi Mysticism, Inner Transformation, Philosophical Inquiry, Sacred Longing, Devotional Spirituality, Human Conscience and Moral Reflection',
+    conceptual_orientation: 'Contemporary Sufi thought expressed through mystical reflection, philosophical inquiry, spiritual psychology, ethical self-examination, and modern poetic language. His work connects classical Sufi ideas with contemporary human experience, identity, conscience, love, mortality, and inner transformation.',
     submitted_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
