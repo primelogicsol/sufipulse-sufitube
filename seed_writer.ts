@@ -10,7 +10,7 @@ if (!existing) {
     contributor_status: 'ACTIVE',
     writer_category: 'Founding / Internal Writer',
     affiliation: 'SufiPulse Studio USA',
-    roles: ['Writer', 'Lyricist'],
+    roles: ['Writer', 'Lyricist', 'Composer', 'Music Director'],
     primary_language: 'Urdu',
     submitted_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
