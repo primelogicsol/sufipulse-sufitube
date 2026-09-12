@@ -105,7 +105,7 @@ export default function AdminProducerApplications() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-white tracking-tight">Ahl-e-Naghma Registry</h1>
-                        <p className="text-neutral-500 text-sm">Manage institutional producer applications and musical architecture credentials.</p>
+                        <p className="text-neutral-500 text-sm">Govern composer, music director, producer, and musical architecture participation across the SufiPulse production ecosystem.</p>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-amber-400/10 border border-amber-400/20 rounded-lg">
                         <Music className="w-4 h-4 text-amber-400" />
@@ -267,8 +267,46 @@ export default function AdminProducerApplications() {
                             </div>
 
                             {/* Modal Body */}
+                            
                             <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                {selectedApp.is_internal_mapped ? (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        <div className="space-y-8">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Status</p>
+                                                <p className="text-white font-bold">{selectedApp.status_label}</p>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Canonical Roles</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(selectedApp.primary_production_focus || []).map((f: string) => (
+                                                        <span key={f} className="px-3 py-1 bg-white/5 border border-emerald-500/30 rounded-lg text-[10px] font-bold text-emerald-400 uppercase tracking-wider">{f}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Additional SufiPulse Roles</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(selectedApp.additional_roles || []).map((f: string) => (
+                                                        <span key={f} className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-neutral-300 uppercase tracking-wider">{f}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-8 lg:border-l lg:border-white/5 lg:pl-8">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Workflow</p>
+                                                <p className="text-white font-bold">{selectedApp.workflow}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Managed / Affiliated With</p>
+                                                <p className="text-white font-bold">{selectedApp.affiliation}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
                                     
                                     {/* Left: Metadata */}
                                     <div className="lg:col-span-2 space-y-8">
@@ -345,18 +383,24 @@ export default function AdminProducerApplications() {
                                                 placeholder="Add internal institutional notes or technical revision instructions..."
                                                 className="w-full h-40 bg-neutral-900 border border-white/5 rounded-2xl p-4 text-xs text-white placeholder:text-neutral-700 outline-none focus:border-amber-400/30 transition-all"
                                             />
+                                            
                                             <p className="text-[9px] text-neutral-600 uppercase font-bold tracking-widest leading-relaxed">
                                                 Notes marked as 'Revision Instructions' will be visible to the applicant in their status portal.
                                             </p>
                                         </div>
                                     </div>
-                                </div>
+                                    </div>
+                                )}
                             </div>
 
+
                             {/* Modal Footer */}
+                            
                             <div className="px-8 py-6 border-t border-white/5 bg-white/[0.01]">
+                                {!selectedApp.is_internal_mapped && (
                                 <div className="flex flex-wrap items-center justify-end gap-3">
                                     <button
+
                                         onClick={() => handleUpdateStatus(selectedApp.id, 'revision_requested')}
                                         disabled={processingAction}
                                         className="px-6 py-3 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/20 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30"
@@ -376,10 +420,13 @@ export default function AdminProducerApplications() {
                                         disabled={processingAction || (selectedApp.status || selectedApp.profile_status) === 'approved'}
                                         className="px-8 py-3 bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all disabled:opacity-30"
                                     >
+                                        
                                         Authorize Registry Admission
                                     </button>
                                 </div>
+                                )}
                             </div>
+
                         </div>
                     </div>
                 )}

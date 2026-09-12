@@ -9,6 +9,7 @@ import { Card } from '../../components/primitives/Card';
 import { roleDisplayMap } from '../../components/lib/roleDisplayMap';
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { HeroCTAGroup } from '../../components/ui/HeroCTAGroup';
 
 export default function Writers() {
   const workflowScrollRef = useRef<HTMLDivElement>(null);
@@ -99,17 +100,11 @@ export default function Writers() {
                 Writers originate sacred kalam within the SufiPulse institutional framework. Every piece undergoes rigorous editorial review by the Majlis-e-Nazr before entering composition, vocal assignment, and studio production.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
-                <Link href="/writers/apply">
-                  <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
-                    Apply as Writer
-                  </PrimaryButton>
-                </Link>
-                <Link href="/governance">
-                  <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
-                    Editorial Governance
-                  </PrimaryButton>
-                </Link>
+              <div className="mb-14">
+                <HeroCTAGroup 
+                  primary={{ label: "Apply as Writer", href: "/writers/apply" }}
+                  secondary={{ label: "Editorial Governance", href: "/governance" }}
+                />
               </div>
 
               {/* Responsibilities Strip */}

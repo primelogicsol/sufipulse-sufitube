@@ -9,6 +9,7 @@ import { Card } from '../../components/primitives/Card';
 import { roleDisplayMap } from '../../components/lib/roleDisplayMap';
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { HeroCTAGroup } from '../../components/ui/HeroCTAGroup';
 
 export default function Vocalists() {
   const workflowScrollRef = useRef<HTMLDivElement>(null);
@@ -109,17 +110,11 @@ export default function Vocalists() {
                 Vocalists interpret and embody approved kalam within the SufiPulse production framework. Voice assignment follows editorial clearance and precedes musical structuring and studio master capture.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
-                <Link href="/vocalists/apply">
-                  <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
-                    Apply as Vocalist
-                  </PrimaryButton>
-                </Link>
-                <Link href="/governance">
-                  <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
-                    Performance Governance
-                  </PrimaryButton>
-                </Link>
+              <div className="mb-14">
+                <HeroCTAGroup 
+                  primary={{ label: "Apply as Vocalist", href: "/vocalists/apply" }}
+                  secondary={{ label: "Performance Governance", href: "/governance" }}
+                />
               </div>
 
               {/* Responsibilities Strip */}

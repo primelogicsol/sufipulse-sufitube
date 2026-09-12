@@ -9,8 +9,45 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  
   try {
-    const items = entityGetAll('producers');
+    const rawProducers = entityGetAll('producers') || [];
+    const rawWriters = entityGetAll('writers') || [];
+    
+    const internalNaghma = rawWriters
+      .filter((w: any) => 
+        w.roles && 
+        (w.roles.includes('Composer') || w.roles.includes('Music Director') || w.roles.includes('Producer'))
+      )
+      .map((w: any) => ({
+        id: w.id,
+        user_id: w.reviewed_by || 'internal',
+        full_name: w.public_name,
+        professional_name: w.pen_name || w.public_credit,
+        country: w.country || 'USA',
+        city: 'Internal',
+        email: 'internal@sufipulse.com',
+        years_experience: 'Internal',
+        primary_production_focus: w.roles.filter((r: string) => ['Composer', 'Music Director', 'Producer'].includes(r)),
+        additional_roles: w.roles.filter((r: string) => !['Composer', 'Music Director', 'Producer'].includes(r)),
+        primary_tools: 'SufiPulse Studio',
+        musical_background: w.conceptual_orientation || '',
+        portfolio_link: 'Internal Contributor',
+        worked_structured_production: true,
+        acknowledge_centralized_control: true,
+        accept_framework: true,
+        profile_status: 'approved',
+        status_label: 'Approved / Internal Contributor',
+        affiliation: w.affiliation || 'SufiPulse Studio USA',
+        workflow: 'Internal Institutional Workflow',
+        created_at: w.created_at,
+        submitted_at: w.submitted_at || w.created_at,
+        updated_at: w.updated_at,
+        is_internal_mapped: true
+      }));
+
+    const items = [...rawProducers, ...internalNaghma];
+
     const sorted = items.sort((a: any, b: any) =>
       new Date(b.submitted_at || b.created_at || 0).getTime() -
       new Date(a.submitted_at || a.created_at || 0).getTime()
