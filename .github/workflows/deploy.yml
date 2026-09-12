@@ -215,7 +215,7 @@ jobs:
             _e YOUTUBE_CLIENT_ID            "${{ secrets.YOUTUBE_CLIENT_ID }}"
             _e YOUTUBE_CLIENT_SECRET        "${{ secrets.YOUTUBE_CLIENT_SECRET }}"
             _e YOUTUBE_REFRESH_TOKEN        "${{ secrets.YOUTUBE_REFRESH_TOKEN }}"
-
+            _e PRIVATE_PRODUCTION_ENCRYPTION_KEY "${{ secrets.PRIVATE_PRODUCTION_ENCRYPTION_KEY }}"
             # ── GHCR AUTH ────────────────────────────────────────────────────
             _s="docker-login"
             docker logout ghcr.io 2>/dev/null || true
