@@ -75,9 +75,8 @@ async function main() {
         users = parsed;
         console.log('[seed-admin] loaded', users.length, 'existing user(s)');
       } else {
-        // Handles legacy { records: [...] } format written by earlier broken seeds
-        console.warn('[seed-admin] users.json was not a plain array — resetting to empty.');
-        users = [];
+        console.error('[seed-admin] FATAL: users.json is not a plain array. Refusing to modify production data.');
+        process.exit(1);
       }
     } catch (err) {
       console.error('[seed-admin] FATAL: users.json is not valid JSON:', err.message);

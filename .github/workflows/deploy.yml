@@ -275,6 +275,20 @@ jobs:
             echo "Synchronizing admin credentials..."
             docker compose -p sufipulse_new exec -T app node scripts/seed-admin.js
 
+            # force application to reload users.json
+            docker compose -p sufipulse_new restart app
+
+            # wait for health again
+            healthy=0
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+              if curl -fsS http://127.0.0.1:3001 >/dev/null 2>&1; then
+                healthy=1
+                break
+              fi
+              sleep 5
+            done
+            [ "$healthy" -eq 1 ] || exit 1
+
             # ── CLEANUP ──────────────────────────────────────────────────────
             _s="cleanup"
             docker image prune -af
@@ -286,9 +300,12 @@ jobs:
             DEPLOYED_COMMIT=$(echo "$VERSION_JSON" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4 || echo 'unknown')
             echo "expected: ${{ github.event.inputs.deployment_sha || github.sha }}"
             echo "deployed: ${DEPLOYED_COMMIT}"
-            [ "$DEPLOYED_COMMIT" = "${{ github.event.inputs.deployment_sha || github.sha }}" ] \
-              && echo "VERSION CHECK: PASS" \
-              || echo "VERSION CHECK: FAIL (may still be warming up)"
+            if [ "$DEPLOYED_COMMIT" = "${{ github.event.inputs.deployment_sha || github.sha }}" ]; then
+              echo "VERSION CHECK: PASS"
+            else
+              echo "VERSION CHECK: FAIL. Expected ${{ github.event.inputs.deployment_sha || github.sha }} but got ${DEPLOYED_COMMIT}"
+              exit 1
+            fi
 
             echo "DEPLOY COMPLETE — ${{ github.sha }}"
 
