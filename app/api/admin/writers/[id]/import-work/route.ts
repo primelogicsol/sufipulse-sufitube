@@ -73,6 +73,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       email: auth.email,
       status: 'submitted',
       source_asset_id: sourceAssetId,
+      credits: {
+        writer: writerId,
+        lyricist: writerId,
+        composer: writerId,
+        music_director: writerId
+      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
