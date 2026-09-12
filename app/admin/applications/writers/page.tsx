@@ -38,6 +38,8 @@ interface AdminWriterProfile extends WriterFormData {
     admin_notes?: string;
     public_name?: string;
     roles?: string[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 export default function WriterEditorialReviewQueue() {
@@ -45,6 +47,7 @@ export default function WriterEditorialReviewQueue() {
     const [applications, setApplications] = useState<AdminWriterProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedApp, setSelectedApp] = useState<AdminWriterProfile | null>(null);
+    const [writerKalams, setWriterKalams] = useState<any[]>([]);
     const [adminNote, setAdminNote] = useState('');
     const [filter, setFilter] = useState<EditorialStatus | 'all'>('pending');
     const [processingAction, setProcessingAction] = useState(false);
@@ -57,6 +60,18 @@ export default function WriterEditorialReviewQueue() {
             loadApplications();
         }
     }, [authLoading]);
+
+    useEffect(() => {
+        if (selectedApp) {
+            fetch('/api/kalams').then(r => r.json()).then(data => {
+                if (Array.isArray(data)) {
+                    setWriterKalams(data.filter(k => k.user_id === selectedApp.id));
+                }
+            }).catch(() => setWriterKalams([]));
+        } else {
+            setWriterKalams([]);
+        }
+    }, [selectedApp]);
 
     async function loadApplications() {
         try {
@@ -312,9 +327,13 @@ export default function WriterEditorialReviewQueue() {
                             </div>
 
                             <div className="dashboard-modal-body p-0 grid grid-cols-1 md:grid-cols-[300px_1fr] flex-1 min-h-0 overflow-hidden">
-                                {/* Left Panel: Profile Details */}
+                                {/* Left Panel: Institutional Intake Profile */}
                                 <div className="border-r border-[var(--dash-border)] overflow-y-auto p-5 bg-neutral-950/20">
                                     <div className="space-y-8">
+                                        <div className="pb-4 border-b border-neutral-900">
+                                            <h2 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Institutional Intake Profile</h2>
+                                        </div>
+
                                         <section>
                                             <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Identity & Background</h3>
                                             <div className="space-y-4">
@@ -323,20 +342,62 @@ export default function WriterEditorialReviewQueue() {
                                                     <p className="text-sm text-neutral-200">{selectedApp.public_name || selectedApp.full_name}</p>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Pen Name</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.pen_name || '—'}</p>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Pen Name / Takhallus</label>
+                                                    <p className="text-sm text-neutral-200">{selectedApp.pen_name || 'Not provided'}</p>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Email</label>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Contact Identity</label>
                                                     <p className="text-sm text-neutral-200">{selectedApp.email || 'Internal Workflow'}</p>
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] text-neutral-600 uppercase mb-1">Location</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.city ? `${selectedApp.city}, ` : ''}{selectedApp.country}</p>
+                                                    <p className="text-sm text-neutral-200">{[selectedApp.city, selectedApp.country].filter(Boolean).join(', ') || 'Not provided'}</p>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Experience</label>
-                                                    <p className="text-sm text-neutral-200">{selectedApp.years_experience} Years</p>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Writer Type</label>
+                                                    <p className="text-sm text-neutral-200">{(selectedApp as any).writer_category || 'External Applicant'}</p>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Literary & Linguistic Profile</h3>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Literary Languages</label>
+                                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                                        {(Array.isArray(selectedApp.primary_languages) ? selectedApp.primary_languages : ((selectedApp as any).primary_language ? [(selectedApp as any).primary_language] : [])).length > 0 
+                                                            ? (Array.isArray(selectedApp.primary_languages) ? selectedApp.primary_languages : [(selectedApp as any).primary_language]).map(l => (
+                                                                <span key={l} className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400 rounded-md">{l}</span>
+                                                            ))
+                                                            : <span className="text-xs text-neutral-500 italic">Not provided</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Forms & Styles</label>
+                                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                                        {selectedApp.writing_styles && selectedApp.writing_styles.length > 0
+                                                            ? selectedApp.writing_styles.map(s => (
+                                                                <span key={s} className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400 rounded-md">{s}</span>
+                                                            ))
+                                                            : <span className="text-xs text-neutral-500 italic">Not provided</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <section>
+                                            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Thematic Orientation</h3>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Thematic Focus</label>
+                                                    <p className="text-xs text-neutral-400 italic leading-relaxed">{selectedApp.thematic_focus || 'Not provided'}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Conceptual Orientation</label>
+                                                    <p className="text-xs text-neutral-400 italic leading-relaxed">{(selectedApp as any).conceptual_orientation || 'Not provided'}</p>
                                                 </div>
                                             </div>
                                         </section>
@@ -353,42 +414,6 @@ export default function WriterEditorialReviewQueue() {
                                                 </div>
                                             </section>
                                         )}
-
-                                        <section>
-                                            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Literary Focus</h3>
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Languages</label>
-                                                    <p className="text-sm text-neutral-200">{Array.isArray(selectedApp.primary_languages) ? selectedApp.primary_languages.join(', ') : selectedApp.primary_languages}</p>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Styles / Forms</label>
-                                                    <div className="flex flex-wrap gap-1.5 mt-1">
-                                                        {selectedApp.writing_styles?.map(s => (
-                                                            <span key={s} className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400 rounded-md">{s}</span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] text-neutral-600 uppercase mb-1">Thematic Focus</label>
-                                                    <p className="text-xs text-neutral-400 italic leading-relaxed">{selectedApp.thematic_focus || 'Not specified'}</p>
-                                                </div>
-                                            </div>
-                                        </section>
-
-                                        <section>
-                                            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Governance</h3>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-between text-xs p-2 bg-neutral-900/50 rounded border border-neutral-800">
-                                                    <span className="text-neutral-500">Revision Ack.</span>
-                                                    {selectedApp.revision_acknowledged ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-red-500" />}
-                                                </div>
-                                                <div className="flex items-center justify-between text-xs p-2 bg-neutral-900/50 rounded border border-neutral-800">
-                                                    <span className="text-neutral-500">Institutional Ack.</span>
-                                                    {selectedApp.institutional_acknowledged ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-red-500" />}
-                                                </div>
-                                            </div>
-                                        </section>
                                     </div>
                                 </div>
 
@@ -396,20 +421,74 @@ export default function WriterEditorialReviewQueue() {
                                 <div className="flex flex-col h-full bg-[#0a0a0a] min-h-0">
                                     <div className="flex-1 overflow-y-auto p-6">
                                         <div className="space-y-6">
-                                            {/* Sample Kalam */}
-                                            <section>
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
-                                                        <StickyNote className="w-4 h-4 text-amber-400" />
-                                                        Sample Kalam Submission
-                                                    </h3>
-                                                </div>
-                                                <div className="bg-[#111] border border-neutral-800 rounded-xl p-8 shadow-inner overflow-x-auto">
-                                                    <pre className="text-base text-neutral-200 font-mono whitespace-pre-wrap leading-loose">
-                                                        {selectedApp.sample_kalam}
-                                                    </pre>
-                                                </div>
-                                            </section>
+                                            {/* Works / Kalam or Sample Kalam */}
+                                            {selectedApp.profile_status === 'approved_as_writer' ? (
+                                                <section>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                                                            <StickyNote className="w-4 h-4 text-emerald-400" />
+                                                            Works / Kalam
+                                                        </h3>
+                                                        <span className="text-xs text-neutral-500 font-mono">Total: {writerKalams.length}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 gap-2 mb-4">
+                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
+                                                            <p className="text-[10px] text-neutral-500 uppercase">Draft</p>
+                                                            <p className="text-lg font-bold text-neutral-300">{writerKalams.filter(k => k.status === 'draft').length}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
+                                                            <p className="text-[10px] text-neutral-500 uppercase">Review</p>
+                                                            <p className="text-lg font-bold text-amber-400">{writerKalams.filter(k => k.status === 'editorial_review').length}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
+                                                            <p className="text-[10px] text-neutral-500 uppercase">Approved</p>
+                                                            <p className="text-lg font-bold text-emerald-400">{writerKalams.filter(k => k.status === 'approved').length}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
+                                                            <p className="text-[10px] text-neutral-500 uppercase">Released</p>
+                                                            <p className="text-lg font-bold text-blue-400">{writerKalams.filter(k => k.status === 'released').length}</p>
+                                                        </div>
+                                                    </div>
+                                                    {writerKalams.length > 0 ? (
+                                                        <div className="space-y-2">
+                                                            {writerKalams.slice(0, 5).map(k => (
+                                                                <div key={k.id} className="p-3 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-between">
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-sm text-neutral-200 font-medium truncate">{k.title}</p>
+                                                                        <p className="text-[10px] text-neutral-500 font-mono mt-0.5">{k.id}</p>
+                                                                    </div>
+                                                                    <div className="shrink-0 ml-4">
+                                                                        <span className="px-2 py-1 text-[10px] uppercase font-bold rounded-full bg-neutral-800 text-neutral-400">
+                                                                            {k.status?.replace(/_/g, ' ') || 'Unknown'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            {writerKalams.length > 5 && (
+                                                                <p className="text-xs text-neutral-500 text-center py-2">+ {writerKalams.length - 5} more works in catalog</p>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-[#111] border border-neutral-800 rounded-xl p-8 shadow-inner flex items-center justify-center">
+                                                            <p className="text-xs text-neutral-500 italic">No works found in catalog</p>
+                                                        </div>
+                                                    )}
+                                                </section>
+                                            ) : (
+                                                <section>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                                                            <StickyNote className="w-4 h-4 text-amber-400" />
+                                                            Sample Kalam Submission
+                                                        </h3>
+                                                    </div>
+                                                    <div className="bg-[#111] border border-neutral-800 rounded-xl p-8 shadow-inner overflow-x-auto">
+                                                        <pre className="text-base text-neutral-200 font-mono whitespace-pre-wrap leading-loose">
+                                                            {selectedApp.sample_kalam || 'Not provided'}
+                                                        </pre>
+                                                    </div>
+                                                </section>
+                                            )}
 
                                             {/* Previous Publications */}
                                             {selectedApp.previous_publications && (
@@ -433,40 +512,94 @@ export default function WriterEditorialReviewQueue() {
 
                                             {/* Privileged Workflow for Zarf-e-Noori */}
                                             {selectedApp.id === 'writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9' && (
-                                                <ZarfImportTool writerId={selectedApp.id} />
+                                                <div className="pt-2">
+                                                    <ZarfImportTool writerId={selectedApp.id} />
+                                                </div>
                                             )}
 
-                                            {/* Review History */}
-                                            <section className="pt-8 border-t border-neutral-900">
-                                                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                                    <History className="w-4 h-4" />
-                                                    Editorial Review History
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    {selectedApp.reviewed_at ? (
-                                                        <div className="flex gap-4">
-                                                            <div className="w-0.5 bg-neutral-800 relative">
-                                                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-neutral-700" />
+                                            {/* Editorial / Governance */}
+                                            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-neutral-900">
+                                                <div>
+                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                        <History className="w-4 h-4" />
+                                                        Editorial Review History
+                                                    </h3>
+                                                    <div className="space-y-4">
+                                                        {selectedApp.reviewed_at ? (
+                                                            <div className="flex gap-4">
+                                                                <div className="w-0.5 bg-neutral-800 relative">
+                                                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-neutral-700" />
+                                                                </div>
+                                                                <div className="pb-4">
+                                                                    <p className="text-[10px] text-neutral-600 mb-1">
+                                                                        {new Date(selectedApp.reviewed_at).toLocaleString()}
+                                                                    </p>
+                                                                    <p className="text-sm text-neutral-300">
+                                                                        Status updated to <span className="text-amber-400 font-medium">{(selectedApp.profile_status || '').replace(/_/g, ' ')}</span>
+                                                                    </p>
+                                                                    {selectedApp.admin_notes && (
+                                                                        <div className="mt-2 p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg text-xs text-neutral-500 italic">
+                                                                            &ldquo;{selectedApp.admin_notes}&rdquo;
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div className="pb-4">
-                                                                <p className="text-[10px] text-neutral-600 mb-1">
-                                                                    {new Date(selectedApp.reviewed_at).toLocaleString()}
-                                                                </p>
-                                                                <p className="text-sm text-neutral-300">
-                                                                    Status updated to <span className="text-amber-400 font-medium">{(selectedApp.profile_status || '').replace(/_/g, ' ')}</span>
-                                                                </p>
-                                                                {selectedApp.admin_notes && (
-                                                                    <div className="mt-2 p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg text-xs text-neutral-500 italic">
-                                                                        &ldquo;{selectedApp.admin_notes}&rdquo;
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                        ) : (
+                                                            <p className="text-xs text-neutral-600 italic">No previous review activity recorded.</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Institutional Covenant</h3>
+                                                    <div className="space-y-3">
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex items-center justify-between">
+                                                            <span className="text-xs text-neutral-400">Editorial Covenant</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Acknowledged</span>
                                                         </div>
-                                                    ) : (
-                                                        <p className="text-xs text-neutral-600 italic">No previous review activity recorded.</p>
-                                                    )}
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex items-center justify-between">
+                                                            <span className="text-xs text-neutral-400">Institutional Governance</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Acknowledged</span>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg flex items-center justify-between">
+                                                            <span className="text-xs text-neutral-400">Contributor Verification</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Verified</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </section>
+
+                                            {/* Registry Status */}
+                                            {selectedApp.profile_status === 'approved_as_writer' && (
+                                                <section className="pt-6 border-t border-neutral-900">
+                                                    <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Registry Status</h3>
+                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Writer Status</p>
+                                                            <p className="text-xs text-emerald-400 font-bold">APPROVED</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Contributor Status</p>
+                                                            <p className="text-xs text-emerald-400 font-bold">ACTIVE</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Intake Status</p>
+                                                            <p className="text-xs text-blue-400 font-bold">COMPLETED</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Works Count</p>
+                                                            <p className="text-xs text-neutral-300 font-bold">{writerKalams.length}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Release Linkage</p>
+                                                            <p className="text-xs text-neutral-300 font-bold">ACTIVE</p>
+                                                        </div>
+                                                        <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
+                                                            <p className="text-[10px] text-neutral-500 uppercase mb-1">Last Activity</p>
+                                                            <p className="text-xs text-neutral-300 font-bold">{new Date(selectedApp.updated_at || Date.now()).toLocaleDateString()}</p>
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                            )}
                                         </div>
                                     </div>
 
