@@ -453,22 +453,22 @@ export default function WriterEditorialReviewQueue() {
                                                         </h3>
                                                         <span className="text-xs text-neutral-500 font-mono">Total: {writerKalams.length}</span>
                                                     </div>
-                                                    <div className="grid grid-cols-4 gap-2 mb-4">
-                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Draft</p>
-                                                            <p className="text-lg font-bold text-slate-100">{writerKalams.filter(k => k.status === 'draft').length}</p>
+                                                    <div className="space-y-2 mb-6 p-4 bg-neutral-900/30 border border-neutral-800/50 rounded-lg font-mono">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">DRAFT</span>
+                                                            <span className="text-sm font-bold text-slate-300">{writerKalams.filter(k => k.status === 'draft').length}</span>
                                                         </div>
-                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Review</p>
-                                                            <p className="text-lg font-bold text-amber-400">{writerKalams.filter(k => k.status === 'editorial_review').length}</p>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">REVIEW</span>
+                                                            <span className="text-sm font-bold text-amber-400/90">{writerKalams.filter(k => k.status === 'editorial_review').length}</span>
                                                         </div>
-                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Approved</p>
-                                                            <p className="text-lg font-bold text-emerald-400">{writerKalams.filter(k => k.status === 'approved').length}</p>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">APPROVED</span>
+                                                            <span className="text-sm font-bold text-emerald-400/90">{writerKalams.filter(k => k.status === 'approved').length}</span>
                                                         </div>
-                                                        <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
-                                                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Released</p>
-                                                            <p className="text-lg font-bold text-blue-400">{writerKalams.filter(k => k.status === 'released').length}</p>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">RELEASED</span>
+                                                            <span className="text-sm font-bold text-blue-400/90">{writerKalams.filter(k => k.status === 'released').length}</span>
                                                         </div>
                                                     </div>
                                                     {writerKalams.length > 0 ? (
