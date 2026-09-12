@@ -76,8 +76,9 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "@id": `${BASE_URL}/#organization`,
-  name: "SufiPulse",
+  "@id": "https://sufipulse.com/#organization",
+  name: "SufiPulse USA",
+  alternateName: ["SufiPulse", "Sufi Pulse"],
   url: BASE_URL,
   logo: `${BASE_URL}/sufipulse-logo-v5.png`,
   description: "The premier platform for authentic Sufi music, sacred poetry, and literary works from Kashmir and the Indian Subcontinent.",
@@ -103,7 +104,7 @@ const organizationSchema = {
     "https://www.youtube.com/@SufiPulse-USA",
     "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
     "https://dkf.sufisciencecenter.info",
-    `${BASE_URL}/verification`,
+    "https://sufipulse.com/verification",
   ],
 };
 
@@ -116,7 +117,7 @@ const personSchema = {
   jobTitle: "Founder",
   worksFor: {
     "@type": "Organization",
-    "@id": `${BASE_URL}/#organization`
+    "@id": "https://sufipulse.com/#organization"
   }
 };
 
@@ -129,7 +130,7 @@ const websiteSchema = {
   description: "Sacred Sufi music, poetry, and literary works from Kashmir and the Indian Subcontinent.",
   publisher: {
     "@type": "Organization",
-    "@id": `${BASE_URL}/#organization`
+    "@id": "https://sufipulse.com/#organization"
   },
   potentialAction: {
     "@type": "SearchAction",

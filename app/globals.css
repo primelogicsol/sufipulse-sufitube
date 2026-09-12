@@ -7,6 +7,14 @@
 @import './styles/admin-components.css';
 @import './styles/verification.css';
 
+@theme {
+  --header-height-mobile: 80px;
+  --header-height-desktop: 96px;
+  --header-height: var(--header-height-desktop);
+  --hero-content-top: calc(var(--header-height-mobile) + 48px);
+  --hero-content-top-desktop: calc(var(--header-height-desktop) + 64px);
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;

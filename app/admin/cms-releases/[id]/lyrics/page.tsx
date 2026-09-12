@@ -11,26 +11,27 @@ import { useReleaseForm } from '../use-release-form';
 import DashboardLayout from '../../../../components/layout/DashboardLayout';
 
 export default function LyricsEditorPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const releaseId = params.id as string;
   const isAdmin = user?.role.includes('admin') ?? false;
+  const isNew = releaseId === 'new';
 
   useEffect(() => {
-    if (!isAdmin) router.push('/admin');
-  }, [user]);
-
-  const isNew = releaseId === 'new';
+    if (!authLoading && !isAdmin) router.push('/admin');
+  }, [authLoading, isAdmin, router]);
 
   const {
     form,
-    loading, notFound,
+    loading,
+    notFound,
     saving,
     hasUnsavedChanges,
     errorMessage, setErrorMessage,
     successMessage, setSuccessMessage,
-    selectedLyricsStructureLanguage, setSelectedLyricsStructureLanguage,
+    selectedLyricsStructureLanguage,
+    setSelectedLyricsStructureLanguage,
     getLyricsBlocks,
     addLyricsBlock,
     updateLyricsBlock,
@@ -40,11 +41,34 @@ export default function LyricsEditorPage() {
   } = useReleaseForm({
     releaseId,
     isNew,
-    ready: isAdmin,
+    ready: !authLoading && isAdmin,
     onNavigate: (path) => router.push(path),
   });
 
-  if (!isAdmin) return <DashboardLayout><div className="p-8 text-center">Unauthorized</div></DashboardLayout>;
+  // CONDITIONAL RETURNS ONLY AFTER ALL HOOKS ABOVE
+
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-24">
+          <div
+            className="text-sm"
+            style={{ color: 'var(--dash-text-muted)' }}
+          >
+            Loading...
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 text-center">Unauthorized</div>
+      </DashboardLayout>
+    );
+  }
 
   if (loading) return (
     <DashboardLayout>

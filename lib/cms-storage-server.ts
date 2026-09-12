@@ -16,6 +16,20 @@ console.log(`[CMS-SERVER] Data File: ${SERVER_DATA_FILE}`);
 let hydrated = false;
 let lastHydratedMtime = 0;
 
+/**
+ * Persistence guard — observability.
+ * Tracks which data source was used for the most recent hydration.
+ *
+ * 'disk'   — production persistent store (expected in production)
+ * 'seed'   — repo seed fallback (cold-start, fresh container, or seed > disk)
+ * 'none'   — no releases found in either source
+ *
+ * Exposed via getInfo() and the /api/status health endpoint so operators
+ * can detect unexpected seed fallback in production.
+ */
+let lastDataSource: 'disk' | 'seed' | 'none' = 'none';
+let lastHydratedCount = 0;
+
 const ensureHydrated = (force = false) => {
   let currentMtime = 0;
   try {
@@ -98,12 +112,25 @@ const ensureHydrated = (force = false) => {
       }
 
       console.log(`[CMS-SERVER] Hydrated ${importedCount} releases from ${sourceUsed}.`);
-      
-      // If we used the seed because it was better, persist it to disk now
+
+      // Persistence guard — record source for observability
+      lastDataSource = sourceUsed as 'disk' | 'seed' | 'none';
+      lastHydratedCount = importedCount;
+
+      // If seed was used, log a clear warning so operators see it in production logs.
+      // This is the earliest detectable signal that persistent storage is missing.
       if (sourceUsed === 'seed') {
+        console.warn(
+          `[CMS-SERVER] ⚠️  DATA SOURCE = SEED_FALLBACK. ` +
+          `Persistent disk store was empty or seed had more records. ` +
+          `Loaded ${importedCount} releases from seed. ` +
+          `If this is production, verify that the persistent data volume is mounted and healthy.`
+        );
         persist();
       }
     } else {
+      lastDataSource = 'none';
+      lastHydratedCount = 0;
       console.warn(`[CMS-SERVER] No releases found in either disk or seed.`);
     }
 
@@ -167,7 +194,11 @@ export const cmsServerStorage = {
       seedFile: SEED_FILE,
       cwd: process.cwd(),
       exists: fs.existsSync(SERVER_DATA_FILE),
-      mtime: fs.existsSync(SERVER_DATA_FILE) ? fs.statSync(SERVER_DATA_FILE).mtimeMs : 0
+      mtime: fs.existsSync(SERVER_DATA_FILE) ? fs.statSync(SERVER_DATA_FILE).mtimeMs : 0,
+      // Persistence guard — active data source observability
+      dataSource: lastDataSource,          // 'disk' | 'seed' | 'none'
+      hydratedCount: lastHydratedCount,    // number of records loaded
+      isSeedFallback: lastDataSource === 'seed',
     };
   },
 

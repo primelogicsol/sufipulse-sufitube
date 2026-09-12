@@ -1,1 +1,1 @@
-export { ReleaseFeaturesSection, ReleaseMediaInfoSection } from './sections';
+export { ReleaseFeaturesSection, ReleaseMediaInfoSection, BasicInfoSection, ReleaseIntelligenceSection } from './sections';

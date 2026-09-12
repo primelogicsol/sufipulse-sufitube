@@ -11,9 +11,7 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen flex flex-col bg-[var(--color-midnight)]">
       <Header />
 
-      <div className="h-16" aria-hidden="true" />
-
-      <main className="flex-1 mt-20">
+      <main className="flex-1 pt-[144px] has-[.hero-bleed]:pt-0">
         {children}
       </main>
 

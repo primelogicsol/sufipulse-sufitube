@@ -121,7 +121,7 @@ export default function CMSReleasesPage() {
   const loadReleases = async () => {
     try {
       setLoading(true);
-      const url = filter === 'all' ? '/api/releases?status=all&refresh=1' : `/api/releases?status=${filter}&refresh=1`;
+      const url = filter === 'all' ? '/api/releases?refresh=1' : `/api/releases?status=${filter}&refresh=1`;
       const res = await fetch(url);
       const data = await res.json();
       

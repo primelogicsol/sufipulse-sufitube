@@ -128,7 +128,6 @@ export function useReleaseForm({
   const [loading, setLoading] = useState(!isNew);
   const [notFound, setNotFound] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'content' | 'subtitles'>('info');
   const [exportingZip, setExportingZip] = useState(false);
   const [youtubeSyncing, setYoutubeSyncing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -1803,7 +1802,6 @@ export function useReleaseForm({
     hasUnsavedChanges,
     loading, notFound,
     saving,
-    activeTab, setActiveTab,
     exportingZip,
     youtubeSyncing,
     errorMessage, setErrorMessage,
