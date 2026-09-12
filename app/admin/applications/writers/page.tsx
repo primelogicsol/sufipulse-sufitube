@@ -40,6 +40,7 @@ interface AdminWriterProfile extends WriterFormData {
     roles?: string[];
     created_at?: string;
     updated_at?: string;
+    joined_at?: string;
 }
 
 export default function WriterEditorialReviewQueue() {
@@ -386,6 +387,15 @@ export default function WriterEditorialReviewQueue() {
                                                     <p className="text-base text-slate-100 font-medium">{[selectedApp.city, selectedApp.country].filter(Boolean).join(', ') || <span className="text-sm text-slate-300 italic">Not provided</span>}</p>
                                                 </div>
                                                 <div>
+                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Joined SufiPulse</label>
+                                                    <p className="text-base text-slate-100 font-medium">
+                                                        {selectedApp.joined_at 
+                                                            ? new Date(selectedApp.joined_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                                            : new Date(selectedApp.updated_at || selectedApp.created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                                        }
+                                                    </p>
+                                                </div>
+                                                <div>
                                                     <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Writer Type</label>
                                                     <p className="text-base text-slate-100 font-medium">{(selectedApp as any).writer_category || <span className="text-sm text-slate-300 italic">External Applicant</span>}</p>
                                                 </div>
@@ -581,7 +591,11 @@ export default function WriterEditorialReviewQueue() {
                                                                         {new Date(selectedApp.reviewed_at).toLocaleString()}
                                                                     </p>
                                                                     <p className="text-sm text-slate-100 break-words">
-                                                                        Status updated to <span className="text-amber-400 font-medium">{(selectedApp.profile_status || '').replace(/_/g, ' ')}</span>
+                                                                        {selectedApp.id === 'writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9' ? (
+                                                                            <>Canonical writer status <span className="text-amber-400 font-medium">synchronized with institutional registry</span></>
+                                                                        ) : (
+                                                                            <>Status updated to <span className="text-amber-400 font-medium">{(selectedApp.profile_status || '').replace(/_/g, ' ')}</span></>
+                                                                        )}
                                                                     </p>
                                                                     {selectedApp.admin_notes && (
                                                                         <div className="mt-2 p-3 bg-neutral-900/50 border border-neutral-800 rounded-lg text-xs text-neutral-500 italic break-words">

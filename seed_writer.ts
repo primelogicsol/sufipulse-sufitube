@@ -17,6 +17,8 @@ if (!existing) {
     conceptual_orientation: 'Contemporary Sufi thought expressed through mystical reflection, philosophical inquiry, spiritual psychology, ethical self-examination, and modern poetic language. His work connects classical Sufi ideas with contemporary human experience, identity, conscience, love, mortality, and inner transformation.',
     creative_orientation: 'Bold Sufi, modern mystical, philosophical, conscience-driven, and spiritually confrontational writing.',
     country: 'United States of America',
+    joined_at: '2025-05-20T00:00:00.000Z',
+    reviewed_at: '2026-09-11T23:06:30.000Z',
     submitted_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
