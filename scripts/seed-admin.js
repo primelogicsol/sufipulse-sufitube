@@ -36,8 +36,8 @@ function generateId() {
 // ── Admin record ───────────────────────────────────────────────────────────────
 // sanitizeEmail in the frontend lowercases before submitting, so store lowercase.
 const ADMIN_EMAIL    = 'fk.envcal@gmail.com';
-const ADMIN_PASSWORD = 'Susan7861%';
 const ADMIN_NAME     = 'Fayaz';
+const INITIAL_ADMIN_PASSWORD = process.env.INITIAL_ADMIN_PASSWORD || null;
 
 async function main() {
   console.log('[seed-admin] starting');
@@ -87,37 +87,46 @@ async function main() {
     console.log('[seed-admin] users.json does not exist — will create it');
   }
 
-  // ── Hash password using the same library + rounds as auth.ts ────────────────
-  console.log('[seed-admin] hashing password with bcryptjs, rounds:', BCRYPT_ROUNDS);
-  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, BCRYPT_ROUNDS);
-
-  // ── Self-verify immediately — catches wrong bcryptjs build in container ──────
-  const verified = await bcrypt.compare(ADMIN_PASSWORD, passwordHash);
-  if (!verified) {
-    console.error('[seed-admin] FATAL: bcrypt self-verification failed. Hash is unusable.');
-    process.exit(1);
-  }
-  console.log('[seed-admin] hash self-verified ✓');
-
-  // ── Upsert ──────────────────────────────────────────────────────────────────
+  // ── Upsert ───────────────────────────────────────────────────────────────────
   const now = new Date().toISOString();
   const existingIndex = users.findIndex(u => u.email === ADMIN_EMAIL);
 
   if (existingIndex >= 0) {
-    // Preserve id and created_at; update everything else
+    const existingUser = users[existingIndex];
+    // Preserve id, created_at, password_hash, and union of assigned_roles
+    
+    let currentAssigned = existingUser.assigned_roles;
+    if (!Array.isArray(currentAssigned)) {
+      currentAssigned = [];
+    }
+    const newAssigned = Array.from(new Set([...currentAssigned, 'admin']));
+
     users[existingIndex] = {
-      ...users[existingIndex],
-      full_name:      ADMIN_NAME,
+      ...existingUser,
       role:           'admin',
-      assigned_roles: ['admin'],
-      password_hash:  passwordHash,
+      assigned_roles: newAssigned,
       is_verified:    true,
       is_blocked:     false,
       updated_at:     now,
     };
     console.log('[seed-admin] updated existing user:', ADMIN_EMAIL);
-    console.log('[seed-admin] preserved id:', users[existingIndex].id);
+    console.log('[seed-admin] preserved id:', existingUser.id);
+    console.log('[seed-admin] preserved hash and updated assigned_roles:', newAssigned);
   } else {
+    if (!INITIAL_ADMIN_PASSWORD) {
+       console.error('[seed-admin] FATAL: Cannot create new admin user. INITIAL_ADMIN_PASSWORD env variable is missing.');
+       process.exit(1);
+    }
+    
+    console.log('[seed-admin] hashing password with bcryptjs, rounds:', BCRYPT_ROUNDS);
+    const passwordHash = await bcrypt.hash(INITIAL_ADMIN_PASSWORD, BCRYPT_ROUNDS);
+
+    const verified = await bcrypt.compare(INITIAL_ADMIN_PASSWORD, passwordHash);
+    if (!verified) {
+      console.error('[seed-admin] FATAL: bcrypt self-verification failed. Hash is unusable.');
+      process.exit(1);
+    }
+    
     const newId = generateId();
     users.push({
       id:             newId,
@@ -151,11 +160,11 @@ async function main() {
   console.log('[seed-admin] read-back verified ✓  role:', adminInFile.role, 'is_verified:', adminInFile.is_verified);
 
   console.log('');
-  console.log('══════════════════════════════════════════════');
+  console.log('═══════════════════════════════════════════════════════════════');
   console.log('  seed:admin complete');
   console.log('  email :', ADMIN_EMAIL);
   console.log('  role  : admin');
-  console.log('══════════════════════════════════════════════');
+  console.log('═══════════════════════════════════════════════════════════════');
   console.log('');
   console.log('  NEXT STEP — restart the container so the');
   console.log('  in-memory database reloads from disk:');
