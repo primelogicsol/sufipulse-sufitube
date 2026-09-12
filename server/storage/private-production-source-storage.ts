@@ -136,6 +136,11 @@ const persist = (store: PrivateProductionSourceFile) => {
 };
 
 export const privateProductionSourceStorage = {
+  listAll(): PrivateProductionSourceRecord[] {
+    const store = load();
+    return Object.values(store.releases);
+  },
+
   get(releaseId: string): PrivateProductionSourceRecord | null {
     const store = load();
     return store.releases[releaseId] || null;

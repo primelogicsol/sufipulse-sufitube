@@ -1497,6 +1497,23 @@ export default function EditReleasePage() {
             updatePublicCredits={updatePublicCredits}
           />
 
+          {/* Private Production Sources */}
+          <div id="production-sources-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Private Production Sources</h2>
+                {!isNew && (
+                  <Link href={`/admin/cms-releases/${params.id}/production-sources`} className="text-xs mt-0.5 inline-block hover:underline" style={{ color: 'var(--dash-accent)' }}>
+                    Manage Production Sources & Assembly →
+                  </Link>
+                )}
+              </div>
+            </div>
+            <p className="text-sm" style={{ color: 'var(--dash-text-muted)' }}>
+              Configure private sources, test connection, and assemble the Part 1 Master Timing.
+            </p>
+          </div>
+
           {/* Structured Lyrics */}
           <div id="lyrics-structure-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">

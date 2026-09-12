@@ -83,7 +83,7 @@ const formatSeconds = (value: number) => {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
 };
 
-export default function PrivateAudioAssemblyPage() {
+export default function ProductionSourcesPage() {
   const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -140,7 +140,7 @@ export default function PrivateAudioAssemblyPage() {
       setConfirmApply(false);
       setCompiled(data.compiled || null);
     } catch (err: any) {
-      setError(String(err?.message || err || 'Failed to load private audio assembly.'));
+      setError(String(err?.message || err || 'Failed to load Private Production Sources.'));
     } finally {
       setLoading(false);
     }
@@ -310,10 +310,10 @@ export default function PrivateAudioAssemblyPage() {
       <div className="mx-auto max-w-7xl space-y-6 px-6 py-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <Link href={`/admin/cms-releases/${releaseId}/audio-alignment`} className="mb-3 inline-flex items-center gap-2 text-sm text-white/60 hover:text-white">
-              <ArrowLeft className="h-4 w-4" /> Back to alignment
+            <Link href={`/admin/cms-releases/${releaseId}`} className="mb-3 inline-flex items-center gap-2 text-sm text-white/60 hover:text-white">
+              <ArrowLeft className="h-4 w-4" /> Back to Release
             </Link>
-            <h1 className="text-2xl font-semibold text-white">Private Production Assembly</h1>
+            <h1 className="text-2xl font-semibold text-white">Private Production Sources & Assembly</h1>
             <p className="mt-1 text-sm text-white/60">{releaseTitle}</p>
           </div>
           <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
