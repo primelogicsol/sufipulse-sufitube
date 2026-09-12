@@ -1,0 +1,16 @@
+{
+  "project": "SufiPulse",
+  "version": "3.0.0-pro",
+  "deployment": {
+    "sha": "e3a83bd0040f45417b48981370f0c2a1a5c3fbde",
+    "timestamp": "2026-09-12T12:55:00Z",
+    "status": "BUILDING"
+  },
+  "features": {
+    "private_production": "integrated",
+    "premiere_room": "integrated",
+    "youtube_oauth": "integrated",
+    "google_ads": "integrated",
+    "ahl_e_naghma": "integrated"
+  }
+}
