@@ -1495,6 +1495,7 @@ export default function EditReleasePage() {
           <ReleaseCreditsSection
             form={form}
             updatePublicCredits={updatePublicCredits}
+            setForm={setForm}
           />
 
           {/* Private Production Sources */}

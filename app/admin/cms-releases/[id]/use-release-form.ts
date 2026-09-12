@@ -10,6 +10,7 @@ import {
   ALL_LANGUAGES,
   DEFAULT_STYLE_NAME,
   DEFAULT_STYLE_PACK,
+  DEFAULT_STUDIO_WRITER_ID,
 } from './release-constants';
 import {
   cueTimeToSeconds,
@@ -81,6 +82,8 @@ export function useReleaseForm({
     youtubeChannelId: '',
     youtubeChannelUrl: '',
     description: '',
+    writer: DEFAULT_STUDIO_WRITER_ID,
+    lyricist: DEFAULT_STUDIO_WRITER_ID,
     releaseDate: new Date().toISOString().split('T')[0],
     durationSeconds: 0,
     durationFormatted: '0:00',

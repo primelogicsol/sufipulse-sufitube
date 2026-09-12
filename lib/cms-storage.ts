@@ -104,8 +104,9 @@ export interface CMSRelease {
   distribution?: Record<string, PlatformDistribution>;
   
   // Credits
-  writer?: { name: string; nameUrdu?: string };
-  vocalist?: { name: string; nameUrdu?: string };
+  writer?: string | { name: string; nameUrdu?: string };
+  lyricist?: string;
+  vocalist?: string | { name: string; nameUrdu?: string };
   chorusVocalists?: string[];
   producer?: { name: string };
   

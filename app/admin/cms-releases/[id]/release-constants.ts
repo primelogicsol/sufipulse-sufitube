@@ -92,3 +92,6 @@ export const DEFAULT_STYLE_PACK: ASSStylePack = {
   marginV: 28,
   maxWidthPercent: 82,
 };
+
+// Configurable default for new studio releases
+export const DEFAULT_STUDIO_WRITER_ID = process.env.NEXT_PUBLIC_DEFAULT_STUDIO_WRITER_ID || 'writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9';
