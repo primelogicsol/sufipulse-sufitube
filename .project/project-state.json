@@ -2,9 +2,19 @@
   "project": "SufiPulse",
   "version": "3.0.0-pro",
   "deployment": {
-    "sha": "e3a83bd0040f45417b48981370f0c2a1a5c3fbde",
-    "timestamp": "2026-09-12T12:55:00Z",
-    "status": "BUILDING"
+    "sha": "7331ad67a837c357e32d140be5a45c726bfc1b2e",
+    "timestamp": "2026-09-12T13:00:00Z",
+    "status": "DEPLOYED / LIVE VERIFIED",
+    "artifact": {
+      "image_tag": "sha-7331ad6",
+      "oci_digest": "sha256:4a1c52d43e5c7a4b0870f7e4f1a2345bd30d8905b9cdbbaf04b680798319f6a5",
+      "labels": {
+        "org.opencontainers.image.revision": "7331ad67a837c357e32d140be5a45c726bfc1b2e",
+        "org.opencontainers.image.source": "https://github.com/primelogicsol/sufipulse-sufitube",
+        "org.opencontainers.image.version": "3.0.0-pro",
+        "org.opencontainers.image.created": "2026-09-12T13:00:00Z"
+      }
+    }
   },
   "features": {
     "private_production": "integrated",
@@ -12,5 +22,10 @@
     "youtube_oauth": "integrated",
     "google_ads": "integrated",
     "ahl_e_naghma": "integrated"
+  },
+  "live_verification": {
+    "status": "PASS",
+    "routes": ["/", "/releases", "/release-premieres", "/release-detail"],
+    "systems": ["Premiere thumbnail", "YouTube Analytics", "Google Ads Operations", "Writer Registry", "Vocalist Registry", "Ahl-e-Naghma", "CMS release editing"]
   }
 }
