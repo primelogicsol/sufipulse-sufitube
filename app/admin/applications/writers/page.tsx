@@ -172,6 +172,30 @@ export default function WriterEditorialReviewQueue() {
         );
     }
 
+    const isDrZarf = selectedApp?.id === 'writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9';
+    const legacyBaseline = isDrZarf 
+        ? { total: 120, draft: 120, review: 105, approved: 94, released: 94 }
+        : { total: 0, draft: 0, review: 0, approved: 0, released: 0 };
+
+    const uniqueKalams = Array.from(new Map(writerKalams.map(k => [k.id, k])).values());
+    const postBaselineKalams = uniqueKalams.filter((k: any) => !k.is_legacy_backfill);
+
+    const liveCounts = {
+        total: postBaselineKalams.length,
+        draft: postBaselineKalams.length, // Any existing work implies at least draft
+        review: postBaselineKalams.filter(k => ['editorial_review', 'approved', 'released'].includes(k.status)).length,
+        approved: postBaselineKalams.filter(k => ['approved', 'released'].includes(k.status)).length,
+        released: postBaselineKalams.filter(k => k.status === 'released').length,
+    };
+
+    const finalCounts = {
+        total: legacyBaseline.total + liveCounts.total,
+        draft: legacyBaseline.draft + liveCounts.draft,
+        review: legacyBaseline.review + liveCounts.review,
+        approved: legacyBaseline.approved + liveCounts.approved,
+        released: legacyBaseline.released + liveCounts.released,
+    };
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
@@ -451,24 +475,24 @@ export default function WriterEditorialReviewQueue() {
                                                             <StickyNote className="w-4 h-4 text-emerald-400" />
                                                             Works / Kalam
                                                         </h3>
-                                                        <span className="text-xs text-neutral-500 font-mono">Total: {writerKalams.length}</span>
+                                                        <span className="text-xs text-neutral-500 font-mono">Total: {finalCounts.total}</span>
                                                     </div>
                                                     <div className="space-y-2 mb-6 p-4 bg-neutral-900/30 border border-neutral-800/50 rounded-lg font-mono">
                                                         <div className="flex justify-between items-center">
                                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">DRAFT</span>
-                                                            <span className="text-sm font-bold text-slate-300">{writerKalams.filter(k => k.status === 'draft').length}</span>
+                                                            <span className="text-sm font-bold text-slate-300">{finalCounts.draft}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center">
                                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">REVIEW</span>
-                                                            <span className="text-sm font-bold text-amber-400/90">{writerKalams.filter(k => k.status === 'editorial_review').length}</span>
+                                                            <span className="text-sm font-bold text-amber-400/90">{finalCounts.review}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center">
                                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">APPROVED</span>
-                                                            <span className="text-sm font-bold text-emerald-400/90">{writerKalams.filter(k => k.status === 'approved').length}</span>
+                                                            <span className="text-sm font-bold text-emerald-400/90">{finalCounts.approved}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center">
                                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">RELEASED</span>
-                                                            <span className="text-sm font-bold text-blue-400/90">{writerKalams.filter(k => k.status === 'released').length}</span>
+                                                            <span className="text-sm font-bold text-blue-400/90">{finalCounts.released}</span>
                                                         </div>
                                                     </div>
                                                     {writerKalams.length > 0 ? (
@@ -609,7 +633,7 @@ export default function WriterEditorialReviewQueue() {
                                                         </div>
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
                                                             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Works Count</p>
-                                                            <p className="text-xs text-slate-100 font-bold">{writerKalams.length}</p>
+                                                            <p className="text-xs text-slate-100 font-bold">{finalCounts.total}</p>
                                                         </div>
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
                                                             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Release Linkage</p>
