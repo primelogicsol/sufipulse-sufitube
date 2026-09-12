@@ -248,15 +248,15 @@ export interface YouTubeStudioLifetimeFunnel {
 const LIFETIME_FUNNEL_FILE = path.join(DATA_DIR, 'youtube-studio-lifetime-funnel.json');
 
 export const DEFAULT_LIFETIME_FUNNEL: YouTubeStudioLifetimeFunnel = {
-  period: 'May 20, 2025 – Aug 26, 2026 (464 days)',
-  impressions: 986800,
-  recommendationPercentage: 86.4,
+  period: 'May 20, 2025 – Sep 11, 2026 (480 days)',
+  impressions: 994300,
+  recommendationPercentage: 86.2,
   ctr: 8.4,
-  engagedViews: 82900,
+  engagedViews: 83000,
   avgViewDurationFormatted: '6:19',
   avgViewDurationSecs: 379,
   watchTimeHours: 8700,
-  updatedAt: new Date().toISOString(),
+  updatedAt: '2026-09-11T12:00:00.000Z',
 };
 
 export function getYouTubeStudioLifetimeFunnel(): YouTubeStudioLifetimeFunnel {

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { saveYTAnalyticsToken, normalizeYTAnalyticsCredential } from '@/app/lib/server/youtube-analytics-oauth-store';
 
 const OAUTH_STATE_COOKIE = 'sufipulse_yt_oauth_state';
+const CANONICAL_CHANNEL_ID = 'UCraDr3i5A3k0j7typ6tOOsQ';
 
 function statesMatch(expected: string | undefined, received: string | null): boolean {
   if (!expected || !received) return false;
@@ -70,6 +71,23 @@ export async function GET(request: NextRequest) {
     }
     if (!tokens.refresh_token) {
       throw new Error('No refresh token returned — reconnect with consent to grant offline read-only access.');
+    }
+
+    // CANONICAL CHANNEL VERIFICATION
+    const testAnalyticsUrl = new URL('https://youtubeanalytics.googleapis.com/v2/reports');
+    testAnalyticsUrl.searchParams.set('ids', `channel==${CANONICAL_CHANNEL_ID}`);
+    testAnalyticsUrl.searchParams.set('startDate', '2020-01-01');
+    const endDate = new Date().toISOString().split('T')[0];
+    testAnalyticsUrl.searchParams.set('endDate', endDate);
+    testAnalyticsUrl.searchParams.set('metrics', 'views');
+    
+    const verificationRes = await fetch(testAnalyticsUrl.toString(), {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+      cache: 'no-store'
+    });
+
+    if (!verificationRes.ok) {
+      throw new Error('Authorized account does not have Analytics access to the canonical SufiPulse USA channel. Please log in with the correct Brand Account manager/owner.');
     }
 
     await saveYTAnalyticsToken({

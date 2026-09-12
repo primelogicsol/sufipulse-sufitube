@@ -83,22 +83,25 @@ export default function YouTubeAnalyticsPage() {
   const [studioImporting, setStudioImporting] = useState(false);
   const [studioSummary, setStudioSummary] = useState<{ rowCount: number; importedAt: string; fileName: string } | null>(null);
 
+  
+  const [health, setHealth] = useState<any>(null);
+  
   const checkStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/youtube-analytics/status', { cache: 'no-store' });
+      const res = await fetch('/api/admin/youtube-analytics/health', { cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
-        setConnected(Boolean(json.connected));
-        setReconnectRequired(Boolean(json.reconnectRequired));
+        setHealth(json);
+        setConnected(json.oauth === 'CONNECTED');
+        setReconnectRequired(json.oauth === 'REAUTH_REQUIRED');
       } else {
         setConnected(false);
-        setReconnectRequired(false);
       }
     } catch {
       setConnected(false);
-      setReconnectRequired(false);
     }
   }, []);
+  
 
   const loadStudioStatus = useCallback(async () => {
     try {
@@ -265,22 +268,40 @@ export default function YouTubeAnalyticsPage() {
               </button>
             )}
 
-            {(connected === false || reconnectRequired) && (
-              <button
-                onClick={handleConnect}
-                disabled={connecting}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors disabled:opacity-50"
-              >
-                {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-                {reconnectRequired ? 'Reconnect YouTube' : 'Connect YouTube Analytics'}
-              </button>
+            
+            {health && (
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+                <span className={`px-2 py-1 rounded border ${health.oauth === 'CONNECTED' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>OAuth: {health.oauth}</span>
+                <span className={`px-2 py-1 rounded border ${health.dataApi === 'READY' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>Data API: {health.dataApi}</span>
+                <span className={`px-2 py-1 rounded border ${health.analyticsApi === 'READY' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>Analytics API: {health.analyticsApi}</span>
+                <span className={`px-2 py-1 rounded border ${health.captionApi === 'READY' ? 'bg-green-500/10 border-green-500/30 text-green-400' : health.captionApi === 'AUTHORIZATION_REQUIRED' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>Caption API: {health.captionApi || 'AUTHORIZATION_REQUIRED'}</span>
+                <span className="px-2 py-1 rounded border bg-sky-500/10 border-sky-500/30 text-sky-400">Channel: SufiPulse USA</span>
+                {health.lastError && (
+                  <span className="px-2 py-1 rounded border bg-red-500/10 border-red-500/30 text-red-400 truncate max-w-xs">{health.lastError}</span>
+                )}
+                
+                {(health.oauth === 'REAUTH_REQUIRED' || health.oauth === 'ERROR') && (
+                  <button onClick={handleConnect} disabled={connecting} className="ml-2 flex items-center gap-2 px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors disabled:opacity-50">
+                    {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link2 className="w-3 h-3" />}
+                    {health.oauth === 'REAUTH_REQUIRED' ? 'Reconnect Google Account' : 'Connect YouTube OAuth'}
+                  </button>
+                )}
+                
+                {health.captionApi === 'AUTHORIZATION_REQUIRED' && (
+                  <button onClick={handleConnect} disabled={connecting} className="ml-2 flex items-center gap-2 px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors disabled:opacity-50">
+                    {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link2 className="w-3 h-3" />}
+                    Authorize Caption Management
+                  </button>
+                )}
+              </div>
             )}
+  
 
             {connected === true && !reconnectRequired && (
               <span className="flex items-center gap-1.5 px-3 py-2 text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                Read-only OAuth
-              </span>
+            {health?.captionApi === 'READY' ? 'OAuth: Analytics + Captions' : 'OAuth: Analytics + Read'}
+          </span>
             )}
           </div>
         </div>
@@ -312,138 +333,145 @@ export default function YouTubeAnalyticsPage() {
 
         {(connected === true || studioSummary) && (
           <>
-            {/* ── ROW 1: 4 Primary KPI Cards ─────────────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* 1. Total Views */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Eye className="w-5 h-5 text-blue-400" />
-                    <SourceBadge source={summary?.metricSources?.views ?? (dataSource === 'studio_csv' ? 'studio_csv' : data.length > 0 ? 'youtube_analytics_api' : 'unavailable')} />
-                  </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(totalViews)}</div>
-                </div>
-                <div className="text-xs text-neutral-500 mt-2">Total views in selected API window</div>
+            {/* ── SECTION 1: LIVE CHANNEL PERFORMANCE ────────────────────── */}
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white tracking-wide uppercase">Live Channel Performance</h2>
+                <SourceBadge source="youtube_analytics_api" />
               </div>
-
-              {/* 2. Total Impressions (Studio CSV & Lifetime) */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Layers className="w-5 h-5 text-sky-400" />
-                    <SourceBadge source={summary?.metricSources?.impressions ?? (summary?.impressions ? 'studio_csv' : 'unavailable')} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Eye className="w-5 h-5 text-blue-400" />
+                      <SourceBadge source={summary?.metricSources?.views ?? (dataSource === 'studio_csv' ? 'studio_csv' : data.length > 0 ? 'youtube_analytics_api' : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(totalViews)}</div>
                   </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(summary?.impressions)}</div>
+                  <div className="text-xs text-neutral-500 mt-2">Total Views</div>
                 </div>
-                <div className="text-xs text-neutral-500 mt-2">Thumbnail impressions in selected API window</div>
-              </div>
 
-              {/* 3. Average CTR */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Target className="w-5 h-5 text-emerald-400" />
-                    <SourceBadge source={summary?.metricSources?.impressionsCtr ?? (summary?.impressionsCtr !== null ? 'studio_csv' : 'unavailable')} />
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Clock className="w-5 h-5 text-purple-400" />
+                      <SourceBadge source={summary?.metricSources?.watchTimeHours ?? (dataSource === 'studio_csv' ? 'studio_csv' : totalWatchHours !== null ? 'youtube_analytics_api' : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">
+                      {totalWatchHours !== null ? `${fmt(totalWatchHours)}h` : '—'}
+                    </div>
                   </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">
-                    {summary?.impressionsCtr !== null && summary?.impressionsCtr !== undefined ? `${summary.impressionsCtr.toFixed(2)}%` : '—'}
-                  </div>
+                  <div className="text-xs text-neutral-500 mt-2">Total Watch Time</div>
                 </div>
-                <div className="text-xs text-neutral-500 mt-2">Impression click-through rate</div>
-              </div>
 
-              {/* 4. Total Subscribers */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Users className="w-5 h-5 text-indigo-400" />
-                    <SourceBadge source={summary?.metricSources?.subscribers ?? (summary?.subscribers !== null ? 'youtube_data_api' : 'unavailable')} />
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Timer className="w-5 h-5 text-amber-400" />
+                      <SourceBadge source={summary?.metricSources?.averageViewDurationSeconds ?? (dataSource === 'studio_csv' ? 'studio_csv' : weightedAvgDuration !== null ? 'youtube_analytics_api' : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmtDuration(weightedAvgDuration)}</div>
                   </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(summary?.subscribers)}</div>
+                  <div className="text-xs text-neutral-500 mt-2">Overall Avg View Duration</div>
                 </div>
-                <div className="text-xs text-neutral-500 mt-2">Current channel subscribers</div>
+
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Activity className="w-5 h-5 text-teal-400" />
+                      <SourceBadge source={summary?.metricSources?.averageViewPercentage ?? (summary?.averageViewPercentage !== null ? 'youtube_analytics_api' : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">
+                      {summary?.averageViewPercentage !== null && summary?.averageViewPercentage !== undefined
+                        ? `${summary.averageViewPercentage.toFixed(1)}%`
+                        : '—'}
+                    </div>
+                  </div>
+                  <div className="text-xs text-neutral-500 mt-2">Avg Percentage Viewed</div>
+                </div>
+
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Users className="w-5 h-5 text-indigo-400" />
+                      <SourceBadge source={summary?.metricSources?.subscribers ?? (summary?.subscribers !== null ? 'youtube_data_api' : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(summary?.subscribers)}</div>
+                  </div>
+                  <div className="text-xs text-neutral-500 mt-2">Subscribers</div>
+                </div>
+
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Video className="w-5 h-5 text-rose-400" />
+                      <SourceBadge source={summary?.metricSources?.totalVideos ?? (totalVideosDisplay !== null ? (dataSource === 'studio_csv' ? 'studio_csv' : 'youtube_data_api') : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(totalVideosDisplay)}</div>
+                  </div>
+                  <div className="text-xs text-neutral-500 mt-2">Videos</div>
+                </div>
               </div>
             </div>
 
-            {/* ── ROW 2: 4 Primary KPI Cards ─────────────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* 5. Watch Time */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Clock className="w-5 h-5 text-purple-400" />
-                    <SourceBadge source={summary?.metricSources?.watchTimeHours ?? (dataSource === 'studio_csv' ? 'studio_csv' : totalWatchHours !== null ? 'youtube_analytics_api' : 'unavailable')} />
-                  </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">
-                    {totalWatchHours !== null ? `${fmt(totalWatchHours)}h` : '—'}
-                  </div>
-                </div>
-                <div className="text-xs text-neutral-500 mt-2">Watch time</div>
+            {/* ── SECTION 2: SELECTED PERIOD STUDIO SNAPSHOT ───────────────── */}
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white tracking-wide uppercase">Selected Period Studio Snapshot</h2>
+                <SourceBadge source="studio_csv" />
               </div>
-
-              {/* 6. Average View Duration */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Timer className="w-5 h-5 text-amber-400" />
-                    <SourceBadge source={summary?.metricSources?.averageViewDurationSeconds ?? (dataSource === 'studio_csv' ? 'studio_csv' : weightedAvgDuration !== null ? 'youtube_analytics_api' : 'unavailable')} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:w-2/3">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Layers className="w-5 h-5 text-sky-400" />
+                      <SourceBadge source={summary?.metricSources?.impressions ?? (summary?.impressions ? 'studio_csv' : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(summary?.impressions)}</div>
                   </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmtDuration(weightedAvgDuration)}</div>
+                  <div className="text-xs text-neutral-500 mt-2">Impressions</div>
                 </div>
-                <div className="text-xs text-neutral-500 mt-2">Weighted average view duration</div>
-              </div>
 
-              {/* 7. Average Retention */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Activity className="w-5 h-5 text-teal-400" />
-                    <SourceBadge source={summary?.metricSources?.averageViewPercentage ?? (summary?.averageViewPercentage !== null ? 'youtube_analytics_api' : 'unavailable')} />
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Target className="w-5 h-5 text-emerald-400" />
+                      <SourceBadge source={summary?.metricSources?.impressionsCtr ?? (summary?.impressionsCtr !== null ? 'studio_csv' : 'unavailable')} />
+                    </div>
+                    <div className="text-2xl font-bold text-neutral-100 tabular-nums">
+                      {summary?.impressionsCtr !== null && summary?.impressionsCtr !== undefined ? `${summary.impressionsCtr.toFixed(2)}%` : '—'}
+                    </div>
                   </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">
-                    {summary?.averageViewPercentage !== null && summary?.averageViewPercentage !== undefined
-                      ? `${summary.averageViewPercentage.toFixed(1)}%`
-                      : '—'}
-                  </div>
+                  <div className="text-xs text-neutral-500 mt-2">CTR</div>
                 </div>
-                <div className="text-xs text-neutral-500 mt-2">Average percentage viewed</div>
-              </div>
-
-              {/* 8. Total Videos */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Video className="w-5 h-5 text-rose-400" />
-                    <SourceBadge source={summary?.metricSources?.totalVideos ?? (totalVideosDisplay !== null ? (dataSource === 'studio_csv' ? 'studio_csv' : 'youtube_data_api') : 'unavailable')} />
-                  </div>
-                  <div className="text-2xl font-bold text-neutral-100 tabular-nums">{fmt(totalVideosDisplay)}</div>
-                </div>
-                <div className="text-xs text-neutral-500 mt-2">Total channel videos</div>
               </div>
             </div>
 
             {/* ── YOUTUBE STUDIO LIFETIME IMPRESSIONS & WATCH TIME FUNNEL ────────── */}
             {lifetimeFunnel && (
-              <div className="bg-gradient-to-br from-neutral-900 via-neutral-900 to-purple-950/30 border border-purple-500/20 rounded-xl p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="bg-gradient-to-br from-neutral-900 via-neutral-900 to-purple-950/30 border border-purple-500/20 rounded-xl p-6 space-y-6">
+                <div className="space-y-4">
                   <div className="flex items-center gap-2.5 text-purple-200">
-                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <Sparkles className="w-5 h-5 text-purple-400" />
                     <h2 className="text-sm font-semibold tracking-wide uppercase text-neutral-200">
-                      Lifetime Impressions & How They Led to Watch Time
+                      YouTube Impressions Funnel
                     </h2>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-neutral-500">{lifetimeFunnel.period}</span>
-                    <SourceBadge source="studio_lifetime" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">YouTube Studio Snapshot</p>
+                    <p className="text-[11px] text-neutral-500">{lifetimeFunnel.period}</p>
+                    <div className="pt-2 pb-1">
+                      <SourceBadge source="studio_lifetime" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {/* Step 1: Impressions */}
                   <div className="bg-neutral-950/60 border border-neutral-800 rounded-lg p-3.5 space-y-1">
                     <div className="text-[11px] font-medium text-neutral-400">Thumbnail impressions</div>
                     <div className="text-xl font-bold text-purple-300 tabular-nums">{fmt(lifetimeFunnel.impressions)}</div>
-                    <div className="text-[10px] text-purple-400/80">{lifetimeFunnel.recommendationPercentage}% from recommendations</div>
+                    <div className="text-[10px] text-purple-400/80">{lifetimeFunnel.recommendationPercentage}% from YouTube recommendations</div>
                   </div>
 
                   {/* Step 2: CTR */}
@@ -464,15 +492,18 @@ export default function YouTubeAnalyticsPage() {
                   <div className="bg-neutral-950/60 border border-neutral-800 rounded-lg p-3.5 space-y-1">
                     <div className="text-[11px] font-medium text-neutral-400">Avg view duration</div>
                     <div className="text-xl font-bold text-amber-300 tabular-nums">{lifetimeFunnel.avgViewDurationFormatted}</div>
-                    <div className="text-[10px] text-neutral-500">Per view retention</div>
+                    <div className="text-[10px] text-neutral-500">From impression-derived views</div>
                   </div>
 
-                  {/* Step 5: Watch time */}
+                                    {/* Step 5: Watch time */}
                   <div className="col-span-2 md:col-span-1 bg-neutral-950/60 border border-neutral-800 rounded-lg p-3.5 space-y-1">
                     <div className="text-[11px] font-medium text-neutral-400">Watch time</div>
                     <div className="text-xl font-bold text-teal-300 tabular-nums">{fmt(lifetimeFunnel.watchTimeHours)}h</div>
                     <div className="text-[10px] text-teal-400/80">From impressions</div>
                   </div>
+                </div>
+                <div className="pt-2 text-right">
+                  <span className="text-[9px] text-neutral-600 uppercase tracking-widest">Last imported: Sep 11, 2026</span>
                 </div>
               </div>
             )}

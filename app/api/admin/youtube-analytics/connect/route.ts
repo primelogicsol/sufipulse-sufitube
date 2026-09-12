@@ -6,6 +6,7 @@ import { requireAdmin } from '@/server/middleware/authenticate';
 const SCOPES = [
   'https://www.googleapis.com/auth/yt-analytics.readonly',
   'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/youtube.force-ssl',
 ];
 
 const OAUTH_STATE_COOKIE = 'sufipulse_yt_oauth_state';
