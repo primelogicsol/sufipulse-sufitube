@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { PageContainer } from '@/app/components/layout/PageContainer';
 import { getReleaseStorageBackend, getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease, toPublicPremiereRelease } from '@/server/storage/release-dto';
+import { HeroCTAGroup } from '@/app/components/ui/HeroCTAGroup';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
-import { FeaturedPremiere } from './components/FeaturedPremiere';
+import { PremiereReleaseCard } from '@/app/components/releases/PremiereReleaseCard';
 import { UpcomingPremiereCard } from './components/UpcomingPremiereCard';
 
 export const metadata = {
@@ -147,14 +148,11 @@ export default async function ReleasePremieresPage() {
                 Discover forthcoming SufiPulse works before their official release. Experience governed premium teasers, scheduled premieres, and first-listen previews from SufiPulse Studio USA.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <a href="#premieres-content" className="px-8 py-4 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm hover:bg-[#FDE68A] transition-all rounded-full shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:-translate-y-0.5">EXPLORE PREMIERES</a>
-                <Link
-                  href="/governance"
-                  className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-sm hover:bg-white/10 transition-all rounded-full backdrop-blur-sm"
-                >
-                  PREMIERE GOVERNANCE
-                </Link>
+              <div className="mb-14">
+                <HeroCTAGroup 
+                  primary={{ label: "EXPLORE PREMIERES", href: "#premieres-content" }}
+                  secondary={{ label: "PREMIERE GOVERNANCE", href: "/governance" }}
+                />
               </div>
             </div>
           </PageContainer>
@@ -197,7 +195,7 @@ export default async function ReleasePremieresPage() {
               <>
                 {/* Featured Upcoming Release */}
                 {featured && (
-                  <FeaturedPremiere release={featured} />
+                  <PremiereReleaseCard release={featured} variant="full" />
                 )}
 
                 {/* Upcoming Releases Grid */}

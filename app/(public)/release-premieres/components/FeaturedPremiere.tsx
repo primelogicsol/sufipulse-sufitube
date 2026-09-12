@@ -9,7 +9,7 @@ import { Share2, Bell, Play, ExternalLink, Mic2, FileText, BookOpen, Users, Star
 import { NotifyMeModal } from './NotifyMeModal';
 import { PremiumTeaserModal } from './PremiumTeaserModal';
 
-// â”€â”€â”€ Phase determination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Phase determination ───────────────────────────────────────────────────────
 //
 // Phase 1 (EDITORIAL)      lifecycle=upcoming | no youtubeId
 // Phase 2 (PREMIERE LIVE)  lifecycle=premiere_scheduled | youtubeId present
@@ -28,7 +28,7 @@ function derivePhase(release: any): Phase {
   return 'editorial';
 }
 
-// â”€â”€â”€ Background â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Background ───────────────────────────────────────────────────────────────
 function Background({ artworkUrl }: { artworkUrl: string | null }) {
   return (
     <div className="absolute inset-0 z-0">
@@ -60,7 +60,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-// â”€â”€â”€ Pill asset list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Pill asset list ──────────────────────────────────────────────────────────
 const PREMIERE_ASSETS = [
   { icon: <Play className="w-3 h-3" />, label: 'Premium Teaser' },
   { icon: <Mic2 className="w-3 h-3" />, label: 'Mystical Commentary & Insights' },
@@ -77,7 +77,7 @@ const RELEASE_ASSETS = [
   { icon: <Star className="w-3 h-3" />, label: 'Sponsors & Acknowledgements' },
 ];
 
-// â”€â”€â”€ Phase 1: Editorial â€” no YouTube ID required â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Phase 1: Editorial — no YouTube ID required ──────────────────────────────
 function EditorialCard({ release, title, tagline, introduction, liveTeaser, onNotify, onTeaser, onShare }: {
   release: any; title: string; tagline: string | null; introduction: string;
   liveTeaser: any; onNotify: () => void; onTeaser: () => void; onShare: () => void;
@@ -95,7 +95,7 @@ function EditorialCard({ release, title, tagline, introduction, liveTeaser, onNo
             {liveTeaser ? 'Premium Teaser Live' : 'Upcoming'}
           </span>
           <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
-            The Premiere Room &nbsp;Â·&nbsp; SufiPulse Studio USA
+            The Premiere Room &nbsp;·&nbsp; SufiPulse Studio USA
           </span>
         </div>
 
@@ -202,7 +202,7 @@ function EditorialCard({ release, title, tagline, introduction, liveTeaser, onNo
   );
 }
 
-// â”€â”€â”€ Phase 2: Premiere Live â€” YouTube + premiere_scheduled â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Phase 2: Premiere Live — YouTube + premiere_scheduled ────────────────────
 function PremiereLiveCard({ release, title, tagline, introduction, onShare }: {
   release: any; title: string; tagline: string | null; introduction: string; onShare: () => void;
 }) {
@@ -267,7 +267,7 @@ function PremiereLiveCard({ release, title, tagline, introduction, onShare }: {
   );
 }
 
-// â”€â”€â”€ Phase 3: Released â€” full video + rich content inventory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Phase 3: Released — full video + rich content inventory ──────────────────
 function ReleasedCard({ release, title, tagline, introduction, onShare }: {
   release: any; title: string; tagline: string | null; introduction: string; onShare: () => void;
 }) {
@@ -340,7 +340,7 @@ function ReleasedCard({ release, title, tagline, introduction, onShare }: {
   );
 }
 
-// â”€â”€â”€ Root export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Root export ──────────────────────────────────────────────────────────────
 export function FeaturedPremiere({ release }: { release: any }) {
   const [showShare, setShowShare] = useState(false);
   const [showNotify, setShowNotify] = useState(false);

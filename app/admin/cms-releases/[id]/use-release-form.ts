@@ -531,7 +531,7 @@ export function useReleaseForm({
 
   const loadRelease = async () => {
     try {
-      const res = await fetch(`/api/releases/${releaseId}`);
+      const res = await fetch(`/api/releases/${releaseId}`, { cache: 'no-store' });
       if (res.status === 404) { setNotFound(true); return; }
       if (res.ok) {
         const data = await res.json();
