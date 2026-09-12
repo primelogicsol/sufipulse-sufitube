@@ -116,8 +116,9 @@ export default function WriterEditorialReviewQueue() {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
             app.pen_name?.toLowerCase().includes(query) ||
-            app.email.toLowerCase().includes(query) ||
+            app.email?.toLowerCase().includes(query) ||
             app.full_name?.toLowerCase().includes(query) ||
+            app.public_name?.toLowerCase().includes(query) ||
             getReferenceId(app).toLowerCase().includes(query);
 
         const matchesFilter = filter === 'all' || (app.profile_status || 'pending') === filter;
@@ -268,7 +269,7 @@ export default function WriterEditorialReviewQueue() {
                                                         }}
                                                         className="dashboard-btn-secondary py-1 text-xs"
                                                     >
-                                                        Review
+                                                        {app.profile_status === 'approved_as_writer' ? 'View Profile' : 'Review'}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -280,7 +281,7 @@ export default function WriterEditorialReviewQueue() {
                     )}
                 </div>
 
-                {/* Detail View Modal */}
+                {/* Profile Detail Modal */}
                 {selectedApp && (
                     <div className="dashboard-modal-overlay" onClick={() => !processingAction && setSelectedApp(null)}>
                         <div className="dashboard-modal max-w-5xl" onClick={(e) => e.stopPropagation()}>
@@ -291,7 +292,7 @@ export default function WriterEditorialReviewQueue() {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-3">
-                                            <h2 className="text-lg font-bold text-white mb-0">Editorial Review: {selectedApp.full_name}</h2>
+                                            <h2 className="text-lg font-bold text-white mb-0">{selectedApp.profile_status === 'approved_as_writer' ? 'Profile:' : 'Editorial Review:'} {selectedApp.public_name || selectedApp.full_name}</h2>
                                             <StatusBadge status={selectedApp.profile_status || 'pending'} />
                                         </div>
                                         <div className="flex items-center gap-2 mt-1">
