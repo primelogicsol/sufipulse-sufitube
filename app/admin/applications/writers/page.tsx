@@ -324,7 +324,7 @@ export default function WriterEditorialReviewQueue() {
                 {/* Profile Detail Modal */}
                 {selectedApp && (
                     <div className="dashboard-modal-overlay flex items-center justify-center p-4" onClick={() => !processingAction && setSelectedApp(null)}>
-                        <div className="dashboard-modal w-[92vw] max-w-[1360px] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <div className="dashboard-modal flex flex-col" style={{ width: '94vw', maxWidth: '1500px', maxHeight: '92vh', padding: 0, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
                             <div className="dashboard-modal-header border-b border-[var(--dash-border)] shrink-0 sticky top-0 z-10 bg-[#0a0a0a] rounded-t-xl relative flex p-6">
                                 <div className="flex items-start sm:items-center justify-between gap-4 w-full pr-8">
                                     <div className="flex items-center gap-4">
@@ -362,10 +362,10 @@ export default function WriterEditorialReviewQueue() {
                                 </button>
                             </div>
 
-                            <div className="dashboard-modal-body p-0 flex-1 min-h-0 overflow-y-auto">
-                                <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,0.34fr)_minmax(0,0.66fr)] xl:grid-cols-[minmax(260px,0.27fr)_minmax(380px,0.43fr)_minmax(300px,0.30fr)] h-full min-h-max">
+                            <div className="dashboard-modal-body p-0 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+                                <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,0.34fr)_minmax(0,0.66fr)] xl:grid-cols-[minmax(260px,28%)_minmax(420px,42%)_minmax(300px,30%)] h-full min-h-max">
                                     {/* Left Panel: Institutional Intake Profile */}
-                                    <div className="lg:border-r border-[var(--dash-border)] p-6 xl:p-8 bg-neutral-950/20 lg:row-span-2 xl:row-span-1">
+                                    <div className="lg:border-r border-[var(--dash-border)] p-6 xl:p-8 bg-neutral-950/20 lg:row-span-2 xl:row-span-1 min-w-0">
                                     <div className="space-y-6">
                                         <div className="pb-3 border-b border-neutral-900">
                                             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Institutional Intake Profile</h2>
@@ -477,7 +477,7 @@ export default function WriterEditorialReviewQueue() {
                                 </div>
                                     
                                 {/* Center Panel: Works & Production */}
-                                <div className="p-6 xl:p-8 bg-[#0a0a0a] border-b lg:border-b-0 xl:border-r border-[var(--dash-border)]">
+                                <div className="p-6 xl:p-8 bg-[#0a0a0a] border-b lg:border-b-0 xl:border-r border-[var(--dash-border)] min-w-0">
                                     <div className="space-y-6">
                                             {/* Works / Kalam or Sample Kalam */}
                                             {selectedApp.profile_status === 'approved_as_writer' ? (
@@ -578,8 +578,8 @@ export default function WriterEditorialReviewQueue() {
                                     </div>
 
                                     {/* Right Panel: Governance & Registry */}
-                                    <div className="p-6 xl:p-8 bg-neutral-950/40 flex flex-col h-full">
-                                        <div className="space-y-6 flex-1 flex flex-col">
+                                    <div className="p-6 xl:p-8 bg-neutral-950/40 flex flex-col h-full min-w-0">
+                                        <div className="space-y-6 flex-1 flex flex-col min-w-0">
                                             {/* Editorial / Governance */}
                                             <section className="flex flex-col gap-6 min-w-0">
                                                 <div className="min-w-0">
@@ -668,31 +668,31 @@ export default function WriterEditorialReviewQueue() {
                                                 </section>
                                             )}
 
-                                            {/* Internal Note */}
-                                            <section className="mt-auto pt-6 border-t border-neutral-900">
-                                                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Editorial Internal Note / Feedback</label>
-                                                <textarea 
-                                                    value={adminNote}
-                                                    onChange={(e) => setAdminNote(e.target.value)}
-                                                    placeholder="Add internal evaluation or feedback for revision request..."
-                                                    className="dashboard-textarea w-full min-h-[120px] text-sm resize-none"
-                                                />
-                                            </section>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Full-Width Sticky Footer Actions */}
-                            <div className="shrink-0 p-6 lg:px-8 bg-neutral-900 border-t border-[var(--dash-border)] sticky bottom-0 z-20 rounded-b-xl flex justify-end">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <button 
-                                        onClick={() => handleUpdateStatus(selectedApp.id, 'under_editorial_screening')}
-                                        disabled={processingAction}
-                                        className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold min-w-[120px]"
-                                    >
-                                        Screening
-                                    </button>
+                            <div className="shrink-0 p-6 lg:px-8 bg-neutral-900 border-t border-[var(--dash-border)] sticky bottom-0 z-20 rounded-b-xl">
+                                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-end">
+                                    <div className="min-w-0">
+                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Editorial Internal Note / Feedback to Writer</label>
+                                        <textarea 
+                                            value={adminNote}
+                                            onChange={(e) => setAdminNote(e.target.value)}
+                                            placeholder="Add internal evaluation or feedback for revision request..."
+                                            className="dashboard-textarea w-full min-h-[80px] text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <button 
+                                            onClick={() => handleUpdateStatus(selectedApp.id, 'under_editorial_screening')}
+                                            disabled={processingAction}
+                                            className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold min-w-[120px]"
+                                        >
+                                            Screening
+                                        </button>
                                     <button 
                                         onClick={() => handleUpdateStatus(selectedApp.id, 'revision_requested')}
                                         disabled={processingAction}
@@ -717,6 +717,7 @@ export default function WriterEditorialReviewQueue() {
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 )}
             </div>
