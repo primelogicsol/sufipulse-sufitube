@@ -1794,7 +1794,8 @@
     "joined_at": "2025-05-20T00:00:00.000Z",
     "created_at": "2026-09-12T04:33:41.267Z",
     "updated_at": "2026-09-12T04:33:41.267Z",
-    "email": "Internal Workflow"
+    "email": "Internal Workflow",
+    "contributorId": "ctr_ed6c98ae_zarf"
   },
   {
     "id": "vocalists_91e7d7de-3879-4045-ae96-6fb039e84735",

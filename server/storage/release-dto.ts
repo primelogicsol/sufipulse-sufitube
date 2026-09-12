@@ -1,18 +1,21 @@
-import { CMSRelease } from '@/lib/cms-storage';
+﻿import { CMSRelease } from '@/lib/cms-storage';
+import { resolveContributorPublicName } from '@/lib/entity-storage-server';
+
+function safeResolve(idOrObj: any): string {
+  if (!idOrObj) return 'Contributor information unavailable';
+  if (typeof idOrObj === 'string') return resolveContributorPublicName(idOrObj, idOrObj);
+  return idOrObj.public_name || idOrObj.professional_name || idOrObj.name || idOrObj.full_name || 'Contributor information unavailable';
+}
 
 export function toCanonicalCMSRelease(release: any): CMSRelease {
   if (!release) return release;
   
-  // Clone to avoid mutating in-memory cache or DB row directly
   const canonical = { ...release };
   
-  // Map legacy snake_case fields that were accidentally preserved during DB migration
-  // and in the filesystem JSON, to ensure both backends output camelCase.
   if (canonical.created_at && !canonical.createdAt) canonical.createdAt = canonical.created_at;
   if (canonical.updated_at && !canonical.updatedAt) canonical.updatedAt = canonical.updated_at;
   if (canonical.published_at && !canonical.publishedAt) canonical.publishedAt = canonical.published_at;
   
-  // Normalization logic for dynamically generated defaults
   canonical.visibility = canonical.visibility || 'public';
   canonical.format = canonical.format || 'video';
   canonical.releaseType = canonical.releaseType || 'studio-release';
@@ -21,7 +24,6 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
     : (canonical.releaseDate || canonical.publishedAt || canonical.published_at || canonical.createdAt || canonical.created_at);
   
   canonical.publishedAt = effectiveDate;
-  canonical.publishedDate = effectiveDate;
 
   if (canonical.youtube_id && !canonical.youtubeId) canonical.youtubeId = canonical.youtube_id;
   if (canonical.youtube_url && !canonical.youtubeUrl) canonical.youtubeUrl = canonical.youtube_url;
@@ -42,52 +44,13 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   delete canonical.youtube_url;
   delete canonical.like_count;
   delete canonical.view_count;
-  delete canonical.views; // strip legacy seed snapshot — canonical field is viewCount
   delete canonical.enable_lyrics;
-  delete canonical.enable_credits;
-  delete canonical.enable_adoption;
-  delete canonical.enable_sponsors;
   delete canonical.enable_commentary;
-  delete canonical.show_likes;
+  delete canonical.enable_sponsors;
+  delete canonical.enable_adoption;
+  delete canonical.enable_credits;
   delete canonical.show_views;
-  
-  // Strip transient resolution properties from DB mapper
-  // Preserved A/B and canonical fields for architecture round-trip
-  
-  // Apply standard business defaults for missing fields deterministically
-  if (canonical.status === 'published' && canonical.youtubeId && !canonical.format) {
-    canonical.format = 'video';
-  }
-  if (!canonical.releaseType) {
-    canonical.releaseType = 'studio-release';
-  }
-  if (canonical.visibility === undefined) {
-    canonical.visibility = 'public';
-  }
-  
-  if (!canonical.distribution) {
-    canonical.distribution = {
-      youtube: { platform: 'youtube', status: 'not_started', isVisible: true, isVerified: false },
-      apple_music: { platform: 'apple_music', status: 'not_started', isVisible: true, isVerified: false },
-      spotify: { platform: 'spotify', status: 'not_started', isVisible: true, isVerified: false },
-      facebook: { platform: 'facebook', status: 'not_started', isVisible: true, isVerified: false },
-      instagram: { platform: 'instagram', status: 'not_started', isVisible: true, isVerified: false },
-      x: { platform: 'x', status: 'not_started', isVisible: true, isVerified: false },
-      sufipulse_radio: { platform: 'sufipulse_radio', status: 'not_started', isVisible: true, isVerified: false }
-    };
-  }
-
-  // Ensure dates that were previously initialized dynamically remain undefined if not in source data
-  // (Handled by removing dynamic date fallback in lib/cms-storage.ts)
-
-  // Attach deterministic tie-breaker for strict API parity
-  if (typeof (release as any).registry_order === 'number') {
-    (canonical as any).registryOrder = (release as any).registry_order;
-    delete (canonical as any).registry_order;
-  }
-  if (typeof canonical.registryOrder === 'number') {
-    // If it was already added as registryOrder (e.g. from FS), just keep it.
-  }
+  delete canonical.show_likes;
 
   return canonical as CMSRelease;
 }
@@ -110,10 +73,28 @@ export type PublicPremiereRelease = Pick<
   | 'officialReleaseAt'
   | 'premiereAnnouncedAt'
   | 'isFeaturedPremiere'
-  | 'preReleaseAssets'
   | 'createdAt'
+  | 'premiereEnabled'
+  | 'premiereStatus'
+  | 'premiereOrder'
+  | 'premiereDate'
+  | 'premiereDateTba'
+  | 'premiereDescription'
+  | 'premiereThumbnail'
+  | 'premiereMobileThumbnail'
+  | 'premiumTeaserAvailable'
+  | 'commentaryAvailable'
+  | 'lyricsTranslationsAvailable'
+  | 'creditsNotesAvailable'
+  | 'notifyEnabled'
+  | 'premiereCtaLabel'
 > & {
-  // Only include safe metadata that might be needed
+  preReleaseAssets?: Array<{
+    type: string;
+    url?: string;
+    title?: string;
+    status: string;
+  }>;
 };
 
 export function toPublicPremiereRelease(release: CMSRelease): PublicPremiereRelease {
@@ -121,7 +102,7 @@ export function toPublicPremiereRelease(release: CMSRelease): PublicPremiereRele
     id: release.id,
     title: release.title,
     description: release.description,
-    vocalist: release.vocalist,
+    vocalist: safeResolve(release.vocalist),
     slug: release.slug,
     canonicalTitle: release.canonicalTitle,
     youtubeTitle: release.youtubeTitle,
@@ -135,12 +116,28 @@ export function toPublicPremiereRelease(release: CMSRelease): PublicPremiereRele
     premiereAnnouncedAt: release.premiereAnnouncedAt,
     isFeaturedPremiere: release.isFeaturedPremiere,
     createdAt: release.createdAt,
+
+    premiereEnabled: release.premiereEnabled,
+    premiereStatus: release.premiereStatus,
+    premiereOrder: release.premiereOrder,
+    premiereDate: release.premiereDate,
+    premiereDateTba: release.premiereDateTba,
+    premiereDescription: release.premiereDescription,
+    premiereThumbnail: release.premiereThumbnail,
+    premiereMobileThumbnail: release.premiereMobileThumbnail,
+    premiumTeaserAvailable: release.premiumTeaserAvailable,
+    commentaryAvailable: release.commentaryAvailable,
+    lyricsTranslationsAvailable: release.lyricsTranslationsAvailable,
+    creditsNotesAvailable: release.creditsNotesAvailable,
+    notifyEnabled: release.notifyEnabled,
+    premiereCtaLabel: release.premiereCtaLabel,
+
     preReleaseAssets: release.preReleaseAssets?.filter((a) => a.status === 'live'),
   };
   return mapped;
 }
 
-export type PublicRelease = Pick<
+export type PublicRelease = Omit<Pick<
   CMSRelease,
   | 'id'
   | 'title'
@@ -164,17 +161,30 @@ export type PublicRelease = Pick<
   | 'publishedAt'
   | 'releaseDate'
   | 'writer'
-> & {
-  publishedDate?: string;
+>, 'viewCount'> & {
+  viewCount?: number;
+  lyricist?: string;
+  composer?: string;
+  musicDirector?: string;
+  producer?: string;
+  publicCredits?: string;
+  writerId?: string;
+  lyricistId?: string;
   tags?: string[];
+  publishedDate?: string;
 };
 
 export function toPublicRelease(release: any): PublicRelease {
+
+  const rawViews = release.viewCount || release.views || release.youtubeDetails?.viewCount || release.youtube_details?.viewCount || release.statistics?.viewCount;
+  const parsedViews = Number(rawViews);
+  const finalViewCount = (!isNaN(parsedViews) && parsedViews > 0) ? parsedViews : undefined;
+
   return {
     id: release.id,
     title: release.title,
     description: release.description,
-    vocalist: release.vocalist,
+    vocalist: safeResolve(release.vocalist),
     slug: release.slug,
     canonicalTitle: release.canonicalTitle,
     youtubeTitle: release.youtubeTitle,
@@ -185,15 +195,22 @@ export function toPublicRelease(release: any): PublicRelease {
     youtubeId: release.youtubeId,
     durationSeconds: release.durationSeconds,
     durationFormatted: release.durationFormatted,
-    viewCount: release.viewCount,
+    viewCount: finalViewCount,
     source: release.source,
     format: release.format,
     govType: release.govType,
     governanceOrigin: release.governanceOrigin,
     publishedAt: release.publishedAt,
-    publishedDate: release.publishedDate,
+    publishedDate: release.publishedDate || release.publishedAt,
     releaseDate: release.releaseDate,
-    writer: release.writer,
+    writer: safeResolve(release.writer),
+    lyricist: safeResolve(release.lyricist),
+    composer: safeResolve(release.composer),
+    musicDirector: safeResolve(release.musicDirector),
+    producer: safeResolve(release.producer),
+    publicCredits: safeResolve(release.publicCredits),
+    writerId: safeResolve(release.writerId),
+    lyricistId: safeResolve(release.lyricistId),
     tags: release.tags,
   };
 }

@@ -75,3 +75,27 @@ export function entityDelete(entity: string, id: string): boolean {
   writeAll(entity, records);
   return true;
 }
+
+export function resolveContributorPublicName(id: string | null | undefined, fallback?: string): string {
+  if (!id) return fallback || 'Contributor information unavailable';
+  
+  const idParts = id.split('_');
+  if (idParts.length >= 2 && ['writers', 'vocalists', 'contributors', 'producers'].includes(idParts[0])) {
+    try {
+      const entityType = idParts[0];
+      const record = entityGetById<any>(entityType, id);
+      if (record) {
+        return record.public_name || record.professional_name || record.name || record.full_name || fallback || 'Contributor information unavailable';
+      }
+    } catch (e) {
+      // Ignore
+    }
+    return fallback || 'Contributor information unavailable';
+  }
+
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return fallback || 'Contributor information unavailable';
+  }
+
+  return id;
+}

@@ -87,6 +87,22 @@ export interface CMSRelease {
   officialReleaseAt?: string;
   premiereAnnouncedAt?: string;
   isFeaturedPremiere?: boolean;
+
+    premiereEnabled?: boolean;
+    premiereStatus?: 'coming_soon' | 'scheduled' | 'live' | 'completed';
+    premiereOrder?: number;
+    premiereDate?: string;
+    premiereDateTba?: boolean;
+    premiereDescription?: string;
+    premiereThumbnail?: string;
+    premiereMobileThumbnail?: string;
+    premiumTeaserAvailable?: boolean;
+    commentaryAvailable?: boolean;
+    lyricsTranslationsAvailable?: boolean;
+    creditsNotesAvailable?: boolean;
+    notifyEnabled?: boolean;
+    premiereCtaLabel?: string;
+
   premiereVisibility?: 'private' | 'public';
   preReleaseAssets?: Array<{
     id: string;

@@ -118,3 +118,51 @@ export function checkMetadataDrift(release: any): {
     youtubeTitle,
   };
 }
+
+/**
+ * Resolves the flagship release for the homepage and /releases
+ * using a single canonical selection rule.
+ */
+export function resolveFlagshipRelease(releases: any[]): any {
+  if (!releases || !Array.isArray(releases) || releases.length === 0) return null;
+  // Exclude premiere items from being flagship
+  const flagshipCandidates = releases.filter(r => !isPremiereRoomRelease(r));
+  if (flagshipCandidates.length === 0) return null;
+  return flagshipCandidates.find(r => r.govType === 'native_governed') || flagshipCandidates[0];
+}
+
+/**
+ * Determines if a release is in the active Premiere/Forthcoming stage.
+ * Used to strictly partition homepage sections.
+ */
+export function isPremiereRoomRelease(r: any): boolean {
+  if (r.status === 'draft' || r.status === 'archived' || r.visibility === 'private' || r.visibility === 'internal') return false;
+
+  if (r.premiereEnabled && ['coming_soon', 'scheduled', 'live'].includes(r.premiereStatus)) {
+    return true;
+  }
+
+  // Legacy fallback
+  if (r.status !== 'published') return false;
+  if (r.premiereVisibility && r.premiereVisibility !== 'public') return false;
+
+  const lifecycle = r.releaseLifecycle || '';
+  return ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(lifecycle);
+}
+
+export function resolvePremiereReleases(releases: any[]): any[] {
+  if (!releases || !Array.isArray(releases)) return [];
+  return releases.filter(isPremiereRoomRelease);
+}
+
+export function resolveRegistryHighlights(releases: any[], limit: number = 5): any[] {
+  if (!releases || !Array.isArray(releases)) return [];
+  const normalReleases = releases.filter(r => !isPremiereRoomRelease(r) && Boolean(r.youtubeId || r.youtube_video_id || r.id));
+  return normalReleases.slice(0, limit);
+}
+
+export function resolveRecentRegistryEntries(releases: any[], limit: number = 8): any[] {
+  if (!releases || !Array.isArray(releases)) return [];
+  const normalReleases = releases.filter(r => !isPremiereRoomRelease(r) && Boolean(r.youtubeId || r.youtube_video_id || r.id));
+  return normalReleases.slice(0, limit);
+}

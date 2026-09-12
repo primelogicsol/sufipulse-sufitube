@@ -30,7 +30,7 @@ function normalizeFieldNames(body: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(body)) {
-    // Map known snake_case â†’ camelCase fields from the public page
+    // Map known snake_case → camelCase fields from the public page
     const fieldMap: Record<string, string> = {
       release_title: 'title',
       subtitle_cues: 'subtitleCues',
@@ -107,7 +107,11 @@ export async function GET(
       if (!isAdmin) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return NextResponse.json(canonical);
+      return NextResponse.json(canonical, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+        }
+      });
     }
 
     if (!isAdmin && ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(canonical.releaseLifecycle || '')) {
