@@ -86,6 +86,7 @@ const adminNavigation = [
     title: 'Stage 3 — Production & Studio',
     links: [
       { path: '/admin/production-queue', label: 'Studio Production Queue', icon: FileText },
+      { path: '/admin/studio-settings/private-production', label: 'Studio Audio Settings', icon: Settings },
       { path: '/admin/editorial/production-consideration', label: 'Production Consideration', icon: Activity },
       { path: '/admin/production-workflow', label: 'Production Workflow',     icon: Settings },
       { path: '/admin/session-requests',    label: 'Session Requests (Queue)',icon: Calendar },

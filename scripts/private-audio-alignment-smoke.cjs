@@ -20,6 +20,21 @@ const executable = transformed.code.replace(/require\(["']server-only["']\);?/g,
 const mod = new Module(sourcePath, module);
 mod.filename = sourcePath;
 mod.paths = Module._nodeModulePaths(path.dirname(sourcePath));
+
+const originalRequire = mod.require.bind(mod);
+mod.require = (id) => {
+  if (id.includes('private-audio-connection-resolver')) {
+    return {
+      getPrivateAudioConnection: () => ({
+        alignmentUrlTemplate: process.env.PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE,
+        alignmentAuthorization: process.env.PRIVATE_AUDIO_ALIGNMENT_AUTHORIZATION,
+        alignmentExtraHeadersJson: process.env.PRIVATE_AUDIO_ALIGNMENT_EXTRA_HEADERS_JSON,
+      }),
+    };
+  }
+  return originalRequire(id);
+};
+
 mod._compile(executable, sourcePath);
 
 const {

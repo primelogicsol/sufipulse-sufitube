@@ -1,17 +1,17 @@
 import 'server-only';
+import { getPrivateAudioConnection } from '@/server/integrations/private-audio-connection-resolver';
 
 const RANGE_PATTERN = /^bytes=(\d*)-(\d*)$/i;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
-const parseExtraHeaders = (): Record<string, string> => {
-  const raw = process.env.PRIVATE_AUDIO_STREAM_EXTRA_HEADERS_JSON?.trim();
+const parseExtraHeaders = (raw?: string | null): Record<string, string> => {
   if (!raw) return {};
 
   const parsed = JSON.parse(raw);
   if (!isRecord(parsed)) {
-    throw new Error('PRIVATE_AUDIO_STREAM_EXTRA_HEADERS_JSON must be a JSON object.');
+    throw new Error('Extra headers must be a JSON object.');
   }
 
   const blocked = new Set([
@@ -41,13 +41,12 @@ export const normalizeSingleRangeHeader = (input: string | null): string | undef
   return `bytes=${match[1]}-${match[2]}`;
 };
 
-const buildConfiguredStreamUrl = (sourceAssetId: string): string => {
-  const template = process.env.PRIVATE_AUDIO_STREAM_URL_TEMPLATE?.trim();
+const buildConfiguredStreamUrl = (sourceAssetId: string, template?: string | null): string => {
   if (!template) {
     throw new Error('Private audio streaming is not configured on this server.');
   }
   if (!template.includes('{assetId}')) {
-    throw new Error('PRIVATE_AUDIO_STREAM_URL_TEMPLATE must contain {assetId}.');
+    throw new Error('Stream URL template must contain {assetId}.');
   }
 
   const candidate = template.replaceAll('{assetId}', encodeURIComponent(sourceAssetId));
@@ -58,20 +57,23 @@ const buildConfiguredStreamUrl = (sourceAssetId: string): string => {
   return parsed.toString();
 };
 
-export const isPrivateAudioStreamConfigured = (): boolean =>
-  Boolean(process.env.PRIVATE_AUDIO_STREAM_URL_TEMPLATE?.trim());
+export const isPrivateAudioStreamConfigured = (): boolean => {
+  const conn = getPrivateAudioConnection();
+  return Boolean(conn.streamUrlTemplate?.trim());
+};
 
 export async function fetchConfiguredPrivateAudioStream(
   sourceAssetId: string,
   rangeHeader?: string,
 ): Promise<Response> {
-  const url = buildConfiguredStreamUrl(sourceAssetId);
+  const conn = getPrivateAudioConnection();
+  const url = buildConfiguredStreamUrl(sourceAssetId, conn.streamUrlTemplate);
   const headers: Record<string, string> = {
     Accept: 'audio/*,application/octet-stream;q=0.9,*/*;q=0.1',
-    ...parseExtraHeaders(),
+    ...parseExtraHeaders(conn.streamExtraHeadersJson),
   };
 
-  const authorization = process.env.PRIVATE_AUDIO_STREAM_AUTHORIZATION?.trim();
+  const authorization = conn.streamAuthorization;
   if (authorization) headers.Authorization = authorization;
   if (rangeHeader) headers.Range = rangeHeader;
 

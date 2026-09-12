@@ -19,6 +19,21 @@ const loadTsModule = (relativePath) => {
   const mod = new Module(sourcePath, module);
   mod.filename = sourcePath;
   mod.paths = Module._nodeModulePaths(path.dirname(sourcePath));
+
+  const originalRequire = mod.require.bind(mod);
+  mod.require = (id) => {
+    if (id.includes('private-audio-connection-resolver')) {
+      return {
+        getPrivateAudioConnection: () => ({
+          streamUrlTemplate: process.env.PRIVATE_AUDIO_STREAM_URL_TEMPLATE,
+          streamAuthorization: process.env.PRIVATE_AUDIO_STREAM_AUTHORIZATION,
+          streamExtraHeadersJson: process.env.PRIVATE_AUDIO_STREAM_EXTRA_HEADERS_JSON,
+        }),
+      };
+    }
+    return originalRequire(id);
+  };
+
   mod._compile(executable, sourcePath);
   return mod.exports;
 };

@@ -220,36 +220,38 @@ export function normalizePrivateAudioAlignment(payloadInput: unknown): Normalize
   };
 }
 
-const parseExtraHeaders = (): Record<string, string> => {
-  const raw = process.env.PRIVATE_AUDIO_ALIGNMENT_EXTRA_HEADERS_JSON?.trim();
+import { getPrivateAudioConnection } from '@/server/integrations/private-audio-connection-resolver';
+
+const parseExtraHeaders = (raw?: string | null): Record<string, string> => {
   if (!raw) return {};
 
   const parsed = JSON.parse(raw);
-  if (!isRecord(parsed)) throw new Error('PRIVATE_AUDIO_ALIGNMENT_EXTRA_HEADERS_JSON must be a JSON object.');
+  if (!isRecord(parsed)) throw new Error('Extra headers must be a JSON object.');
 
-  const headers: Record<string, string> = {};
   for (const [key, value] of Object.entries(parsed)) {
-    if (typeof value === 'string' && value.trim()) headers[key] = value;
+    if (typeof value !== 'string') throw new Error(`Header ${key} must be a string.`);
   }
-  return headers;
+
+  return parsed as Record<string, string>;
 };
 
 export async function fetchConfiguredPrivateAudioAlignment(sourceAssetId: string): Promise<unknown> {
-  const template = process.env.PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE?.trim();
+  const conn = getPrivateAudioConnection();
+  const template = conn.alignmentUrlTemplate;
   if (!template) {
     throw new Error('Private audio alignment fetch is not configured on this server.');
   }
   if (!template.includes('{assetId}')) {
-    throw new Error('PRIVATE_AUDIO_ALIGNMENT_URL_TEMPLATE must contain {assetId}.');
+    throw new Error('Alignment URL template must contain {assetId}.');
   }
 
-  const url = template.replaceAll('{assetId}', encodeURIComponent(sourceAssetId));
+  const url = template.replace('{assetId}', encodeURIComponent(sourceAssetId));
   const headers: Record<string, string> = {
     Accept: 'application/json',
-    ...parseExtraHeaders(),
+    ...parseExtraHeaders(conn.alignmentExtraHeadersJson),
   };
 
-  const authorization = process.env.PRIVATE_AUDIO_ALIGNMENT_AUTHORIZATION?.trim();
+  const authorization = conn.alignmentAuthorization;
   if (authorization) headers.Authorization = authorization;
 
   const timeoutMs = Math.min(

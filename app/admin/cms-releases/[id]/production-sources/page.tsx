@@ -106,6 +106,10 @@ export default function ProductionSourcesPage() {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState<{
+    alignmentConfigured: boolean;
+    streamConfigured: boolean;
+  } | null>(null);
 
   const sourceLookup = useMemo(
     () => Object.fromEntries(sources.map((source) => [source.sourceAssetId, source])),
@@ -115,15 +119,21 @@ export default function ProductionSourcesPage() {
   const load = async () => {
     try {
       setLoading(true);
-      const [releaseRes, assemblyRes] = await Promise.all([
-        fetch(`/api/releases?key=${encodeURIComponent(releaseId)}`, { cache: 'no-store' }),
+      const [releaseRes, assemblyRes, connRes] = await Promise.all([
+        fetch(`/api/admin/releases/${encodeURIComponent(releaseId)}`, { cache: 'no-store' }),
         fetch(`/api/admin/releases/${encodeURIComponent(releaseId)}/audio-assembly`, { cache: 'no-store' }),
+        fetch('/api/admin/studio-settings/private-production', { cache: 'no-store' }),
       ]);
 
       if (releaseRes.ok) {
         const release = await releaseRes.json();
         setReleaseTitle(release.title || release.canonicalTitle || 'Release');
         setLanguage(String(release.defaultLanguage || 'en').toLowerCase());
+      }
+
+      if (connRes.ok) {
+        const connData = await connRes.json();
+        setConnectionStatus(connData);
       }
 
       if (!assemblyRes.ok) {
@@ -318,6 +328,35 @@ export default function ProductionSourcesPage() {
           </div>
           <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
             Admin-only • source-local → master timeline
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <div className="rounded-xl border border-white/10 bg-black/40 p-4">
+            <h3 className="text-sm font-medium text-white mb-2">Private Production Connection</h3>
+            {connectionStatus ? (
+              <div className="flex flex-wrap items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60">Alignment:</span>
+                  <span className={connectionStatus.alignmentConfigured ? "text-emerald-400 font-medium" : "text-amber-400 font-medium"}>
+                    {connectionStatus.alignmentConfigured ? "Connected" : "Missing"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60">Studio Audio:</span>
+                  <span className={connectionStatus.streamConfigured ? "text-emerald-400 font-medium" : "text-amber-400 font-medium"}>
+                    {connectionStatus.streamConfigured ? "Connected" : "Missing"}
+                  </span>
+                </div>
+                {(!connectionStatus.alignmentConfigured || !connectionStatus.streamConfigured) && (
+                  <Link href="/admin/studio-settings/private-production" className="ml-auto text-amber-400 hover:text-amber-300 text-xs font-semibold">
+                    Configure Connection →
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="text-sm text-white/40">Checking connection status...</div>
+            )}
           </div>
         </div>
 
