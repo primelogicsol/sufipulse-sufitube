@@ -1,9 +1,8 @@
-"use client";
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import { PageContainer } from '../layout/PageContainer';
-import { PrimaryButton } from '../primitives/PrimaryButton';
 import { CountUp } from '../ui/CountUp';
+import { HeroCTAGroup } from '../ui/HeroCTAGroup';
 
 interface HeroSectionProps {
   kpiStats: {
@@ -53,28 +52,10 @@ export function HeroSection({ kpiStats }: HeroSectionProps) {
               SufiPulse Studio USA, managed by Dr. Kumar Foundation USA, is a disciplined institution dedicated to the authorship, performance, production, and entrusted release of sacred expression.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
-              <Link
-                href="/releases"
-                className="group flex items-center gap-3 px-6 py-3 rounded-xl bg-[var(--color-slate)]/80 hover:bg-[var(--color-slate)] border border-[var(--color-gold)]/30 hover:border-[var(--color-gold)]/60 transition-all duration-300 shadow-xl backdrop-blur-md hover:scale-[1.02]"
-              >
-                <Image
-                  src="/sufitube-logo-v5.png"
-                  alt="Sufitube Logo"
-                  width={160}
-                  height={40}
-                  className="h-8 md:h-10 w-auto object-contain"
-                />
-                <span className="text-xs font-bold text-[var(--color-gold)] group-hover:text-[var(--color-gold-hover)] uppercase tracking-wider pl-2 border-l border-white/10">
-                  Explore Catalog →
-                </span>
-              </Link>
-
-              <Link href="/governance">
-                <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
-                  Governance Framework
-                </PrimaryButton>
-              </Link>
+            <div className="mb-16">
+              <HeroCTAGroup 
+                primary={{ label: "Governance Framework", href: "/governance" }} 
+              />
             </div>
 
             {/* KPI Counter Strip */}

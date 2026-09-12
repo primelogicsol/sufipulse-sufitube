@@ -70,7 +70,7 @@ export const PRODUCTION_ITEMS = [
 export const GOVERNANCE_ITEMS = [
   {
     public: 'Institutional Framework',
-    mystical: 'Mithaq â€” Constitutional Charter',
+    mystical: 'Mithaq — Constitutional Charter',
     href: '/governance/mithaq',
     ariaLabel: 'Mithaq Constitutional Charter'
   },

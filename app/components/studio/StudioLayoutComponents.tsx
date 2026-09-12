@@ -8,6 +8,7 @@ import { Card } from '../primitives/Card';
 import { PrimaryButton } from '../primitives/PrimaryButton';
 import Link from 'next/link';
 import React from 'react';
+import { HeroCTAGroup, HeroActionProps } from '../ui/HeroCTAGroup';
 
 interface StudioHeroProps {
   badge: string;
@@ -15,9 +16,11 @@ interface StudioHeroProps {
   mysticalName: string;
   description: string;
   disclaimer?: string;
+  primaryCTA?: HeroActionProps;
+  secondaryCTA?: HeroActionProps;
 }
 
-export function StudioHero({ badge, title, mysticalName, description, disclaimer }: StudioHeroProps) {
+export function StudioHero({ badge, title, mysticalName, description, disclaimer, primaryCTA, secondaryCTA }: StudioHeroProps) {
   return (
     <Section background="midnight" spacing="spacious">
       <PageContainer>
@@ -25,15 +28,16 @@ export function StudioHero({ badge, title, mysticalName, description, disclaimer
           <div className="mb-6"><Badge variant="gold">{badge}</Badge></div>
           <h1 className="text-[var(--text-4xl)] md:text-[64px] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight">{title}</h1>
           <p className="text-[var(--text-xl)] text-[var(--color-gold)] font-medium mb-10 tracking-wide uppercase">{mysticalName}</p>
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto mb-10">
             <p className="text-[var(--text-lg)] text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light mb-6 text-center">{description}</p>
             {disclaimer && (
-              <div className="flex items-center justify-center gap-3 text-neutral-600">
+              <div className="flex items-center justify-center gap-3 text-neutral-600 mb-6">
                 <Shield className="w-4 h-4" />
                 <p className="font-black uppercase tracking-[0.3em] text-[10px]">{disclaimer}</p>
               </div>
             )}
           </div>
+          <HeroCTAGroup primary={primaryCTA} secondary={secondaryCTA} />
         </div>
       </PageContainer>
     </Section>

@@ -10,6 +10,7 @@ import { RegistryStatusMonitoring } from '../../components/ui/RegistryStatusMoni
 import { StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { HeroCTAGroup } from '../../components/ui/HeroCTAGroup';
 
 export default function Studio() {
   const studioResponsibilities = [
@@ -85,17 +86,11 @@ export default function Studio() {
                 The Studio operates after editorial clearance and before registry authorization. It is responsible for master-grade audio capture, technical sound engineering, and final master validation across the global SufiPulse network.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
-                <Link href="/studio/apply">
-                  <PrimaryButton size="medium" className="px-8 py-3.5 shadow-xl">
-                    Submit Studio Credentials
-                  </PrimaryButton>
-                </Link>
-                <Link href="/governance">
-                  <PrimaryButton variant="outline" size="medium" className="px-8 py-3.5 backdrop-blur-md">
-                    Studio Governance
-                  </PrimaryButton>
-                </Link>
+              <div className="mb-14">
+                <HeroCTAGroup 
+                  primary={{ label: "Submit Studio Credentials", href: "/studio/apply" }}
+                  secondary={{ label: "Studio Governance", href: "/governance" }}
+                />
               </div>
 
               {/* Responsibilities Strip */}

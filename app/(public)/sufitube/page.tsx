@@ -1,7 +1,8 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { PageContainer } from '../../components/layout/PageContainer';
+import { HeroCTAGroup } from '../../components/ui/HeroCTAGroup';
 
 export const metadata: Metadata = {
   title: 'SufiTube | Official Video & Sacred-Media Channel | SufiPulse',
@@ -125,25 +126,11 @@ export default function SufiTubePage() {
                 SufiTube is the official video and audiovisual publishing channel of SufiPulse USA — the branded identity through which sacred music, mystical kalam, Sufi poetry, premiere releases and contemplative visual works are presented to the world.
               </p>
 
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a
-                  href="https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[var(--color-gold)] text-black font-bold text-sm uppercase tracking-widest hover:bg-[#FDE68A] transition-all duration-200 shadow-[0_0_24px_rgba(212,175,55,0.25)]"
-                >
-                  Visit Official YouTube Channel
-                  <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </a>
-                <Link
-                  href="/official-channels"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border border-[var(--color-gold)]/40 text-[var(--color-gold)] font-semibold text-sm uppercase tracking-widest hover:bg-[var(--color-gold)]/8 hover:border-[var(--color-gold)]/70 transition-all duration-200"
-                >
-                  View Official Channels
-                </Link>
+              <div className="mb-14">
+                <HeroCTAGroup 
+                  primary={{ label: "Visit Official YouTube Channel", href: "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ" }}
+                  secondary={{ label: "View Official Channels", href: "/official-channels" }}
+                />
               </div>
             </div>
           </PageContainer>
