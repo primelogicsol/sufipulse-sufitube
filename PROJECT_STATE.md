@@ -21,5 +21,6 @@
 ## Known Limitations / Business State
 - Google Ads Managed account `9641210148` is technically connected but serving is currently suspended.
 - YouTube captions architecture is complete but `youtube.force-ssl` usage requires final Google Cloud OAuth verification.
-- **Post-Deployment Audit Needed:** `DISCOVERY-ANALYTICS` and `CRAWLER-REGISTRY` initialization `TypeError` warnings, plus 19 npm vulnerabilities.
+- **Post-Deployment Audit:** `DISCOVERY-ANALYTICS` and `CRAWLER-REGISTRY` initialization errors resolved. 15/19 npm vulnerabilities patched (remaining require --force breaking updates to next.js/nodemailer).
+
 
