@@ -120,6 +120,7 @@ jobs:
           IMAGE_DIGEST: ${{ steps.build_image.outputs.digest }}
         with:
           host: ${{ secrets.VPS_HOST }}
+          envs: IMAGE_DIGEST
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
@@ -281,5 +282,6 @@ jobs:
               || echo "VERSION CHECK: FAIL (may still be warming up)"
 
             echo "DEPLOY COMPLETE — ${{ github.sha }}"
+
 
 
