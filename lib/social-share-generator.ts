@@ -1,4 +1,5 @@
 import type { CMSRelease } from './cms-storage';
+import { getWriterDisplayName, getVocalistDisplayName } from './cms-storage';
 
 interface SocialShareKit {
   generatedAt: string;
@@ -17,8 +18,8 @@ export function generateSocialShareKit(release: CMSRelease): SocialShareKit {
     ? `https://www.youtube.com/watch?v=${release.youtubeId}&list=${release.youtubePlaylistId}`
     : `https://www.youtube.com/watch?v=${release.youtubeId}`;
 
-  const vocalistName = release.vocalist?.name || '';
-  const writerName = release.writer?.name || '';
+  const vocalistName = getVocalistDisplayName(release.vocalist) || '';
+  const writerName = getWriterDisplayName(release.writer) || '';
 
   const byLine = [
     vocalistName ? `Vocals: ${vocalistName}` : '',

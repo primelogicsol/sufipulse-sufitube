@@ -104,9 +104,9 @@ export interface CMSRelease {
   distribution?: Record<string, PlatformDistribution>;
   
   // Credits
-  writer?: string | { name: string; nameUrdu?: string };
+  writer?: string | { name?: string; nameUrdu?: string; public_name?: string; public_credit?: string; pen_name?: string; [key: string]: any };
   lyricist?: string;
-  vocalist?: string | { name: string; nameUrdu?: string };
+  vocalist?: string | { name?: string; nameUrdu?: string; public_name?: string; [key: string]: any };
   chorusVocalists?: string[];
   producer?: { name: string };
   
@@ -745,3 +745,19 @@ class CMSStorage {
 
 // Export singleton
 export const cmsStorage = new CMSStorage();
+
+export function getWriterDisplayName(writer: CMSRelease['writer']): string | null {
+  if (!writer) return null;
+  if (typeof writer === 'string') {
+    if (writer.startsWith('writers_')) return 'Dr. Zarf-e-Noori'; // Temporary fallback for unhydrated canonical ID
+    return writer;
+  }
+  return writer.public_credit || writer.public_name || writer.name || writer.pen_name || null;
+}
+
+export function getVocalistDisplayName(vocalist: CMSRelease['vocalist']): string | null {
+  if (!vocalist) return null;
+  if (typeof vocalist === 'string') return vocalist;
+  return vocalist.public_credit || vocalist.public_name || vocalist.name || null;
+}
+

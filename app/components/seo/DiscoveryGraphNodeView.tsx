@@ -10,6 +10,7 @@ import { Layout } from '@/app/components/layout/Layout';
 import { JsonLd } from './JsonLd';
 import { registriesStorage, type RegistryItem } from '@/lib/registries-storage';
 import { graphResolver } from '@/lib/graph-resolver';
+import { getVocalistDisplayName } from '@/lib/cms-storage';
 
 interface DiscoveryGraphNodeViewProps {
   slug: string;
@@ -176,7 +177,7 @@ export async function DiscoveryGraphNodeView({
           "byArtist": [
             {
               "@type": "MusicGroup",
-              "name": release.vocalist?.name || "SufiPulse Artist"
+              "name": getVocalistDisplayName(release.vocalist) || "SufiPulse Artist"
             }
           ]
         }
@@ -336,7 +337,7 @@ export async function DiscoveryGraphNodeView({
 
                       <div className="flex items-center justify-between text-[10px] text-neutral-500 border-t border-white/5 pt-3">
                         <span className="font-semibold text-neutral-300">
-                          {release.vocalist?.name || 'SufiPulse Artist'}
+                          {getVocalistDisplayName(release.vocalist) || 'SufiPulse Artist'}
                         </span>
                         <span className="font-mono">
                           {release.viewCount?.toLocaleString() ?? 0} views

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
-import { CMSRelease } from '@/lib/cms-storage';
+import { CMSRelease, getWriterDisplayName, getVocalistDisplayName } from '@/lib/cms-storage';
 
 export async function GET(
   request: Request,
@@ -16,8 +16,8 @@ export async function GET(
 
   const getKeywords = (r: CMSRelease) => {
     const text = [
-      r.title, r.subtitle, r.category, r.releaseType, r.writer?.name,
-      r.description, r.youtubeTitle, r.vocalist?.name
+      r.title, r.subtitle, r.category, r.releaseType, getWriterDisplayName(r.writer),
+      r.description, r.youtubeTitle, getVocalistDisplayName(r.vocalist)
     ].join(' ').toLowerCase();
     
     return {
@@ -37,9 +37,14 @@ export async function GET(
   function recommendationScore(current: CMSRelease, candidate: CMSRelease, cKw: any) {
     let score = 0;
     
+    const currWriter = getWriterDisplayName(current.writer);
+    const candWriter = getWriterDisplayName(candidate.writer);
+    const currVoc = getVocalistDisplayName(current.vocalist);
+    const candVoc = getVocalistDisplayName(candidate.vocalist);
+
     if (current.category && current.category === candidate.category) score += 15;
-    if (current.writer?.name && current.writer.name === candidate.writer?.name) score += 20;
-    if (current.vocalist?.name && current.vocalist.name === candidate.vocalist?.name) score += 15;
+    if (currWriter && currWriter === candWriter) score += 20;
+    if (currVoc && currVoc === candVoc) score += 15;
     
     const overlaps = ['kashmiri', 'urdu', 'english', 'mysticism', 'devotion', 'silence', 'qawwali', 'kalam'];
     for (const key of overlaps) {

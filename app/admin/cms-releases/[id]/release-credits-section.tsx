@@ -51,7 +51,7 @@ export function ReleaseCreditsSection({ form, updatePublicCredits, setForm }: Pr
             <div className="flex items-center gap-3">
               <select 
                 className="form-input flex-1"
-                value={form.writer || ''}
+                value={typeof form.writer === 'string' ? form.writer : ''}
                 onChange={(e) => handleCanonicalWriterChange(e.target.value)}
               >
                 <option value="">-- Select Canonical Writer --</option>

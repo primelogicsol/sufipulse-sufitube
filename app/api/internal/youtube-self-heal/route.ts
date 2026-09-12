@@ -117,10 +117,10 @@ export async function POST(request: NextRequest) {
       if (!existing) {
         newCandidates.push({
           youtubeId: video.id,
-          title: video.title || video.snippet?.title || video.id,
-          description: video.description || video.snippet?.description || '',
+          title: video.title || video.id,
+          description: video.description || '',
           thumbnailUrl: liveThumbnail(video) || undefined,
-          publishedDate: video.publishedDate || video.snippet?.publishedAt,
+          publishedDate: video.publishedDate,
           durationSeconds: video.durationSeconds,
           durationFormatted: video.durationFormatted,
           views: video.views,

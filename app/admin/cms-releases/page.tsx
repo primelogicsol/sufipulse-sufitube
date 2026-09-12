@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Edit2, Trash2, Eye, EyeOff, Archive, MoreVertical, Download, RefreshCw, CheckSquare, Square, ListVideo, Radio, Music } from 'lucide-react';
-import type { CMSRelease } from '@/lib/cms-storage';
+import { type CMSRelease, getVocalistDisplayName } from '@/lib/cms-storage';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
 type YouTubeImportVideo = {
@@ -940,9 +940,9 @@ export default function CMSReleasesPage() {
                         </div>
                       )}
 
-                      {release.vocalist?.name && (
+                      {getVocalistDisplayName(release.vocalist) && (
                         <p className="text-xs mt-0.5" style={{ color: 'var(--dash-text-muted)' }}>
-                          {release.vocalist.name}
+                          {getVocalistDisplayName(release.vocalist)}
                         </p>
                       )}
                     </td>
