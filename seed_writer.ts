@@ -11,7 +11,7 @@ if (!existing) {
     writer_category: 'Founding / Internal Writer',
     affiliation: 'SufiPulse Studio USA',
     roles: ['Writer', 'Lyricist', 'Composer', 'Music Director'],
-    primary_language: 'Urdu',
+    primary_languages: ['Urdu', 'English', 'Persian', 'Kashmiri'],
     submitted_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
