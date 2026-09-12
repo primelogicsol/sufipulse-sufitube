@@ -324,36 +324,48 @@ export default function WriterEditorialReviewQueue() {
                 {/* Profile Detail Modal */}
                 {selectedApp && (
                     <div className="dashboard-modal-overlay flex items-center justify-center p-4" onClick={() => !processingAction && setSelectedApp(null)}>
-                        <div className="dashboard-modal max-w-5xl w-full max-h-[calc(100vh-2rem)] flex flex-col" onClick={(e) => e.stopPropagation()}>
-                            <div className="dashboard-modal-header border-b border-[var(--dash-border)] shrink-0 sticky top-0 z-10 bg-[#0a0a0a] rounded-t-xl">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center">
-                                        <FileText className="w-6 h-6 text-amber-400" />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-3">
-                                            <h2 className="text-lg font-bold text-white mb-0">{selectedApp.profile_status === 'approved_as_writer' ? 'Profile:' : 'Editorial Review:'} {selectedApp.public_name || selectedApp.full_name}</h2>
-                                            <StatusBadge status={selectedApp.profile_status || 'pending'} />
+                        <div className="dashboard-modal w-[92vw] max-w-[1360px] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                            <div className="dashboard-modal-header border-b border-[var(--dash-border)] shrink-0 sticky top-0 z-10 bg-[#0a0a0a] rounded-t-xl relative flex p-6">
+                                <div className="flex items-start sm:items-center justify-between gap-4 w-full pr-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center shrink-0">
+                                            <FileText className="w-6 h-6 text-amber-400" />
                                         </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="font-mono text-xs text-amber-400/80">{getReferenceId(selectedApp)}</span>
-                                            <button 
-                                                onClick={() => handleCopy(getReferenceId(selectedApp))}
-                                                className="p-1 hover:bg-white/5 rounded transition-colors"
-                                            >
-                                                {copiedId === getReferenceId(selectedApp) ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-neutral-500" />}
-                                            </button>
+                                        <div>
+                                            <div className="flex items-center gap-3">
+                                                <h2 className="text-lg font-bold text-white mb-0">{selectedApp.profile_status === 'approved_as_writer' ? 'Profile:' : 'Editorial Review:'} {selectedApp.public_name || selectedApp.full_name}</h2>
+                                                <StatusBadge status={selectedApp.profile_status || 'pending'} />
+                                            </div>
+                                            <div className="flex items-center gap-3 mt-1.5">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-mono text-xs text-amber-400/80">{getReferenceId(selectedApp)}</span>
+                                                    <button 
+                                                        onClick={() => handleCopy(getReferenceId(selectedApp))}
+                                                        className="p-1 hover:bg-white/5 rounded transition-colors -ml-1"
+                                                    >
+                                                        {copiedId === getReferenceId(selectedApp) ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-neutral-500" />}
+                                                    </button>
+                                                </div>
+                                                <span className="text-neutral-600 text-xs">•</span>
+                                                <span className="text-xs text-slate-400 font-medium">
+                                                    Member Since: {selectedApp.joined_at 
+                                                        ? new Date(selectedApp.joined_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                                        : new Date(selectedApp.updated_at || selectedApp.created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                                    }
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setSelectedApp(null)} className="p-2 hover:bg-white/5 rounded-lg text-neutral-500 hover:text-white transition-colors">
+                                <button onClick={() => setSelectedApp(null)} className="absolute top-5 right-5 p-2 hover:bg-white/5 rounded-lg text-neutral-500 hover:text-white transition-colors">
                                     <XCircle className="w-6 h-6" />
                                 </button>
                             </div>
 
-                            <div className="dashboard-modal-body p-0 grid grid-cols-1 md:grid-cols-[300px_1fr] flex-1 min-h-0 overflow-hidden">
-                                {/* Left Panel: Institutional Intake Profile */}
-                                <div className="border-r border-[var(--dash-border)] overflow-y-auto p-5 bg-neutral-950/20">
+                            <div className="dashboard-modal-body p-0 flex-1 min-h-0 overflow-y-auto">
+                                <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,0.32fr)_minmax(0,0.68fr)] h-full min-h-max">
+                                    {/* Left Panel: Institutional Intake Profile */}
+                                    <div className="lg:border-r border-[var(--dash-border)] p-6 lg:p-8 bg-neutral-950/20">
                                     <div className="space-y-8">
                                         <div className="pb-4 border-b border-neutral-900">
                                             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Institutional Intake Profile</h2>
@@ -385,15 +397,6 @@ export default function WriterEditorialReviewQueue() {
                                                 <div>
                                                     <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Location</label>
                                                     <p className="text-base text-slate-100 font-medium">{[selectedApp.city, selectedApp.country].filter(Boolean).join(', ') || <span className="text-sm text-slate-300 italic">Not provided</span>}</p>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Joined SufiPulse</label>
-                                                    <p className="text-base text-slate-100 font-medium">
-                                                        {selectedApp.joined_at 
-                                                            ? new Date(selectedApp.joined_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                                                            : new Date(selectedApp.updated_at || selectedApp.created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                                                        }
-                                                    </p>
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Writer Type</label>
@@ -472,11 +475,10 @@ export default function WriterEditorialReviewQueue() {
                                         )}
                                     </div>
                                 </div>
-
+                                    
                                 {/* Right Panel: Sample Kalam & Actions */}
-                                <div className="flex flex-col h-full bg-[#0a0a0a] min-h-0">
-                                    <div className="flex-1 overflow-y-auto p-6">
-                                        <div className="space-y-6">
+                                <div className="p-6 lg:p-8 bg-[#0a0a0a]">
+                                    <div className="space-y-6">
                                             {/* Works / Kalam or Sample Kalam */}
                                             {selectedApp.profile_status === 'approved_as_writer' ? (
                                                 <section>
@@ -632,7 +634,7 @@ export default function WriterEditorialReviewQueue() {
                                             {selectedApp.profile_status === 'approved_as_writer' && (
                                                 <section className="pt-6 border-t border-neutral-900">
                                                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Registry Status</h3>
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
                                                         <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg">
                                                             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Writer Status</p>
                                                             <p className="text-xs text-emerald-400 font-bold">APPROVED</p>
@@ -662,51 +664,50 @@ export default function WriterEditorialReviewQueue() {
                                             )}
                                         </div>
                                     </div>
+                                </div>
+                            </div>
 
-                                    {/* Footer Actions */}
-                                    <div className="shrink-0 p-5 bg-neutral-900/90 backdrop-blur-md border-t border-[var(--dash-border)]">
-                                        <div className="mb-4">
-                                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Editorial Internal Note / Feedback to Writer</label>
-                                            <textarea 
-                                                value={adminNote}
-                                                onChange={(e) => setAdminNote(e.target.value)}
-                                                placeholder="Add internal evaluation or feedback for revision request..."
-                                                className="dashboard-textarea h-20 text-sm"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-4 gap-3">
-                                            <button 
-                                                onClick={() => handleUpdateStatus(selectedApp.id, 'under_editorial_screening')}
-                                                disabled={processingAction}
-                                                className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold"
-                                            >
-                                                Screening
-                                            </button>
-                                            <button 
-                                                onClick={() => handleUpdateStatus(selectedApp.id, 'revision_requested')}
-                                                disabled={processingAction}
-                                                className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold text-orange-400 border-orange-500/20"
-                                            >
-                                                Req Revision
-                                            </button>
-                                            <button 
-                                                onClick={() => handleUpdateStatus(selectedApp.id, 'approved_as_writer')}
-                                                disabled={processingAction}
-                                                className="dashboard-btn-primary bg-emerald-600 hover:bg-emerald-500 text-[11px] h-11 uppercase tracking-wider font-bold"
-                                            >
-                                                Approve
-                                            </button>
-                                            <button 
-                                                onClick={() => handleUpdateStatus(selectedApp.id, 'archived_not_advanced')}
-                                                disabled={processingAction}
-                                                className="dashboard-btn-danger text-[11px] h-11 uppercase tracking-wider font-bold opacity-60 hover:opacity-100"
-                                            >
-                                                Archive
-                                            </button>
-                                        </div>
-                                        <p className="mt-4 text-[9px] text-neutral-600 text-center uppercase tracking-widest">
-                                            Updating status triggers institutional email notification to writer.
-                                        </p>
+                            {/* Full-Width Sticky Footer Actions */}
+                            <div className="shrink-0 p-6 lg:px-8 bg-neutral-900 border-t border-[var(--dash-border)] sticky bottom-0 z-20 rounded-b-xl">
+                                <div className="w-full flex flex-col md:flex-row items-center gap-6">
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Editorial Internal Note / Feedback to Writer</label>
+                                        <textarea 
+                                            value={adminNote}
+                                            onChange={(e) => setAdminNote(e.target.value)}
+                                            placeholder="Add internal evaluation or feedback for revision request..."
+                                            className="dashboard-textarea h-11 text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="w-full md:w-auto grid grid-cols-2 sm:flex items-center gap-3 self-end">
+                                        <button 
+                                            onClick={() => handleUpdateStatus(selectedApp.id, 'under_editorial_screening')}
+                                            disabled={processingAction}
+                                            className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold min-w-[120px]"
+                                        >
+                                            Screening
+                                        </button>
+                                        <button 
+                                            onClick={() => handleUpdateStatus(selectedApp.id, 'revision_requested')}
+                                            disabled={processingAction}
+                                            className="dashboard-btn-secondary text-[11px] h-11 uppercase tracking-wider font-bold text-orange-400 border-orange-500/20 min-w-[120px]"
+                                        >
+                                            Req Revision
+                                        </button>
+                                        <button 
+                                            onClick={() => handleUpdateStatus(selectedApp.id, 'approved_as_writer')}
+                                            disabled={processingAction}
+                                            className="dashboard-btn-primary bg-emerald-600 hover:bg-emerald-500 text-[11px] h-11 uppercase tracking-wider font-bold min-w-[120px]"
+                                        >
+                                            Approve
+                                        </button>
+                                        <button 
+                                            onClick={() => handleUpdateStatus(selectedApp.id, 'archived_not_advanced')}
+                                            disabled={processingAction}
+                                            className="dashboard-btn-danger text-[11px] h-11 uppercase tracking-wider font-bold opacity-60 hover:opacity-100 min-w-[120px]"
+                                        >
+                                            Archive
+                                        </button>
                                     </div>
                                 </div>
                             </div>
