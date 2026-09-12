@@ -7,6 +7,7 @@ export type StudioOAuthRecord = {
   tokenType: string;
   expiresAt: string;
   updatedAt: string;
+  googleEmail?: string;
 };
 
 const STORE_DIR = path.join(process.cwd(), '.data');
@@ -32,10 +33,13 @@ export async function getStudioOAuthRecord(): Promise<StudioOAuthRecord | null> 
 }
 
 export async function upsertStudioOAuthRecord(params: {
+
   accessToken: string;
   refreshToken?: string | null;
   tokenType?: string;
   expiresInSeconds?: number;
+
+  googleEmail?: string;
 }): Promise<StudioOAuthRecord> {
   const existing = await readRecord();
   const now = new Date();
@@ -49,6 +53,7 @@ export async function upsertStudioOAuthRecord(params: {
     tokenType: params.tokenType ?? existing?.tokenType ?? 'Bearer',
     expiresAt,
     updatedAt: now.toISOString(),
+    googleEmail: params.googleEmail ?? existing?.googleEmail,
   };
 
   await writeRecord(record);

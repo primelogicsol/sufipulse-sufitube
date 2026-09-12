@@ -27,9 +27,12 @@ export async function POST(request: NextRequest) {
   oauthUrl.searchParams.set('client_id', clientId);
   oauthUrl.searchParams.set('redirect_uri', redirectUri);
   oauthUrl.searchParams.set('response_type', 'code');
-  oauthUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/adwords');
+  // Add email and openid scopes to retrieve the authorized Google account email
+  oauthUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/adwords openid email');
   oauthUrl.searchParams.set('access_type', 'offline');
-  oauthUrl.searchParams.set('prompt', 'consent');
+  // Force the account chooser screen even if already authenticated
+  oauthUrl.searchParams.set('prompt', 'select_account consent');
+  oauthUrl.searchParams.set('include_granted_scopes', 'true');
   oauthUrl.searchParams.set('state', 'studio');
 
   return NextResponse.json({ authUrl: oauthUrl.toString(), redirect_uri: redirectUri });

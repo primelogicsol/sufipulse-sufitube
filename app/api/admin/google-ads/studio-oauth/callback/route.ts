@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { upsertStudioOAuthRecord } from '@/app/lib/server/google-ads-studio-oauth-store';
+import { upsertStudioOAuthRecord, getStudioOAuthRecord } from '@/app/lib/server/google-ads-studio-oauth-store';
 
 /**
  * GET /api/admin/google-ads/studio-oauth/callback
@@ -7,9 +7,6 @@ import { upsertStudioOAuthRecord } from '@/app/lib/server/google-ads-studio-oaut
  * Google OAuth2 callback for the SufiTube managed ads account.
  * Receives the authorization code, exchanges for tokens, and stores
  * refresh + access token in .data/google-ads-studio-oauth.json.
- *
- * Register this URI in Google Cloud Console OAuth 2.0 credentials:
- *   https://yourdomain.com/api/admin/google-ads/studio-oauth/callback
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -49,15 +46,31 @@ export async function GET(request: NextRequest) {
       throw new Error(tokens.error_description || 'Token exchange failed');
     }
 
-    if (!tokens.refresh_token) {
-      throw new Error('No refresh token received. Ensure prompt=consent is set.');
+    const existingRecord = await getStudioOAuthRecord();
+    const hasExistingRefreshToken = !!existingRecord?.refreshToken;
+
+    if (!tokens.refresh_token && !hasExistingRefreshToken) {
+      throw new Error('No refresh token received. Revoke access in Google Account and try again.');
+    }
+
+    let googleEmail: string | undefined = undefined;
+    if (tokens.id_token) {
+      try {
+        const payloadBase64 = tokens.id_token.split('.')[1];
+        const payloadJson = Buffer.from(payloadBase64, 'base64').toString('utf8');
+        const payload = JSON.parse(payloadJson);
+        if (payload.email) googleEmail = payload.email;
+      } catch (e) {
+        console.warn('[studio-oauth/callback] Failed to parse id_token email');
+      }
     }
 
     await upsertStudioOAuthRecord({
       accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      refreshToken: tokens.refresh_token, 
       tokenType: tokens.token_type || 'Bearer',
       expiresInSeconds: Number(tokens.expires_in || 3600),
+      googleEmail,
     });
 
     return NextResponse.redirect(`${adminUrl}?studio_oauth=success`);
