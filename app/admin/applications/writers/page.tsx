@@ -399,6 +399,12 @@ export default function WriterEditorialReviewQueue() {
                                                     <label className="block text-[10px] text-neutral-600 uppercase mb-1">Conceptual Orientation</label>
                                                     <p className="text-xs text-neutral-400 italic leading-relaxed">{(selectedApp as any).conceptual_orientation || 'Not provided'}</p>
                                                 </div>
+                                                {(selectedApp as any).creative_orientation && (
+                                                    <div>
+                                                        <label className="block text-[10px] text-neutral-600 uppercase mb-1">Creative Orientation</label>
+                                                        <p className="text-xs text-neutral-400 italic leading-relaxed">{(selectedApp as any).creative_orientation}</p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </section>
 
