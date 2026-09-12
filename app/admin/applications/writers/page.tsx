@@ -283,9 +283,9 @@ export default function WriterEditorialReviewQueue() {
 
                 {/* Profile Detail Modal */}
                 {selectedApp && (
-                    <div className="dashboard-modal-overlay" onClick={() => !processingAction && setSelectedApp(null)}>
-                        <div className="dashboard-modal max-w-5xl" onClick={(e) => e.stopPropagation()}>
-                            <div className="dashboard-modal-header border-b border-[var(--dash-border)]">
+                    <div className="dashboard-modal-overlay flex items-center justify-center p-4" onClick={() => !processingAction && setSelectedApp(null)}>
+                        <div className="dashboard-modal max-w-5xl w-full max-h-[calc(100vh-2rem)] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                            <div className="dashboard-modal-header border-b border-[var(--dash-border)] shrink-0 sticky top-0 z-10 bg-[#0a0a0a] rounded-t-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center">
                                         <FileText className="w-6 h-6 text-amber-400" />
@@ -311,9 +311,9 @@ export default function WriterEditorialReviewQueue() {
                                 </button>
                             </div>
 
-                            <div className="dashboard-modal-body p-0 grid md:grid-cols-12 max-h-[80vh] overflow-hidden">
+                            <div className="dashboard-modal-body p-0 grid grid-cols-1 md:grid-cols-[300px_1fr] flex-1 min-h-0 overflow-hidden">
                                 {/* Left Panel: Profile Details */}
-                                <div className="md:col-span-4 border-r border-[var(--dash-border)] overflow-y-auto p-6 bg-neutral-950/20">
+                                <div className="border-r border-[var(--dash-border)] overflow-y-auto p-5 bg-neutral-950/20">
                                     <div className="space-y-8">
                                         <section>
                                             <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Identity & Background</h3>
@@ -393,9 +393,9 @@ export default function WriterEditorialReviewQueue() {
                                 </div>
 
                                 {/* Right Panel: Sample Kalam & Actions */}
-                                <div className="md:col-span-8 flex flex-col h-full bg-[#0a0a0a]">
-                                    <div className="flex-1 overflow-y-auto p-8">
-                                        <div className="space-y-8">
+                                <div className="flex flex-col h-full bg-[#0a0a0a] min-h-0">
+                                    <div className="flex-1 overflow-y-auto p-6">
+                                        <div className="space-y-6">
                                             {/* Sample Kalam */}
                                             <section>
                                                 <div className="flex items-center justify-between mb-4">
@@ -471,7 +471,7 @@ export default function WriterEditorialReviewQueue() {
                                     </div>
 
                                     {/* Footer Actions */}
-                                    <div className="p-6 bg-neutral-900/40 border-t border-[var(--dash-border)]">
+                                    <div className="shrink-0 p-5 bg-neutral-900/90 backdrop-blur-md border-t border-[var(--dash-border)]">
                                         <div className="mb-4">
                                             <label className="block text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-2">Editorial Internal Note / Feedback to Writer</label>
                                             <textarea 
