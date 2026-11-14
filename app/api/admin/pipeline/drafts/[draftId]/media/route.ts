@@ -98,13 +98,52 @@ export async function GET(
     const stat = fs.statSync(filePath);
     const range = request.headers.get('range');
 
+    const createSafeWebStream = (start?: number, end?: number) => {
+      const fileStream =
+        typeof start === 'number' && typeof end === 'number'
+          ? fs.createReadStream(filePath!, { start, end })
+          : fs.createReadStream(filePath!);
+
+      if (request.signal) {
+        if (request.signal.aborted) {
+          fileStream.destroy();
+        } else {
+          request.signal.addEventListener('abort', () => fileStream.destroy(), { once: true });
+        }
+      }
+
+      return new ReadableStream({
+        start(controller) {
+          fileStream.on('data', (chunk: Buffer) => {
+            try {
+              controller.enqueue(new Uint8Array(chunk));
+            } catch {
+              fileStream.destroy();
+            }
+          });
+          fileStream.on('end', () => {
+            try {
+              controller.close();
+            } catch {}
+          });
+          fileStream.on('error', (err) => {
+            try {
+              controller.error(err);
+            } catch {}
+          });
+        },
+        cancel() {
+          fileStream.destroy();
+        },
+      });
+    };
+
     if (range) {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
       const chunksize = end - start + 1;
-      const fileStream = fs.createReadStream(filePath, { start, end });
-      const webStream = Readable.toWeb(fileStream);
+      const webStream = createSafeWebStream(start, end);
 
       return new NextResponse(webStream as any, {
         status: 206,
@@ -117,8 +156,7 @@ export async function GET(
       });
     }
 
-    const fileStream = fs.createReadStream(filePath);
-    const webStream = Readable.toWeb(fileStream);
+    const webStream = createSafeWebStream();
     return new NextResponse(webStream as any, {
       headers: {
         'Content-Length': stat.size.toString(),
