@@ -40,8 +40,8 @@ export async function POST(
       draft.video.partB = {
         enabled: body.enabled !== false,
         canvaDesignId: body.canvaDesignId || draft.video.partB?.canvaDesignId || 'DAHa7eJOcbI',
-        canvaUrl: body.canvaUrl || draft.video.partB?.canvaUrl || 'https://www.canva.com/d/PmQwnpEWAbuVg4q',
-        title: body.title || draft.video.partB?.title || 'Copy of Copy of Copy of PANI GAWAH HAI | KASHMIR WATER BEARS WITNESS',
+        canvaUrl: body.canvaUrl || draft.video.partB?.canvaUrl || 'https://canva.link/qvmwwc830dm623g',
+        title: body.title || draft.video.partB?.title || 'Part 2',
         sceneCount: typeof body.sceneCount === 'number' ? body.sceneCount : (draft.video.partB?.sceneCount || 19),
         filePath: draft.video.partB?.filePath,
         fileName: draft.video.partB?.fileName,
@@ -100,8 +100,8 @@ export async function POST(
       draft.video.partB = {
         enabled: true,
         canvaDesignId,
-        canvaUrl: 'https://www.canva.com/d/PmQwnpEWAbuVg4q',
-        title: 'Copy of Copy of Copy of PANI GAWAH HAI | KASHMIR WATER BEARS WITNESS',
+        canvaUrl: 'https://canva.link/qvmwwc830dm623g',
+        title: 'Part 2',
         sceneCount: 19,
         filePath: targetPath,
         fileName: file.name,

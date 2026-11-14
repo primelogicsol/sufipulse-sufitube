@@ -992,7 +992,7 @@ export default function PipelineCockpitPage() {
                       </span>
                     </div>
                     <a
-                      href={draft?.video?.partB?.canvaUrl || 'https://www.canva.com/d/PmQwnpEWAbuVg4q?utm_source=chatgpt.com'}
+                      href={draft?.video?.partB?.canvaUrl || 'https://canva.link/qvmwwc830dm623g'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 underline font-normal"
@@ -1003,7 +1003,7 @@ export default function PipelineCockpitPage() {
                   </div>
 
                   <div className="text-[11px] text-white/70">
-                    <strong className="text-white">Title:</strong> {draft?.video?.partB?.title || 'Copy of Copy of Copy of PANI GAWAH HAI | KASHMIR WATER BEARS WITNESS'} (19 Scenes, 1920x1080)
+                    <strong className="text-white">Heading:</strong> {draft?.video?.partB?.title || 'Part 2'} (19 Scenes, 1920x1080)
                   </div>
 
                   {/* Playback Scope Option */}
