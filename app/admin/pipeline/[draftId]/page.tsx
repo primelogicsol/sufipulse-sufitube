@@ -565,22 +565,24 @@ export default function PipelineCockpitPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
-                    value={variantLabel}
+                    value={variantLabel || ''}
                     onChange={(e) => setVariantLabel(e.target.value)}
                     placeholder="Label (e.g. Variant B, Chorus Patch)"
                     className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
                   />
                   {variantSourceMode === 'url' ? (
                     <input
+                      key="suno-url-input"
                       type="url"
                       required
-                      value={sunoUrl}
+                      value={sunoUrl || ''}
                       onChange={(e) => setSunoUrl(e.target.value)}
                       placeholder="https://suno.com/song/..."
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
                     />
                   ) : (
                     <input
+                      key="audio-file-input"
                       type="file"
                       required
                       accept="audio/*,.mp3,.wav,.m4a,.aac,.flac"
@@ -848,7 +850,7 @@ export default function PipelineCockpitPage() {
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={approvalConfirmed}
+                    checked={Boolean(approvalConfirmed)}
                     onChange={(e) => setApprovalConfirmed(e.target.checked)}
                     className="mt-1 w-4 h-4 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
                   />
@@ -862,7 +864,7 @@ export default function PipelineCockpitPage() {
 
                 <textarea
                   rows={2}
-                  value={approvalNotes}
+                  value={approvalNotes || ''}
                   onChange={(e) => setApprovalNotes(e.target.value)}
                   placeholder="Review notes (optional): e.g. Crossfade at 12s verified, Nastaliq layout checked."
                   className="w-full rounded-xl border border-purple-500/20 bg-black/40 p-2.5 text-xs text-white placeholder-white/30 focus:border-purple-400 focus:outline-none"
