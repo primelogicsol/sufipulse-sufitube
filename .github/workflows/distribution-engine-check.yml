@@ -1,0 +1,55 @@
+name: Verify SufiPulse Distribution Engine
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/distribution/**'
+      - 'data/distribution/**'
+      - 'app/admin/distribution/**'
+      - '.github/workflows/distribution-engine-check.yml'
+  push:
+    branches:
+      - feature/organic-distribution-engine-20261114
+    paths:
+      - 'scripts/distribution/**'
+      - 'data/distribution/**'
+      - '.github/workflows/distribution-engine-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax check
+        run: |
+          node --check scripts/distribution/build-organic-campaign.mjs
+          node --check scripts/distribution/run-growth-engine.mjs
+      - name: Compile 30-day integrated campaign
+        run: node scripts/distribution/run-growth-engine.mjs --start 2026-11-16 --days 30 --out /tmp/sufipulse-distribution
+      - name: Validate evidence and non-publishing status
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const dir = '/tmp/sufipulse-distribution';
+          const summary = JSON.parse(fs.readFileSync(dir + '/control-center.json','utf8'));
+          const baseline = JSON.parse(fs.readFileSync(dir + '/measurement-baseline.json','utf8'));
+          const queue = fs.readFileSync(dir + '/distribution-queue.csv','utf8');
+          const matches = fs.readFileSync(dir + '/discovery-opportunities.csv','utf8');
+          assert(summary.counts.songs >= 8);
+          assert(summary.counts.prospects >= 6);
+          assert(summary.counts.plannedDrafts >= 30);
+          assert(matches.includes('research_only_not_contacted'));
+          assert(queue.includes('draft_not_published'));
+          assert(summary.safety.thirdPartyPosting === 'disabled');
+          assert(summary.safety.automatedPlayback === 'disabled');
+          assert(baseline.verifiedAppearancesSoFar === 0);
+          assert(baseline.verifiedUniqueListenersSoFar === null);
+          console.log('Distribution planning checks passed');
+          NODE
