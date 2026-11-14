@@ -31,7 +31,8 @@ import {
   MessageSquare,
   Music2,
   Network,
-  Database
+  Database,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -85,6 +86,7 @@ const adminNavigation = [
   {
     title: 'Stage 3 — Production & Studio',
     links: [
+      { path: '/admin/pipeline', label: 'Hybrid Studio Pipeline (New Releases)', icon: Sparkles },
       { path: '/admin/production-queue', label: 'Studio Production Queue', icon: FileText },
       { path: '/admin/studio-settings/private-production', label: 'Studio Audio Settings', icon: Settings },
       { path: '/admin/editorial/production-consideration', label: 'Production Consideration', icon: Activity },
