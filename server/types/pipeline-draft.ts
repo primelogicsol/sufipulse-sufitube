@@ -212,6 +212,20 @@ export interface PipelineDraft {
       | 'published';
   };
   publishingTx: PublishingTransactionRecord | null;
+  video?: {
+    status: 'PENDING' | 'RENDERING' | 'RENDERED' | 'FAILED';
+    renderedAt?: string;
+    formats: Record<
+      string,
+      {
+        format: string;
+        outputPath: string;
+        sha256?: string;
+        durationSeconds: number;
+        hasBurnedSubtitles: boolean;
+      }
+    >;
+  };
   createdAt: string;
   updatedAt: string;
 }

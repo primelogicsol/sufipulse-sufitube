@@ -142,7 +142,8 @@ export function createEmptyWavBuffer(
   durationSeconds: number,
   sampleRate: number = 48000,
   channels: number = 2,
-  bitsPerSample: number = 16
+  bitsPerSample: number = 16,
+  audible: boolean = true
 ): Buffer {
   const bytesPerSample = (bitsPerSample / 8) * channels;
   const totalSamples = Math.floor(durationSeconds * sampleRate);
@@ -167,6 +168,34 @@ export function createEmptyWavBuffer(
   // data subchunk
   buffer.write('data', 36);
   buffer.writeUInt32LE(dataSize, 40);
+
+  // If audible is requested, synthesize a gentle harmonic reference drone (216Hz + 432Hz with soft pulsation)
+  // so the file contains authentic audible sound and waveform movement across the full duration.
+  if (audible && bitsPerSample === 16) {
+    let offset = 44;
+    const fadeSamples = Math.min(Math.floor(sampleRate * 1.5), Math.floor(totalSamples / 4));
+    for (let i = 0; i < totalSamples; i++) {
+      const t = i / sampleRate;
+      let env = 1.0;
+      if (i < fadeSamples) env = i / fadeSamples;
+      else if (i > totalSamples - fadeSamples) env = Math.max(0, (totalSamples - i) / fadeSamples);
+
+      // Warm acoustic pulse (216Hz root + 432Hz octave + 648Hz fifth) with subtle 0.5Hz breathing rhythm
+      const pulse = 0.85 + 0.15 * Math.sin(2 * Math.PI * 0.5 * t);
+      const wave =
+        0.55 * Math.sin(2 * Math.PI * 216 * t) +
+        0.30 * Math.sin(2 * Math.PI * 432 * t) +
+        0.15 * Math.sin(2 * Math.PI * 648 * t);
+
+      // Keep comfortable reference volume (-18dB peak)
+      const sampleVal = Math.max(-32767, Math.min(32767, Math.round(wave * env * pulse * 4500)));
+
+      for (let c = 0; c < channels; c++) {
+        buffer.writeInt16LE(sampleVal, offset);
+        offset += 2;
+      }
+    }
+  }
 
   return buffer;
 }

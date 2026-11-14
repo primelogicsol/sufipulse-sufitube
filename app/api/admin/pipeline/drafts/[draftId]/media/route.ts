@@ -114,9 +114,13 @@ export async function GET(
 
       return new ReadableStream({
         start(controller) {
-          fileStream.on('data', (chunk: Buffer) => {
+          fileStream.on('data', (chunk: string | Buffer) => {
             try {
-              controller.enqueue(new Uint8Array(chunk));
+              if (typeof chunk === 'string') {
+                controller.enqueue(new TextEncoder().encode(chunk));
+              } else {
+                controller.enqueue(new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength));
+              }
             } catch {
               fileStream.destroy();
             }

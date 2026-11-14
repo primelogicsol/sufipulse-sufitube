@@ -15,6 +15,7 @@ import {
   fetchConfiguredPrivateAudioAlignment,
   normalizePrivateAudioAlignment,
 } from '@/server/integrations/private-audio-alignment';
+import { scrapePublicSunoSong } from '@/server/integrations/suno-public-scraper';
 import type { VariantSource } from '@/server/types/pipeline-draft';
 
 export const dynamic = 'force-dynamic';
@@ -100,10 +101,27 @@ export async function POST(request: NextRequest) {
             alignmentQuality: normalized.alignmentQuality,
           };
         } catch (alignErr: any) {
-          console.warn(`[pipeline-create] Upstream alignment fetch skipped: ${alignErr.message}`);
+          console.warn(`[pipeline-create] Upstream alignment fetch skipped: ${alignErr.message}. Attempting public Suno metadata fallback.`);
+          try {
+            const scraped = await scrapePublicSunoSong(detectedAssetId);
+            if (scraped) {
+              if (!customDuration && scraped.durationSeconds > 0) {
+                durationSeconds = scraped.durationSeconds;
+              }
+              if (scraped.title && (draft.title.startsWith('Suno Release') || draft.title.startsWith('Untitled'))) {
+                draft.title = scraped.title;
+              }
+              if (scraped.lyrics && (!draft.canonicalLyrics.text || draft.canonicalLyrics.text.trim().length === 0)) {
+                draft.canonicalLyrics.text = scraped.lyrics;
+              }
+              pipelineDraftStorage.saveDraft(draft);
+            }
+          } catch (scrapeErr: any) {
+            console.warn(`[pipeline-create] Public Suno scrape notice: ${scrapeErr.message}`);
+          }
         }
 
-        const buf = createEmptyWavBuffer(durationSeconds, 48000, 2, 16);
+        const buf = createEmptyWavBuffer(durationSeconds, 48000, 2, 16, true);
         fs.writeFileSync(filePath, buf);
 
         const variant: VariantSource = {

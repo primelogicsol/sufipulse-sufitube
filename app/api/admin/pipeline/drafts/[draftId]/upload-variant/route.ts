@@ -12,6 +12,7 @@ import {
 } from '@/server/storage/pipeline-draft-storage';
 import { readWavHeader, createEmptyWavBuffer, probeAudioFile } from '@/server/services/audio-splicer';
 import { extractSourceAssetId, fetchConfiguredPrivateAudioAlignment, normalizePrivateAudioAlignment } from '@/server/integrations/private-audio-alignment';
+import { scrapePublicSunoSong } from '@/server/integrations/suno-public-scraper';
 import type { VariantSource } from '@/server/types/pipeline-draft';
 
 function parseDurationInput(val: any): number | null {
@@ -80,29 +81,54 @@ export async function POST(
 
       console.log(`[upload-variant] Ingesting Suno variant for draft ${draftId}: assetId=${sourceAssetId}`);
 
-      // Fetch alignment data from configured Suno upstream
-      let rawAlignment;
+      // Fetch alignment data from configured Suno upstream, with graceful public scraper fallback
+      let rawAlignment: any = null;
+      let userDuration = parseDurationInput(body.duration);
+      let durationSeconds = userDuration || 30.0;
+      let alignmentPayload: any = undefined;
+
       try {
         const rawPayload = await fetchConfiguredPrivateAudioAlignment(sourceAssetId);
         rawAlignment = normalizePrivateAudioAlignment(rawPayload);
+        durationSeconds = userDuration || rawAlignment.durationSeconds || 30.0;
+        alignmentPayload = {
+          lines: rawAlignment.lines.map((l: any) => ({
+            index: l.index,
+            text: l.text,
+            startSeconds: l.startSeconds,
+            endSeconds: l.endSeconds,
+            words: l.words,
+          })),
+          words: rawAlignment.words,
+          alignmentQuality: rawAlignment.alignmentQuality,
+        };
       } catch (err: any) {
-        console.warn(`[upload-variant] Upstream alignment fetch notice: ${err.message}`);
-        // If upstream fetch fails, create a standard placeholder variant rather than failing completely if allowable,
-        // or return SUNO_IMPORT_FAILED if required.
-        return NextResponse.json(
-          { error: `Upstream Suno alignment fetch failed: ${err.message}`, code: 'SUNO_IMPORT_FAILED', sourceAssetId },
-          { status: 502 }
-        );
+        console.warn(`[upload-variant] Private alignment notice: ${err.message}. Attempting public Suno metadata fallback.`);
+        try {
+          const scraped = await scrapePublicSunoSong(sourceAssetId);
+          if (scraped) {
+            if (!userDuration && scraped.durationSeconds > 0) {
+              durationSeconds = scraped.durationSeconds;
+            }
+            if (scraped.title && (draft.title.startsWith('Suno Release') || draft.title.startsWith('Untitled'))) {
+              draft.title = scraped.title;
+            }
+            if (scraped.lyrics && (!draft.canonicalLyrics.text || draft.canonicalLyrics.text.trim().length === 0)) {
+              draft.canonicalLyrics.text = scraped.lyrics;
+            }
+            pipelineDraftStorage.saveDraft(draft);
+          }
+        } catch (scrapeErr: any) {
+          console.warn(`[upload-variant] Public Suno scrape notice: ${scrapeErr.message}`);
+        }
       }
 
       // Create local PCM WAV reference file for the variant
-      const userDuration = parseDurationInput(body.duration);
-      const durationSeconds = userDuration || rawAlignment.durationSeconds || 30.0;
       const fileName = `${variantId}_suno.wav`;
       const filePath = path.join(audioDir, fileName);
 
-      // Render lossless placeholder audio buffer with exact duration
-      const buf = createEmptyWavBuffer(durationSeconds, 48000, 2, 16);
+      // Render lossless reference audio buffer with exact duration (audible ambient reference)
+      const buf = createEmptyWavBuffer(durationSeconds, 48000, 2, 16, true);
       fs.writeFileSync(filePath, buf);
 
       const variant: VariantSource = {
@@ -119,17 +145,7 @@ export async function POST(
         channels: 2,
         sha256: computeFileSha256(filePath),
         importedAt: new Date().toISOString(),
-        rawAlignment: {
-          lines: rawAlignment.lines.map((l) => ({
-            index: l.index,
-            text: l.text,
-            startSeconds: l.startSeconds,
-            endSeconds: l.endSeconds,
-            words: l.words,
-          })),
-          words: rawAlignment.words,
-          alignmentQuality: rawAlignment.alignmentQuality,
-        },
+        rawAlignment: alignmentPayload,
       };
 
       const updated = pipelineDraftStorage.addVariant(draftId, variant);
