@@ -79,8 +79,8 @@ export default function OfficialChannels() {
             verified: false, // Pending: confirm @sufipulse handle is controlled by SufiPulse
         },
         {
-            name: 'Facebook (Page)',
-            description: 'Official SufiPulse presence, releases, and announcements.',
+            name: 'Facebook (Official)',
+            description: 'Official SufiPulse USA presence, releases, and announcements.',
             purpose: 'Institutional outreach and official community updates.',
             url: 'https://www.facebook.com/profile.php?id=61591758150138',
             buttonText: 'Visit Facebook',
@@ -88,17 +88,17 @@ export default function OfficialChannels() {
             verified: true,
         },
         {
-            name: 'Facebook Group (Community)',
-            description: 'SufiPulse and Dr Kumar Foundation USA community group.',
-            purpose: 'Community communion, discussions, and spiritual engagement.',
+            name: 'Facebook Group (SufiPulse USA Video Archive)',
+            description: 'Official SufiPulse USA Video Archive community group.',
+            purpose: 'Community communion, video archive access, and spiritual engagement.',
             url: 'https://www.facebook.com/groups/1100263345262190',
             buttonText: 'Join Group',
             icon: Facebook,
             verified: true,
         },
         {
-            name: 'Facebook (Dr Zarf-e-Noori)',
-            description: 'Spiritual guide and founder official presence.',
+            name: 'Facebook (Co-Founder - Dr. Zarf-e-Noori)',
+            description: 'Dr. Zarf-e-Noori, Co-Founder official presence.',
             purpose: 'Contemplative discourse, thought leadership, and institutional vision.',
             url: 'https://www.facebook.com/profile.php?id=61585776993670',
             buttonText: 'View Profile',

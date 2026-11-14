@@ -11,30 +11,35 @@ const VERIFIED_SOCIAL = [
     platform: 'YouTube',
     url: 'https://www.youtube.com/@SufiPulse-USA',
     label: 'SufiPulse on YouTube',
+    tooltip: 'YouTube',
     hoverClass: 'hover:border-red-600/60 hover:text-red-400',
   },
   {
     platform: 'Facebook',
     url: 'https://www.facebook.com/profile.php?id=61591758150138',
-    label: 'SufiPulse on Facebook',
+    label: 'Official — SufiPulse USA',
+    tooltip: 'Official',
     hoverClass: 'hover:border-[#1877F2]/60 hover:text-[#1877F2]',
   },
   {
     platform: 'Instagram',
     url: 'https://www.instagram.com/sufipulseusa/',
     label: 'SufiPulse on Instagram',
+    tooltip: 'Instagram',
     hoverClass: 'hover:border-[#E1306C]/60 hover:text-[#E1306C]',
   },
   {
-    platform: 'FacebookGroup',
+    platform: 'Facebook',
     url: 'https://www.facebook.com/groups/1100263345262190',
-    label: 'SufiPulse Community on Facebook (Group)',
+    label: 'Group — SufiPulse USA Video Archive',
+    tooltip: 'Group',
     hoverClass: 'hover:border-[#1877F2]/60 hover:text-[#1877F2]',
   },
   {
     platform: 'Facebook',
     url: 'https://www.facebook.com/profile.php?id=61585776993670',
-    label: 'Dr Zarf-e-Noori on Facebook',
+    label: 'Co founders — Dr. Zarf-e-Noori',
+    tooltip: 'Co founders',
     hoverClass: 'hover:border-[#1877F2]/60 hover:text-[#1877F2]',
   },
 ];
@@ -232,23 +237,35 @@ export function Footer() {
               {VERIFIED_SOCIAL.length > 0 && (
                 <div className="flex items-center gap-2 mt-1">
                   {VERIFIED_SOCIAL.map((ch) => (
-                    <a
-                      key={ch.url}
-                      href={ch.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={ch.label}
-                      title={ch.label}
-                      className={[
-                        'w-9 h-9 rounded-full flex items-center justify-center',
-                        'border border-white/10 bg-white/[0.03]',
-                        'text-[var(--color-text-tertiary)]',
-                        'transition-all duration-200 hover:scale-105 hover:bg-white/[0.07]',
-                        ch.hoverClass,
-                      ].join(' ')}
-                    >
-                      {SOCIAL_ICONS[ch.platform]}
-                    </a>
+                    <div key={ch.url} className="relative group/social flex items-center justify-center">
+                      <a
+                        href={ch.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={ch.label}
+                        title={ch.label}
+                        className={[
+                          'w-9 h-9 rounded-full flex items-center justify-center',
+                          'border border-white/10 bg-white/[0.03]',
+                          'text-[var(--color-text-tertiary)]',
+                          'transition-all duration-200 hover:scale-105 hover:bg-white/[0.07]',
+                          ch.hoverClass,
+                        ].join(' ')}
+                      >
+                        {SOCIAL_ICONS[ch.platform]}
+                      </a>
+
+                      {/* Instant hover tooltip */}
+                      <div
+                        role="tooltip"
+                        className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/social:opacity-100 group-focus-within/social:opacity-100 transition-all duration-150 transform translate-y-1 group-hover/social:translate-y-0 z-30 flex flex-col items-center"
+                      >
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide whitespace-nowrap bg-neutral-900/95 text-[var(--color-gold)] border border-[var(--color-gold)]/30 shadow-lg">
+                          {ch.tooltip}
+                        </span>
+                        <span className="w-1.5 h-1.5 bg-neutral-900/95 border-r border-b border-[var(--color-gold)]/30 rotate-45 -mt-1" />
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

@@ -169,8 +169,11 @@ export interface CanvaPartAConfig {
   canvaDesignId: string;
   canvaUrl: string;
   title: string;
+  mediaType?: 'image' | 'video';
   filePath?: string;
   fileName?: string;
+  thumbnailPath?: string;
+  durationSeconds?: number;
   width?: number;
   height?: number;
   validationStatus?: 'VALID' | 'FAILED' | 'PENDING';
@@ -187,6 +190,7 @@ export interface CanvaPartBConfig {
   filePath?: string;
   fileName?: string;
   durationSeconds?: number;
+  formattedDuration?: string;
   width?: number;
   height?: number;
   hasAudio?: boolean;

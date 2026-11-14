@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'node:path';
 import fs from 'node:fs';
+import { spawn } from 'node:child_process';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { pipelineDraftStorage, isValidDraftId } from '@/server/storage/pipeline-draft-storage';
+import { probeMediaFile, getFfmpegPath } from '@/server/services/video-renderer';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,10 +28,11 @@ export async function POST(
 
     const contentType = request.headers.get('content-type') || '';
 
-    // Direct image upload: supports both direct binary stream and multipart/form-data
+    // Direct image or video upload: supports both direct binary stream and multipart/form-data
     if (
       contentType.includes('application/octet-stream') ||
       contentType.includes('image/') ||
+      contentType.includes('video/') ||
       contentType.includes('multipart/form-data')
     ) {
       let fileBuffer: Buffer | null = null;
@@ -72,17 +75,63 @@ export async function POST(
       }
 
       if (!fileBuffer || fileBuffer.length === 0) {
-        return NextResponse.json({ error: 'No image file data provided' }, { status: 400 });
+        return NextResponse.json({ error: 'No media file data provided' }, { status: 400 });
       }
 
       const videoDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video');
       fs.mkdirSync(videoDir, { recursive: true });
 
       const ext = path.extname(fileName) || '.png';
-      const targetFileName = `part_a_background_${Date.now()}${ext}`;
+      const targetFileName = `part_a_theme_${Date.now()}${ext}`;
       const targetPath = path.join(videoDir, targetFileName);
 
       fs.writeFileSync(targetPath, fileBuffer);
+
+      let mediaType: 'image' | 'video' = 'image';
+      let durationSeconds: number | undefined = undefined;
+      let width: number | undefined = undefined;
+      let height: number | undefined = undefined;
+      let thumbnailPath: string | undefined = undefined;
+
+      const isVideoFile = ext.toLowerCase() === '.mp4' || ext.toLowerCase() === '.mov' || ext.toLowerCase() === '.webm' || contentType.includes('video/');
+
+      if (isVideoFile) {
+        mediaType = 'video';
+        try {
+          const probe = await probeMediaFile(targetPath);
+          if (probe.isValid) {
+            durationSeconds = probe.durationSeconds;
+            width = probe.width;
+            height = probe.height;
+          }
+        } catch (probeErr) {
+          console.warn('[part-a] Video probe warning:', probeErr);
+        }
+
+        // Extract initial frame (t=0) as default thumbnail
+        const thumbFileName = `thumbnail_${Date.now()}.jpg`;
+        const thumbFilePath = path.join(videoDir, thumbFileName);
+        try {
+          const ffBin = getFfmpegPath();
+          const proc = spawn(ffBin, [
+            '-ss', '0',
+            '-i', targetPath,
+            '-vframes', '1',
+            '-q:v', '2',
+            '-y',
+            thumbFilePath,
+          ]);
+          await new Promise<void>((resolve) => {
+            proc.on('close', () => resolve());
+            proc.on('error', () => resolve());
+          });
+          if (fs.existsSync(thumbFilePath) && fs.statSync(thumbFilePath).size > 0) {
+            thumbnailPath = thumbFilePath;
+          }
+        } catch (thumbErr) {
+          console.warn('[part-a] Thumbnail extraction warning:', thumbErr);
+        }
+      }
 
       if (!draft.video) {
         draft.video = {
@@ -96,8 +145,14 @@ export async function POST(
         canvaDesignId,
         canvaUrl,
         title,
+        mediaType,
         filePath: targetPath,
         fileName,
+        thumbnailPath,
+        durationSeconds,
+        width,
+        height,
+        validationStatus: 'VALID',
         uploadedAt: new Date().toISOString(),
       };
 

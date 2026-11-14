@@ -1073,14 +1073,29 @@ export default function PipelineCockpitPage() {
 
                   {/* Part A Background Canvas Visual Preview */}
                   <div className="relative rounded-lg overflow-hidden border border-amber-500/20 aspect-video bg-black/40">
-                    <img
-                      src={`/api/admin/pipeline/drafts/${draftId}/media?asset=part_a_image`}
-                      alt="Part A Background Canvas"
-                      className="w-full h-full object-cover"
-                    />
+                    {draft?.video?.partA?.mediaType === 'video' ? (
+                      <video
+                        controls
+                        className="w-full h-full object-cover"
+                        src={`/api/admin/pipeline/drafts/${draftId}/media?asset=part_a_image`}
+                      />
+                    ) : (
+                      <img
+                        src={`/api/admin/pipeline/drafts/${draftId}/media?asset=part_a_image`}
+                        alt="Part A Background Canvas"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                     <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-amber-300 border border-amber-400/20">
-                      Part A Canvas &bull; 1920x1080
+                      {draft?.video?.partA?.mediaType === 'video'
+                        ? `Part A Theme Video • ${draft.video.partA.durationSeconds?.toFixed(1)}s Loop (auto-loops across ${draft?.masterAudio?.durationSeconds?.toFixed(1) || 285.2}s song)`
+                        : 'Part A Canvas • 1920x1080'}
                     </div>
+                    {draft?.video?.partA?.thumbnailPath && (
+                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-emerald-300 border border-emerald-400/20 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Initial Frame as Thumbnail
+                      </div>
+                    )}
                   </div>
 
                   {/* Upload / Attached Status for Part A Background */}
@@ -1088,7 +1103,7 @@ export default function PipelineCockpitPage() {
                     {draft?.video?.partA?.filePath ? (
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-emerald-400 flex items-center gap-1 font-medium">
-                          <Check className="w-3.5 h-3.5" /> Background Canvas Attached
+                          <Check className="w-3.5 h-3.5" /> Background Canvas Attached ({draft.video.partA.mediaType === 'video' ? `${draft.video.partA.durationSeconds?.toFixed(1)}s Video Loop (Auto-Stretched)` : 'Image'})
                         </span>
                         <span className="text-white/40 font-mono text-[10px] truncate max-w-[140px]">
                           {draft.video.partA.fileName || 'part_a_background.png'}
@@ -1097,12 +1112,12 @@ export default function PipelineCockpitPage() {
                     ) : (
                       <form onSubmit={handleUploadPartA} className="space-y-2">
                         <label className="text-[11px] text-white/60 block">
-                          Attach Exported Canva Theme (PNG / JPG):
+                          Attach Exported Canva Theme (Video MP4 or PNG / JPG):
                         </label>
                         <div className="flex gap-2">
                           <input
                             type="file"
-                            accept="image/png,image/jpeg,image/webp"
+                            accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime"
                             onChange={(e) => setPartAFile(e.target.files?.[0] || null)}
                             className="text-[11px] text-white/70 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-white/10 file:text-white hover:file:bg-white/20"
                           />
@@ -1140,7 +1155,7 @@ export default function PipelineCockpitPage() {
                   </div>
 
                   <div className="text-[11px] text-white/70">
-                    <strong className="text-white">Heading:</strong> {draft?.video?.partB?.title || 'Part 2'} (19 Scenes, 1920x1080)
+                    <strong className="text-white">Heading:</strong> {draft?.video?.partB?.title || 'Part 2'} (19 Scenes &bull; {draft?.video?.partB?.formattedDuration || '10:08'} &bull; 1920x1080)
                   </div>
 
                   {/* Playback Scope Option */}
@@ -1274,16 +1289,18 @@ export default function PipelineCockpitPage() {
                       <>
                         {(() => {
                           const partASec = draft?.masterAudio?.durationSeconds || 0;
-                          const partBSec = (draft?.video?.partB?.enabled && draft?.video?.partB?.filePath && (draft?.video?.partB?.durationSeconds || 0) > 0)
+                          const partBSec = (draft?.video?.partB?.enabled && (draft?.video?.partB?.durationSeconds || 0) > 0)
                             ? (draft?.video?.partB?.durationSeconds || 0)
                             : 0;
                           const isCrossfade = partBAudioMode === 'crossfade' && draft?.video?.partB?.hasAudio;
                           const finalSec = isCrossfade && partBSec > 1.5
                             ? Math.max(0, partASec + partBSec - 1.5)
                             : partASec + partBSec;
-                          return `${finalSec.toFixed(1)}s`;
+                          const mins = Math.floor(finalSec / 60);
+                          const secs = Math.round(finalSec % 60);
+                          return `${finalSec.toFixed(1)}s (${mins}m ${secs < 10 ? '0' : ''}${secs}s)`;
                         })()}
-                        {draft?.video?.partB?.filePath && (
+                        {draft?.video?.partB && (
                           <span className="text-[10px] font-normal text-white/50 ml-1">
                             (Part A: {(draft?.masterAudio?.durationSeconds || 0).toFixed(1)}s + Part B: {(draft?.video?.partB?.durationSeconds || 0).toFixed(1)}s{partBAudioMode === 'crossfade' && draft?.video?.partB?.hasAudio ? ' - 1.5s crossfade' : ''})
                           </span>

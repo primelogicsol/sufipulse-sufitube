@@ -243,7 +243,7 @@ export interface VideoRenderResult {
   hasBurnedSubtitles: boolean;
 }
 
-function getFfmpegPath(): string {
+export function getFfmpegPath(): string {
   if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
     return process.env.FFMPEG_PATH;
   }
@@ -345,8 +345,17 @@ export async function render1080pMusicVideo(
       const partADuration = options.durationSeconds;
       const ffmpegArgs: string[] = [];
 
-      // Input 0: Part A Artwork (loop image for partADuration)
-      ffmpegArgs.push('-loop', '1', '-t', String(partADuration), '-i', options.artworkPath);
+      // Input 0: Part A Canvas (loop video continuously or loop still image for partADuration)
+      const isVideoArtwork =
+        options.artworkPath.toLowerCase().endsWith('.mp4') ||
+        options.artworkPath.toLowerCase().endsWith('.mov') ||
+        options.artworkPath.toLowerCase().endsWith('.webm');
+
+      if (isVideoArtwork) {
+        ffmpegArgs.push('-stream_loop', '-1', '-t', String(partADuration), '-i', options.artworkPath);
+      } else {
+        ffmpegArgs.push('-loop', '1', '-t', String(partADuration), '-i', options.artworkPath);
+      }
 
       // Input 1: Part A Master Audio
       ffmpegArgs.push('-i', options.audioPath);
