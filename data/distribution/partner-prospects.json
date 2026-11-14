@@ -1,0 +1,102 @@
+{
+  "asOf": "2026-11-14",
+  "disclaimer": "Research prospects only; identified does not mean endorsed, contacted or authorized.",
+  "partners": [
+    {
+      "id": "amk",
+      "name": "Adbi Markaz Kamraz",
+      "website": "https://www.adbimarkazkamraz.org/",
+      "region": "Kashmir Valley",
+      "type": "literary-cultural",
+      "topics": [
+        "kashmiri",
+        "poetry",
+        "heritage"
+      ],
+      "status": "identified",
+      "contactPermission": false,
+      "source": "https://www.adbimarkazkamraz.org/",
+      "notes": "Umbrella literary organization; explore relevant programming, not an existing partner"
+    },
+    {
+      "id": "khf",
+      "name": "Kasheer History Foundation",
+      "website": "https://khfmuseum.com/",
+      "region": "Srinagar",
+      "type": "cultural-heritage",
+      "topics": [
+        "kashmir",
+        "music",
+        "heritage"
+      ],
+      "status": "identified",
+      "contactPermission": false,
+      "source": "https://khfmuseum.com/",
+      "notes": "Public program includes Sufi and folk music"
+    },
+    {
+      "id": "kct",
+      "name": "Kashmir Cultural Trust",
+      "website": "https://www.kashmirculturaltrust.in/",
+      "region": "Kashmir / diaspora",
+      "type": "language-literature",
+      "topics": [
+        "kashmiri",
+        "poetry",
+        "culture"
+      ],
+      "status": "identified",
+      "contactPermission": false,
+      "source": "https://www.kashmirculturaltrust.in/",
+      "notes": "Kashmiri language and cultural preservation"
+    },
+    {
+      "id": "kgna",
+      "name": "Kashmiri Group of North America",
+      "website": "https://www.kgna.us/",
+      "region": "North America",
+      "type": "diaspora-cultural",
+      "topics": [
+        "kashmir",
+        "heritage",
+        "music"
+      ],
+      "status": "identified",
+      "contactPermission": false,
+      "source": "https://www.kgna.us/",
+      "notes": "Cultural events and Kashmiri heritage"
+    },
+    {
+      "id": "koa",
+      "name": "Kashmiri Overseas Association",
+      "website": "https://www.koausa.org/",
+      "region": "United States",
+      "type": "diaspora-cultural",
+      "topics": [
+        "kashmir",
+        "heritage",
+        "culture"
+      ],
+      "status": "identified",
+      "contactPermission": false,
+      "source": "https://www.koausa.org/",
+      "notes": "Kashmiri Pandit community cultural organization"
+    },
+    {
+      "id": "koac",
+      "name": "Kashmiri Overseas Association of Canada",
+      "website": "https://www.koacanada.org/default.aspx",
+      "region": "Canada",
+      "type": "diaspora-cultural",
+      "topics": [
+        "kashmir",
+        "heritage",
+        "culture"
+      ],
+      "status": "identified",
+      "contactPermission": false,
+      "source": "https://www.koacanada.org/default.aspx",
+      "notes": "Canadian Kashmiri cultural association"
+    }
+  ]
+}
