@@ -279,15 +279,16 @@ export default function PipelineCockpitPage() {
     if (!partAFile) return;
     try {
       setUploadingPartA(true);
-      const formData = new FormData();
-      formData.append('file', partAFile);
-      formData.append('canvaDesignId', draft?.video?.partA?.canvaDesignId || 'DAHa7St5CYs');
-      formData.append('canvaUrl', draft?.video?.partA?.canvaUrl || 'https://canva.link/ezqj8ymddv6yl2d');
-      formData.append('title', draft?.video?.partA?.title || 'Part A Background Theme');
-
       const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-a`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'x-file-name': encodeURIComponent(partAFile.name),
+          'x-canva-design-id': draft?.video?.partA?.canvaDesignId || 'DAHa7St5CYs',
+          'x-canva-url': encodeURIComponent(draft?.video?.partA?.canvaUrl || 'https://canva.link/ezqj8ymddv6yl2d'),
+          'x-title': encodeURIComponent(draft?.video?.partA?.title || 'Part A Background Theme'),
+        },
+        body: partAFile,
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -309,15 +310,16 @@ export default function PipelineCockpitPage() {
     if (!partBFile) return;
     try {
       setUploadingPartB(true);
-      const formData = new FormData();
-      formData.append('file', partBFile);
-      formData.append('canvaDesignId', draft?.video?.partB?.canvaDesignId || 'DAHa7eJOcbI');
-      formData.append('playbackMode', partBPlaybackMode);
-      formData.append('audioMode', partBAudioMode);
-
       const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-b`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'x-file-name': encodeURIComponent(partBFile.name),
+          'x-canva-design-id': draft?.video?.partB?.canvaDesignId || 'DAHa7eJOcbI',
+          'x-playback-mode': partBPlaybackMode,
+          'x-audio-mode': partBAudioMode,
+        },
+        body: partBFile,
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));

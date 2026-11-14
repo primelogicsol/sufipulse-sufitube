@@ -56,27 +56,66 @@ export async function POST(
       return NextResponse.json({ success: true, partB: draft.video.partB, draft });
     }
 
-    // Direct MP4 file upload (FormData)
-    if (contentType.includes('multipart/form-data')) {
-      const formData = await request.formData();
-      const file = formData.get('file') as File | null;
-      const canvaDesignId = String(formData.get('canvaDesignId') || 'DAHa7eJOcbI');
-      const playbackMode = (formData.get('playbackMode') as any) || 'full_19_scenes';
-      const audioMode = (formData.get('audioMode') as any) || 'preserve_canva_audio';
+    // MP4 File Upload: supports both direct binary streaming and multipart/form-data
+    if (
+      contentType.includes('application/octet-stream') ||
+      contentType.includes('video/') ||
+      contentType.includes('multipart/form-data')
+    ) {
+      let fileBuffer: Buffer | null = null;
+      let fileName = 'canva_part_b.mp4';
+      let canvaDesignId = 'DAHa7eJOcbI';
+      let playbackMode: any = 'full_19_scenes';
+      let audioMode: any = 'preserve_canva_audio';
 
-      if (!file) {
-        return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      // 1. Try reading headers first (for direct octet-stream upload)
+      const fileNameHeader = request.headers.get('x-file-name');
+      if (fileNameHeader) fileName = decodeURIComponent(fileNameHeader);
+      if (request.headers.get('x-canva-design-id')) canvaDesignId = request.headers.get('x-canva-design-id')!;
+      if (request.headers.get('x-playback-mode')) playbackMode = request.headers.get('x-playback-mode') as any;
+      if (request.headers.get('x-audio-mode')) audioMode = request.headers.get('x-audio-mode') as any;
+
+      // 2. If multipart/form-data, try parsing form-data with error resilience
+      if (contentType.includes('multipart/form-data')) {
+        try {
+          const formData = await request.formData();
+          const file = formData.get('file') as File | null;
+          if (file) {
+            fileName = file.name;
+            fileBuffer = Buffer.from(await file.arrayBuffer());
+          }
+          if (formData.get('canvaDesignId')) canvaDesignId = String(formData.get('canvaDesignId'));
+          if (formData.get('playbackMode')) playbackMode = formData.get('playbackMode') as any;
+          if (formData.get('audioMode')) audioMode = formData.get('audioMode') as any;
+        } catch (formErr) {
+          console.warn('[part-b] request.formData() failed, attempting raw arrayBuffer fallback:', formErr);
+        }
+      }
+
+      // 3. If fileBuffer not yet extracted, read raw body stream
+      if (!fileBuffer) {
+        try {
+          const arrayBuffer = await request.arrayBuffer();
+          if (arrayBuffer && arrayBuffer.byteLength > 0) {
+            fileBuffer = Buffer.from(arrayBuffer);
+          }
+        } catch (bodyErr) {
+          console.error('[part-b] Error reading body buffer:', bodyErr);
+        }
+      }
+
+      if (!fileBuffer || fileBuffer.length === 0) {
+        return NextResponse.json({ error: 'No video file data received' }, { status: 400 });
       }
 
       const videoDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video');
       fs.mkdirSync(videoDir, { recursive: true });
 
-      const ext = path.extname(file.name) || '.mp4';
+      const ext = path.extname(fileName) || '.mp4';
       const targetFileName = `canva_part_b_${Date.now()}${ext}`;
       const targetPath = path.join(videoDir, targetFileName);
 
-      const arrayBuffer = await file.arrayBuffer();
-      fs.writeFileSync(targetPath, Buffer.from(arrayBuffer));
+      fs.writeFileSync(targetPath, fileBuffer);
 
       // Probe audio/video duration
       let probedDuration = 0;
@@ -104,7 +143,7 @@ export async function POST(
         title: 'Part 2',
         sceneCount: 19,
         filePath: targetPath,
-        fileName: file.name,
+        fileName,
         durationSeconds: probedDuration > 0 ? Number(probedDuration.toFixed(2)) : undefined,
         audioMode,
         playbackMode,
