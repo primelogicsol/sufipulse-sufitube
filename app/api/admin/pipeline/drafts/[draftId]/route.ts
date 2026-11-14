@@ -39,6 +39,7 @@ export async function PATCH(
 
     const body = await request.json();
     if (body.title) draft.title = String(body.title).trim();
+    if (body.slug) draft.slug = String(body.slug).trim();
     if (body.canonicalLyrics) {
       draft.canonicalLyrics = {
         ...draft.canonicalLyrics,
@@ -47,6 +48,14 @@ export async function PATCH(
     }
     if (body.activeVariantId && draft.variants[body.activeVariantId]) {
       draft.activeVariantId = body.activeVariantId;
+    }
+    if (body.approvalStatus) {
+      draft.downstreamStatus.approvalStatus = body.approvalStatus;
+      if (body.approvalStatus === 'approved_for_publishing') {
+        draft.canonicalLyrics.status = 'APPROVED';
+        draft.canonicalLyrics.approvedAt = new Date().toISOString();
+        draft.canonicalLyrics.approvedBy = (auth as any)?.email || (auth as any)?.id || 'admin';
+      }
     }
 
     pipelineDraftStorage.saveDraft(draft);
