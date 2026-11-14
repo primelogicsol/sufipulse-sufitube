@@ -1,0 +1,86 @@
+{
+  "asOf": "2026-11-14",
+  "disclaimer": "Known public YouTube recordings; lifetime view counts are snapshot indicators, not real-time.",
+  "songs": [
+    {
+      "id": "8nmW-vJbwMA",
+      "title": "KASHMIR, HAR MANZAR MEIN TU",
+      "topics": [
+        "kashmir",
+        "nature",
+        "heritage"
+      ],
+      "lifetimeViews": 40843
+    },
+    {
+      "id": "3axIOaWesf0",
+      "title": "Teri Mitti... Mera Kashmir",
+      "topics": [
+        "kashmir",
+        "heritage",
+        "identity"
+      ],
+      "lifetimeViews": 1592
+    },
+    {
+      "id": "dXqkrpP-41I",
+      "title": "PANI GAWAH HAI | KASHMIR WATER BEARS WITNESS",
+      "topics": [
+        "kashmir",
+        "nature",
+        "environment"
+      ],
+      "lifetimeViews": 118
+    },
+    {
+      "id": "LMen31sMjMg",
+      "title": "Kumar Ganderbal | Qalandar-e-Zaman",
+      "topics": [
+        "kashmir",
+        "heritage",
+        "sufi"
+      ],
+      "lifetimeViews": 2233
+    },
+    {
+      "id": "hXAJUFwEuGk",
+      "title": "Sheikh! Sheikh! Noorani (RA)",
+      "topics": [
+        "kashmir",
+        "heritage",
+        "sufi"
+      ],
+      "lifetimeViews": 555
+    },
+    {
+      "id": "D7hvqyQYJrk",
+      "title": "Kemis Taani Chhu Aav Aav",
+      "topics": [
+        "kashmiri",
+        "sufi",
+        "music"
+      ],
+      "lifetimeViews": 110
+    },
+    {
+      "id": "Dbd0fhJty4A",
+      "title": "Ik Khamoshi, Tu Aur Main",
+      "topics": [
+        "sufi",
+        "mysticism",
+        "poetry"
+      ],
+      "lifetimeViews": 369
+    },
+    {
+      "id": "Hc1TjcyZLnM",
+      "title": "PEHCHAAN KHUD KO",
+      "topics": [
+        "sufi",
+        "mysticism",
+        "youth"
+      ],
+      "lifetimeViews": 141
+    }
+  ]
+}

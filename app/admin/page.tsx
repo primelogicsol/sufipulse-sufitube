@@ -227,6 +227,14 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
+      label: 'Organic Distribution',
+      value: 'Control Center',
+      meta: 'Kashmir and diaspora full-song discovery',
+      icon: Globe,
+      link: '/admin/distribution',
+      color: 'var(--dash-accent)',
+    },
+    {
       label: 'Total Users',
       value: stats.totalUsers,
       meta: 'Active accounts',
