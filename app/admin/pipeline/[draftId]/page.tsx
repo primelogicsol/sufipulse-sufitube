@@ -25,6 +25,10 @@ import {
   Clock,
   Eye,
   Check,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Info,
 } from 'lucide-react';
 
 type LangTab = 'ur' | 'en' | 'en-rom' | 'ur-deva';
@@ -72,6 +76,7 @@ export default function PipelineCockpitPage() {
   const [publishVisibility, setPublishVisibility] = useState<'public' | 'unlisted'>('public');
   const [publishing, setPublishing] = useState(false);
   const [publishResult, setPublishResult] = useState<any>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const fetchDraft = async () => {
     if (!draftId) return;
@@ -372,8 +377,17 @@ export default function PipelineCockpitPage() {
             </p>
           </div>
 
-          {/* Quick Stage Status Indicators */}
+          {/* Quick Stage Status Indicators & Guide Toggle */}
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsHelpOpen(!isHelpOpen)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 text-xs font-semibold transition-colors"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+              <span>{isHelpOpen ? 'Hide Cockpit Guide' : 'How to Use Cockpit'}</span>
+              {isHelpOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border ${
                 hasMasterAudio
@@ -412,6 +426,92 @@ export default function PipelineCockpitPage() {
             </span>
           </div>
         </div>
+
+        {/* Expandable / Collapsible Cockpit Guide */}
+        {isHelpOpen && (
+          <div className="rounded-2xl border border-amber-500/30 bg-black/60 backdrop-blur-sm p-6 shadow-2xl space-y-6 text-sm">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5 text-amber-400 font-bold text-base">
+                <Info className="w-5 h-5" />
+                <span>Review Cockpit — Step-by-Step Operator Guide</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHelpOpen(false)}
+                className="text-xs text-white/40 hover:text-white transition-colors"
+              >
+                Close ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Step 1 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wider">
+                  <Music className="w-4 h-4" /> 1. Audio Master
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Add audio takes using <strong>Suno URL</strong> or <strong>Upload Audio</strong> (.wav/.mp3/.m4a).
+                </p>
+                <div className="p-2.5 rounded-lg bg-white/5 text-[11px] text-white/60 space-y-1">
+                  <div><strong>Action:</strong> Click <em>"Re-render Master WAV"</em> to slice & crossfade variants into the definitive 48kHz lossless master.</div>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-blue-400 font-semibold text-xs uppercase tracking-wider">
+                  <FileText className="w-4 h-4" /> 2. Multilingual Lyrics
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Generates 4 localized representations mapped to the master timeline: Urdu Nastaliq, Sufi English, Roman Urdu & Devanagari.
+                </p>
+                <div className="p-2.5 rounded-lg bg-white/5 text-[11px] text-white/60 space-y-1">
+                  <div><strong>Action:</strong> Click <em>"Run Multilingual Engine"</em> then <em>"Export Subtitles"</em> (.vtt / .srt / .ass).</div>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xs uppercase tracking-wider">
+                  <Video className="w-4 h-4" /> 3. Video Studio
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Renders 1080p Full HD video with GPU/FFmpeg acceleration.
+                </p>
+                <div className="p-2.5 rounded-lg bg-white/5 text-[11px] text-white/60 space-y-1">
+                  <div><strong>1. Lyric Master:</strong> Burned dual Nastaliq Urdu + English translation.</div>
+                  <div><strong>2. Clean Cinematic:</strong> Unburned canvas for toggleable CC.</div>
+                  <div><strong>Action:</strong> Click <em>"Render 1080p Lyric Master"</em> and test playback in the preview player.</div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-purple-400 font-semibold text-xs uppercase tracking-wider">
+                  <Send className="w-4 h-4" /> 4. Human Gate & Publish
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Governance safeguard: publishing requires human sign-off.
+                </p>
+                <div className="p-2.5 rounded-lg bg-white/5 text-[11px] text-white/60 space-y-1">
+                  <div><strong>Action:</strong> Check <em>"I approve this release"</em> &rarr; <em>"Commit Approval Status"</em> &rarr; <em>"Approve & Publish"</em> to upload to YouTube & register CMS release.</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Tips */}
+            <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-white/70 space-y-1">
+              <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Verification & Playback Invariants</span>
+              </div>
+              <p>
+                Always scrub the rendered video preview to ensure: (1) Urdu Nastaliq font displays legibly right-to-left without clipping, (2) English translation matches beneath it, and (3) subtitles vanish during instrumental breaks.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Publication Success Banner if already published */}
         {isPublished && (
