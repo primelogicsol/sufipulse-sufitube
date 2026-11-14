@@ -18,6 +18,12 @@ import {
   Send,
   RefreshCw,
   Trash2,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Info,
+  ShieldCheck,
+  Headphones,
 } from 'lucide-react';
 
 interface DraftItem {
@@ -60,6 +66,7 @@ export default function PipelineDashboardPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newSunoUrl, setNewSunoUrl] = useState('');
   const [newLyrics, setNewLyrics] = useState('');
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const fetchDrafts = async () => {
     try {
@@ -239,6 +246,15 @@ export default function PipelineDashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsHelpOpen(!isHelpOpen)}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4 text-amber-400" />
+              <span>{isHelpOpen ? 'Hide Pipeline Guide' : 'How to Use Pipeline'}</span>
+              {isHelpOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
             {drafts.length > 0 && (
               <button
                 onClick={handleClearAllDrafts}
@@ -265,6 +281,106 @@ export default function PipelineDashboardPage() {
             </button>
           </div>
         </div>
+
+        {/* Expandable / Collapsible In-Page Help Guide */}
+        {isHelpOpen && (
+          <div className="rounded-2xl border border-amber-500/30 bg-black/60 backdrop-blur-sm p-6 shadow-2xl space-y-6 text-sm">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5 text-amber-400 font-bold text-base">
+                <Info className="w-5 h-5" />
+                <span>Hybrid Studio Pipeline — End-to-End Workflow Guide</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHelpOpen(false)}
+                className="text-xs text-white/40 hover:text-white transition-colors"
+              >
+                Close ✕
+              </button>
+            </div>
+
+            {/* Workflow Steps */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Step 1 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wider">
+                  <Music className="w-4 h-4" /> 1. Audio Master & Variant Ingestion
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Import multiple audio takes to assemble the definitive song:
+                </p>
+                <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
+                  <li><strong className="text-white/80">Suno URL:</strong> Paste any Suno song link to auto-extract the 36-char asset ID.</li>
+                  <li><strong className="text-white/80">Upload Audio:</strong> Directly upload <code className="text-amber-300">.wav</code>, <code className="text-amber-300">.mp3</code>, or <code className="text-amber-300">.m4a</code> files. Local <code className="text-amber-300">ffprobe</code> will calculate exact duration and waveforms.</li>
+                  <li><strong className="text-white/80">Re-render Master WAV:</strong> Slices and crossfades takes into an uncompressed lossless 48kHz / 16-bit PCM WAV master.</li>
+                </ul>
+              </div>
+
+              {/* Step 2 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-blue-400 font-semibold text-xs uppercase tracking-wider">
+                  <FileText className="w-4 h-4" /> 2. Multilingual Lyrics & Synchronization
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Generates and synchronizes 4 authoritative lyric tracks mapped against the master audio timestamps:
+                </p>
+                <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
+                  <li><strong className="text-white/80">1. Urdu (Nastaliq):</strong> Canonical right-to-left Urdu poetry in authentic Nastaliq typography.</li>
+                  <li><strong className="text-white/80">2. Sufi English:</strong> Philosophical and theological English translation.</li>
+                  <li><strong className="text-white/80">3. Roman Urdu:</strong> Phonetic transliteration for global singers and listeners.</li>
+                  <li><strong className="text-white/80">4. Devanagari:</strong> Hindi script rendering for South Asian accessibility.</li>
+                  <li><strong className="text-white/80">Exports:</strong> Download synchronized <code className="text-blue-300">.vtt</code>, <code className="text-blue-300">.srt</code>, or advanced styling <code className="text-blue-300">.ass</code> files.</li>
+                </ul>
+              </div>
+
+              {/* Step 3 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xs uppercase tracking-wider">
+                  <Video className="w-4 h-4" /> 3. 1080p Video Studio
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Renders full-length 1920x1080 music videos using GPU/FFmpeg acceleration in two distinct formats:
+                </p>
+                <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
+                  <li><strong className="text-white/80">1. Lyric Master:</strong> Full HD video with burned Dual-Subtitle typography (prominent Nastaliq on top + English translation beneath).</li>
+                  <li><strong className="text-white/80">2. Clean Cinematic:</strong> Unburned 1080p canvas for viewers who prefer toggleable Closed Captions (CC).</li>
+                </ul>
+              </div>
+
+              {/* Step 4 */}
+              <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center gap-2 text-purple-400 font-semibold text-xs uppercase tracking-wider">
+                  <Send className="w-4 h-4" /> 4. Human Approval Gate & Publishing
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Automated publishing is locked until a human administrator reviews and signs off:
+                </p>
+                <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
+                  <li><strong className="text-white/80">Checklist:</strong> Verify audio continuity, confirm Nastaliq typography, and review synchronized lyric intervals.</li>
+                  <li><strong className="text-white/80">4-Phase Publishing Transaction:</strong>
+                    <ol className="list-decimal list-inside pl-1 text-[11px] text-white/50 space-y-0.5 mt-1">
+                      <li>Upload 1080p video as private to YouTube SufiPulse channel.</li>
+                      <li>Upload and attach 4 localized CC subtitle tracks.</li>
+                      <li>Register canonical release into the SufiPulse CMS database.</li>
+                      <li>Switch video visibility to public unveiling.</li>
+                    </ol>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Governance Callout */}
+            <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-start gap-3 text-xs">
+              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="font-semibold text-white">Canonical Title Authority (GEMINI.md Governance Invariant)</span>
+                <p className="text-white/70 leading-relaxed">
+                  Canonical song title = permanent identity. YouTube A/B/C testing may optimize thumbnail packaging and qualifiers, but all variants must begin with the exact same canonical song title.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Pipeline Info Banner */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
