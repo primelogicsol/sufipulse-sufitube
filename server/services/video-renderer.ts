@@ -219,6 +219,12 @@ export interface VideoRenderOptions {
   format: 'lyric_master' | 'clean_cinematic';
   orientation?: 'landscape' | 'portrait';
   durationSeconds: number;
+  partA?: {
+    playbackMode?: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range';
+    loopStartSeconds?: number;
+    loopEndSeconds?: number;
+    sourceDurationSeconds?: number;
+  };
   partB?: {
     enabled: boolean;
     filePath?: string;
@@ -355,10 +361,41 @@ export async function render1080pMusicVideo(
         options.artworkPath.toLowerCase().endsWith('.mov') ||
         options.artworkPath.toLowerCase().endsWith('.webm');
 
+      const partAPlaybackMode = options.partA?.playbackMode || 'seamless_loop';
+      const sourceDuration = options.partA?.sourceDurationSeconds || 4.0;
+
+      let partABaseFilter = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1`;
+
       if (isVideoArtwork) {
-        ffmpegArgs.push('-stream_loop', '-1', '-t', String(partADuration), '-i', options.artworkPath);
+        if (partAPlaybackMode === 'freeze_last_frame') {
+          // Play visual once, then hold last frame until audio endpoint
+          ffmpegArgs.push('-i', options.artworkPath);
+          const holdDuration = Math.max(0, partADuration - sourceDuration);
+          partABaseFilter += `,tpad=stop_mode=clone:stop_duration=${holdDuration.toFixed(2)},trim=duration=${partADuration},fps=30`;
+        } else if (partAPlaybackMode === 'stretch') {
+          // Stretch animation to song duration
+          ffmpegArgs.push('-i', options.artworkPath);
+          const stretchRatio = (partADuration / Math.max(sourceDuration, 0.1)).toFixed(4);
+          partABaseFilter += `,setpts=${stretchRatio}*PTS,fps=30,trim=duration=${partADuration}`;
+        } else if (
+          partAPlaybackMode === 'custom_range' &&
+          typeof options.partA?.loopStartSeconds === 'number' &&
+          typeof options.partA?.loopEndSeconds === 'number' &&
+          options.partA.loopEndSeconds > options.partA.loopStartSeconds
+        ) {
+          // Custom visual loop range
+          const start = options.partA.loopStartSeconds;
+          const end = options.partA.loopEndSeconds;
+          ffmpegArgs.push('-ss', String(start), '-to', String(end), '-stream_loop', '-1', '-t', String(partADuration), '-i', options.artworkPath);
+          partABaseFilter += `,fps=30`;
+        } else {
+          // Seamless loop (Default): repeat visual seamlessly to cover exact audio master duration
+          ffmpegArgs.push('-stream_loop', '-1', '-t', String(partADuration), '-i', options.artworkPath);
+          partABaseFilter += `,fps=30`;
+        }
       } else {
         ffmpegArgs.push('-loop', '1', '-t', String(partADuration), '-i', options.artworkPath);
+        partABaseFilter += `,fps=30`;
       }
 
       // Input 1: Part A Master Audio
@@ -367,7 +404,7 @@ export async function render1080pMusicVideo(
       const filterParts: string[] = [];
 
       // 1. Process Part A Video stream
-      let partAVideoFilter = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30`;
+      let partAVideoFilter = partABaseFilter;
       
       if (options.format === 'lyric_master' && options.subtitlesPath && fs.existsSync(options.subtitlesPath)) {
         let burnAssPath = options.subtitlesPath;

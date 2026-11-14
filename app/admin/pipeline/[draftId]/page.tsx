@@ -29,6 +29,9 @@ import {
   ChevronUp,
   HelpCircle,
   Info,
+  Repeat,
+  Image as ImageIcon,
+  Sliders,
 } from 'lucide-react';
 
 type LangTab = 'ur' | 'en' | 'en-rom' | 'ur-deva';
@@ -61,9 +64,19 @@ export default function PipelineCockpitPage() {
   const [renderingVideo, setRenderingVideo] = useState(false);
   const [videoRenderResult, setVideoRenderResult] = useState<any>(null);
 
-  // Part A Canva Artwork State
+  // Part A Canva Artwork & Playback Mode State
   const [partAFile, setPartAFile] = useState<File | null>(null);
   const [uploadingPartA, setUploadingPartA] = useState(false);
+  const [partAPlaybackMode, setPartAPlaybackMode] = useState<'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range'>('seamless_loop');
+  const [partALoopStart, setPartALoopStart] = useState<number>(0);
+  const [partALoopEnd, setPartALoopEnd] = useState<number>(4);
+  const [savingPartAPlayback, setSavingPartAPlayback] = useState(false);
+  const [customThumbTimestamp, setCustomThumbTimestamp] = useState<string>('0.0');
+  const [extractingThumbnail, setExtractingThumbnail] = useState(false);
+  const [customThumbFile, setCustomThumbFile] = useState<File | null>(null);
+  const [uploadingCustomThumb, setUploadingCustomThumb] = useState(false);
+  const [showReplacePartA, setShowReplacePartA] = useState(false);
+  const [showCustomThumbStudio, setShowCustomThumbStudio] = useState(false);
 
   // Part B Canva Video State
   const [partBFile, setPartBFile] = useState<File | null>(null);
@@ -104,6 +117,18 @@ export default function PipelineCockpitPage() {
       if (data.draft?.downstreamStatus?.approvalStatus === 'approved_for_publishing') {
         setApprovalConfirmed(true);
       }
+      if (data.draft?.video?.partA?.playbackMode) {
+        setPartAPlaybackMode(data.draft.video.partA.playbackMode);
+      }
+      if (typeof data.draft?.video?.partA?.loopStartSeconds === 'number') {
+        setPartALoopStart(data.draft.video.partA.loopStartSeconds);
+      }
+      if (typeof data.draft?.video?.partA?.loopEndSeconds === 'number') {
+        setPartALoopEnd(data.draft.video.partA.loopEndSeconds);
+      }
+      if (typeof data.draft?.video?.partA?.thumbnailTimestampSeconds === 'number') {
+        setCustomThumbTimestamp(String(data.draft.video.partA.thumbnailTimestampSeconds));
+      }
     } catch (err: any) {
       setError(err.message || 'Error fetching draft');
     } finally {
@@ -141,12 +166,14 @@ export default function PipelineCockpitPage() {
       let res: Response;
 
       if (variantSourceMode === 'file' && audioFile) {
-        const fd = new FormData();
-        fd.append('file', audioFile);
-        fd.append('label', variantLabel.trim() || `Variant ${Object.keys(draft?.variants || {}).length + 1}`);
         res = await fetch(`/api/admin/pipeline/drafts/${draftId}/upload-variant`, {
           method: 'POST',
-          body: fd,
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'x-file-name': encodeURIComponent(audioFile.name),
+            'x-label': encodeURIComponent(variantLabel.trim() || `Variant ${Object.keys(draft?.variants || {}).length + 1}`),
+          },
+          body: audioFile,
         });
       } else {
         res = await fetch(`/api/admin/pipeline/drafts/${draftId}/upload-variant`, {
@@ -256,7 +283,12 @@ export default function PipelineCockpitPage() {
       const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/render-video`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format: videoFormat, orientation: videoOrientation }),
+        body: JSON.stringify({
+          format: videoFormat,
+          orientation: videoOrientation,
+          partAPlaybackMode,
+          partBAudioMode,
+        }),
       });
 
       if (!res.ok) {
@@ -298,10 +330,92 @@ export default function PipelineCockpitPage() {
       await fetchDraft();
       alert('Part A (Canva Background Theme) attached successfully!');
       setPartAFile(null);
+      setShowReplacePartA(false);
     } catch (err: any) {
       alert(`Part A upload failed: ${err.message}`);
     } finally {
       setUploadingPartA(false);
+    }
+  };
+
+  // Update Part A Playback Mode (Seamless Loop, Freeze Last Frame, Stretch, Custom Range)
+  const handleUpdatePartAPlayback = async (mode: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range') => {
+    setPartAPlaybackMode(mode);
+    try {
+      setSavingPartAPlayback(true);
+      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-a`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playbackMode: mode,
+          loopStartSeconds: partALoopStart,
+          loopEndSeconds: partALoopEnd,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to update Part A playback mode');
+      }
+      await fetchDraft();
+    } catch (err: any) {
+      alert(`Error updating Part A playback mode: ${err.message}`);
+    } finally {
+      setSavingPartAPlayback(false);
+    }
+  };
+
+  // Extract Frame at Timestamp as Thumbnail
+  const handleExtractThumbnailFrame = async (timestampSec: number) => {
+    try {
+      setExtractingThumbnail(true);
+      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-a`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'extract_thumbnail_frame',
+          timestampSeconds: timestampSec,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to extract thumbnail frame');
+      }
+      await fetchDraft();
+      alert(`Thumbnail extracted at ${timestampSec.toFixed(1)}s successfully!`);
+    } catch (err: any) {
+      alert(`Thumbnail extraction failed: ${err.message}`);
+    } finally {
+      setExtractingThumbnail(false);
+    }
+  };
+
+  // Upload Custom Thumbnail Image
+  const handleUploadCustomThumbnail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customThumbFile) return;
+    try {
+      setUploadingCustomThumb(true);
+      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-a?asset=thumbnail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'x-thumbnail-upload': 'true',
+          'x-file-name': encodeURIComponent(customThumbFile.name),
+        },
+        body: customThumbFile,
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to upload custom thumbnail');
+      }
+      await fetchDraft();
+      alert('Custom thumbnail image attached successfully!');
+      setCustomThumbFile(null);
+      setShowCustomThumbStudio(false);
+    } catch (err: any) {
+      alert(`Thumbnail upload failed: ${err.message}`);
+    } finally {
+      setUploadingCustomThumb(false);
     }
   };
 
@@ -1042,8 +1156,8 @@ export default function PipelineCockpitPage() {
                   </span>
                 </div>
 
-                {/* Part A Details (Canva Background Theme + Core Lyric Video) */}
-                <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 space-y-2.5 text-xs">
+                {/* Part A Details (Canva Background Theme + Dynamic Duration Matching) */}
+                <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3 text-xs">
                   <div className="flex items-center justify-between font-semibold text-amber-300">
                     <div className="flex items-center gap-1.5">
                       <span>Part A: Core Lyric Video</span>
@@ -1062,13 +1176,34 @@ export default function PipelineCockpitPage() {
                     </a>
                   </div>
 
-                  <div className="text-[11px] text-white/70">
-                    <strong className="text-white">Theme:</strong> Background Canvas &bull; 1920x1080
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-white/60">
-                    <span>Suno Master WAV + Dual Nastaliq & English Subtitles</span>
-                    <span className="font-mono text-emerald-400 font-semibold">{hasMasterAudio ? `${draft?.masterAudio?.durationSeconds?.toFixed(1)}s` : 'Pending Master'}</span>
+                  {/* Dynamic Duration Matching Status Banner */}
+                  <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/70 font-semibold uppercase tracking-wider text-[10px] flex items-center gap-1">
+                        <Repeat className="w-3 h-3 text-amber-400" />
+                        Dynamic Duration Matching
+                      </span>
+                      <span className="font-mono text-emerald-400 font-bold">
+                        {hasMasterAudio ? `${draft?.masterAudio?.durationSeconds?.toFixed(1)}s` : 'Pending Master'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-amber-500/20">
+                      <div>
+                        <span className="text-white/50 block text-[10px]">Source Canva Duration:</span>
+                        <span className="font-mono text-white font-medium">
+                          {draft?.video?.partA?.durationSeconds?.toFixed(1) || 4.0}s (Visual Loop)
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-white/50 block text-[10px]">Part A Extended Duration:</span>
+                        <span className="font-mono text-emerald-300 font-bold">
+                          {draft?.masterAudio?.durationSeconds?.toFixed(1) || 285.2}s (Song Length)
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-amber-200/80 pt-0.5">
+                      Visual automatically extends via {partAPlaybackMode === 'freeze_last_frame' ? 'last frame freeze' : partAPlaybackMode === 'stretch' ? 'animation speed stretch' : 'seamless repeating loop'} (~{Math.ceil((draft?.masterAudio?.durationSeconds || 285.2) / (draft?.video?.partA?.durationSeconds || 4.0))} repetitions, zero black frames).
+                    </div>
                   </div>
 
                   {/* Part A Background Canvas Visual Preview */}
@@ -1088,32 +1223,236 @@ export default function PipelineCockpitPage() {
                     )}
                     <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-amber-300 border border-amber-400/20">
                       {draft?.video?.partA?.mediaType === 'video'
-                        ? `Part A Theme Video • ${draft.video.partA.durationSeconds?.toFixed(1)}s Loop (auto-loops across ${draft?.masterAudio?.durationSeconds?.toFixed(1) || 285.2}s song)`
+                        ? `Part A Theme Video • ${draft.video.partA.durationSeconds?.toFixed(1) || 4.0}s Source (${draft?.masterAudio?.durationSeconds?.toFixed(1) || 285.2}s Dynamic Target)`
                         : 'Part A Canvas • 1920x1080'}
                     </div>
                     {draft?.video?.partA?.thumbnailPath && (
                       <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-emerald-300 border border-emerald-400/20 flex items-center gap-1">
-                        <Check className="w-3 h-3" /> Initial Frame as Thumbnail
+                        <Check className="w-3 h-3" /> Thumbnail: {draft.video.partA.thumbnailMode === 'custom_upload' ? 'Custom Upload' : draft.video.partA.thumbnailMode === 'custom_frame' ? `Frame at ${draft.video.partA.thumbnailTimestampSeconds || 0}s` : 'Initial Frame (t=0)'}
                       </div>
                     )}
                   </div>
 
-                  {/* Upload / Attached Status for Part A Background */}
+                  {/* Playback Mode Selection (Seamless Loop, Freeze Last Frame, Stretch, Custom Range) */}
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-[11px] text-white/70 font-semibold block flex items-center gap-1">
+                      <Sliders className="w-3 h-3 text-amber-400" />
+                      Part A Playback Mode:
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePartAPlayback('seamless_loop')}
+                        disabled={savingPartAPlayback}
+                        className={`px-2 py-1.5 rounded-lg border text-left font-medium transition-all ${
+                          partAPlaybackMode === 'seamless_loop'
+                            ? 'border-amber-400 bg-amber-500/20 text-white font-semibold'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <div>1. Seamless Loop (Default)</div>
+                        <div className="text-[9px] text-white/40">Repeats visual to song end</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePartAPlayback('freeze_last_frame')}
+                        disabled={savingPartAPlayback}
+                        className={`px-2 py-1.5 rounded-lg border text-left font-medium transition-all ${
+                          partAPlaybackMode === 'freeze_last_frame'
+                            ? 'border-amber-400 bg-amber-500/20 text-white font-semibold'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <div>2. Freeze Last Frame</div>
+                        <div className="text-[9px] text-white/40">Holds final frame until audio end</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePartAPlayback('stretch')}
+                        disabled={savingPartAPlayback}
+                        className={`px-2 py-1.5 rounded-lg border text-left font-medium transition-all ${
+                          partAPlaybackMode === 'stretch'
+                            ? 'border-amber-400 bg-amber-500/20 text-white font-semibold'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <div>3. Stretch Animation</div>
+                        <div className="text-[9px] text-white/40">Slows animation to match runtime</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePartAPlayback('custom_range')}
+                        disabled={savingPartAPlayback}
+                        className={`px-2 py-1.5 rounded-lg border text-left font-medium transition-all ${
+                          partAPlaybackMode === 'custom_range'
+                            ? 'border-amber-400 bg-amber-500/20 text-white font-semibold'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <div>4. Custom Loop Range</div>
+                        <div className="text-[9px] text-white/40">Trimmed loop In &rarr; Out</div>
+                      </button>
+                    </div>
+
+                    {partAPlaybackMode === 'custom_range' && (
+                      <div className="p-2 rounded-lg bg-black/40 border border-white/10 flex items-center gap-2 text-[10px]">
+                        <span className="text-white/60">Loop In (s):</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          value={partALoopStart}
+                          onChange={(e) => setPartALoopStart(parseFloat(e.target.value) || 0)}
+                          className="w-16 px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-white font-mono"
+                        />
+                        <span className="text-white/60">Out (s):</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          value={partALoopEnd}
+                          onChange={(e) => setPartALoopEnd(parseFloat(e.target.value) || 4)}
+                          className="w-16 px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-white font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleUpdatePartAPlayback('custom_range')}
+                          className="px-2 py-0.5 rounded bg-amber-500 text-black font-semibold hover:bg-amber-400 ml-auto"
+                        >
+                          Save Range
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Separate Thumbnail Studio Panel (Requirement 5) */}
+                  <div className="pt-2 border-t border-amber-500/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-white/80 flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3 text-amber-400" />
+                        Thumbnail Selection Studio
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomThumbStudio(!showCustomThumbStudio)}
+                        className="text-[10px] text-amber-400 hover:text-amber-300 underline"
+                      >
+                        {showCustomThumbStudio ? 'Hide Controls' : 'Configure Thumbnail'}
+                      </button>
+                    </div>
+
+                    {showCustomThumbStudio && (
+                      <div className="p-2.5 rounded-lg border border-white/10 bg-black/30 space-y-2.5">
+                        <div className="text-[10px] text-white/60">
+                          Select the release thumbnail frame independently without modifying background playback:
+                        </div>
+
+                        {draft?.video?.partA?.thumbnailPath && (
+                          <div className="flex items-center gap-3 p-2 rounded-lg bg-black/40 border border-white/10">
+                            <img
+                              src={`/api/admin/pipeline/drafts/${draftId}/media?asset=thumbnail`}
+                              alt="Release Thumbnail"
+                              className="w-24 h-14 object-cover rounded border border-white/10 shrink-0"
+                            />
+                            <div className="space-y-0.5 min-w-0 text-[10px]">
+                              <div className="text-white font-medium">Active Release Thumbnail</div>
+                              <div className="text-white/50 truncate">
+                                Mode: {draft.video.partA.thumbnailMode === 'custom_upload' ? 'Custom Uploaded Image' : draft.video.partA.thumbnailMode === 'custom_frame' ? `Frame extracted at ${draft.video.partA.thumbnailTimestampSeconds || 0}s` : 'Initial Frame (t=0.0s)'}
+                              </div>
+                              <div className="text-emerald-400 font-mono text-[9px] flex items-center gap-1">
+                                <Check className="w-2.5 h-2.5" /> Ready for YouTube & Catalog
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleExtractThumbnailFrame(0.0)}
+                            disabled={extractingThumbnail}
+                            className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium border border-white/20"
+                          >
+                            First Frame (t=0.0s)
+                          </button>
+
+                          <div className="flex items-center gap-1.5 text-[10px]">
+                            <span className="text-white/50">Frame at (s):</span>
+                            <input
+                              type="number"
+                              step="0.5"
+                              min="0"
+                              max={draft?.video?.partA?.durationSeconds || 4}
+                              value={customThumbTimestamp}
+                              onChange={(e) => setCustomThumbTimestamp(e.target.value)}
+                              className="w-14 px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-white font-mono text-[10px]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleExtractThumbnailFrame(parseFloat(customThumbTimestamp) || 0)}
+                              disabled={extractingThumbnail}
+                              className="px-2 py-1 rounded bg-amber-500 text-black font-semibold text-[10px] hover:bg-amber-400 disabled:opacity-50"
+                            >
+                              {extractingThumbnail ? 'Extracting...' : 'Extract Frame'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Custom Thumbnail Upload */}
+                        <form onSubmit={handleUploadCustomThumbnail} className="pt-2 border-t border-white/10 flex items-center gap-2">
+                          <label className="text-[10px] text-white/50 shrink-0">Upload Custom Image:</label>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={(e) => setCustomThumbFile(e.target.files?.[0] || null)}
+                            className="text-[10px] text-white/70 file:py-0.5 file:px-1.5 file:rounded file:border-0 file:text-[9px] file:bg-white/10 file:text-white"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!customThumbFile || uploadingCustomThumb}
+                            className="px-2.5 py-1 rounded bg-emerald-500 text-black text-[10px] font-semibold hover:bg-emerald-400 disabled:opacity-40 shrink-0"
+                          >
+                            {uploadingCustomThumb ? 'Uploading...' : 'Attach Image'}
+                          </button>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload / Replace Background Video (Requirement 3) */}
                   <div className="pt-2 border-t border-amber-500/20">
-                    {draft?.video?.partA?.filePath ? (
+                    {draft?.video?.partA?.filePath && !showReplacePartA ? (
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-emerald-400 flex items-center gap-1 font-medium">
-                          <Check className="w-3.5 h-3.5" /> Background Canvas Attached ({draft.video.partA.mediaType === 'video' ? `${draft.video.partA.durationSeconds?.toFixed(1)}s Video Loop (Auto-Stretched)` : 'Image'})
+                          <Check className="w-3.5 h-3.5" /> Background Canvas Attached ({draft.video.partA.mediaType === 'video' ? `${draft.video.partA.durationSeconds?.toFixed(1) || 4.0}s Video Loop` : 'Image'})
                         </span>
-                        <span className="text-white/40 font-mono text-[10px] truncate max-w-[140px]">
-                          {draft.video.partA.fileName || 'part_a_background.png'}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowReplacePartA(true)}
+                          className="text-[10px] text-amber-400 hover:text-amber-300 underline font-medium"
+                        >
+                          Replace Background Video
+                        </button>
                       </div>
                     ) : (
                       <form onSubmit={handleUploadPartA} className="space-y-2">
-                        <label className="text-[11px] text-white/60 block">
-                          Attach Exported Canva Theme (Video MP4 or PNG / JPG):
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] text-white/60 block">
+                            {draft?.video?.partA?.filePath ? 'Replace Background Video (MP4 or PNG):' : 'Attach Exported Canva Theme (Video MP4 or PNG / JPG):'}
+                          </label>
+                          {draft?.video?.partA?.filePath && (
+                            <button
+                              type="button"
+                              onClick={() => setShowReplacePartA(false)}
+                              className="text-[10px] text-white/40 hover:text-white underline"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                         <div className="flex gap-2">
                           <input
                             type="file"
@@ -1124,9 +1463,9 @@ export default function PipelineCockpitPage() {
                           <button
                             type="submit"
                             disabled={!partAFile || uploadingPartA}
-                            className="px-3 py-1 rounded-lg bg-amber-500 text-black text-[11px] font-semibold hover:bg-amber-400 disabled:opacity-40"
+                            className="px-3 py-1 rounded-lg bg-amber-500 text-black text-[11px] font-semibold hover:bg-amber-400 disabled:opacity-40 shrink-0"
                           >
-                            {uploadingPartA ? 'Uploading...' : 'Attach'}
+                            {uploadingPartA ? 'Uploading...' : draft?.video?.partA?.filePath ? 'Replace Video' : 'Attach'}
                           </button>
                         </div>
                       </form>

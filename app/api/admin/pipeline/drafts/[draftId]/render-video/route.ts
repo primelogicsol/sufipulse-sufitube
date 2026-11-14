@@ -45,6 +45,15 @@ export async function POST(
         }
       : undefined;
 
+    const partAConfig = draft.video?.partA
+      ? {
+          playbackMode: (body.partAPlaybackMode || draft.video.partA.playbackMode || 'seamless_loop') as any,
+          loopStartSeconds: draft.video.partA.loopStartSeconds,
+          loopEndSeconds: draft.video.partA.loopEndSeconds,
+          sourceDurationSeconds: draft.video.partA.durationSeconds || 4.0,
+        }
+      : undefined;
+
     const result = await render1080pMusicVideo({
       draftId,
       audioPath: draft.masterAudio.filePath,
@@ -54,6 +63,7 @@ export async function POST(
       format,
       orientation,
       durationSeconds: draft.masterAudio.durationSeconds,
+      partA: partAConfig,
       partB: partBConfig,
     });
 

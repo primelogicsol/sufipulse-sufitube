@@ -173,7 +173,13 @@ export interface CanvaPartAConfig {
   filePath?: string;
   fileName?: string;
   thumbnailPath?: string;
-  durationSeconds?: number;
+  durationSeconds?: number; // Visual source duration (e.g. 4.0s)
+  playbackDurationSeconds?: number; // Target dynamic duration = approved master audio duration (e.g. 285.2s)
+  playbackMode?: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range';
+  loopStartSeconds?: number;
+  loopEndSeconds?: number;
+  thumbnailMode?: 'first_frame' | 'custom_frame' | 'custom_upload';
+  thumbnailTimestampSeconds?: number;
   width?: number;
   height?: number;
   validationStatus?: 'VALID' | 'FAILED' | 'PENDING';

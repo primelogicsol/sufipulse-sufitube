@@ -162,25 +162,53 @@ export async function POST(
       return NextResponse.json({ success: true, variant, draft: freshDraft });
     }
 
-    // Direct file upload fallback (FormData)
-    if (contentType.includes('multipart/form-data')) {
-      const formData = await request.formData();
-      const file = formData.get('file') as File | null;
-      const label = String(formData.get('label') || `Variant ${Object.keys(draft.variants).length + 1}`).trim();
+    // Direct file upload fallback (FormData or direct binary stream)
+    if (
+      contentType.includes('multipart/form-data') ||
+      contentType.includes('application/octet-stream') ||
+      contentType.includes('audio/')
+    ) {
+      let fileName = 'variant_audio.wav';
+      let label = `Variant ${Object.keys(draft.variants).length + 1}`;
+      const extFromMime = contentType.includes('mpeg') || contentType.includes('mp3') ? 'mp3' : 'wav';
+      const targetFileName = `${variantId}_audio.${extFromMime}`;
+      const filePath = path.join(audioDir, targetFileName);
 
-      if (!file) {
+      const labelHeader = request.headers.get('x-label');
+      if (labelHeader) label = decodeURIComponent(labelHeader);
+      const fileNameHeader = request.headers.get('x-file-name');
+      if (fileNameHeader) fileName = decodeURIComponent(fileNameHeader);
+
+      if (contentType.includes('multipart/form-data')) {
+        const formData = await request.formData();
+        const file = formData.get('file') as File | null;
+        if (!file) {
+          return NextResponse.json(
+            { error: 'No audio file provided', code: 'AUDIO_SOURCE_UNAVAILABLE' },
+            { status: 400 }
+          );
+        }
+        fileName = file.name;
+        if (formData.get('label')) label = String(formData.get('label')).trim();
+        const writeStream = fs.createWriteStream(filePath);
+        const { pipeline: streamPipeline } = await import('node:stream/promises');
+        const { Readable } = await import('node:stream');
+        await streamPipeline(Readable.fromWeb(file.stream() as any), writeStream);
+      } else if (request.body) {
+        const writeStream = fs.createWriteStream(filePath);
+        const { pipeline: streamPipeline } = await import('node:stream/promises');
+        const { Readable } = await import('node:stream');
+        await streamPipeline(Readable.fromWeb(request.body as any), writeStream);
+      }
+
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
         return NextResponse.json(
-          { error: 'No audio file provided', code: 'AUDIO_SOURCE_UNAVAILABLE' },
+          { error: 'Empty audio file received', code: 'AUDIO_SOURCE_UNAVAILABLE' },
           { status: 400 }
         );
       }
 
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const ext = path.extname(file.name).toLowerCase().replace('.', '') || 'wav';
-      const fileName = `${variantId}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-      const filePath = path.join(audioDir, fileName);
-
-      fs.writeFileSync(filePath, buffer);
+      const ext = path.extname(fileName).toLowerCase().replace('.', '') || extFromMime;
 
       let durationSeconds = 30.0;
       let sampleRate = 48000;
@@ -188,6 +216,7 @@ export async function POST(
 
       if (ext === 'wav') {
         try {
+          const buffer = fs.readFileSync(filePath);
           const meta = readWavHeader(buffer);
           durationSeconds = meta.durationSeconds;
           sampleRate = meta.sampleRate;
@@ -241,6 +270,10 @@ export async function POST(
       }
 
       const freshDraft = pipelineDraftStorage.getDraft(draftId) || updated;
+      if (freshDraft.video?.partA) {
+        freshDraft.video.partA.playbackDurationSeconds = durationSeconds;
+        pipelineDraftStorage.saveDraft(freshDraft);
+      }
       return NextResponse.json({ success: true, variant, draft: freshDraft });
     }
 

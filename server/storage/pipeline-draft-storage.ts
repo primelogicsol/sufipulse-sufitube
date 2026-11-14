@@ -363,6 +363,11 @@ export const pipelineDraftStorage = {
     draft.downstreamStatus.timestampsValid = true;
     draft.downstreamStatus.approvalStatus = 'assembly_pending_review';
 
+    // Dynamic duration matching: Part A background duration automatically matches approved master audio
+    if (draft.video?.partA) {
+      draft.video.partA.playbackDurationSeconds = durationSeconds;
+    }
+
     this.saveDraft(draft);
     return draft;
   },
