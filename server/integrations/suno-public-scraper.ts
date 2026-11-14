@@ -75,6 +75,12 @@ export async function scrapePublicSunoSong(sunoUrlOrId: string): Promise<PublicS
 
     // If lyrics have a main heading (e.g. # कब तक ख़ामोश?), use that as a refined title if title is generic
     if (lyrics) {
+      // Strip trailing Next.js streaming serialization metadata (e.g. 58:["$","$Lc4",... or </script>)
+      const artifactIndex = lyrics.search(/\d+:\s*\[|\{"prefetched"|<\/script>|\$L[a-z0-9]+/i);
+      if (artifactIndex !== -1) {
+        lyrics = lyrics.slice(0, artifactIndex).trim();
+      }
+
       const firstHeading = lyrics.match(/^#+\s*(.+)$/m);
       if (firstHeading && firstHeading[1]) {
         const candidate = firstHeading[1].trim();

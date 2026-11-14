@@ -1237,7 +1237,7 @@ export default function PipelineCockpitPage() {
                       : '0.0s'}
                     {draft?.video?.partB?.filePath && (
                       <span className="text-[10px] font-normal text-white/50 ml-1">
-                        (Part A: {draft?.masterAudio?.durationSeconds?.toFixed(1)}s + Part B: {draft?.video?.partB?.durationSeconds?.toFixed(1)}s)
+                        (Part A: {(draft?.masterAudio?.durationSeconds || 0).toFixed(1)}s + Part B: {(draft?.video?.partB?.durationSeconds || 0).toFixed(1)}s)
                       </span>
                     )}
                   </span>
