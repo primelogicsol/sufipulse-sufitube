@@ -32,18 +32,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function parseDurationInput(val: any): number | null {
-  if (!val) return null;
-  const str = String(val).trim();
-  if (str.includes(':')) {
-    const parts = str.split(':').map((p) => parseFloat(p));
-    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-      return parts[0] * 60 + parts[1];
-    }
-  }
-  const num = parseFloat(str);
-  return !isNaN(num) && num > 0 ? num : null;
-}
+import { parseDurationInput } from '@/server/services/duration-parser';
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
@@ -105,7 +94,7 @@ export async function POST(request: NextRequest) {
           try {
             const scraped = await scrapePublicSunoSong(detectedAssetId);
             if (scraped) {
-              if (!customDuration && scraped.durationSeconds > 0) {
+              if (scraped.durationSeconds > 0 && (!customDuration || (customDuration < 30 && scraped.durationSeconds >= 30))) {
                 durationSeconds = scraped.durationSeconds;
               }
               if (scraped.title && (draft.title.startsWith('Suno Release') || draft.title.startsWith('Untitled'))) {

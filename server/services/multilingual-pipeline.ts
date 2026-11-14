@@ -245,7 +245,8 @@ export function generateMultilingualPackage(
           .filter((l) => l.length > 0);
         const count = rawLines.length;
         if (count === 0) return [];
-        const lineDur = (masterTimeline.durationSeconds || 60.0) / count;
+        const totalDuration = masterTimeline.durationSeconds || (masterTimeline as any).totalDurationSeconds || 60.0;
+        const lineDur = totalDuration / count;
         return rawLines.map((text, idx) => ({
           lineIndex: idx,
           segmentId: 'seg_default',

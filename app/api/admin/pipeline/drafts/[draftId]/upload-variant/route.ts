@@ -15,18 +15,7 @@ import { extractSourceAssetId, fetchConfiguredPrivateAudioAlignment, normalizePr
 import { scrapePublicSunoSong } from '@/server/integrations/suno-public-scraper';
 import type { VariantSource } from '@/server/types/pipeline-draft';
 
-function parseDurationInput(val: any): number | null {
-  if (!val) return null;
-  const str = String(val).trim();
-  if (str.includes(':')) {
-    const parts = str.split(':').map((p) => parseFloat(p));
-    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-      return parts[0] * 60 + parts[1];
-    }
-  }
-  const num = parseFloat(str);
-  return !isNaN(num) && num > 0 ? num : null;
-}
+import { parseDurationInput } from '@/server/services/duration-parser';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,7 +96,7 @@ export async function POST(
         try {
           const scraped = await scrapePublicSunoSong(sourceAssetId);
           if (scraped) {
-            if (!userDuration && scraped.durationSeconds > 0) {
+            if (scraped.durationSeconds > 0 && (!userDuration || (userDuration < 30 && scraped.durationSeconds >= 30))) {
               durationSeconds = scraped.durationSeconds;
             }
             if (scraped.title && (draft.title.startsWith('Suno Release') || draft.title.startsWith('Untitled'))) {
