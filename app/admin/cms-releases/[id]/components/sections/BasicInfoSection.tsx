@@ -110,15 +110,36 @@ export function BasicInfoSection({
             ? <p className="form-error-message">{fieldErrors.youtubeId}</p>
             : <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Paste a full YouTube URL and the ID will be extracted automatically</p>
           }
-          {form.youtubeId && /^[A-Za-z0-9_-]{11}$/.test(form.youtubeId.trim()) && (
+        </div>
+
+        <div>
+          <label htmlFor="release-thumbnail-url" className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+            Release Thumbnail URL
+          </label>
+          <input
+            id="release-thumbnail-url"
+            type="url"
+            name="thumbnailUrl"
+            value={form.thumbnailUrl || ''}
+            onChange={handleInputChange}
+            className="form-input w-full"
+            placeholder="https://example.com/cover.jpg"
+          />
+          <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>
+            Custom artwork is saved with the release. Leave blank to use the YouTube thumbnail when a video is linked.
+          </p>
+          {(form.thumbnailUrl || (form.youtubeId && /^[A-Za-z0-9_-]{11}$/.test(form.youtubeId.trim()))) && (
             <div className="mt-2 flex items-start gap-3">
               <img
-                src={`https://i.ytimg.com/vi/${form.youtubeId.trim()}/hqdefault.jpg`}
-                alt="YouTube thumbnail preview"
+                key={form.thumbnailUrl || form.youtubeId}
+                src={form.thumbnailUrl || `https://i.ytimg.com/vi/${form.youtubeId!.trim()}/hqdefault.jpg`}
+                alt="Current release thumbnail preview"
                 className="rounded"
                 style={{width: 160, height: 90, objectFit: 'cover', border: '1px solid var(--dash-border)'}}
               />
-              <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>Thumbnail preview</p>
+              <p className="text-xs mt-1" style={{color: 'var(--dash-text-muted)'}}>
+                Preview reflects the current thumbnail URL. Click Save Changes to persist it.
+              </p>
             </div>
           )}
         </div>
