@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { pipelineDraftStorage } from '@/server/storage/pipeline-draft-storage';
 
@@ -30,8 +31,18 @@ export async function GET(
     let contentType = 'application/octet-stream';
 
     if (asset === 'audio' || asset === 'master_audio') {
-      filePath = draft.masterAudio?.filePath || null;
       contentType = 'audio/wav';
+      const audioDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'audio');
+      if (draft.masterAudio?.filePath && fs.existsSync(draft.masterAudio.filePath)) {
+        filePath = draft.masterAudio.filePath;
+      } else if (fs.existsSync(path.join(audioDir, `master_rev${draft.currentRevision}.wav`))) {
+        filePath = path.join(audioDir, `master_rev${draft.currentRevision}.wav`);
+      } else if (fs.existsSync(path.join(audioDir, 'master.wav'))) {
+        filePath = path.join(audioDir, 'master.wav');
+      } else if (fs.existsSync(audioDir)) {
+        const wavs = fs.readdirSync(audioDir).filter((f) => f.endsWith('.wav'));
+        if (wavs.length > 0) filePath = path.join(audioDir, wavs[0]);
+      }
     } else if (asset === 'variant' && variantId) {
       const variant = draft.variants[variantId];
       if (variant) {
@@ -39,9 +50,40 @@ export async function GET(
         contentType = variant.format === 'wav' ? 'audio/wav' : 'audio/mpeg';
       }
     } else if (asset === 'video' || asset === 'master_video') {
-      const videoFileName = format === 'clean_cinematic' ? 'clean_cinematic.mp4' : 'lyric_master.mp4';
-      filePath = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video', videoFileName);
       contentType = 'video/mp4';
+      const targetFormat = format === 'clean_cinematic' ? 'clean_cinematic' : 'lyric_master';
+      const videoDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video');
+
+      // 1. Check draft video metadata format output path
+      if (
+        draft.video?.formats?.[targetFormat]?.outputPath &&
+        fs.existsSync(draft.video.formats[targetFormat].outputPath)
+      ) {
+        filePath = draft.video.formats[targetFormat].outputPath;
+      }
+      // 2. Check revision-based name (e.g. video_lyric_master_rev1.mp4)
+      else if (
+        fs.existsSync(path.join(videoDir, `video_${targetFormat}_rev${draft.currentRevision}.mp4`))
+      ) {
+        filePath = path.join(videoDir, `video_${targetFormat}_rev${draft.currentRevision}.mp4`);
+      }
+      // 3. Check legacy flat name (e.g. lyric_master.mp4)
+      else if (fs.existsSync(path.join(videoDir, `${targetFormat}.mp4`))) {
+        filePath = path.join(videoDir, `${targetFormat}.mp4`);
+      }
+      // 4. Check prefixed name (e.g. video_lyric_master.mp4)
+      else if (fs.existsSync(path.join(videoDir, `video_${targetFormat}.mp4`))) {
+        filePath = path.join(videoDir, `video_${targetFormat}.mp4`);
+      }
+      // 5. Fallback: match any mp4 in videoDir containing the format substring
+      else if (fs.existsSync(videoDir)) {
+        const matches = fs
+          .readdirSync(videoDir)
+          .filter((f) => f.includes(targetFormat) && f.endsWith('.mp4'));
+        if (matches.length > 0) {
+          filePath = path.join(videoDir, matches[matches.length - 1]);
+        }
+      }
     } else if (asset === 'subtitle' && lang) {
       const subDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles');
       const ext = searchParams.get('ext') || 'vtt';
@@ -62,8 +104,9 @@ export async function GET(
       const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
       const chunksize = end - start + 1;
       const fileStream = fs.createReadStream(filePath, { start, end });
+      const webStream = Readable.toWeb(fileStream);
 
-      return new NextResponse(fileStream as any, {
+      return new NextResponse(webStream as any, {
         status: 206,
         headers: {
           'Content-Range': `bytes ${start}-${end}/${stat.size}`,
@@ -75,7 +118,8 @@ export async function GET(
     }
 
     const fileStream = fs.createReadStream(filePath);
-    return new NextResponse(fileStream as any, {
+    const webStream = Readable.toWeb(fileStream);
+    return new NextResponse(webStream as any, {
       headers: {
         'Content-Length': stat.size.toString(),
         'Content-Type': contentType,

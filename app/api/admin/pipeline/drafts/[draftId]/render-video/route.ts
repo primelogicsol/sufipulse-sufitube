@@ -43,6 +43,31 @@ export async function POST(
       durationSeconds: draft.masterAudio.durationSeconds,
     });
 
+    if (!draft.video) {
+      draft.video = {
+        status: 'RENDERED',
+        renderedAt: new Date().toISOString(),
+        formats: {},
+      };
+    }
+    draft.video.status = 'RENDERED';
+    draft.video.renderedAt = new Date().toISOString();
+    draft.video.formats[format] = {
+      format,
+      outputPath: result.outputPath,
+      sha256: result.sha256,
+      durationSeconds: result.durationSeconds,
+      hasBurnedSubtitles: format === 'lyric_master',
+    };
+
+    // Ensure canonical flat filename exists for direct access
+    const canonicalFlat = path.join(videoDir, `${format}.mp4`);
+    if (outputPath !== canonicalFlat) {
+      try {
+        fs.copyFileSync(outputPath, canonicalFlat);
+      } catch {}
+    }
+
     draft.downstreamStatus.videoValid = true;
     pipelineDraftStorage.saveDraft(draft);
 
