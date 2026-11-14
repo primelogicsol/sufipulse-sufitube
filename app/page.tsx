@@ -81,6 +81,15 @@ export default async function Home() {
     <Layout>
       <HeroSection kpiStats={kpiStats} />
       
+      <section aria-label="Discover Kashmiri Sufi music" className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
+        <div className="rounded-2xl border border-emerald-800/30 bg-emerald-950 px-6 py-7 text-white">
+          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-200">Full-length listening collection</p>
+          <h2 className="mt-2 text-2xl font-semibold">Kashmiri Sufi Music &amp; Kalam</h2>
+          <p className="mt-2 max-w-2xl text-emerald-100">Explore original SufiPulse recordings about Kashmir, its spiritual heritage, its landscapes and the inward journey.</p>
+          <a href="/kashmir" className="mt-5 inline-block rounded-md bg-amber-200 px-5 py-3 font-semibold text-emerald-950 hover:bg-amber-100">Explore Kashmir songs</a>
+        </div>
+      </section>
+
       <FlagshipSpotlight featuredRelease={flagshipRelease} />
 
       <PremiereRoomHomeSection premieres={premiereReleases} />
