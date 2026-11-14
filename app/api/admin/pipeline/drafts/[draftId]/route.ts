@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'node:fs';
 import { requireAdmin } from '@/server/middleware/authenticate';
-import { pipelineDraftStorage } from '@/server/storage/pipeline-draft-storage';
+import {
+  pipelineDraftStorage,
+  isValidDraftId,
+  BASE_DATA_DIR,
+} from '@/server/storage/pipeline-draft-storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,13 +18,30 @@ export async function GET(
 
   try {
     const { draftId } = await params;
+    if (!isValidDraftId(draftId)) {
+      return NextResponse.json(
+        { error: `Invalid draft ID format: "${draftId}"`, code: 'INVALID_DRAFT_ID', draftId },
+        { status: 400 }
+      );
+    }
+
+    if (!fs.existsSync(BASE_DATA_DIR)) {
+      return NextResponse.json(
+        { error: 'Draft storage directory unavailable', code: 'DRAFT_STORAGE_UNAVAILABLE' },
+        { status: 500 }
+      );
+    }
+
     const draft = pipelineDraftStorage.getDraft(draftId);
     if (!draft) {
-      return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: `Pipeline draft not found: ${draftId}`, code: 'DRAFT_NOT_FOUND', draftId },
+        { status: 404 }
+      );
     }
     return NextResponse.json({ draft });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message, code: 'DRAFT_STORAGE_UNAVAILABLE' }, { status: 500 });
   }
 }
 
@@ -32,9 +54,19 @@ export async function PATCH(
 
   try {
     const { draftId } = await params;
+    if (!isValidDraftId(draftId)) {
+      return NextResponse.json(
+        { error: `Invalid draft ID format: "${draftId}"`, code: 'INVALID_DRAFT_ID', draftId },
+        { status: 400 }
+      );
+    }
+
     const draft = pipelineDraftStorage.getDraft(draftId);
     if (!draft) {
-      return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: `Pipeline draft not found: ${draftId}`, code: 'DRAFT_NOT_FOUND', draftId },
+        { status: 404 }
+      );
     }
 
     const body = await request.json();
@@ -61,7 +93,7 @@ export async function PATCH(
     pipelineDraftStorage.saveDraft(draft);
     return NextResponse.json({ draft });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message, code: 'DRAFT_STORAGE_UNAVAILABLE' }, { status: 500 });
   }
 }
 
@@ -74,12 +106,22 @@ export async function DELETE(
 
   try {
     const { draftId } = await params;
+    if (!isValidDraftId(draftId)) {
+      return NextResponse.json(
+        { error: `Invalid draft ID format: "${draftId}"`, code: 'INVALID_DRAFT_ID', draftId },
+        { status: 400 }
+      );
+    }
+
     const deleted = pipelineDraftStorage.deleteDraft(draftId);
     if (!deleted) {
-      return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: `Pipeline draft not found: ${draftId}`, code: 'DRAFT_NOT_FOUND', draftId },
+        { status: 404 }
+      );
     }
     return NextResponse.json({ success: true, deletedDraftId: draftId });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message, code: 'DRAFT_STORAGE_UNAVAILABLE' }, { status: 500 });
   }
 }

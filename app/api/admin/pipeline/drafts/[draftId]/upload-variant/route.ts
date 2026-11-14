@@ -5,6 +5,8 @@ import crypto from 'node:crypto';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import {
   pipelineDraftStorage,
+  isValidDraftId,
+  BASE_DATA_DIR,
   getDraftAudioDir,
   computeFileSha256,
 } from '@/server/storage/pipeline-draft-storage';
@@ -23,8 +25,28 @@ export async function POST(
 
   try {
     const { draftId } = await params;
+    if (!isValidDraftId(draftId)) {
+      return NextResponse.json(
+        { error: `Invalid draft ID format: "${draftId}"`, code: 'INVALID_DRAFT_ID', draftId },
+        { status: 400 }
+      );
+    }
+
+    if (!fs.existsSync(BASE_DATA_DIR)) {
+      return NextResponse.json(
+        { error: 'Draft storage directory unavailable', code: 'DRAFT_STORAGE_UNAVAILABLE' },
+        { status: 500 }
+      );
+    }
+
     const draft = pipelineDraftStorage.getDraft(draftId);
-    if (!draft) return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
+    if (!draft) {
+      console.warn(`[upload-variant] Draft not found on disk: "${draftId}" in ${BASE_DATA_DIR}`);
+      return NextResponse.json(
+        { error: `Pipeline draft not found: ${draftId}`, code: 'DRAFT_NOT_FOUND', draftId },
+        { status: 404 }
+      );
+    }
 
     const contentType = request.headers.get('content-type') || '';
     const audioDir = getDraftAudioDir(draftId);
@@ -37,8 +59,13 @@ export async function POST(
 
       const sourceAssetId = extractSourceAssetId(sunoUrl);
       if (!sourceAssetId) {
-        return NextResponse.json({ error: 'Valid Suno URL or Asset ID is required' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Valid Suno URL or 36-char Asset ID is required', code: 'AUDIO_SOURCE_UNAVAILABLE' },
+          { status: 400 }
+        );
       }
+
+      console.log(`[upload-variant] Ingesting Suno variant for draft ${draftId}: assetId=${sourceAssetId}`);
 
       // Fetch alignment data from configured Suno upstream
       let rawAlignment;
@@ -46,7 +73,13 @@ export async function POST(
         const rawPayload = await fetchConfiguredPrivateAudioAlignment(sourceAssetId);
         rawAlignment = normalizePrivateAudioAlignment(rawPayload);
       } catch (err: any) {
-        return NextResponse.json({ error: `Upstream alignment fetch failed: ${err.message}` }, { status: 502 });
+        console.warn(`[upload-variant] Upstream alignment fetch notice: ${err.message}`);
+        // If upstream fetch fails, create a standard placeholder variant rather than failing completely if allowable,
+        // or return SUNO_IMPORT_FAILED if required.
+        return NextResponse.json(
+          { error: `Upstream Suno alignment fetch failed: ${err.message}`, code: 'SUNO_IMPORT_FAILED', sourceAssetId },
+          { status: 502 }
+        );
       }
 
       // Create local PCM WAV reference file for the variant
@@ -96,7 +129,10 @@ export async function POST(
       const label = String(formData.get('label') || `Variant ${Object.keys(draft.variants).length + 1}`).trim();
 
       if (!file) {
-        return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'No audio file provided', code: 'AUDIO_SOURCE_UNAVAILABLE' },
+          { status: 400 }
+        );
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
@@ -147,8 +183,8 @@ export async function POST(
       return NextResponse.json({ success: true, variant, draft: updated });
     }
 
-    return NextResponse.json({ error: 'Unsupported Content-Type' }, { status: 400 });
+    return NextResponse.json({ error: 'Unsupported Content-Type', code: 'AUDIO_SOURCE_UNAVAILABLE' }, { status: 400 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message, code: 'DRAFT_STORAGE_UNAVAILABLE' }, { status: 500 });
   }
 }

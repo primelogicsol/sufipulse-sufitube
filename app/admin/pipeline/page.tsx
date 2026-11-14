@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
@@ -47,6 +48,7 @@ interface DraftItem {
 }
 
 export default function PipelineDashboardPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.role?.includes('admin') ?? false;
 
@@ -54,7 +56,9 @@ export default function PipelineDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
+  const [newSunoUrl, setNewSunoUrl] = useState('');
   const [newLyrics, setNewLyrics] = useState('');
 
   const fetchDrafts = async () => {
@@ -78,9 +82,30 @@ export default function PipelineDashboardPage() {
     }
   }, [isAdmin]);
 
+  // Handle smart title input (auto-detect pasted Suno URLs or UUID fragments)
+  const handleTitleChange = (val: string) => {
+    const trimmed = val.trim();
+    const uuidMatch = trimmed.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+    const isSunoUrl = trimmed.includes('suno.com/song/') || trimmed.startsWith('https://suno.com');
+
+    if (isSunoUrl || (uuidMatch && trimmed.length <= 42)) {
+      const assetId = uuidMatch ? uuidMatch[0] : trimmed;
+      if (!newSunoUrl) {
+        setNewSunoUrl(isSunoUrl ? trimmed : `https://suno.com/song/${assetId}`);
+      }
+      setNewTitle(`Suno Release (${assetId.slice(0, 8)})`);
+      return;
+    }
+    setNewTitle(val);
+  };
+
   const handleCreateDraft = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    setCreateError(null);
+    if (!newTitle.trim() && !newSunoUrl.trim()) {
+      setCreateError('Please enter a Song Title or Suno URL.');
+      return;
+    }
 
     try {
       setCreateLoading(true);
@@ -89,19 +114,29 @@ export default function PipelineDashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newTitle.trim(),
+          sunoUrl: newSunoUrl.trim() || undefined,
           lyricsText: newLyrics.trim(),
           primaryLanguage: 'ur',
         }),
       });
 
-      if (res.ok) {
-        setShowCreateModal(false);
-        setNewTitle('');
-        setNewLyrics('');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || `Creation failed with status ${res.status}`);
+      }
+
+      setShowCreateModal(false);
+      setNewTitle('');
+      setNewSunoUrl('');
+      setNewLyrics('');
+
+      if (data.draft?.draftId) {
+        router.push(`/admin/pipeline/${data.draft.draftId}`);
+      } else {
         await fetchDrafts();
       }
-    } catch (err) {
-      console.error('Failed to create draft', err);
+    } catch (err: any) {
+      setCreateError(err.message || 'Failed to create release pipeline');
     } finally {
       setCreateLoading(false);
     }
@@ -360,6 +395,12 @@ export default function PipelineDashboardPage() {
               </div>
 
               <form onSubmit={handleCreateDraft} className="space-y-4">
+                {createError && (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+                    {createError}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs uppercase tracking-wider font-semibold text-white/70 mb-1.5">
                     Canonical Song Title *
@@ -368,8 +409,8 @@ export default function PipelineDashboardPage() {
                     type="text"
                     required
                     value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="e.g. Noor-e-Fana (Radiance of Divine Silence)"
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="e.g. Rab Ki Tasbeeh (Bolo Ab Toh Bolo)"
                     className="w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
                   />
                   <p className="mt-1 text-xs text-white/40">
@@ -379,13 +420,29 @@ export default function PipelineDashboardPage() {
 
                 <div>
                   <label className="block text-xs uppercase tracking-wider font-semibold text-white/70 mb-1.5">
+                    Initial Suno Variant URL / Asset ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newSunoUrl}
+                    onChange={(e) => setNewSunoUrl(e.target.value)}
+                    placeholder="https://suno.com/song/1d47c525-20df-42e9-a58f-9f082fbdfbcf"
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none font-mono text-xs"
+                  />
+                  <p className="mt-1 text-xs text-white/40">
+                    If provided, Variant 1 will be automatically ingested upon pipeline creation.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/70 mb-1.5">
                     Original Urdu / Canonical Lyrics
                   </label>
                   <textarea
-                    rows={6}
+                    rows={5}
                     value={newLyrics}
                     onChange={(e) => setNewLyrics(e.target.value)}
-                    placeholder="عشق اور فنا میں خاموشی کا نور ہے...&#10;هر دم دلِ بے قرار با یادِ حق..."
+                    placeholder="بولو اب تو بولو خاموش زمیرو...&#10;عشق اور فنا میں خاموشی کا نور ہے..."
                     dir="rtl"
                     className="w-full rounded-xl border border-white/15 bg-white/5 p-3 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none font-serif leading-relaxed"
                   />
@@ -404,10 +461,10 @@ export default function PipelineDashboardPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={createLoading || !newTitle.trim()}
+                    disabled={createLoading || (!newTitle.trim() && !newSunoUrl.trim())}
                     className="px-5 py-2 rounded-xl text-sm font-semibold bg-amber-500 text-black hover:bg-amber-400 transition-colors disabled:opacity-50"
                   >
-                    {createLoading ? 'Creating...' : 'Initialize Pipeline'}
+                    {createLoading ? 'Initializing...' : 'Initialize Pipeline'}
                   </button>
                 </div>
               </form>

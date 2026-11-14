@@ -9,7 +9,12 @@ import type {
   ReconciledMasterTimeline,
 } from '@/server/types/pipeline-draft';
 
-const BASE_DATA_DIR = path.join(process.cwd(), '.data', 'pipeline-drafts');
+export const BASE_DATA_DIR = path.resolve(process.cwd(), '.data', 'pipeline-drafts');
+
+export function isValidDraftId(draftId: string): boolean {
+  if (!draftId || typeof draftId !== 'string') return false;
+  return /^draft_\d+_[a-f0-9]+$/i.test(draftId.trim());
+}
 
 function ensureDir(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
@@ -17,11 +22,11 @@ function ensureDir(dirPath: string) {
   }
 }
 
-function getDraftDir(draftId: string): string {
+export function getDraftDir(draftId: string): string {
   return path.join(BASE_DATA_DIR, draftId);
 }
 
-function getDraftJsonPath(draftId: string): string {
+export function getDraftJsonPath(draftId: string): string {
   return path.join(getDraftDir(draftId), 'draft.json');
 }
 
@@ -42,10 +47,23 @@ export const pipelineDraftStorage = {
     slug?: string;
     lyricsText?: string;
     primaryLanguage?: string;
+    initialSourceAssetId?: string;
   }): PipelineDraft {
     ensureDir(BASE_DATA_DIR);
     const draftId = `draft_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-    const slug = (params.slug || params.title)
+
+    // Clean and validate title: prevent raw Suno URLs or fragmented UUIDs from being the title
+    let rawTitle = String(params.title || '').trim();
+    const uuidMatch = rawTitle.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+    const isUrl = rawTitle.includes('suno.com') || rawTitle.startsWith('http://') || rawTitle.startsWith('https://');
+
+    let cleanTitle = rawTitle;
+    if (isUrl || (uuidMatch && rawTitle.length <= 42) || !rawTitle) {
+      const assetSnippet = uuidMatch ? uuidMatch[0].slice(0, 8) : (params.initialSourceAssetId ? params.initialSourceAssetId.slice(0, 8) : 'new');
+      cleanTitle = `Suno Release (${assetSnippet})`;
+    }
+
+    const slug = (params.slug || cleanTitle)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || `release-${draftId}`;
@@ -54,7 +72,7 @@ export const pipelineDraftStorage = {
     const draft: PipelineDraft = {
       draftId,
       slug,
-      title: params.title.trim(),
+      title: cleanTitle,
       primaryLanguage: params.primaryLanguage || 'ur',
       availableLanguages: ['ur', 'en', 'en-rom', 'hi'],
       canonicalLyrics: {
@@ -89,12 +107,19 @@ export const pipelineDraftStorage = {
     };
 
     this.saveDraft(draft);
+    console.log(`[pipelineDraftStorage] Created draft ${draftId} ("${cleanTitle}") in ${getDraftDir(draftId)}`);
     return draft;
   },
 
   getDraft(draftId: string): PipelineDraft | null {
+    if (!isValidDraftId(draftId)) {
+      console.warn(`[pipelineDraftStorage] Rejected lookup for invalid draftId format: "${draftId}"`);
+      return null;
+    }
     const jsonPath = getDraftJsonPath(draftId);
-    if (!fs.existsSync(jsonPath)) return null;
+    const exists = fs.existsSync(jsonPath);
+    console.log(`[pipelineDraftStorage] getDraft("${draftId}") -> exists: ${exists} (${jsonPath})`);
+    if (!exists) return null;
 
     try {
       const raw = fs.readFileSync(jsonPath, 'utf8');
@@ -115,6 +140,7 @@ export const pipelineDraftStorage = {
 
     fs.writeFileSync(tmpPath, JSON.stringify(draft, null, 2), 'utf8');
     fs.renameSync(tmpPath, targetPath);
+    console.log(`[pipelineDraftStorage] Persisted draft ${draft.draftId} to disk.`);
   },
 
   listDrafts(): PipelineDraft[] {

@@ -79,7 +79,8 @@ export default function PipelineCockpitPage() {
       setLoading(true);
       const res = await fetch(`/api/admin/pipeline/drafts/${draftId}`);
       if (!res.ok) {
-        throw new Error(`Failed to load draft (${res.status})`);
+        const d = await res.json().catch(() => ({}));
+        throw new Error(`Failed to load draft (${res.status}): ${d.error || res.statusText}`);
       }
       const data = await res.json();
       setDraft(data.draft);
@@ -144,8 +145,9 @@ export default function PipelineCockpitPage() {
       }
 
       if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || 'Failed to import audio variant');
+        const d = await res.json().catch(() => ({}));
+        const errCode = d.code ? `[${d.code}] ` : '';
+        throw new Error(`${errCode}${d.error || 'Failed to import audio variant'}`);
       }
 
       setSunoUrl('');
