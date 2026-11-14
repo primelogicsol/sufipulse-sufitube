@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { pipelineDraftStorage, isValidDraftId } from '@/server/storage/pipeline-draft-storage';
-import { probeAudioFile } from '@/server/services/audio-splicer';
+import { probeMediaFile } from '@/server/services/media-prober';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,16 +117,9 @@ export async function POST(
 
       fs.writeFileSync(targetPath, fileBuffer);
 
-      // Probe audio/video duration
-      let probedDuration = 0;
-      try {
-        const probed = await probeAudioFile(targetPath);
-        if (probed && probed.durationSeconds > 0) {
-          probedDuration = probed.durationSeconds;
-        }
-      } catch (probeErr) {
-        console.warn('[part-b] Could not probe MP4 duration:', probeErr);
-      }
+      // Authoritative Media Probe for duration, dimensions, stream health
+      const probe = await probeMediaFile(targetPath);
+      console.log(`[part-b] Probed media for ${targetPath}:`, probe);
 
       if (!draft.video) {
         draft.video = {
@@ -144,7 +137,12 @@ export async function POST(
         sceneCount: 19,
         filePath: targetPath,
         fileName,
-        durationSeconds: probedDuration > 0 ? Number(probedDuration.toFixed(2)) : undefined,
+        durationSeconds: probe.durationSeconds > 0 ? probe.durationSeconds : undefined,
+        width: probe.width,
+        height: probe.height,
+        hasAudio: probe.hasAudio,
+        validationStatus: probe.isValid ? 'VALID' : 'FAILED',
+        validationError: probe.error,
         audioMode,
         playbackMode,
         uploadedAt: new Date().toISOString(),

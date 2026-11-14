@@ -25,11 +25,13 @@ export async function POST(
 
     const body = await request.json().catch(() => ({}));
     const format = (body.format === 'clean_cinematic' ? 'clean_cinematic' : 'lyric_master') as 'lyric_master' | 'clean_cinematic';
+    const orientation = (body.orientation === 'portrait' ? 'portrait' : 'landscape') as 'landscape' | 'portrait';
 
     const videoDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video');
     fs.mkdirSync(videoDir, { recursive: true });
 
-    const outputPath = path.join(videoDir, `video_${format}_rev${draft.currentRevision}.mp4`);
+    const key = `${format}_${orientation}`;
+    const outputPath = path.join(videoDir, `video_${format}_${orientation}_rev${draft.currentRevision}.mp4`);
     const artworkPath =
       body.artworkPath ||
       (draft.video?.partA?.filePath && fs.existsSync(draft.video.partA.filePath) ? draft.video.partA.filePath : null) ||
@@ -43,6 +45,7 @@ export async function POST(
       subtitlesPath: format === 'lyric_master' ? subPath : undefined,
       outputPath,
       format,
+      orientation,
       durationSeconds: draft.masterAudio.durationSeconds,
       partB: draft.video?.partB?.enabled && draft.video.partB.filePath ? draft.video.partB : undefined,
     });
@@ -56,8 +59,8 @@ export async function POST(
     }
     draft.video.status = 'RENDERED';
     draft.video.renderedAt = new Date().toISOString();
-    draft.video.formats[format] = {
-      format,
+    draft.video.formats[key] = {
+      format: key,
       outputPath: result.outputPath,
       sha256: result.sha256,
       durationSeconds: result.durationSeconds,
@@ -65,6 +68,8 @@ export async function POST(
       partASeconds: result.partASeconds,
       partBSeconds: result.partBSeconds,
     };
+    // Also save legacy key for backward compatibility
+    draft.video.formats[format] = draft.video.formats[key];
 
     // Ensure canonical flat filename exists for direct access
     const canonicalFlat = path.join(videoDir, `${format}.mp4`);

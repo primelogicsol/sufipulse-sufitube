@@ -57,6 +57,7 @@ export default function PipelineCockpitPage() {
 
   // Video State
   const [videoFormat, setVideoFormat] = useState<'lyric_master' | 'clean_cinematic'>('lyric_master');
+  const [videoOrientation, setVideoOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [renderingVideo, setRenderingVideo] = useState(false);
   const [videoRenderResult, setVideoRenderResult] = useState<any>(null);
 
@@ -255,7 +256,7 @@ export default function PipelineCockpitPage() {
       const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/render-video`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format: videoFormat }),
+        body: JSON.stringify({ format: videoFormat, orientation: videoOrientation }),
       });
 
       if (!res.ok) {
@@ -995,6 +996,40 @@ export default function PipelineCockpitPage() {
                 </div>
               </div>
 
+              {/* Aspect Ratio / Canvas Layout Selection */}
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-wider font-semibold text-white/70 block">
+                  Canvas Aspect Ratio & Layout:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVideoOrientation('landscape')}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      videoOrientation === 'landscape'
+                        ? 'border-amber-400 bg-amber-500/10 text-white'
+                        : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-semibold text-xs text-white">16:9 Landscape</div>
+                    <div className="text-[10px] text-white/50 mt-0.5">1920x1080 (YouTube Master)</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setVideoOrientation('portrait')}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      videoOrientation === 'portrait'
+                        ? 'border-amber-400 bg-amber-500/10 text-white'
+                        : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-semibold text-xs text-white">9:16 Portrait</div>
+                    <div className="text-[10px] text-white/50 mt-0.5">1080x1920 (Shorts / Reels)</div>
+                  </button>
+                </div>
+              </div>
+
               {/* Two-Part Video Composition: Part A + Part B */}
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3.5">
                 <div className="flex items-center justify-between">
@@ -1182,9 +1217,15 @@ export default function PipelineCockpitPage() {
                     {draft?.video?.partB?.filePath ? (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-emerald-400 flex items-center gap-1 font-medium">
-                            <Check className="w-3.5 h-3.5" /> MP4 Attached ({draft.video.partB.durationSeconds ? `${draft.video.partB.durationSeconds}s` : 'Ready'})
-                          </span>
+                          {draft.video.partB.validationStatus === 'VALID' && (draft.video.partB.durationSeconds || 0) > 0 ? (
+                            <span className="text-emerald-400 flex items-center gap-1.5 font-medium">
+                              <Check className="w-3.5 h-3.5" /> MP4 Attached & Verified ({draft.video.partB.durationSeconds}s &bull; {draft.video.partB.width && draft.video.partB.height ? `${draft.video.partB.width}x${draft.video.partB.height}` : 'HD'} &bull; {draft.video.partB.hasAudio ? 'Audio Stream' : 'Video Only'})
+                            </span>
+                          ) : (
+                            <span className="text-red-400 flex items-center gap-1.5 font-semibold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
+                              <AlertCircle className="w-3.5 h-3.5" /> ATTACHED - VALIDATION FAILED: {draft.video.partB.validationError || 'Invalid duration (0.0s) or stream decoding error'}
+                            </span>
+                          )}
                           <span className="text-white/40 font-mono text-[10px] truncate max-w-[140px]">
                             {draft.video.partB.fileName || 'canva_part_b.mp4'}
                           </span>
@@ -1196,7 +1237,7 @@ export default function PipelineCockpitPage() {
                             src={`/api/admin/pipeline/drafts/${draftId}/media?asset=part_b_video`}
                           />
                           <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-blue-300 border border-blue-400/20">
-                            Part B Video (Part 2) &bull; 19 Scenes
+                            Part B Video (Part 2) &bull; 19 Scenes ({draft.video.partB.durationSeconds ? `${draft.video.partB.durationSeconds}s` : '0.0s'})
                           </div>
                         </div>
                       </div>
@@ -1229,29 +1270,59 @@ export default function PipelineCockpitPage() {
                 <div className="flex items-center justify-between pt-1 text-xs">
                   <span className="text-white/70 font-medium">Final Video Master Runtime:</span>
                   <span className="font-mono text-amber-300 font-bold">
-                    {hasMasterAudio
-                      ? `${(
-                          (draft?.masterAudio?.durationSeconds || 0) +
-                          (draft?.video?.partB?.filePath ? draft.video.partB.durationSeconds || 0 : 0)
-                        ).toFixed(1)}s`
-                      : '0.0s'}
-                    {draft?.video?.partB?.filePath && (
-                      <span className="text-[10px] font-normal text-white/50 ml-1">
-                        (Part A: {(draft?.masterAudio?.durationSeconds || 0).toFixed(1)}s + Part B: {(draft?.video?.partB?.durationSeconds || 0).toFixed(1)}s)
-                      </span>
-                    )}
+                    {hasMasterAudio ? (
+                      <>
+                        {(() => {
+                          const partASec = draft?.masterAudio?.durationSeconds || 0;
+                          const partBSec = (draft?.video?.partB?.enabled && draft?.video?.partB?.filePath && (draft?.video?.partB?.durationSeconds || 0) > 0)
+                            ? (draft?.video?.partB?.durationSeconds || 0)
+                            : 0;
+                          const isCrossfade = partBAudioMode === 'crossfade' && draft?.video?.partB?.hasAudio;
+                          const finalSec = isCrossfade && partBSec > 1.5
+                            ? Math.max(0, partASec + partBSec - 1.5)
+                            : partASec + partBSec;
+                          return `${finalSec.toFixed(1)}s`;
+                        })()}
+                        {draft?.video?.partB?.filePath && (
+                          <span className="text-[10px] font-normal text-white/50 ml-1">
+                            (Part A: {(draft?.masterAudio?.durationSeconds || 0).toFixed(1)}s + Part B: {(draft?.video?.partB?.durationSeconds || 0).toFixed(1)}s{partBAudioMode === 'crossfade' && draft?.video?.partB?.hasAudio ? ' - 1.5s crossfade' : ''})
+                          </span>
+                        )}
+                      </>
+                    ) : '0.0s'}
                   </span>
                 </div>
               </div>
 
               {/* Render Video Button */}
+              {Boolean(
+                draft?.video?.partB?.enabled &&
+                draft?.video?.partB?.filePath &&
+                (draft.video.partB.validationStatus === 'FAILED' || !(draft.video.partB.durationSeconds && draft.video.partB.durationSeconds > 0))
+              ) && (
+                <div className="p-2.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>Final rendering disabled: Part B MP4 failed validation. Please re-upload a valid Canva MP4 export.</span>
+                </div>
+              )}
+
               <button
                 onClick={handleRenderVideo}
-                disabled={renderingVideo || !hasMasterAudio}
+                disabled={
+                  renderingVideo ||
+                  !hasMasterAudio ||
+                  Boolean(
+                    draft?.video?.partB?.enabled &&
+                    draft?.video?.partB?.filePath &&
+                    (draft.video.partB.validationStatus === 'FAILED' || !(draft.video.partB.durationSeconds && draft.video.partB.durationSeconds > 0))
+                  )
+                }
                 className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs shadow-lg shadow-amber-500/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Video className={`w-4 h-4 ${renderingVideo ? 'animate-spin' : ''}`} />
-                {renderingVideo ? 'Rendering 1080p MP4...' : `Render 1080p ${videoFormat === 'lyric_master' ? 'Lyric Master' : 'Clean Cinematic'}`}
+                {renderingVideo
+                  ? 'Rendering MP4 Master...'
+                  : `Render ${videoOrientation === 'portrait' ? '9:16 Portrait' : '1080p Landscape'} ${videoFormat === 'lyric_master' ? 'Lyric Master' : 'Clean Cinematic'}`}
               </button>
 
               {/* Video Player Preview if Rendered */}

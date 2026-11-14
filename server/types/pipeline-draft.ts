@@ -171,6 +171,10 @@ export interface CanvaPartAConfig {
   title: string;
   filePath?: string;
   fileName?: string;
+  width?: number;
+  height?: number;
+  validationStatus?: 'VALID' | 'FAILED' | 'PENDING';
+  validationError?: string;
   uploadedAt?: string;
 }
 
@@ -183,6 +187,11 @@ export interface CanvaPartBConfig {
   filePath?: string;
   fileName?: string;
   durationSeconds?: number;
+  width?: number;
+  height?: number;
+  hasAudio?: boolean;
+  validationStatus?: 'VALID' | 'FAILED' | 'PENDING';
+  validationError?: string;
   audioMode: 'preserve_canva_audio' | 'crossfade' | 'mute';
   playbackMode: 'full_19_scenes' | 'trimmed';
   trimStartSeconds?: number;

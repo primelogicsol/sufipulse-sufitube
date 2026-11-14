@@ -85,16 +85,18 @@ export async function GET(
         }
       }
     } else if (asset === 'part_a_image' || asset === 'part_a_artwork') {
-      if (draft.video?.partA?.filePath && fs.existsSync(draft.video.partA.filePath)) {
-        filePath = draft.video.partA.filePath;
+      const candidate = draft.video?.partA?.filePath ? path.resolve(process.cwd(), draft.video.partA.filePath) : null;
+      if (candidate && fs.existsSync(candidate)) {
+        filePath = candidate;
         contentType = filePath.endsWith('.png') ? 'image/png' : filePath.endsWith('.jpg') || filePath.endsWith('.jpeg') ? 'image/jpeg' : 'image/webp';
       } else {
         filePath = path.join(process.cwd(), 'public', 'banner1.png');
         contentType = 'image/png';
       }
     } else if (asset === 'part_b_video') {
-      if (draft.video?.partB?.filePath && fs.existsSync(draft.video.partB.filePath)) {
-        filePath = draft.video.partB.filePath;
+      const candidate = draft.video?.partB?.filePath ? path.resolve(process.cwd(), draft.video.partB.filePath) : null;
+      if (candidate && fs.existsSync(candidate)) {
+        filePath = candidate;
         contentType = 'video/mp4';
       }
     } else if (asset === 'subtitle' && lang) {
