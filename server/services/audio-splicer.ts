@@ -28,6 +28,8 @@ function getFfmpegPath(): string {
   if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
     return process.env.FFMPEG_PATH;
   }
+  const wingetLink = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Links\\ffmpeg.exe';
+  if (fs.existsSync(wingetLink)) return wingetLink;
   const wingetFfmpeg = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffmpeg.exe';
   if (fs.existsSync(wingetFfmpeg)) return wingetFfmpeg;
   return 'ffmpeg';
@@ -37,6 +39,8 @@ function getFfprobePath(): string {
   if (process.env.FFPROBE_PATH && fs.existsSync(process.env.FFPROBE_PATH)) {
     return process.env.FFPROBE_PATH;
   }
+  const wingetLink = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Links\\ffprobe.exe';
+  if (fs.existsSync(wingetLink)) return wingetLink;
   const wingetFfprobe = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffprobe.exe';
   if (fs.existsSync(wingetFfprobe)) return wingetFfprobe;
   return 'ffprobe';

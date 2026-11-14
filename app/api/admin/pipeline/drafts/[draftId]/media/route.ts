@@ -84,11 +84,30 @@ export async function GET(
           filePath = path.join(videoDir, matches[matches.length - 1]);
         }
       }
-    } else if (asset === 'part_a_image' || asset === 'part_a_artwork') {
+    } else if (asset === 'part_a_image' || asset === 'part_a_artwork' || asset === 'part_a_video') {
       const candidate = draft.video?.partA?.filePath ? path.resolve(process.cwd(), draft.video.partA.filePath) : null;
       if (candidate && fs.existsSync(candidate)) {
         filePath = candidate;
-        contentType = filePath.endsWith('.png') ? 'image/png' : filePath.endsWith('.jpg') || filePath.endsWith('.jpeg') ? 'image/jpeg' : 'image/webp';
+        if (filePath.endsWith('.mp4')) {
+          contentType = 'video/mp4';
+        } else if (filePath.endsWith('.mov')) {
+          contentType = 'video/quicktime';
+        } else if (filePath.endsWith('.png')) {
+          contentType = 'image/png';
+        } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+          contentType = 'image/jpeg';
+        } else {
+          contentType = 'image/webp';
+        }
+      } else {
+        filePath = path.join(process.cwd(), 'public', 'banner1.png');
+        contentType = 'image/png';
+      }
+    } else if (asset === 'part_a_thumbnail' || asset === 'thumbnail') {
+      const thumb = draft.video?.partA?.thumbnailPath ? path.resolve(process.cwd(), draft.video.partA.thumbnailPath) : null;
+      if (thumb && fs.existsSync(thumb)) {
+        filePath = thumb;
+        contentType = 'image/jpeg';
       } else {
         filePath = path.join(process.cwd(), 'public', 'banner1.png');
         contentType = 'image/png';

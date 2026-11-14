@@ -45,6 +45,8 @@ export function getFfprobePath(): string {
   if (process.env.FFPROBE_PATH && fs.existsSync(process.env.FFPROBE_PATH)) {
     return process.env.FFPROBE_PATH;
   }
+  const wingetLink = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Links\\ffprobe.exe';
+  if (fs.existsSync(wingetLink)) return wingetLink;
   const wingetFfprobe = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffprobe.exe';
   if (fs.existsSync(wingetFfprobe)) return wingetFfprobe;
   const shotcutFfprobe = 'C:\\Program Files\\Shotcut\\ffprobe.exe';
@@ -247,6 +249,8 @@ export function getFfmpegPath(): string {
   if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
     return process.env.FFMPEG_PATH;
   }
+  const wingetLink = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Links\\ffmpeg.exe';
+  if (fs.existsSync(wingetLink)) return wingetLink;
   const wingetFfmpeg = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffmpeg.exe';
   if (fs.existsSync(wingetFfmpeg)) return wingetFfmpeg;
   const shotcutFfmpeg = 'C:\\Program Files\\Shotcut\\ffmpeg.exe';
@@ -395,8 +399,11 @@ export async function render1080pMusicVideo(
 
         // Part B Audio handling
         if (audioMode === 'crossfade' && partBHasAudio) {
+          // Normalize audio formats before crossfading
+          filterParts.push(`[1:a]aformat=sample_rates=48000:channel_layouts=stereo[a0_raw]`);
+          filterParts.push(`[2:a]aformat=sample_rates=48000:channel_layouts=stereo[a1_raw]`);
           // Overlapping crossfade of 1.5 seconds
-          filterParts.push(`[1:a][2:a]acrossfade=d=1.5:c1=tri:c2=tri[a]`);
+          filterParts.push(`[a0_raw][a1_raw]acrossfade=d=1.5:c1=tri:c2=tri[a]`);
           filterParts.push(`[v0][v1]concat=n=2:v=1:a=0[v]`);
           totalDuration = Math.round((partADuration + partBDuration - 1.5) * 100) / 100;
         } else {

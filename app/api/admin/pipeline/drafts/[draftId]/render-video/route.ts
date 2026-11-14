@@ -38,6 +38,13 @@ export async function POST(
       path.join(process.cwd(), 'public', 'banner1.png');
     const subPath = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles', 'master_dual_urdu_english.ass');
 
+    const partBConfig = draft.video?.partB?.enabled && draft.video.partB.filePath
+      ? {
+          ...draft.video.partB,
+          audioMode: body.partBAudioMode || draft.video.partB.audioMode || 'preserve_canva_audio',
+        }
+      : undefined;
+
     const result = await render1080pMusicVideo({
       draftId,
       audioPath: draft.masterAudio.filePath,
@@ -47,7 +54,7 @@ export async function POST(
       format,
       orientation,
       durationSeconds: draft.masterAudio.durationSeconds,
-      partB: draft.video?.partB?.enabled && draft.video.partB.filePath ? draft.video.partB : undefined,
+      partB: partBConfig,
     });
 
     if (!draft.video) {

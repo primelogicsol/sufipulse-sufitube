@@ -21,6 +21,10 @@ const nextConfig = {
   serverExternalPackages: ['bcryptjs', 'busboy'],
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    middlewareClientMaxBodySize: "1000mb",
+    serverActions: {
+      bodySizeLimit: "1000mb",
+    },
   },
   // 'standalone' creates a minimal self-contained server — ideal for Docker.
   // Run with: node .next/standalone/server.js (NOT npm start)

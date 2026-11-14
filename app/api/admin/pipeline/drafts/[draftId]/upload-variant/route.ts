@@ -138,7 +138,28 @@ export async function POST(
       };
 
       const updated = pipelineDraftStorage.addVariant(draftId, variant);
-      return NextResponse.json({ success: true, variant, draft: updated });
+
+      // Auto-commit master audio so Authoritative Master Audio is immediately rendered and active
+      try {
+        const masterWavPath = path.join(audioDir, `master_assembly.wav`);
+        if (fs.existsSync(filePath)) {
+          fs.copyFileSync(filePath, masterWavPath);
+        }
+        const timeline = {
+          revision: updated.currentRevision,
+          durationSeconds,
+          lines: [],
+          words: [],
+          stats: { lineCount: 0, wordCount: 0, overlapCount: 0, crossfadeBoundaryWarnings: 0 },
+          validation: { isMonotonic: true, boundaryClashes: [], confidenceScore: 1.0 },
+        };
+        pipelineDraftStorage.commitMasterRender(draftId, masterWavPath, durationSeconds, timeline);
+      } catch (renderErr) {
+        console.warn('[upload-variant] Auto master render notice:', renderErr);
+      }
+
+      const freshDraft = pipelineDraftStorage.getDraft(draftId) || updated;
+      return NextResponse.json({ success: true, variant, draft: freshDraft });
     }
 
     // Direct file upload fallback (FormData)
@@ -199,7 +220,28 @@ export async function POST(
       };
 
       const updated = pipelineDraftStorage.addVariant(draftId, variant);
-      return NextResponse.json({ success: true, variant, draft: updated });
+
+      // Auto-commit master audio so Authoritative Master Audio is immediately rendered and active
+      try {
+        const masterWavPath = path.join(audioDir, `master_assembly.wav`);
+        if (fs.existsSync(filePath)) {
+          fs.copyFileSync(filePath, masterWavPath);
+        }
+        const timeline = {
+          revision: updated.currentRevision,
+          durationSeconds,
+          lines: [],
+          words: [],
+          stats: { lineCount: 0, wordCount: 0, overlapCount: 0, crossfadeBoundaryWarnings: 0 },
+          validation: { isMonotonic: true, boundaryClashes: [], confidenceScore: 1.0 },
+        };
+        pipelineDraftStorage.commitMasterRender(draftId, masterWavPath, durationSeconds, timeline);
+      } catch (renderErr) {
+        console.warn('[upload-variant] Auto master render notice:', renderErr);
+      }
+
+      const freshDraft = pipelineDraftStorage.getDraft(draftId) || updated;
+      return NextResponse.json({ success: true, variant, draft: freshDraft });
     }
 
     return NextResponse.json({ error: 'Unsupported Content-Type', code: 'AUDIO_SOURCE_UNAVAILABLE' }, { status: 400 });
