@@ -31,6 +31,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function parseDurationInput(val: any): number | null {
+  if (!val) return null;
+  const str = String(val).trim();
+  if (str.includes(':')) {
+    const parts = str.split(':').map((p) => parseFloat(p));
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      return parts[0] * 60 + parts[1];
+    }
+  }
+  const num = parseFloat(str);
+  return !isNaN(num) && num > 0 ? num : null;
+}
+
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (auth instanceof NextResponse) return auth;
@@ -67,13 +80,14 @@ export async function POST(request: NextRequest) {
         const fileName = `${variantId}_suno.wav`;
         const filePath = path.join(audioDir, fileName);
 
-        let durationSeconds = 30.0;
+        const customDuration = parseDurationInput(body.duration);
+        let durationSeconds = customDuration || 30.0;
         let alignmentPayload: any = null;
 
         try {
           const rawPayload = await fetchConfiguredPrivateAudioAlignment(detectedAssetId);
           const normalized = normalizePrivateAudioAlignment(rawPayload);
-          durationSeconds = normalized.durationSeconds || 30.0;
+          durationSeconds = customDuration || normalized.durationSeconds || 30.0;
           alignmentPayload = {
             lines: normalized.lines.map((l) => ({
               index: l.index,

@@ -14,6 +14,19 @@ import { readWavHeader, createEmptyWavBuffer, probeAudioFile } from '@/server/se
 import { extractSourceAssetId, fetchConfiguredPrivateAudioAlignment, normalizePrivateAudioAlignment } from '@/server/integrations/private-audio-alignment';
 import type { VariantSource } from '@/server/types/pipeline-draft';
 
+function parseDurationInput(val: any): number | null {
+  if (!val) return null;
+  const str = String(val).trim();
+  if (str.includes(':')) {
+    const parts = str.split(':').map((p) => parseFloat(p));
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      return parts[0] * 60 + parts[1];
+    }
+  }
+  const num = parseFloat(str);
+  return !isNaN(num) && num > 0 ? num : null;
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(
@@ -83,7 +96,8 @@ export async function POST(
       }
 
       // Create local PCM WAV reference file for the variant
-      const durationSeconds = rawAlignment.durationSeconds || 30.0;
+      const userDuration = parseDurationInput(body.duration);
+      const durationSeconds = userDuration || rawAlignment.durationSeconds || 30.0;
       const fileName = `${variantId}_suno.wav`;
       const filePath = path.join(audioDir, fileName);
 

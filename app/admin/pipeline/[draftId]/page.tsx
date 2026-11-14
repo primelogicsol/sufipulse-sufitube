@@ -64,6 +64,7 @@ export default function PipelineCockpitPage() {
   const [variantSourceMode, setVariantSourceMode] = useState<'url' | 'file'>('url');
   const [variantLabel, setVariantLabel] = useState('');
   const [sunoUrl, setSunoUrl] = useState('');
+  const [sunoDuration, setSunoDuration] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploadingVariant, setUploadingVariant] = useState(false);
   const [renderingMaster, setRenderingMaster] = useState(false);
@@ -143,6 +144,7 @@ export default function PipelineCockpitPage() {
           body: JSON.stringify({
             sourceType: 'suno_url',
             sunoUrl: sunoUrl.trim(),
+            duration: sunoDuration.trim() || undefined,
             label: variantLabel.trim() || `Variant ${Object.keys(draft?.variants || {}).length + 1}`,
             role: 'primary',
           }),
@@ -156,6 +158,7 @@ export default function PipelineCockpitPage() {
       }
 
       setSunoUrl('');
+      setSunoDuration('');
       setVariantLabel('');
       setAudioFile(null);
       await fetchDraft();
@@ -662,7 +665,7 @@ export default function PipelineCockpitPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className={`grid grid-cols-1 ${variantSourceMode === 'url' ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
                   <input
                     type="text"
                     value={variantLabel || ''}
@@ -671,15 +674,25 @@ export default function PipelineCockpitPage() {
                     className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
                   />
                   {variantSourceMode === 'url' ? (
-                    <input
-                      key="suno-url-input"
-                      type="url"
-                      required
-                      value={sunoUrl || ''}
-                      onChange={(e) => setSunoUrl(e.target.value)}
-                      placeholder="https://suno.com/song/..."
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
-                    />
+                    <>
+                      <input
+                        key="suno-url-input"
+                        type="url"
+                        required
+                        value={sunoUrl || ''}
+                        onChange={(e) => setSunoUrl(e.target.value)}
+                        placeholder="https://suno.com/song/..."
+                        className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={sunoDuration || ''}
+                        onChange={(e) => setSunoDuration(e.target.value)}
+                        placeholder="Duration (e.g. 4:45 or 285s)"
+                        className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none font-mono"
+                        title="Optional duration if external alignment gateway is not active"
+                      />
+                    </>
                   ) : (
                     <input
                       key="audio-file-input"

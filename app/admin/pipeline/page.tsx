@@ -65,6 +65,7 @@ export default function PipelineDashboardPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newSunoUrl, setNewSunoUrl] = useState('');
+  const [newDuration, setNewDuration] = useState('');
   const [newLyrics, setNewLyrics] = useState('');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -122,6 +123,7 @@ export default function PipelineDashboardPage() {
         body: JSON.stringify({
           title: newTitle.trim(),
           sunoUrl: newSunoUrl.trim() || undefined,
+          duration: newDuration.trim() || undefined,
           lyricsText: newLyrics.trim(),
           primaryLanguage: 'ur',
         }),
@@ -135,6 +137,7 @@ export default function PipelineDashboardPage() {
       setShowCreateModal(false);
       setNewTitle('');
       setNewSunoUrl('');
+      setNewDuration('');
       setNewLyrics('');
 
       if (data.draft?.draftId) {
@@ -534,20 +537,31 @@ export default function PipelineDashboardPage() {
                   </p>
                 </div>
 
-                <div>
-                  <label className="block text-xs uppercase tracking-wider font-semibold text-white/70 mb-1.5">
-                    Initial Suno Variant URL / Asset ID (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={newSunoUrl}
-                    onChange={(e) => setNewSunoUrl(e.target.value)}
-                    placeholder="https://suno.com/song/1d47c525-20df-42e9-a58f-9f082fbdfbcf"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none font-mono text-xs"
-                  />
-                  <p className="mt-1 text-xs text-white/40">
-                    If provided, Variant 1 will be automatically ingested upon pipeline creation.
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs uppercase tracking-wider font-semibold text-white/70 mb-1.5">
+                      Initial Suno Variant URL / Asset ID (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newSunoUrl}
+                      onChange={(e) => setNewSunoUrl(e.target.value)}
+                      placeholder="https://suno.com/song/6a79ea36-a31d-45db-aae1-6862e99db69e"
+                      className="w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none font-mono text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider font-semibold text-white/70 mb-1.5">
+                      Duration (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newDuration}
+                      onChange={(e) => setNewDuration(e.target.value)}
+                      placeholder="e.g. 4:45 or 285s"
+                      className="w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none font-mono text-xs"
+                    />
+                  </div>
                 </div>
 
                 <div>
