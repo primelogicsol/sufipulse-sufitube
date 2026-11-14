@@ -1034,6 +1034,18 @@ export default function PipelineCockpitPage() {
                     <span className="font-mono text-emerald-400 font-semibold">{hasMasterAudio ? `${draft?.masterAudio?.durationSeconds?.toFixed(1)}s` : 'Pending Master'}</span>
                   </div>
 
+                  {/* Part A Background Canvas Visual Preview */}
+                  <div className="relative rounded-lg overflow-hidden border border-amber-500/20 aspect-video bg-black/40">
+                    <img
+                      src={`/api/admin/pipeline/drafts/${draftId}/media?asset=part_a_image`}
+                      alt="Part A Background Canvas"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-amber-300 border border-amber-400/20">
+                      Part A Canvas &bull; 1920x1080
+                    </div>
+                  </div>
+
                   {/* Upload / Attached Status for Part A Background */}
                   <div className="pt-2 border-t border-amber-500/20">
                     {draft?.video?.partA?.filePath ? (
@@ -1166,13 +1178,25 @@ export default function PipelineCockpitPage() {
                   {/* Upload / Attached Status */}
                   <div className="pt-2 border-t border-blue-500/20">
                     {draft?.video?.partB?.filePath ? (
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-emerald-400 flex items-center gap-1 font-medium">
-                          <Check className="w-3.5 h-3.5" /> MP4 Attached ({draft.video.partB.durationSeconds ? `${draft.video.partB.durationSeconds}s` : 'Ready'})
-                        </span>
-                        <span className="text-white/40 font-mono text-[10px] truncate max-w-[140px]">
-                          {draft.video.partB.fileName || 'canva_part_b.mp4'}
-                        </span>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                            <Check className="w-3.5 h-3.5" /> MP4 Attached ({draft.video.partB.durationSeconds ? `${draft.video.partB.durationSeconds}s` : 'Ready'})
+                          </span>
+                          <span className="text-white/40 font-mono text-[10px] truncate max-w-[140px]">
+                            {draft.video.partB.fileName || 'canva_part_b.mp4'}
+                          </span>
+                        </div>
+                        <div className="relative rounded-lg overflow-hidden border border-blue-500/20 aspect-video bg-black/40">
+                          <video
+                            controls
+                            className="w-full h-full object-cover"
+                            src={`/api/admin/pipeline/drafts/${draftId}/media?asset=part_b_video`}
+                          />
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-blue-300 border border-blue-400/20">
+                            Part B Video (Part 2) &bull; 19 Scenes
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <form onSubmit={handleUploadPartB} className="space-y-2">

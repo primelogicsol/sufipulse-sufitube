@@ -101,6 +101,25 @@ export const pipelineDraftStorage = {
         videoValid: false,
         approvalStatus: 'draft',
       },
+      video: {
+        status: 'PENDING',
+        renderedAt: now,
+        partA: {
+          canvaDesignId: 'DAHa7St5CYs',
+          canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
+          title: 'Part A Background Theme',
+        },
+        partB: {
+          enabled: true,
+          canvaDesignId: 'DAHa7eJOcbI',
+          canvaUrl: 'https://canva.link/qvmwwc830dm623g',
+          title: 'Part 2',
+          sceneCount: 19,
+          playbackMode: 'full_19_scenes',
+          audioMode: 'preserve_canva_audio',
+        },
+        formats: {},
+      },
       publishingTx: null,
       createdAt: now,
       updatedAt: now,
@@ -123,7 +142,36 @@ export const pipelineDraftStorage = {
 
     try {
       const raw = fs.readFileSync(jsonPath, 'utf8');
-      return JSON.parse(raw) as PipelineDraft;
+      const draft = JSON.parse(raw) as PipelineDraft;
+
+      // Invariant: Ensure Part A background theme and Part B Canva video are always present
+      if (!draft.video) {
+        draft.video = {
+          status: 'PENDING',
+          renderedAt: draft.updatedAt || new Date().toISOString(),
+          formats: {},
+        };
+      }
+      if (!draft.video.partA) {
+        draft.video.partA = {
+          canvaDesignId: 'DAHa7St5CYs',
+          canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
+          title: 'Part A Background Theme',
+        };
+      }
+      if (!draft.video.partB) {
+        draft.video.partB = {
+          enabled: true,
+          canvaDesignId: 'DAHa7eJOcbI',
+          canvaUrl: 'https://canva.link/qvmwwc830dm623g',
+          title: 'Part 2',
+          sceneCount: 19,
+          playbackMode: 'full_19_scenes',
+          audioMode: 'preserve_canva_audio',
+        };
+      }
+
+      return draft;
     } catch (err) {
       console.error(`[pipelineDraftStorage] Error reading draft ${draftId}:`, err);
       return null;

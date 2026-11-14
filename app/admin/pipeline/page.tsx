@@ -467,6 +467,14 @@ export default function PipelineDashboardPage() {
                           <FileText className="w-3.5 h-3.5 text-blue-400" />
                           Subtitles: {draft.downstreamStatus?.subtitlesValid ? 'Ready' : 'Pending'}
                         </span>
+                        <span className="flex items-center gap-1.5 text-amber-300/90 font-medium">
+                          <Video className="w-3.5 h-3.5 text-amber-400" />
+                          Part A (DAHa7St5CYs)
+                        </span>
+                        <span className="flex items-center gap-1.5 text-blue-300/90 font-medium">
+                          <Video className="w-3.5 h-3.5 text-blue-400" />
+                          Part B (Part 2)
+                        </span>
                         <span className="text-white/40">
                           Updated {new Date(draft.updatedAt).toLocaleString()}
                         </span>

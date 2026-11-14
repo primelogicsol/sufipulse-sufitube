@@ -84,6 +84,19 @@ export async function GET(
           filePath = path.join(videoDir, matches[matches.length - 1]);
         }
       }
+    } else if (asset === 'part_a_image' || asset === 'part_a_artwork') {
+      if (draft.video?.partA?.filePath && fs.existsSync(draft.video.partA.filePath)) {
+        filePath = draft.video.partA.filePath;
+        contentType = filePath.endsWith('.png') ? 'image/png' : filePath.endsWith('.jpg') || filePath.endsWith('.jpeg') ? 'image/jpeg' : 'image/webp';
+      } else {
+        filePath = path.join(process.cwd(), 'public', 'banner1.png');
+        contentType = 'image/png';
+      }
+    } else if (asset === 'part_b_video') {
+      if (draft.video?.partB?.filePath && fs.existsSync(draft.video.partB.filePath)) {
+        filePath = draft.video.partB.filePath;
+        contentType = 'video/mp4';
+      }
     } else if (asset === 'subtitle' && lang) {
       const subDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles');
       const ext = searchParams.get('ext') || 'vtt';
