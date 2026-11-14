@@ -1,16 +1,28 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { privateProductionConnectionStorage, type PrivateProductionConnectionSettings } from '@/server/storage/private-production-connection-storage';
-import { isPrivateAudioAlignmentConfigured, isPrivateAudioStreamConfigured } from '@/server/integrations/private-audio-connection-resolver';
+import {
+  getPrivateAudioConnection,
+  isPrivateAudioAlignmentConfigured,
+  isPrivateAudioStreamConfigured,
+} from '@/server/integrations/private-audio-connection-resolver';
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (auth instanceof NextResponse) return auth;
 
+  const conn = getPrivateAudioConnection();
+  const alignmentConfigured = isPrivateAudioAlignmentConfigured();
+  const streamConfigured = isPrivateAudioStreamConfigured();
+  const authConfigured = Boolean(conn.alignmentAuthorization || conn.streamAuthorization);
+  const secureStorageReady = Boolean(process.env.PRIVATE_PRODUCTION_ENCRYPTION_KEY);
+
   // Do not expose secrets! Only return configuration boolean status.
   return NextResponse.json({
-    alignmentConfigured: isPrivateAudioAlignmentConfigured(),
-    streamConfigured: isPrivateAudioStreamConfigured(),
+    alignmentConfigured,
+    streamConfigured,
+    authConfigured,
+    secureStorageReady,
   });
 }
 
@@ -46,15 +58,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'test') {
-      // In a real scenario, this would perform a safe lightweight ping.
-      // For now we check configuration parsing as a proxy for "PASS" / "FAIL".
       const alignOk = isPrivateAudioAlignmentConfigured();
       const streamOk = isPrivateAudioStreamConfigured();
+      const conn = getPrivateAudioConnection();
+      const authOk = Boolean(conn.alignmentAuthorization || conn.streamAuthorization);
 
       return NextResponse.json({
         alignment: alignOk ? 'PASS' : 'FAIL',
         stream: streamOk ? 'PASS' : 'FAIL',
-        auth: (alignOk || streamOk) ? 'PASS' : 'FAIL',
+        auth: authOk ? 'PASS' : 'FAIL',
       });
     }
 
