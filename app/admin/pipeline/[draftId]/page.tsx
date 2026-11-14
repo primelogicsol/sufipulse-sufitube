@@ -60,6 +60,12 @@ export default function PipelineCockpitPage() {
   const [renderingVideo, setRenderingVideo] = useState(false);
   const [videoRenderResult, setVideoRenderResult] = useState<any>(null);
 
+  // Part B Canva Video State
+  const [partBFile, setPartBFile] = useState<File | null>(null);
+  const [uploadingPartB, setUploadingPartB] = useState(false);
+  const [partBPlaybackMode, setPartBPlaybackMode] = useState<'full_19_scenes' | 'trimmed'>('full_19_scenes');
+  const [partBAudioMode, setPartBAudioMode] = useState<'preserve_canva_audio' | 'crossfade' | 'mute'>('preserve_canva_audio');
+
   // Variant Upload State
   const [variantSourceMode, setVariantSourceMode] = useState<'url' | 'file'>('url');
   const [variantLabel, setVariantLabel] = useState('');
@@ -260,6 +266,36 @@ export default function PipelineCockpitPage() {
       alert(`Video rendering failed: ${err.message}`);
     } finally {
       setRenderingVideo(false);
+    }
+  };
+
+  // Upload Part B (Canva MP4)
+  const handleUploadPartB = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!partBFile) return;
+    try {
+      setUploadingPartB(true);
+      const formData = new FormData();
+      formData.append('file', partBFile);
+      formData.append('canvaDesignId', draft?.video?.partB?.canvaDesignId || 'DAHa7eJOcbI');
+      formData.append('playbackMode', partBPlaybackMode);
+      formData.append('audioMode', partBAudioMode);
+
+      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-b`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to attach Part B MP4');
+      }
+      await fetchDraft();
+      alert('Part B (Canva Promotional Video) MP4 attached successfully!');
+      setPartBFile(null);
+    } catch (err: any) {
+      alert(`Part B upload failed: ${err.message}`);
+    } finally {
+      setUploadingPartB(false);
     }
   };
 
@@ -920,6 +956,177 @@ export default function PipelineCockpitPage() {
                     <div className="font-semibold text-xs text-white">2. Clean Cinematic</div>
                     <div className="text-[11px] text-white/50 mt-0.5">Unburned canvas (Toggleable CC)</div>
                   </button>
+                </div>
+              </div>
+
+              {/* Two-Part Video Composition: Part A + Part B */}
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                    Two-Part Video Composition
+                  </div>
+                  <span className="text-[11px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    Part A + Part B
+                  </span>
+                </div>
+
+                {/* Part A Details */}
+                <div className="p-3 rounded-lg border border-white/5 bg-black/30 space-y-1 text-xs">
+                  <div className="flex items-center justify-between font-semibold text-white">
+                    <span>Part A: Core Lyric Video</span>
+                    <span className="font-mono text-emerald-400">{hasMasterAudio ? `${draft?.masterAudio?.durationSeconds?.toFixed(1)}s` : 'Pending Master'}</span>
+                  </div>
+                  <p className="text-[11px] text-white/50">
+                    Suno Master WAV + 1920x1080 visual canvas + Dual Nastaliq & English captions.
+                  </p>
+                </div>
+
+                {/* Part B Details (Canva Promotional Video) */}
+                <div className="p-3 rounded-lg border border-blue-500/20 bg-blue-500/5 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between font-semibold text-blue-300">
+                    <div className="flex items-center gap-1.5">
+                      <span>Part B: Canva Promotional Video</span>
+                      <span className="text-[10px] font-mono bg-blue-500/20 px-1.5 py-0.5 rounded border border-blue-400/30 text-blue-200">
+                        {draft?.video?.partB?.canvaDesignId || 'DAHa7eJOcbI'}
+                      </span>
+                    </div>
+                    <a
+                      href={draft?.video?.partB?.canvaUrl || 'https://www.canva.com/d/PmQwnpEWAbuVg4q?utm_source=chatgpt.com'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 underline font-normal"
+                    >
+                      Open in Canva
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  <div className="text-[11px] text-white/70">
+                    <strong className="text-white">Title:</strong> {draft?.video?.partB?.title || 'Copy of Copy of Copy of PANI GAWAH HAI | KASHMIR WATER BEARS WITNESS'} (19 Scenes, 1920x1080)
+                  </div>
+
+                  {/* Playback Scope Option */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-white/60 font-medium block">Part B Playback Scope:</label>
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setPartBPlaybackMode('full_19_scenes')}
+                        className={`px-2.5 py-1.5 rounded-lg border text-left font-medium transition-colors ${
+                          partBPlaybackMode === 'full_19_scenes'
+                            ? 'border-blue-400 bg-blue-500/20 text-blue-200'
+                            : 'border-white/10 bg-white/5 text-white/50 hover:text-white'
+                        }`}
+                      >
+                        All 19 Scenes (Full)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPartBPlaybackMode('trimmed')}
+                        className={`px-2.5 py-1.5 rounded-lg border text-left font-medium transition-colors ${
+                          partBPlaybackMode === 'trimmed'
+                            ? 'border-blue-400 bg-blue-500/20 text-blue-200'
+                            : 'border-white/10 bg-white/5 text-white/50 hover:text-white'
+                        }`}
+                      >
+                        Custom Trimmed Range
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Audio Policy Option */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-white/60 font-medium block">Part B Audio Policy:</label>
+                    <div className="grid grid-cols-3 gap-1 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => setPartBAudioMode('preserve_canva_audio')}
+                        className={`px-2 py-1 rounded border text-center font-medium transition-colors ${
+                          partBAudioMode === 'preserve_canva_audio'
+                            ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200'
+                            : 'border-white/10 bg-white/5 text-white/50 hover:text-white'
+                        }`}
+                      >
+                        Preserve Audio
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPartBAudioMode('crossfade')}
+                        className={`px-2 py-1 rounded border text-center font-medium transition-colors ${
+                          partBAudioMode === 'crossfade'
+                            ? 'border-amber-400 bg-amber-500/20 text-amber-200'
+                            : 'border-white/10 bg-white/5 text-white/50 hover:text-white'
+                        }`}
+                      >
+                        Crossfade 1.5s
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPartBAudioMode('mute')}
+                        className={`px-2 py-1 rounded border text-center font-medium transition-colors ${
+                          partBAudioMode === 'mute'
+                            ? 'border-red-400 bg-red-500/20 text-red-200'
+                            : 'border-white/10 bg-white/5 text-white/50 hover:text-white'
+                        }`}
+                      >
+                        Mute Part B
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Upload / Attached Status */}
+                  <div className="pt-2 border-t border-blue-500/20">
+                    {draft?.video?.partB?.filePath ? (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                          <Check className="w-3.5 h-3.5" /> MP4 Attached ({draft.video.partB.durationSeconds ? `${draft.video.partB.durationSeconds}s` : 'Ready'})
+                        </span>
+                        <span className="text-white/40 font-mono text-[10px] truncate max-w-[140px]">
+                          {draft.video.partB.fileName || 'canva_part_b.mp4'}
+                        </span>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleUploadPartB} className="space-y-2">
+                        <label className="text-[11px] text-white/60 block">
+                          Attach Exported Canva MP4:
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="file"
+                            accept="video/mp4"
+                            onChange={(e) => setPartBFile(e.target.files?.[0] || null)}
+                            className="text-[11px] text-white/70 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-white/10 file:text-white hover:file:bg-white/20"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!partBFile || uploadingPartB}
+                            className="px-3 py-1 rounded-lg bg-blue-500 text-white text-[11px] font-semibold hover:bg-blue-400 disabled:opacity-40"
+                          >
+                            {uploadingPartB ? 'Uploading...' : 'Attach'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+
+                {/* Final Combined Timeline Indicator */}
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <span className="text-white/70 font-medium">Final Video Master Runtime:</span>
+                  <span className="font-mono text-amber-300 font-bold">
+                    {hasMasterAudio
+                      ? `${(
+                          (draft?.masterAudio?.durationSeconds || 0) +
+                          (draft?.video?.partB?.filePath ? draft.video.partB.durationSeconds || 0 : 0)
+                        ).toFixed(1)}s`
+                      : '0.0s'}
+                    {draft?.video?.partB?.filePath && (
+                      <span className="text-[10px] font-normal text-white/50 ml-1">
+                        (Part A: {draft?.masterAudio?.durationSeconds?.toFixed(1)}s + Part B: {draft?.video?.partB?.durationSeconds?.toFixed(1)}s)
+                      </span>
+                    )}
+                  </span>
                 </div>
               </div>
 

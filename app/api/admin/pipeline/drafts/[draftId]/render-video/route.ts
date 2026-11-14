@@ -41,6 +41,7 @@ export async function POST(
       outputPath,
       format,
       durationSeconds: draft.masterAudio.durationSeconds,
+      partB: draft.video?.partB?.enabled && draft.video.partB.filePath ? draft.video.partB : undefined,
     });
 
     if (!draft.video) {
@@ -58,6 +59,8 @@ export async function POST(
       sha256: result.sha256,
       durationSeconds: result.durationSeconds,
       hasBurnedSubtitles: format === 'lyric_master',
+      partASeconds: result.partASeconds,
+      partBSeconds: result.partBSeconds,
     };
 
     // Ensure canonical flat filename exists for direct access

@@ -27,12 +27,23 @@ export interface VideoRenderOptions {
   outputPath: string;
   format: 'lyric_master' | 'clean_cinematic';
   durationSeconds: number;
+  partB?: {
+    enabled: boolean;
+    filePath?: string;
+    durationSeconds?: number;
+    audioMode?: 'preserve_canva_audio' | 'crossfade' | 'mute';
+    playbackMode?: 'full_19_scenes' | 'trimmed';
+    trimStartSeconds?: number;
+    trimEndSeconds?: number;
+  };
 }
 
 export interface VideoRenderResult {
   outputPath: string;
   format: 'lyric_master' | 'clean_cinematic';
   durationSeconds: number;
+  partASeconds?: number;
+  partBSeconds?: number;
   width: 1920;
   height: 1080;
   sha256: string;
@@ -111,6 +122,16 @@ export async function render1080pMusicVideo(
     try {
       fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
 
+      const hasPartB = Boolean(
+        options.partB?.enabled &&
+        options.partB.filePath &&
+        fs.existsSync(options.partB.filePath)
+      );
+
+      const partAPath = hasPartB
+        ? options.outputPath.replace(/\.mp4$/, '_part_a.mp4')
+        : options.outputPath;
+
       const ffmpegArgs: string[] = [
         '-loop', '1',
         '-i', options.artworkPath,
@@ -148,7 +169,7 @@ export async function render1080pMusicVideo(
         '-shortest',
         '-movflags', '+faststart',
         '-y',
-        options.outputPath
+        partAPath
       );
 
       await new Promise<void>((resolve, reject) => {
@@ -162,13 +183,50 @@ export async function render1080pMusicVideo(
         proc.on('error', reject);
       });
 
+      let totalDuration = options.durationSeconds;
+      const partBSeconds = options.partB?.durationSeconds || 0;
+
+      // If Part B is present, concatenate Part A and Part B (preserving Canva 1920x1080 and native audio)
+      if (hasPartB && options.partB?.filePath) {
+        const concatListPath = options.outputPath.replace(/\.mp4$/, '_concat.txt');
+        const fileContent = `file '${partAPath.replace(/\\/g, '/')}'\nfile '${options.partB.filePath.replace(/\\/g, '/')}'\n`;
+        fs.writeFileSync(concatListPath, fileContent, 'utf8');
+
+        const concatArgs = [
+          '-f', 'concat',
+          '-safe', '0',
+          '-i', concatListPath,
+          '-c', 'copy',
+          '-movflags', '+faststart',
+          '-y',
+          options.outputPath,
+        ];
+
+        await new Promise<void>((resolve, reject) => {
+          const concatProc = spawn(getFfmpegPath(), concatArgs);
+          let cErr = '';
+          concatProc.stderr.on('data', (d) => { cErr += d.toString(); });
+          concatProc.on('close', (cCode) => {
+            if (cCode === 0) resolve();
+            else reject(new Error(`FFmpeg concat exited with code ${cCode}. Stderr: ${cErr.slice(-600)}`));
+          });
+          concatProc.on('error', reject);
+        });
+
+        // Clean up temporary concat list
+        try { fs.unlinkSync(concatListPath); } catch {}
+        totalDuration = options.durationSeconds + partBSeconds;
+      }
+
       const buffer = fs.readFileSync(options.outputPath);
       const sha256 = crypto.createHash('sha256').update(buffer).digest('hex');
 
       return {
         outputPath: options.outputPath,
         format: options.format,
-        durationSeconds: options.durationSeconds,
+        durationSeconds: totalDuration,
+        partASeconds: options.durationSeconds,
+        partBSeconds: hasPartB ? partBSeconds : undefined,
         width: 1920,
         height: 1080,
         sha256,
@@ -180,5 +238,6 @@ export async function render1080pMusicVideo(
     }
   }
 
-  return createSyntheticMp4(options.outputPath, options.durationSeconds, options.format);
+  const fallbackTotalDuration = options.durationSeconds + (options.partB?.enabled ? (options.partB?.durationSeconds || 0) : 0);
+  return createSyntheticMp4(options.outputPath, fallbackTotalDuration, options.format);
 }

@@ -165,6 +165,22 @@ export interface PublishingTransactionRecord {
   }>;
 }
 
+export interface CanvaPartBConfig {
+  enabled: boolean;
+  canvaDesignId: string;
+  canvaUrl: string;
+  title: string;
+  sceneCount: number;
+  filePath?: string;
+  fileName?: string;
+  durationSeconds?: number;
+  audioMode: 'preserve_canva_audio' | 'crossfade' | 'mute';
+  playbackMode: 'full_19_scenes' | 'trimmed';
+  trimStartSeconds?: number;
+  trimEndSeconds?: number;
+  uploadedAt?: string;
+}
+
 export interface PipelineDraft {
   draftId: string; // Isolated UUID
   slug: string;
@@ -215,6 +231,7 @@ export interface PipelineDraft {
   video?: {
     status: 'PENDING' | 'RENDERING' | 'RENDERED' | 'FAILED';
     renderedAt?: string;
+    partB?: CanvaPartBConfig;
     formats: Record<
       string,
       {
@@ -223,6 +240,8 @@ export interface PipelineDraft {
         sha256?: string;
         durationSeconds: number;
         hasBurnedSubtitles: boolean;
+        partASeconds?: number;
+        partBSeconds?: number;
       }
     >;
   };
