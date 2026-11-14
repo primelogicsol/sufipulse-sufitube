@@ -57,8 +57,10 @@ export default function PipelineCockpitPage() {
   const [videoRenderResult, setVideoRenderResult] = useState<any>(null);
 
   // Variant Upload State
+  const [variantSourceMode, setVariantSourceMode] = useState<'url' | 'file'>('url');
   const [variantLabel, setVariantLabel] = useState('');
   const [sunoUrl, setSunoUrl] = useState('');
+  const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploadingVariant, setUploadingVariant] = useState(false);
   const [renderingMaster, setRenderingMaster] = useState(false);
 
@@ -110,31 +112,45 @@ export default function PipelineCockpitPage() {
     }
   };
 
-  // Add Suno Variant
+  // Add Variant (Suno URL or Audio Upload)
   const handleAddVariant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sunoUrl.trim()) return;
+    if (variantSourceMode === 'url' && !sunoUrl.trim()) return;
+    if (variantSourceMode === 'file' && !audioFile) return;
 
     try {
       setUploadingVariant(true);
-      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/upload-variant`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceType: 'suno_url',
-          sunoUrl: sunoUrl.trim(),
-          label: variantLabel.trim() || `Variant ${Object.keys(draft?.variants || {}).length + 1}`,
-          role: 'primary',
-        }),
-      });
+      let res: Response;
+
+      if (variantSourceMode === 'file' && audioFile) {
+        const fd = new FormData();
+        fd.append('file', audioFile);
+        fd.append('label', variantLabel.trim() || `Variant ${Object.keys(draft?.variants || {}).length + 1}`);
+        res = await fetch(`/api/admin/pipeline/drafts/${draftId}/upload-variant`, {
+          method: 'POST',
+          body: fd,
+        });
+      } else {
+        res = await fetch(`/api/admin/pipeline/drafts/${draftId}/upload-variant`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sourceType: 'suno_url',
+            sunoUrl: sunoUrl.trim(),
+            label: variantLabel.trim() || `Variant ${Object.keys(draft?.variants || {}).length + 1}`,
+            role: 'primary',
+          }),
+        });
+      }
 
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || 'Failed to import Suno variant');
+        throw new Error(d.error || 'Failed to import audio variant');
       }
 
       setSunoUrl('');
       setVariantLabel('');
+      setAudioFile(null);
       await fetchDraft();
     } catch (err: any) {
       alert(`Error importing variant: ${err.message}`);
@@ -518,9 +534,32 @@ export default function PipelineCockpitPage() {
 
               {/* Ingest New Variant Form */}
               <form onSubmit={handleAddVariant} className="pt-2 border-t border-white/10 space-y-3">
-                <div className="text-xs font-semibold uppercase tracking-wider text-white/70">
-                  Import New Suno Variant / Extension
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-white/70">
+                    Ingest Audio Variant
+                  </span>
+                  <div className="inline-flex rounded-lg border border-white/10 bg-white/5 p-0.5 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setVariantSourceMode('url')}
+                      className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                        variantSourceMode === 'url' ? 'bg-amber-500 text-black font-semibold' : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      Suno URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVariantSourceMode('file')}
+                      className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                        variantSourceMode === 'file' ? 'bg-amber-500 text-black font-semibold' : 'text-white/60 hover:text-white'
+                      }`}
+                    >
+                      Upload Audio
+                    </button>
+                  </div>
                 </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
@@ -529,21 +568,36 @@ export default function PipelineCockpitPage() {
                     placeholder="Label (e.g. Variant B, Chorus Patch)"
                     className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
                   />
-                  <input
-                    type="url"
-                    required
-                    value={sunoUrl}
-                    onChange={(e) => setSunoUrl(e.target.value)}
-                    placeholder="https://suno.com/song/..."
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
-                  />
+                  {variantSourceMode === 'url' ? (
+                    <input
+                      type="url"
+                      required
+                      value={sunoUrl}
+                      onChange={(e) => setSunoUrl(e.target.value)}
+                      placeholder="https://suno.com/song/..."
+                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
+                    />
+                  ) : (
+                    <input
+                      type="file"
+                      required
+                      accept="audio/*,.mp3,.wav,.m4a,.aac,.flac"
+                      onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 focus:border-amber-400 focus:outline-none"
+                    />
+                  )}
                 </div>
+
                 <button
                   type="submit"
-                  disabled={uploadingVariant || !sunoUrl.trim()}
+                  disabled={uploadingVariant || (variantSourceMode === 'url' ? !sunoUrl.trim() : !audioFile)}
                   className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors disabled:opacity-50"
                 >
-                  {uploadingVariant ? 'Importing...' : 'Add Variant to Isolated Draft'}
+                  {uploadingVariant
+                    ? 'Importing...'
+                    : variantSourceMode === 'url'
+                    ? 'Import Suno Variant'
+                    : 'Upload Audio Variant'}
                 </button>
               </form>
             </div>

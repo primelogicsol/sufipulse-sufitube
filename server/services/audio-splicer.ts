@@ -33,11 +33,52 @@ function getFfmpegPath(): string {
   return 'ffmpeg';
 }
 
+function getFfprobePath(): string {
+  if (process.env.FFPROBE_PATH && fs.existsSync(process.env.FFPROBE_PATH)) {
+    return process.env.FFPROBE_PATH;
+  }
+  const wingetFfprobe = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffprobe.exe';
+  if (fs.existsSync(wingetFfprobe)) return wingetFfprobe;
+  return 'ffprobe';
+}
+
 export function isFfmpegAvailable(): Promise<boolean> {
   return new Promise((resolve) => {
     const proc = spawn(getFfmpegPath(), ['-version']);
     proc.on('error', () => resolve(false));
     proc.on('close', (code) => resolve(code === 0));
+  });
+}
+
+export function probeAudioFile(filePath: string): Promise<{ durationSeconds: number; sampleRate: number; channels: number } | null> {
+  return new Promise((resolve) => {
+    const proc = spawn(getFfprobePath(), [
+      '-v', 'quiet',
+      '-print_format', 'json',
+      '-show_format',
+      '-show_streams',
+      filePath,
+    ]);
+
+    let stdout = '';
+    proc.stdout.on('data', (d) => { stdout += d.toString(); });
+    proc.on('error', () => resolve(null));
+    proc.on('close', (code) => {
+      if (code !== 0) return resolve(null);
+      try {
+        const data = JSON.parse(stdout);
+        const audioStream = data.streams?.find((s: any) => s.codec_type === 'audio');
+        const duration = parseFloat(data.format?.duration || audioStream?.duration || '0');
+        const sampleRate = parseInt(audioStream?.sample_rate || '48000', 10);
+        const channels = parseInt(audioStream?.channels || '2', 10);
+        if (duration > 0) {
+          return resolve({ durationSeconds: duration, sampleRate, channels });
+        }
+        resolve(null);
+      } catch {
+        resolve(null);
+      }
+    });
   });
 }
 

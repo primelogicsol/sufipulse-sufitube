@@ -64,3 +64,22 @@ export async function PATCH(
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ draftId: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    const { draftId } = await params;
+    const deleted = pipelineDraftStorage.deleteDraft(draftId);
+    if (!deleted) {
+      return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, deletedDraftId: draftId });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

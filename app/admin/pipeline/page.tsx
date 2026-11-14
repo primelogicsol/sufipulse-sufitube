@@ -16,6 +16,7 @@ import {
   Video,
   Send,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 
 interface DraftItem {
@@ -106,6 +107,40 @@ export default function PipelineDashboardPage() {
     }
   };
 
+  const handleDeleteDraft = async (draftId: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete draft "${title}"?`)) return;
+    try {
+      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        await fetchDrafts();
+      } else {
+        const d = await res.json();
+        alert(`Failed to delete draft: ${d.error || res.statusText}`);
+      }
+    } catch (err: any) {
+      alert(`Error deleting draft: ${err.message}`);
+    }
+  };
+
+  const handleClearAllDrafts = async () => {
+    if (!confirm('Are you sure you want to clear ALL pipeline drafts? This cannot be undone.')) return;
+    try {
+      const res = await fetch('/api/admin/pipeline/drafts', {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        await fetchDrafts();
+      } else {
+        const d = await res.json();
+        alert(`Failed to clear drafts: ${d.error || res.statusText}`);
+      }
+    } catch (err: any) {
+      alert(`Error clearing drafts: ${err.message}`);
+    }
+  };
+
   if (!isAdmin) {
     return (
       <DashboardLayout>
@@ -169,6 +204,16 @@ export default function PipelineDashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {drafts.length > 0 && (
+              <button
+                onClick={handleClearAllDrafts}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors"
+                title="Clear all pipeline drafts"
+              >
+                <Trash2 className="w-4 h-4 text-red-400" />
+                Clear All Drafts
+              </button>
+            )}
             <button
               onClick={fetchDrafts}
               className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition-colors"
@@ -274,7 +319,14 @@ export default function PipelineDashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 self-end md:self-center">
+                    <div className="flex items-center gap-2.5 self-end md:self-center">
+                      <button
+                        onClick={() => handleDeleteDraft(draft.draftId, draft.title)}
+                        className="p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/20 hover:border-red-500/40 text-white/50 hover:text-red-300 transition-colors"
+                        title="Delete this draft"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                       <Link
                         href={`/admin/pipeline/${draft.draftId}`}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-amber-500 hover:text-black font-semibold text-sm text-white transition-all group-hover:shadow-md"

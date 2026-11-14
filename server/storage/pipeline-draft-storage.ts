@@ -292,4 +292,29 @@ export const pipelineDraftStorage = {
     this.saveDraft(draft);
     return draft;
   },
+
+  deleteDraft(draftId: string): boolean {
+    const dir = getDraftDir(draftId);
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+      return true;
+    }
+    return false;
+  },
+
+  clearAllDrafts(): number {
+    ensureDir(BASE_DATA_DIR);
+    const dirs = fs.readdirSync(BASE_DATA_DIR);
+    let count = 0;
+    for (const d of dirs) {
+      const fullPath = path.join(BASE_DATA_DIR, d);
+      try {
+        if (fs.statSync(fullPath).isDirectory()) {
+          fs.rmSync(fullPath, { recursive: true, force: true });
+          count++;
+        }
+      } catch {}
+    }
+    return count;
+  },
 };

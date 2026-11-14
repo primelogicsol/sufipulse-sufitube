@@ -8,7 +8,7 @@ import {
   getDraftAudioDir,
   computeFileSha256,
 } from '@/server/storage/pipeline-draft-storage';
-import { readWavHeader, createEmptyWavBuffer } from '@/server/services/audio-splicer';
+import { readWavHeader, createEmptyWavBuffer, probeAudioFile } from '@/server/services/audio-splicer';
 import { extractSourceAssetId, fetchConfiguredPrivateAudioAlignment, normalizePrivateAudioAlignment } from '@/server/integrations/private-audio-alignment';
 import type { VariantSource } from '@/server/types/pipeline-draft';
 
@@ -118,6 +118,16 @@ export async function POST(
           channels = meta.channels;
         } catch {}
       }
+
+      // If ffprobe is available, probe exact audio metrics for MP3, M4A, FLAC, AAC or WAV
+      try {
+        const probed = await probeAudioFile(filePath);
+        if (probed && probed.durationSeconds > 0) {
+          durationSeconds = Math.round(probed.durationSeconds * 100) / 100;
+          sampleRate = probed.sampleRate || sampleRate;
+          channels = probed.channels || channels;
+        }
+      } catch {}
 
       const variant: VariantSource = {
         variantId,
