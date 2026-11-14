@@ -3,7 +3,20 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import { AlertCircle, CheckCircle2, Server, Save } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Server,
+  Save,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Info,
+  ShieldCheck,
+  Key,
+  Layers,
+  Code,
+} from 'lucide-react';
 
 export default function PrivateProductionConnectionSettings() {
   const { user } = useAuth();
@@ -12,6 +25,7 @@ export default function PrivateProductionConnectionSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   
   const [testResult, setTestResult] = useState<{
@@ -134,7 +148,118 @@ export default function PrivateProductionConnectionSettings() {
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto py-8">
-        <h1 className="text-2xl font-bold text-white mb-8">Private Production Connection</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Private Production Connection</h1>
+            <p className="text-xs text-white/50 mt-1">
+              Secure upstream gateway for Suno AI audio alignment and high-definition stream retrieval.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsHelpOpen(!isHelpOpen)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 text-xs font-semibold transition-colors self-start sm:self-auto"
+          >
+            <HelpCircle className="w-4 h-4 text-amber-400" />
+            <span>{isHelpOpen ? 'Hide Help Guide' : 'How to Use / Help Guide'}</span>
+            {isHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
+        {/* Expandable / Collapsible Help Guide */}
+        {isHelpOpen && (
+          <div className="mb-8 rounded-2xl border border-amber-500/30 bg-black/60 backdrop-blur-sm p-6 shadow-2xl space-y-6 text-sm">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2 text-amber-400 font-semibold text-base">
+                <Info className="w-5 h-5" />
+                <span>Gateway Configuration & Setup Guide</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHelpOpen(false)}
+                className="text-xs text-white/40 hover:text-white transition-colors"
+              >
+                Close ✕
+              </button>
+            </div>
+
+            {/* Section 1: Overview */}
+            <div className="space-y-2">
+              <h3 className="text-xs uppercase tracking-wider font-bold text-white/80 flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-amber-400" /> 1. What This Gateway Does
+              </h3>
+              <p className="text-xs text-white/70 leading-relaxed">
+                When you input a Suno URL (e.g. <code className="text-amber-300 bg-white/5 px-1 py-0.5 rounded font-mono">https://suno.com/song/1d47c525-20df-42e9-a58f-9f082fbdfbcf</code>) into the New Release Pipeline or CMS Releases, SufiPulse extracts the 36-character asset UUID and queries your configured upstream endpoints by replacing <code className="text-amber-300 font-mono font-bold">{'{assetId}'}</code>.
+              </p>
+            </div>
+
+            {/* Section 2: URL Template Syntax */}
+            <div className="space-y-3">
+              <h3 className="text-xs uppercase tracking-wider font-bold text-white/80 flex items-center gap-1.5">
+                <Code className="w-4 h-4 text-emerald-400" /> 2. Required URL Template Syntax
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02] space-y-1.5">
+                  <div className="font-semibold text-amber-300">Alignment Service URL</div>
+                  <p className="text-white/60">Returns word-level timestamps and timed lyric lines in JSON format.</p>
+                  <code className="block p-2 rounded-lg bg-black/60 text-emerald-400 font-mono text-[11px] break-all border border-white/5">
+                    https://your-api.com/api/song/{'{assetId}'}
+                  </code>
+                </div>
+                <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02] space-y-1.5">
+                  <div className="font-semibold text-amber-300">Studio Audio Service URL</div>
+                  <p className="text-white/60">Streams or serves the audio track (.mp3 or .wav) for the given asset ID.</p>
+                  <code className="block p-2 rounded-lg bg-black/60 text-emerald-400 font-mono text-[11px] break-all border border-white/5">
+                    https://your-api.com/api/stream/{'{assetId}'}
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Authentication & Headers */}
+            <div className="space-y-3">
+              <h3 className="text-xs uppercase tracking-wider font-bold text-white/80 flex items-center gap-1.5">
+                <Key className="w-4 h-4 text-purple-400" /> 3. Authentication & Custom Headers
+              </h3>
+              <div className="space-y-2 text-xs text-white/70">
+                <p>
+                  <strong className="text-white">Authentication Header:</strong> Format as <code className="font-mono text-amber-300">Bearer &lt;token&gt;</code> or <code className="font-mono text-amber-300">ApiKey &lt;key&gt;</code>.
+                </p>
+                <p>
+                  <strong className="text-white">Additional Headers (JSON):</strong> If your upstream proxy requires session cookies or custom client IDs, enter them as valid JSON:
+                </p>
+                <pre className="p-2.5 rounded-lg bg-black/60 text-amber-200 font-mono text-[11px] border border-white/5 overflow-x-auto">
+{`{
+  "Cookie": "__client_session=YOUR_SESSION_COOKIE_VALUE",
+  "X-Custom-Client": "SufiPulse-Studio"
+}`}
+                </pre>
+              </div>
+            </div>
+
+            {/* Section 4: Security & Zero Leakage */}
+            <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 space-y-1 text-xs">
+              <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Zero-Browser Leakage Security Guarantee</span>
+              </div>
+              <p className="text-white/70">
+                All credentials entered here are encrypted with AES-256-GCM using your server’s <code className="font-mono text-emerald-300">PRIVATE_PRODUCTION_ENCRYPTION_KEY</code> and stored in <code className="font-mono text-white/90">.data/private-production-connection.enc</code>. Tokens are write-only and are <strong>never sent back to the browser</strong>.
+              </p>
+            </div>
+
+            {/* Section 5: Local Pipeline Alternative */}
+            <div className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-500/5 space-y-1 text-xs">
+              <div className="flex items-center gap-1.5 font-semibold text-blue-400">
+                <Info className="w-4 h-4" />
+                <span>Do You Need This To Test Releases Right Now?</span>
+              </div>
+              <p className="text-white/70">
+                <strong>No.</strong> In the <a href="/admin/pipeline" className="text-amber-400 underline hover:text-amber-300">New Release Pipeline</a>, you can toggle to <strong>Upload Audio</strong> to ingest any <code className="font-mono text-blue-300">.wav</code>, <code className="font-mono text-blue-300">.mp3</code>, or <code className="font-mono text-blue-300">.m4a</code> file directly. Local <code className="font-mono text-blue-300">ffprobe</code> will analyze exact duration, waveforms, and channels without needing an external API.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Status Section */}
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#111] p-6 shadow-xl">
