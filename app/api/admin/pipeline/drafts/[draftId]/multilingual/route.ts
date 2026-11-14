@@ -63,6 +63,7 @@ export async function POST(
         draft.primaryLanguage
       );
 
+      pipelineDraftStorage.saveDraft(draft);
       return NextResponse.json({ success: true, package: pkg });
     }
 

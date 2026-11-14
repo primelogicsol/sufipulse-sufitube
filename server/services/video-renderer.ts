@@ -41,7 +41,12 @@ export interface VideoRenderResult {
 }
 
 function getFfmpegPath(): string {
-  return process.env.FFMPEG_PATH || 'ffmpeg';
+  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
+    return process.env.FFMPEG_PATH;
+  }
+  const wingetFfmpeg = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffmpeg.exe';
+  if (fs.existsSync(wingetFfmpeg)) return wingetFfmpeg;
+  return 'ffmpeg';
 }
 
 /**
@@ -114,9 +119,20 @@ export async function render1080pMusicVideo(
 
       // If lyric master and ASS subtitle path is provided, burn subtitles into video canvas
       if (options.format === 'lyric_master' && options.subtitlesPath && fs.existsSync(options.subtitlesPath)) {
+        let burnAssPath = options.subtitlesPath;
+
+        // Ensure RTL Nastaliq script is shaped continuously by stripping inline karaoke duration tags if present
+        const rawAss = fs.readFileSync(options.subtitlesPath, 'utf8');
+        if (rawAss.includes('{\\k')) {
+          const cleanAss = rawAss.replace(/\{\\k\d+\}/g, '');
+          burnAssPath = options.subtitlesPath.replace(/\.ass$/, '_burned.ass');
+          fs.writeFileSync(burnAssPath, cleanAss, 'utf8');
+        }
+
         // Escape backslashes and colons for FFmpeg subtitle filter on Windows
-        const escapedSubPath = options.subtitlesPath.replace(/\\/g, '/').replace(/:/g, '\\:');
-        ffmpegArgs.push('-vf', `scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,subtitles='${escapedSubPath}'`);
+        const escapedSubPath = burnAssPath.replace(/\\/g, '/').replace(/:/g, '\\:');
+        const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/').replace(/:/g, '\\:');
+        ffmpegArgs.push('-vf', `scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,subtitles='${escapedSubPath}':fontsdir='${fontsDir}'`);
       } else {
         ffmpegArgs.push('-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2');
       }

@@ -112,11 +112,13 @@ export function compileAss(
     dualSubtitle?: boolean;
     primaryLang?: string;
     secondaryLang?: string;
+    enableKaraoke?: boolean;
   }
 ): string {
   const dual = options?.dualSubtitle !== false;
   const primLang = options?.primaryLang || 'ur';
   const secLang = options?.secondaryLang || 'en';
+  const enableKaraoke = options?.enableKaraoke !== false;
 
   const doc: string[] = [
     '[Script Info]',
@@ -131,10 +133,10 @@ export function compileAss(
     '',
     '[V4+ Styles]',
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
-    // Style for Nastaliq Script / Urdu Calligraphy
-    'Style: Mystic_Primary,Noto Nastaliq Urdu, Segoe UI, Arial,52,&H00FFFFFF,&H0000FFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,3,0,2,40,40,100,1',
-    // Style for Secondary English / Spiritual Contemplation
-    'Style: Mystic_Secondary,Georgia, Segoe UI, Arial,32,&H00E0C068,&H00FFFFFF,&H00121212,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,50,50,45,1',
+    // Style for Nastaliq Script / Urdu Calligraphy (Alignment 2 = bottom-center, MarginV 140 places it above English)
+    'Style: Mystic_Primary,Noto Nastaliq Urdu,68,&H00FFFFFF,&H0000FFFF,&H00000000,&H90000000,-1,0,0,0,100,100,0,0,1,4.0,3.0,2,40,40,140,1',
+    // Style for Secondary English / Spiritual Contemplation (Alignment 2 = bottom-center, MarginV 60 places it comfortably below Urdu)
+    'Style: Mystic_Secondary,Georgia,40,&H0050D0FF,&H00FFFFFF,&H00000000,&H90000000,0,0,0,0,100,100,0,0,1,3.0,2.0,2,50,50,60,1',
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
@@ -154,7 +156,7 @@ export function compileAss(
     // Reconcile Karaoke durations so sum(cs) exactly equals (end - start) in centiseconds
     const lineTotalDurationCs = Math.max(1, Math.round((entry.endSeconds - entry.startSeconds) * 100));
 
-    if (entry.words && entry.words.length > 0 && primLang === 'ur') {
+    if (enableKaraoke && entry.words && entry.words.length > 0 && primLang === 'ur') {
       const words = entry.words;
       const rawDurations = words.map((w) => Math.max(1, Math.round((w.endSeconds - w.startSeconds) * 100)));
       const rawSum = rawDurations.reduce((acc, v) => acc + v, 0);
@@ -209,7 +211,7 @@ export function exportAllSubtitles(
   for (const lang of langCodes) {
     const vtt = compileVtt(pkg, lang);
     const srt = compileSrt(pkg, lang);
-    const ass = compileAss(pkg, { dualSubtitle: false, primaryLang: lang });
+    const ass = compileAss(pkg, { dualSubtitle: false, primaryLang: lang, enableKaraoke: true });
 
     fs.writeFileSync(path.join(outputDir, `${lang}.vtt`), vtt, 'utf8');
     fs.writeFileSync(path.join(outputDir, `${lang}.srt`), srt, 'utf8');

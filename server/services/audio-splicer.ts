@@ -25,7 +25,12 @@ export interface SplicerRenderResult {
 }
 
 function getFfmpegPath(): string {
-  return process.env.FFMPEG_PATH || 'ffmpeg';
+  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
+    return process.env.FFMPEG_PATH;
+  }
+  const wingetFfmpeg = 'C:\\Users\\Fayaz\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffmpeg.exe';
+  if (fs.existsSync(wingetFfmpeg)) return wingetFfmpeg;
+  return 'ffmpeg';
 }
 
 export function isFfmpegAvailable(): Promise<boolean> {
@@ -344,6 +349,19 @@ export async function renderMasterWav(
   variants: Record<string, VariantSource>,
   outputPath: string
 ): Promise<SplicerRenderResult> {
+  const allWav = Object.values(variants).every(
+    (v) => v.format === 'wav' || v.filePath.toLowerCase().endsWith('.wav')
+  );
+
+  // For sample-accurate PCM WAV sources, prefer native lossless sample-aligned splicer
+  if (allWav) {
+    try {
+      return spliceWavNative(edl, variants, outputPath);
+    } catch (err) {
+      console.warn('[AudioSplicer] Native PCM WAV splice failed, trying FFmpeg:', err);
+    }
+  }
+
   const hasFfmpeg = await isFfmpegAvailable();
 
   if (hasFfmpeg) {

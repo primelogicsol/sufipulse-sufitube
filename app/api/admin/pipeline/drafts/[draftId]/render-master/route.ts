@@ -23,7 +23,25 @@ export async function POST(
     if (!draft) return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
 
     if (!draft.assembly.segments.length) {
-      return NextResponse.json({ error: 'No assembly segments to render' }, { status: 400 });
+      const variantIds = Object.keys(draft.variants);
+      if (variantIds.length === 0) {
+        return NextResponse.json({ error: 'No variants ingested to render' }, { status: 400 });
+      }
+      const primaryId = draft.activeVariantId || variantIds[0];
+      const primaryVariant = draft.variants[primaryId];
+      draft.assembly.segments = [
+        {
+          segmentId: `seg_init_${Date.now()}`,
+          sourceVariantId: primaryId,
+          sourceInSeconds: 0,
+          sourceOutSeconds: primaryVariant.durationSeconds,
+          destinationStartSeconds: 0,
+          transition: { type: 'cut' },
+          trackType: 'full_mix',
+          enabled: true,
+        },
+      ];
+      pipelineDraftStorage.saveDraft(draft);
     }
 
     const audioDir = getDraftAudioDir(draftId);

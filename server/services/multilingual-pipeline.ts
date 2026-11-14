@@ -98,6 +98,34 @@ const POETIC_VERSE_TRANSLATIONS: Record<string, string> = {
   'حق موجود صدا موجود': 'The Divine Truth is ever-present, everlasting and near',
   'سفر میں مسافر کون رہ گیا': 'Upon this sacred journey, who remains but the seeker and the Beloved',
   'تو اور میں': 'The duality of You and I melts into oneness',
+  // Rab Ki Tasbeeh / Kashmiri Sufi-Rishi Dialogue
+  'रब की तस्बीह में अशजार पुकारें!': 'In the Divine Tasbeeh, the sacred trees call out!',
+  'رَب کی تسبیح میں اشجار پکاریں!': 'In the Divine Tasbeeh, the sacred trees call out!',
+  'رب کی تسبیح میں اشجار پکاریں!': 'In the Divine Tasbeeh, the sacred trees call out!',
+  'बोलो... बोलो... अब तो बोलो!': 'Speak now... speak! Awake and speak!',
+  'بولو... بولو... اب تو بولو!': 'Speak now... speak! Awake and speak!',
+  'اپنے زمیر کے پردے کھولو!': 'Unveil the sacred curtains of your conscience!',
+  'اپنے ضمیر کے پردے کھولو!': 'Unveil the sacred curtains of your conscience!',
+  'اپنے زمیر کے پردے کھولو': 'Unveil the sacred curtains of your conscience!',
+  'اپنے ضمیر کے پردے کھولو': 'Unveil the sacred curtains of your conscience!',
+  'अपने ज़मीर के पर्दे खोलो!': 'Unveil the sacred curtains of your conscience!',
+  'कब तक ख़ामोश... कब तक ख़ामोश?': 'How long in silence... how long will you remain silent?',
+  'کب تک خاموش... کب تک خاموش؟': 'How long in silence... how long will you remain silent?',
+  'कब जागेगा तेरा सोया होश?': 'When will your slumbering spirit awaken to Truth?',
+  'کب جاگے گا تیرا سویا ہوش؟': 'When will your slumbering spirit awaken to Truth?',
+  'یا رب، کیا شجر تیرا ذکر کریں؟': 'O Lord, do the trees chant Your Sacred Remembrance?',
+  'کیا دریا بھی تیری تسبیح پڑھیں؟': 'Do the flowing rivers also recite Your sacred praise?',
+  'کیا چشموں میں کوئی پوشیدہ کلام؟': 'Is there a hidden word whispering through the fresh springs?',
+  'کیا بادِ صبا میں تیرا پیغام؟': 'Does the morning breeze carry Your divine message?',
+  'تو ان کی تسبیح کا راز پوچھے': 'You seek the mystery behind their sacred praise',
+  'اپنے عمل کا حساب کیوں بھولے؟': 'Why then do you forget to account for your own deeds?',
+  'ہر شجر کی تسبیح، ہر قطرے کا ذکر': 'Every tree praises Him, every droplet chants His name',
+  'فطرت کی حفاظت، ایمان کی فکر!': 'Protecting nature is safeguarding faith itself',
+  // Additional classical refrains
+  'رَبّ... میری راہ کھول دے': 'O Lord, open the spiritual pathway for my soul',
+  'میری راہ کھول دے': 'Open the pathway for my longing soul',
+  'دِل تھک گیا، سانس گراں ہے': 'The weary heart tires, and every breath feels heavy',
+  'تُو اپنی نگاہ کھول دے': 'Cast upon me the gaze of Your Divine Grace',
 };
 
 export function urduToDevanagari(text: string): string {
@@ -189,7 +217,9 @@ export function translateSufiEnglish(text: string): string {
   }
 
   if (translatedAny) {
-    translation = translation.replace(/[\u0600-\u06FF]/g, '').replace(/\s+/g, ' ').trim();
+    // Gracefully transliterate any untranslated Arabic/Urdu words rather than blanking them
+    translation = translation.replace(/[\u0600-\u06FF]+/g, (match) => urduToRomanUrdu(match));
+    translation = translation.replace(/\s+/g, ' ').trim();
     if (translation.length > 0) {
       // Capitalize first letter
       return translation.charAt(0).toUpperCase() + translation.slice(1);
@@ -206,7 +236,34 @@ export function generateMultilingualPackage(
 ): MultilingualPackage {
   const lines: MultilingualLineEntry[] = [];
 
-  for (const line of masterTimeline.lines) {
+  const timelineLines = masterTimeline.lines && masterTimeline.lines.length > 0
+    ? masterTimeline.lines
+    : (() => {
+        const rawLines = (canonicalLyricsText || '')
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+        const count = rawLines.length;
+        if (count === 0) return [];
+        const lineDur = (masterTimeline.durationSeconds || 60.0) / count;
+        return rawLines.map((text, idx) => ({
+          lineIndex: idx,
+          segmentId: 'seg_default',
+          sourceVariantId: 'primary',
+          sourceLineIndex: idx,
+          startSeconds: idx * lineDur,
+          endSeconds: (idx + 1) * lineDur,
+          text,
+          isProductionDirection: text.startsWith('(') || text.startsWith('[') || text.startsWith('#'),
+          words: [],
+        }));
+      })();
+
+  if (masterTimeline.lines && masterTimeline.lines.length === 0) {
+    masterTimeline.lines = timelineLines as any;
+  }
+
+  for (const line of timelineLines) {
     const rawText = line.text.trim();
     const isDirection = line.isProductionDirection;
 
