@@ -102,8 +102,8 @@ async function runMilestone2Tests() {
   assert(roman.toLowerCase().includes('ishq'), 'Roman Urdu correctly transliterates "Ishq"');
   assert(roman.toLowerCase().includes('fana'), 'Roman Urdu correctly transliterates "Fana"');
 
-  assert(english.includes('Divine Love'), 'Sufi English translation interprets Ishq as Divine Love');
-  assert(english.includes('Annihilation of Self'), 'Sufi English translation interprets Fana as Annihilation of Self');
+  assert(english.toLowerCase().includes('divine love'), 'Sufi English translation interprets Ishq as Divine Love');
+  assert(english.toLowerCase().includes('annihilation'), 'Sufi English translation interprets Fana as self-annihilation');
 
   // ── TEST 3: Real Vocal Audio Fixture & Master Timeline ─────────────────────
   console.log('\n--- Test 3: Real Vocal Audio Fixture & Master Assembly ---');

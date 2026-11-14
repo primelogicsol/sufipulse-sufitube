@@ -3,11 +3,11 @@
  *
  * Synchronized Multilingual Subtitle Compiler for SufiPulse Pipeline.
  * 
- * Compiles:
- *  - WebVTT (.vtt)
- *  - SubRip (.srt)
- *  - Advanced SubStation Alpha (.ass) with syllable-level \k karaoke highlighting
- *  - Dual-Subtitle ASS (Original Calligraphy / Script + English translation below)
+ * Features:
+ *  - Nastaliq Arabic script typography (Noto Nastaliq Urdu / Segoe UI) with proper RTL shaping.
+ *  - Exact Karaoke \k duration reconciliation (sum of \k durations === line total duration to the centisecond).
+ *  - Dual-Subtitle ASS (Calligraphy/Nastaliq on top + English translation below).
+ *  - Standard WebVTT (.vtt) and SubRip (.srt).
  */
 
 import fs from 'node:fs';
@@ -38,7 +38,7 @@ export function formatAssTime(seconds: number): string {
   const h = Math.floor(totalMs / 3600000);
   const mm = Math.floor((totalMs % 3600000) / 60000);
   const ss = Math.floor((totalMs % 60000) / 1000);
-  const cs = Math.floor((totalMs % 1000) / 10); // centiseconds
+  const cs = Math.floor((totalMs % 1000) / 10);
   return `${h}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
 }
 
@@ -58,9 +58,6 @@ function getTextForLanguage(line: MultilingualLineEntry, langCode: string): stri
   }
 }
 
-/**
- * Builds WebVTT string for a specific language
- */
 export function compileVtt(pkg: MultilingualPackage, langCode: string): string {
   const lines: string[] = ['WEBVTT', `NOTE Language: ${langCode}`, `NOTE Revision: ${pkg.revision}`, ''];
 
@@ -82,9 +79,6 @@ export function compileVtt(pkg: MultilingualPackage, langCode: string): string {
   return lines.join('\n');
 }
 
-/**
- * Builds SubRip (SRT) string for a specific language
- */
 export function compileSrt(pkg: MultilingualPackage, langCode: string): string {
   const lines: string[] = [];
 
@@ -107,8 +101,10 @@ export function compileSrt(pkg: MultilingualPackage, langCode: string): string {
 }
 
 /**
- * Builds Advanced SubStation Alpha (.ass) with Karaoke syllable timing \k<cs>
- * and Dual-Subtitle support (Nastaliq on top, English translation below).
+ * Builds Advanced SubStation Alpha (.ass) with:
+ *  - Proper Nastaliq typography (Noto Nastaliq Urdu, Segoe UI).
+ *  - Exact karaoke duration reconciliation (sum of \k durations matches line interval).
+ *  - Dual-Subtitle master option (Layer 0 Nastaliq, Layer 1 English).
  */
 export function compileAss(
   pkg: MultilingualPackage,
@@ -135,10 +131,10 @@ export function compileAss(
     '',
     '[V4+ Styles]',
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
-    // Style for Primary Script (e.g. Urdu Nastaliq or Roman Urdu)
-    'Style: Mystic_Primary,Arial,48,&H00FFFFFF,&H0000FFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,3,0,2,40,40,95,1',
-    // Style for Secondary Translation (e.g. English)
-    'Style: Mystic_Secondary,Arial,32,&H00A0E0FF,&H00FFFFFF,&H00151515,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,50,50,45,1',
+    // Style for Nastaliq Script / Urdu Calligraphy
+    'Style: Mystic_Primary,Noto Nastaliq Urdu, Segoe UI, Arial,52,&H00FFFFFF,&H0000FFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,3,0,2,40,40,100,1',
+    // Style for Secondary English / Spiritual Contemplation
+    'Style: Mystic_Secondary,Georgia, Segoe UI, Arial,32,&H00E0C068,&H00FFFFFF,&H00121212,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,50,50,45,1',
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
@@ -155,20 +151,42 @@ export function compileAss(
 
     if (!primText && !secText) continue;
 
-    // If word timings exist on primary language, build syllable-level karaoke \k tags
+    // Reconcile Karaoke durations so sum(cs) exactly equals (end - start) in centiseconds
+    const lineTotalDurationCs = Math.max(1, Math.round((entry.endSeconds - entry.startSeconds) * 100));
+
     if (entry.words && entry.words.length > 0 && primLang === 'ur') {
+      const words = entry.words;
+      const rawDurations = words.map((w) => Math.max(1, Math.round((w.endSeconds - w.startSeconds) * 100)));
+      const rawSum = rawDurations.reduce((acc, v) => acc + v, 0);
+
+      // Distribute any remainder or stretch proportionally to guarantee exact duration match
+      let reconciledDurations: number[];
+      if (rawSum > 0) {
+        const factor = lineTotalDurationCs / rawSum;
+        reconciledDurations = rawDurations.map((d) => Math.max(1, Math.round(d * factor)));
+        const newSum = reconciledDurations.reduce((acc, v) => acc + v, 0);
+        const diff = lineTotalDurationCs - newSum;
+        // Adjust last word by the rounding delta
+        reconciledDurations[reconciledDurations.length - 1] = Math.max(
+          1,
+          reconciledDurations[reconciledDurations.length - 1] + diff
+        );
+      } else {
+        const perWord = Math.floor(lineTotalDurationCs / words.length);
+        reconciledDurations = words.map((_, i) =>
+          i === words.length - 1 ? lineTotalDurationCs - perWord * (words.length - 1) : perWord
+        );
+      }
+
       let karaokeText = '';
-      for (const w of entry.words) {
-        const durationCs = Math.max(1, Math.round((w.endSeconds - w.startSeconds) * 100));
-        karaokeText += `{\\k${durationCs}}${w.text} `;
+      for (let wIdx = 0; wIdx < words.length; wIdx++) {
+        karaokeText += `{\\k${reconciledDurations[wIdx]}}${words[wIdx].text} `;
       }
       primText = karaokeText.trim();
     }
 
     if (dual && secText && primText) {
-      // Layer 0: Primary script (higher up on screen)
       doc.push(`Dialogue: 0,${start},${end},Mystic_Primary,,0,0,0,,${primText}`);
-      // Layer 1: Secondary translation (below primary script)
       doc.push(`Dialogue: 1,${start},${end},Mystic_Secondary,,0,0,0,,${secText}`);
     } else {
       const activeText = primText || secText;
@@ -179,9 +197,6 @@ export function compileAss(
   return doc.join('\n');
 }
 
-/**
- * Compiles all subtitle formats and saves them to the draft subtitles directory.
- */
 export function exportAllSubtitles(
   pkg: MultilingualPackage,
   outputDir: string
@@ -203,7 +218,7 @@ export function exportAllSubtitles(
     results[lang] = { vtt, srt, ass };
   }
 
-  // Compile standard Dual-Subtitle Master ASS (Nastaliq + English)
+  // Dual-Subtitle Master ASS (Nastaliq + English)
   const masterDualAss = compileAss(pkg, { dualSubtitle: true, primaryLang: 'ur', secondaryLang: 'en' });
   fs.writeFileSync(path.join(outputDir, 'master_dual_urdu_english.ass'), masterDualAss, 'utf8');
 

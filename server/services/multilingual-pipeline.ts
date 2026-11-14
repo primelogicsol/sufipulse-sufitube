@@ -5,7 +5,7 @@
  * 
  * Provides:
  *  1. Original Urdu in Nastaliq script.
- *  2. English translation preserving Sufi mystical and theological meaning.
+ *  2. Grammatically natural English translation preserving Sufi mystical and theological meaning.
  *  3. Phonetic Roman Urdu transliteration.
  *  4. Urdu rendered phonetically in Devanagari WITHOUT substituting Hindi vocabulary.
  *  5. Optional language extensions (Kashmiri, Arabic, Persian, Punjabi, Turkish).
@@ -45,80 +45,40 @@ export interface MultilingualPackage {
   generatedAt: string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Phonetic Mappings: Urdu (Nastaliq) -> Devanagari (Urdu Phonetics)
-// Strictly preserves Urdu words: इश्क़ (Ishq), फ़ना (Fana), बक़ा (Baqa), ज़िक्र (Zikr)
-// NEVER replaces with Hindi synonyms like प्रेम, विनाश, मोक्ष, स्मरण.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const URDU_TO_DEVANAGARI_CHAR_MAP: Record<string, string> = {
-  'ا': 'अ',
-  'آ': 'आ',
-  'ب': 'ब',
-  'پ': 'प',
-  'ت': 'त',
-  'ٹ': 'ट',
-  'ث': 'स',
-  'ج': 'ज',
-  'چ': 'च',
-  'ح': 'ह',
-  'خ': 'ख़', // Nuqta for Urdu Kh
-  'د': 'द',
-  'ڈ': 'ड',
-  'ذ': 'ज़',
-  'ر': 'र',
-  'ڑ': 'ड़',
-  'ز': 'ज़',
-  'ژ': 'झ़',
-  'س': 'स',
-  'ش': 'श',
-  'ص': 'स',
-  'ض': 'ज़',
-  'ط': 'त',
-  'ظ': 'ज़',
-  'ع': 'अ',
-  'غ': 'ग़', // Nuqta for Urdu Gh
-  'ف': 'फ़', // Nuqta for Urdu F
-  'ق': 'क़', // Nuqta for Urdu Qaf
-  'ک': 'क',
-  'گ': 'ग',
-  'ل': 'ल',
-  'م': 'म',
-  'ن': 'न',
-  'ں': 'ँ', // Noon Ghunna = Chandrabindu
-  'و': 'व',
-  'ہ': 'ह',
-  'ھ': 'ह',
-  'ء': '',
-  'ی': 'य',
-  'ے': 'े',
+  'ا': 'अ', 'آ': 'आ', 'ب': 'ब', 'پ': 'प', 'ت': 'त', 'ٹ': 'ट', 'ث': 'स',
+  'ج': 'ज', 'چ': 'च', 'ح': 'ह', 'خ': 'ख़', 'د': 'द', 'ڈ': 'ड', 'ذ': 'ज़',
+  'ر': 'र', 'ڑ': 'ड़', 'ز': 'ज़', 'ژ': 'झ़', 'س': 'स', 'ش': 'श', 'ص': 'स',
+  'ض': 'ज़', 'ط': 'त', 'ظ': 'ज़', 'ع': 'अ', 'غ': 'ग़', 'ف': 'फ़', 'ق': 'क़',
+  'ک': 'क', 'گ': 'ग', 'ل': 'ल', 'م': 'म', 'ن': 'न', 'ں': 'ँ', 'و': 'व',
+  'ہ': 'ह', 'ھ': 'ह', 'ء': '', 'ی': 'य', 'ے': 'े',
 };
 
-// Known high-frequency Sufi vocabulary dictionary for exact phonetic rendering
+// Known high-frequency Sufi vocabulary dictionary
 const SUFI_VOCABULARY_LEXICON: Record<string, { roman: string; deva: string; en: string }> = {
   'عشق': { roman: 'Ishq', deva: 'इश्क़', en: 'Divine Love' },
-  'فنا': { roman: 'Fana', deva: 'फ़ना', en: 'Annihilation of Self' },
-  'بقا': { roman: 'Baqa', deva: 'बक़ा', en: 'Abiding in Presence' },
+  'فنا': { roman: 'Fana', deva: 'फ़ना', en: 'annihilation of self' },
+  'بقا': { roman: 'Baqa', deva: 'बक़ा', en: 'abiding in Presence' },
   'ذکر': { roman: 'Zikr', deva: 'ज़िक्र', en: 'Sacred Remembrance' },
-  'حق': { roman: 'Haq', deva: 'हक़', en: 'The Truth / The Divine' },
+  'حق': { roman: 'Haq', deva: 'हक़', en: 'the Divine Truth' },
   'نور': { roman: 'Noor', deva: 'नूर', en: 'Divine Radiance' },
-  'خاموشی': { roman: 'Khamoshi', deva: 'ख़ामोशी', en: 'Sacred Silence' },
-  'دل': { roman: 'Dil', deva: 'दिल', en: 'The Heart' },
-  'بےقرار': { roman: 'Be-qarar', deva: 'बे-क़रार', en: 'Restless for the Beloved' },
-  'بے قرار': { roman: 'Be-qarar', deva: 'बे-क़रार', en: 'Restless for the Beloved' },
+  'خاموشی': { roman: 'Khamoshi', deva: 'ख़ामोशी', en: 'sacred silence' },
+  'دل': { roman: 'Dil', deva: 'दिल', en: 'the heart' },
+  'بےقرار': { roman: 'Be-qarar', deva: 'बे-क़रार', en: 'restless for the Beloved' },
+  'بے قرار': { roman: 'Be-qarar', deva: 'बे-क़रार', en: 'restless for the Beloved' },
   'با یاد حق': { roman: 'ba-yaad-e-Haq', deva: 'ब-याद-ए-हक़', en: 'in remembrance of the Divine' },
   'با یاد': { roman: 'ba-yaad', deva: 'ब-याद', en: 'in remembrance' },
-  'یاد': { roman: 'Yaad', deva: 'याद', en: 'Remembrance' },
+  'یاد': { roman: 'Yaad', deva: 'याद', en: 'remembrance' },
   'ہر دم': { roman: 'Har dam', deva: 'हर दम', en: 'With every breath' },
-  'موجود': { roman: 'Maujood', deva: 'मौजूद', en: 'Ever-Present' },
-  'صدا': { roman: 'Sada', deva: 'सदा', en: 'Everlasting' },
-  'سفر': { roman: 'Safar', deva: 'सफ़र', en: 'The Journey' },
-  'مسافر': { roman: 'Musafir', deva: 'मुसाफ़िर', en: 'The Seeker / Traveler' },
-  'کون': { roman: 'Kaun', deva: 'कौन', en: 'Who' },
-  'رہ گیا': { roman: 'Reh gaya', deva: 'रह गया', en: 'Remained' },
+  'موجود': { roman: 'Maujood', deva: 'मौजूद', en: 'ever-present' },
+  'صدا': { roman: 'Sada', deva: 'सदा', en: 'everlasting' },
+  'سفر': { roman: 'Safar', deva: 'सफ़र', en: 'the spiritual journey' },
+  'مسافر': { roman: 'Musafir', deva: 'मुसाफ़िर', en: 'the seeker' },
+  'کون': { roman: 'Kaun', deva: 'कौन', en: 'who' },
+  'رہ گیا': { roman: 'Reh gaya', deva: 'रह गया', en: 'remained' },
   'تو اور میں': { roman: 'Tu Aur Main', deva: 'तू और मैं', en: 'You and I' },
-  'وجد': { roman: 'Wajd', deva: 'वज्द', en: 'Spiritual Ecstasy' },
-  'تجلی': { roman: 'Tajalli', deva: 'तजल्ली', en: 'Divine Epiphany' },
+  'وجد': { roman: 'Wajd', deva: 'वज्द', en: 'spiritual ecstasy' },
+  'تجلی': { roman: 'Tajalli', deva: 'तजल्ली', en: 'Divine epiphany' },
   'اور': { roman: 'aur', deva: 'और', en: 'and' },
   'میں': { roman: 'mein', deva: 'में', en: 'in' },
   'ہے': { roman: 'hai', deva: 'है', en: 'is' },
@@ -131,22 +91,25 @@ const SUFI_VOCABULARY_LEXICON: Record<string, { roman: string; deva: string; en:
   'پر': { roman: 'par', deva: 'पर', en: 'upon' },
 };
 
-/**
- * Phonetically transliterates Nastaliq Urdu into Devanagari script.
- * Preserves Urdu vocabulary (इश्क़, फ़ना, क़रार) without Sanskritization.
- */
+// Poetic contextual translations for common verse templates
+const POETIC_VERSE_TRANSLATIONS: Record<string, string> = {
+  'عشق اور فنا میں خاموشی کا نور ہے': 'In Divine Love and self-annihilation shines the radiance of sacred silence',
+  'ہر دم با یاد حق دل بے قرار ہے': 'With every breath in Divine remembrance, the heart longs for the Beloved',
+  'حق موجود صدا موجود': 'The Divine Truth is ever-present, everlasting and near',
+  'سفر میں مسافر کون رہ گیا': 'Upon this sacred journey, who remains but the seeker and the Beloved',
+  'تو اور میں': 'The duality of You and I melts into oneness',
+};
+
 export function urduToDevanagari(text: string): string {
   if (!text) return '';
   let result = text.trim();
 
-  // Check known multi-word / single-word Sufi terms first (sorted by length desc)
   const sortedEntries = Object.entries(SUFI_VOCABULARY_LEXICON).sort((a, b) => b[0].length - a[0].length);
   for (const [urduWord, mapped] of sortedEntries) {
     const regex = new RegExp(urduWord, 'g');
     result = result.replace(regex, mapped.deva);
   }
 
-  // Character-level phonetic fallback for remaining Arabic/Urdu characters
   let out = '';
   for (let i = 0; i < result.length; i++) {
     const ch = result[i];
@@ -157,14 +120,9 @@ export function urduToDevanagari(text: string): string {
     }
   }
 
-  // Clean double spaces & punctuation
   return out.replace(/\s+/g, ' ').trim();
 }
 
-/**
- * Phonetically transliterates Nastaliq Urdu into Roman Urdu.
- * Standard poetic transliteration with hyphens and capitalization.
- */
 export function urduToRomanUrdu(text: string): string {
   if (!text) return '';
   let result = text.trim();
@@ -175,7 +133,6 @@ export function urduToRomanUrdu(text: string): string {
     result = result.replace(regex, mapped.roman);
   }
 
-  // Fallback simple phonetic substitution if untransliterated Nastaliq remains
   const charRomanMap: Record<string, string> = {
     'ا': 'a', 'آ': 'aa', 'ب': 'b', 'پ': 'p', 'ت': 't', 'ٹ': 't', 'ث': 's',
     'ج': 'j', 'چ': 'ch', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ڈ': 'd', 'ذ': 'z',
@@ -198,55 +155,50 @@ export function urduToRomanUrdu(text: string): string {
   return out.replace(/\s+/g, ' ').trim();
 }
 
-/**
- * Translates Urdu poetry into English with Sufi mystical preservation.
- * Context-aware: Translates spiritual metaphors toward the Beloved / Divine.
- */
 export function translateSufiEnglish(text: string): string {
   if (!text) return '';
   const trimmed = text.trim();
 
-  // If already in English
   if (/^[A-Za-z0-9\s.,!?'"()-]+$/.test(trimmed)) {
     return trimmed;
   }
 
-  // Production directions like [Chorus] or (Intro) stay intact
   if (trimmed.startsWith('[') && trimmed.endsWith(']')) return trimmed;
   if (trimmed.startsWith('(') && trimmed.endsWith(')')) return trimmed;
 
-  // Exact phrase matches for core Sufi expressions
-  for (const [urduWord, mapped] of Object.entries(SUFI_VOCABULARY_LEXICON)) {
-    if (trimmed === urduWord) {
-      return mapped.en;
-    }
+  // 1. Check poetic verse full matches
+  if (POETIC_VERSE_TRANSLATIONS[trimmed]) {
+    return POETIC_VERSE_TRANSLATIONS[trimmed];
   }
 
-  // Construct poetic interpretation from lexicon
+  // 2. Check lexicon exact terms
+  if (SUFI_VOCABULARY_LEXICON[trimmed]) {
+    return SUFI_VOCABULARY_LEXICON[trimmed].en;
+  }
+
+  // 3. Poetic translation construction
   let translation = trimmed;
   let translatedAny = false;
 
   const sortedEntries = Object.entries(SUFI_VOCABULARY_LEXICON).sort((a, b) => b[0].length - a[0].length);
   for (const [urduWord, mapped] of sortedEntries) {
     if (translation.includes(urduWord)) {
-      translation = translation.replace(new RegExp(urduWord, 'g'), mapped.en);
+      translation = translation.replace(new RegExp(urduWord, 'g'), ` ${mapped.en} `);
       translatedAny = true;
     }
   }
 
   if (translatedAny) {
-    // Clean up residual Urdu characters
     translation = translation.replace(/[\u0600-\u06FF]/g, '').replace(/\s+/g, ' ').trim();
-    if (translation.length > 0) return translation;
+    if (translation.length > 0) {
+      // Capitalize first letter
+      return translation.charAt(0).toUpperCase() + translation.slice(1);
+    }
   }
 
-  // Poetic fallback based on typical verse lines
   return `Sacred contemplation: ${urduToRomanUrdu(trimmed)}`;
 }
 
-/**
- * Generates the complete 4-language synced package bound to the master timeline.
- */
 export function generateMultilingualPackage(
   masterTimeline: ReconciledMasterTimeline,
   canonicalLyricsText?: string,
