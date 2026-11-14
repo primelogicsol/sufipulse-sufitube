@@ -30,7 +30,10 @@ export async function POST(
     fs.mkdirSync(videoDir, { recursive: true });
 
     const outputPath = path.join(videoDir, `video_${format}_rev${draft.currentRevision}.mp4`);
-    const artworkPath = body.artworkPath || path.join(process.cwd(), 'public', 'banner1.png');
+    const artworkPath =
+      body.artworkPath ||
+      (draft.video?.partA?.filePath && fs.existsSync(draft.video.partA.filePath) ? draft.video.partA.filePath : null) ||
+      path.join(process.cwd(), 'public', 'banner1.png');
     const subPath = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles', 'master_dual_urdu_english.ass');
 
     const result = await render1080pMusicVideo({

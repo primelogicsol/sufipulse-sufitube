@@ -165,6 +165,15 @@ export interface PublishingTransactionRecord {
   }>;
 }
 
+export interface CanvaPartAConfig {
+  canvaDesignId: string;
+  canvaUrl: string;
+  title: string;
+  filePath?: string;
+  fileName?: string;
+  uploadedAt?: string;
+}
+
 export interface CanvaPartBConfig {
   enabled: boolean;
   canvaDesignId: string;
@@ -231,6 +240,7 @@ export interface PipelineDraft {
   video?: {
     status: 'PENDING' | 'RENDERING' | 'RENDERED' | 'FAILED';
     renderedAt?: string;
+    partA?: CanvaPartAConfig;
     partB?: CanvaPartBConfig;
     formats: Record<
       string,

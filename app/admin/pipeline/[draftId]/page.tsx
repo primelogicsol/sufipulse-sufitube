@@ -60,6 +60,10 @@ export default function PipelineCockpitPage() {
   const [renderingVideo, setRenderingVideo] = useState(false);
   const [videoRenderResult, setVideoRenderResult] = useState<any>(null);
 
+  // Part A Canva Artwork State
+  const [partAFile, setPartAFile] = useState<File | null>(null);
+  const [uploadingPartA, setUploadingPartA] = useState(false);
+
   // Part B Canva Video State
   const [partBFile, setPartBFile] = useState<File | null>(null);
   const [uploadingPartB, setUploadingPartB] = useState(false);
@@ -266,6 +270,36 @@ export default function PipelineCockpitPage() {
       alert(`Video rendering failed: ${err.message}`);
     } finally {
       setRenderingVideo(false);
+    }
+  };
+
+  // Upload Part A (Canva Background Theme Image)
+  const handleUploadPartA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!partAFile) return;
+    try {
+      setUploadingPartA(true);
+      const formData = new FormData();
+      formData.append('file', partAFile);
+      formData.append('canvaDesignId', draft?.video?.partA?.canvaDesignId || 'DAHa7St5CYs');
+      formData.append('canvaUrl', draft?.video?.partA?.canvaUrl || 'https://canva.link/ezqj8ymddv6yl2d');
+      formData.append('title', draft?.video?.partA?.title || 'Part A Background Theme');
+
+      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-a`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to attach Part A background');
+      }
+      await fetchDraft();
+      alert('Part A (Canva Background Theme) attached successfully!');
+      setPartAFile(null);
+    } catch (err: any) {
+      alert(`Part A upload failed: ${err.message}`);
+    } finally {
+      setUploadingPartA(false);
     }
   };
 
@@ -971,15 +1005,69 @@ export default function PipelineCockpitPage() {
                   </span>
                 </div>
 
-                {/* Part A Details */}
-                <div className="p-3 rounded-lg border border-white/5 bg-black/30 space-y-1 text-xs">
-                  <div className="flex items-center justify-between font-semibold text-white">
-                    <span>Part A: Core Lyric Video</span>
-                    <span className="font-mono text-emerald-400">{hasMasterAudio ? `${draft?.masterAudio?.durationSeconds?.toFixed(1)}s` : 'Pending Master'}</span>
+                {/* Part A Details (Canva Background Theme + Core Lyric Video) */}
+                <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between font-semibold text-amber-300">
+                    <div className="flex items-center gap-1.5">
+                      <span>Part A: Core Lyric Video</span>
+                      <span className="text-[10px] font-mono bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-400/30 text-amber-200">
+                        {draft?.video?.partA?.canvaDesignId || 'DAHa7St5CYs'}
+                      </span>
+                    </div>
+                    <a
+                      href={draft?.video?.partA?.canvaUrl || 'https://canva.link/ezqj8ymddv6yl2d'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 underline font-normal"
+                    >
+                      Open in Canva
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
-                  <p className="text-[11px] text-white/50">
-                    Suno Master WAV + 1920x1080 visual canvas + Dual Nastaliq & English captions.
-                  </p>
+
+                  <div className="text-[11px] text-white/70">
+                    <strong className="text-white">Theme:</strong> Background Canvas &bull; 1920x1080
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-white/60">
+                    <span>Suno Master WAV + Dual Nastaliq & English Subtitles</span>
+                    <span className="font-mono text-emerald-400 font-semibold">{hasMasterAudio ? `${draft?.masterAudio?.durationSeconds?.toFixed(1)}s` : 'Pending Master'}</span>
+                  </div>
+
+                  {/* Upload / Attached Status for Part A Background */}
+                  <div className="pt-2 border-t border-amber-500/20">
+                    {draft?.video?.partA?.filePath ? (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                          <Check className="w-3.5 h-3.5" /> Background Canvas Attached
+                        </span>
+                        <span className="text-white/40 font-mono text-[10px] truncate max-w-[140px]">
+                          {draft.video.partA.fileName || 'part_a_background.png'}
+                        </span>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleUploadPartA} className="space-y-2">
+                        <label className="text-[11px] text-white/60 block">
+                          Attach Exported Canva Theme (PNG / JPG):
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={(e) => setPartAFile(e.target.files?.[0] || null)}
+                            className="text-[11px] text-white/70 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-white/10 file:text-white hover:file:bg-white/20"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!partAFile || uploadingPartA}
+                            className="px-3 py-1 rounded-lg bg-amber-500 text-black text-[11px] font-semibold hover:bg-amber-400 disabled:opacity-40"
+                          >
+                            {uploadingPartA ? 'Uploading...' : 'Attach'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
                 </div>
 
                 {/* Part B Details (Canva Promotional Video) */}
