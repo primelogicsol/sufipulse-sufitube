@@ -14,6 +14,19 @@ export interface PublicGlobalReachPayload {
   recommendationEngine: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['recommendationEngine'];
   geographies: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['geographies'];
   snapshotStatus?: string;
+  reach?: {
+    baseline: number;
+    baselineThrough: string;
+    firstReportDay: string | null;
+    lastReportDay: string | null;
+    latestPeriodImpressions: number;
+    reportingDays: number;
+    missingDaysSinceBaseline: number;
+    isLifetimeReconciled: boolean;
+    verifiedLifetimeImpressions: number | null;
+    checkedAt: string | null;
+    lastError: string | null;
+  };
   lastUpdated: string;
   status: 'active' | 'stale' | 'error';
   errorMessage?: string;

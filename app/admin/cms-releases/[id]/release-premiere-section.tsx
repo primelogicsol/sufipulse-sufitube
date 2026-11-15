@@ -6,6 +6,31 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
+  const hasText = (value: unknown): boolean => typeof value === 'string' && value.trim().length > 0;
+  const studioDraftId = form.studioProduction?.draftId || (typeof form.id === 'string' && form.id.startsWith('studio_') ? form.id.replace('studio_', '') : null);
+
+  const teaserReady = assets.some((a: any) =>
+    a.type === 'premium_teaser' && (hasText(a.youtubeId) || hasText(a.url)) && (a.status === 'live' || a.status === 'scheduled' || a.status === 'ready')) ||
+    Boolean(form.studioProduction?.videoMasterPath) ||
+    hasText(form.trailerYoutubeId);
+
+  const commentaryReady =
+    (Array.isArray(form.publicCommentary) && form.publicCommentary.some((entry: any) => hasText(entry.content) && entry.isPublished !== false)) ||
+    [form.commentary, form.editorial_note, form.editorialNote].some(hasText);
+
+  const lyricsReady = hasText(form.canonicalLyrics?.text) ||
+    (Array.isArray(form.lyrics) ? form.lyrics.some((line: any) => hasText(line?.text || line)) :
+      typeof form.lyrics === 'string' ? hasText(form.lyrics) : Boolean(form.lyrics && Object.keys(form.lyrics).length)) ||
+    Boolean(Array.isArray(form.lyricsStructures) && form.lyricsStructures.length > 0);
+
+  const translationTracks = Array.isArray(form.canonicalLyrics?.languages) ? form.canonicalLyrics.languages.length : (form.availableLanguages?.length || 0);
+
+  const creditsReady = Boolean(
+    Object.values(form.publicCredits || {}).some((section: any) =>
+      section && typeof section === 'object' && Object.values(section).some(hasText)) ||
+    (typeof form.credits === 'string' ? hasText(form.credits) : Boolean(form.credits && Object.keys(form.credits).length))
+  );
+
   const addAsset = () => {
     setForm({
       ...form,
@@ -214,7 +239,26 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
 
                 {/* Feature Availability */}
         <div className="space-y-4 pt-6 border-t border-neutral-800">
-          <h3 className="text-sm font-bold text-neutral-300">Available at Premiere</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-neutral-300">Available at Premiere</h3>
+            <button
+              type="button"
+              onClick={() => {
+                setForm({
+                  ...form,
+                  premiumTeaserAvailable: teaserReady ? true : form.premiumTeaserAvailable,
+                  commentaryAvailable: commentaryReady ? true : form.commentaryAvailable,
+                  lyricsTranslationsAvailable: lyricsReady ? true : form.lyricsTranslationsAvailable,
+                  creditsNotesAvailable: creditsReady ? true : form.creditsNotesAvailable,
+                  notifyEnabled: true,
+                });
+              }}
+              className="text-xs text-amber-400 hover:text-amber-300 font-semibold"
+            >
+              Enable All Ready Features
+            </button>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="flex flex-col gap-1">
               <label className="flex items-center gap-2">
@@ -226,9 +270,31 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                 />
                 <span className="text-sm text-neutral-300">Premium Teaser</span>
               </label>
-              <span className={`text-[10px] ml-6 font-bold uppercase ${assets.some((a: any) => a.type === 'premium_teaser' && a.youtubeId) ? 'text-green-500' : 'text-red-500'}`}>
-                Asset: {assets.some((a: any) => a.type === 'premium_teaser' && a.youtubeId) ? 'READY' : 'NOT CONFIGURED'}
+              <span className={`text-[10px] ml-6 font-bold uppercase ${teaserReady ? 'text-green-500' : 'text-red-500'}`}>
+                Asset: {teaserReady ? 'READY' : 'NOT CONFIGURED'}
               </span>
+              {!teaserReady && studioDraftId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAsset = {
+                      id: `asset_teaser_${Date.now()}`,
+                      type: 'premium_teaser',
+                      title: `${form.title || 'Release'} - Studio Master Teaser`,
+                      status: 'live',
+                      url: `/api/admin/pipeline/drafts/${studioDraftId}/media?asset=video`,
+                    };
+                    setForm({
+                      ...form,
+                      premiumTeaserAvailable: true,
+                      preReleaseAssets: [...assets.filter((a: any) => a.type !== 'premium_teaser'), newAsset]
+                    });
+                  }}
+                  className="ml-6 text-[11px] text-amber-400 hover:text-amber-300 font-medium text-left"
+                >
+                  + Link Studio Master
+                </button>
+              )}
             </div>
 
             <div className="flex flex-col gap-1">
@@ -241,9 +307,17 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                 />
                 <span className="text-sm text-neutral-300">Mystical Commentary</span>
               </label>
-              <span className={`text-[10px] ml-6 font-bold uppercase ${(form.commentary || form.editorial_note || form.editorialNote) ? 'text-green-500' : 'text-red-500'}`}>
-                Content: {(form.commentary || form.editorial_note || form.editorialNote) ? 'READY' : 'NOT READY'}
+              <span className={`text-[10px] ml-6 font-bold uppercase ${commentaryReady ? 'text-green-500' : 'text-red-500'}`}>
+                Content: {commentaryReady ? 'READY' : 'NOT READY'}
               </span>
+              {!commentaryReady && (
+                <a
+                  href="#commentary-section"
+                  className="ml-6 text-[11px] text-amber-400 hover:text-amber-300 font-medium"
+                >
+                  &darr; Add Commentary Below
+                </a>
+              )}
             </div>
 
             <div className="flex flex-col gap-1">
@@ -256,9 +330,12 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                 />
                 <span className="text-sm text-neutral-300">Lyrics & Translations</span>
               </label>
-              <span className={`text-[10px] ml-6 font-bold uppercase ${(form.lyrics || (form.lyricsStructures && form.lyricsStructures.length > 0)) ? 'text-green-500' : 'text-red-500'}`}>
-                Content: {(form.lyrics || (form.lyricsStructures && form.lyricsStructures.length > 0)) ? 'READY' : 'NOT READY'}
+              <span className={`text-[10px] ml-6 font-bold uppercase ${lyricsReady ? 'text-green-500' : 'text-red-500'}`}>
+                Content: {lyricsReady ? 'LYRICS READY' : 'NOT READY'}
               </span>
+              {lyricsReady && translationTracks > 1 && (
+                <span className="text-[10px] ml-6 text-amber-400">{translationTracks} language tracks declared; check readable translations before enabling</span>
+              )}
             </div>
 
             <div className="flex flex-col gap-1">
@@ -271,9 +348,17 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                 />
                 <span className="text-sm text-neutral-300">Credits & Notes</span>
               </label>
-              <span className={`text-[10px] ml-6 font-bold uppercase ${(form.credits || form.publicCredits) ? 'text-green-500' : 'text-red-500'}`}>
-                Content: {(form.credits || form.publicCredits) ? 'READY' : 'NOT READY'}
+              <span className={`text-[10px] ml-6 font-bold uppercase ${creditsReady ? 'text-green-500' : 'text-red-500'}`}>
+                Content: {creditsReady ? 'READY' : 'NOT READY'}
               </span>
+              {!creditsReady && (
+                <a
+                  href="#credits-section"
+                  className="ml-6 text-[11px] text-amber-400 hover:text-amber-300 font-medium"
+                >
+                  &darr; Add Credits Below
+                </a>
+              )}
             </div>
           </div>
         </div>

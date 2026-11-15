@@ -77,13 +77,20 @@ export interface ReconciledWord {
 
 export interface ReconciledLine {
   lineIndex: number;
+  vocalIndex?: number;
   segmentId: string;
   sourceVariantId: string;
   sourceLineIndex: number;
   startSeconds: number;
   endSeconds: number;
   text: string;
-  section?: string;
+  speaker?: string; // e.g. "शायर" | "रब" | "नौजवान" | "कोरस"
+  section?: string; // e.g. "आग़ाज़ | पुर-असरार सुकूत, गहरी सरगोशी"
+  confidence?: number;
+  urduNastaliq?: string;
+  englishTranslation?: string;
+  romanUrdu?: string;
+  devanagariUrdu?: string;
   isProductionDirection: boolean;
   words: ReconciledWord[];
 }
@@ -165,29 +172,60 @@ export interface PublishingTransactionRecord {
   }>;
 }
 
-export interface CanvaPartAConfig {
-  canvaDesignId: string;
-  canvaUrl: string;
-  title: string;
-  mediaType?: 'image' | 'video';
+export interface VideoPartAThumbnailConfig {
+  enabled?: boolean;
+  durationSeconds?: number; // Introductory screen duration, default: 5.0s
+  sourceType?: 'uploaded_image' | 'canva_image' | 'video_frame' | 'default_banner';
   filePath?: string;
   fileName?: string;
   thumbnailPath?: string;
-  durationSeconds?: number; // Visual source duration (e.g. 4.0s)
-  playbackDurationSeconds?: number; // Target dynamic duration = approved master audio duration (e.g. 285.2s)
-  playbackMode?: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range';
-  loopStartSeconds?: number;
-  loopEndSeconds?: number;
   thumbnailMode?: 'first_frame' | 'custom_frame' | 'custom_upload';
   thumbnailTimestampSeconds?: number;
+  independentYouTubeThumbnailPath?: string;
+  audioPolicy?: 'silence' | 'ambient' | 'suno_starts_at_part_b' | 'suno_starts_at_part_a';
+  uploadedAt?: string;
+  // Legacy / visual fallbacks
+  canvaDesignId?: string;
+  canvaUrl?: string;
+  title?: string;
+  mediaType?: 'image' | 'video';
+  playbackDurationSeconds?: number;
+  playbackMode?: any;
+  loopStartSeconds?: number;
+  loopEndSeconds?: number;
   width?: number;
   height?: number;
   validationStatus?: 'VALID' | 'FAILED' | 'PENDING';
   validationError?: string;
-  uploadedAt?: string;
 }
 
-export interface CanvaPartBConfig {
+export interface VideoPartBSongConfig {
+  enabled?: boolean;
+  canvaDesignId: string;
+  canvaUrl: string;
+  title: string;
+  filePath?: string;
+  fileName?: string;
+  sourceDurationSeconds?: number; // e.g. 4.0s
+  targetDurationSeconds?: number; // exact match to Suno master audio, e.g. 285.16s
+  playbackMode: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range';
+  loopStartSeconds?: number;
+  loopEndSeconds?: number;
+  hasBurnedSubtitles?: boolean;
+  uploadedAt?: string;
+  // Legacy fallback if promo passed to partB
+  sceneCount?: number;
+  formattedDuration?: string;
+  durationSeconds?: number;
+  audioMode?: any;
+  width?: number;
+  height?: number;
+  hasAudio?: boolean;
+  validationStatus?: 'VALID' | 'FAILED' | 'PENDING';
+  validationError?: string;
+}
+
+export interface VideoPartCPromoConfig {
   enabled: boolean;
   canvaDesignId: string;
   canvaUrl: string;
@@ -195,7 +233,7 @@ export interface CanvaPartBConfig {
   sceneCount: number;
   filePath?: string;
   fileName?: string;
-  durationSeconds?: number;
+  durationSeconds?: number; // e.g. 608.0s (10:08)
   formattedDuration?: string;
   width?: number;
   height?: number;
@@ -209,6 +247,21 @@ export interface CanvaPartBConfig {
   uploadedAt?: string;
 }
 
+// Backward compatibility legacy interfaces
+export interface CanvaPartAConfig extends VideoPartBSongConfig {
+  mediaType?: 'image' | 'video';
+  thumbnailPath?: string;
+  playbackDurationSeconds?: number;
+  thumbnailMode?: 'first_frame' | 'custom_frame' | 'custom_upload';
+  thumbnailTimestampSeconds?: number;
+  width?: number;
+  height?: number;
+  validationStatus?: 'VALID' | 'FAILED' | 'PENDING';
+  validationError?: string;
+}
+
+export interface CanvaPartBConfig extends VideoPartCPromoConfig {}
+
 export interface PipelineDraft {
   draftId: string; // Isolated UUID
   slug: string;
@@ -221,6 +274,8 @@ export interface PipelineDraft {
     status: 'DRAFT' | 'REVIEWED' | 'APPROVED';
     approvedAt?: string;
     approvedBy?: string;
+    thematicSubtitle?: string;
+    structured?: any;
   };
   variants: Record<string, VariantSource>;
   activeVariantId: string;
@@ -238,6 +293,25 @@ export interface PipelineDraft {
     renderedAt: string;
   } | null;
   masterTimeline: ReconciledMasterTimeline | null;
+  /** Automated production chain status (align -> subtitles -> 4 masters). */
+  productionStatus?: {
+    state: 'running' | 'done' | 'failed';
+    stage: string;
+    message?: string;
+    error?: string | null;
+    completed?: string[];
+    startedAt?: string;
+    updatedAt?: string;
+  };
+  /** Background caption alignment status (vocal isolation + speech alignment). */
+  alignmentStatus?: {
+    state: 'running' | 'done' | 'failed';
+    message?: string;
+    code?: string;
+    startedAt?: string;
+    updatedAt?: string;
+    alignedLineCount?: number;
+  };
   stems: {
     hasSeparateStems: boolean;
     vocalStemPath?: string;
@@ -259,8 +333,13 @@ export interface PipelineDraft {
   video?: {
     status: 'PENDING' | 'RENDERING' | 'RENDERED' | 'FAILED';
     renderedAt?: string;
-    partA?: CanvaPartAConfig;
-    partB?: CanvaPartBConfig;
+    activeFormat?: 'lyric_master' | 'clean_cinematic';
+    activeOrientation?: 'landscape' | 'portrait';
+    partA?: VideoPartAThumbnailConfig;
+    partB?: VideoPartBSongConfig;
+    partC?: VideoPartCPromoConfig;
+    legacyPartA?: any;
+    legacyPartB?: any;
     formats: Record<
       string,
       {
@@ -271,6 +350,9 @@ export interface PipelineDraft {
         hasBurnedSubtitles: boolean;
         partASeconds?: number;
         partBSeconds?: number;
+        partCSeconds?: number;
+        width?: number;
+        height?: number;
       }
     >;
   };

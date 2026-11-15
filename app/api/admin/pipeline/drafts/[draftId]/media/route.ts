@@ -51,37 +51,45 @@ export async function GET(
       }
     } else if (asset === 'video' || asset === 'master_video') {
       contentType = 'video/mp4';
-      const targetFormat = format === 'clean_cinematic' ? 'clean_cinematic' : 'lyric_master';
+      const videoType = (searchParams.get('format') === 'clean_cinematic' ? 'clean_cinematic' : 'lyric_master') as 'lyric_master' | 'clean_cinematic';
+      const orientation = (searchParams.get('orientation') === 'portrait' ? 'portrait' : 'landscape') as 'landscape' | 'portrait';
+      const formatKey = `${videoType}_${orientation}`;
       const videoDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video');
 
-      // 1. Check draft video metadata format output path
+      // 1. Check draft video metadata format output path for exact key
       if (
-        draft.video?.formats?.[targetFormat]?.outputPath &&
-        fs.existsSync(draft.video.formats[targetFormat].outputPath)
+        draft.video?.formats?.[formatKey]?.outputPath &&
+        fs.existsSync(draft.video.formats[formatKey].outputPath)
       ) {
-        filePath = draft.video.formats[targetFormat].outputPath;
+        filePath = draft.video.formats[formatKey].outputPath;
       }
-      // 2. Check revision-based name (e.g. video_lyric_master_rev1.mp4)
+      // 2. Check full revision-based filename (e.g. video_lyric_master_portrait_rev1.mp4)
       else if (
-        fs.existsSync(path.join(videoDir, `video_${targetFormat}_rev${draft.currentRevision}.mp4`))
+        fs.existsSync(path.join(videoDir, `video_${formatKey}_rev${draft.currentRevision}.mp4`))
       ) {
-        filePath = path.join(videoDir, `video_${targetFormat}_rev${draft.currentRevision}.mp4`);
+        filePath = path.join(videoDir, `video_${formatKey}_rev${draft.currentRevision}.mp4`);
       }
-      // 3. Check legacy flat name (e.g. lyric_master.mp4)
-      else if (fs.existsSync(path.join(videoDir, `${targetFormat}.mp4`))) {
-        filePath = path.join(videoDir, `${targetFormat}.mp4`);
+      // 3. Check un-versioned name (e.g. video_lyric_master_portrait.mp4 or lyric_master_portrait.mp4)
+      else if (fs.existsSync(path.join(videoDir, `video_${formatKey}.mp4`))) {
+        filePath = path.join(videoDir, `video_${formatKey}.mp4`);
+      } else if (fs.existsSync(path.join(videoDir, `${formatKey}.mp4`))) {
+        filePath = path.join(videoDir, `${formatKey}.mp4`);
       }
-      // 4. Check prefixed name (e.g. video_lyric_master.mp4)
-      else if (fs.existsSync(path.join(videoDir, `video_${targetFormat}.mp4`))) {
-        filePath = path.join(videoDir, `video_${targetFormat}.mp4`);
-      }
-      // 5. Fallback: match any mp4 in videoDir containing the format substring
-      else if (fs.existsSync(videoDir)) {
-        const matches = fs
-          .readdirSync(videoDir)
-          .filter((f) => f.includes(targetFormat) && f.endsWith('.mp4'));
-        if (matches.length > 0) {
-          filePath = path.join(videoDir, matches[matches.length - 1]);
+      // 4. If landscape, allow legacy fallbacks (never fall back to landscape when portrait is requested!)
+      else if (orientation === 'landscape') {
+        if (
+          draft.video?.formats?.[videoType]?.outputPath &&
+          fs.existsSync(draft.video.formats[videoType].outputPath)
+        ) {
+          filePath = draft.video.formats[videoType].outputPath;
+        } else if (
+          fs.existsSync(path.join(videoDir, `video_${videoType}_rev${draft.currentRevision}.mp4`))
+        ) {
+          filePath = path.join(videoDir, `video_${videoType}_rev${draft.currentRevision}.mp4`);
+        } else if (fs.existsSync(path.join(videoDir, `${videoType}.mp4`))) {
+          filePath = path.join(videoDir, `${videoType}.mp4`);
+        } else if (fs.existsSync(path.join(videoDir, `video_${videoType}.mp4`))) {
+          filePath = path.join(videoDir, `video_${videoType}.mp4`);
         }
       }
     } else if (asset === 'part_a_image' || asset === 'part_a_artwork' || asset === 'part_a_video') {
@@ -107,16 +115,63 @@ export async function GET(
       const thumb = draft.video?.partA?.thumbnailPath ? path.resolve(process.cwd(), draft.video.partA.thumbnailPath) : null;
       if (thumb && fs.existsSync(thumb)) {
         filePath = thumb;
-        contentType = 'image/jpeg';
+        const ext = path.extname(thumb).toLowerCase();
+        contentType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
       } else {
         filePath = path.join(process.cwd(), 'public', 'banner1.png');
         contentType = 'image/png';
       }
-    } else if (asset === 'part_b_video') {
+    } else if (asset === 'part_b_preview') {
+      const orientationParam = searchParams.get('orientation') === 'portrait' ? 'portrait' : 'landscape';
+      const prev = (draft.video as any)?.partB?.preview;
+      const prevPath = prev?.path && prev.orientation === orientationParam ? prev.path : null;
+      if (prevPath && fs.existsSync(prevPath)) {
+        filePath = prevPath;
+        contentType = 'video/mp4';
+      }
+    } else if (asset === 'part_b_rendered') {
+      const videoType = format === 'clean_cinematic' ? 'clean_cinematic' : 'lyric_master';
+      const orientation = searchParams.get('orientation') === 'portrait' ? 'portrait' : 'landscape';
+      const rendered = draft.video?.formats?.[videoType + '_' + orientation];
+      const previewFile = rendered?.sha256 ? path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video', 'part_b_' + rendered.sha256 + '.mp4') : null;
+      if (previewFile && fs.existsSync(previewFile)) {
+        filePath = previewFile;
+        contentType = 'video/mp4';
+      } else if (rendered?.outputPath && fs.existsSync(rendered.outputPath)) {
+        // Fall back to the rendered full master video if dedicated preview segment is not yet extracted
+        filePath = rendered.outputPath;
+        contentType = 'video/mp4';
+      }
+    } else if (asset === 'part_b_video' || asset === 'part_b') {
       const candidate = draft.video?.partB?.filePath ? path.resolve(process.cwd(), draft.video.partB.filePath) : null;
+      const themeLocal = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video', 'canva_part_b_original_4s.mp4');
+      const themeLocal2 = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video', 'part_a_theme.mp4');
+      const sharedTheme = path.join(process.cwd(), '.data', 'shared-assets', 'canva_part_a_DAHa7St5CYs.mp4');
+
       if (candidate && fs.existsSync(candidate)) {
         filePath = candidate;
         contentType = 'video/mp4';
+      } else if (fs.existsSync(themeLocal)) {
+        filePath = themeLocal;
+        contentType = 'video/mp4';
+      } else if (fs.existsSync(themeLocal2)) {
+        filePath = themeLocal2;
+        contentType = 'video/mp4';
+      } else if (fs.existsSync(sharedTheme)) {
+        filePath = sharedTheme;
+        contentType = 'video/mp4';
+      }
+    } else if (asset === 'part_c_video' || asset === 'part_c') {
+      const candidate = draft.video?.partC?.filePath ? path.resolve(process.cwd(), draft.video.partC.filePath) : null;
+      if (candidate && fs.existsSync(candidate)) {
+        filePath = candidate;
+        contentType = 'video/mp4';
+      } else {
+        const sharedPromo = path.join(process.cwd(), '.data', 'shared-assets', 'promotional', 'canva_part_b_DAHa7eJOcbI.mp4');
+        if (fs.existsSync(sharedPromo)) {
+          filePath = sharedPromo;
+          contentType = 'video/mp4';
+        }
       }
     } else if (asset === 'subtitle' && lang) {
       const subDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles');
@@ -126,7 +181,10 @@ export async function GET(
     }
 
     if (!filePath || !fs.existsSync(filePath)) {
-      return NextResponse.json({ error: `Asset ${asset} not found` }, { status: 404 });
+      const errMsg = asset.startsWith('part_b')
+        ? 'SOURCE VIDEO UNAVAILABLE: RECONNECT OR REPLACE PART B BACKGROUND'
+        : `Asset ${asset} not found`;
+      return NextResponse.json({ error: errMsg }, { status: 404 });
     }
 
     const stat = fs.statSync(filePath);
@@ -200,6 +258,7 @@ export async function GET(
         'Content-Length': stat.size.toString(),
         'Content-Type': contentType,
         'Accept-Ranges': 'bytes',
+        'Cache-Control': asset === 'thumbnail' || asset === 'part_a_thumbnail' ? 'no-store, max-age=0' : 'private, max-age=0',
       },
     });
   } catch (err: any) {

@@ -62,6 +62,15 @@ export interface Release {
   // Distribution state per platform
   distribution?: Record<string, PlatformDistribution>;
 
+  // YouTube Shorts Syndication (Zero local disk footprint)
+  youtubeShorts?: Record<string, {
+    id: string;
+    url: string;
+    title: string;
+    uploadedAt: string;
+    privacyStatus?: string;
+  }>;
+
   // Subtitle timeline and multilingual cue text
   subtitle_cues?: SubtitleCue[];
   subtitle_translations?: Record<string, Record<string, string>>;

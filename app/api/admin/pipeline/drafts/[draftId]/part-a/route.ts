@@ -47,9 +47,12 @@ export async function POST(
 
     // ─── 1. DEDICATED THUMBNAIL UPLOAD (Custom Thumbnail) ─────────────────────
     if (isThumbnailUpload) {
-      const thumbFileName = `thumbnail_${Date.now()}.jpg`;
+      const requestedName = decodeURIComponent(request.headers.get('x-file-name') || 'thumbnail.jpg');
+      const requestedExt = path.extname(requestedName).toLowerCase();
+      const safeExt = ['.jpg', '.jpeg', '.png', '.webp'].includes(requestedExt) ? requestedExt : '.jpg';
+      const thumbFileName = `thumbnail_${Date.now()}${safeExt}`;
       const thumbFilePath = path.join(videoDir, thumbFileName);
-      const canonicalThumb = path.join(videoDir, 'thumbnail.jpg');
+      const canonicalThumb = path.join(videoDir, `thumbnail${safeExt}`);
 
       if (contentType.includes('multipart/form-data')) {
         const formData = await request.formData();
@@ -62,19 +65,33 @@ export async function POST(
         await pipeline(Readable.fromWeb(request.body as any), writeStream);
       }
 
-      if (fs.existsSync(thumbFilePath)) {
-        try { fs.copyFileSync(thumbFilePath, canonicalThumb); } catch {}
+      if (!fs.existsSync(thumbFilePath) || fs.statSync(thumbFilePath).size === 0) {
+        return NextResponse.json({ error: 'Empty thumbnail file received' }, { status: 400 });
       }
+
+      try { fs.copyFileSync(thumbFilePath, canonicalThumb); } catch {}
 
       if (!draft.video.partA) {
         draft.video.partA = {
+          enabled: true,
+          durationSeconds: 5.0,
+          sourceType: 'uploaded_image',
+          audioPolicy: 'suno_starts_at_part_b',
           canvaDesignId: 'DAHa7St5CYs',
           canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
           title: 'Part A Background Theme',
         };
       }
-      draft.video.partA.thumbnailPath = thumbFilePath;
-      draft.video.partA.thumbnailMode = 'custom_upload';
+      const partA = draft.video.partA!;
+      partA.thumbnailPath = thumbFilePath;
+      partA.thumbnailMode = 'custom_upload';
+      // A custom Part A cover is also the actual opening visual, not merely a preview image.
+      partA.sourceType = 'uploaded_image';
+      partA.mediaType = 'image';
+      partA.filePath = thumbFilePath;
+      partA.fileName = requestedName;
+      partA.validationStatus = 'VALID';
+      partA.uploadedAt = new Date().toISOString();
 
       pipelineDraftStorage.saveDraft(draft);
       return NextResponse.json({ success: true, partA: draft.video.partA, draft });
@@ -86,14 +103,19 @@ export async function POST(
 
       if (!draft.video.partA) {
         draft.video.partA = {
+          enabled: true,
+          durationSeconds: 5.0,
+          sourceType: 'uploaded_image',
+          audioPolicy: 'suno_starts_at_part_b',
           canvaDesignId: 'DAHa7St5CYs',
           canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
           title: 'Part A Background Theme',
         };
       }
+      const partA = draft.video.partA!;
 
       // Action: Extract specific frame from existing video as thumbnail
-      if (body.action === 'extract_thumbnail_frame' && draft.video.partA.filePath) {
+      if (body.action === 'extract_thumbnail_frame' && partA.filePath) {
         const timestamp = typeof body.timestampSeconds === 'number' ? Math.max(0, body.timestampSeconds) : 0;
         const thumbFileName = `thumbnail_frame_${Date.now()}.jpg`;
         const thumbFilePath = path.join(videoDir, thumbFileName);
@@ -102,7 +124,7 @@ export async function POST(
         const ffBin = getFfmpegPath();
         const proc = spawn(ffBin, [
           '-ss', String(timestamp),
-          '-i', draft.video.partA.filePath,
+          '-i', partA.filePath,
           '-vframes', '1',
           '-q:v', '2',
           '-y',
@@ -119,25 +141,27 @@ export async function POST(
 
         if (fs.existsSync(thumbFilePath)) {
           try { fs.copyFileSync(thumbFilePath, canonicalThumb); } catch {}
-          draft.video.partA.thumbnailPath = thumbFilePath;
-          draft.video.partA.thumbnailMode = timestamp === 0 ? 'first_frame' : 'custom_frame';
-          draft.video.partA.thumbnailTimestampSeconds = timestamp;
+          partA.thumbnailPath = thumbFilePath;
+          partA.thumbnailMode = timestamp === 0 ? 'first_frame' : 'custom_frame';
+          partA.thumbnailTimestampSeconds = timestamp;
         }
 
         pipelineDraftStorage.saveDraft(draft);
         return NextResponse.json({ success: true, partA: draft.video.partA, draft });
       }
 
-      // Update Playback Mode and Loop Settings
-      if (body.playbackMode) draft.video.partA.playbackMode = body.playbackMode;
-      if (typeof body.loopStartSeconds === 'number') draft.video.partA.loopStartSeconds = body.loopStartSeconds;
-      if (typeof body.loopEndSeconds === 'number') draft.video.partA.loopEndSeconds = body.loopEndSeconds;
-      if (body.canvaDesignId) draft.video.partA.canvaDesignId = body.canvaDesignId;
-      if (body.canvaUrl) draft.video.partA.canvaUrl = body.canvaUrl;
-      if (body.title) draft.video.partA.title = body.title;
+      // Update Playback Mode, Duration and Settings
+      if (typeof body.durationSeconds === 'number') partA.durationSeconds = body.durationSeconds;
+      if (body.audioPolicy) partA.audioPolicy = body.audioPolicy;
+      if (body.playbackMode) partA.playbackMode = body.playbackMode;
+      if (typeof body.loopStartSeconds === 'number') partA.loopStartSeconds = body.loopStartSeconds;
+      if (typeof body.loopEndSeconds === 'number') partA.loopEndSeconds = body.loopEndSeconds;
+      if (body.canvaDesignId) partA.canvaDesignId = body.canvaDesignId;
+      if (body.canvaUrl) partA.canvaUrl = body.canvaUrl;
+      if (body.title) partA.title = body.title;
 
       // Always maintain dynamic duration matching with Master Audio
-      draft.video.partA.playbackDurationSeconds = draft.masterAudio?.durationSeconds || draft.video.partA.playbackDurationSeconds || 285.2;
+      partA.playbackDurationSeconds = draft.masterAudio?.durationSeconds || partA.playbackDurationSeconds || 285.2;
 
       pipelineDraftStorage.saveDraft(draft);
       return NextResponse.json({ success: true, partA: draft.video.partA, draft });
@@ -236,6 +260,9 @@ export async function POST(
       const playbackDurationSeconds = draft.masterAudio?.durationSeconds || 285.2;
 
       draft.video.partA = {
+        enabled: true,
+        sourceType: mediaType === 'video' ? 'video_frame' : 'uploaded_image',
+        audioPolicy: 'suno_starts_at_part_b',
         canvaDesignId,
         canvaUrl,
         title,

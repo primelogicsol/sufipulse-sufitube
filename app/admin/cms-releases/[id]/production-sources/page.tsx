@@ -91,6 +91,8 @@ export default function ProductionSourcesPage() {
   const isAdmin = user?.role?.includes('admin') ?? false;
 
   const [releaseTitle, setReleaseTitle] = useState('Release');
+  const [isStudioGoverned, setIsStudioGoverned] = useState(false);
+  const [studioDraftId, setStudioDraftId] = useState<string | null>(null);
   const [language, setLanguage] = useState('en');
   const [sources, setSources] = useState<SourceSummary[]>([]);
   const [primarySourceAssetId, setPrimarySourceAssetId] = useState('');
@@ -129,6 +131,10 @@ export default function ProductionSourcesPage() {
         const release = await releaseRes.json();
         setReleaseTitle(release.title || release.canonicalTitle || 'Release');
         setLanguage(String(release.defaultLanguage || 'en').toLowerCase());
+        const isStudio = release.source === 'studio_pipeline' || Boolean(release.studioProduction);
+        setIsStudioGoverned(isStudio);
+        const draftId = (release.studioProduction as any)?.draftId || (typeof releaseId === 'string' && releaseId.startsWith('studio_') ? releaseId.replace('studio_', '') : null);
+        setStudioDraftId(draftId);
       }
 
       if (connRes.ok) {
@@ -364,6 +370,37 @@ export default function ProductionSourcesPage() {
           </div>
         </div>
 
+        {isStudioGoverned && (
+          <div className="rounded-2xl border border-amber-400/40 bg-amber-400/[0.08] p-5 shadow-lg">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-6 w-6 text-amber-400 shrink-0" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-white">SufiPulse Studio Governed Master (Immutable)</h2>
+                    <span className="rounded bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase tracking-wider">Locked</span>
+                  </div>
+                  <p className="mt-1 text-xs text-white/70 max-w-2xl leading-relaxed">
+                    This release was produced and validated in <strong>Hybrid Studio Pipeline</strong> (Part A, Suno Take B, Part C).
+                    Production audio sources and multi-part assembly are immutable in CMS to protect the approved master.
+                    To modify sources or rebuild the audio assembly, create a new studio revision.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                {studioDraftId && (
+                  <Link
+                    href={`/admin/pipeline/${studioDraftId}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-semibold text-black hover:bg-amber-300 transition-colors"
+                  >
+                    Open in Hybrid Studio Pipeline →
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4">
           <div className="rounded-xl border border-white/10 bg-black/40 p-4">
             <h3 className="text-sm font-medium text-white mb-2">Private Production Connection</h3>
@@ -454,11 +491,11 @@ export default function ProductionSourcesPage() {
                   />
                   <button
                     onClick={handleInject}
-                    disabled={injectWorking || !injectSource.trim()}
+                    disabled={injectWorking || !injectSource.trim() || isStudioGoverned}
                     className="rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-50 transition flex items-center gap-2"
                   >
                     <Upload className="w-4 h-4" />
-                    {injectWorking ? 'Injecting...' : 'Fetch & Inject'}
+                    {injectWorking ? 'Injecting...' : isStudioGoverned ? 'Locked to Studio' : 'Fetch & Inject'}
                   </button>
                 </div>
               </div>
@@ -533,7 +570,7 @@ export default function ProductionSourcesPage() {
           />
           <button
             type="button"
-            disabled={working || (!sourceUrl.trim() && !sourceAssetId.trim())}
+            disabled={working || (!sourceUrl.trim() && !sourceAssetId.trim()) || isStudioGoverned}
             onClick={() => void importSource()}
             className="mt-3 inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -549,7 +586,7 @@ export default function ProductionSourcesPage() {
             </div>
             <button
               type="button"
-              disabled={!sources.length || working}
+              disabled={!sources.length || working || isStudioGoverned}
               onClick={addSegment}
               className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm font-medium text-white/80 disabled:opacity-40"
             >
@@ -645,11 +682,11 @@ export default function ProductionSourcesPage() {
             </button>
             <button
               type="button"
-              disabled={!segments.length || working}
+              disabled={!segments.length || working || isStudioGoverned}
               onClick={() => void compileOrSave(true)}
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40"
             >
-              <Save className="h-4 w-4" /> Save private assembly
+              <Save className="h-4 w-4" /> {isStudioGoverned ? 'Assembly Locked to Studio Master' : 'Save private assembly'}
             </button>
           </div>
         </section>
@@ -729,11 +766,11 @@ export default function ProductionSourcesPage() {
 
               <button
                 type="button"
-                disabled={!savedAssemblyVersion || assemblyDirty || !compiled || !confirmApply || working}
+                disabled={!savedAssemblyVersion || assemblyDirty || !compiled || !confirmApply || working || isStudioGoverned}
                 onClick={() => void applySavedAssemblyTiming()}
                 className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-300/30 bg-amber-300/10 px-4 py-2.5 text-sm font-semibold text-amber-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Upload className="h-4 w-4" /> Apply saved assembly as draft timing
+                <Upload className="h-4 w-4" /> {isStudioGoverned ? 'Timing Locked to Studio Master' : 'Apply saved assembly as draft timing'}
               </button>
 
               {assemblyDirty ? (

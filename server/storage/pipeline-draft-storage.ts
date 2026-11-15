@@ -105,18 +105,35 @@ export const pipelineDraftStorage = {
         status: 'PENDING',
         renderedAt: now,
         partA: {
-          canvaDesignId: 'DAHa7St5CYs',
-          canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
-          title: 'Part A Background Theme',
+          enabled: true,
+          durationSeconds: 5.0,
+          sourceType: 'uploaded_image',
+          audioPolicy: 'suno_starts_at_part_b',
         },
         partB: {
+          enabled: true,
+          canvaDesignId: 'DAHa7St5CYs',
+          canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
+          title: 'Part B Background Theme',
+          sourceDurationSeconds: 4.0,
+          targetDurationSeconds: 285.16,
+          playbackMode: 'seamless_loop',
+          hasBurnedSubtitles: true,
+        },
+        partC: {
           enabled: true,
           canvaDesignId: 'DAHa7eJOcbI',
           canvaUrl: 'https://canva.link/qvmwwc830dm623g',
           title: 'Part 2',
           sceneCount: 19,
-          playbackMode: 'full_19_scenes',
+          durationSeconds: 608.0,
+          formattedDuration: '10:08',
+          width: 1920,
+          height: 1080,
+          hasAudio: true,
+          validationStatus: 'VALID',
           audioMode: 'preserve_canva_audio',
+          playbackMode: 'full_19_scenes',
         },
         formats: {},
       },
@@ -154,20 +171,39 @@ export const pipelineDraftStorage = {
       }
       if (!draft.video.partA) {
         draft.video.partA = {
-          canvaDesignId: 'DAHa7St5CYs',
-          canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
-          title: 'Part A Background Theme',
+          enabled: true,
+          durationSeconds: 5.0,
+          sourceType: 'uploaded_image',
+          audioPolicy: 'suno_starts_at_part_b',
         };
       }
       if (!draft.video.partB) {
         draft.video.partB = {
           enabled: true,
+          canvaDesignId: 'DAHa7St5CYs',
+          canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
+          title: 'Part B Background Theme',
+          sourceDurationSeconds: 4.0,
+          targetDurationSeconds: 285.16,
+          playbackMode: 'seamless_loop',
+          hasBurnedSubtitles: true,
+        };
+      }
+      if (!draft.video.partC) {
+        draft.video.partC = {
+          enabled: true,
           canvaDesignId: 'DAHa7eJOcbI',
           canvaUrl: 'https://canva.link/qvmwwc830dm623g',
           title: 'Part 2',
           sceneCount: 19,
-          playbackMode: 'full_19_scenes',
+          durationSeconds: 608.0,
+          formattedDuration: '10:08',
+          width: 1920,
+          height: 1080,
+          hasAudio: true,
+          validationStatus: 'VALID',
           audioMode: 'preserve_canva_audio',
+          playbackMode: 'full_19_scenes',
         };
       }
 
@@ -360,10 +396,19 @@ export const pipelineDraftStorage = {
     };
 
     draft.masterTimeline = timeline;
-    draft.downstreamStatus.timestampsValid = true;
+    // "Valid timing" must mean real timed words exist, not merely that a timeline object exists.
+    const hasTimedWords = Boolean(timeline?.lines?.some((l: any) => l.words?.length));
+    draft.downstreamStatus.timestampsValid = hasTimedWords;
+    if (!hasTimedWords) {
+      draft.downstreamStatus.subtitlesValid = false;
+      draft.downstreamStatus.videoValid = false;
+    }
     draft.downstreamStatus.approvalStatus = 'assembly_pending_review';
 
-    // Dynamic duration matching: Part A background duration automatically matches approved master audio
+    // Dynamic duration matching: Part B background duration automatically matches approved master audio
+    if (draft.video?.partB) {
+      draft.video.partB.targetDurationSeconds = durationSeconds;
+    }
     if (draft.video?.partA) {
       draft.video.partA.playbackDurationSeconds = durationSeconds;
     }
@@ -374,11 +419,27 @@ export const pipelineDraftStorage = {
 
   deleteDraft(draftId: string): boolean {
     const dir = getDraftDir(draftId);
-    if (fs.existsSync(dir)) {
-      fs.rmSync(dir, { recursive: true, force: true });
-      return true;
+    if (!fs.existsSync(dir)) {
+      return false;
     }
-    return false;
+
+    try {
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+      return true;
+    } catch (err: any) {
+      // Secondary fallback on Windows using PowerShell Remove-Item
+      try {
+        const { execSync } = require('node:child_process');
+        execSync(`powershell -NoProfile -Command "Remove-Item -LiteralPath '${dir.replace(/'/g, "''")}' -Force -Recurse"`);
+        if (!fs.existsSync(dir)) {
+          return true;
+        }
+      } catch {}
+
+      throw new Error(
+        `Failed to delete draft ${draftId}: Files inside the draft directory may be locked by an active video render, preview stream, or playback process. Please stop any active render and try again. Details: ${err.message}`
+      );
+    }
   },
 
   clearAllDrafts(): number {

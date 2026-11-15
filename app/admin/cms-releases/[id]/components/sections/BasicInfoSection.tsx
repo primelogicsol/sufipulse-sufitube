@@ -235,8 +235,21 @@ export function BasicInfoSection({
             <input
               type="date"
               name="releaseDate"
-              value={form.releaseDate || ''}
-              onChange={handleInputChange}
+              value={form.releaseDate ? form.releaseDate.slice(0, 10) : ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setForm((prev) => ({
+                  ...prev,
+                  releaseDate: val,
+                  publicCredits: {
+                    ...(prev.publicCredits || {}),
+                    rights: {
+                      ...((prev.publicCredits as any)?.rights || {}),
+                      releaseDateText: val,
+                    },
+                  },
+                }));
+              }}
               className="form-input w-full"
             />
           </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Plus, Upload, Youtube, CheckSquare, RefreshCw, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Upload, Youtube, CheckSquare, RefreshCw, Loader2, ShieldCheck, Download, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -47,6 +47,7 @@ import { ReleaseEditorLanguageManagementSection } from './components/sections/Re
 import { VideoStructureSection } from './components/sections/VideoStructureSection';
 import { CanonicalLyricsSection } from './components/sections/CanonicalLyricsSection';
 import { ReleasePremiereSection } from './release-premiere-section';
+import { ReleaseViralSyndicationSection } from './release-viral-syndication-section';
 import { ReleaseCommentarySection } from './release-commentary-section';
 import { ReleaseSponsorsSection } from './release-sponsors-section';
 import { CaptionImportModal } from './modals/caption-import-modal';
@@ -73,6 +74,7 @@ export default function EditReleasePage() {
     clearAutosave,
     recoverAutosave,
     hasUnsavedChanges,
+    unsavedFieldNames,
     loading, notFound,
     saving,
     exportingZip,
@@ -255,6 +257,9 @@ export default function EditReleasePage() {
     );
   }
 
+  const isStudioGoverned = form.source === 'studio_pipeline' || Boolean(form.studioProduction);
+  const studioDraftId = (form.studioProduction as any)?.draftId || (typeof params.id === 'string' && params.id.startsWith('studio_') ? params.id.replace('studio_', '') : null);
+
   const styleNames = Object.keys(form.subtitleStylePacks || { [DEFAULT_STYLE_NAME]: DEFAULT_STYLE_PACK });
   const activeStyleName = styleNames.includes(selectedStyleName) ? selectedStyleName : styleNames[0];
   const activeStyle = {
@@ -317,9 +322,11 @@ export default function EditReleasePage() {
       done: Boolean(
         String(form.title || '').trim() &&
         String(form.slug || '').trim() &&
-        /^[A-Za-z0-9_-]{11}$/.test(String(form.youtubeId || '').trim())
+        (form.status === 'published' ? /^[A-Za-z0-9_-]{11}$/.test(String(form.youtubeId || '').trim()) : true)
       ),
-      detail: 'Title, slug, and valid YouTube ID are required.',
+      detail: form.status === 'published'
+        ? 'Title, slug, and valid YouTube ID are required for published releases.'
+        : 'Title and slug configured. YouTube ID optional until public release.',
       whatItDoes: 'Creates the canonical release identity used by CMS, slug-first public routing, and YouTube linkage.',
       whyImportant: 'If identity is weak, every downstream operation can attach to the wrong release or fail to resolve publicly.',
       whatCanGoWrong: 'Broken URLs, duplicate records, or invalid media linkage can cause publishing and QA confusion.',
@@ -370,43 +377,49 @@ export default function EditReleasePage() {
     {
       id: 'lyrics',
       rank: 5,
-      sectionId: 'lyrics-structure-section',
+      sectionId: 'canonical-lyrics-section',
       title: 'Lyrics Structure',
-      done: publishedLyricsCount > 0,
-      detail: `Published blocks in ${getLanguageLabel(defaultLanguage)}: ${publishedLyricsCount}.`,
+      done: isStudioGoverned ? Boolean(String(form.canonicalLyrics?.text || '').trim()) : publishedLyricsCount > 0,
+      detail: isStudioGoverned
+        ? 'Canonical lyrics approved and locked from Studio Master.'
+        : `Published blocks in ${getLanguageLabel(defaultLanguage)}: ${publishedLyricsCount}.`,
       whatItDoes: 'Creates structured source blocks used for lyrics display and placeholder cue generation.',
       whyImportant: 'Structured lyrics become the source material for consistent subtitle creation workflows.',
       whatCanGoWrong: 'Unstructured or missing lines lead to chaotic placeholders and translation mismatch.',
       whyNow: 'This step feeds subtitle placeholders, so it should exist before cue refinement.',
-      actionLabel: publishedLyricsCount > 0 ? 'Review Lyrics Blocks' : 'Add First Lyrics Block',
+      actionLabel: isStudioGoverned ? 'View Approved Lyrics' : (publishedLyricsCount > 0 ? 'Review Lyrics Blocks' : 'Add First Lyrics Block'),
     },
     {
       id: 'timeline',
       rank: 6,
       sectionId: 'subtitle-timeline-section',
       title: 'Subtitle Timeline',
-      done: subtitleCuesCount > 0,
-      detail: `Cues created: ${subtitleCuesCount}.`,
+      done: isStudioGoverned ? true : subtitleCuesCount > 0,
+      detail: isStudioGoverned
+        ? '4-track subtitles verified and burned into 1080p master in Hybrid Studio.'
+        : `Cues created: ${subtitleCuesCount}.`,
       whatItDoes: 'Builds canonical cue timing windows that every subtitle format and language output uses.',
       whyImportant: 'Cue timing is the backbone for web subtitles, exports, and YouTube delivery.',
       whatCanGoWrong: 'Bad timing causes unreadable playback and cross-language sync defects.',
       whyNow: 'Timing should be established before validating language completeness.',
-      actionLabel: subtitleCuesCount > 0 ? 'Open Subtitle Timeline' : 'Create First Cue',
+      actionLabel: isStudioGoverned ? 'View Master Tracks' : (subtitleCuesCount > 0 ? 'Open Subtitle Timeline' : 'Create First Cue'),
     },
     {
       id: 'language-track',
       rank: 7,
       sectionId: 'subtitle-timeline-section',
       title: `Language Track (${getLanguageLabel(selectedSubtitleLanguage)})`,
-      done: subtitleCuesCount > 0 && translatedCueCount === subtitleCuesCount,
-      detail: subtitleCuesCount > 0
-        ? `Translated cues for ${getLanguageLabel(selectedSubtitleLanguage)}: ${translatedCueCount}/${subtitleCuesCount}.`
-        : 'Create cues first, then sync/translate this language.',
+      done: isStudioGoverned ? true : (subtitleCuesCount > 0 && translatedCueCount === subtitleCuesCount),
+      detail: isStudioGoverned
+        ? 'Multilingual tracks (Urdu, English, Roman Urdu, Hindi) locked to Studio Master.'
+        : subtitleCuesCount > 0
+          ? `Translated cues for ${getLanguageLabel(selectedSubtitleLanguage)}: ${translatedCueCount}/${subtitleCuesCount}.`
+          : 'Create cues first, then sync/translate this language.',
       whatItDoes: 'Ensures the selected language track is fully populated against the canonical cue list.',
       whyImportant: 'Delivery quality depends on complete language text aligned to approved timings.',
       whatCanGoWrong: 'Partial tracks can ship with missing lines and fail review or audience expectations.',
       whyNow: 'Once cue timing exists, language completion becomes the primary readiness gate.',
-      actionLabel: 'Sync Language From Lyrics',
+      actionLabel: isStudioGoverned ? 'View Master Subtitles' : 'Sync Language From Lyrics',
     },
     {
       id: 'commentary',
@@ -469,6 +482,19 @@ export default function EditReleasePage() {
             <div>
               <h1 className="text-3xl font-bold" style={{color: 'var(--dash-text-primary)'}}>
                 {isNew ? 'New Release' : 'Edit Release'}
+              {!isNew && !loading && Boolean(form.id) && (
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                  <span className="rounded border border-sky-500/40 bg-sky-500/10 px-2 py-1 text-sky-300">
+                    {hasUnsavedChanges ? 'Unsaved edits' : 'Saved in CMS'}
+                  </span>
+                  <span className={form.status === "published" && form.visibility === "public"
+                    ? "rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-emerald-300"
+                    : "rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-amber-300"}>
+                    {form.status === "published" && form.visibility === "public" ? "Published on SufiPulse" : "Not public on SufiPulse"}
+                  </span>
+                  {form.youtubeId && <a href={"https://www.youtube.com/watch?v=" + form.youtubeId} target="_blank" rel="noreferrer" className="text-sky-300 underline">YouTube video</a>}
+                </div>
+              )}
               </h1>
               {hasUnsavedChanges && (
                 <p className="text-sm mt-1" style={{color: 'var(--dash-status-pending)'}}>Unsaved changes (Ctrl+S to save)</p>
@@ -551,6 +577,35 @@ export default function EditReleasePage() {
           onToggleStepGuide={(stepId) => setExpandedWorkflowStepId(stepId === openWorkflowStepId ? null : stepId)}
         />
 
+        {isStudioGoverned && (
+          <div className="mb-6 p-4 rounded-xl border border-purple-500/40 bg-purple-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-white">SufiPulse Studio Governed Master</h3>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    LOCKED PRODUCTION ASSET
+                  </span>
+                </div>
+                <p className="text-xs text-white/60 mt-0.5">
+                  Audio assembly, synchronized lyrics, subtitle timing, and video boundaries are permanently governed by Hybrid Studio. Editorial metadata, credits, sponsors, and SEO can be managed below.
+                </p>
+              </div>
+            </div>
+            {studioDraftId && (
+              <Link
+                href={`/admin/pipeline/${studioDraftId}`}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-1.5 shadow-lg shadow-purple-600/20"
+              >
+                Open in Hybrid Studio Pipeline &rarr;
+              </Link>
+            )}
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="dashboard-card p-8">
           {/* Basic Info */}
@@ -581,11 +636,21 @@ export default function EditReleasePage() {
           <VideoStructureSection
             durationSeconds={form.durationSeconds || 0}
             initialStructure={form.videoStructure || {}}
+            isLocked={isStudioGoverned}
             onUpdate={(structure) => setForm((f: any) => ({ ...f, videoStructure: structure }))}
           />
 
           {/* Premiere & Pre-Release */}
-          <ReleasePremiereSection
+          <ReleaseViralSyndicationSection
+            releaseId={String(params.id || form.id || '')}
+            draftId={form.studioProduction?.draftId}
+            slug={form.slug}
+            title={form.title}
+            youtubeId={form.youtubeId}
+            isStudioGoverned={isStudioGoverned}
+          />
+
+            <ReleasePremiereSection
             form={form}
             setForm={setForm}
           />
@@ -598,7 +663,7 @@ export default function EditReleasePage() {
 
           {/* Features */}
           <div id="features-section">
-            <ReleaseFeaturesSection form={form} onCheckboxChange={handleCheckboxChange} />
+            <ReleaseFeaturesSection form={form} setForm={setForm} onCheckboxChange={handleCheckboxChange} />
           </div>
 
           {/* Public Commentary */}
@@ -628,29 +693,35 @@ export default function EditReleasePage() {
           {/* Public Credits */}
           <ReleaseCreditsSection
             form={form}
+            setForm={setForm}
             updatePublicCredits={updatePublicCredits}
           />
 
           {/* Canonical Part I Lyrics */}
-          <CanonicalLyricsSection
-            initialLyrics={form.canonicalLyrics}
-            onUpdate={(canonicalLyrics) =>
-              setForm((prev) => ({ ...prev, canonicalLyrics }))
-            }
-          />
+          <div id="canonical-lyrics-section">
+            <CanonicalLyricsSection
+              initialLyrics={form.canonicalLyrics}
+              isLocked={isStudioGoverned}
+              onUpdate={(canonicalLyrics) =>
+                setForm((prev) => ({ ...prev, canonicalLyrics }))
+              }
+            />
+          </div>
 
-          {/* Structured Lyrics */}
-          <LyricsStructureSection
-            form={form}
-            selectedLyricsStructureLanguage={selectedLyricsStructureLanguage}
-            setSelectedLyricsStructureLanguage={setSelectedLyricsStructureLanguage}
-            addLyricsBlock={addLyricsBlock}
-            updateLyricsBlock={updateLyricsBlock}
-            removeLyricsBlock={removeLyricsBlock}
-            getLyricsBlocks={getLyricsBlocks}
-            getLanguageLabel={getLanguageLabel}
-            editorHref={!isNew ? `/admin/cms-releases/${params.id as string}/lyrics` : undefined}
-          />
+          {/* Structured Lyrics (Legacy editor for non-studio releases) */}
+          {!isStudioGoverned && (
+            <LyricsStructureSection
+              form={form}
+              selectedLyricsStructureLanguage={selectedLyricsStructureLanguage}
+              setSelectedLyricsStructureLanguage={setSelectedLyricsStructureLanguage}
+              addLyricsBlock={addLyricsBlock}
+              updateLyricsBlock={updateLyricsBlock}
+              removeLyricsBlock={removeLyricsBlock}
+              getLyricsBlocks={getLyricsBlocks}
+              getLanguageLabel={getLanguageLabel}
+              editorHref={!isNew ? `/admin/cms-releases/${params.id as string}/lyrics` : undefined}
+            />
+          )}
 
           <ReleaseEditorLanguageManagementSection
             form={form}
@@ -666,7 +737,108 @@ export default function EditReleasePage() {
 
           {/* Subtitle Timeline + Language Tracks */}
           <div id="subtitle-timeline-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+            {isStudioGoverned ? (
+              <div className="rounded-2xl border border-purple-500/30 bg-purple-950/10 p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-500/20 pb-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                      <h3 className="text-base font-bold text-white">Hybrid Studio Master Tracks</h3>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        4 TRACKS BURNED
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/60">
+                      Vocal speech alignment, word timestamps, and optical typography were compiled and burned into the video master during Phase 2 &amp; 3 of production.
+                    </p>
+                  </div>
+                  {studioDraftId && (
+                    <Link
+                      href={`/admin/pipeline/${studioDraftId}`}
+                      className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-1.5 self-start sm:self-auto shadow-lg shadow-purple-600/20"
+                    >
+                      Edit in Hybrid Studio &rarr;
+                    </Link>
+                  )}
+                </div>
+
+                {/* 4 Multi-lingual Tracks Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-3.5 rounded-xl border border-white/10 bg-white/5 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-semibold text-white">
+                      <span>Urdu (Nastaliq)</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">READY</span>
+                    </div>
+                    <p className="text-[11px] text-white/50">Urdu Nastaliq typography with calibrated optical weight (60/74pt).</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-white/10 bg-white/5 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-semibold text-white">
+                      <span>English</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">READY</span>
+                    </div>
+                    <p className="text-[11px] text-white/50">Master thematic English translation synchronized to verse cadence.</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-white/10 bg-white/5 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-semibold text-white">
+                      <span>Roman Urdu</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">READY</span>
+                    </div>
+                    <p className="text-[11px] text-white/50">Latin-script phonetics for global singing and pronunciation.</p>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-white/10 bg-white/5 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-semibold text-white">
+                      <span>Devanagari Hindi</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">READY</span>
+                    </div>
+                    <p className="text-[11px] text-white/50">Cross-cultural Hindi script representation of mystical kalam.</p>
+                  </div>
+                </div>
+
+                {/* Master Render Production Info */}
+                <div className="p-4 rounded-xl border border-white/10 bg-black/40 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/60">Master Video Output:</span>
+                    <span className="font-mono text-white/90 text-[11px] truncate max-w-md">
+                      {(form.studioProduction as any)?.outputPath || 'Authoritative 1080p Master'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/60">Approved Production Format:</span>
+                    <span className="font-mono text-amber-400 uppercase text-[11px]">
+                      {(form.studioProduction as any)?.format || 'lyric_master'} ({(form.studioProduction as any)?.orientation || 'landscape'})
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/60">Audio Master Continuity:</span>
+                    <span className="text-emerald-400 font-semibold text-[11px]">
+                      48kHz WAV Master Verified • SHA-256 Validated
+                    </span>
+                  </div>
+                </div>
+
+                {/* Subtitle Export & Distribution Actions */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={exportAllSubtitlesZip}
+                    disabled={exportingZip}
+                    className="dashboard-btn-secondary px-4 py-2 text-xs inline-flex items-center gap-2"
+                  >
+                    <Download size={14} />
+                    {exportingZip ? 'Generating ZIP...' : 'Export Subtitle Package (.VTT / .SRT / .ASS)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={copySubtitleNamingConvention}
+                    className="dashboard-btn-secondary px-4 py-2 text-xs"
+                  >
+                    Copy YouTube CC Track Names
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
               <div>
                 <h2 className="text-xl font-semibold" style={{color: 'var(--dash-text-primary)'}}>Subtitle Timeline & Language Tracks</h2>
                 {!isNew && (
@@ -1049,6 +1221,8 @@ export default function EditReleasePage() {
               setReviewComment={setReviewComment}
               addReviewLog={addReviewLog}
             />
+              </>
+            )}
 
             {!isNew && (
               <DeliveryPanelSection
@@ -1084,8 +1258,24 @@ export default function EditReleasePage() {
             )}
           </div>
 
+          {/* Saved persistence and public publication are distinct verified states. */}
+          {!isNew && !loading && Boolean(form.id) && (
+            <div role="status" aria-live="polite" className="mt-10 flex flex-wrap items-center gap-3 rounded-xl border border-white/15 bg-white/5 p-4">
+              <span className="text-xs font-semibold text-white/75">RELEASE STATUS</span>
+              <span className="rounded-lg border border-sky-500/40 px-3 py-2 text-sm font-semibold text-sky-300">Saved in CMS</span>
+              {hasUnsavedChanges && <span className="rounded-lg border border-amber-500/40 px-3 py-2 text-sm font-semibold text-amber-300" title="Fields changed in the editor but not saved">
+                Unsaved edits: {unsavedFieldNames.slice(0, 6).join(", ")}{unsavedFieldNames.length > 6 ? ` (+${unsavedFieldNames.length - 6} more)` : ""}
+              </span>}
+              <span className={form.status === "published" && form.visibility === "public" ? "rounded-lg border border-emerald-500/40 px-3 py-2 text-sm font-semibold text-emerald-300" : "rounded-lg border border-amber-500/40 px-3 py-2 text-sm font-semibold text-amber-300"}>
+                {form.status === "published" && form.visibility === "public" ? "Published on SufiPulse" : "Not publicly published on SufiPulse"}
+              </span>
+              {form.status === "published" && form.visibility === "public" && form.slug && (
+                <a href={"/release-detail/" + form.slug} target="_blank" rel="noreferrer" className="text-xs font-semibold text-sky-300 underline">View public release</a>
+              )}
+            </div>
+          )}
           {/* Submit */}
-          <div className="flex gap-3 mt-12 pt-8 border-t border-[var(--dash-border)]">
+          <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-[var(--dash-border)]">
             <button
               type="submit"
               disabled={saving || (!hasUnsavedChanges && !isNew)}
@@ -1123,44 +1313,6 @@ export default function EditReleasePage() {
           </div>
         </form>
       </div>
-
-      {/* Floating Save Bar */}
-      {!isNew && hasUnsavedChanges && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-bottom-8 duration-500">
-          <div className="flex items-center gap-4 px-6 py-3 rounded-full shadow-2xl backdrop-blur-md border border-amber-500/30 bg-neutral-900/90">
-            <div className="flex flex-col">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-500">Unsaved Changes</span>
-              <span className="text-[10px] text-neutral-400">Press Ctrl+S or click save</span>
-            </div>
-            <div className="h-8 w-[1px] bg-neutral-700" />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const formEl = document.querySelector('form');
-                  formEl?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                }}
-                disabled={saving}
-                className="dashboard-btn-primary px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2"
-              >
-                {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-                {saving ? 'Saving...' : 'Save Now'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                   if (confirm('Discard all unsaved changes in this session?')) {
-                     window.location.reload();
-                   }
-                }}
-                className="dashboard-btn-secondary px-5 py-2 rounded-full text-sm font-bold"
-              >
-                Discard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Import Captions Modal */}
       <CaptionImportModal

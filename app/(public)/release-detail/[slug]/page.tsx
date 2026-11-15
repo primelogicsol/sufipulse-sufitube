@@ -89,6 +89,7 @@ import {
   getLanguageLabel,
   LANGUAGE_OPTIONS as PAGE_LANGUAGE_OPTIONS,
   LyricsRequestModal,
+  ViralStatusShareBar,
 } from "./components";
 import { PreReleaseView } from "./components/PreReleaseView";
 import { ShareModal } from '@/app/components/share/ShareModal';
@@ -1181,6 +1182,7 @@ function Release() {
           subtitles_available: Boolean(cmsRelease.subtitleCues?.length > 0),
           subtitle_languages: Object.keys(cmsRelease.subtitleTranslations || {}),
           lyrics: cmsRelease.lyrics || {},
+          canonicalLyrics: cmsRelease.canonicalLyrics,
           subtitle_cues: cmsRelease.subtitleCues || [],
           subtitle_translations: cmsRelease.subtitleTranslations || {},
           subtitle_cue_metadata: cmsRelease.subtitleCueMetadata || {},
@@ -1189,7 +1191,9 @@ function Release() {
           lyrics_structure: cmsRelease.lyricsStructure || {},
           enable_credits: cmsRelease.enableCredits !== false,
           enable_commentary: cmsRelease.enableCommentary !== false,
-          enable_sponsors: !!cmsRelease.enableSponsors,
+          // An enabled but empty sponsor section must not render as a public sponsorship claim.
+          enable_sponsors: !!cmsRelease.enableSponsors && Array.isArray(cmsRelease.publicSponsors) &&
+            cmsRelease.publicSponsors.some((s: any) => s?.isPublished !== false && String(s?.name || '').trim()),
           enable_adoption: cmsRelease.enableAdoption !== false,
           public_commentary: cmsRelease.publicCommentary || [],
           public_sponsors_intro: cmsRelease.publicSponsorsIntro || "",
@@ -4631,6 +4635,19 @@ function Release() {
                                   .join("\n")
                             : "";
 
+                          // Published canonical lyrics are the source of truth when a legacy
+                          // per-language lyrics table has not been populated. Never label
+                          // an Urdu source text as an English or Hindi translation.
+                          const canonical = release.canonicalLyrics;
+                          const canonicalText = canonical?.status === "APPROVED"
+                            ? String(canonical.text || "").trim() : "";
+                          const isRomanScript = /[A-Za-z]/.test(canonicalText) &&
+                            !/[\u0600-\u06FF\u0900-\u097F]/.test(canonicalText);
+                          const isUrduScript = /[\u0600-\u06FF]/.test(canonicalText);
+                          const canonicalMatchesSelection = canonicalText &&
+                            ((activeLanguage === "roman_urdu" && canonical.primaryLanguage === "ur" && isRomanScript) ||
+                              (activeLanguage === "urdu" && canonical.primaryLanguage === "ur" && isUrduScript) ||
+                              (activeLanguage === "hindi" && canonical.primaryLanguage === "hi"));
                           const flatLyricsText =
                             hiddenTranslations.length > 0
                               ? hiddenTranslations
@@ -4662,7 +4679,7 @@ function Release() {
                                       )
                                       .filter(Boolean)
                                       .join("\n")
-                                  : "";
+                                  : canonicalMatchesSelection ? canonicalText : "";
 
                           return isEditing ? (
                             <div className="space-y-4">
@@ -5034,17 +5051,13 @@ function Release() {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-8">
-                        <div className="p-6 bg-gradient-to-br from-neutral-900 to-neutral-900/50 border border-neutral-800 rounded-xl hover:border-amber-400/30 transition-colors">
-                          <p className="text-neutral-300 whitespace-pre-line leading-relaxed text-sm">
-                            {commentaryBlocks.length > 0
-                              ? commentaryBlocks
-                                  .map((b: any) => b.content)
-                                  .filter(Boolean)
-                                  .join("\n\n")
-                              : "No content yet."}
-                          </p>
-                        </div>
+                      <div className="space-y-6">
+                        {commentaryBlocks.length > 0 ? commentaryBlocks.map((block: any, index: number) => (
+                          <section key={block.id || index} className="p-6 bg-gradient-to-br from-neutral-900 to-neutral-900/50 border border-neutral-800 rounded-xl hover:border-amber-400/30 transition-colors">
+                            {block.title && <h4 className="mb-4 font-serif text-xl text-amber-400">{block.title}</h4>}
+                            <p className="text-neutral-300 whitespace-pre-line leading-relaxed text-sm">{block.content}</p>
+                          </section>
+                        )) : <p className="text-neutral-500">No commentary published yet.</p>}
                       </div>
                     )}
                   </div>
@@ -5306,6 +5319,13 @@ function Release() {
         initialLanguageName={getLanguageLabel(selectedLyricsLanguage)}
         languages={captionLanguageOptions as any}
         user={user}
+      />
+
+      <ViralStatusShareBar
+        title={release.release_title || release.title}
+        youtubeId={release.youtube_video_id || release.youtubeId}
+        slug={release.slug || (typeof params?.slug === 'string' ? params.slug : 'sacred-kalam')}
+        lyricSnippet={release.canonicalLyrics?.text?.split('\n')?.[0]}
       />
 
       {/* Toast Notifications */}

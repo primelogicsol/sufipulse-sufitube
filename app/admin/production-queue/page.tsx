@@ -74,15 +74,15 @@ export default function ProductionQueuePage() {
                     <td className="px-4 py-3 font-mono text-[11px] text-white/60">{item.primarySourceId}</td>
                     <td className="px-4 py-3">{item.extensionCount}</td>
                     <td className="px-4 py-3">
-                      <span className={item.alignmentStatus === 'Configured' ? 'text-emerald-400' : 'text-amber-400'}>{item.alignmentStatus}</span>
+                      <span className={item.alignmentStatus === 'Verified' ? 'text-emerald-400' : 'text-amber-400'}>{item.alignmentStatus}</span>
                     </td>
                     <td className="px-4 py-3">{item.assemblyStatus}</td>
                     <td className="px-4 py-3">{item.masterTimingStatus}</td>
                     <td className="px-4 py-3">{item.captionStatus}</td>
                     <td className="px-4 py-3 text-white/40">{new Date(item.updatedAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
-                      <Link href={`/admin/cms-releases/${item.releaseId}/production-sources`} className="text-amber-400 hover:text-amber-300 whitespace-nowrap">
-                        Open Workspace &rarr;
+                      <Link href={`/admin/pipeline/${item.releaseId}`} className="text-amber-400 hover:text-amber-300 whitespace-nowrap">
+                        Open Pipeline &rarr;
                       </Link>
                     </td>
                   </tr>

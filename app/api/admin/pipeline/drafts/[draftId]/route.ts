@@ -6,6 +6,7 @@ import {
   isValidDraftId,
   BASE_DATA_DIR,
 } from '@/server/storage/pipeline-draft-storage';
+import { applyDefaultVideoParts } from '@/server/services/default-video-parts';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,8 @@ export async function GET(
         { status: 404 }
       );
     }
+    // Fresh drafts automatically receive the shared Canva Part B background / verified Part C promo.
+    if (applyDefaultVideoParts(draft)) pipelineDraftStorage.saveDraft(draft);
     return NextResponse.json({ draft });
   } catch (err: any) {
     return NextResponse.json({ error: err.message, code: 'DRAFT_STORAGE_UNAVAILABLE' }, { status: 500 });
@@ -70,8 +73,27 @@ export async function PATCH(
     }
 
     const body = await request.json();
+
+    // Canonical identity is frozen once the release is published.
+    const isPublished =
+      (draft as any).publishingTx?.status === 'VISIBILITY_UNVEILED' ||
+      draft.downstreamStatus?.approvalStatus === 'published';
+    if (isPublished && (body.title || body.slug)) {
+      return NextResponse.json(
+        { error: 'Canonical title and slug are frozen after publication.', code: 'CANONICAL_TITLE_FROZEN' },
+        { status: 409 }
+      );
+    }
+
     if (body.title) draft.title = String(body.title).trim();
-    if (body.slug) draft.slug = String(body.slug).trim();
+    if (body.slug) {
+      const cleanSlug = String(body.slug)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      if (cleanSlug) draft.slug = cleanSlug;
+    }
     if (body.canonicalLyrics) {
       draft.canonicalLyrics = {
         ...draft.canonicalLyrics,
@@ -82,6 +104,9 @@ export async function PATCH(
       draft.activeVariantId = body.activeVariantId;
     }
     if (body.approvalStatus) {
+      if (body.approvalStatus === 'approved_for_publishing' && (!draft.masterTimeline?.lines?.length || !draft.masterTimeline.lines.some(line => line.words?.length))) {
+        return NextResponse.json({ error: 'Cannot approve a lyric video with unverified caption alignment.', code: 'CAPTION_ALIGNMENT_MISSING' }, { status: 422 });
+      }
       draft.downstreamStatus.approvalStatus = body.approvalStatus;
       if (body.approvalStatus === 'approved_for_publishing') {
         draft.canonicalLyrics.status = 'APPROVED';

@@ -167,12 +167,29 @@ export type PublicRelease = Omit<Pick<
   composer?: string;
   musicDirector?: string;
   producer?: string;
-  publicCredits?: string;
+  publicCredits?: CMSRelease['publicCredits'];
+  canonicalLyrics?: CMSRelease['canonicalLyrics'];
+  lyrics?: CMSRelease['lyrics'];
+  lyricsStructure?: CMSRelease['lyricsStructure'];
+  subtitleCues?: CMSRelease['subtitleCues'];
+  subtitleTranslations?: CMSRelease['subtitleTranslations'];
+  publicCommentary?: CMSRelease['publicCommentary'];
+  enableLyrics?: boolean;
+  enableCommentary?: boolean;
+  enableCredits?: boolean;
+  enableSponsors?: boolean;
+  enableAdoption?: boolean;
   writerId?: string;
   lyricistId?: string;
   tags?: string[];
   publishedDate?: string;
-};
+} & Partial<Pick<CMSRelease,
+  'availableLanguages' | 'defaultLanguage' | 'subtitleCueMetadata' |
+  'subtitleStylePacks' | 'languageStyleOverrides' | 'publicSponsorsIntro' |
+  'publicSponsors' | 'targetRegions' | 'targetDiaspora' |
+  'targetLanguages' | 'sufiConcepts' | 'themes' | 'moods' | 'seoKeywords' |
+  'relatedReleases' | 'relatedPlaylists' | 'intelligenceStatus' | 'intelligenceUpdatedAt'
+>>;
 
 export function toPublicRelease(release: any): PublicRelease {
 
@@ -208,7 +225,36 @@ export function toPublicRelease(release: any): PublicRelease {
     composer: safeResolve(release.composer),
     musicDirector: safeResolve(release.musicDirector),
     producer: safeResolve(release.producer),
-    publicCredits: safeResolve(release.publicCredits),
+    publicCredits: release.enableCredits !== false ? release.publicCredits : undefined,
+    canonicalLyrics: release.enableLyrics !== false && release.canonicalLyrics?.status === 'APPROVED' ? release.canonicalLyrics : undefined,
+    lyrics: release.enableLyrics !== false ? release.lyrics : undefined,
+    lyricsStructure: release.enableLyrics !== false ? release.lyricsStructure : undefined,
+    subtitleCues: release.enableLyrics !== false ? release.subtitleCues : undefined,
+    subtitleTranslations: release.enableLyrics !== false ? release.subtitleTranslations : undefined,
+    subtitleCueMetadata: release.enableLyrics !== false ? release.subtitleCueMetadata : undefined,
+    subtitleStylePacks: release.enableLyrics !== false ? release.subtitleStylePacks : undefined,
+    languageStyleOverrides: release.enableLyrics !== false ? release.languageStyleOverrides : undefined,
+    availableLanguages: release.availableLanguages || [],
+    defaultLanguage: release.defaultLanguage,
+    publicSponsorsIntro: release.enableSponsors ? release.publicSponsorsIntro : undefined,
+    publicSponsors: release.enableSponsors ? release.publicSponsors?.filter((s: any) => s.isPublished !== false && String(s.name || '').trim()) : [],
+    targetRegions: release.targetRegions,
+    targetDiaspora: release.targetDiaspora,
+    targetLanguages: release.targetLanguages,
+    sufiConcepts: release.sufiConcepts,
+    themes: release.themes,
+    moods: release.moods,
+    seoKeywords: release.seoKeywords,
+    relatedReleases: release.relatedReleases,
+    relatedPlaylists: release.relatedPlaylists,
+    intelligenceStatus: release.intelligenceStatus,
+    intelligenceUpdatedAt: release.intelligenceUpdatedAt,
+    publicCommentary: release.enableCommentary !== false ? release.publicCommentary?.filter((c: any) => c.isPublished === true && String(c.content || '').trim()) : undefined,
+    enableLyrics: release.enableLyrics,
+    enableCommentary: release.enableCommentary,
+    enableCredits: release.enableCredits,
+    enableSponsors: release.enableSponsors,
+    enableAdoption: release.enableAdoption,
     writerId: safeResolve(release.writerId),
     lyricistId: safeResolve(release.lyricistId),
     tags: release.tags,

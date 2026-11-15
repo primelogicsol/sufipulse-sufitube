@@ -12,15 +12,25 @@
  */
 
 import type { ReconciledMasterTimeline } from '@/server/types/pipeline-draft';
+import {
+  parseCanonicalPoemDocument,
+  alignVocalPhrasesToTimeline,
+  FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON,
+} from './lyric-parser';
 
 export interface MultilingualLineEntry {
   lineIndex: number;
+  vocalIndex?: number;
   startSeconds: number;
   endSeconds: number;
   originalText: string;
+  urduNastaliq?: string;
   englishTranslation: string;
   romanUrdu: string;
   devanagariUrdu: string;
+  speaker?: string;
+  section?: string;
+  confidence?: number;
   additionalLanguages?: Record<string, string>;
   isProductionDirection: boolean;
   words?: Array<{
@@ -226,7 +236,9 @@ export function translateSufiEnglish(text: string): string {
     }
   }
 
-  return `Sacred contemplation: ${urduToRomanUrdu(trimmed)}`;
+  // Never invent generic spiritual filler when no verified English translation exists.
+  // Missing English stays blank and must be supplied by a real translation source.
+  return '';
 }
 
 export function generateMultilingualPackage(
@@ -235,74 +247,127 @@ export function generateMultilingualPackage(
   primaryLanguage: string = 'ur'
 ): MultilingualPackage {
   const lines: MultilingualLineEntry[] = [];
+  const durationSec = masterTimeline.durationSeconds || (masterTimeline as any).totalDurationSeconds || 285.2;
 
-  const timelineLines = masterTimeline.lines && masterTimeline.lines.length > 0
-    ? masterTimeline.lines
-    : (() => {
-        const rawLines = (canonicalLyricsText || '')
-          .split('\n')
-          .map((l) => l.trim())
-          .filter((l) => l.length > 0);
-        const count = rawLines.length;
-        if (count === 0) return [];
-        const totalDuration = masterTimeline.durationSeconds || (masterTimeline as any).totalDurationSeconds || 60.0;
-        const lineDur = totalDuration / count;
-        return rawLines.map((text, idx) => ({
-          lineIndex: idx,
-          segmentId: 'seg_default',
-          sourceVariantId: 'primary',
-          sourceLineIndex: idx,
-          startSeconds: idx * lineDur,
-          endSeconds: (idx + 1) * lineDur,
-          text,
-          isProductionDirection: text.startsWith('(') || text.startsWith('[') || text.startsWith('#'),
-          words: [],
-        }));
-      })();
+  // Check if timeline needs structural decomposition & natural vocal alignment
+  const hasNaiveOrDirections =
+    !masterTimeline.lines ||
+    masterTimeline.lines.length === 0 ||
+    masterTimeline.lines.some(
+      (l) =>
+        l.isProductionDirection ||
+        l.text.startsWith('#') ||
+        l.text.startsWith('**[') ||
+        l.text.startsWith('[') ||
+        l.text.startsWith('**शायर') ||
+        l.text.startsWith('**रब') ||
+        l.text.startsWith('**नौजवान')
+    );
 
-  if (masterTimeline.lines && masterTimeline.lines.length === 0) {
-    masterTimeline.lines = timelineLines as any;
+  if (hasNaiveOrDirections && canonicalLyricsText) {
+    const doc = parseCanonicalPoemDocument(canonicalLyricsText);
+    const alignedVocals = alignVocalPhrasesToTimeline(doc.vocalLines, durationSec);
+
+    masterTimeline.lines = alignedVocals.map((v, idx) => ({
+      lineIndex: idx,
+      vocalIndex: v.vocalIndex,
+      segmentId: 'seg_vocal',
+      sourceVariantId: 'primary',
+      sourceLineIndex: v.lineIndex,
+      startSeconds: v.startSeconds || 0,
+      endSeconds: v.endSeconds || 0,
+      text: v.text,
+      speaker: v.speaker,
+      section: v.section,
+      confidence: v.confidence ?? 0,
+      urduNastaliq: v.urduNastaliq,
+      englishTranslation: v.englishTranslation,
+      romanUrdu: v.romanUrdu,
+      devanagariUrdu: v.devanagariUrdu,
+      isProductionDirection: false,
+      words: [],
+    }));
   }
 
+  const timelineLines = masterTimeline.lines || [];
+
   for (const line of timelineLines) {
+    if (line.isProductionDirection) continue;
+
     const rawText = line.text.trim();
-    const isDirection = line.isProductionDirection;
 
-    let original = rawText;
-    let english = '';
-    let roman = '';
-    let deva = '';
+    const normalizeLookup = (value: string) =>
+      value
+        .trim()
+        .replace(/^[\s"'“”‘’]+|[\s"'“”‘’]+$/g, '')
+        .replace(/[।.!?]+$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-    if (isDirection) {
-      english = rawText;
-      roman = rawText;
-      deva = rawText;
-    } else {
-      english = translateSufiEnglish(rawText);
-      roman = urduToRomanUrdu(rawText);
-      deva = urduToDevanagari(rawText);
-    }
+    const normalizedRaw = normalizeLookup(rawText);
+    const lex =
+      FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON[rawText] ||
+      FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON[rawText.replace(/[,\.?!।]$/, '')] ||
+      Object.entries(FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON).find(
+        ([key]) => normalizeLookup(key) === normalizedRaw
+      )?.[1];
+
+    const containsArabic = /[\u0600-\u06FF]/.test(rawText);
+    const containsDevanagari = /[\u0900-\u097F]/.test(rawText);
+    const isLatinOnly = (value?: string) =>
+      Boolean(value) &&
+      /[A-Za-z]/.test(String(value)) &&
+      !/[\u0600-\u06FF\u0900-\u097F]/.test(String(value));
+    const isArabicScript = (value?: string) =>
+      Boolean(value) && /[\u0600-\u06FF]/.test(String(value));
+    const isDevanagariScript = (value?: string) =>
+      Boolean(value) && /[\u0900-\u097F]/.test(String(value));
+
+    // Strict same-line language binding. Wrong-script stale metadata is rejected.
+    const urduNastaliq =
+      (isArabicScript(line.urduNastaliq) ? line.urduNastaliq : '') ||
+      lex?.urdu ||
+      (containsArabic ? rawText : '');
+    const english =
+      (isLatinOnly(line.englishTranslation) ? line.englishTranslation : '') ||
+      lex?.en ||
+      translateSufiEnglish(rawText);
+    const roman =
+      (isLatinOnly(line.romanUrdu) ? line.romanUrdu : '') ||
+      lex?.rom ||
+      (containsArabic ? urduToRomanUrdu(rawText) : '');
+    const deva =
+      (isDevanagariScript(line.devanagariUrdu) ? line.devanagariUrdu : '') ||
+      lex?.deva ||
+      (containsDevanagari ? rawText : '');
 
     lines.push({
       lineIndex: line.lineIndex,
+      vocalIndex: line.vocalIndex,
       startSeconds: line.startSeconds,
       endSeconds: line.endSeconds,
-      originalText: original,
+      originalText: rawText,
+      urduNastaliq,
       englishTranslation: english,
       romanUrdu: roman,
       devanagariUrdu: deva,
-      isProductionDirection: isDirection,
-      words: line.words ? line.words.map((w) => ({
-        text: w.text,
-        startSeconds: w.startSeconds,
-        endSeconds: w.endSeconds,
-      })) : undefined,
+      speaker: line.speaker || 'शायर',
+      section: line.section,
+      confidence: line.confidence ?? 0,
+      isProductionDirection: false,
+      words: line.words
+        ? line.words.map((w) => ({
+            text: w.text,
+            startSeconds: w.startSeconds,
+            endSeconds: w.endSeconds,
+          }))
+        : undefined,
     });
   }
 
   return {
     revision: masterTimeline.revision,
-    masterDurationSeconds: masterTimeline.durationSeconds,
+    masterDurationSeconds: durationSec,
     primaryLanguage,
     languages: {
       ur: { code: 'ur', label: 'Urdu (Nastaliq)', isOriginal: true, status: 'approved' },

@@ -10,14 +10,39 @@ import {
   getDraftAudioDir,
   computeFileSha256,
 } from '@/server/storage/pipeline-draft-storage';
-import { readWavHeader, createEmptyWavBuffer, probeAudioFile } from '@/server/services/audio-splicer';
+import { readWavHeader, probeAudioFile } from '@/server/services/audio-splicer';
 import { extractSourceAssetId, fetchConfiguredPrivateAudioAlignment, normalizePrivateAudioAlignment } from '@/server/integrations/private-audio-alignment';
 import { scrapePublicSunoSong } from '@/server/integrations/suno-public-scraper';
+import { ingestAuthorizedAudio } from '@/server/integrations/ingest-authorized-audio';
+import { isPrivateAudioStreamConfigured } from '@/server/integrations/private-audio-connection-resolver';
+import { ingestSunoBrowserAudio, isLocalSunoBrowserAvailable } from '@/server/integrations/suno-browser-export';
 import type { VariantSource } from '@/server/types/pipeline-draft';
 
 import { parseDurationInput } from '@/server/services/duration-parser';
 
 export const dynamic = 'force-dynamic';
+
+function selectRecordingForReferenceAssembly(
+  updated: ReturnType<typeof pipelineDraftStorage.addVariant>,
+  variant: VariantSource,
+) {
+  const enabledSegments = updated.assembly.segments.filter(segment => segment.enabled);
+  if (enabledSegments.length && enabledSegments.every(segment =>
+    updated.variants[segment.sourceVariantId]?.sourceType === 'suno_url')) {
+    updated.activeVariantId = variant.variantId;
+    updated.assembly.segments = [{
+      segmentId: "seg_recording_" + variant.variantId,
+      sourceVariantId: variant.variantId,
+      sourceInSeconds: 0,
+      sourceOutSeconds: variant.durationSeconds,
+      destinationStartSeconds: 0,
+      transition: { type: "cut" },
+      trackType: "full_mix",
+      enabled: true,
+    }];
+    updated.assembly.updatedAt = new Date().toISOString();
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -68,6 +93,22 @@ export async function POST(
         );
       }
 
+      // URL metadata must never be substituted for the actual music.
+      if (body.rightsConfirmed !== true) {
+        return NextResponse.json({
+          error: 'Confirm that this song is yours or that you have authorization to import the recording.',
+          code: 'RIGHTS_CONFIRMATION_REQUIRED',
+        }, { status: 403 });
+      }
+      const useProvider = isPrivateAudioStreamConfigured();
+      if (!useProvider && !isLocalSunoBrowserAvailable()) {
+        return NextResponse.json({
+          error: 'No authorized audio provider is connected. Configure the stream URL template in Studio Audio Settings, or use Upload Audio for an official Suno export.',
+          code: 'AUDIO_PROVIDER_NOT_CONFIGURED',
+          sourceAssetId,
+        }, { status: 422 });
+      }
+
       console.log(`[upload-variant] Ingesting Suno variant for draft ${draftId}: assetId=${sourceAssetId}`);
 
       // Fetch alignment data from configured Suno upstream, with graceful public scraper fallback
@@ -112,54 +153,57 @@ export async function POST(
         }
       }
 
-      // Create local PCM WAV reference file for the variant
-      const fileName = `${variantId}_suno.wav`;
+      const fileName = `${variantId}_authorized.wav`;
       const filePath = path.join(audioDir, fileName);
-
-      // Render lossless reference audio buffer with exact duration (audible ambient reference)
-      const buf = createEmptyWavBuffer(durationSeconds, 48000, 2, 16, true);
-      fs.writeFileSync(filePath, buf);
-
+      let retrieved;
+      try {
+        retrieved = useProvider
+          ? await ingestAuthorizedAudio(sourceAssetId, filePath)
+          : await ingestSunoBrowserAudio(sourceAssetId, filePath);
+      } catch (error) {
+        return NextResponse.json({
+          error: error instanceof Error ? error.message : 'Suno export failed.',
+          code: 'SUNO_EXPORT_FAILED',
+        }, { status: 422 });
+      }
+      const sha256 = computeFileSha256(filePath);
+      // Re-import of the same song is idempotent.
+      const latestDraft = pipelineDraftStorage.getDraft(draftId) || draft;
+      const duplicate = Object.values(latestDraft.variants).find(v =>
+        v.sha256 === sha256 && v.sourceType === 'audio_upload' && fs.existsSync(v.filePath));
+      if (duplicate) {
+        fs.rmSync(filePath, { force: true });
+        return NextResponse.json({ success: true, reused: true, variant: duplicate,
+          needsMasterRender: !latestDraft.masterAudio && latestDraft.activeVariantId === duplicate.variantId &&
+            latestDraft.assembly.segments.filter(segment => segment.enabled).length === 1 &&
+            latestDraft.assembly.segments.some(segment => segment.enabled && segment.sourceVariantId === duplicate.variantId),
+          draft: latestDraft,
+        });
+      }
       const variant: VariantSource = {
-        variantId,
-        label,
-        sourceType: 'suno_url',
-        sourceAssetId,
-        sourceUrl: sunoUrl,
-        fileName,
-        filePath,
-        format: 'wav',
-        durationSeconds,
-        sampleRate: 48000,
-        channels: 2,
-        sha256: computeFileSha256(filePath),
-        importedAt: new Date().toISOString(),
+        variantId, label, sourceType: 'audio_upload',
+        sourceAssetId, sourceUrl: sunoUrl, fileName, filePath,
+        format: 'wav', durationSeconds: retrieved.durationSeconds,
+        sampleRate: retrieved.sampleRate, channels: retrieved.channels,
+        sha256, importedAt: new Date().toISOString(),
         rawAlignment: alignmentPayload,
       };
-
       const updated = pipelineDraftStorage.addVariant(draftId, variant);
-
-      // Auto-commit master audio so Authoritative Master Audio is immediately rendered and active
-      try {
-        const masterWavPath = path.join(audioDir, `master_assembly.wav`);
-        if (fs.existsSync(filePath)) {
-          fs.copyFileSync(filePath, masterWavPath);
-        }
-        const timeline = {
-          revision: updated.currentRevision,
-          durationSeconds,
-          lines: [],
-          words: [],
-          stats: { lineCount: 0, wordCount: 0, overlapCount: 0, crossfadeBoundaryWarnings: 0 },
-          validation: { isMonotonic: true, boundaryClashes: [], confidenceScore: 1.0 },
-        };
-        pipelineDraftStorage.commitMasterRender(draftId, masterWavPath, durationSeconds, timeline);
-      } catch (renderErr) {
-        console.warn('[upload-variant] Auto master render notice:', renderErr);
+      selectRecordingForReferenceAssembly(updated, variant);
+      if (updated.activeVariantId !== variant.variantId || !updated.assembly.segments.some(segment =>
+        segment.enabled && segment.sourceVariantId === variant.variantId)) {
+        return NextResponse.json({ success: true, variant, needsMasterRender: false, draft: updated });
       }
+      updated.masterAudio = null;
+      updated.masterTimeline = null;
+      updated.downstreamStatus.timestampsValid = false;
+      updated.downstreamStatus.subtitlesValid = false;
+      updated.downstreamStatus.videoValid = false;
+      updated.downstreamStatus.approvalStatus = 'assembly_pending_review';
+      if (updated.video) { updated.video.status = 'PENDING'; updated.video.formats = {}; }
+      pipelineDraftStorage.saveDraft(updated);
+      return NextResponse.json({ success: true, variant, needsMasterRender: true, draft: updated });
 
-      const freshDraft = pipelineDraftStorage.getDraft(draftId) || updated;
-      return NextResponse.json({ success: true, variant, draft: freshDraft });
     }
 
     // Direct file upload fallback (FormData or direct binary stream)
@@ -249,32 +293,22 @@ export async function POST(
       };
 
       const updated = pipelineDraftStorage.addVariant(draftId, variant);
-
-      // Auto-commit master audio so Authoritative Master Audio is immediately rendered and active
-      try {
-        const masterWavPath = path.join(audioDir, `master_assembly.wav`);
-        if (fs.existsSync(filePath)) {
-          fs.copyFileSync(filePath, masterWavPath);
-        }
-        const timeline = {
-          revision: updated.currentRevision,
-          durationSeconds,
-          lines: [],
-          words: [],
-          stats: { lineCount: 0, wordCount: 0, overlapCount: 0, crossfadeBoundaryWarnings: 0 },
-          validation: { isMonotonic: true, boundaryClashes: [], confidenceScore: 1.0 },
-        };
-        pipelineDraftStorage.commitMasterRender(draftId, masterWavPath, durationSeconds, timeline);
-      } catch (renderErr) {
-        console.warn('[upload-variant] Auto master render notice:', renderErr);
+      selectRecordingForReferenceAssembly(updated, variant);
+      if (updated.activeVariantId !== variant.variantId || !updated.assembly.segments.some(segment =>
+        segment.enabled && segment.sourceVariantId === variant.variantId)) {
+        return NextResponse.json({ success: true, variant, needsMasterRender: false, draft: updated });
       }
-
-      const freshDraft = pipelineDraftStorage.getDraft(draftId) || updated;
-      if (freshDraft.video?.partA) {
-        freshDraft.video.partA.playbackDurationSeconds = durationSeconds;
-        pipelineDraftStorage.saveDraft(freshDraft);
-      }
-      return NextResponse.json({ success: true, variant, draft: freshDraft });
+      // Do not copy an unconverted MP3/FLAC or an unreviewed variant into the
+      // authoritative WAV slot. A successful upload is NOT a rendered master.
+      updated.masterAudio = null;
+      updated.masterTimeline = null;
+      updated.downstreamStatus.timestampsValid = false;
+      updated.downstreamStatus.subtitlesValid = false;
+      updated.downstreamStatus.videoValid = false;
+      updated.downstreamStatus.approvalStatus = 'assembly_pending_review';
+      if (updated.video) updated.video.status = 'PENDING';
+      pipelineDraftStorage.saveDraft(updated);
+      return NextResponse.json({ success: true, variant, needsMasterRender: true, draft: updated });
     }
 
     return NextResponse.json({ error: 'Unsupported Content-Type', code: 'AUDIO_SOURCE_UNAVAILABLE' }, { status: 400 });

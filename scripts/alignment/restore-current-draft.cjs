@@ -1,0 +1,13 @@
+const fs=require('fs');
+const p='.data/pipeline-drafts/draft_1794713823276_8baeb8cc/draft.json';
+const lp='.data/pipeline-drafts/draft_1794713823276_8baeb8cc/alignment/recovered_suno_lyrics.txt';
+const d=JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));
+const lyrics=fs.readFileSync(lp,'utf8');
+d.canonicalLyrics.text=lyrics;
+d.video=d.video||{};
+d.video.partA=d.video.partA||{};
+d.video.partA.audioPolicy='suno_starts_at_part_a';
+d.updatedAt=new Date().toISOString();
+fs.writeFileSync(p,JSON.stringify(d,null,2),'utf8');
+fs.writeFileSync('.data/pipeline-drafts/draft_1794713823276_8baeb8cc/alignment/canonical_lyrics.txt',lyrics,'utf8');
+console.log('restored',lyrics.length,lyrics.split(/\r?\n/).length,d.video.partA.audioPolicy);

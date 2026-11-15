@@ -67,7 +67,80 @@ export default function PipelineDashboardPage() {
   const [newSunoUrl, setNewSunoUrl] = useState('');
   const [newDuration, setNewDuration] = useState('');
   const [newLyrics, setNewLyrics] = useState('');
+  const [titleAutoFilled, setTitleAutoFilled] = useState(false);
+  const [fetchingTitle, setFetchingTitle] = useState(false);
+  const [titleFetchNote, setTitleFetchNote] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [sunoConnection, setSunoConnection] = useState<{state: string; message?: string}>({ state: 'checking' });
+  const [connectingSuno, setConnectingSuno] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let mounted = true;
+    const check = async () => {
+      try {
+        const response = await fetch('/api/admin/pipeline/suno-connection', { cache: 'no-store' });
+        const data = await response.json();
+        if (mounted) setSunoConnection(response.ok ? data : { state: 'unavailable', message: data.error || 'Could not check Suno.' });
+      } catch {
+        if (mounted) setSunoConnection({ state: 'unavailable', message: 'Connection status unavailable.' });
+      }
+    };
+    void check();
+    const timer = setInterval(check, 4000);
+    return () => { mounted = false; clearInterval(timer); };
+  }, [isAdmin]);
+
+  const connectSuno = async () => {
+    setConnectingSuno(true);
+    try {
+      const response = await fetch('/api/admin/pipeline/suno-connection', { method: 'POST' });
+      const data = await response.json();
+      setSunoConnection(response.ok ? data : { state: 'needs_signin', message: data.error || 'Could not start Suno sign-in.' });
+    } catch {
+      setSunoConnection({ state: 'needs_signin', message: 'Could not open the Suno sign-in window.' });
+    } finally {
+      setConnectingSuno(false);
+    }
+  };
+
+  // Auto-fetch canonical title from a pasted Suno URL / asset ID
+  useEffect(() => {
+    const m = newSunoUrl.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+    if (!m) {
+      setTitleFetchNote(null);
+      return;
+    }
+    // Never overwrite a title the admin typed manually
+    if (newTitle.trim() && !titleAutoFilled) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        setFetchingTitle(true);
+        setTitleFetchNote(null);
+        const res = await fetch(`/api/admin/pipeline/suno-metadata?url=${encodeURIComponent(m[0])}`);
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok && data.title) {
+          setNewTitle(data.title);
+          setTitleAutoFilled(true);
+          setTitleFetchNote(`Fetched from Suno${data.artist ? ` (by ${data.artist})` : ''}. You can edit it.`);
+        } else {
+          setTitleFetchNote(data.error ? `Could not fetch title: ${data.error}. Enter it manually.` : 'Could not fetch title. Enter it manually.');
+        }
+      } catch {
+        if (!cancelled) setTitleFetchNote('Could not fetch title. Enter it manually.');
+      } finally {
+        if (!cancelled) setFetchingTitle(false);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newSunoUrl]);
 
   const fetchDrafts = async () => {
     try {
@@ -101,9 +174,12 @@ export default function PipelineDashboardPage() {
       if (!newSunoUrl) {
         setNewSunoUrl(isSunoUrl ? trimmed : `https://suno.com/song/${assetId}`);
       }
-      setNewTitle(`Suno Release (${assetId.slice(0, 8)})`);
+      // Title will be auto-fetched from Suno by the URL effect
+      setTitleAutoFilled(true);
+      setNewTitle('');
       return;
     }
+    setTitleAutoFilled(false);
     setNewTitle(val);
   };
 
@@ -284,6 +360,22 @@ export default function PipelineDashboardPage() {
             </button>
           </div>
         </div>
+
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between" aria-label="Suno connection">
+          <div>
+            <h2 className="font-semibold text-white">Suno account connection</h2>
+            <p className="text-sm text-white/70 mt-1">
+              {sunoConnection.state === 'connected' ? 'Connected. Sign-in is saved for future authorized imports.' :
+               sunoConnection.state === 'connecting' ? 'Sign in to Suno in the dedicated Chrome window. This status updates automatically.' :
+               sunoConnection.message || 'Connect Suno once to reuse your Chrome sign-in.'}
+            </p>
+            <p className="text-xs text-white/45 mt-1">Dedicated local Chrome profile. Reconnection may be required if Suno expires the session.</p>
+          </div>
+          <button type="button" onClick={connectSuno} disabled={connectingSuno || sunoConnection.state === 'connecting' || sunoConnection.state === 'checking'}
+            className="shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">
+            {sunoConnection.state === 'connected' ? 'Reconnect Suno' : sunoConnection.state === 'connecting' ? 'Waiting for Sign-in' : 'Connect Suno'}
+          </button>
+        </section>
 
         {/* Expandable / Collapsible In-Page Help Guide */}
         {isHelpOpen && (
@@ -467,13 +559,17 @@ export default function PipelineDashboardPage() {
                           <FileText className="w-3.5 h-3.5 text-blue-400" />
                           Subtitles: {draft.downstreamStatus?.subtitlesValid ? 'Ready' : 'Pending'}
                         </span>
+                        <span className="flex items-center gap-1.5 text-white/70 font-medium">
+                          <Video className="w-3.5 h-3.5 text-white/50" />
+                          Part A (Thumbnail)
+                        </span>
                         <span className="flex items-center gap-1.5 text-amber-300/90 font-medium">
                           <Video className="w-3.5 h-3.5 text-amber-400" />
-                          Part A (DAHa7St5CYs)
+                          Part B (DAHa7St5CYs)
                         </span>
                         <span className="flex items-center gap-1.5 text-blue-300/90 font-medium">
                           <Video className="w-3.5 h-3.5 text-blue-400" />
-                          Part B (Part 2)
+                          Part C (DAHa7eJOcbI)
                         </span>
                         <span className="text-white/40">
                           Updated {new Date(draft.updatedAt).toLocaleString()}
@@ -543,6 +639,11 @@ export default function PipelineDashboardPage() {
                   <p className="mt-1 text-xs text-white/40">
                     The permanent canonical title for SufiPulse and YouTube Variant A.
                   </p>
+                  {(fetchingTitle || titleFetchNote) && (
+                    <p className="mt-1 text-xs text-amber-300/80">
+                      {fetchingTitle ? 'Fetching title from Suno…' : titleFetchNote}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

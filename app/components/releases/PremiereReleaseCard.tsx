@@ -30,10 +30,25 @@ export function PremiereReleaseCard({
 
   const isHomepage = variant === 'homepage';
 
-  const isPremiumTeaserReady = release.premiumTeaserAvailable && (release.preReleaseAssets?.some((a: any) => a.type === 'premium_teaser' && a.youtubeId) || false);
-  const isCommentaryReady = release.commentaryAvailable && !!(release.commentary || release.editorial_note || release.editorialNote);
-  const isLyricsReady = release.lyricsTranslationsAvailable && !!((release.lyrics && Object.keys(release.lyrics).length > 0) || (release.lyricsStructures && release.lyricsStructures.length > 0));
-  const isCreditsReady = release.creditsNotesAvailable && !!(release.credits || release.publicCredits);
+  const isPremiumTeaserReady = release.premiumTeaserAvailable && (
+    (release.preReleaseAssets?.some((a: any) => a.type === 'premium_teaser' && (a.youtubeId || a.url)) || false) ||
+    Boolean(release.studioProduction?.videoMasterPath)
+  );
+  const isCommentaryReady = release.commentaryAvailable && !!(
+    release.commentary ||
+    release.editorial_note ||
+    release.editorialNote ||
+    (Array.isArray(release.publicCommentary) && release.publicCommentary.some((c: any) => c.isPublished !== false && typeof c.content === 'string' && c.content.trim().length > 0))
+  );
+  const isLyricsReady = release.lyricsTranslationsAvailable && !!(
+    (release.lyrics && Object.keys(release.lyrics).length > 0) ||
+    (release.lyricsStructures && release.lyricsStructures.length > 0) ||
+    (release.canonicalLyrics && typeof release.canonicalLyrics.text === 'string' && release.canonicalLyrics.text.trim().length > 0)
+  );
+  const isCreditsReady = release.creditsNotesAvailable && !!(
+    release.credits ||
+    (release.publicCredits && Object.values(release.publicCredits).some((sec: any) => sec && typeof sec === 'object' && Object.values(sec).some((val) => typeof val === 'string' && val.trim().length > 0)))
+  );
 
   const hasAnyFeatures = isPremiumTeaserReady || isCommentaryReady || isLyricsReady || isCreditsReady;
 

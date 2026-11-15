@@ -27,7 +27,7 @@ let lastHydratedMtime = 0;
  * Exposed via getInfo() and the /api/status health endpoint so operators
  * can detect unexpected seed fallback in production.
  */
-let lastDataSource: 'disk' | 'seed' | 'none' = 'none';
+let lastDataSource: 'disk' | 'seed' | 'reconciled' | 'none' = 'none';
 let lastHydratedCount = 0;
 
 const ensureHydrated = (force = false) => {
@@ -69,19 +69,33 @@ const ensureHydrated = (force = false) => {
       }
     }
 
-    // 3. Logic: Prefer seed if it has more releases or if disk is empty
-    // This allows repo-pushed data updates to "win" over stale persistent volumes
-    if (seedReleases.length > diskReleases.length) {
-      console.log(`[CMS-SERVER] Seed file has MORE releases (${seedReleases.length}) than disk (${diskReleases.length}). Using seed.`);
-      releasesToImport = seedReleases;
-      sourceUsed = 'seed';
-    } else if (diskReleases.length > 0) {
-      releasesToImport = diskReleases;
-      sourceUsed = 'disk';
-    } else if (seedReleases.length > 0) {
-      releasesToImport = seedReleases;
-      sourceUsed = 'seed';
+    // 3. Record-level reconciliation: Merge seed and disk.
+    // Repo seed releases establish baseline records.
+    // Persistent disk records take precedence for updated fields and newly created releases
+    // (such as studio_draft_*), ensuring new releases are never discarded.
+    const mergedMap = new Map<string, CMSRelease>();
+    for (const r of seedReleases) {
+      if (r?.id) mergedMap.set(r.id, r);
     }
+    for (const r of diskReleases) {
+      if (r?.id) {
+        const existing = mergedMap.get(r.id);
+        if (!existing) {
+          mergedMap.set(r.id, r);
+        } else {
+          const diskTime = new Date(r.updatedAt || r.createdAt || 0).getTime();
+          const seedTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+          if (diskTime >= seedTime || r.source === 'studio_pipeline') {
+            mergedMap.set(r.id, { ...existing, ...r });
+          }
+        }
+      }
+    }
+    releasesToImport = Array.from(mergedMap.values());
+    sourceUsed = diskReleases.length > 0
+      ? (seedReleases.length > 0 ? 'reconciled' : 'disk')
+      : (seedReleases.length > 0 ? 'seed' : 'none');
+    console.log(`[CMS-SERVER] Reconciled ${releasesToImport.length} releases (Seed: ${seedReleases.length}, Disk: ${diskReleases.length}).`);
 
     if (releasesToImport.length > 0) {
       cmsStorage.clearAll();
@@ -224,6 +238,30 @@ export const cmsServerStorage = {
   getAllReleases(filter?: { status?: string; category?: string }): CMSRelease[] {
     ensureHydrated();
     return cmsStorage.getAllReleases(filter);
+  },
+
+  getNextRegisteredReleaseId(targetYear?: number): string {
+    ensureHydrated();
+    const year = targetYear || new Date().getFullYear();
+    const releases = this.getAllReleases();
+    const regex = new RegExp(`^SP-KS-${year}-(\\d+)$`, 'i');
+    let maxNum = 0;
+    for (const r of releases) {
+      const id = (r as any).publicCredits?.rights?.registeredReleaseId ||
+                 (r as any).releaseRights?.registeredReleaseId ||
+                 (r as any).registeredReleaseId;
+      if (id) {
+        const match = String(id).trim().match(regex);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
+        }
+      }
+    }
+    const nextNum = maxNum + 1;
+    return `SP-KS-${year}-${String(nextNum).padStart(3, '0')}`;
   },
 
   getPublishedReleases(limit?: number): CMSRelease[] {

@@ -1,22 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import {
-  AlertCircle,
-  CheckCircle2,
-  Server,
-  Save,
-  ChevronDown,
-  ChevronUp,
-  HelpCircle,
-  Info,
-  ShieldCheck,
-  Key,
-  Layers,
-  Code,
-} from 'lucide-react';
 
 export default function PrivateProductionConnectionSettings() {
   const { user } = useAuth();
@@ -25,8 +11,8 @@ export default function PrivateProductionConnectionSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [notice, setNotice] = useState('');
+  const [testSongUrl, setTestSongUrl] = useState('https://suno.com/song/6a79ea36-a31d-45db-aae1-6862e99db69e');
   
   const [testResult, setTestResult] = useState<{
     alignment: string;
@@ -48,6 +34,7 @@ export default function PrivateProductionConnectionSettings() {
   const [status, setStatus] = useState({
     alignmentConfigured: false,
     streamConfigured: false,
+    localSunoBrowserAvailable: false,
     authConfigured: false,
     secureStorageReady: false,
   });
@@ -60,6 +47,7 @@ export default function PrivateProductionConnectionSettings() {
         setStatus({
           alignmentConfigured: data.alignmentConfigured,
           streamConfigured: data.streamConfigured,
+          localSunoBrowserAvailable: data.localSunoBrowserAvailable,
           authConfigured: data.authConfigured,
           secureStorageReady: data.secureStorageReady,
         });
@@ -95,6 +83,7 @@ export default function PrivateProductionConnectionSettings() {
           providerKey: '',
         });
         await fetchStatus();
+        setNotice(form.streamUrlTemplate.trim() ? 'Audio provider saved. Test it with a Suno link before importing.' : 'Advanced settings saved.');
       } else {
         const errorData = await res.json();
         alert(`Error saving: ${errorData.error}`);
@@ -113,7 +102,7 @@ export default function PrivateProductionConnectionSettings() {
       const res = await fetch('/api/admin/studio-settings/private-production', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'test' }),
+        body: JSON.stringify({ action: 'test', sourceAssetId: testSongUrl }),
       });
       const data = await res.json();
       setTestResult(data);
@@ -133,303 +122,76 @@ export default function PrivateProductionConnectionSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'clear' }),
       });
-      if (res.ok) await fetchStatus();
+      if (res.ok) {
+        setNotice('');
+        setTestResult(null);
+        await fetchStatus();
+      }
     } finally {
       setSaving(false);
     }
   };
 
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const hasAnyConfig = status.alignmentConfigured || status.streamConfigured || status.authConfigured;
+  const inputClass = "mt-1 w-full rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white";
+  const fields = [
+    ["streamAuthorization", "Audio service authorization"],
+    ["streamExtraHeadersJson", "Audio service headers (JSON)"],
+    ["alignmentUrlTemplate", "Lyric alignment URL template"],
+    ["alignmentAuthorization", "Lyric alignment authorization"],
+    ["alignmentExtraHeadersJson", "Lyric alignment headers (JSON)"],
+  ] as const;
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Private Production Connection</h1>
-            <p className="text-xs text-white/50 mt-1">
-              Secure upstream gateway for Suno AI audio alignment and high-definition stream retrieval.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsHelpOpen(!isHelpOpen)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 text-xs font-semibold transition-colors self-start sm:self-auto"
-          >
-            <HelpCircle className="w-4 h-4 text-amber-400" />
-            <span>{isHelpOpen ? 'Hide Help Guide' : 'How to Use / Help Guide'}</span>
-            {isHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-
-        {/* Expandable / Collapsible Help Guide */}
-        {isHelpOpen && (
-          <div className="mb-8 rounded-2xl border border-amber-500/30 bg-black/60 backdrop-blur-sm p-6 shadow-2xl space-y-6 text-sm">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2 text-amber-400 font-semibold text-base">
-                <Info className="w-5 h-5" />
-                <span>Gateway Configuration & Setup Guide</span>
+      <div className="mx-auto max-w-2xl space-y-6 py-8 text-white">
+        <header>
+          <h1 className="text-2xl font-bold">Private Production</h1>
+          <p className="mt-2 text-sm text-white/70">Paste each Suno song link in its release draft. SufiPulse can use your Chrome Suno sign-in or a saved audio provider.</p>
+        </header>
+        <section className="space-y-4 rounded-xl border border-white/10 bg-[#111] p-5">
+          <h2 className="font-semibold">Suno link import</h2>
+          <p role="status" className="text-sm text-white/80">
+            {loading ? "Checking connection..." : status.streamConfigured ? "Audio provider configured" : status.localSunoBrowserAvailable ? "Chrome export available. Sign in when Chrome prompts you." : "Audio provider needed for link imports"}
+          </p>
+          <form onSubmit={handleSave} className="space-y-4">
+            <label className="block text-sm">
+              Audio provider URL template (optional with Chrome)
+              <input className={inputClass} value={form.streamUrlTemplate} onChange={e => setForm({ ...form, streamUrlTemplate: e.target.value })} placeholder="https://provider.example/audio/{assetId}" />
+            </label>
+            <p className="text-xs text-white/65">Use the audio endpoint from your provider with {"{assetId}"}. Leave saved fields blank to keep their values.</p>
+            <details className="rounded-lg border border-white/10 p-3">
+              <summary className="cursor-pointer text-sm font-medium">Advanced settings</summary>
+              <div className="mt-3 space-y-3">
+                {fields.map(([key, label]) => (
+                  <label key={key} className="block text-sm">
+                    {label}
+                    <input className={inputClass} type={key === "alignmentUrlTemplate" ? "text" : "password"} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} />
+                  </label>
+                ))}
+                {hasAnyConfig && <button type="button" onClick={handleDisable} disabled={saving || testing} className="text-sm text-red-300">Clear saved connection</button>}
               </div>
-              <button
-                type="button"
-                onClick={() => setIsHelpOpen(false)}
-                className="text-xs text-white/40 hover:text-white transition-colors"
-              >
-                Close ✕
-              </button>
-            </div>
-
-            {/* Section 1: Overview */}
-            <div className="space-y-2">
-              <h3 className="text-xs uppercase tracking-wider font-bold text-white/80 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-amber-400" /> 1. What This Gateway Does
-              </h3>
-              <p className="text-xs text-white/70 leading-relaxed">
-                When you input a Suno URL (e.g. <code className="text-amber-300 bg-white/5 px-1 py-0.5 rounded font-mono">https://suno.com/song/1d47c525-20df-42e9-a58f-9f082fbdfbcf</code>) into the New Release Pipeline or CMS Releases, SufiPulse extracts the 36-character asset UUID and queries your configured upstream endpoints by replacing <code className="text-amber-300 font-mono font-bold">{'{assetId}'}</code>.
-              </p>
-            </div>
-
-            {/* Section 2: URL Template Syntax */}
-            <div className="space-y-3">
-              <h3 className="text-xs uppercase tracking-wider font-bold text-white/80 flex items-center gap-1.5">
-                <Code className="w-4 h-4 text-emerald-400" /> 2. Required URL Template Syntax
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02] space-y-1.5">
-                  <div className="font-semibold text-amber-300">Alignment Service URL</div>
-                  <p className="text-white/60">Returns word-level timestamps and timed lyric lines in JSON format.</p>
-                  <code className="block p-2 rounded-lg bg-black/60 text-emerald-400 font-mono text-[11px] break-all border border-white/5">
-                    https://your-api.com/api/song/{'{assetId}'}
-                  </code>
-                </div>
-                <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02] space-y-1.5">
-                  <div className="font-semibold text-amber-300">Studio Audio Service URL</div>
-                  <p className="text-white/60">Streams or serves the audio track (.mp3 or .wav) for the given asset ID.</p>
-                  <code className="block p-2 rounded-lg bg-black/60 text-emerald-400 font-mono text-[11px] break-all border border-white/5">
-                    https://your-api.com/api/stream/{'{assetId}'}
-                  </code>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 3: Authentication & Headers */}
-            <div className="space-y-3">
-              <h3 className="text-xs uppercase tracking-wider font-bold text-white/80 flex items-center gap-1.5">
-                <Key className="w-4 h-4 text-purple-400" /> 3. Authentication & Custom Headers
-              </h3>
-              <div className="space-y-2 text-xs text-white/70">
-                <p>
-                  <strong className="text-white">Authentication Header:</strong> Format as <code className="font-mono text-amber-300">Bearer &lt;token&gt;</code> or <code className="font-mono text-amber-300">ApiKey &lt;key&gt;</code>.
-                </p>
-                <p>
-                  <strong className="text-white">Additional Headers (JSON):</strong> If your upstream proxy requires session cookies or custom client IDs, enter them as valid JSON:
-                </p>
-                <pre className="p-2.5 rounded-lg bg-black/60 text-amber-200 font-mono text-[11px] border border-white/5 overflow-x-auto">
-{`{
-  "Cookie": "__client_session=YOUR_SESSION_COOKIE_VALUE",
-  "X-Custom-Client": "SufiPulse-Studio"
-}`}
-                </pre>
-              </div>
-            </div>
-
-            {/* Section 4: Security & Zero Leakage */}
-            <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 space-y-1 text-xs">
-              <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Zero-Browser Leakage Security Guarantee</span>
-              </div>
-              <p className="text-white/70">
-                All credentials entered here are encrypted with AES-256-GCM using your server’s <code className="font-mono text-emerald-300">PRIVATE_PRODUCTION_ENCRYPTION_KEY</code> and stored in <code className="font-mono text-white/90">.data/private-production-connection.enc</code>. Tokens are write-only and are <strong>never sent back to the browser</strong>.
-              </p>
-            </div>
-
-            {/* Section 5: Local Pipeline Alternative */}
-            <div className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-500/5 space-y-1 text-xs">
-              <div className="flex items-center gap-1.5 font-semibold text-blue-400">
-                <Info className="w-4 h-4" />
-                <span>Do You Need This To Test Releases Right Now?</span>
-              </div>
-              <p className="text-white/70">
-                <strong>No.</strong> In the <a href="/admin/pipeline" className="text-amber-400 underline hover:text-amber-300">New Release Pipeline</a>, you can toggle to <strong>Upload Audio</strong> to ingest any <code className="font-mono text-blue-300">.wav</code>, <code className="font-mono text-blue-300">.mp3</code>, or <code className="font-mono text-blue-300">.m4a</code> file directly. Local <code className="font-mono text-blue-300">ffprobe</code> will analyze exact duration, waveforms, and channels without needing an external API.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Status Section */}
-        <section className="mb-8 rounded-2xl border border-white/10 bg-[#111] p-6 shadow-xl">
-          <h2 className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-6">Connection Status</h2>
-          
-          {loading ? (
-            <div className="text-white/50 text-sm animate-pulse">Loading status...</div>
-          ) : (
-            <div className="space-y-4 text-sm font-medium">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <span className="text-white/80">Alignment Service</span>
-                <span className={status.alignmentConfigured ? 'text-emerald-400' : 'text-amber-500'}>
-                  {status.alignmentConfigured ? 'CONFIGURED' : 'NOT CONFIGURED'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <span className="text-white/80">Studio Audio Service</span>
-                <span className={status.streamConfigured ? 'text-emerald-400' : 'text-amber-500'}>
-                  {status.streamConfigured ? 'CONFIGURED' : 'NOT CONFIGURED'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between pb-2">
-                <span className="text-white/80">Authentication</span>
-                <span className={status.authConfigured ? 'text-emerald-400' : 'text-amber-500'}>
-                  {status.authConfigured ? 'CONFIGURED' : 'NOT CONFIGURED'}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-8 flex flex-wrap gap-4">
-            <button
-              onClick={handleTest}
-              disabled={testing || !hasAnyConfig}
-              className="rounded-lg bg-white/10 hover:bg-white/15 px-6 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
-            >
-              {testing ? 'Testing...' : 'Test Connection'}
+            </details>
+            {!loading && !status.secureStorageReady && <p className="text-sm text-red-300">Set PRIVATE_PRODUCTION_ENCRYPTION_KEY on the server to enable saving.</p>}
+            <button type="submit" disabled={loading || saving || testing || !status.secureStorageReady || !Object.values(form).some(value => value.trim())} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">
+              {saving ? "Saving..." : "Save connection"}
             </button>
-            <button
-              onClick={scrollToForm}
-              className="rounded-lg border border-amber-400/50 hover:bg-amber-400/10 px-6 py-2.5 text-sm font-medium text-amber-400 transition"
-            >
-              Configure Connection
-            </button>
-            <button
-              onClick={handleDisable}
-              disabled={saving || !hasAnyConfig}
-              className="ml-auto rounded-lg border border-red-500/20 hover:bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition disabled:opacity-50 disabled:hidden"
-            >
-              Disable Connection
-            </button>
-          </div>
-
-          {testResult && (
-            <div className="mt-6 rounded-xl border border-white/10 bg-black/40 p-4 text-sm">
-              <div className="font-semibold text-white mb-2">Diagnostic Summary</div>
-              <div className="grid grid-cols-2 gap-2 text-white/70">
-                <div>Alignment Service: <span className={testResult.alignment === 'PASS' ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>{testResult.alignment}</span></div>
-                <div>Studio Audio Service: <span className={testResult.stream === 'PASS' ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>{testResult.stream}</span></div>
-                <div>Authentication: <span className={testResult.auth === 'PASS' ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>{testResult.auth}</span></div>
-              </div>
-              {testResult.error && (
-                <div className="mt-3 text-red-400/80 text-xs">Error: {testResult.error}</div>
-              )}
+            {notice && <p role="status" className="text-sm text-emerald-300">{notice}</p>}
+          </form>
+          {(status.streamConfigured || status.localSunoBrowserAvailable) && (
+            <div className="space-y-2 border-t border-white/10 pt-4">
+              <label className="block text-sm">Test song link
+                <input className={inputClass} value={testSongUrl} onChange={e => { setTestSongUrl(e.target.value); setTestResult(null); }} placeholder="https://suno.com/song/..." />
+              </label>
+              <button type="button" onClick={handleTest} disabled={testing || saving || !testSongUrl.trim()} className="rounded-lg bg-white/10 px-4 py-2 text-sm disabled:opacity-50">{testing ? "Testing..." : "Test connection"}</button>
+              {testResult && <p role="status" className="text-sm text-white/80">{testResult.error || (testResult.stream === "PASS" ? "Audio provider downloaded and decoded successfully." : testResult.stream === "BROWSER_PASS" ? "Local authenticated Suno browser export downloaded and decoded successfully." : "Audio import test failed.")}</p>}
             </div>
           )}
         </section>
-
-        {/* Configuration Form */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="font-medium text-white mb-2 flex items-center gap-2">
-            <Server className="h-5 w-5" /> Update Configuration
-          </h2>
-          <p className="text-xs text-white/50 mb-6">Leave fields blank to keep their existing secure values. Authentication is never exposed back to the browser.</p>
-
-          <form ref={formRef} onSubmit={handleSave} className="space-y-8">
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-amber-400 border-b border-white/10 pb-2">Alignment Service</h3>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1">URL Template</label>
-                <input
-                  type="text"
-                  value={form.alignmentUrlTemplate}
-                  onChange={(e) => setForm({ ...form, alignmentUrlTemplate: e.target.value })}
-                  placeholder="https://.../api/external/song/{assetId}"
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50 placeholder:text-white/20"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1">Authentication Header</label>
-                <input
-                  type="password"
-                  value={form.alignmentAuthorization}
-                  onChange={(e) => setForm({ ...form, alignmentAuthorization: e.target.value })}
-                  placeholder="Bearer ..."
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50 placeholder:text-white/20"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1">Additional Headers (JSON)</label>
-                <input
-                  type="password"
-                  value={form.alignmentExtraHeadersJson}
-                  onChange={(e) => setForm({ ...form, alignmentExtraHeadersJson: e.target.value })}
-                  placeholder='{"Cookie": "..."}'
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50 placeholder:text-white/20"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-amber-400 border-b border-white/10 pb-2">Studio Audio Service</h3>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1">URL Template</label>
-                <input
-                  type="text"
-                  value={form.streamUrlTemplate}
-                  onChange={(e) => setForm({ ...form, streamUrlTemplate: e.target.value })}
-                  placeholder="https://.../api/external/stream/{assetId}"
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50 placeholder:text-white/20"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1">Authentication Header</label>
-                <input
-                  type="password"
-                  value={form.streamAuthorization}
-                  onChange={(e) => setForm({ ...form, streamAuthorization: e.target.value })}
-                  placeholder="Bearer ..."
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50 placeholder:text-white/20"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1">Additional Headers (JSON)</label>
-                <input
-                  type="password"
-                  value={form.streamExtraHeadersJson}
-                  onChange={(e) => setForm({ ...form, streamExtraHeadersJson: e.target.value })}
-                  placeholder='{"Cookie": "..."}'
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50 placeholder:text-white/20"
-                />
-              </div>
-            </div>
-
-            {!loading && !status.secureStorageReady ? (
-              <div className="pt-4 border-t border-white/10">
-                <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-center">
-                  <AlertCircle className="w-5 h-5 text-red-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-red-400">Secure storage is not configured.</p>
-                  <p className="text-xs text-red-400/80 mt-1">Connection credentials cannot be saved yet. Ensure PRIVATE_PRODUCTION_ENCRYPTION_KEY is present.</p>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-4 border-t border-white/10">
-                <div className="mb-4">
-                  <p className="text-sm font-semibold text-white/90">Advanced connection settings</p>
-                  <p className="text-xs text-white/50 mt-1">Configure only after the private production connection contract has been verified. These values are encrypted server-side and apply to all Studio releases.</p>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-xl bg-amber-400 hover:bg-amber-300 px-8 py-3 text-sm font-semibold text-black transition flex items-center gap-2 disabled:opacity-50"
-                  >
-                    <Save className="h-4 w-4" /> Save Configuration
-                  </button>
-                </div>
-              </div>
-            )}
-          </form>
+        <section className="rounded-xl border border-white/10 bg-[#111] p-5">
+          <h2 className="font-semibold">Upload a Suno export</h2>
+          <p className="mt-2 text-sm text-white/70">In your release draft, open Master Audio &amp; Suno Ingestion and choose Upload Audio. You can use this option immediately.</p>
+          <a href="/admin/pipeline" className="mt-3 inline-block text-sm font-medium text-amber-300">Open Release Pipeline</a>
         </section>
       </div>
     </DashboardLayout>

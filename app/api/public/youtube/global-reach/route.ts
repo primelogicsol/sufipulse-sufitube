@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { youtubeAnalyticsService } from '@/lib/youtube-analytics-service';
+import { syncYouTubeReachReports } from '@/lib/youtube-reach-reports';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,13 @@ export async function GET(request: NextRequest) {
   const refresh = searchParams.get('refresh') === '1';
 
   try {
-    const analytics = await youtubeAnalyticsService.getLifetimeGlobalReachAnalytics(refresh);
+    const [analytics, reach] = await Promise.all([
+      youtubeAnalyticsService.getLifetimeGlobalReachAnalytics(refresh),
+      syncYouTubeReachReports(refresh),
+    ]);
+    if (reach.verifiedLifetimeImpressions !== null) {
+      analytics.lifetimeSnapshot.performance.impressions = reach.verifiedLifetimeImpressions;
+    }
     
     // Return only public-safe fields from the Lifetime Snapshot
     const publicSafe = {
@@ -25,7 +32,10 @@ export async function GET(request: NextRequest) {
       recommendationEngine: analytics.lifetimeSnapshot.recommendationEngine,
       geographies: analytics.lifetimeSnapshot.geographies,
       
-      snapshotStatus: analytics.apiStatus?.connected ? 'Live refreshed' : 'Preserved verified fallback',
+      snapshotStatus: reach.isLifetimeReconciled
+        ? 'Reconciled official YouTube daily thumbnail impressions'
+        : 'Historical Studio lifetime baseline; newer daily reports shown separately',
+      reach,
       
       lastUpdated: analytics.lastUpdated,
       nextRefreshAt: analytics.nextRefreshAt,

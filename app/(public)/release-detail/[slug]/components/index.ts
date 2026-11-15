@@ -11,3 +11,5 @@ export { SubtitlePasteEditor } from './SubtitlePasteEditor';
 export { LyricsRequestModal } from './LyricsRequestModal';
 
 export { useVideoTimeTracker, TimeDisplay } from './VideoTimeTracker';
+export { ViralStatusShareBar } from './ViralStatusShareBar';
+

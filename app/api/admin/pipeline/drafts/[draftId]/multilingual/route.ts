@@ -24,7 +24,7 @@ export async function GET(
     }
 
     const pkg = generateMultilingualPackage(
-      draft.masterTimeline,
+      structuredClone(draft.masterTimeline),
       draft.canonicalLyrics.text,
       draft.primaryLanguage
     );
@@ -58,13 +58,13 @@ export async function POST(
 
     if (action === 'generate') {
       const pkg = generateMultilingualPackage(
-        draft.masterTimeline,
+        structuredClone(draft.masterTimeline),
         draft.canonicalLyrics.text,
         draft.primaryLanguage
       );
 
-      pipelineDraftStorage.saveDraft(draft);
-      return NextResponse.json({ success: true, package: pkg });
+      // Estimated phrase positions are previews, not verified source alignment.
+      return NextResponse.json({ success: true, package: pkg, timingVerified: Boolean(draft.masterTimeline.lines.some(line => line.words?.length)), warning: 'Generated phrase times are estimates until synchronized against the recorded vocals.' });
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

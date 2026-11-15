@@ -22,6 +22,13 @@ const VERIFIED_SOCIAL = [
     hoverClass: 'hover:border-[#1877F2]/60 hover:text-[#1877F2]',
   },
   {
+    platform: 'WhatsApp',
+    url: 'https://chat.whatsapp.com/Fbc7OP4kPge07Ao0Ml3znd?s=qt&p=a&iam=2',
+    label: 'Join the SufiPulse USA WhatsApp Group',
+    tooltip: 'WhatsApp Group',
+    hoverClass: 'hover:border-[#25D366]/60 hover:text-[#25D366]',
+  },
+  {
     platform: 'Instagram',
     url: 'https://www.instagram.com/sufipulseusa/',
     label: 'SufiPulse on Instagram',
@@ -68,6 +75,14 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M20.52 3.48A11.87 11.87 0 0 0 12.06 0C5.47 0 .1 5.36.1 11.95c0 2.11.55 4.17 1.59 5.99L0 24l6.22-1.63a11.93 11.93 0 0 0 5.72 1.46h.01c6.59 0 11.96-5.36 11.96-11.95 0-3.19-1.24-6.19-3.39-8.4ZM11.95 21.8a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.7.97.99-3.6-.24-.37a9.88 9.88 0 0 1-1.52-5.27c0-5.48 4.46-9.94 9.95-9.94 2.65 0 5.14 1.03 7.02 2.91a9.87 9.87 0 0 1 2.91 7.03c0 5.48-4.46 9.94-10.01 9.94Zm5.45-7.45c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.47-2.4-1.49-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.22 3.07c.15.2 2.11 3.22 5.12 4.51.72.31 1.29.5 1.73.64.73.23 1.4.2 1.92.12.59-.09 1.76-.72 2.01-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z" />
+    </svg>
+  );
+}
+
 function FacebookGroupIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -80,6 +95,7 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   YouTube: <YouTubeIcon className="w-4 h-4" />,
   Facebook: <FacebookIcon className="w-4 h-4" />,
   Instagram: <InstagramIcon className="w-4 h-4" />,
+  WhatsApp: <WhatsAppIcon className="w-4 h-4" />,
   FacebookGroup: <FacebookGroupIcon className="w-4 h-4" />,
 };
 

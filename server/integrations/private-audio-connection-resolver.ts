@@ -29,7 +29,18 @@ export function isPrivateAudioAlignmentConfigured(): boolean {
   return Boolean(conn.alignmentUrlTemplate && conn.alignmentUrlTemplate.includes('{assetId}'));
 }
 
+export function isAudioStreamUrlTemplate(value?: string | null): boolean {
+  if (!value?.includes('{assetId}')) return false;
+  try {
+    const url = new URL(value.replaceAll('{assetId}', '00000000-0000-4000-8000-000000000000'));
+    const isSunoPage = /^(www\.)?suno\.com$/i.test(url.hostname);
+    const isSunoMcp = url.hostname === 'api.suno.com' && /^\/mcp\/?$/.test(url.pathname);
+    return url.protocol === 'https:' && !url.username && !url.password && !isSunoPage && !isSunoMcp;
+  } catch {
+    return false;
+  }
+}
+
 export function isPrivateAudioStreamConfigured(): boolean {
-  const conn = getPrivateAudioConnection();
-  return Boolean(conn.streamUrlTemplate && conn.streamUrlTemplate.includes('{assetId}'));
+  return isAudioStreamUrlTemplate(getPrivateAudioConnection().streamUrlTemplate);
 }

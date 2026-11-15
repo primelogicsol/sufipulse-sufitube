@@ -9,6 +9,7 @@ import { ShareModal } from '@/app/components/share/ShareModal';
 import { NotifyMeModal } from '@/app/(public)/release-premieres/components/NotifyMeModal';
 import { PremiumTeaserModal } from '@/app/(public)/release-premieres/components/PremiumTeaserModal';
 import { buildShareContext } from '@/lib/share-context';
+import { ViralStatusShareBar } from './ViralStatusShareBar';
 
 export function PreReleaseView({ release, isAdmin }: { release: any; isAdmin: boolean }) {
   const [showShare, setShowShare] = useState(false);
@@ -175,6 +176,13 @@ export function PreReleaseView({ release, isAdmin }: { release: any; isAdmin: bo
       {showTeaser && liveTeaser?.youtubeId && (
         <PremiumTeaserModal youtubeId={liveTeaser.youtubeId} onClose={() => setShowTeaser(false)} />
       )}
+
+      <ViralStatusShareBar
+        title={title}
+        youtubeId={release.youtubeId || release.youtube_video_id}
+        slug={release.slug}
+        lyricSnippet={release.canonicalLyrics?.text?.split('\n')[0]}
+      />
     </div>
   );
 }

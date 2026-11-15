@@ -31,6 +31,22 @@ export function ReleaseEditorLanguageManagementSection({
   const [editingLangNewLabel, setEditingLangNewLabel] = useState('');
   const [customLangCode, setCustomLangCode] = useState('');
   const [customLangLabel, setCustomLangLabel] = useState('');
+  const studioTrackLanguages = form.source === 'studio_pipeline' && form.studioProduction?.approvedAt
+    ? Array.from(new Set(
+        (form.canonicalLyrics?.languages || [])
+          .map(code => code === 'ur-deva' ? 'hi' : code)
+          .filter(code => ALL_LANGUAGES.some(lang => lang.code === code))
+      ))
+    : [];
+  const restoreStudioLanguages = () => {
+    if (!studioTrackLanguages.length) return;
+    setForm({
+      ...form,
+      availableLanguages: studioTrackLanguages,
+      defaultLanguage: studioTrackLanguages.includes(form.canonicalLyrics?.primaryLanguage || '')
+        ? form.canonicalLyrics!.primaryLanguage : studioTrackLanguages[0],
+    });
+  };
 
   const handleAddCustomLanguage = () => {
     const code = normalizeLanguageCode(customLangCode);
@@ -53,6 +69,17 @@ export function ReleaseEditorLanguageManagementSection({
         </span>
       </div>
 
+      {studioTrackLanguages.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-800/40 bg-emerald-950/20 p-3">
+          <div>
+            <p className="text-xs font-semibold text-emerald-300">Hybrid Studio defaults: {studioTrackLanguages.map(getLanguageLabel).join(', ')}</p>
+            <p className="text-xs text-neutral-400">Preselected from approved source tracks. Uncheck any language you do not want enabled in CMS; this will not alter the Studio master.</p>
+          </div>
+          <button type="button" onClick={restoreStudioLanguages} className="dashboard-btn-secondary px-3 py-2 text-xs">
+            Restore Studio Language Defaults
+          </button>
+        </div>
+      )}
       {/* Preset languages grid */}
       <p className="text-xs font-medium mb-2" style={{color: 'var(--dash-text-muted)'}}>PRESET LANGUAGES</p>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">

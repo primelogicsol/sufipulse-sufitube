@@ -1,11 +1,72 @@
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { getFfmpegPath } from '@/server/services/video-renderer';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'node:path';
 import fs from 'node:fs';
 import { requireAdmin } from '@/server/middleware/authenticate';
 import { pipelineDraftStorage } from '@/server/storage/pipeline-draft-storage';
-import { render1080pMusicVideo } from '@/server/services/video-renderer';
+import { hasChangingVideoFrames } from '@/server/services/video-motion-validator';
+import { renderMasterVideoForDraft, MasterVideoError } from '@/server/services/master-video-service';
 
 export const dynamic = 'force-dynamic';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ draftId: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    const { draftId } = await params;
+    const draft = pipelineDraftStorage.getDraft(draftId);
+    if (!draft) return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
+
+    const videoDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video');
+    const combinations = [
+      'lyric_master_landscape',
+      'clean_cinematic_landscape',
+      'lyric_master_portrait',
+      'clean_cinematic_portrait',
+    ];
+
+    const formatsStatus: Record<string, any> = {};
+    for (const combo of combinations) {
+      const entry = draft.video?.formats?.[combo];
+      const revPath = path.join(videoDir, `video_${combo}_rev${draft.currentRevision}.mp4`);
+      const unversionedPath = path.join(videoDir, `video_${combo}.mp4`);
+      const flatPath = path.join(videoDir, `${combo}.mp4`);
+
+      let resolvedPath: string | null = null;
+      if (entry?.outputPath && fs.existsSync(entry.outputPath)) resolvedPath = entry.outputPath;
+      else if (fs.existsSync(revPath)) resolvedPath = revPath;
+      else if (fs.existsSync(unversionedPath)) resolvedPath = unversionedPath;
+      else if (fs.existsSync(flatPath)) resolvedPath = flatPath;
+
+      formatsStatus[combo] = {
+        rendered: Boolean(resolvedPath),
+        outputPath: resolvedPath,
+        durationSeconds: entry?.durationSeconds,
+        width: entry?.width || (combo.includes('portrait') ? 1080 : 1920),
+        height: entry?.height || (combo.includes('portrait') ? 1920 : 1080),
+        hasBurnedSubtitles: combo.startsWith('lyric_master'),
+        orientation: combo.includes('portrait') ? 'portrait' : 'landscape',
+        format: combo.startsWith('lyric_master') ? 'lyric_master' : 'clean_cinematic',
+      };
+    }
+
+    return NextResponse.json({
+      success: true,
+      activeFormat: draft.video?.activeFormat || 'lyric_master',
+      activeOrientation: draft.video?.activeOrientation || 'landscape',
+      formats: formatsStatus,
+      status: draft.video?.status || 'PENDING',
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -19,91 +80,40 @@ export async function POST(
     const draft = pipelineDraftStorage.getDraft(draftId);
     if (!draft) return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
 
-    if (!draft.masterAudio) {
-      return NextResponse.json({ error: 'Master audio must be rendered before generating video' }, { status: 400 });
-    }
-
     const body = await request.json().catch(() => ({}));
-    const format = (body.format === 'clean_cinematic' ? 'clean_cinematic' : 'lyric_master') as 'lyric_master' | 'clean_cinematic';
-    const orientation = (body.orientation === 'portrait' ? 'portrait' : 'landscape') as 'landscape' | 'portrait';
 
-    const videoDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'video');
-    fs.mkdirSync(videoDir, { recursive: true });
-
-    const key = `${format}_${orientation}`;
-    const outputPath = path.join(videoDir, `video_${format}_${orientation}_rev${draft.currentRevision}.mp4`);
-    const artworkPath =
-      body.artworkPath ||
-      (draft.video?.partA?.filePath && fs.existsSync(draft.video.partA.filePath) ? draft.video.partA.filePath : null) ||
-      path.join(process.cwd(), 'public', 'banner1.png');
-    const subPath = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles', 'master_dual_urdu_english.ass');
-
-    const partBConfig = draft.video?.partB?.enabled && draft.video.partB.filePath
-      ? {
-          ...draft.video.partB,
-          audioMode: body.partBAudioMode || draft.video.partB.audioMode || 'preserve_canva_audio',
-        }
-      : undefined;
-
-    const partAConfig = draft.video?.partA
-      ? {
-          playbackMode: (body.partAPlaybackMode || draft.video.partA.playbackMode || 'seamless_loop') as any,
-          loopStartSeconds: draft.video.partA.loopStartSeconds,
-          loopEndSeconds: draft.video.partA.loopEndSeconds,
-          sourceDurationSeconds: draft.video.partA.durationSeconds || 4.0,
-        }
-      : undefined;
-
-    const result = await render1080pMusicVideo({
-      draftId,
-      audioPath: draft.masterAudio.filePath,
-      artworkPath,
-      subtitlesPath: format === 'lyric_master' ? subPath : undefined,
-      outputPath,
-      format,
-      orientation,
-      durationSeconds: draft.masterAudio.durationSeconds,
-      partA: partAConfig,
-      partB: partBConfig,
-    });
-
-    if (!draft.video) {
-      draft.video = {
-        status: 'RENDERED',
-        renderedAt: new Date().toISOString(),
-        formats: {},
-      };
-    }
-    draft.video.status = 'RENDERED';
-    draft.video.renderedAt = new Date().toISOString();
-    draft.video.formats[key] = {
-      format: key,
-      outputPath: result.outputPath,
-      sha256: result.sha256,
-      durationSeconds: result.durationSeconds,
-      hasBurnedSubtitles: format === 'lyric_master',
-      partASeconds: result.partASeconds,
-      partBSeconds: result.partBSeconds,
-    };
-    // Also save legacy key for backward compatibility
-    draft.video.formats[format] = draft.video.formats[key];
-
-    // Ensure canonical flat filename exists for direct access
-    const canonicalFlat = path.join(videoDir, `${format}.mp4`);
-    if (outputPath !== canonicalFlat) {
-      try {
-        fs.copyFileSync(outputPath, canonicalFlat);
-      } catch {}
+    // Action: Save Preferences without rendering
+    if (body.action === 'save_preferences') {
+      if (!draft.video) {
+        draft.video = {
+          status: 'PENDING',
+          renderedAt: new Date().toISOString(),
+          formats: {},
+        };
+      }
+      if (body.format && ['lyric_master', 'clean_cinematic'].includes(body.format)) {
+        draft.video.activeFormat = body.format;
+      }
+      if (body.orientation && ['landscape', 'portrait'].includes(body.orientation)) {
+        draft.video.activeOrientation = body.orientation;
+      }
+      pipelineDraftStorage.saveDraft(draft);
+      return NextResponse.json({
+        success: true,
+        activeFormat: draft.video.activeFormat,
+        activeOrientation: draft.video.activeOrientation,
+      });
     }
 
-    draft.downstreamStatus.videoValid = true;
-    pipelineDraftStorage.saveDraft(draft);
-
-    return NextResponse.json({
-      success: true,
-      video: result,
-      draft,
-    });
+    try {
+      const { result, draft: updated } = await renderMasterVideoForDraft(draftId, body);
+      return NextResponse.json({ success: true, video: result, draft: updated });
+    } catch (e: any) {
+      if (e instanceof MasterVideoError) {
+        return NextResponse.json({ error: e.message, code: e.code }, { status: e.status });
+      }
+      throw e;
+    }
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

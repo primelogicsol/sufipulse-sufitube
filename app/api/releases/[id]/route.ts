@@ -191,8 +191,22 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
+    // Do not let a browser tab loaded before a Studio/YouTube reconciliation
+    // overwrite the newer public metadata or publication state.
+    if (existing?.source === 'studio_pipeline' && existing.updatedAt && body.updatedAt &&
+        new Date(body.updatedAt).getTime() !== new Date(existing.updatedAt).getTime()) {
+      return NextResponse.json({ error: 'This release changed since the editor was opened. Reload the editor before saving to avoid overwriting the published record.', code: 'STALE_RELEASE' }, { status: 409 });
+    }
+
     const userId = authResult.id || (authResult as any).email || 'system';
-    if (body.canonicalLyrics !== undefined) {
+    const studioLocked = existing?.source === 'studio_pipeline' && Boolean(existing?.studioProduction?.approvedAt);
+    if (studioLocked) {
+      // Protect the approved master even if a stale browser tab submits old form data.
+      // Editorial metadata remains editable, but canonical media fields always come from the approved record.
+      for (const key of ['canonicalLyrics', 'videoStructure', 'durationSeconds', 'durationFormatted', 'studioProduction'] as const) {
+        delete body[key];
+      }
+    } else if (body.canonicalLyrics !== undefined) {
       body.canonicalLyrics = applyCanonicalLyricsWorkflow(existing?.canonicalLyrics, body.canonicalLyrics, userId, new Date().toISOString());
     }
 

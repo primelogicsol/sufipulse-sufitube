@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { analyticsStorage, type AnalyticsSnapshot, DEFAULT_PAYLOAD } from './analytics-storage';
 import { getYouTubeAnalyticsAccessToken, queryYouTubeAnalytics } from './youtube-analytics-client';
 import { getYouTubeStudioLifetimeFunnel } from './youtube-studio-import';
+import { getReachSummary } from './youtube-reach-reports';
 
 function fmtDuration(seconds: number): string {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
@@ -102,7 +103,7 @@ export const youtubeAnalyticsService = {
           ...current.lifetimeSnapshot,
           performance: {
             ...current.lifetimeSnapshot.performance,
-            impressions: lifetimeFunnel.impressions,
+            impressions: getReachSummary().verifiedLifetimeImpressions ?? lifetimeFunnel.impressions,
             views: lifetimeViews > 0 ? lifetimeViews : current.lifetimeSnapshot.performance.views,
             watchTimeHours: lifetimeWatchTimeHours > 0 ? lifetimeWatchTimeHours : current.lifetimeSnapshot.performance.watchTimeHours,
             clickThroughRate: lifetimeFunnel.ctr,

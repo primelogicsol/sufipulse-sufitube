@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { saveYTAnalyticsToken, normalizeYTAnalyticsCredential } from '@/app/lib/server/youtube-analytics-oauth-store';
 
 const OAUTH_STATE_COOKIE = 'sufipulse_yt_oauth_state';
+const OAUTH_RETURN_COOKIE = 'sufipulse_yt_oauth_return';
 const CANONICAL_CHANNEL_ID = 'UCraDr3i5A3k0j7typ6tOOsQ';
 
 function statesMatch(expected: string | undefined, received: string | null): boolean {
@@ -15,6 +16,13 @@ function statesMatch(expected: string | undefined, received: string | null): boo
 
 function redirectAndClearState(url: string): NextResponse {
   const response = NextResponse.redirect(url);
+  response.cookies.set(OAUTH_RETURN_COOKIE, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/admin/youtube-analytics/callback',
+    maxAge: 0,
+  });
   response.cookies.set(OAUTH_STATE_COOKIE, '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -33,7 +41,10 @@ export async function GET(request: NextRequest) {
   const expectedState = request.cookies.get(OAUTH_STATE_COOKIE)?.value;
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
-  const adminUrl = `${appUrl}/admin/youtube-analytics`;
+  const storedReturnTo = request.cookies.get(OAUTH_RETURN_COOKIE)?.value;
+  const returnTo = storedReturnTo && /^\/admin\/pipeline\/draft_\d+_[a-f0-9]+$/.test(storedReturnTo)
+    ? storedReturnTo : '/admin/youtube-analytics';
+  const adminUrl = `${appUrl}${returnTo}`;
 
   if (!statesMatch(expectedState, state)) {
     return redirectAndClearState(`${adminUrl}?yt_auth=error&reason=invalid_oauth_state`);
@@ -90,6 +101,20 @@ export async function GET(request: NextRequest) {
       throw new Error('Authorized account does not have Analytics access to the canonical SufiPulse USA channel. Please log in with the correct Brand Account manager/owner.');
     }
 
+    if (returnTo.startsWith('/admin/pipeline/')) {
+      const permissionRes = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(tokens.access_token), { cache: 'no-store' });
+      const permission = await permissionRes.json().catch(() => ({}));
+      if (!permissionRes.ok || !String(permission.scope || '').split(' ').includes('https://www.googleapis.com/auth/youtube.upload')) {
+        throw new Error('Google did not grant YouTube upload permission. Please reconnect and approve uploading videos.');
+      }
+      const channelRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=id&mine=true', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` }, cache: 'no-store',
+      });
+      const channelData = await channelRes.json().catch(() => ({}));
+      if (!channelRes.ok || !channelData.items?.some((item: any) => item.id === CANONICAL_CHANNEL_ID)) {
+        throw new Error('Connected YouTube identity cannot access the SufiPulse USA channel. Select the correct channel when reconnecting.');
+      }
+    }
     await saveYTAnalyticsToken({
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,

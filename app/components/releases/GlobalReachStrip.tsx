@@ -329,6 +329,25 @@ export default function GlobalReachStrip() {
               <FootprintCard g={data!.geographies} />
             </div>
           </div>
+          <div className="mt-6 rounded-xl border border-amber-400/20 bg-neutral-900/30 px-5 py-4">
+            <p className="text-xs font-bold text-amber-400">YouTube Thumbnail Impressions</p>
+            <p className="text-sm text-neutral-300 mt-1">
+              {data?.reach?.isLifetimeReconciled
+                ? `Verified lifetime total through ${data.reach.lastReportDay}: ${data.reach.verifiedLifetimeImpressions?.toLocaleString()} impressions.`
+                : `Historical verified baseline through September 11, 2026: ${(data?.reach?.baseline ?? 994300).toLocaleString()} impressions. This is not a current lifetime total.`}
+            </p>
+            {data?.reach && data.reach.reportingDays > 0 && (
+              <p className="text-sm text-neutral-400 mt-2">
+                New official daily reports: {data.reach.latestPeriodImpressions.toLocaleString()} impressions
+                {data.reach.firstReportDay && data.reach.lastReportDay
+                  ? ` across available days from ${data.reach.firstReportDay} through ${data.reach.lastReportDay}` : ''}.
+                {!data.reach.isLifetimeReconciled && ' Not added to lifetime because reporting dates since the September baseline are incomplete.'}
+              </p>
+            )}
+            {data?.reach && data.reach.reportingDays === 0 && (
+              <p className="text-xs text-neutral-500 mt-2">Official YouTube Reporting API job is active. Awaiting first daily report.</p>
+            )}
+          </div>
           <div className="mt-6 border border-neutral-800/50 rounded-xl bg-neutral-900/30 overflow-hidden">
             <div className="px-4 py-2 bg-neutral-800/20 border-b border-neutral-800/50 flex items-center gap-2">
               <CheckCircle className="w-3 h-3 text-amber-500/70" />
@@ -363,7 +382,9 @@ export default function GlobalReachStrip() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Data Range</span>
-                <span className="text-xs text-neutral-300">May 20, 2025 – Aug 26, 2026</span>
+                <span className="text-xs text-neutral-300">{data?.reach?.isLifetimeReconciled && data.reach.lastReportDay
+                  ? `May 20, 2025 - ${data.reach.lastReportDay}`
+                  : 'May 20, 2025 - Sep 11, 2026 (impressions baseline)'}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold">Live API Dependency</span>

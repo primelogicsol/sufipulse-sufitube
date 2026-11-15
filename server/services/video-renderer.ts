@@ -212,21 +212,42 @@ export function probeMediaFile(filePath: string): Promise<MediaProbeResult> {
 
 export interface VideoRenderOptions {
   draftId: string;
-  audioPath: string;
-  artworkPath: string;
-  subtitlesPath?: string;
   outputPath: string;
   format: 'lyric_master' | 'clean_cinematic';
   orientation?: 'landscape' | 'portrait';
-  durationSeconds: number;
+  durationSeconds?: number;
+  // Part A: Thumbnail Introduction (New)
   partA?: {
+    enabled?: boolean;
+    durationSeconds?: number; // e.g. 5.0s
+    imagePath?: string;
+    audioPolicy?: 'silence' | 'ambient' | 'suno_starts_at_part_b' | 'suno_starts_at_part_a';
     playbackMode?: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range';
     loopStartSeconds?: number;
     loopEndSeconds?: number;
     sourceDurationSeconds?: number;
   };
+  // Part B: Main Suno Song (Former Part A)
   partB?: {
-    enabled: boolean;
+    enabled?: boolean;
+    videoPath?: string; // Canva DAHa7St5CYs
+    audioPath?: string; // Suno master WAV
+    durationSeconds?: number; // e.g. 285.16s
+    playbackMode?: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range';
+    loopStartSeconds?: number;
+    loopEndSeconds?: number;
+    sourceDurationSeconds?: number;
+    subtitlesPath?: string;
+    filePath?: string;
+    hasAudio?: boolean;
+    audioMode?: 'preserve_canva_audio' | 'crossfade' | 'mute';
+    trimStartSeconds?: number;
+    trimEndSeconds?: number;
+  };
+  // Part C: Canva Promotional Video (Former Part B)
+  partC?: {
+    enabled?: boolean;
+    videoPath?: string; // Canva DAHa7eJOcbI (19 scenes, 608s)
     filePath?: string;
     durationSeconds?: number;
     hasAudio?: boolean;
@@ -235,6 +256,10 @@ export interface VideoRenderOptions {
     trimStartSeconds?: number;
     trimEndSeconds?: number;
   };
+  // Legacy backward-compatibility options
+  audioPath?: string;
+  artworkPath?: string;
+  subtitlesPath?: string;
 }
 
 export interface VideoRenderResult {
@@ -242,8 +267,9 @@ export interface VideoRenderResult {
   format: 'lyric_master' | 'clean_cinematic';
   orientation: 'landscape' | 'portrait';
   durationSeconds: number;
-  partASeconds?: number;
-  partBSeconds?: number;
+  partASeconds?: number; // Thumbnail duration (e.g. 5.0s)
+  partBSeconds?: number; // Song duration (e.g. 285.16s)
+  partCSeconds?: number; // Promo duration (e.g. 608.0s)
   width: number;
   height: number;
   sha256: string;
@@ -336,141 +362,190 @@ export async function render1080pMusicVideo(
     try {
       fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
 
-      // Check Part B availability and probe its media properties
-      let hasPartB = false;
-      let partBPath = '';
-      let partBDuration = 0;
-      let partBHasAudio = false;
-
-      if (options.partB?.enabled && options.partB.filePath && fs.existsSync(options.partB.filePath)) {
-        partBPath = options.partB.filePath;
-        const probeB = await probeMediaFile(partBPath);
-        if (probeB.isValid && probeB.durationSeconds > 0) {
-          hasPartB = true;
-          partBDuration = probeB.durationSeconds;
-          partBHasAudio = probeB.hasAudio;
+      // Resolve Part A: Thumbnail Introduction (Default: 5.0s)
+      const hasPartA = options.partA?.enabled !== false;
+      const partADuration = hasPartA ? (options.partA?.durationSeconds ?? 5.0) : 0;
+      let thumbnailPath = options.partA?.imagePath;
+      if (!thumbnailPath || !fs.existsSync(thumbnailPath)) {
+        if (options.artworkPath && !options.artworkPath.toLowerCase().endsWith('.mp4') && fs.existsSync(options.artworkPath)) {
+          thumbnailPath = options.artworkPath;
+        } else {
+          thumbnailPath = path.join(process.cwd(), 'public', 'banner1.png');
         }
       }
 
-      const partADuration = options.durationSeconds;
+      // Resolve Part B: Main Suno Song (Strict Authoritative Media Resolution - Zero Silent Fallbacks)
+      const resolvedPartBVisual =
+        options.partB?.videoPath ||
+        (options.artworkPath?.toLowerCase().endsWith('.mp4') ? options.artworkPath : null) ||
+        options.partB?.filePath;
+
+      if (!resolvedPartBVisual || !fs.existsSync(resolvedPartBVisual)) {
+        throw new Error('SOURCE VIDEO UNAVAILABLE: RECONNECT OR REPLACE PART B BACKGROUND');
+      }
+      const songVisualPath = resolvedPartBVisual;
+      const songAudioPath = options.partB?.audioPath || options.audioPath;
+      if (!songAudioPath || !fs.existsSync(songAudioPath)) {
+        throw new Error('AUTHORITATIVE SUNO AUDIO MISSING: refusing to render a silent replacement track.');
+      }
+      const songDuration = options.partB?.durationSeconds || options.durationSeconds || 285.16;
+      const songSubtitlesPath = options.partB?.subtitlesPath || (options.format === 'lyric_master' ? options.subtitlesPath : undefined);
+      const songPlaybackMode = options.partB?.playbackMode || options.partA?.playbackMode || 'seamless_loop';
+      const songSourceDuration = options.partB?.sourceDurationSeconds || options.partA?.sourceDurationSeconds || 4.0;
+
+      // Resolve Part C: Canva Promotional Video
+      let hasPartC = false;
+      let promoVideoPath = '';
+      let promoDuration = 0;
+      let promoHasAudio = false;
+
+      const candidatePromoPath =
+        options.partC?.videoPath ||
+        options.partC?.filePath ||
+        (options.partB?.filePath?.includes('canva_part_b') ? options.partB.filePath : null);
+
+      if (options.partC?.enabled !== false && (!candidatePromoPath || !fs.existsSync(candidatePromoPath))) {
+        throw new Error('PART C MISSING: enabled promotional video has no valid source file.');
+      }
+      if (options.partC?.enabled !== false && candidatePromoPath && fs.existsSync(candidatePromoPath)) {
+        promoVideoPath = candidatePromoPath;
+        const probeC = await probeMediaFile(promoVideoPath);
+        if (!probeC.isValid || !probeC.hasVideo || probeC.durationSeconds <= 0) {
+          throw new Error('PART C INVALID: promotional file must decode as a real video with positive duration.');
+        }
+        hasPartC = true;
+        promoDuration = probeC.durationSeconds;
+        promoHasAudio = probeC.hasAudio;
+      }
+
       const ffmpegArgs: string[] = [];
-
-      // Input 0: Part A Canvas (loop video continuously or loop still image for partADuration)
-      const isVideoArtwork =
-        options.artworkPath.toLowerCase().endsWith('.mp4') ||
-        options.artworkPath.toLowerCase().endsWith('.mov') ||
-        options.artworkPath.toLowerCase().endsWith('.webm');
-
-      const partAPlaybackMode = options.partA?.playbackMode || 'seamless_loop';
-      const sourceDuration = options.partA?.sourceDurationSeconds || 4.0;
-
-      let partABaseFilter = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1`;
-
-      if (isVideoArtwork) {
-        if (partAPlaybackMode === 'freeze_last_frame') {
-          // Play visual once, then hold last frame until audio endpoint
-          ffmpegArgs.push('-i', options.artworkPath);
-          const holdDuration = Math.max(0, partADuration - sourceDuration);
-          partABaseFilter += `,tpad=stop_mode=clone:stop_duration=${holdDuration.toFixed(2)},trim=duration=${partADuration},fps=30`;
-        } else if (partAPlaybackMode === 'stretch') {
-          // Stretch animation to song duration
-          ffmpegArgs.push('-i', options.artworkPath);
-          const stretchRatio = (partADuration / Math.max(sourceDuration, 0.1)).toFixed(4);
-          partABaseFilter += `,setpts=${stretchRatio}*PTS,fps=30,trim=duration=${partADuration}`;
-        } else if (
-          partAPlaybackMode === 'custom_range' &&
-          typeof options.partA?.loopStartSeconds === 'number' &&
-          typeof options.partA?.loopEndSeconds === 'number' &&
-          options.partA.loopEndSeconds > options.partA.loopStartSeconds
-        ) {
-          // Custom visual loop range
-          const start = options.partA.loopStartSeconds;
-          const end = options.partA.loopEndSeconds;
-          ffmpegArgs.push('-ss', String(start), '-to', String(end), '-stream_loop', '-1', '-t', String(partADuration), '-i', options.artworkPath);
-          partABaseFilter += `,fps=30`;
-        } else {
-          // Seamless loop (Default): repeat visual seamlessly to cover exact audio master duration
-          ffmpegArgs.push('-stream_loop', '-1', '-t', String(partADuration), '-i', options.artworkPath);
-          partABaseFilter += `,fps=30`;
-        }
-      } else {
-        ffmpegArgs.push('-loop', '1', '-t', String(partADuration), '-i', options.artworkPath);
-        partABaseFilter += `,fps=30`;
-      }
-
-      // Input 1: Part A Master Audio
-      ffmpegArgs.push('-i', options.audioPath);
-
       const filterParts: string[] = [];
+      let inputIdx = 0;
 
-      // 1. Process Part A Video stream
-      let partAVideoFilter = partABaseFilter;
-      
-      if (options.format === 'lyric_master' && options.subtitlesPath && fs.existsSync(options.subtitlesPath)) {
-        let burnAssPath = options.subtitlesPath;
-        const rawAss = fs.readFileSync(options.subtitlesPath, 'utf8');
-        if (rawAss.includes('{\\k')) {
-          const cleanAss = rawAss.replace(/\{\\k\d+\}/g, '');
-          burnAssPath = options.subtitlesPath.replace(/\.ass$/, '_burned.ass');
-          fs.writeFileSync(burnAssPath, cleanAss, 'utf8');
+      let vSegmentRefs: string[] = [];
+      let aSegmentRefs: string[] = [];
+
+      // The master song begins at t=0 over Part A. Part B continues from the Part A cutoff.
+      const songStartsAtPartA = options.partA?.audioPolicy === 'suno_starts_at_part_a';
+      const songStartOffset = songStartsAtPartA && hasPartA
+        ? Math.min(partADuration, Math.max(0, songDuration - 0.1))
+        : 0;
+      const songPartBDuration = Math.max(0.1, songDuration - songStartOffset);
+      ffmpegArgs.push('-i', songAudioPath);
+      const songAudioInputIdx = inputIdx++;
+
+      // Prepare one authoritative caption file for both Part A and Part B.
+      let burnedSubtitlePath: string | undefined;
+      let escapedBurnedSubtitlePath: string | undefined;
+      let escapedFontsDir: string | undefined;
+      if (options.format === 'lyric_master') {
+        if (!songSubtitlesPath || !fs.existsSync(songSubtitlesPath)) {
+          throw new Error('LYRIC SUBTITLES MISSING: refusing to label an uncaptioned render a Lyric Master.');
         }
-
-        const escapedSubPath = burnAssPath.replace(/\\/g, '/').replace(/:/g, '\\:');
-        const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/').replace(/:/g, '\\:');
-        partAVideoFilter += `,subtitles='${escapedSubPath}':fontsdir='${fontsDir}'`;
+        let sourceAssPath = songSubtitlesPath;
+        if (orientation === 'portrait') {
+          const portraitCandidate = songSubtitlesPath.replace(/\.ass$/, '_portrait.ass');
+          if (fs.existsSync(portraitCandidate)) sourceAssPath = portraitCandidate;
+        }
+        const rawAss = fs.readFileSync(sourceAssPath, 'utf8');
+        const cleanAss = rawAss.replace(/\{\\k\d+\}/g, '');
+        burnedSubtitlePath = sourceAssPath.replace(/(_burned)?\.ass$/, '_burned.ass');
+        fs.writeFileSync(burnedSubtitlePath, cleanAss, 'utf8');
+        escapedBurnedSubtitlePath = burnedSubtitlePath.replace(/\\/g, '/').replace(/:/g, '\\:');
+        escapedFontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/').replace(/:/g, '\\:');
       }
 
-      filterParts.push(`[0:v]${partAVideoFilter}[v0]`);
-
-      let totalDuration = partADuration;
-
-      if (hasPartB) {
-        // Input 2: Part B Video
-        ffmpegArgs.push('-i', partBPath);
-
-        // Process Part B Video stream: normalize resolution, sar, fps
-        const partBVideoFilter = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30`;
-        filterParts.push(`[2:v]${partBVideoFilter}[v1]`);
-
-        const audioMode = options.partB?.audioMode || 'preserve_canva_audio';
-
-        // Part B Audio handling
-        if (audioMode === 'crossfade' && partBHasAudio) {
-          // Normalize audio formats before crossfading
-          filterParts.push(`[1:a]aformat=sample_rates=48000:channel_layouts=stereo[a0_raw]`);
-          filterParts.push(`[2:a]aformat=sample_rates=48000:channel_layouts=stereo[a1_raw]`);
-          // Overlapping crossfade of 1.5 seconds
-          filterParts.push(`[a0_raw][a1_raw]acrossfade=d=1.5:c1=tri:c2=tri[a]`);
-          filterParts.push(`[v0][v1]concat=n=2:v=1:a=0[v]`);
-          totalDuration = Math.round((partADuration + partBDuration - 1.5) * 100) / 100;
+      // 1. SEGMENT 0: Part A - Thumbnail Introduction
+      if (hasPartA && partADuration > 0) {
+        ffmpegArgs.push('-loop', '1', '-t', String(partADuration), '-i', thumbnailPath);
+        const partAInputIdx = inputIdx++;
+        let partAFilter = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30`;
+        if (songStartsAtPartA && options.format === 'lyric_master' && escapedBurnedSubtitlePath && escapedFontsDir) {
+          partAFilter += `,subtitles='${escapedBurnedSubtitlePath}':fontsdir='${escapedFontsDir}'`;
+        }
+        filterParts.push(`[${partAInputIdx}:v]${partAFilter}[v_part_a]`);
+        if (songStartsAtPartA) {
+          filterParts.push(`[${songAudioInputIdx}:a]atrim=start=0:end=${songStartOffset},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo[a_part_a]`);
         } else {
-          // Hard cut concatenation (default)
-          if (partBHasAudio && audioMode === 'preserve_canva_audio') {
-            filterParts.push(`[2:a]aformat=sample_rates=48000:channel_layouts=stereo[a1]`);
-          } else {
-            // Synthesize silence matching Part B duration
-            filterParts.push(`aevalsrc=0:d=${partBDuration}:s=48000:c=stereo[a1]`);
-          }
-          filterParts.push(`[1:a]aformat=sample_rates=48000:channel_layouts=stereo[a0]`);
-          filterParts.push(`[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]`);
-          totalDuration = Math.round((partADuration + partBDuration) * 100) / 100;
+          filterParts.push(`aevalsrc=0:d=${partADuration}:s=48000:c=stereo[a_part_a]`);
         }
-
-        ffmpegArgs.push(
-          '-filter_complex', filterParts.join(';'),
-          '-map', '[v]',
-          '-map', '[a]'
-        );
-      } else {
-        // Part A only
-        ffmpegArgs.push(
-          '-filter_complex', filterParts.join(';'),
-          '-map', '[v0]',
-          '-map', '1:a'
-        );
+        vSegmentRefs.push('[v_part_a]');
+        aSegmentRefs.push('[a_part_a]');
       }
 
-      // Output encoding: standard H.264 High Profile / AAC 48kHz stereo, faststart for streaming
+      // 2. SEGMENT 1: Part B - Main Suno Song
+      const isSongVideoVisual =
+        songVisualPath.toLowerCase().endsWith('.mp4') ||
+        songVisualPath.toLowerCase().endsWith('.mov') ||
+        songVisualPath.toLowerCase().endsWith('.webm');
+
+      let songBaseFilter = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1`;
+
+      if (isSongVideoVisual) {
+        if (songPlaybackMode === 'freeze_last_frame') {
+          ffmpegArgs.push('-i', songVisualPath);
+          const holdDuration = Math.max(0, songPartBDuration - songSourceDuration);
+          songBaseFilter += `,tpad=stop_mode=clone:stop_duration=${holdDuration.toFixed(2)},trim=duration=${songPartBDuration},fps=30`;
+        } else if (songPlaybackMode === 'stretch') {
+          ffmpegArgs.push('-i', songVisualPath);
+          const stretchRatio = (songPartBDuration / Math.max(songSourceDuration, 0.1)).toFixed(4);
+          songBaseFilter += `,setpts=${stretchRatio}*PTS,fps=30,trim=duration=${songPartBDuration}`;
+        } else {
+          // Seamless loop (Default)
+          ffmpegArgs.push('-stream_loop', '-1', '-t', String(songPartBDuration), '-i', songVisualPath);
+          songBaseFilter += `,fps=30`;
+        }
+      } else {
+        ffmpegArgs.push('-loop', '1', '-t', String(songPartBDuration), '-i', songVisualPath);
+        songBaseFilter += `,fps=30`;
+      }
+      const songVisualInputIdx = inputIdx++;
+
+      // Burn the same global lyric timeline onto Part B, but advance its frame clock
+      // by the Part A duration so captions continue rather than restart at t=0.
+      if (options.format === 'lyric_master' && escapedBurnedSubtitlePath && escapedFontsDir) {
+        songBaseFilter += `,setpts=PTS+${songStartOffset}/TB,subtitles='${escapedBurnedSubtitlePath}':fontsdir='${escapedFontsDir}',setpts=PTS-STARTPTS`;
+      }
+
+      filterParts.push(`[${songVisualInputIdx}:v]${songBaseFilter}[v_part_b]`);
+      vSegmentRefs.push('[v_part_b]');
+
+      // Continue the Suno master from the exact Part A cutoff.
+      filterParts.push(`[${songAudioInputIdx}:a]atrim=start=${songStartOffset}:end=${songDuration},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo[a_part_b]`);
+      aSegmentRefs.push('[a_part_b]');
+
+      // 3. SEGMENT 2: Part C - Canva Promotional Video
+      if (hasPartC && promoDuration > 0) {
+        ffmpegArgs.push('-i', promoVideoPath);
+        const promoInputIdx = inputIdx++;
+        filterParts.push(
+          `[${promoInputIdx}:v]scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[v_part_c]`
+        );
+        vSegmentRefs.push('[v_part_c]');
+
+        if (promoHasAudio) {
+          filterParts.push(`[${promoInputIdx}:a]aformat=sample_rates=48000:channel_layouts=stereo[a_part_c]`);
+        } else {
+          filterParts.push(`aevalsrc=0:d=${promoDuration}:s=48000:c=stereo[a_part_c]`);
+        }
+        aSegmentRefs.push('[a_part_c]');
+      }
+
+      // 4. Sequential Concatenation: Part A + Part B (+ Part C)
+      const concatCount = vSegmentRefs.length;
+      let concatPairs = '';
+      for (let i = 0; i < concatCount; i++) {
+        concatPairs += `${vSegmentRefs[i]}${aSegmentRefs[i]}`;
+      }
+      filterParts.push(`${concatPairs}concat=n=${concatCount}:v=1:a=1[v][a]`);
+
+      ffmpegArgs.push(
+        '-filter_complex', filterParts.join(';'),
+        '-map', '[v]',
+        '-map', '[a]'
+      );
+
+      // Output encoding: standard H.264 High Profile / AAC 48kHz stereo, faststart
       ffmpegArgs.push(
         '-c:v', 'libx264',
         '-preset', 'fast',
@@ -484,7 +559,10 @@ export async function render1080pMusicVideo(
         options.outputPath
       );
 
-      console.log(`[VideoRenderer] Executing FFmpeg render: format=${options.format} orientation=${orientation} totalDuration=${totalDuration}s hasPartB=${hasPartB}`);
+      const totalDuration = Math.round((partADuration + songPartBDuration + (hasPartC ? promoDuration : 0)) * 100) / 100;
+      console.log(
+        `[VideoRenderer] Executing Three-Part FFmpeg render: format=${options.format} orientation=${orientation} totalDuration=${totalDuration}s (Part A: ${partADuration}s + Part B: ${songPartBDuration}s + Part C: ${hasPartC ? promoDuration : 0}s; policy=${songStartsAtPartA ? 'song_starts_part_a' : 'silent_part_a'})`
+      );
 
       await new Promise<void>((resolve, reject) => {
         const proc = spawn(getFfmpegPath(), ffmpegArgs);
@@ -506,7 +584,8 @@ export async function render1080pMusicVideo(
         orientation,
         durationSeconds: totalDuration,
         partASeconds: partADuration,
-        partBSeconds: hasPartB ? partBDuration : undefined,
+        partBSeconds: songPartBDuration,
+        partCSeconds: hasPartC ? promoDuration : undefined,
         width: targetWidth,
         height: targetHeight,
         sha256,
@@ -514,10 +593,11 @@ export async function render1080pMusicVideo(
         hasBurnedSubtitles: options.format === 'lyric_master',
       };
     } catch (err: any) {
-      console.warn('[VideoRenderer] FFmpeg render failed, using synthetic fallback:', err.message);
-      return createSyntheticMp4(options.outputPath, options.durationSeconds, options.format, orientation);
+      // A fabricated video must never be presented as a successful music-video render.
+      // Preserve the real FFmpeg failure for correction and retry.
+      throw new Error(`Three-part video render failed: ${err.message}`);
     }
   }
 
-  return createSyntheticMp4(options.outputPath, options.durationSeconds, options.format, orientation);
+  throw new Error('FFmpeg is unavailable. Cannot render a genuine three-part video.');
 }

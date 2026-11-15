@@ -50,10 +50,11 @@ export async function POST(
     const draft = pipelineDraftStorage.getDraft(draftId);
     if (!draft) return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
 
-    if (!draft.masterTimeline) {
+    if (!draft.masterTimeline?.lines?.length || !draft.masterTimeline.lines.some(line => line.words?.length)) {
       return NextResponse.json({
-        error: 'Master audio must be rendered before compiling subtitles',
-      }, { status: 400 });
+        error: 'Caption timing not verified: master timeline has no source-aligned words. Import a genuine audio/lyric alignment before compiling synchronized subtitles.',
+        code: 'CAPTION_ALIGNMENT_MISSING',
+      }, { status: 422 });
     }
 
     const subDir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles');

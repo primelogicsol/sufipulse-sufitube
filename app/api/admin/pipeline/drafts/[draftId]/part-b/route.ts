@@ -37,23 +37,49 @@ export async function POST(
           formats: {},
         };
       }
-      draft.video.partB = {
-        enabled: body.enabled !== false,
-        canvaDesignId: body.canvaDesignId || draft.video.partB?.canvaDesignId || 'DAHa7eJOcbI',
-        canvaUrl: body.canvaUrl || draft.video.partB?.canvaUrl || 'https://canva.link/qvmwwc830dm623g',
-        title: body.title || draft.video.partB?.title || 'Part 2',
-        sceneCount: typeof body.sceneCount === 'number' ? body.sceneCount : (draft.video.partB?.sceneCount || 19),
-        filePath: draft.video.partB?.filePath,
-        fileName: draft.video.partB?.fileName,
-        durationSeconds: typeof body.durationSeconds === 'number' ? body.durationSeconds : draft.video.partB?.durationSeconds,
-        audioMode: body.audioMode || draft.video.partB?.audioMode || 'preserve_canva_audio',
-        playbackMode: body.playbackMode || draft.video.partB?.playbackMode || 'full_19_scenes',
-        trimStartSeconds: body.trimStartSeconds,
-        trimEndSeconds: body.trimEndSeconds,
-      };
+
+      // If updating Suno song visual playback mode
+      if (['seamless_loop', 'freeze_last_frame', 'stretch', 'custom_range'].includes(body.playbackMode)) {
+        if (!draft.video.partB) {
+          draft.video.partB = {
+            canvaDesignId: 'DAHa7St5CYs',
+            canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
+            title: 'Part B Background Theme',
+            playbackMode: body.playbackMode,
+          };
+        } else {
+          draft.video.partB.playbackMode = body.playbackMode;
+          if (typeof body.loopStartSeconds === 'number') draft.video.partB.loopStartSeconds = body.loopStartSeconds;
+          if (typeof body.loopEndSeconds === 'number') draft.video.partB.loopEndSeconds = body.loopEndSeconds;
+        }
+      } else {
+        // Promo settings passed to legacy part-b: update partC and legacyPartB
+        if (!draft.video.partC) {
+          draft.video.partC = {
+            enabled: body.enabled !== false,
+            canvaDesignId: 'DAHa7eJOcbI',
+            canvaUrl: 'https://canva.link/qvmwwc830dm623g',
+            title: 'Part 2',
+            sceneCount: 19,
+            durationSeconds: 608.0,
+            formattedDuration: '10:08',
+            width: 1920,
+            height: 1080,
+            hasAudio: true,
+            validationStatus: 'VALID',
+            audioMode: body.audioMode || 'preserve_canva_audio',
+            playbackMode: body.playbackMode || 'full_19_scenes',
+          };
+        } else {
+          if (body.audioMode) draft.video.partC.audioMode = body.audioMode;
+          if (body.playbackMode) draft.video.partC.playbackMode = body.playbackMode;
+          if (typeof body.trimStartSeconds === 'number') draft.video.partC.trimStartSeconds = body.trimStartSeconds;
+          if (typeof body.trimEndSeconds === 'number') draft.video.partC.trimEndSeconds = body.trimEndSeconds;
+        }
+      }
 
       pipelineDraftStorage.saveDraft(draft);
-      return NextResponse.json({ success: true, partB: draft.video.partB, draft });
+      return NextResponse.json({ success: true, partB: draft.video.partB, partC: draft.video.partC, draft });
     }
 
     // MP4 File Upload: supports both direct binary streaming and multipart/form-data
@@ -131,21 +157,23 @@ export async function POST(
 
       draft.video.partB = {
         enabled: true,
-        canvaDesignId,
-        canvaUrl: 'https://canva.link/qvmwwc830dm623g',
-        title: 'Part 2',
-        sceneCount: 19,
+        canvaDesignId: canvaDesignId || 'DAHa7St5CYs',
+        canvaUrl: request.headers.get('x-canva-url') ? decodeURIComponent(request.headers.get('x-canva-url')!) : 'https://canva.link/ezqj8ymddv6yl2d',
+        title: request.headers.get('x-title') ? decodeURIComponent(request.headers.get('x-title')!) : 'Part B Background Theme',
         filePath: targetPath,
         fileName,
-        durationSeconds: probe.durationSeconds > 0 ? probe.durationSeconds : undefined,
-        width: probe.width,
-        height: probe.height,
+        sourceDurationSeconds: probe.durationSeconds > 0 ? probe.durationSeconds : 4.0,
+        targetDurationSeconds: draft.masterAudio?.durationSeconds || 285.16,
+        durationSeconds: probe.durationSeconds > 0 ? probe.durationSeconds : 4.0,
+        width: probe.width || 3840,
+        height: probe.height || 2160,
         hasAudio: probe.hasAudio,
         validationStatus: probe.isValid ? 'VALID' : 'FAILED',
         validationError: probe.error,
         audioMode,
-        playbackMode,
+        playbackMode: playbackMode || 'seamless_loop',
         uploadedAt: new Date().toISOString(),
+        hasBurnedSubtitles: true,
       };
 
       pipelineDraftStorage.saveDraft(draft);

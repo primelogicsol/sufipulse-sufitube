@@ -118,6 +118,15 @@ export interface CMSRelease {
 
   // Distribution state per platform
   distribution?: Record<string, PlatformDistribution>;
+
+  // YouTube Shorts Syndication (Zero local disk footprint)
+  youtubeShorts?: Record<string, {
+    id: string;
+    url: string;
+    title: string;
+    uploadedAt: string;
+    privacyStatus?: string;
+  }>;
   
   // Credits
   writer?: string | { name?: string; nameUrdu?: string; public_name?: string; public_credit?: string; pen_name?: string; [key: string]: any };
@@ -386,6 +395,16 @@ export interface CMSRelease {
   intelligenceStatus?: 'draft' | 'reviewed' | 'approved';
   intelligenceUpdatedAt?: string;
 
+  // Hybrid Studio Pipeline Integration
+  studioProduction?: {
+    draftId: string;
+    approvedAt: string;
+    audioTakeId?: string;
+    videoMasterPath?: string;
+    subtitlesMasterPath?: string;
+    languageTracks?: string[];
+  };
+
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
@@ -435,12 +454,32 @@ export const PLATFORMS = [
 export function getDefaultDistribution(): Record<string, PlatformDistribution> {
   const dist: Record<string, PlatformDistribution> = {};
   PLATFORMS.forEach(p => {
-    dist[p.id] = {
-      platform: p.id as any,
-      status: 'not_started',
-      isVerified: false,
-      isVisible: true,
-    };
+    if (p.id === 'instagram') {
+      dist[p.id] = {
+        platform: 'instagram',
+        status: 'published',
+        url: 'https://www.instagram.com/sufipulseusa/',
+        isVerified: true,
+        isVisible: true,
+        lastCheckedAt: new Date().toISOString(),
+      };
+    } else if (p.id === 'facebook') {
+      dist[p.id] = {
+        platform: 'facebook',
+        status: 'published',
+        url: 'https://www.facebook.com/profile.php?id=61591758150138',
+        isVerified: true,
+        isVisible: true,
+        lastCheckedAt: new Date().toISOString(),
+      };
+    } else {
+      dist[p.id] = {
+        platform: p.id as any,
+        status: 'not_started',
+        isVerified: false,
+        isVisible: true,
+      };
+    }
   });
   return dist;
 }

@@ -20,10 +20,39 @@ export function ReleaseIntelligenceSection({
   setForm,
   allReleases
 }: ReleaseIntelligenceSectionProps) {
+  const allOptions = {
+    targetRegions: REGIONS.map(item => item.code),
+    targetDiaspora: DIASPORA_MARKETS.map(item => item.code),
+    targetLanguages: LANGUAGES.map(item => item.code),
+    sufiConcepts: SUFI_CONCEPTS.map(item => item.code),
+    themes: SPIRITUAL_THEMES.map(item => item.code),
+    moods: MOODS.map(item => item.code),
+  };
+  const updateAll = (select: boolean) => {
+    setForm(prev => ({
+      ...prev,
+      targetRegions: select ? [...allOptions.targetRegions] : [],
+      targetDiaspora: select ? [...allOptions.targetDiaspora] : [],
+      targetLanguages: select ? [...allOptions.targetLanguages] : [],
+      sufiConcepts: select ? [...allOptions.sufiConcepts] : [],
+      themes: select ? [...allOptions.themes] : [],
+      moods: select ? [...allOptions.moods] : [],
+      intelligenceUpdatedAt: new Date().toISOString(),
+    }));
+  };
   return (
     <div id="release-intelligence-section" className="mb-8 pb-8" style={{borderBottom: '1px solid var(--dash-border)'}}>
-      <h2 className="text-xl font-semibold mb-6" style={{color: 'var(--dash-text-primary)'}}>Release Intelligence</h2>
-      
+      <h2 className="text-xl font-semibold mb-3" style={{color: 'var(--dash-text-primary)'}}>Release Intelligence</h2>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg" style={{backgroundColor: 'var(--dash-bg-secondary)', border: '1px solid var(--dash-border)'}}>
+        <div>
+          <p className="text-sm font-medium" style={{color: 'var(--dash-text-primary)'}}>All available intelligence options selected by default</p>
+          <p className="text-xs" style={{color: 'var(--dash-text-muted)'}}>Deselect individual values. Saved selections, including an empty category, are preserved.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="dashboard-btn-secondary px-3 py-2 text-xs" onClick={() => updateAll(true)}>Select All</button>
+          <button type="button" className="dashboard-btn-secondary px-3 py-2 text-xs" onClick={() => updateAll(false)}>Deselect All</button>
+        </div>
+      </div>
       <div className="space-y-6">
         {/* Intelligence Status & Last Updated */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -329,12 +358,13 @@ export function ReleaseIntelligenceSection({
             </label>
             <div className="max-h-40 overflow-y-auto space-y-1.5 p-2 rounded bg-[var(--dash-bg-secondary)]" style={{border: '1px solid var(--dash-border)'}}>
               {allReleases
-                .filter(r => r.id !== form.id)
-                .map((rel) => {
+                .filter((r): r is CMSRelease & { id: string } => Boolean(r && typeof r.id === 'string' && r.id.trim().length > 0 && r.id !== form.id))
+                .filter((r, idx, arr) => arr.findIndex(item => item.id === r.id) === idx)
+                .map((rel, relIdx) => {
                   const isActive = (form.relatedReleases || []).includes(rel.id);
                   return (
                     <label
-                      key={rel.id}
+                      key={rel.id || `rel-${relIdx}`}
                       className="flex items-center gap-2 p-1.5 rounded cursor-pointer transition text-xs font-normal hover:bg-[var(--dash-bg-hover)]"
                     >
                       <input
@@ -349,11 +379,11 @@ export function ReleaseIntelligenceSection({
                         }}
                         style={{accentColor: 'var(--dash-accent)'}}
                       />
-                      <span style={{color: isActive ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)'}}>{rel.title}</span>
+                      <span style={{color: isActive ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)'}}>{rel.title || rel.slug || rel.id}</span>
                     </label>
                   );
                 })}
-              {allReleases.filter(r => r.id !== form.id).length === 0 && (
+              {allReleases.filter(r => Boolean(r && typeof r.id === 'string' && r.id.trim().length > 0 && r.id !== form.id)).length === 0 && (
                 <div className="text-center py-4 text-xs text-[var(--dash-text-muted)]">No other releases available.</div>
               )}
             </div>

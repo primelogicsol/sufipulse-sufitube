@@ -23,7 +23,8 @@
     "prebuild": "node scripts/validate-env.mjs",
     "db:migrate": "node scripts/migrate.js",
     "seed:export": "node scripts/export-seed.js",
-    "seed:export:dry": "node scripts/export-seed.js --dry-run"
+    "seed:export:dry": "node scripts/export-seed.js --dry-run",
+    "suno:connect": "node scripts/connect-suno.cjs"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",
@@ -58,6 +59,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@swc-node/register": "^1.12.1",
     "@tailwindcss/postcss": "^4",
     "@types/busboy": "^1.5.4",
     "@types/node": "^20",

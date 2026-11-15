@@ -65,6 +65,8 @@ export default function PrivateAudioAlignmentPage() {
   const isAdmin = user?.role?.includes('admin') ?? false;
 
   const [releaseTitle, setReleaseTitle] = useState('Release');
+  const [isStudioGoverned, setIsStudioGoverned] = useState(false);
+  const [studioDraftId, setStudioDraftId] = useState<string | null>(null);
   const [sourceUrl, setSourceUrl] = useState('');
   const [sourceAssetId, setSourceAssetId] = useState('');
   const [language, setLanguage] = useState('en');
@@ -86,8 +88,8 @@ export default function PrivateAudioAlignmentPage() {
   const [error, setError] = useState('');
 
   const hasSource = Boolean(sourceUrl.trim() || sourceAssetId.trim());
-  const canInspect = hasSource && !working;
-  const canApply = Boolean(summary) && confirmReplace && !working;
+  const canInspect = hasSource && !working && !isStudioGoverned;
+  const canApply = Boolean(summary) && confirmReplace && !working && !isStudioGoverned;
   const adminAudioRoute = `/api/releases/${encodeURIComponent(releaseId)}/audio`;
 
   const timingSummary = useMemo(() => {
@@ -121,6 +123,10 @@ export default function PrivateAudioAlignmentPage() {
           const release = await releaseRes.json();
           setReleaseTitle(release.title || release.canonicalTitle || 'Release');
           setLanguage(String(release.defaultLanguage || 'en').toLowerCase());
+          const isStudio = release.source === 'studio_pipeline' || Boolean(release.studioProduction);
+          setIsStudioGoverned(isStudio);
+          const draftId = (release.studioProduction as any)?.draftId || (typeof releaseId === 'string' && releaseId.startsWith('studio_') ? releaseId.replace('studio_', '') : null);
+          setStudioDraftId(draftId);
         }
 
         if (sourceRes.ok) {
@@ -301,6 +307,37 @@ export default function PrivateAudioAlignmentPage() {
           </div>
         </div>
 
+        {isStudioGoverned && (
+          <div className="rounded-2xl border border-amber-400/40 bg-amber-400/[0.08] p-5 shadow-lg">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-6 w-6 text-amber-400 shrink-0" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-white">SufiPulse Studio Governed Master (Immutable)</h2>
+                    <span className="rounded bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase tracking-wider">Locked</span>
+                  </div>
+                  <p className="mt-1 text-xs text-white/70 max-w-2xl leading-relaxed">
+                    This release was assembled, aligned, and rendered by the <strong>Hybrid Studio Pipeline</strong>.
+                    Source audio, vocal alignment, waveform sync, and multilingual subtitles are immutable in the CMS to protect the approved master.
+                    To modify alignment or audio timing, create a new studio revision.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                {studioDraftId && (
+                  <Link
+                    href={`/admin/pipeline/${studioDraftId}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-semibold text-black hover:bg-amber-300 transition-colors"
+                  >
+                    Open in Hybrid Studio Pipeline →
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-300" />
@@ -441,11 +478,11 @@ export default function PrivateAudioAlignmentPage() {
 
               <button
                 type="button"
-                disabled={!canApply}
+                disabled={!canApply || isStudioGoverned}
                 onClick={() => void importAlignment(true)}
                 className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-300/30 bg-amber-300/10 px-4 py-2.5 text-sm font-semibold text-amber-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Upload className="h-4 w-4" /> Apply as draft master timing
+                <Upload className="h-4 w-4" /> {isStudioGoverned ? 'Locked to Studio Master' : 'Apply as draft master timing'}
               </button>
             </div>
           </div>
@@ -503,11 +540,11 @@ export default function PrivateAudioAlignmentPage() {
 
                 <button
                   type="button"
-                  disabled={!confirmRollback || rollbackWorking}
+                  disabled={!confirmRollback || rollbackWorking || isStudioGoverned}
                   onClick={() => void restoreRollbackSnapshot()}
                   className="mt-4 inline-flex items-center gap-2 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-2.5 text-sm font-semibold text-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <ShieldCheck className="h-4 w-4" /> {rollbackWorking ? 'Restoring…' : 'Restore captured timing'}
+                  <ShieldCheck className="h-4 w-4" /> {rollbackWorking ? 'Restoring…' : isStudioGoverned ? 'Timing Locked to Studio Master' : 'Restore captured timing'}
                 </button>
               </div>
             </div>

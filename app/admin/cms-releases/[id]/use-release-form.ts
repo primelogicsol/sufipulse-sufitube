@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import JSZip from 'jszip';
 import type { CMSRelease } from '@/lib/cms-storage';
+import { REGION_CODES, DIASPORA_CODES, LANGUAGE_CODES, SUFI_CONCEPT_CODES, THEME_CODES, MOOD_CODES } from '@/lib/cms-taxonomy';
 
 import {
   type SubtitleStatus,
@@ -91,9 +92,15 @@ export function useReleaseForm({
     likeCount: 0,
     status: 'draft',
     contentReadinessState: 'draft',
+    targetRegions: [...REGION_CODES],
+    targetDiaspora: [...DIASPORA_CODES],
+    targetLanguages: [...LANGUAGE_CODES],
+    sufiConcepts: [...SUFI_CONCEPT_CODES],
+    themes: [...THEME_CODES],
+    moods: [...MOOD_CODES],
     enableLyrics: true,
     enableCommentary: true,
-    enableSponsors: false,
+    enableSponsors: true,
     enableAdoption: true,
     enableCredits: true,
     publicCommentary: [
@@ -142,7 +149,7 @@ export function useReleaseForm({
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          setAllReleases(data);
+          setAllReleases(data.filter((r): r is CMSRelease => Boolean(r && typeof r.id === 'string' && r.id.trim().length > 0)));
         }
       })
       .catch((err) => console.error('Error fetching all releases:', err));
@@ -237,7 +244,11 @@ export function useReleaseForm({
   liveRef.current = { form, lockAllCuePositions };
 
   // Derived
-  const hasUnsavedChanges = originalForm != null && JSON.stringify(form) !== JSON.stringify(originalForm);
+  const unsavedFieldNames = originalForm == null ? [] : Array.from(new Set([...Object.keys(form), ...Object.keys(originalForm)])).filter((key) => {
+    const field = key as keyof CMSRelease;
+    return JSON.stringify(form[field]) !== JSON.stringify(originalForm[field]);
+  });
+  const hasUnsavedChanges = unsavedFieldNames.length > 0;
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
@@ -293,9 +304,9 @@ export function useReleaseForm({
     return () => { cancelled = true; clearTimeout(timer); };
   }, [form.youtubeId]);
 
-  // Auto-fill channel fields from fetched metadata
+  // Do not mutate an existing saved release when YouTube lookup completes.
   useEffect(() => {
-    if (!fetchedYouTubeChannel) return;
+    if (!isNew || !fetchedYouTubeChannel) return;
     setForm((prev) => {
       const next = { ...prev };
       let changed = false;
@@ -544,7 +555,8 @@ export function useReleaseForm({
             ? data.subtitleStylePacks
             : { [DEFAULT_STYLE_NAME]: { ...DEFAULT_STYLE_PACK } },
           subtitleReviewLogs: data.subtitleReviewLogs || [],
-          youtubeSubtitleAutoSync: data.youtubeSubtitleAutoSync !== false,
+          // Studio-approved YouTube caption tracks must not be overwritten by an ordinary CMS Save.
+          youtubeSubtitleAutoSync: data.source === 'studio_pipeline' ? false : data.youtubeSubtitleAutoSync !== false,
           youtubeCaptionTracks: data.youtubeCaptionTracks || {},
           contentReadinessState: data.contentReadinessState || 'draft',
           masterTimingVersion: data.masterTimingVersion || 1,
@@ -558,6 +570,14 @@ export function useReleaseForm({
           publicSponsors: Array.isArray(data.publicSponsors) ? data.publicSponsors : [],
           publicCredits: data.publicCredits || { artistic: {}, production: {}, visual: {}, literary: {}, rights: {} },
           lyricsStructure: data.lyricsStructure || {},
+          // Initialize absent intelligence categories to all options once.
+          // Explicitly saved arrays, including [], remain untouched on every reload.
+          targetRegions: Array.isArray(data.targetRegions) ? data.targetRegions : [...REGION_CODES],
+          targetDiaspora: Array.isArray(data.targetDiaspora) ? data.targetDiaspora : [...DIASPORA_CODES],
+          targetLanguages: Array.isArray(data.targetLanguages) ? data.targetLanguages : [...LANGUAGE_CODES],
+          sufiConcepts: Array.isArray(data.sufiConcepts) ? data.sufiConcepts : [...SUFI_CONCEPT_CODES],
+          themes: Array.isArray(data.themes) ? data.themes : [...THEME_CODES],
+          moods: Array.isArray(data.moods) ? data.moods : [...MOOD_CODES],
         };
 
         const existingBackgroundVocals = String((formData.publicCredits as any)?.artistic?.backgroundVocals || '').trim();
@@ -571,8 +591,77 @@ export function useReleaseForm({
           } as any;
         }
 
+        // Studio-to-CMS contract: populate missing editorial fields from the approved
+        // production assets, without overwriting any existing editor choices.
+        if (data.source === 'studio_pipeline' && data.studioProduction?.approvedAt) {
+          try {
+            const autoRes = await fetch(`/api/admin/releases/${releaseId}/studio-autofill`, { cache: 'no-store' });
+            if (autoRes.ok) {
+              const suggested = await autoRes.json();
+              if (!String(formData.description || '').trim()) formData.description = suggested.description || '';
+              if (!String(formData.premiereDescription || '').trim()) {
+                formData.premiereDescription = String(suggested.premiereDescription || '').slice(0, 2000);
+              }
+              if (!String(formData.premiereCtaLabel || '').trim()) {
+                formData.premiereCtaLabel = String(suggested.premiereCtaLabel || 'Explore the Release').slice(0, 100);
+              }
+              // A saved empty string is an editorial decision, not a missing value.
+              if (data.publicSponsorsIntro == null) {
+                formData.publicSponsorsIntro = String(suggested.sponsorsIntro || '').slice(0, 1200);
+              }
+              // Undefined means never initialized; [] means the editor deliberately cleared keywords.
+              if (!Array.isArray(data.seoKeywords) && Array.isArray(suggested.seoKeywords)) {
+                formData.seoKeywords = suggested.seoKeywords.slice(0, 30);
+              }
+              const existingCommentary = Array.isArray(formData.publicCommentary) ? formData.publicCommentary : [];
+              const hasMismatchedTemplate = existingCommentary.some((block: any) =>
+                /yearning of the restless soul|divine silence is not absence|longing of the heart: silence/i.test(
+                  String(block?.content || '') + ' ' + String(block?.title || '')));
+              const hasActualCommentary = existingCommentary.some((block: any) =>
+                String(block?.content || '').trim().length > 0);
+              if (Array.isArray(suggested.commentary) && suggested.commentary.length &&
+                  (!hasActualCommentary || hasMismatchedTemplate)) {
+                // Draft only. Never copy an unrelated generic commentary or publish a new one automatically.
+                formData.publicCommentary = suggested.commentary.map((block: any) => ({ ...block, isPublished: false }));
+              }
+              const currentLyrics = { ...(formData.lyrics || {}) };
+              for (const [language, rows] of Object.entries(suggested.tracks || {})) {
+                const existingLyrics = currentLyrics[language];
+                const hasSavedLyrics = typeof existingLyrics === 'string'
+                  ? existingLyrics.trim().length > 0
+                  : Array.isArray(existingLyrics) && existingLyrics.length > 0;
+                if (!hasSavedLyrics) currentLyrics[language] = rows as any;
+              }
+              formData.lyrics = currentLyrics;
+              // Only initialize language selections when the release has none.
+              // Saved empty arrays represent a deliberate deselection.
+              if (data.availableLanguages == null && data.canonicalLyrics?.languages?.length) {
+                formData.availableLanguages = data.canonicalLyrics.languages.filter((code: string) =>
+                  ['ur', 'en', 'en-rom', 'hi'].includes(code)
+                );
+                formData.defaultLanguage = data.canonicalLyrics.primaryLanguage || 'ur';
+              }
+              const nextCredits: Record<string, any> = { ...(formData.publicCredits || {}) };
+              for (const section of ['artistic', 'production', 'visual', 'literary', 'rights']) {
+                const existing = { ...(nextCredits[section] || {}) };
+                for (const [field, value] of Object.entries(suggested.credits?.[section] || {})) {
+                  if (!String(existing[field] || '').trim() && String(value || '').trim()) existing[field] = value;
+                }
+                nextCredits[section] = existing;
+              }
+              formData.publicCredits = nextCredits as CMSRelease['publicCredits'];
+              if (suggested.warnings?.length) {
+                setCarryForwardNotice('Studio auto-fill notes: ' + suggested.warnings.join('; '));
+              }
+            }
+          } catch (error) {
+            console.warn('Studio auto-fill unavailable; existing CMS values preserved.', error);
+          }
+        }
+        // Compare against the hydrated form, not the raw API object.
+        // Default UI values and Studio autofill must not register as manual edits.
         setForm(formData);
-        setOriginalForm(formData);
+        setOriginalForm(structuredClone(formData));
 
         const trackNotes: Record<string, string> = {};
         Object.entries((formData.youtubeCaptionTracks || {}) as Record<string, any>).forEach(([language, meta]) => {
@@ -879,7 +968,7 @@ export function useReleaseForm({
         }
       } else {
         const error = await res.json();
-        setErrorMessage(`Save failed: ${error.error || 'Unknown error'}`);
+        setErrorMessage(`Save failed: ${error.error || 'Unknown error'}${error.details ? ' | ' + Object.entries(error.details).filter(([key]) => key !== '_errors').map(([key, item]: [string, any]) => key + ': ' + (item?._errors?.join(', ') || JSON.stringify(item))).slice(0, 8).join(' | ') : ''}`);
       }
     } catch (error) {
       console.error('Failed to save:', error);
@@ -912,7 +1001,7 @@ export function useReleaseForm({
         }
       } else {
         const error = await res.json();
-        setErrorMessage(`Save failed: ${error.error || 'Unknown error'}`);
+        setErrorMessage(`Save failed: ${error.error || 'Unknown error'}${error.details ? ' | ' + Object.entries(error.details).filter(([key]) => key !== '_errors').map(([key, item]: [string, any]) => key + ': ' + (item?._errors?.join(', ') || JSON.stringify(item))).slice(0, 8).join(' | ') : ''}`);
       }
     } catch (error) {
       setErrorMessage(`Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -1800,6 +1889,7 @@ export function useReleaseForm({
     form, setForm,
     originalForm, setOriginalForm,
     hasUnsavedChanges,
+    unsavedFieldNames,
     loading, notFound,
     saving,
     exportingZip,

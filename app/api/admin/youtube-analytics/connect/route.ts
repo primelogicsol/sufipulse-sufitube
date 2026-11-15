@@ -7,9 +7,11 @@ const SCOPES = [
   'https://www.googleapis.com/auth/yt-analytics.readonly',
   'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/youtube.force-ssl',
+  'https://www.googleapis.com/auth/youtube.upload',
 ];
 
 const OAUTH_STATE_COOKIE = 'sufipulse_yt_oauth_state';
+const OAUTH_RETURN_COOKIE = 'sufipulse_yt_oauth_return';
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
@@ -22,6 +24,9 @@ export async function POST(request: NextRequest) {
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
   const redirectUri = `${appUrl}/api/admin/youtube-analytics/callback`;
+  const payload = await request.json().catch(() => ({}));
+  const returnTo = typeof payload.returnTo === 'string' && /^\/admin\/pipeline\/draft_\d+_[a-f0-9]+$/.test(payload.returnTo)
+    ? payload.returnTo : '/admin/youtube-analytics';
   const state = randomBytes(32).toString('hex');
 
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -43,5 +48,12 @@ export async function POST(request: NextRequest) {
     maxAge: 10 * 60,
   });
 
+  response.cookies.set(OAUTH_RETURN_COOKIE, returnTo, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/admin/youtube-analytics/callback',
+    maxAge: 10 * 60,
+  });
   return response;
 }

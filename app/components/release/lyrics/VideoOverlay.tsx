@@ -55,15 +55,15 @@ export function VideoOverlay({ track, currentTime, captionsEnabled, fontSizeScal
     : {};
 
   const captionBoxStyle: React.CSSProperties = {
-    maxWidth: `${Math.max(40, Math.min(100, Number(activeCue.maxWidthPercent || 82)))}%`,
+    maxWidth: `${Math.max(56, Math.min(94, Number(activeCue.maxWidthPercent || 90)))}%`,
     backgroundColor: assColorToCss(activeCue.backColor, 'rgba(23, 23, 23, 0.5)'),
     borderColor: assColorToCss(activeCue.outlineColor, 'rgba(64, 64, 64, 0.5)'),
     boxShadow: `0 8px 30px rgba(0,0,0,${activeCue.shadow ? 0.42 : 0.3})`,
   };
 
-  // Dynamically calculate base font size for responsiveness.
-  // Using clamped viewport units guarantees it is big enough on larger screens.
-  const responsiveBaseFontSize = `clamp(16px, 2vw + 10px, 48px)`;
+  // Readability-first scaling against the actual video player width, not the browser viewport.
+  // cqw keeps captions responsive inside embedded players, split layouts, tablets and mobile rotation.
+  const responsiveBaseFontSize = `clamp(19px, 5cqw, 52px)`;
   const rawSize = activeCue.fontSize ? `${Math.max(12, Math.min(84, activeCue.fontSize))}px` : responsiveBaseFontSize;
 
   const textStyle: React.CSSProperties = {
@@ -76,18 +76,21 @@ export function VideoOverlay({ track, currentTime, captionsEnabled, fontSizeScal
   };
 
   return (
-    <div className={overlayPlacementClass} style={containerStyle}>
+    <div
+      className={overlayPlacementClass}
+      style={{ ...containerStyle, containerType: 'inline-size' }}
+    >
       <div
         className="backdrop-blur-md rounded-xl text-center w-full"
         style={{
             ...captionBoxStyle,
             // Use 'em' inside inline styles to ensure the container scales padding proportionately to font-size chosen
-            padding: '0.6em 1.25em',
+            padding: 'clamp(0.42em, 1.4cqw, 0.62em) clamp(0.78em, 2.8cqw, 1.2em)',
             fontSize: textStyle.fontSize // Apply font size to parent so 'em' works flawlessly for padding
         }}
         dir={track.direction}
       >
-        <p className={`tracking-wide leading-[1.3] ${track.direction === 'rtl' ? 'font-urdu' : ''}`} style={{ ...textStyle, fontSize: '1em' }}>
+        <p className={`tracking-normal leading-[1.16] ${track.direction === 'rtl' ? 'font-urdu' : ''}`} style={{ ...textStyle, fontSize: '1em' }}>
           {activeCue.text}
         </p>
       </div>

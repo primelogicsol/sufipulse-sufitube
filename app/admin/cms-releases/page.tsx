@@ -66,8 +66,9 @@ export default function CMSReleasesPage() {
     }
   };
 
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const isAdmin = user?.role?.includes('admin') ?? false;
   const [releases, setReleases] = useState<CMSRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
@@ -100,12 +101,13 @@ export default function CMSReleasesPage() {
   const [playlistMessage, setPlaylistMessage] = useState<React.ReactNode | null>(null);
 
   useEffect(() => {
-    if (!user?.role.includes('admin')) {
+    if (authLoading) return;
+    if (!isAdmin) {
       router.push('/admin');
       return;
     }
     loadReleases();
-  }, [user, filter]);
+  }, [authLoading, isAdmin, filter]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -471,6 +473,20 @@ export default function CMSReleasesPage() {
     { length: Math.min(visiblePageCount, totalPages) },
     (_, index) => pageWindowStart + index
   );
+
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-96 items-center justify-center">
+          <div className="text-sm text-neutral-400">Loading CMS Releases...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <DashboardLayout>
@@ -955,7 +971,14 @@ export default function CMSReleasesPage() {
                           border: `1px solid ${statusColor[release.status] || 'var(--dash-border)'}`,
                         }}
                       >
-                        {release.status}
+                        {release.status === 'published' && release.visibility === 'public'
+                          ? 'Published'
+                          : release.status === 'published'
+                            ? 'Saved'
+                            : release.status}
+                      </span>
+                      <span className="ml-2 inline-flex rounded border border-sky-500/40 px-2 py-0.5 text-xs font-medium text-sky-300">
+                        Saved
                       </span>
                     </td>
                     <td className="px-4 py-3">
