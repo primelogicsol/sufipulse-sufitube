@@ -17,30 +17,39 @@ const SEED_FILE = path.join(process.cwd(), 'lib', 'kashmir-partner-seed.json');
 class KashmirPartnerStore {
   private partners: KashmirPartner[] = [];
   private initialized = false;
+  private lastMtime: number = 0;
 
   private ensureInitialized() {
-    if (this.initialized) return;
-
     try {
       if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR, { recursive: true });
       }
 
       if (fs.existsSync(PARTNERS_FILE)) {
-        const raw = fs.readFileSync(PARTNERS_FILE, 'utf8');
-        this.partners = JSON.parse(raw);
+        const stat = fs.statSync(PARTNERS_FILE);
+        if (!this.initialized || stat.mtimeMs > this.lastMtime) {
+          const raw = fs.readFileSync(PARTNERS_FILE, 'utf8');
+          this.partners = JSON.parse(raw);
+          this.lastMtime = stat.mtimeMs;
+          this.initialized = true;
+        }
       } else if (fs.existsSync(SEED_FILE)) {
         const seedRaw = fs.readFileSync(SEED_FILE, 'utf8');
         this.partners = JSON.parse(seedRaw);
         fs.writeFileSync(PARTNERS_FILE, JSON.stringify(this.partners, null, 2), 'utf8');
+        const stat = fs.statSync(PARTNERS_FILE);
+        this.lastMtime = stat.mtimeMs;
+        this.initialized = true;
       } else {
         this.partners = [];
+        this.initialized = true;
       }
-      this.initialized = true;
     } catch (err: any) {
       logger.cms.error('[KashmirPartnerStore] Failed to initialize store', { error: err.message });
-      this.partners = [];
-      this.initialized = true;
+      if (!this.initialized) {
+        this.partners = [];
+        this.initialized = true;
+      }
     }
   }
 
@@ -50,6 +59,8 @@ class KashmirPartnerStore {
         fs.mkdirSync(DATA_DIR, { recursive: true });
       }
       fs.writeFileSync(PARTNERS_FILE, JSON.stringify(this.partners, null, 2), 'utf8');
+      const stat = fs.statSync(PARTNERS_FILE);
+      this.lastMtime = stat.mtimeMs;
     } catch (err: any) {
       logger.cms.error('[KashmirPartnerStore] Failed to persist data', { error: err.message });
     }
@@ -171,6 +182,7 @@ class KashmirPartnerStore {
         engagedListens: 0,
         completedListens: 0,
       },
+      notes: partner.notes || '',
       createdAt: now,
       updatedAt: now,
     };
@@ -189,6 +201,15 @@ class KashmirPartnerStore {
     partner.consentStatus = 'explicit_permission_granted';
     if (notes) partner.verificationNotes = notes;
     partner.updatedAt = new Date().toISOString();
+    this.persist();
+    return true;
+  }
+
+  public reject(partnerId: string): boolean {
+    this.ensureInitialized();
+    const idx = this.partners.findIndex((p) => p.id === partnerId);
+    if (idx < 0) return false;
+    this.partners.splice(idx, 1);
     this.persist();
     return true;
   }
@@ -281,6 +302,7 @@ class KashmirPartnerStore {
     return {
       totalPartners: total,
       verifiedPartners: verified,
+      pendingPartners: total - verified,
       totalEstimatedReach: totalReach,
       districtsCovered,
       totalClicks,

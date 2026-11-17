@@ -142,19 +142,19 @@ export default function KashmirReachPage() {
     });
   }, [partners, selectedPillar, selectedDistrict, statusFilter, searchQuery]);
 
-  const handleVerifyPartner = async (partnerId: string) => {
+  const handleVerifyPartner = async (partnerId: string, action: 'approve' | 'reject' = 'approve') => {
     try {
       const res = await fetch('/api/admin/kashmir-reach/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerId }),
+        body: JSON.stringify({ partnerId, action }),
       });
       const data = await res.json();
       if (data.success) {
         fetchPartners();
       }
     } catch (err) {
-      console.error('Failed to verify partner', err);
+      console.error(`Failed to ${action} partner`, err);
     }
   };
 
@@ -276,9 +276,19 @@ export default function KashmirReachPage() {
               <span className="text-xs text-neutral-400 uppercase tracking-wider font-bold">Verified Partners</span>
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
             </div>
-            <div className="text-2xl font-bold text-white">
-              {stats?.verifiedPartners || 0}
-              <span className="text-xs text-neutral-500 font-normal ml-2">/ {stats?.totalPartners || 0} Total</span>
+            <div className="text-2xl font-bold text-white flex items-center justify-between">
+              <div>
+                {stats?.verifiedPartners || 0}
+                <span className="text-xs text-neutral-500 font-normal ml-2">/ {stats?.totalPartners || 0} Total</span>
+              </div>
+              {(stats?.pendingPartners || 0) > 0 && (
+                <button
+                  onClick={() => setStatusFilter('pending_verification')}
+                  className="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded text-[10px] font-bold hover:bg-amber-500/30 transition-colors animate-pulse"
+                >
+                  {stats.pendingPartners} Pending Review
+                </button>
+              )}
             </div>
             <p className="text-[11px] text-neutral-400 mt-1">100% explicit permission</p>
           </div>
@@ -751,6 +761,31 @@ export default function KashmirReachPage() {
             </div>
           </div>
 
+          {/* Pending Applications Alert Banner */}
+          {(stats?.pendingPartners || 0) > 0 && statusFilter !== 'pending_verification' && (
+            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-sm shrink-0">
+                  {stats.pendingPartners}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">
+                    {stats.pendingPartners} Incoming Partner Application{stats.pendingPartners > 1 ? 's' : ''} Received
+                  </h4>
+                  <p className="text-xs text-neutral-300">
+                    Submitted via public intake (<code className="text-amber-300 font-mono text-[11px]">/network/kashmir-partners/apply</code>). Review details & credentials to approve or dismiss.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setStatusFilter('pending_verification')}
+                className="px-3.5 py-1.5 bg-amber-500 text-black font-bold text-xs rounded-lg hover:bg-amber-400 transition-colors shrink-0 shadow-md flex items-center gap-1.5"
+              >
+                Review Applications ({stats.pendingPartners}) &rarr;
+              </button>
+            </div>
+          )}
+
           {/* Table */}
           <div className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
@@ -783,6 +818,11 @@ export default function KashmirReachPage() {
                           )}
                         </div>
                         <div className="text-[11px] text-neutral-400 font-mono">{partner.primaryHandle}</div>
+                        {partner.notes && (
+                          <div className="text-[10px] text-amber-200/90 mt-1.5 max-w-sm italic bg-white/[0.03] p-1.5 rounded border border-white/5" title={partner.notes}>
+                            <span className="font-semibold text-neutral-400 not-italic">Note:</span> {partner.notes}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 border border-white/10 text-neutral-200">
@@ -813,12 +853,20 @@ export default function KashmirReachPage() {
                       </td>
                       <td className="py-3.5 px-4 text-right space-x-2">
                         {partner.verificationStatus === 'pending_verification' ? (
-                          <button
-                            onClick={() => handleVerifyPartner(partner.id)}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold transition-all shadow-md"
-                          >
-                            Approve & Verify
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleVerifyPartner(partner.id, 'approve')}
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold transition-all shadow-md flex items-center gap-1"
+                            >
+                              <CheckCircle2 className="w-3 h-3" /> Approve & Verify
+                            </button>
+                            <button
+                              onClick={() => handleVerifyPartner(partner.id, 'reject')}
+                              className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 rounded text-[11px] font-bold transition-all"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
                         ) : (
                           <>
                             <button
