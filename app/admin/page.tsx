@@ -467,6 +467,7 @@ export default function AdminDashboard() {
         stats.pendingContactMessages,
       icon: DollarSign,
       links: [
+        { label: 'Kashmir Reach', href: '/admin/kashmir-reach' },
         { label: 'Adoptions', href: '/admin/song-adoptions' },
         { label: 'Partnerships', href: '/admin/partnerships' },
         { label: 'Inquiries', href: '/admin/inquiries' },
