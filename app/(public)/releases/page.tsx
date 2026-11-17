@@ -37,25 +37,32 @@ async function fetchPublishedReleases(): Promise<InitialRelease[]> {
       .filter((r: any) => r.slug && r.status === 'published' && r.visibility === 'public')
       .map((r: any): InitialRelease => {
         const durationSecs = Number(r.durationSeconds || 0);
-        const m = Math.floor(durationSecs / 60);
-        const s = durationSecs % 60;
+        const totalSecs = Math.round(durationSecs);
+        const m = Math.floor(totalSecs / 60);
+        const s = totalSecs % 60;
+        const cleanDuration = totalSecs > 0 ? `${m}:${String(s).padStart(2, '0')}` : (r.durationFormatted || '');
+        const rawThumb = r.canonicalThumbnail || r.thumbnailUrl || '';
+        const safeThumb = (typeof rawThumb === 'string' && rawThumb.includes('/api/admin/'))
+          ? (r.youtubeId ? `https://i.ytimg.com/vi/${r.youtubeId}/hqdefault.jpg` : '')
+          : rawThumb;
+
         return {
           id: r.youtubeId || r.id,
           slug: r.slug,
           title: r.canonicalTitle || r.title || r.youtubeTitle || 'Untitled',
-          thumbnailUrl: r.canonicalThumbnail || r.thumbnailUrl || '',
+          thumbnailUrl: safeThumb,
           youtubeId: r.youtubeId || '',
           format: (r.format as InitialRelease['format']) || 'video',
           govType: r.governanceOrigin || r.govType || 'native_governed',
           publishedDate: r.publishedAt || r.releaseDate || r.createdAt || '',
-          durationSeconds: durationSecs,
-          durationFormatted: durationSecs > 0 ? `${m}:${String(s).padStart(2, '0')}` : '',
+          durationSeconds: totalSecs,
+          durationFormatted: cleanDuration,
           views: Number(r.viewCount ?? r.views ?? 0),
           description: r.description || '',
-          vocalist: typeof r.vocalist === 'string' ? r.vocalist
-            : [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
-          writer: typeof r.writer === 'string' ? r.writer
-            : [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' '),
+          vocalist: typeof r.vocalist === 'string' && r.vocalist ? r.vocalist
+            : (r.publicCredits?.artistic?.leadVocalist || [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' ') || 'SufiPulse Vocal Ensemble'),
+          writer: typeof r.writer === 'string' && r.writer ? r.writer
+            : (r.publicCredits?.artistic?.lyricist || [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' ') || 'Traditional Sacred Kalam'),
           tags: Array.isArray(r.tags) ? r.tags.join(' ') : '',
           rawTitle: r.canonicalTitle || r.title || '',
           youtubeTitle: r.youtubeTitle || '',

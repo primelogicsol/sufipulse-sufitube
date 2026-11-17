@@ -37,6 +37,22 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   if (canonical.show_views && canonical.showViews === undefined) canonical.showViews = canonical.show_views;
   if (canonical.show_likes && canonical.showLikes === undefined) canonical.showLikes = canonical.show_likes;
 
+  // Resolve writer and vocalist from publicCredits if top-level fields are missing
+  if (!canonical.writer && canonical.publicCredits?.artistic?.lyricist) {
+    canonical.writer = canonical.publicCredits.artistic.lyricist;
+  }
+  if (!canonical.vocalist && canonical.publicCredits?.artistic?.leadVocalist) {
+    canonical.vocalist = canonical.publicCredits.artistic.leadVocalist;
+  }
+
+  // Defensive: never expose internal /api/admin/ media URLs to public release objects
+  if (typeof canonical.thumbnailUrl === 'string' && canonical.thumbnailUrl.includes('/api/admin/')) {
+    canonical.thumbnailUrl = canonical.youtubeId ? `https://i.ytimg.com/vi/${canonical.youtubeId}/hqdefault.jpg` : '';
+  }
+  if (typeof canonical.canonicalThumbnail === 'string' && canonical.canonicalThumbnail.includes('/api/admin/')) {
+    canonical.canonicalThumbnail = canonical.youtubeId ? `https://i.ytimg.com/vi/${canonical.youtubeId}/maxresdefault.jpg` : '';
+  }
+
   delete canonical.created_at;
   delete canonical.updated_at;
   delete canonical.published_at;

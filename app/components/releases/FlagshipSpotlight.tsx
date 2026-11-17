@@ -12,6 +12,29 @@ interface FlagshipSpotlightProps {
 export function FlagshipSpotlight({ featuredRelease }: FlagshipSpotlightProps) {
     if (!featuredRelease) return null;
 
+    const displayDuration = (() => {
+        const raw = featuredRelease.durationFormatted;
+        if (raw && /^\d+:\d{2}$/.test(raw)) return raw;
+        if (raw && /^00:\d{2}:\d{2}$/.test(raw)) return raw.slice(3);
+        const totalSec = Math.round(Number(featuredRelease.durationSeconds || 0));
+        if (totalSec > 0) {
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+        return raw || '0:00';
+    })();
+
+    const thumbCandidates = buildYouTubeThumbnailCandidates(
+        featuredRelease.youtubeId || featuredRelease.id,
+        [featuredRelease.canonicalThumbnail, featuredRelease.thumbnailUrl]
+    );
+
+    const vocalist = featuredRelease.vocalist || featuredRelease.publicCredits?.artistic?.leadVocalist || 'SufiPulse Vocal Ensemble';
+    const writer = featuredRelease.writer || featuredRelease.publicCredits?.artistic?.lyricist || 'Traditional Sacred Kalam';
+    const title = featuredRelease.canonicalTitle || featuredRelease.title || 'Untitled Release';
+    const releaseHref = `/release-detail/${featuredRelease.slug || featuredRelease.youtubeId || featuredRelease.id}`;
+
     return (
         <section className="py-16 bg-gradient-to-b from-[var(--color-midnight)] to-[var(--color-slate)] border-b border-white/5">
             <PageContainer>
@@ -26,27 +49,22 @@ export function FlagshipSpotlight({ featuredRelease }: FlagshipSpotlightProps) {
                     <div className="flex flex-col md:flex-row bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
                         {/* Left: Artwork / Video Thumbnail */}
                         <div className="w-full md:w-[45%] relative aspect-video bg-black group">
-                            {(() => {
-                                const thumbCandidates = buildYouTubeThumbnailCandidates(featuredRelease.youtubeId || featuredRelease.id, [featuredRelease.thumbnailUrl]);
-                                return (
-                                    <img 
-                                        src={thumbCandidates[0]} 
-                                        alt={featuredRelease.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                        onError={(e) => advanceThumbnailFallback(e.currentTarget, thumbCandidates)}
-                                    />
-                                );
-                            })()}
+                            <img 
+                                src={thumbCandidates[0]} 
+                                alt={title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                onError={(e) => advanceThumbnailFallback(e.currentTarget, thumbCandidates)}
+                            />
                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                                 <Link 
-                                    href={`/release-detail/${featuredRelease.slug || featuredRelease.youtubeId || featuredRelease.id}`}
+                                    href={releaseHref}
                                     className="w-14 h-14 rounded-full bg-[var(--color-gold)] flex items-center justify-center text-[var(--color-midnight)] shadow-2xl hover:scale-110 transition-transform duration-300"
                                 >
                                     <Play className="w-6 h-6 ml-1" fill="currentColor" />
                                 </Link>
                             </div>
                             <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-white">
-                                {featuredRelease.durationFormatted}
+                                {displayDuration}
                             </div>
                             <div className="absolute top-3 left-3 bg-amber-400 text-black px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
                                 {featuredRelease.govType === 'native_governed' ? 'Governed Production' : 'Legacy Registry'}
@@ -68,7 +86,7 @@ export function FlagshipSpotlight({ featuredRelease }: FlagshipSpotlightProps) {
                                     ) : null}
                                 </div>
                                 <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight">
-                                    {featuredRelease.title}
+                                    {title}
                                 </h2>
                             </div>
 
@@ -78,11 +96,11 @@ export function FlagshipSpotlight({ featuredRelease }: FlagshipSpotlightProps) {
                                 <div className="grid grid-cols-2 gap-3 text-xs">
                                     <div>
                                         <span className="text-[var(--color-text-tertiary)] block text-[10px] uppercase font-bold">Vocalist</span>
-                                        <span className="text-white font-medium">{featuredRelease.vocalist || 'SufiPulse Vocal Ensemble'}</span>
+                                        <span className="text-white font-medium">{vocalist}</span>
                                     </div>
                                     <div>
                                         <span className="text-[var(--color-text-tertiary)] block text-[10px] uppercase font-bold">Kalam / Lyrics</span>
-                                        <span className="text-white font-medium">{featuredRelease.writer || 'Traditional Sacred Kalam'}</span>
+                                        <span className="text-white font-medium">{writer}</span>
                                     </div>
                                 </div>
                             </div>
@@ -93,7 +111,7 @@ export function FlagshipSpotlight({ featuredRelease }: FlagshipSpotlightProps) {
 
                             <div className="flex flex-wrap items-center gap-3 pt-2">
                                 <Link 
-                                    href={`/release-detail/${featuredRelease.slug || featuredRelease.youtubeId || featuredRelease.id}`}
+                                    href={releaseHref}
                                     className="px-5 py-2.5 bg-[var(--color-gold)] hover:bg-[#FDE68A] text-[var(--color-midnight)] font-black text-[11px] uppercase tracking-widest rounded-lg transition-all shadow-xl flex items-center gap-2"
                                 >
                                     <Play className="w-3.5 h-3.5" fill="currentColor" /> Watch & Listen

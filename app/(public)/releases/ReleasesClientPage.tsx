@@ -400,9 +400,10 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
 
     const formatSeconds = (totalSeconds: number): string => {
         if (!totalSeconds) return '0:00';
-        const h = Math.floor(totalSeconds / 3600);
-        const m = Math.floor((totalSeconds % 3600) / 60);
-        const s = totalSeconds % 60;
+        const total = Math.round(totalSeconds);
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
         if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         return `${m}:${s.toString().padStart(2, '0')}`;
     };
@@ -458,10 +459,17 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
             const mappedData = cmsData.map((r: any) => {
                 const source = r.source || 'native';
                 const durationSecs = Number(r.durationSeconds || r.youtubeStats?.durationSeconds || 0);
-                const durationFormatted = r.durationFormatted || r.duration || formatSeconds(durationSecs);
+                const rawDuration = r.durationFormatted || r.duration;
+                const durationFormatted = (rawDuration && /^\d+:\d{2}$/.test(rawDuration))
+                    ? rawDuration
+                    : (rawDuration && /^00:\d{2}:\d{2}$/.test(rawDuration) ? rawDuration.slice(3) : formatSeconds(durationSecs));
                 const canonicalTitle = r.canonicalTitle || r.title || 'Untitled Release';
                 const youtubeTitle = r.youtubeTitle || r.youtubeStats?.title || '';
                 const govType = r.governanceOrigin || (r.source === 'native' ? 'native_governed' : (r.govType || 'native_governed'));
+                const rawThumb = r.canonicalThumbnail || r.thumbnail || r.thumbnailUrl || '';
+                const safeThumb = (typeof rawThumb === 'string' && rawThumb.includes('/api/admin/'))
+                    ? (r.youtubeId ? `https://i.ytimg.com/vi/${r.youtubeId}/hqdefault.jpg` : '')
+                    : rawThumb;
                 return {
                     id: r.youtubeId || r.id,
                     slug: r.slug,
@@ -471,7 +479,7 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
                     rawTitle: canonicalTitle,
                     youtubeTitle: youtubeTitle,
                     description: r.description || '',
-                    thumbnailUrl: r.canonicalThumbnail || r.thumbnail || r.thumbnailUrl || '',
+                    thumbnailUrl: safeThumb,
                     publishedAt: r.publishedAt || r.releaseDate || r.createdAt,
                     publishedDate: r.publishedAt || r.releaseDate || r.createdAt,
                     durationSeconds: durationSecs,
@@ -480,12 +488,12 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
                     source: source,
                     format: r.format || 'video',
                     govType: govType,
-                    vocalist: typeof r.vocalist === 'string'
+                    vocalist: typeof r.vocalist === 'string' && r.vocalist
                         ? r.vocalist
-                        : [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' '),
-                    writer: typeof r.writer === 'string'
+                        : (r.publicCredits?.artistic?.leadVocalist || [r.vocalist?.name, r.vocalist?.nameUrdu].filter(Boolean).join(' ') || 'SufiPulse Vocal Ensemble'),
+                    writer: typeof r.writer === 'string' && r.writer
                         ? r.writer
-                        : [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' '),
+                        : (r.publicCredits?.artistic?.lyricist || [r.writer?.name, r.writer?.nameUrdu].filter(Boolean).join(' ') || 'Traditional Sacred Kalam'),
                     tags: Array.isArray(r.tags) ? r.tags.join(' ') : (r.description?.match(/#\w+/g)?.join(' ') || ''),
                     youtubeId: r.youtubeId || '',
                     lastYoutubeSyncAt: r.lastYoutubeSyncAt

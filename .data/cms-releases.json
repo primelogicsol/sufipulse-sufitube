@@ -766,7 +766,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-015",
       "releaseDate": "2026-02-20"
-    }
+    },
+    "vocalist": "Omar Hayes, Mariam Bennett, Michael Rhodes, Ayesha Noor, Arjun Mehta, Raghav Sharma"
   },
   {
     "id": "release_1775202913816_g9VGzWRHZ0g",
@@ -956,7 +957,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-016",
       "releaseDate": "2026-02-07"
-    }
+    },
+    "vocalist": "Faizan Akhtar"
   },
   {
     "id": "release_1775202913816__zx1N_xZzys",
@@ -1147,7 +1149,8 @@
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-017"
-    }
+    },
+    "vocalist": "Raghav Mehra, Ananya Iyer"
   },
   {
     "id": "release_1775202913817_n6q_g4bY_sA",
@@ -1338,7 +1341,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-018",
       "releaseDate": "2026-01-18"
-    }
+    },
+    "vocalist": "Rehan Mir, Daniyal Kashfi"
   },
   {
     "id": "release_1775202913817_lMxb4Dk-n0Y",
@@ -1528,7 +1532,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-019",
       "releaseDate": "2026-01-11"
-    }
+    },
+    "vocalist": "Ibrahim Ziya, Amina Noor, Faizan Rahim"
   },
   {
     "id": "release_1775202913818_QkGzXGrEllo",
@@ -1716,7 +1721,8 @@
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-020"
-    }
+    },
+    "vocalist": "Hamza Ali, Ahsan Raza"
   },
   {
     "id": "release_1775202913818_FelED4DBHCk",
@@ -2092,7 +2098,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-021",
       "releaseDate": "2026-01-05"
-    }
+    },
+    "vocalist": "Ahsan Rizvi, Faizan Qureshi, Salman Ansari, Imran Siddiqui"
   },
   {
     "id": "release_1775202913818_k0D188oBZ1Y",
@@ -2283,7 +2290,8 @@
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-022"
-    }
+    },
+    "vocalist": "Rashid Khan, Junaid Khan, Saad bin Imran Ansari, Ahmad Rizvi"
   },
   {
     "id": "release_1775202913819_sPOY59RAkAU",
@@ -2475,7 +2483,8 @@
       "releaseDate": "2025-12-25",
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License"
-    }
+    },
+    "vocalist": "Zayan Rafi, Rahil Qureshi, Ibrahim Nouri, Zohair Nadeem"
   },
   {
     "id": "release_1775202913819_24SrdzzLYus",
@@ -2665,7 +2674,8 @@
       "releaseDate": "2025-12-20",
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License"
-    }
+    },
+    "vocalist": "Ayaan Idrisi, Rahil Qureshi, Ibrahim Nouri"
   },
   {
     "id": "release_1775202913820_XPaJu3lHd5Y",
@@ -2854,7 +2864,8 @@
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-023"
-    }
+    },
+    "vocalist": "Armaan Qadri, Sameer Nizami, Yusuf Rahmani"
   },
   {
     "id": "release_1775202913820_LwnPXSEJJHI",
@@ -3046,7 +3057,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-024",
       "releaseDate": "2025-12-09"
-    }
+    },
+    "vocalist": "Armaan Qadri, Sameer Nizami, Yusuf Rahmani"
   },
   {
     "id": "release_1775202913821_be6GFwGpobw",
@@ -3236,7 +3248,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-025",
       "releaseDate": "2025-11-28"
-    }
+    },
+    "vocalist": "Maazin Khalid, Rauf Azeem"
   },
   {
     "id": "release_1775203218431_8nmW-vJbwMA",
@@ -3397,7 +3410,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Faizan Akhtar"
   },
   {
     "id": "release_1775203218439_X_7bA19M1E8",
@@ -3557,7 +3571,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Maazin Khalid & Rauf Azeem"
   },
   {
     "id": "release_1775203218440_vKVAKJgOa5I",
@@ -3748,7 +3763,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-026",
       "releaseDate": "2025-11-23"
-    }
+    },
+    "vocalist": "Zaryab Qadri, Sajjad Noorani, Mehran Sajjad"
   },
   {
     "id": "release_1775203218441_BFG-8G3-thY",
@@ -3938,7 +3954,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-027",
       "releaseDate": "2025-11-11"
-    }
+    },
+    "vocalist": "Mehrunisa"
   },
   {
     "id": "release_1775203218442_jV-f1b_qSYU",
@@ -4127,7 +4144,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-028",
       "releaseDate": "2025-11-07"
-    }
+    },
+    "vocalist": "Zayan Ali, Avtar Singh"
   },
   {
     "id": "release_1775203218443_zFD8rHYcx-w",
@@ -4317,7 +4335,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-029",
       "releaseDate": "2025-10-16"
-    }
+    },
+    "vocalist": "Imran Shafeeq, Huzaifa Mirza, Zarrar Ali"
   },
   {
     "id": "release_1775203218443_A0Xrk-Jp9OI",
@@ -4479,7 +4498,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Usman Farid, Tahir Nafees, Zohra Gul & Farhat Shehzadi"
   },
   {
     "id": "release_1775203218444_QrNA31-s8u0",
@@ -4641,7 +4661,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Sami Rahman, Faris Ahmad and Avtar Singh"
   },
   {
     "id": "release_1775203218445_lqMkErpT3dQ",
@@ -4804,7 +4825,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Shaukat Ali & Avtar Singh"
   },
   {
     "id": "release_1775203218446_jdGv8DEu4pE",
@@ -4963,7 +4985,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "17 Multilingual Lead Vocal Performances Adaptation Team"
   },
   {
     "id": "release_1775203218447_Sp4cG8TI7i8",
@@ -5123,7 +5146,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "17 Multilingual Lead Vocal Performances Adaptation Team"
   },
   {
     "id": "release_1775203218447_nn3gXZQqX84",
@@ -5283,7 +5307,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "17 Multilingual Lead Vocal Performances Adaptation Team"
   },
   {
     "id": "release_1775203218448__BxraDL7kS0",
@@ -5444,7 +5469,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Zayan Ali & Dr Zarf-e-Noori"
   },
   {
     "id": "release_1775203218449_kVtYDOa5hPs",
@@ -5603,7 +5629,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Victor Hale & Elias Rowan"
   },
   {
     "id": "release_1775203218450_Ykx2PwA4mOk",
@@ -5763,7 +5790,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Yusuf Rahman, Omar Farid & Amina Shafi"
   },
   {
     "id": "release_1775203218451_srM451HZEOE",
@@ -8174,7 +8202,8 @@
       "releaseDate": "2025-07-27",
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License"
-    }
+    },
+    "vocalist": "Zeeshan Mehmood, Hamad Fakir, Tariq Zameer"
   },
   {
     "id": "release_1775203218466_BMqHN5Uon_k",
@@ -9322,7 +9351,8 @@
       "releaseDate": "2025-07-17",
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License"
-    }
+    },
+    "vocalist": "Sami Rehman, Naseer Junaid, Hussain Irfani, Zohair Ali"
   },
   {
     "id": "release_1775203218475_a_MynvITxO4",
@@ -10621,7 +10651,8 @@
       "releaseDate": "2025-07-04",
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License"
-    }
+    },
+    "vocalist": "Layla Feroze, Amir Haider"
   },
   {
     "id": "release_1775203218489_NBZKTYqQDQA",
@@ -12728,7 +12759,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-036",
       "releaseDate": "2025-06-09"
-    }
+    },
+    "vocalist": "Isaiah Cole"
   },
   {
     "id": "release_1775203218511_EtehDd3oUVc",
@@ -12922,7 +12954,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-035",
       "releaseDate": "2025-05-25"
-    }
+    },
+    "vocalist": "David Matthews, James Carter"
   },
   {
     "id": "release_1775203218513_U6uT9yaQy0Y",
@@ -13116,7 +13149,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-038",
       "releaseDate": "2025-05-25"
-    }
+    },
+    "vocalist": "David Matthews, Emily Harper"
   },
   {
     "id": "release_1775203218514_tFpnzwapo1A",
@@ -13310,7 +13344,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-032",
       "releaseDate": "2025-05-24"
-    }
+    },
+    "vocalist": "Isaiah Cole, Amara Rose"
   },
   {
     "id": "release_1775203218516_I1b9QtSmRAQ",
@@ -13502,7 +13537,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-033",
       "releaseDate": "2025-05-24"
-    }
+    },
+    "vocalist": "Samuel Brooks"
   },
   {
     "id": "release_1775203218519_ZtI5T0H0nnY",
@@ -13696,7 +13732,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-031",
       "releaseDate": "2025-05-23"
-    }
+    },
+    "vocalist": "Sarah Thompson, Michael Thompson"
   },
   {
     "id": "release_1775203218522_DiWJ_RBML08",
@@ -14205,7 +14242,8 @@
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-034"
-    }
+    },
+    "vocalist": "Isaiah Cole"
   },
   {
     "id": "release_1775203218527_Sibgklh-W5g",
@@ -14556,7 +14594,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2025-030",
       "releaseDate": "2025-05-21"
-    }
+    },
+    "vocalist": "Nicholas Ryan Gant"
   },
   {
     "id": "release_1777974043319_D7hvqyQYJrk",
@@ -14766,7 +14805,8 @@
       "releaseDate": "2026-05-05",
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License"
-    }
+    },
+    "vocalist": "Emily Carter (English), Dr. Shivani Kaul (Kashmiri)"
   },
   {
     "id": "release_1777974043322_UcV7rMQ7XGg",
@@ -14946,7 +14986,8 @@
       "licensingPermissions": "Standard SufiPulse License",
       "registeredReleaseId": "SP-KS-2026-014",
       "releaseDate": "2026-05-03"
-    }
+    },
+    "vocalist": "Kaifi Khalil, Talha Anjum, Abdul Hannan, Asim Azhar"
   },
   {
     "id": "LjmOxu1AVAg",
@@ -15153,7 +15194,8 @@
     "descriptionOverrideAt": null,
     "descriptionOverrideBy": null,
     "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
-    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9"
+    "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "vocalist": "Ayaan Qadri & Zarif Ali Shah "
   },
   {
     "id": "release_1778705546287_q58mRXIsi-Y",
@@ -15319,7 +15361,8 @@
         "thematicInterpretation": "Literary Committee",
         "proofreading": "SufiPulse Editorial"
       }
-    }
+    },
+    "vocalist": "Ayaan Qadri, Zarif Ali Shah"
   },
   {
     "id": "release_1778705546287_wMxWfsst48Q",
@@ -15699,7 +15742,8 @@
         "thematicInterpretation": "Literary Committee",
         "proofreading": "SufiPulse Editorial"
       }
-    }
+    },
+    "vocalist": "Ali Sultan, Aaliya Noor"
   },
   {
     "id": "release_1779542779861_4HZbA2sfGmY",
@@ -15916,7 +15960,8 @@
       "releaseDate": "2026-05-23",
       "copyrightHolder": "SufiPulse USA",
       "licensingPermissions": "Standard SufiPulse License"
-    }
+    },
+    "vocalist": "Zarif Ali Shah"
   },
   {
     "id": "release_1787948603540_ooxUUEsh5Kg",
@@ -16203,7 +16248,8 @@
         "thematicInterpretation": "Literary Committee",
         "proofreading": "SufiPulse Editorial"
       }
-    }
+    },
+    "vocalist": "Neel Madhav, Arin Kashyap"
   },
   {
     "id": "release_1787948603541_1kOiOhzXtUY",
@@ -16364,7 +16410,8 @@
         "thematicInterpretation": "Literary Committee",
         "proofreading": "SufiPulse Editorial"
       }
-    }
+    },
+    "vocalist": "Ayaan Raza, Izaan Haq, Ziyan Noor"
   },
   {
     "id": "release_1787948603542_ffTfCn8N0hk",
@@ -16525,7 +16572,8 @@
         "thematicInterpretation": "Literary Committee",
         "proofreading": "SufiPulse Editorial"
       }
-    }
+    },
+    "vocalist": "Ahsan Qadri, Raghav Mehra, Ananya Iyer, Faizan Akhtar"
   },
   {
     "id": "release_1787948603542_RJeRdBuRto0",
@@ -17147,7 +17195,7 @@
     ],
     "defaultLanguage": "en-rom",
     "thumbnailUrl": "https://i.ytimg.com/vi/wYFfuBS78ZI/hqdefault.jpg",
-    "canonicalThumbnail": "/api/admin/pipeline/drafts/draft_1794713823276_8baeb8cc/media?asset=thumbnail",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/wYFfuBS78ZI/maxresdefault.jpg",
     "canonicalLyrics": {
       "text": "# Kab Tak Khamosh?\n### Fitrat Ki Tasbeeh, Insaan Ka Hisaab\n\n[Aaghaz | Pur-asraar Sukoot, Gehri Sargoshi]\n\nShayar:\nYa Rab, Kashmir ki fiza mein aaya,  \nHar shajar ko Teri tasbeeh mein paaya.  \nKohsaaron mein hairat, dariya mein noor,  \nHar zarrey mein Teri qudrat ka zuhoor.\n\nMagar Dal hai zakhmi, Wular be-qarar,  \nJhelum ki maujon mein dard beshumaar.\n\nRab:\n\"Tu Meri nishaaniyon ko padhta raha,  \nMagar unke zakhmon se ghaafil raha?\n\nTujhe zubaan di, tujhe sha'oor diya,  \nPhir kis ne tujhe khamosh kiya?\"\n\n[Mukhda | Purjosh, Sawaaliya Goonj]\nKab tak khamosh, kab tak khamosh?\nAe ahl-e-Kashmir, kab tak khamosh?\n\nJab aab pukaare, jab khaak pukaare,  \nJab Rab ki tasbeeh mein ashjaar pukaarein!\n\nBolo, bolo, ab toh bolo!\nApne zameer ke parde kholo!\n\nKab tak khamosh, kab tak khamosh?\nKab jaagega tera soya hosh?\n\n[Pehla Sawaal | Tasbeeh-e-Kaayinaat]\n\nShayar:\nYa Rab, kya shajar Tera zikr karein?  \nKya dariya bhi Teri tasbeeh padhein?\n\nKya chashmon mein koi posheeda kalaam?  \nKya baad-e-saba mein Tera paighaam?\n\nRab:\n\"Tu unki tasbeeh ka raaz poochhe,  \nApne amal ka hisaab kyon bhoole?\n\nJo shajar Meri naemat kehlaaye,  \nUse kaat kar tu kya paaye?\n\nJo aab teri hayaat ka sahaara,  \nUse aaloodah kis ne kar daala?\"\n\n[Chhota Uthaan | Gehri Dhadkan]\nHar shajar ki tasbeeh, har qatre ka zikr,  \nFitrat ki hifaazat, imaan ki fikr!\n\n[Doosra Sawaal | Meezan-e-Ilaahi]\n\nShayar:\nTu ne Meezan ka farmaan diya,  \nHar shay ko ik tawaazun diya.\n\nPhir jheelon mein gaad kyon badhti gayi?  \nSabz zameen kyon simatti gayi?\n\nKahin khushk-saali, kahin sailaab,  \nKis ke amal ka yeh bigda hisaab?\n\nRab:\n\"Meezan ka naam zubaan pe laaye,  \nPhir uske tawaazun ko khud mitaaye?\n\nTu aab ki raahon mein deewaar kare,  \nPhir sailaab se kyon fariyaad kare?\n\nTu qudrat ka nizaam bigaadta jaaye,  \nPhir har museebat ko Meri raza bataaye?\"\n\n[Mukhda | Buland, Ham-aahang]\nKab tak khamosh, kab tak khamosh?\nAe ahl-e-Kashmir, kab tak khamosh?\n\nNa Meezan todo, na amaanat becho,  \nNa aane waali naslon ka haq becho!\n\nBolo, bolo, ab toh bolo!\nApne zameer ke parde kholo!\n\n[Teesra Sawaal | Khalifa Aur Amaanat]\n\nShayar:\nYa Rab, Tu ne Khalifa banaaya,  \nInsaan ko amaanat-daar bataaya.\n\nKya maalik hoon main Teri zameen ka?  \nKya haakim hoon main har naemat ka?\n\nRab:\n\"Tu maalik hone ka daawa kare,  \nAmaanat ka haq ada na kare?\n\nJo tere supurd hai, teri milk nahin,  \nTeri khwaahish uski taqdeer nahin!\n\nTu Khalifa hone pe fakhr kare,  \nPhir makhlooq pe itna qahar kare?\"\n\n[Chautha Sawaal | Rishi-Sufi Viraasat]\n\nShayar:\nLall Arifa ki irfaani sada,  \nNund Rishi ki zindagi mein zuhd-o-raza.\n\nShah-e-Hamadan ka ilm-o-hunar,  \nZainuddin Wali ki faqiri ka asar.\n\nCharar ka aastaan, Aishmuqam ki ghaar,  \nBaba Payamuddin ka roohaani dayaar.\n\nRab:\n\"Tu auliya ke mazaar sajaaye,  \nMagar unki khaak ko aaloodah banaaye?\n\nTu faqr ki mehfil aabaad kare,  \nPhir israaf se kyon fasaad kare?\n\nUnki aqeedat ka daawa na kar,  \nJab tak amal mein uska asar na kar!\"\n\n[Roohaani Dohraav | Tez, Pur-kaif]\nKab tak khamosh, kab tak khamosh?\nZikr-e-Khuda se jaage hosh!\n\nNa sirf tasbeeh, na sirf kalaam,  \nAmaanat ki hifaazat bhi nek kaam!\n\n[Paanchwaan Sawaal | Fasaad Fil-Ardh]\n\nShayar:\nYa Rab, fasaad fil-ardh kya hai?  \nKya fitrat ki tabaahi bhi is mein hai?\n\nJo chashmon mein aaloodgi bahaaye,  \nJo jangal kaate, aab mitaaye?\n\nJo rizq ki khaatir zehar phailaaye,  \nKya woh Tere Meezan ko thes pahunchaaye?\n\nRab:\n\"Tu fasaad ko bas khoon samjhe,  \nZameen ke zakhmon ko kyon na samjhe?\n\nTere haathon ke amal ka nishaan,  \nKyon bigadta jaaye aab-o-jahaan?\n\nJo naemat ko barbaad karta rahe,  \nWoh apne zameer se kaise bache?\"\n\n[Chhata Sawaal | Khamoshi Ka Gunaah]\n\nShayar:\nJo jaan kar bhi khamosh rahe,  \nJo dekh kar bhi behosh rahe.\n\nJo ilm rakhe, magar bol na paaye,  \nKya uska zameer use maaf kar paaye?\n\nRab:\n\"Tu baatil ke khauf se chup ho jaaye,  \nPhir haq ka alam kaise uthaaye?\n\nNa be-daleel ilzaam laga,  \nNa darr ke maare sach ko chhupa!\n\nIlm ko apna rehnuma kar,  \nInsaaf ke saath sawaal bhi kar!\"\n\n[Pul | Shayar Ki Bebaaki, Rab Ki Sarzanish]\n\nShayar:\nRab, Tu Qaadir, Tu Be-niyaaz,  \nTere liye kya mushkil hai yeh raaz?\n\nTu chaahe toh sab phir sanwaar de,  \nUjde chaman ko bahaar de!\n\nRab:\n\"Tu Mere karam ka muntazir rahe,  \nApne farz se be-khabar rahe?\n\nMaine tujhe aql di, ikhtiyaar diya,  \nHar amaanat ka ehsaas diya.\n\nTu dua mein chaman maangta raha,  \nMagar apne haathon se use mitaata raha?\"\n\n[Urooj | Naujawaanon Ki Buland Sada]\n\nNaujawaan:\nAb na khamosh! Ab na khamosh!  \nBedaar hua hai apna hosh!\n\nDal bhi bachaayein, Wular bhi bachaayein,  \nJhelum ke saahil phir se sajaayein!\n\nChashme bachaayein, jangal bachaayein,  \nHar zakhm ka sach saamne laayein!\n\nNa khauf se jhukein, na sach se hatein,  \nIlm ki raahon pe badhte rahein!\n\n[Aakhiri Mukhda | Buland Roohaani Urooj]\nKab tak khamosh, kab tak khamosh?\nAb zinda hai apna hosh!\n\nZikr bhi karenge, fikr bhi karenge,  \nMeezan-e-fitrat ki hifaazat karenge!\n\nKashmir ki khaak, Kashmir ka aab,  \nHar naemat ka dena hai hisaab!\n\nNund Rishi ka paighaam sambhaalo,  \nAuliya ka irfaan sambhaalo!\n\n[Ikhtitaam | Gehra Sukoot, Aakhiri Sawaal]\n\nShayar:\n\"Ya Rab, agar phir khamosh rahe?\"\n\nRab:\n\"Toh amaanat ka hisaab kya doge?\"\n\nShayar:\n\"Agar fitrat ke haq mein bol uthein?\"\n\nRab:\n\"Toh apne amal se suboot bhi doge?\"\n\nShayar:\n\"Toh ishq-e-ilaahi ki pehchaan?\"\n\nRab:\n\"Kya sirf lafz hain, ya amal-o-imaan?\"\n\n[Aakhiri Goonj | Sirf Aawaaz]\nKab tak khamosh\n\nKab tak khamosh\n\nYeh khaak amaanat, yeh aab amaanat\n\nYeh jangal amaanat, yeh jaan amaanat\n\nShayar:\n\"Main Tujhe sajdon mein dhoondhta raha\"\n\nRab:\n\"Aur Meri amaanat tere saamne ujadti rahi\"\n\n[Aakhiri Sargoshi]\nKab tak khamosh?\n\nAb toh bol",
       "primaryLanguage": "en-rom",
@@ -18436,7 +18484,7 @@
     "relatedPlaylists": [],
     "intelligenceStatus": "draft",
     "intelligenceUpdatedAt": "2026-11-15T10:17:27.092Z",
-    "writer": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
+    "writer": "Dr. Zarf-e-Noori",
     "lyricist": "writers_ed6c98ae-bac7-44cd-8765-2f9fc35ef9a9",
     "subtitleLanguageStatuses": {},
     "subtitleLanguageAssignments": {},
@@ -18447,18 +18495,19 @@
     "youtubeSubtitleAutoSync": false,
     "releaseLifecycle": "upcoming",
     "isFeaturedPremiere": true,
-    "officialReleaseAt": "2026-11-20T18:00:00.000Z"
+    "officialReleaseAt": "2026-11-20T18:00:00.000Z",
+    "vocalist": "Zayan Rafi, Rahil Qureshi"
   },
   {
     "id": "studio_draft_1794752884539_0eb391d5",
-    "title": "Footprints Behind",
-    "canonicalTitle": "Footprints Behind",
+    "title": "Some People Leave Footprints Behind",
+    "canonicalTitle": "Some People Leave Footprints Behind",
     "slug": "footprints-behind",
     "youtubeId": "G595CGkQ4jc",
     "description": "Some People Leave Footprints Behind (کچھ لوگ نشاں چھوڑ جاتے ہیں) | SufiPulse USA\n\nAn original musical reflection by Dr. Zarf-e-Noori, presented by SufiPulse USA.\n\nSome People Leave Footprints Behind is a soulful reflection on those who make a difference through service, knowledge, compassion, courage, and quiet dedication—traveling through mountain trails, the writer’s inner world, the living dignity of Kashmir’s master artisans, fatherhood, and the enduring influence of those who help others turn ideas into meaningful action.\n\n“Some people leave footprints behind,\nNot carved in stone, but in our lives.”\n\nOfficial lyrics and available language tracks are sourced from the approved Hybrid Studio master.",
     "releaseDate": "2026-11-15T18:00:13.350Z",
-    "durationSeconds": 954.79,
-    "durationFormatted": "00:15:54",
+    "durationSeconds": 955,
+    "durationFormatted": "15:55",
     "viewCount": 0,
     "likeCount": 0,
     "status": "published",
@@ -18473,8 +18522,8 @@
       "hi"
     ],
     "defaultLanguage": "ur",
-    "thumbnailUrl": "/api/admin/pipeline/drafts/draft_1794752884539_0eb391d5/media?asset=thumbnail",
-    "canonicalThumbnail": "/api/admin/pipeline/drafts/draft_1794752884539_0eb391d5/media?asset=thumbnail",
+    "thumbnailUrl": "https://i.ytimg.com/vi/G595CGkQ4jc/maxresdefault.jpg",
+    "canonicalThumbnail": "https://i.ytimg.com/vi/G595CGkQ4jc/maxresdefault.jpg",
     "canonicalLyrics": {
       "text": "# کچھ لوگ نشاں چھوڑ جاتے ہیں\n\n[INTRO | Soft piano, mountain wind, intimate baritone]\n\nکوئی نام کی خاطر جیتا ہے،\nکوئی کام سے پہچانا جاتا ہے۔\nکوئی دنیا میں آکر گزرتا ہے،\nکوئی دنیا کو کچھ دے جاتا ہے۔\n\n[VERSE 1 | Mountains and Solitude]\n\nوہ اونچے پہاڑوں کی راہوں کا راہی،\nکبھی خاموش وادی، کبھی برف کی گواہی۔\nکبھی سبز ڈھلانوں پہ تنہا سفر،\nکبھی بادلوں کے پار جاتی نظر۔\n\nنہ منزل کی جلدی، نہ شہرت کا خیال،\nہر موڑ پہ قدرت سے کرتا سوال۔\nچشموں کی دھن میں کوئی راز ملا،\nچوٹی پہ خود سے نیا رابطہ ملا۔\n\n[PRE-CHORUS | Rising strings]\n\nراہیں بھی پہچانیں، ہوائیں بھی جانیں،\nکچھ لوگ سفر کو عبادت مانیں۔\n\n[CHORUS | Powerful melodic hook]\n\nکچھ لوگ نشاں چھوڑ جاتے ہیں،\nخاموشیاں بھی سنا جاتے ہیں۔\nنہ تاج کی خواہش، نہ تخت کا گماں،\nبس دلوں میں اپنا مکاں چھوڑ جاتے ہیں۔\n\nکچھ لوگ نشاں چھوڑ جاتے ہیں،\nبجھتے چراغ جلا جاتے ہیں۔\nاپنے لیے تو سبھی جیتے ہیں،\nوہ اوروں کے لیے جی جاتے ہیں۔\n\n[VERSE 2 | Guardian of Living Crafts]\n\nکبھی دیکھا کسی بنکر کا مکان،\nاس کی آنکھوں میں صدیوں کا ارمان۔\nسوزنی کے ٹانکوں میں درد ملا،\nکانی کے رنگوں میں فخر ملا۔\n\nپشمینہ کی نرمی میں محنت کا نور،\nقالین کی گرہوں میں برسوں کا سرور۔\nاخروٹ کی لکڑی پہ ابھرتا جمال،\nدستکار کے ہاتھوں میں بے مثال کمال۔\n\nجب ہنر کی قیمت گھٹائی گئی،\nہاتھوں کی محنت ٹھکرائی گئی،\nتو دل سے اٹھی ایک سچی صدا،\nہنر کی حفاظت بھی ہے ایک وفا۔\n\n[CRAFT HOOK | Deep rhythmic pulse]\n\nیہ ہاتھ نہیں، یہ تاریخ ہیں!\nیہ نقش نہیں، یہ تحریر ہیں!\nان کی محنت، ان کا مان،\nان سے زندہ کشمیر کی شان!\n\n[VERSE 3 | Dignity and Protection]\n\nوہ کہتا رہا، ہنر کو پہچانو،\nہر اصل نشانی کو اصل ہی مانو۔\nنقل کی چمک سے دھوکہ نہ کھاؤ،\nجو ہاتھوں نے بنایا، اسے حق دلاؤ۔\n\nکاریگر کا حصہ، کاریگر کا مان،\nیہی تو ہے ورثے کی سچی پہچان۔\nدنیا کے در پر جب وادی کا نام،\nپہنچا تو چمکا صدیوں کا کام۔\n\nنہ اپنے لیے کوئی تمغہ مانگا،\nنہ اپنے نام کا چرچا مانگا۔\nبس اتنی تمنا دل میں رہی،\nیہ وراثت کبھی بے نام نہ رہی۔\n\n[CHORUS | Wider harmonies]\n\nکچھ لوگ نشاں چھوڑ جاتے ہیں،\nخاموشیاں بھی سنا جاتے ہیں۔\nنہ تاج کی خواہش، نہ تخت کا گماں،\nبس دلوں میں اپنا مکاں چھوڑ جاتے ہیں۔\n\n[VERSE 4 | The Writer's Soul]\n\nجب شام نے اوڑھی خاموشی کی چادر،\nوہ کھولتا کتابوں کا اپنا سمندر۔\nلفظوں میں ڈھونڈے گزرے زمانے،\nقلم سے لکھے ان کہے فسانے۔\n\nہر صفحے پہ کوئی سوال اترتا،\nہر جواب سے نیا خیال ابھرتا۔\nجو راہوں میں دیکھا، جو لوگوں سے جانا،\nاسے لفظوں میں ڈھالا، دل سے مانا۔\n\nپہاڑوں کی خاموشی، کتابوں کی بات،\nدونوں میں گزری کئی جاگتی رات۔\nایک دنیا باہر، ایک دنیا اندر،\nدونوں کا مسافر، دونوں کا رہبر۔\n\n[HOOK | Intimate and reflective]\n\nکبھی راہوں میں، کبھی کتابوں میں،\nکبھی خوابوں میں، کبھی جوابوں میں۔\nجو خود کو تلاشتا رہتا ہے،\nوہ دنیا کو بھی کچھ کہتا ہے۔\n\n[VERSE 5 | A Father of Two Sons]\n\nگھر لوٹے تو اپنا تھا ایک جہاں،\nدو ننھے چراغوں میں سارا آسماں۔\nدو بیٹوں کی ہنسی، دو آنکھوں کا نور،\nدن بھر کی تھکن ہو جاتی تھی دور۔\n\nان کے لیے خواب، ان کے لیے دعا،\nہر منزل سے دل کا رابطہ۔\nنہ دولت کی چاہت، نہ اونچے مکان،\nبس نیک راہوں پہ چلنے کا ارمان۔\n\nجو سیکھا زندگی کے امتحان سے،\nوہ دینا ہے بیٹوں کو اپنے ایمان سے۔\nنہ صرف وراثت، نہ صرف کوئی نام،\nسچی محنت کا جیتا جاگتا پیغام۔\n\n[PRE-CHORUS | Warm piano and cello]\n\nدو چراغوں میں کل کا سویرا،\nدو نگاہوں میں خوابوں کا ڈیرا۔\nباپ کی دعاؤں کا اتنا اثر،\nروشن رہیں دونوں کی راہیں عمر بھر۔\n\n[VERSE 6 | Beyond Position]\n\nکرسیاں بدلتی ہیں، عہدے بھی ڈھلتے،\nمگر نیک ارادے کہاں ختم ہوتے۔\nکسی کا ہنر جب سہارا بنا،\nکسی کے لیے جب اجالا بنا۔\n\nنہ ہر کام کی تصویر ہوتی،\nنہ ہر کوشش کی تحریر ہوتی۔\nمگر وقت کے سینے میں رہتا نشاں،\nکہاں کس نے بدلا کسی کا جہاں۔\n\n[BRIDGE | Cinematic crescendo]\n\nایک دن یہ راستے پیچھے رہیں گے،\nیہ موسم، یہ منظر بدلتے رہیں گے،\nنہ جانے کہاں تک سفر جائے گا،\nکون کس کو کب تک یاد آئے گا،\n\nمگر جن کے ہاتھوں کو عزت ملی،\nجن کے ہنر کو نئی ہمت ملی،\nوہ دل سے کبھی مٹا نہ سکیں گے،\nکہ کچھ لوگ آئے تھے، جو ساتھ دے گئے۔\n\n[FINAL CHORUS | Grand orchestral rise]\n\nکچھ لوگ نشاں چھوڑ جاتے ہیں،\nخاموشیاں بھی سنا جاتے ہیں۔\nنہ تاج کی خواہش، نہ تخت کا گماں،\nبس دلوں میں اپنا مکاں چھوڑ جاتے ہیں۔\n\nکچھ لوگ نشاں چھوڑ جاتے ہیں،\nبجھتے چراغ جلا جاتے ہیں۔\nنہ نام کی خواہش، نہ نام کا سوال،\nبس کام سے بنتی ہے ان کی مثال۔\n\n[OUTRO | Piano, mountain ambience]\n\nکبھی پہاڑوں کی راہوں میں ملیں گے،\nکبھی کتابوں کے صفحوں میں ملیں گے،\nکبھی کاریگر کی دعاؤں میں رہیں گے،\nکبھی دو چراغوں کی روشنی میں رہیں گے،\n\nنہ ہر داستاں کو کوئی نام چاہیے،\nنہ ہر خدمت کو کوئی انعام چاہیے،\n\n[FINAL WHISPER | Fading baritone]\n\nکچھ لوگ...\n\nبس نشاں چھوڑ جاتے ہیں۔",
       "primaryLanguage": "ur",
@@ -18633,6 +18682,8 @@
         "isPublished": true
       }
     ],
-    "publishedAt": "2026-11-17T16:14:38.492Z"
+    "publishedAt": "2026-11-17T16:14:38.492Z",
+    "writer": "Dr. Zarf-e-Noori",
+    "vocalist": "SufiPulse Vocal Ensemble"
   }
 ]

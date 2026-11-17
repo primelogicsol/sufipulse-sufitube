@@ -32,9 +32,9 @@ export const buildYouTubeThumbnailCandidates = (
   videoId?: string,
   preferred: Array<string | undefined> = []
 ): string[] => {
-  // Strip signed query params from preferred URLs (i9.ytimg.com tokens expire within hours)
+  // Strip signed query params and never expose internal admin endpoints
   const cleanPreferred = preferred
-    .filter((url): url is string => Boolean(url))
+    .filter((url): url is string => typeof url === 'string' && !url.includes('/api/admin/'))
     .map(url => {
       try {
         const u = new URL(url);
