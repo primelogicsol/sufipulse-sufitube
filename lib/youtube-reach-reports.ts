@@ -91,8 +91,18 @@ function parseDailyReport(csv: string, report: {id:string;startTime:string;endTi
   let day: string | null = null, impressions = 0, clicked = 0;
   for (const row of rows) {
     const value = row[dayIndex]?.trim();
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
-    if (!date) throw new Error('Invalid date in YouTube report');
+    let date: string | null = null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      date = value;
+    } else if (/^\d{8}$/.test(value)) {
+      date = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+    } else if (value) {
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) {
+        date = parsed.toISOString().slice(0, 10);
+      }
+    }
+    if (!date) throw new Error(`Invalid date in YouTube report: "${value}"`);
     if (day !== null && day !== date) throw new Error('Unexpected multi-day report');
     day = date;
     const count = Number(row[impressionsIndex]);
