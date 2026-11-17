@@ -67,13 +67,13 @@ export default function KashmirPartnersPublicPage() {
               <Compass className="w-3.5 h-3.5" /> Cultural Distribution Alliance
             </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
-              SufiPulse Cultural <br className="hidden md:inline" />
+              SufiPulse Kashmir <br className="hidden md:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-gold,#D4AF37)] to-[#FDE68A]">
-                Partner Network
+                Cultural Partner Network
               </span>
             </h1>
             <p className="text-base md:text-lg text-neutral-300 leading-relaxed max-w-2xl mx-auto font-light">
-              Connecting genuine community custodians, artisan guilds, and youth forums across the ten districts of the Kashmir Valley to distribute sacred music without commercial ad spam or unsolicited messaging.
+              A collaborative network connecting Sufi music, spiritual poetry, Kashmiri cultural heritage and environmental consciousness with communities throughout the Kashmir Valley.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -170,7 +170,7 @@ export default function KashmirPartnersPublicPage() {
             <ShieldCheck className="w-8 h-8 text-[var(--color-gold,#D4AF37)] mx-auto" />
             <h3 className="text-2xl font-bold text-white tracking-tight">The Non-Commercial Distribution Covenant</h3>
             <p className="text-sm text-neutral-300 leading-relaxed">
-              SufiPulse Cultural Partners do not pay membership fees, nor are they paid affiliate spammers. Partners are respected cultural, ecological, and educational organizations who share a common commitment to preserving classical poetry, environmental ethics, and living artisan heritage.
+              SufiPulse Cultural Partners do not pay membership fees, nor is this a commercial advertising program. Partners are respected cultural, ecological, and educational organizations who share a common commitment to preserving classical poetry, environmental ethics, and living artisan heritage.
             </p>
             <div className="pt-4">
               <Link

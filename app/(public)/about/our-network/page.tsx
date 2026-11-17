@@ -55,7 +55,7 @@ export default function OurNetwork() {
         {
             icon: Globe,
             title: 'Institutional Partners',
-            description: 'Select organizations and research affiliates aligned with the founding mission.'
+            description: 'Select organizations and research collaborators aligned with the founding mission.'
         },
         {
             icon: Mic,
@@ -107,7 +107,7 @@ export default function OurNetwork() {
                             </h1>
 
                             <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-[var(--leading-relaxed)] font-light max-w-3xl mx-auto mb-10 drop-shadow">
-                                SufiPulse operates through a centralized governance framework supported by distributed studio hubs, regional affiliates, and collaborative networks worldwide.
+                                SufiPulse operates through a centralized governance framework supported by distributed studio hubs, regional partners, and collaborative networks worldwide.
                             </p>
 
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
@@ -214,7 +214,7 @@ export default function OurNetwork() {
                     <div className="max-w-6xl mx-auto">
                         <StudioSectionHeader 
                             title="Global Collaboration"
-                            subtitle="Engaging contributors and institutional affiliates across regional boundaries"
+                            subtitle="Engaging contributors and institutional collaborators across regional boundaries"
                         />
 
                         <StudioCardGrid cols={2}>
@@ -243,7 +243,7 @@ export default function OurNetwork() {
                                 Cultural Partner Network
                             </h2>
                             <p className="text-sm md:text-base text-neutral-400 leading-relaxed font-light">
-                                An AI-assisted grassroots distribution ecosystem connecting SufiPulse sacred releases directly with cultural institutions, artisan guilds, ecological groups, and youth societies. Kashmir Valley serves as our founding regional chapter.
+                                A grassroots cultural distribution network connecting SufiPulse sacred releases directly with cultural institutions, artisan guilds, ecological groups, and youth societies. Kashmir Valley serves as our founding regional chapter.
                             </p>
                         </div>
 

@@ -79,8 +79,8 @@ export default function KashmirPartnersGuidelinesPage() {
                 To protect the spiritual dignity of Sufism and prevent platform sanctions, network members must never:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs text-neutral-400">
-                <li>Send unsolicited bulk messages or cold DMs to individuals who have not consented to receive community updates.</li>
-                <li>Engage in bot-assisted playback, engagement pods, or artificial view generation.</li>
+                <li>Send unsolicited bulk messages or cold messages to individuals who have not consented to receive community updates.</li>
+                <li>Engage in artificial playback manipulation, engagement pods, or simulated view generation.</li>
                 <li>Misrepresent partnership as formal institutional governance or doctrinal endorsement of SufiPulse.</li>
               </ul>
             </div>
