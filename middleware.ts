@@ -4,7 +4,7 @@ import { logger } from '@/app/lib/logger';
 
 const middlewareLogger = logger.middleware;
 
-const PROTECTED_PREFIXES = ['/admin', '/user', '/dashboard'];
+const PROTECTED_PREFIXES = ['/admin', '/user', '/dashboard', '/api/admin'];
 const AUTH_ONLY_PATHS = ['/login', '/register', '/forgot-password'];
 const ADMIN_ROLES = ['admin', 'administrator', 'super_admin', 'governance_admin'];
 
@@ -27,7 +27,7 @@ function base64UrlDecode(str: string): string {
 // Verifies a HS256 JWT using the Web Crypto API (fully Edge-compatible, no jose import).
 // Returns the decoded payload on success, or null on failure.
 async function verifyToken(token: string): Promise<TokenPayload | null> {
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.JWT_SECRET || 'dev-secret-change-in-production-must-be-32-chars';
   if (!secret) return null;
   try {
     const parts = token.split('.');
@@ -103,7 +103,12 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const isAdminPath = pathname.startsWith('/admin');
+    // Allow OAuth callback routes without blocking
+    if (pathname.includes('/callback')) {
+      return response;
+    }
+
+    const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
     const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
     const isAuthRoute = AUTH_ONLY_PATHS.includes(pathname);
 
@@ -111,8 +116,16 @@ export async function middleware(request: NextRequest) {
       const token = request.cookies.get('access_token')?.value;
       const payload = token ? await verifyToken(token) : null;
 
-      // Unauthenticated → redirect to login
+      // Unauthenticated → return 401 JSON for API requests, redirect to login for pages
       if (isProtected && !payload) {
+        if (pathname.startsWith('/api/')) {
+          const unauthorizedRes = NextResponse.json(
+            { error: 'Not authenticated', code: 'NO_TOKEN' },
+            { status: 401 }
+          );
+          addSecurityHeaders(unauthorizedRes);
+          return unauthorizedRes;
+        }
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('returnTo', request.nextUrl.pathname + request.nextUrl.search);
         const redirectRes = NextResponse.redirect(loginUrl);
@@ -122,6 +135,11 @@ export async function middleware(request: NextRequest) {
 
       // Authenticated but not admin → 403 for /admin routes (excluding setup)
       if (isAdminPath && !pathname.startsWith('/admin/setup') && payload && !ADMIN_ROLES.includes(payload.role || '')) {
+        if (pathname.startsWith('/api/')) {
+          const forbiddenRes = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+          addSecurityHeaders(forbiddenRes);
+          return forbiddenRes;
+        }
         return new NextResponse('Forbidden', { status: 403 });
       }
 

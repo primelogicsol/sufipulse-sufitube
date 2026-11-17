@@ -73,6 +73,7 @@ export interface KashmirPartner {
   verificationStatus: PartnerVerificationStatus;
   verificationNotes?: string;
   verifiedAt?: string;
+  verifiedBy?: string;
   consentStatus: PartnerConsentStatus;
   consentGrantedAt?: string;
   estimatedCommunityReach: number;      // Documented community/follower footprint

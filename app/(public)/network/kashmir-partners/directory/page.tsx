@@ -35,7 +35,7 @@ export default function KashmirPartnersDirectoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/kashmir-reach?status=verified')
+    fetch('/api/public/kpn-directory')
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -172,11 +172,11 @@ export default function KashmirPartnersDirectoryPage() {
                     </span>
                     {partner.relationshipType === 'affiliated_organization' ? (
                       <span className="text-[10px] text-purple-300 bg-purple-500/10 border border-purple-500/30 px-1.5 py-0.5 rounded font-bold">
-                        Ecosystem Affiliated
+                        Institutional Collaborator
                       </span>
                     ) : (
                       <span className="text-[10px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-1.5 py-0.5 rounded font-bold">
-                        Independent Custodian
+                        Independent Cultural Partner
                       </span>
                     )}
                   </div>

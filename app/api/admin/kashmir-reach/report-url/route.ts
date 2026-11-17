@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 import { kashmirPartnerStore } from '@/server/services/kashmir-partner-store';
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { partnerId, releaseSlug, channel, publishedUrl } = await req.json();
 

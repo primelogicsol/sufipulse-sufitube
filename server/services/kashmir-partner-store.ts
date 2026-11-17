@@ -192,7 +192,7 @@ class KashmirPartnerStore {
     return newPartner;
   }
 
-  public verify(partnerId: string, notes?: string): boolean {
+  public verify(partnerId: string, notes?: string, verifiedBy?: string): boolean {
     this.ensureInitialized();
     const partner = this.partners.find((p) => p.id === partnerId);
     if (!partner) return false;
@@ -200,17 +200,31 @@ class KashmirPartnerStore {
     partner.verifiedAt = new Date().toISOString();
     partner.consentStatus = 'explicit_permission_granted';
     if (notes) partner.verificationNotes = notes;
+    if (verifiedBy) partner.verifiedBy = verifiedBy;
     partner.updatedAt = new Date().toISOString();
     this.persist();
+    logger.cms.info('[KPN Audit] Partner application approved & verified by administrator', {
+      partnerId,
+      partnerName: partner.name,
+      verifiedBy: verifiedBy || 'admin',
+      timestamp: partner.verifiedAt,
+    });
     return true;
   }
 
-  public reject(partnerId: string): boolean {
+  public reject(partnerId: string, rejectedBy?: string): boolean {
     this.ensureInitialized();
     const idx = this.partners.findIndex((p) => p.id === partnerId);
     if (idx < 0) return false;
+    const partner = this.partners[idx];
     this.partners.splice(idx, 1);
     this.persist();
+    logger.cms.info('[KPN Audit] Partner application dismissed by administrator', {
+      partnerId,
+      partnerName: partner.name,
+      rejectedBy: rejectedBy || 'admin',
+      timestamp: new Date().toISOString(),
+    });
     return true;
   }
 

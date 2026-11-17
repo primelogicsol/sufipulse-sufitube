@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 import {
   runAI01DiscoveryScan,
   runAI04ReleaseMatching,
@@ -8,6 +9,9 @@ import {
 } from '@/server/services/kpn-ai-engines';
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { searchParams } = new URL(req.url);
     const releaseSlug = searchParams.get('releaseSlug') || 'footprints-behind';

@@ -12,6 +12,13 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { spawn, ChildProcess } from 'child_process';
+import dotenv from 'dotenv';
+
+if (fs.existsSync('.env.local')) {
+  dotenv.config({ path: '.env.local' });
+} else if (fs.existsSync('.env')) {
+  dotenv.config({ path: '.env' });
+}
 
 interface CheckResult {
   name: string;
@@ -263,6 +270,96 @@ function verifySocialShareAndCutdowns() {
   }
 }
 
+async function verifyKashmirPartnerSecurity() {
+  console.log('\n--- 4. Kashmir Partner Network Security & Authorization Gate ---');
+  const port = process.env.PORT || '3005';
+  const baseUrl = `http://localhost:${port}`;
+
+  // 4.1 Anonymous access to admin endpoints must return 401
+  try {
+    const resGet = await fetch(`${baseUrl}/api/admin/kashmir-reach`);
+    record('Security: Anonymous GET /api/admin/kashmir-reach returns 401', resGet.status === 401, `status: ${resGet.status}`);
+
+    const resVerify = await fetch(`${baseUrl}/api/admin/kashmir-reach/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partnerId: 'fake_id' })
+    });
+    record('Security: Anonymous POST /api/admin/kashmir-reach/verify returns 401', resVerify.status === 401, `status: ${resVerify.status}`);
+
+    const resCampaign = await fetch(`${baseUrl}/api/admin/kashmir-reach/campaign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partnerId: 'fake_id', releaseSlug: 'fake_slug' })
+    });
+    record('Security: Anonymous POST /api/admin/kashmir-reach/campaign returns 401', resCampaign.status === 401, `status: ${resCampaign.status}`);
+
+    const resAi = await fetch(`${baseUrl}/api/admin/kashmir-reach/ai-engines`);
+    record('Security: Anonymous GET /api/admin/kashmir-reach/ai-engines returns 401', resAi.status === 401, `status: ${resAi.status}`);
+
+    const resReport = await fetch(`${baseUrl}/api/admin/kashmir-reach/report-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partnerId: 'fake_id', releaseSlug: 'test', publishedUrl: 'https://test.com' })
+    });
+    record('Security: Anonymous POST /api/admin/kashmir-reach/report-url returns 401', resReport.status === 401, `status: ${resReport.status}`);
+
+    // 4.2 Authenticated Admin Access
+    const { generateAccessToken } = require('../server/services/auth');
+    const { usersRepository } = require('../server/db/repositories/users');
+    const adminUser = usersRepository.listAll().find((u: any) => u.role === 'admin' || u.role === 'super_admin');
+
+    if (adminUser) {
+      const adminToken = await generateAccessToken({ id: adminUser.id, role: adminUser.role, email: adminUser.email });
+      const resAdmin = await fetch(`${baseUrl}/api/admin/kashmir-reach`, {
+        headers: {
+          'cookie': `access_token=${adminToken}`
+        }
+      });
+      record('Security: Authenticated Admin retains access (HTTP 200)', resAdmin.status === 200, `status: ${resAdmin.status}`);
+
+      // 4.3 Non-admin user (e.g. contributor role) must receive 403 Forbidden
+      const nonAdminUser = usersRepository.listAll().find((u: any) => u.role !== 'admin' && u.role !== 'super_admin');
+      if (nonAdminUser) {
+        const nonAdminToken = await generateAccessToken({ id: nonAdminUser.id, role: nonAdminUser.role, email: nonAdminUser.email });
+        const resForbidden = await fetch(`${baseUrl}/api/admin/kashmir-reach`, {
+          headers: { 'Cookie': `access_token=${nonAdminToken}` }
+        });
+        record('Security: Authenticated non-admin receives 403 Forbidden', resForbidden.status === 403, `status: ${resForbidden.status}`);
+      }
+    }
+
+    // 4.4 Public Directory Data Sanitization (Zero Private Leak)
+    const resPublicDir = await fetch(`${baseUrl}/api/public/kpn-directory`);
+    if (resPublicDir.status === 200) {
+      const data = await resPublicDir.json();
+      const partners: any[] = data.partners || [];
+      const hasPrivateFields = partners.some(p =>
+        'contactPerson' in p ||
+        'contactValue' in p ||
+        'contactChannel' in p ||
+        'notes' in p ||
+        'verificationNotes' in p ||
+        'trackingCode' in p
+      );
+      record('Security: Public directory strips all private contacts & notes', !hasPrivateFields && partners.length > 0, `verified: ${partners.length}, leak: ${hasPrivateFields}`);
+    } else {
+      record('Security: Public directory endpoint responds HTTP 200', false, `status: ${resPublicDir.status}`);
+    }
+
+    // 4.5 Public Intake Validation
+    const resApplyNoConsent = await fetch(`${baseUrl}/api/public/kpn-apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Incomplete Test' })
+    });
+    record('Security: Public partner apply rejects incomplete submission (400)', resApplyNoConsent.status === 400, `status: ${resApplyNoConsent.status}`);
+
+  } catch (err: any) {
+    record('Kashmir Partner Network Security Checks', false, err.message);
+  }
+}
+
 async function run() {
   console.log('====================================================');
   console.log(' SufiPulse Pre-Deploy Verification Gate');
@@ -272,6 +369,7 @@ async function run() {
     verifyCmsData();
     verifySocialShareAndCutdowns();
     await verifyRoutes();
+    await verifyKashmirPartnerSecurity();
   } finally {
     if (spawnedServer) {
       console.log('🧹 Terminating automated test server instance...');

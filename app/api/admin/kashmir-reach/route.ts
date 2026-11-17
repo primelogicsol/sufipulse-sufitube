@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 import { kashmirPartnerStore } from '@/server/services/kashmir-partner-store';
 import { PartnerPillar, KashmirDistrict } from '@/server/types/kashmir-reach';
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { searchParams } = new URL(req.url);
     const pillar = searchParams.get('pillar') as PartnerPillar | undefined;
@@ -33,6 +37,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const body = await req.json();
     if (!body.name || !body.pillar || !body.district) {
