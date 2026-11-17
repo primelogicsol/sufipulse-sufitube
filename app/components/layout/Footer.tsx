@@ -166,6 +166,7 @@ export function Footer() {
           <FooterSection title="Institutional Engagement" padLeft>
             <FooterLink href="/official-channels">Official Channels</FooterLink>
             <FooterLink href="/collaboration">Institutional Collaboration</FooterLink>
+            <FooterLink href="/network/kashmir-partners">Cultural Partner Network</FooterLink>
             <FooterLink href="/product-infrastructure">Product Infrastructure</FooterLink>
             <FooterLink href="/governance">Governance</FooterLink>
             <FooterLink href="/contact">Contact SufiPulse</FooterLink>

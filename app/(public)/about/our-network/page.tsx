@@ -231,6 +231,84 @@ export default function OurNetwork() {
                 </PageContainer>
             </Section>
 
+            {/* Cultural Partner Network Section */}
+            <Section background="midnight" spacing="normal">
+                <PageContainer>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center max-w-3xl mx-auto mb-12">
+                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-gold)] mb-3 block">
+                                Regional Grassroots Distribution
+                            </span>
+                            <h2 className="font-serif text-3xl md:text-4xl font-bold text-white mb-4">
+                                Cultural Partner Network
+                            </h2>
+                            <p className="text-sm md:text-base text-neutral-400 leading-relaxed font-light">
+                                An AI-assisted grassroots distribution ecosystem connecting SufiPulse sacred releases directly with cultural institutions, artisan guilds, ecological groups, and youth societies. Kashmir Valley serves as our founding regional chapter.
+                            </p>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6 mb-10">
+                            <div className="elite-card p-6 border border-white/5 space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 flex items-center justify-center text-[var(--color-gold)]">
+                                    <Globe size={20} />
+                                </div>
+                                <h3 className="text-white font-bold text-base">Regional Chapter: Kashmir</h3>
+                                <p className="text-neutral-400 text-xs leading-relaxed">
+                                    Active across all 10 districts of Jammu & Kashmir, preserving sacred poetry, traditional craftsmanship, and ecological heritage through verified distribution.
+                                </p>
+                                <Link 
+                                    href="/network/kashmir-partners"
+                                    className="inline-flex items-center text-xs font-bold text-[var(--color-gold)] hover:underline pt-2"
+                                >
+                                    Explore Chapter Overview &rarr;
+                                </Link>
+                            </div>
+
+                            <div className="elite-card p-6 border border-white/5 space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                    <Users size={20} />
+                                </div>
+                                <h3 className="text-white font-bold text-base">Partner Directory & Guilds</h3>
+                                <p className="text-neutral-400 text-xs leading-relaxed">
+                                    Browse independent craft cooperatives, literary circles, universities, and environmental defenders who champion verified listening in their communities.
+                                </p>
+                                <Link 
+                                    href="/network/kashmir-partners/directory"
+                                    className="inline-flex items-center text-xs font-bold text-emerald-400 hover:underline pt-2"
+                                >
+                                    View Partner Directory &rarr;
+                                </Link>
+                            </div>
+
+                            <div className="elite-card p-6 border border-white/5 space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                                    <Shield size={20} />
+                                </div>
+                                <h3 className="text-white font-bold text-base">Partner Portal & Intake</h3>
+                                <p className="text-neutral-400 text-xs leading-relaxed">
+                                    Verified organizations receive tailored WhatsApp packages, high-definition art assets, and live listening analytics through the private Partner Portal.
+                                </p>
+                                <div className="flex items-center gap-4 pt-2">
+                                    <Link 
+                                        href="/network/kashmir-partners/apply"
+                                        className="inline-flex items-center text-xs font-bold text-purple-400 hover:underline"
+                                    >
+                                        Apply to Join &rarr;
+                                    </Link>
+                                    <span className="text-neutral-600 text-xs">|</span>
+                                    <Link 
+                                        href="/partners/login"
+                                        className="inline-flex items-center text-xs font-bold text-neutral-400 hover:text-white"
+                                    >
+                                        Partner Login
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </PageContainer>
+            </Section>
+
             <StudioGovernancePanel 
                 title="Structural Principle"
                 description="Distributed execution. Centralized governance. Network expansion operates strictly within charter-defined authority to ensure the preservation of sacred art."
