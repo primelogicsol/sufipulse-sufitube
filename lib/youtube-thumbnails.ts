@@ -43,6 +43,11 @@ export const buildYouTubeThumbnailCandidates = (
           const idMatch = u.pathname.match(/\/vi\/([A-Za-z0-9_-]{11})\//);
           if (idMatch) return `https://i.ytimg.com/vi/${idMatch[1]}/hqdefault.jpg`;
         }
+        // Normalize maxresdefault to guaranteed hqdefault (maxresdefault 404s for 80%+ of uploads)
+        if (u.hostname.includes('ytimg.com') && u.pathname.includes('/maxresdefault.')) {
+          u.pathname = u.pathname.replace('/maxresdefault.', '/hqdefault.');
+          return u.toString();
+        }
         // Strip other signed query params
         if (u.search.includes('sqp=') || u.search.includes('rs=')) {
           u.search = '';
@@ -54,15 +59,15 @@ export const buildYouTubeThumbnailCandidates = (
 
   const ytCandidates = videoId
     ? [
-        `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
         `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-        `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`,
         `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
         `https://i.ytimg.com/vi/${videoId}/default.jpg`,
+        `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`,
+        `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
         // Shorts-specific WebP path (works when standard jpg paths 404)
-        `https://i.ytimg.com/vi_webp/${videoId}/maxresdefault.webp`,
         `https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp`,
         `https://i.ytimg.com/vi_webp/${videoId}/mqdefault.webp`,
+        `https://i.ytimg.com/vi_webp/${videoId}/maxresdefault.webp`,
       ]
     : [];
 

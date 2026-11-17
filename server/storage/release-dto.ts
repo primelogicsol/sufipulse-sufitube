@@ -49,8 +49,8 @@ export function toCanonicalCMSRelease(release: any): CMSRelease {
   if (typeof canonical.thumbnailUrl === 'string' && canonical.thumbnailUrl.includes('/api/admin/')) {
     canonical.thumbnailUrl = canonical.youtubeId ? `https://i.ytimg.com/vi/${canonical.youtubeId}/hqdefault.jpg` : '';
   }
-  if (typeof canonical.canonicalThumbnail === 'string' && canonical.canonicalThumbnail.includes('/api/admin/')) {
-    canonical.canonicalThumbnail = canonical.youtubeId ? `https://i.ytimg.com/vi/${canonical.youtubeId}/maxresdefault.jpg` : '';
+  if (typeof canonical.canonicalThumbnail === 'string' && (canonical.canonicalThumbnail.includes('/api/admin/') || canonical.canonicalThumbnail.includes('maxresdefault.jpg'))) {
+    canonical.canonicalThumbnail = canonical.youtubeId ? `https://i.ytimg.com/vi/${canonical.youtubeId}/hqdefault.jpg` : '';
   }
 
   delete canonical.created_at;
