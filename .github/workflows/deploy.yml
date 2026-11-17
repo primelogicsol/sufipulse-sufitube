@@ -61,6 +61,8 @@ jobs:
           echo "[]" > .data/crawler-registry.json
           echo "[]" > .data/discovery-analytics.json
           for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
+          # Reconcile version-controlled releases into .data for build accuracy
+          node scripts/sync-cms-releases.js
           npm run build 2>&1 | tee /tmp/build-output.log
           BUILD_STATUS=${PIPESTATUS[0]}
           if [ "$BUILD_STATUS" -ne 0 ]; then
@@ -76,6 +78,15 @@ jobs:
             grep -iE "(error|failed|cannot|module not found|ENOENT|EACCES|SyntaxError|TypeError|ReferenceError)" /tmp/build-output.log || true
             exit 1
           fi
+
+      - name: Run verification gate (Linux build & runtime audit)
+        env:
+          CI: 'true'
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          PORT: '3005'
+        run: |
+          npm run verify:deploy
 
   # ── Step 2: Build Docker image and deploy ───────────────────────────────────
   deploy:
@@ -136,7 +147,15 @@ jobs:
           script: |
             set -euo pipefail
             _s="init"
-            trap 'echo "[DEPLOY FAILED] section=${_s} exit=$?" >&2' ERR
+            PREV_IMAGE=""
+            trap '
+              echo "[DEPLOY FAILED] section=${_s} exit=$?" >&2
+              if [ -n "${PREV_IMAGE:-}" ] && [ "${PREV_IMAGE}" != "none" ]; then
+                echo "🚨 Initiating automatic rollback to previous container image: ${PREV_IMAGE}"
+                SUFIPULSE_IMAGE="${PREV_IMAGE}" docker compose -p sufipulse_new up -d --force-recreate app || true
+                echo "Rollback container started."
+              fi
+            ' ERR
 
             # ── PREFLIGHT ────────────────────────────────────────────────────
             _s="preflight"
@@ -222,6 +241,11 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" \
               | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
+            # ── CAPTURE ROLLBACK STATE ───────────────────────────────────────
+            _s="capture-rollback-state"
+            PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' sufipulse-new-app 2>/dev/null || echo "")
+            echo "Previous running image captured for rollback: ${PREV_IMAGE:-none}"
+
             # ── PULL AND DEPLOY ──────────────────────────────────────────────
             _s="docker-pull"
             IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
@@ -252,6 +276,11 @@ jobs:
               "${SUFIPULSE_IMAGE}" \
               cp /app/.data/knowledge-registry.json /target/knowledge-registry.json
             echo "knowledge-registry.json synced to volume"
+
+            # ── SYNC CMS RELEASES FROM IMAGE → PERSISTENT VOLUME ─────────────
+            _s="sync-cms-releases"
+            echo "Synchronizing CMS releases into persistent volume with pre-sync backup..."
+            docker compose -p sufipulse_new exec -T app node scripts/sync-cms-releases.js
 
             # ── HEALTH CHECK ─────────────────────────────────────────────────
             _s="health-check"
@@ -306,6 +335,19 @@ jobs:
               echo "VERSION CHECK: FAIL. Expected ${{ github.event.inputs.deployment_sha || github.sha }} but got ${DEPLOYED_COMMIT}"
               exit 1
             fi
+
+            # ── POST-DEPLOY LIVE VERIFICATION ─────────────────────────────────
+            _s="live-smoke-verify"
+            echo "Running live post-deploy verification against http://127.0.0.1:3001..."
+            # Check 308 redirects
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/mithaq)" = "308" || { echo "FATAL: /mithaq failed redirect"; exit 1; }
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/legal/terms-of-service)" = "308" || { echo "FATAL: /legal/terms-of-service failed redirect"; exit 1; }
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/production)" = "308" || { echo "FATAL: /production failed redirect"; exit 1; }
+            # Check 200 public routes & published release
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/applications)" = "200" || { echo "FATAL: /applications returned non-200"; exit 1; }
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/release-detail/footprints-behind)" = "200" || { echo "FATAL: /release-detail/footprints-behind returned non-200"; exit 1; }
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/releases)" = "200" || { echo "FATAL: /releases returned non-200"; exit 1; }
+            echo "LIVE ROUTE & RELEASE VERIFICATION: ALL PASSED"
 
             echo "DEPLOY COMPLETE — ${{ github.sha }}"
 

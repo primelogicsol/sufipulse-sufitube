@@ -5430,10 +5430,35 @@ function SocialShareKitPanel({
     { key: "telegram", label: "Telegram", icon: "✈️" },
   ];
 
-  const copy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+  const copy = async (text: string, key: string) => {
+    let success = false;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        success = true;
+      }
+    } catch {}
+
+    if (!success && typeof document !== 'undefined') {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch {}
+    }
+
+    if (success) {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    }
   };
 
   const generated = kit.generatedAt
@@ -5531,10 +5556,35 @@ function ContributorShareKit({
     },
   ].filter((k) => k.caption);
 
-  const copy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+  const copy = async (text: string, key: string) => {
+    let success = false;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        success = true;
+      }
+    } catch {}
+
+    if (!success && typeof document !== 'undefined') {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch {}
+    }
+
+    if (success) {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    }
   };
 
   return (

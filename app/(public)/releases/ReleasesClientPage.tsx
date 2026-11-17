@@ -347,9 +347,28 @@ function SyncResultModal({
     );
 }
 
+function formatReleaseMonthYear(dateStr?: string): string {
+    if (!dateStr) return '2026';
+    const match = dateStr.match(/^(\d{4})-(\d{2})/);
+    if (!match) {
+        const yearMatch = dateStr.match(/^(\d{4})/);
+        return yearMatch ? yearMatch[1] : '2026';
+    }
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthIdx = parseInt(match[2], 10) - 1;
+    if (monthIdx >= 0 && monthIdx < 12) {
+        return `${months[monthIdx]} ${match[1]}`;
+    }
+    return match[1];
+}
+
 export default function Releases({ initialReleases }: { initialReleases?: InitialRelease[] }) {
     const { user } = useAuth();
     const router = useRouter();
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
     // Seed from SSR-injected initialReleases when provided — eliminates skeleton on first render.
     // The mount useEffect will re-fetch to get the full paginated/filtered view.
     const [releases, setReleases] = useState<YouTubeRelease[]>(
@@ -727,7 +746,7 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
                                                 </button>
                                             )}
                                         </div>
-                                        {user?.role === 'admin' && (
+                                        {isMounted && user?.role === 'admin' && (
                                             <div className="flex flex-col gap-1">
                                                 <button
                                                     onClick={handleSync}
@@ -928,10 +947,12 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
 
                                                     <div className="flex items-center justify-between text-[11px] text-white/40 font-bold uppercase tracking-wider mt-1">
                                                         <div className="flex items-center gap-4">
-                                                            <span>{new Date(release.publishedDate || new Date().toISOString()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                                            <span suppressHydrationWarning>
+                                                                {formatReleaseMonthYear(release.publishedDate)}
+                                                            </span>
                                                             <div className="flex items-center gap-1.5">
                                                                 <div className="w-1 h-1 rounded-full bg-[var(--color-gold)]" />
-                                                                <span>{(Number(release.views) || 0).toLocaleString()} views</span>
+                                                                <span suppressHydrationWarning>{(Number(release.views) || 0).toLocaleString('en-US')} views</span>
                                                             </div>
                                                         </div>
                                                         {Boolean(release.youtubeId) && (

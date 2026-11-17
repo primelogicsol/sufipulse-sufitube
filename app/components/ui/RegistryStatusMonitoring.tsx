@@ -108,17 +108,24 @@ export function RegistryStatusMonitoring({ division, title, mysticalName, steps 
                 </div>
 
                 <div className="pt-4">
-                  <Link 
-                    href={`/applications/${refId}?token=${token}`}
-                    className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-all ${
-                      refId && token 
-                        ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20 hover:bg-amber-500' 
-                        : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
-                    }`}
-                  >
-                    Access Intake Record
-                    <ArrowRight size={14} />
-                  </Link>
+                  {refId && token ? (
+                    <Link 
+                      href={`/applications/${refId}?token=${token}`}
+                      className="w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-all bg-amber-400 text-black shadow-lg shadow-amber-400/20 hover:bg-amber-500 cursor-pointer"
+                    >
+                      Access Intake Record
+                      <ArrowRight size={14} />
+                    </Link>
+                  ) : (
+                    <button 
+                      type="button"
+                      disabled
+                      className="w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 transition-all bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed"
+                    >
+                      Access Intake Record
+                      <ArrowRight size={14} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-center gap-2 pt-4 opacity-50">

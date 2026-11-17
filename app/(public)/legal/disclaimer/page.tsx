@@ -218,7 +218,7 @@ export default function Disclaimer() {
 
                         <div className="mt-6">
                             <Link
-                                href="/legal/terms-of-service"
+                                href="/terms-of-service"
                                 className="text-sm text-amber-400 hover:text-amber-300 transition-colors inline-flex items-center gap-2"
                             >
                                 View Terms of Service

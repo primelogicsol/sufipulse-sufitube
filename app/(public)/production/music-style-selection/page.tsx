@@ -392,7 +392,7 @@ export default function MusicStyleSelection() {
             <StudioGovernancePanel 
                 title="Guiding Philosophy"
                 description="Sacred music theory at SufiPulse is not academic exercise—it is lived spiritual practice. Every technical choice serves the ultimate purpose of divine connection."
-                primaryCTA={{ label: "Production Overview", href: "/production" }}
+                primaryCTA={{ label: "Production Overview", href: "/governance/production-oversight" }}
                 shieldText="Spiritual Integrity Mandatory"
                 background="slate"
             />

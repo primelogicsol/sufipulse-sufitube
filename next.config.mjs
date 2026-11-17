@@ -59,6 +59,21 @@ const nextConfig = {
         destination: '/release-detail/:slug*',
         permanent: true,
       },
+      {
+        source: '/mithaq',
+        destination: '/governance/mithaq',
+        permanent: true,
+      },
+      {
+        source: '/legal/terms-of-service',
+        destination: '/terms-of-service',
+        permanent: true,
+      },
+      {
+        source: '/production',
+        destination: '/governance/production-oversight',
+        permanent: true,
+      },
     ];
   },
   async headers() {

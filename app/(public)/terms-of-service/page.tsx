@@ -387,10 +387,10 @@ export default function TermsOfService() {
                         </ul>
                         <div>
                             <a
-                                href="/mithaq"
+                                href="/governance/mithaq"
                                 className="text-sm text-amber-400 hover:underline"
                             >
-                                View Contributor Policy
+                                View Contributor Policy (Mithaq)
                             </a>
                         </div>
                     </div>

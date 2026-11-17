@@ -1,6 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  src: url('/fonts/NotoNastaliqUrdu-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  src: url('/fonts/NotoNastaliqUrdu-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-nastaliq {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', serif;
+  line-height: 2.2;
+}
+
 @import "tailwindcss";
 @import './styles/design-tokens.css';
 @import './styles/dashboard-tokens.css';

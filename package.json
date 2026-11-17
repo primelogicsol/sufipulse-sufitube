@@ -24,7 +24,8 @@
     "db:migrate": "node scripts/migrate.js",
     "seed:export": "node scripts/export-seed.js",
     "seed:export:dry": "node scripts/export-seed.js --dry-run",
-    "suno:connect": "node scripts/connect-suno.cjs"
+    "suno:connect": "node scripts/connect-suno.cjs",
+    "verify:deploy": "npx tsx scripts/pre-deploy-verify.ts"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",

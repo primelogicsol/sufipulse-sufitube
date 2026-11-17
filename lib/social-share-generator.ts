@@ -18,6 +18,81 @@ export function generateSocialShareKit(release: CMSRelease): SocialShareKit {
     ? `https://www.youtube.com/watch?v=${release.youtubeId}&list=${release.youtubePlaylistId}`
     : `https://www.youtube.com/watch?v=${release.youtubeId}`;
 
+  const isFootprints =
+    release.id?.includes('1794752884539') ||
+    release.slug === 'footprints-behind' ||
+    release.slug === 'some-people-leave-footprints-behind' ||
+    /footprints behind|کچھ لوگ نشاں/i.test(title);
+
+  if (isFootprints) {
+    const footprintsMsg = [
+      `SOME PEOPLE LEAVE FOOTPRINTS BEHIND`,
+      ``,
+      `Some make a difference once. Others make it their way of life, again and again.`,
+      ``,
+      `A soulful musical reflection on mountains, craftsmanship, fatherhood, guidance and lasting human legacy.`,
+      ``,
+      `An original SufiPulse USA release by Dr. Zarf-e-Noori.`,
+      ``,
+      `Watch the complete song:`,
+      `${ytUrl}`,
+      ``,
+      `#SufiPulseUSA #KashmirCrafts #LifeAndLegacy`,
+    ].join('\n');
+
+    return {
+      generatedAt: new Date().toISOString(),
+      whatsapp: footprintsMsg,
+      telegram: footprintsMsg,
+      facebook: [
+        `🎵 SOME PEOPLE LEAVE FOOTPRINTS BEHIND | SufiPulse USA`,
+        ``,
+        `Some make a difference once. Others make it their way of life, again and again.`,
+        ``,
+        `An original musical reflection honoring mountains, the living dignity of Kashmir's master artisans, fatherhood, and lasting human legacy.`,
+        ``,
+        `Written by Dr. Zarf-e-Noori · Dedicated in deep gratitude to Mahmood Ahmad Shah.`,
+        ``,
+        `▶️ Watch the complete song: ${ytUrl}`,
+        ``,
+        `#SufiPulseUSA #KashmirCrafts #KashmirArtisans #LifeAndLegacy`,
+      ].join('\n'),
+      instagram: [
+        `SOME PEOPLE LEAVE FOOTPRINTS BEHIND`,
+        ``,
+        `"Some people leave footprints behind,`,
+        `Not carved in stone, but into our lives."`,
+        ``,
+        `A soulful tribute to Kashmir's master artisans and silent guardians.`,
+        ``,
+        `🎵 Full song link in bio`,
+        ``,
+        `#SufiPulseUSA #KashmirArtisans #KashmirCrafts #LifeAndLegacy #Shorts`,
+      ].join('\n'),
+      twitter: `SOME PEOPLE LEAVE FOOTPRINTS BEHIND\n\nSome make a difference once. Others make it their way of life.\n\nHonoring Kashmir's artisans & lasting legacy.\n\n▶️ ${ytUrl}\n\n#SufiPulseUSA #KashmirCrafts`,
+      linkedin: [
+        `SOME PEOPLE LEAVE FOOTPRINTS BEHIND | SufiPulse USA`,
+        ``,
+        `What will remain of us when our footsteps fade? A mountain trail. A written page. A craftsman's livelihood. A life changed through guidance.`,
+        ``,
+        `Our original release celebrates the silent guardians whose work uplifts others. A tribute in gratitude to Mahmood Ahmad Shah for his leadership in safeguarding Kashmir's living craft traditions.`,
+        ``,
+        `▶️ Watch on YouTube: ${ytUrl}`,
+        ``,
+        `#SufiPulseUSA #KashmirArtisans #LivingCrafts #CulturalPreservation`,
+      ].join('\n'),
+      youtube: [
+        `SOME PEOPLE LEAVE FOOTPRINTS BEHIND | SufiPulse USA`,
+        ``,
+        `An original musical reflection by Dr. Zarf-e-Noori celebrating Kashmir's master artisans, fatherhood, and lasting human legacy.`,
+        ``,
+        `▶️ Watch the full masterpiece: ${ytUrl}`,
+        ``,
+        `#SufiPulseUSA #KashmirArtisans #LifeAndLegacy`,
+      ].join('\n'),
+    };
+  }
+
   const vocalistName = getVocalistDisplayName(release.vocalist) || '';
   const writerName = getWriterDisplayName(release.writer) || '';
 

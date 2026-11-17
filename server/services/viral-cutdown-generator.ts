@@ -28,6 +28,10 @@ export interface ViralCutdown {
   fileSizeBytes: number;
   downloadUrl: string;
   generatedAt: string;
+  publishingTitle?: string;
+  publishingDescription?: string;
+  relatedVideoId?: string;
+  onScreenTitle?: string;
 }
 
 export interface ViralCutdownResult {
@@ -56,6 +60,9 @@ function runFfmpeg(args: string[]): Promise<{ code: number; stderr: string }> {
     });
   });
 }
+
+export { type CutdownSpecTarget, getContentAwareCutdownSpecs } from '@/lib/cutdown-specs';
+import { getContentAwareCutdownSpecs } from '@/lib/cutdown-specs';
 
 /**
  * Automatically produces 3 vertical cutdown videos from the approved master video.
@@ -109,48 +116,8 @@ export async function generateViralCutdowns(draftId: string): Promise<ViralCutdo
   const probe = await probeMediaFile(sourcePath);
   const totalDuration = probe.durationSeconds || 300;
 
-  // 2. Define 3 Strategic Cut Windows
-  // Hook 1: First 15s (Atmospheric opening + first vocal entry)
-  const hook1Start = 0;
-  const hook1Dur = Math.min(15, totalDuration);
-
-  // Hook 2: The Main Chorus (Mukhda) - usually around 25s–30s into the track
-  const chorusStart = Math.min(25, Math.max(0, totalDuration - 35));
-  const chorusDur = Math.min(30, totalDuration - chorusStart);
-
-  // Hook 3: The Climax / Youth / Interrogation - around 35-45% through the master
-  const climaxStart = Math.min(Math.round(totalDuration * 0.35), Math.max(0, totalDuration - 45));
-  const climaxDur = Math.min(45, totalDuration - climaxStart);
-
-  const targets = [
-    {
-      id: 'hook_15s',
-      name: '15s Opening Viral Hook',
-      hookType: 'hook_15s' as const,
-      description: 'Ideal for WhatsApp Status, Instagram Stories, and quick attention capture.',
-      start: hook1Start,
-      duration: hook1Dur,
-      fileName: 'viral_cutdown_hook_15s.mp4',
-    },
-    {
-      id: 'chorus_30s',
-      name: '30s High-Energy Chorus Drop',
-      hookType: 'chorus_30s' as const,
-      description: 'The primary musical climax, optimized for Instagram Reels and YouTube Shorts.',
-      start: chorusStart,
-      duration: chorusDur,
-      fileName: 'viral_cutdown_chorus_30s.mp4',
-    },
-    {
-      id: 'climax_45s',
-      name: '45s Philosophical Dialogue Climax',
-      hookType: 'climax_45s' as const,
-      description: 'Deep narrative tension and identity questions, optimized for Telegram and Facebook Reels.',
-      start: climaxStart,
-      duration: climaxDur,
-      fileName: 'viral_cutdown_climax_45s.mp4',
-    },
-  ];
+  // 2. Define Content-Aware Strategic Cut Windows
+  const targets = getContentAwareCutdownSpecs(draft, totalDuration);
 
   const cutdowns: ViralCutdown[] = [];
 
@@ -220,6 +187,10 @@ export async function generateViralCutdowns(draftId: string): Promise<ViralCutdo
       fileSizeBytes: stat.size,
       downloadUrl: `/api/admin/pipeline/drafts/${draftId}/viral-cutdowns?asset=${t.id}`,
       generatedAt: new Date().toISOString(),
+      publishingTitle: t.publishingTitle,
+      publishingDescription: t.publishingDescription,
+      relatedVideoId: t.relatedVideoId,
+      onScreenTitle: t.onScreenTitle,
     });
   }
 

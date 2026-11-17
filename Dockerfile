@@ -75,6 +75,7 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/lib/cms-seed-releases.json ./lib/cms-seed-releases.json
 COPY --from=builder --chown=node:node /app/package.json ./package.json
 COPY --from=builder --chown=node:node /app/scripts/seed-admin.js ./scripts/seed-admin.js
+COPY --from=builder --chown=node:node /app/scripts/sync-cms-releases.js ./scripts/sync-cms-releases.js
 COPY --from=builder --chown=node:node /app/scripts/migrate.js ./scripts/migrate.js
 COPY --from=builder --chown=node:node /app/scripts/validate-env.mjs ./scripts/validate-env.mjs
 COPY --from=builder --chown=node:node /app/server/db/migrations ./server/db/migrations

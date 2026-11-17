@@ -25,19 +25,43 @@ export function ViralStatusShareBar({
     ? `https://www.youtube.com/watch?v=${youtubeId}`
     : `https://www.sufipulse.com/release-detail/${slug}`;
 
-  const snippet = lyricSnippet || 'Kab tak khamosh, kab tak khamosh? Apne zameer ke parde kholo!';
+  const snippet = lyricSnippet?.trim() ? `"${lyricSnippet.trim()}"\n\n` : '';
   
-  const shareText = `🌙 *"${title}"*\n\n"${snippet}"\n\nA sacred spiritual kalam from Kashmir — watch the master video with multilingual subtitles on YouTube:\n▶️ ${ytUrl}\n\n#SufiPulse #Kashmir #SufiMusic #Kalam`;
+  const shareText = `🌙 *"${title}"*\n\n${snippet}Experience this original musical reflection from SufiPulse USA — watch with multilingual subtitles on YouTube:\n▶️ ${ytUrl}\n\n#SufiPulse #SufiMusic #SpiritualReflection`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(shareText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(shareText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+        return;
+      }
     } catch {
-      // Fallback
+      // Proceed to fallback
+    }
+
+    // Fallback for browsers without clipboard permission
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = shareText;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    } catch {
+      // Ignored
     }
   };
 

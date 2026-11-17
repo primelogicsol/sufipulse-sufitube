@@ -66,18 +66,57 @@ export async function GET(request: NextRequest) {
   const slug = draft ? draft.slug : (release?.slug || targetId);
   const youtubeId = draft ? ((draft as any).downstreamStatus?.publishedYoutubeId || '') : (release?.youtubeId || '');
 
-  const dynamicPost = {
-    id: targetId,
-    title,
-    youtubeId,
-    slug,
-    post: [
-      `🌙 "${title}" — A Sacred Spiritual Release from SufiPulse USA`,
+  const isFootprints =
+    targetId.includes('1794752884539') ||
+    slug === 'footprints-behind' ||
+    slug === 'some-people-leave-footprints-behind' ||
+    /footprints behind|کچھ لوگ نشاں/i.test(title);
+
+  let postContent = '';
+  let whatsappContent = '';
+  let telegramContent = '';
+
+  if (isFootprints) {
+    postContent = [
+      `SOME PEOPLE LEAVE FOOTPRINTS BEHIND`,
       ``,
-      `"دل کو منور کر دے نورِ حق سے`,
-      `ہر غم مٹ جائے تیرے کرم سے"`,
+      `What will remain of us when our footsteps fade?`,
       ``,
-      `We invite you to immerse yourself in this mystical contemplation from the valley of Kashmir.`,
+      `A mountain trail. A written page. A craftsman's livelihood. A life changed through someone else's guidance.`,
+      ``,
+      `Our original song celebrates the people whose contributions become part of other people's journeys.`,
+      ``,
+      `A special expression of gratitude to Mahmood Ahmad Shah for his guidance in our work supporting Kashmir's artisans and living craft heritage.`,
+      ``,
+      `FOUR YEARS. ONE VISION. WE DID IT!`,
+      ``,
+      `Watch the complete musical reflection:`,
+      `https://www.youtube.com/watch?v=${youtubeId || 'G595CGkQ4jc'}`,
+      ``,
+      `#SufiPulseUSA #KashmirArtisans #SomePeopleLeaveFootprintsBehind`,
+    ].join('\n');
+
+    whatsappContent = [
+      `SOME PEOPLE LEAVE FOOTPRINTS BEHIND`,
+      ``,
+      `Some make a difference once. Others make it their way of life, again and again.`,
+      ``,
+      `A soulful musical reflection on mountains, craftsmanship, fatherhood, guidance and lasting human legacy.`,
+      ``,
+      `An original SufiPulse USA release by Dr. Zarf-e-Noori.`,
+      ``,
+      `Watch the complete song:`,
+      `https://www.youtube.com/watch?v=${youtubeId || 'G595CGkQ4jc'}`,
+      ``,
+      `#SufiPulseUSA #KashmirCrafts #LifeAndLegacy`,
+    ].join('\n');
+
+    telegramContent = whatsappContent;
+  } else {
+    postContent = [
+      `🌙 "${title}" — SufiPulse USA`,
+      ``,
+      `Experience "${title}", an original musical reflection presented by SufiPulse USA.`,
       ``,
       youtubeId ? `▶️ Watch on YouTube with Multilingual Subtitles:\nhttps://www.youtube.com/watch?v=${youtubeId}` : '',
       ``,
@@ -86,8 +125,29 @@ export async function GET(request: NextRequest) {
       ``,
       `Share your reflections in the comments below. 👇`,
       ``,
-      `#SufiPulse #SufiMusic #Kashmir #Spiritual #Kalam #UrduPoetry`,
-    ].filter(Boolean).join('\n'),
+      `#SufiPulse #SufiMusic #SpiritualKalam #SufiPulseUSA`,
+    ].filter(Boolean).join('\n');
+
+    whatsappContent = [
+      `🌙 *"${title}"*`,
+      `An original musical reflection from SufiPulse USA.`,
+      ``,
+      `▶️ https://www.youtube.com/watch?v=${youtubeId || ''}`,
+      ``,
+      `#SufiPulseUSA #SufiMusic`,
+    ].join('\n');
+
+    telegramContent = whatsappContent;
+  }
+
+  const dynamicPost = {
+    id: targetId,
+    title,
+    youtubeId,
+    slug,
+    post: postContent,
+    whatsapp: whatsappContent,
+    telegram: telegramContent,
   };
 
   return NextResponse.json({
