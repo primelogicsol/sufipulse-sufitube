@@ -49,6 +49,7 @@ export default function KashmirReachPage() {
   // Filters
   const [selectedPillar, setSelectedPillar] = useState<string>('all');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'verified' | 'pending_verification'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Campaign Studio State
@@ -104,6 +105,7 @@ export default function KashmirReachPage() {
     return partners.filter((p) => {
       if (selectedPillar !== 'all' && p.pillar !== selectedPillar) return false;
       if (selectedDistrict !== 'all' && p.district !== selectedDistrict) return false;
+      if (statusFilter !== 'all' && p.verificationStatus !== statusFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
@@ -115,7 +117,23 @@ export default function KashmirReachPage() {
       }
       return true;
     });
-  }, [partners, selectedPillar, selectedDistrict, searchQuery]);
+  }, [partners, selectedPillar, selectedDistrict, statusFilter, searchQuery]);
+
+  const handleVerifyPartner = async (partnerId: string) => {
+    try {
+      const res = await fetch('/api/admin/kashmir-reach/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchPartners();
+      }
+    } catch (err) {
+      console.error('Failed to verify partner', err);
+    }
+  };
 
   const generateKit = async (partner: KashmirPartner) => {
     setGeneratingKit(true);
@@ -440,6 +458,17 @@ export default function KashmirReachPage() {
                   <option key={k} value={k}>{v}</option>
                 ))}
               </select>
+
+              {/* Status Selector */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="px-3 py-1.5 bg-black/40 border border-white/10 rounded-lg text-xs text-neutral-200 focus:outline-none"
+              >
+                <option value="all">All Statuses</option>
+                <option value="verified">Verified Active</option>
+                <option value="pending_verification">Pending Review</option>
+              </select>
             </div>
           </div>
 
@@ -462,7 +491,18 @@ export default function KashmirReachPage() {
                   {filteredPartners.map((partner) => (
                     <tr key={partner.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-white">{partner.name}</div>
+                        <div className="font-bold text-white flex items-center gap-2">
+                          <span>{partner.name}</span>
+                          {partner.relationshipType === 'affiliated_organization' ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30">
+                              Affiliated
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                              Independent
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-neutral-400 font-mono">{partner.primaryHandle}</div>
                       </td>
                       <td className="py-3.5 px-4">
@@ -482,23 +522,40 @@ export default function KashmirReachPage() {
                         {partner.estimatedCommunityReach.toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                          <CheckCircle2 className="w-3 h-3" /> Verified
-                        </span>
+                        {partner.verificationStatus === 'verified' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3" /> Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                            Pending Review
+                          </span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4 text-right space-x-2">
-                        <button
-                          onClick={() => generateKit(partner)}
-                          className="px-2.5 py-1 bg-[var(--color-gold,#D4AF37)]/10 hover:bg-[var(--color-gold,#D4AF37)]/20 border border-[var(--color-gold,#D4AF37)]/30 text-[var(--color-gold,#D4AF37)] rounded text-[11px] font-bold transition-all"
-                        >
-                          Generate Kit
-                        </button>
-                        <button
-                          onClick={() => setReportModalPartner(partner)}
-                          className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-300 rounded text-[11px] font-bold transition-all"
-                        >
-                          Record URL
-                        </button>
+                        {partner.verificationStatus === 'pending_verification' ? (
+                          <button
+                            onClick={() => handleVerifyPartner(partner.id)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold transition-all shadow-md"
+                          >
+                            Approve & Verify
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => generateKit(partner)}
+                              className="px-2.5 py-1 bg-[var(--color-gold,#D4AF37)]/10 hover:bg-[var(--color-gold,#D4AF37)]/20 border border-[var(--color-gold,#D4AF37)]/30 text-[var(--color-gold,#D4AF37)] rounded text-[11px] font-bold transition-all"
+                            >
+                              Generate Kit
+                            </button>
+                            <button
+                              onClick={() => setReportModalPartner(partner)}
+                              className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-300 rounded text-[11px] font-bold transition-all"
+                            >
+                              Record URL
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}

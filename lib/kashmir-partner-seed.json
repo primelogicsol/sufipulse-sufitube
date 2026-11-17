@@ -7,7 +7,11 @@
     "pillar": "ecological_conservation",
     "district": "srinagar",
     "locationDetails": "Srinagar (Rajbagh / Dal Lake Basin)",
-    "authorizedChannels": ["instagram", "facebook", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "facebook",
+      "whatsapp"
+    ],
     "primaryHandle": "@kashmirecowatch",
     "contactPerson": "Mir Tariq Ahmad",
     "contactChannel": "whatsapp",
@@ -19,7 +23,12 @@
     "consentGrantedAt": "2026-11-02T14:30:00.000Z",
     "estimatedCommunityReach": 38000,
     "trackingCode": "ecowatch",
-    "matchedReleaseThemes": ["environmental", "dal_lake", "river_preservation", "kab_tak_khamosh"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "dal_lake",
+      "river_preservation",
+      "kab_tak_khamosh"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -29,7 +38,9 @@
       "completedListens": 45
     },
     "createdAt": "2026-11-01T10:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_dekoshur_sgr",
@@ -39,7 +50,11 @@
     "pillar": "artisan_craft_heritage",
     "district": "srinagar",
     "locationDetails": "Srinagar (Downtown / Zadibal Craft Hub)",
-    "authorizedChannels": ["instagram", "facebook", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "facebook",
+      "whatsapp"
+    ],
     "primaryHandle": "@dekoshurcrafts",
     "contactPerson": "Bashir Ahmad Jan",
     "contactChannel": "whatsapp",
@@ -51,7 +66,12 @@
     "consentGrantedAt": "2026-11-04T09:15:00.000Z",
     "estimatedCommunityReach": 27500,
     "trackingCode": "dekoshur",
-    "matchedReleaseThemes": ["artisan_heritage", "craft_revival", "footprints_behind", "living_dignity"],
+    "matchedReleaseThemes": [
+      "artisan_heritage",
+      "craft_revival",
+      "footprints_behind",
+      "living_dignity"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -61,7 +81,9 @@
       "completedListens": 52
     },
     "createdAt": "2026-11-03T11:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "affiliated_organization",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_hamadan_sgr",
@@ -71,7 +93,11 @@
     "pillar": "artisan_craft_heritage",
     "district": "srinagar",
     "locationDetails": "Srinagar (Fateh Kadal / Shah-e-Hamadan Shrine Corridor)",
-    "authorizedChannels": ["facebook", "whatsapp", "community_network"],
+    "authorizedChannels": [
+      "facebook",
+      "whatsapp",
+      "community_network"
+    ],
     "primaryHandle": "Hamadan Craft Revival Foundation",
     "contactPerson": "Ghulam Mohammad Wani",
     "contactChannel": "phone",
@@ -83,7 +109,12 @@
     "consentGrantedAt": "2026-11-05T10:00:00.000Z",
     "estimatedCommunityReach": 19000,
     "trackingCode": "hamadan_craft",
-    "matchedReleaseThemes": ["shah_e_hamadan", "carpet_craft", "footprints_behind", "heritage_trade"],
+    "matchedReleaseThemes": [
+      "shah_e_hamadan",
+      "carpet_craft",
+      "footprints_behind",
+      "heritage_trade"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -93,7 +124,9 @@
       "completedListens": 31
     },
     "createdAt": "2026-11-04T12:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "affiliated_organization",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_chrar_bdg",
@@ -103,7 +136,11 @@
     "pillar": "sacred_literature_sufi",
     "district": "budgam",
     "locationDetails": "Budgam (Chrar-i-Sharief Shrine Enclave)",
-    "authorizedChannels": ["whatsapp", "facebook", "community_network"],
+    "authorizedChannels": [
+      "whatsapp",
+      "facebook",
+      "community_network"
+    ],
     "primaryHandle": "Chrar Cultural Forum",
     "contactPerson": "Syed Abdul Hameed",
     "contactChannel": "whatsapp",
@@ -115,7 +152,12 @@
     "consentGrantedAt": "2026-11-06T11:00:00.000Z",
     "estimatedCommunityReach": 22000,
     "trackingCode": "chrar_reshi",
-    "matchedReleaseThemes": ["nund_rishi", "sheikh_noorani", "reshi_tradition", "peace_and_stewardship"],
+    "matchedReleaseThemes": [
+      "nund_rishi",
+      "sheikh_noorani",
+      "reshi_tradition",
+      "peace_and_stewardship"
+    ],
     "metrics": {
       "campaignsReceived": 0,
       "campaignsAccepted": 0,
@@ -125,7 +167,9 @@
       "completedListens": 19
     },
     "createdAt": "2026-11-05T14:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_iust_plw",
@@ -135,7 +179,11 @@
     "pillar": "youth_academic_thinkers",
     "district": "pulwama",
     "locationDetails": "Pulwama (Awantipora University Campus)",
-    "authorizedChannels": ["instagram", "whatsapp", "telegram"],
+    "authorizedChannels": [
+      "instagram",
+      "whatsapp",
+      "telegram"
+    ],
     "primaryHandle": "@iust_thought_hub",
     "contactPerson": "Abrar Ul Haq",
     "contactChannel": "email",
@@ -147,7 +195,12 @@
     "consentGrantedAt": "2026-11-07T12:00:00.000Z",
     "estimatedCommunityReach": 16500,
     "trackingCode": "iust_youth",
-    "matchedReleaseThemes": ["environmental", "science_and_spirituality", "kab_tak_khamosh", "future_generations"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "science_and_spirituality",
+      "kab_tak_khamosh",
+      "future_generations"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -157,7 +210,9 @@
       "completedListens": 39
     },
     "createdAt": "2026-11-06T15:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_lidder_atg",
@@ -167,7 +222,11 @@
     "pillar": "ecological_conservation",
     "district": "anantnag",
     "locationDetails": "Anantnag (Pahalgam / Mattan Corridor)",
-    "authorizedChannels": ["instagram", "whatsapp", "facebook"],
+    "authorizedChannels": [
+      "instagram",
+      "whatsapp",
+      "facebook"
+    ],
     "primaryHandle": "@lidder_river_watch",
     "contactPerson": "Dr. Mushtaq Rather",
     "contactChannel": "whatsapp",
@@ -179,7 +238,12 @@
     "consentGrantedAt": "2026-11-08T10:30:00.000Z",
     "estimatedCommunityReach": 18200,
     "trackingCode": "lidder_watch",
-    "matchedReleaseThemes": ["environmental", "river_preservation", "kab_tak_khamosh", "south_kashmir"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "river_preservation",
+      "kab_tak_khamosh",
+      "south_kashmir"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -189,7 +253,9 @@
       "completedListens": 28
     },
     "createdAt": "2026-11-07T09:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_wular_bpr",
@@ -199,7 +265,10 @@
     "pillar": "ecological_conservation",
     "district": "bandipora",
     "locationDetails": "Bandipora (Wular Lake Shoreline / Zurimanz)",
-    "authorizedChannels": ["facebook", "whatsapp"],
+    "authorizedChannels": [
+      "facebook",
+      "whatsapp"
+    ],
     "primaryHandle": "Wular Conservation Alliance",
     "contactPerson": "Mohammad Yasin Bhat",
     "contactChannel": "phone",
@@ -211,7 +280,12 @@
     "consentGrantedAt": "2026-11-09T13:00:00.000Z",
     "estimatedCommunityReach": 14000,
     "trackingCode": "wular_watch",
-    "matchedReleaseThemes": ["wetlands", "water_balance", "kab_tak_khamosh", "north_kashmir"],
+    "matchedReleaseThemes": [
+      "wetlands",
+      "water_balance",
+      "kab_tak_khamosh",
+      "north_kashmir"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -221,7 +295,9 @@
       "completedListens": 21
     },
     "createdAt": "2026-11-08T11:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_jhelum_brm",
@@ -231,7 +307,11 @@
     "pillar": "ecological_conservation",
     "district": "baramulla",
     "locationDetails": "Baramulla (Old Town / Jhelum Riverbanks)",
-    "authorizedChannels": ["facebook", "whatsapp", "instagram"],
+    "authorizedChannels": [
+      "facebook",
+      "whatsapp",
+      "instagram"
+    ],
     "primaryHandle": "@jhelum_heritage",
     "contactPerson": "Advocate Sheikh Nayeem",
     "contactChannel": "whatsapp",
@@ -243,7 +323,12 @@
     "consentGrantedAt": "2026-11-10T11:30:00.000Z",
     "estimatedCommunityReach": 21500,
     "trackingCode": "jhelum_brm",
-    "matchedReleaseThemes": ["environmental", "river_preservation", "kab_tak_khamosh", "jhelum"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "river_preservation",
+      "kab_tak_khamosh",
+      "jhelum"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -253,7 +338,9 @@
       "completedListens": 25
     },
     "createdAt": "2026-11-09T10:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_lalla_sgr",
@@ -263,7 +350,11 @@
     "pillar": "sacred_literature_sufi",
     "district": "srinagar",
     "locationDetails": "Srinagar (Lalitaditya / Habba Kadal Heritage Quarter)",
-    "authorizedChannels": ["youtube", "facebook", "whatsapp"],
+    "authorizedChannels": [
+      "youtube",
+      "facebook",
+      "whatsapp"
+    ],
     "primaryHandle": "Lall-Arifa Cultural Forum",
     "contactPerson": "Prof. Nazir Ahmad Shawl",
     "contactChannel": "email",
@@ -275,7 +366,12 @@
     "consentGrantedAt": "2026-11-11T14:00:00.000Z",
     "estimatedCommunityReach": 15800,
     "trackingCode": "lall_arifa",
-    "matchedReleaseThemes": ["lalla_ded", "sacred_poetry", "kashmiri_kalam", "unity_of_being"],
+    "matchedReleaseThemes": [
+      "lalla_ded",
+      "sacred_poetry",
+      "kashmiri_kalam",
+      "unity_of_being"
+    ],
     "metrics": {
       "campaignsReceived": 0,
       "campaignsAccepted": 0,
@@ -285,7 +381,9 @@
       "completedListens": 17
     },
     "createdAt": "2026-11-10T12:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_craftlore_sgr",
@@ -295,7 +393,10 @@
     "pillar": "artisan_craft_heritage",
     "district": "srinagar",
     "locationDetails": "Srinagar (Khanyar Artisan Enclave)",
-    "authorizedChannels": ["instagram", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "whatsapp"
+    ],
     "primaryHandle": "@craftlore_kashmir",
     "contactPerson": "Feroz Ahmad Mir",
     "contactChannel": "whatsapp",
@@ -307,7 +408,12 @@
     "consentGrantedAt": "2026-11-12T15:30:00.000Z",
     "estimatedCommunityReach": 19400,
     "trackingCode": "craftlore",
-    "matchedReleaseThemes": ["artisan_heritage", "woodcarving", "footprints_behind", "mahmood_shah"],
+    "matchedReleaseThemes": [
+      "artisan_heritage",
+      "woodcarving",
+      "footprints_behind",
+      "mahmood_shah"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -317,7 +423,9 @@
       "completedListens": 38
     },
     "createdAt": "2026-11-11T13:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "affiliated_organization",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_ku_sgr",
@@ -327,7 +435,11 @@
     "pillar": "youth_academic_thinkers",
     "district": "srinagar",
     "locationDetails": "Srinagar (Hazratbal Campus)",
-    "authorizedChannels": ["instagram", "telegram", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "telegram",
+      "whatsapp"
+    ],
     "primaryHandle": "@ku_cultural_circle",
     "contactPerson": "Danish Qayoom",
     "contactChannel": "whatsapp",
@@ -339,7 +451,12 @@
     "consentGrantedAt": "2026-11-13T11:00:00.000Z",
     "estimatedCommunityReach": 31000,
     "trackingCode": "ku_forum",
-    "matchedReleaseThemes": ["philosophy", "intellectual_sufism", "kab_tak_khamosh", "student_dialogue"],
+    "matchedReleaseThemes": [
+      "philosophy",
+      "intellectual_sufism",
+      "kab_tak_khamosh",
+      "student_dialogue"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -349,7 +466,9 @@
       "completedListens": 72
     },
     "createdAt": "2026-11-12T10:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_khanqah_sgr",
@@ -359,7 +478,10 @@
     "pillar": "sacred_literature_sufi",
     "district": "srinagar",
     "locationDetails": "Srinagar (Zaina Kadal / Jhelum Shore)",
-    "authorizedChannels": ["whatsapp", "community_network"],
+    "authorizedChannels": [
+      "whatsapp",
+      "community_network"
+    ],
     "primaryHandle": "Khanqah-e-Moula Circle",
     "contactPerson": "Peerzada Ghulam Hassan",
     "contactChannel": "phone",
@@ -371,7 +493,12 @@
     "consentGrantedAt": "2026-11-13T16:00:00.000Z",
     "estimatedCommunityReach": 24000,
     "trackingCode": "khanqah_moula",
-    "matchedReleaseThemes": ["shah_e_hamadan", "classical_zikr", "aurad_fathiyyah", "sacred_spaces"],
+    "matchedReleaseThemes": [
+      "shah_e_hamadan",
+      "classical_zikr",
+      "aurad_fathiyyah",
+      "sacred_spaces"
+    ],
     "metrics": {
       "campaignsReceived": 0,
       "campaignsAccepted": 0,
@@ -381,7 +508,9 @@
       "completedListens": 22
     },
     "createdAt": "2026-11-12T14:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_nit_sgr",
@@ -391,7 +520,10 @@
     "pillar": "youth_academic_thinkers",
     "district": "srinagar",
     "locationDetails": "Srinagar (Hazratbal Engineering Campus)",
-    "authorizedChannels": ["instagram", "telegram"],
+    "authorizedChannels": [
+      "instagram",
+      "telegram"
+    ],
     "primaryHandle": "@nit_dialogue_club",
     "contactPerson": "Zubair Ahmad Lone",
     "contactChannel": "email",
@@ -403,7 +535,12 @@
     "consentGrantedAt": "2026-11-14T10:00:00.000Z",
     "estimatedCommunityReach": 14200,
     "trackingCode": "nit_dialogue",
-    "matchedReleaseThemes": ["sufi_science", "technology_ethics", "footprints_behind", "rational_mysticism"],
+    "matchedReleaseThemes": [
+      "sufi_science",
+      "technology_ethics",
+      "footprints_behind",
+      "rational_mysticism"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -413,7 +550,9 @@
       "completedListens": 29
     },
     "createdAt": "2026-11-13T09:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_papiermache_bdg",
@@ -423,7 +562,10 @@
     "pillar": "artisan_craft_heritage",
     "district": "budgam",
     "locationDetails": "Budgam (Kanihama / Magam Craft Belt)",
-    "authorizedChannels": ["whatsapp", "facebook"],
+    "authorizedChannels": [
+      "whatsapp",
+      "facebook"
+    ],
     "primaryHandle": "Budgam Papier Mache Masters",
     "contactPerson": "Maqbool Ahmad Shah",
     "contactChannel": "whatsapp",
@@ -435,7 +577,12 @@
     "consentGrantedAt": "2026-11-14T14:30:00.000Z",
     "estimatedCommunityReach": 11500,
     "trackingCode": "papiermache_bdg",
-    "matchedReleaseThemes": ["artisan_heritage", "naqashi", "footprints_behind", "central_kashmir"],
+    "matchedReleaseThemes": [
+      "artisan_heritage",
+      "naqashi",
+      "footprints_behind",
+      "central_kashmir"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -445,7 +592,9 @@
       "completedListens": 18
     },
     "createdAt": "2026-11-13T12:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_sindh_gbl",
@@ -455,7 +604,10 @@
     "pillar": "ecological_conservation",
     "district": "ganderbal",
     "locationDetails": "Ganderbal (Wayil / Kangan Sindh Basin)",
-    "authorizedChannels": ["instagram", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "whatsapp"
+    ],
     "primaryHandle": "@sindh_valley_stewards",
     "contactPerson": "Suhail Ahmad Khan",
     "contactChannel": "whatsapp",
@@ -467,7 +619,12 @@
     "consentGrantedAt": "2026-11-15T09:00:00.000Z",
     "estimatedCommunityReach": 13600,
     "trackingCode": "sindh_gbl",
-    "matchedReleaseThemes": ["environmental", "river_preservation", "kab_tak_khamosh", "glacier_health"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "river_preservation",
+      "kab_tak_khamosh",
+      "glacier_health"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -477,7 +634,9 @@
       "completedListens": 22
     },
     "createdAt": "2026-11-14T10:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_qalandar_gbl",
@@ -487,7 +646,10 @@
     "pillar": "sacred_literature_sufi",
     "district": "ganderbal",
     "locationDetails": "Ganderbal (Manasbal / Duderhama)",
-    "authorizedChannels": ["facebook", "whatsapp"],
+    "authorizedChannels": [
+      "facebook",
+      "whatsapp"
+    ],
     "primaryHandle": "Ganderbal Sufiana Heritage",
     "contactPerson": "Ustad Farooq Ahmad",
     "contactChannel": "phone",
@@ -499,7 +661,12 @@
     "consentGrantedAt": "2026-11-15T11:00:00.000Z",
     "estimatedCommunityReach": 10500,
     "trackingCode": "ganderbal_sufiana",
-    "matchedReleaseThemes": ["sufiana_mousiqi", "santoor", "classical_maqam", "devotional_melody"],
+    "matchedReleaseThemes": [
+      "sufiana_mousiqi",
+      "santoor",
+      "classical_maqam",
+      "devotional_melody"
+    ],
     "metrics": {
       "campaignsReceived": 0,
       "campaignsAccepted": 0,
@@ -509,7 +676,9 @@
       "completedListens": 14
     },
     "createdAt": "2026-11-14T14:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_simnani_klg",
@@ -519,7 +688,10 @@
     "pillar": "sacred_literature_sufi",
     "district": "kulgam",
     "locationDetails": "Kulgam (Kulgam Town / Mir Simnan Shrine)",
-    "authorizedChannels": ["whatsapp", "facebook"],
+    "authorizedChannels": [
+      "whatsapp",
+      "facebook"
+    ],
     "primaryHandle": "Simnani Heritage Society Kulgam",
     "contactPerson": "Khursheed Ahmad Simnani",
     "contactChannel": "whatsapp",
@@ -531,7 +703,12 @@
     "consentGrantedAt": "2026-11-15T13:30:00.000Z",
     "estimatedCommunityReach": 14800,
     "trackingCode": "simnani_klg",
-    "matchedReleaseThemes": ["sufi_history", "south_kashmir", "reshi_tradition", "moral_rectitude"],
+    "matchedReleaseThemes": [
+      "sufi_history",
+      "south_kashmir",
+      "reshi_tradition",
+      "moral_rectitude"
+    ],
     "metrics": {
       "campaignsReceived": 0,
       "campaignsAccepted": 0,
@@ -541,7 +718,9 @@
       "completedListens": 16
     },
     "createdAt": "2026-11-14T16:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_aharbal_klg",
@@ -551,7 +730,10 @@
     "pillar": "ecological_conservation",
     "district": "kulgam",
     "locationDetails": "Kulgam (Aharbal Waterfall / Veshav Basin)",
-    "authorizedChannels": ["instagram", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "whatsapp"
+    ],
     "primaryHandle": "@aharbal_green_alliance",
     "contactPerson": "Riyaz Ahmad Wani",
     "contactChannel": "whatsapp",
@@ -563,7 +745,12 @@
     "consentGrantedAt": "2026-11-15T14:00:00.000Z",
     "estimatedCommunityReach": 12800,
     "trackingCode": "aharbal_klg",
-    "matchedReleaseThemes": ["environmental", "waterfall_conservation", "kab_tak_khamosh", "forest_protection"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "waterfall_conservation",
+      "kab_tak_khamosh",
+      "forest_protection"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -573,7 +760,9 @@
       "completedListens": 17
     },
     "createdAt": "2026-11-15T09:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_pirpanjal_spn",
@@ -583,7 +772,11 @@
     "pillar": "ecological_conservation",
     "district": "shopian",
     "locationDetails": "Shopian (Sedow / Mughal Road Foothills)",
-    "authorizedChannels": ["facebook", "whatsapp", "instagram"],
+    "authorizedChannels": [
+      "facebook",
+      "whatsapp",
+      "instagram"
+    ],
     "primaryHandle": "@pirpanjal_ecowatch",
     "contactPerson": "Inayatullah Malik",
     "contactChannel": "whatsapp",
@@ -595,7 +788,12 @@
     "consentGrantedAt": "2026-11-15T16:00:00.000Z",
     "estimatedCommunityReach": 16200,
     "trackingCode": "pirpanjal_spn",
-    "matchedReleaseThemes": ["environmental", "forest_protection", "kab_tak_khamosh", "soil_conservation"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "forest_protection",
+      "kab_tak_khamosh",
+      "soil_conservation"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -605,7 +803,9 @@
       "completedListens": 20
     },
     "createdAt": "2026-11-15T11:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_apple_spn",
@@ -615,7 +815,10 @@
     "pillar": "ecological_conservation",
     "district": "shopian",
     "locationDetails": "Shopian (Shopian Town / Rambiara Belt)",
-    "authorizedChannels": ["whatsapp", "community_network"],
+    "authorizedChannels": [
+      "whatsapp",
+      "community_network"
+    ],
     "primaryHandle": "Shopian Agri Ecology Forum",
     "contactPerson": "Shahid Ahmad Reshi",
     "contactChannel": "phone",
@@ -627,7 +830,12 @@
     "consentGrantedAt": "2026-11-15T18:00:00.000Z",
     "estimatedCommunityReach": 13900,
     "trackingCode": "shopian_agri",
-    "matchedReleaseThemes": ["sustainable_earth", "meezan_balance", "kab_tak_khamosh", "farmers_dignity"],
+    "matchedReleaseThemes": [
+      "sustainable_earth",
+      "meezan_balance",
+      "kab_tak_khamosh",
+      "farmers_dignity"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -637,7 +845,9 @@
       "completedListens": 15
     },
     "createdAt": "2026-11-15T13:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_frontier_kpw",
@@ -647,7 +857,10 @@
     "pillar": "artisan_craft_heritage",
     "district": "kupwara",
     "locationDetails": "Kupwara (Handwara / Langate Heritage Cluster)",
-    "authorizedChannels": ["facebook", "whatsapp"],
+    "authorizedChannels": [
+      "facebook",
+      "whatsapp"
+    ],
     "primaryHandle": "Kupwara Cultural Union",
     "contactPerson": "Ghulam Nabi Lone",
     "contactChannel": "whatsapp",
@@ -659,7 +872,12 @@
     "consentGrantedAt": "2026-11-16T09:00:00.000Z",
     "estimatedCommunityReach": 14700,
     "trackingCode": "kupwara_arts",
-    "matchedReleaseThemes": ["artisan_heritage", "folk_tradition", "footprints_behind", "north_kashmir"],
+    "matchedReleaseThemes": [
+      "artisan_heritage",
+      "folk_tradition",
+      "footprints_behind",
+      "north_kashmir"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -669,7 +887,9 @@
       "completedListens": 18
     },
     "createdAt": "2026-11-15T15:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_lolab_kpw",
@@ -679,7 +899,10 @@
     "pillar": "sacred_literature_sufi",
     "district": "kupwara",
     "locationDetails": "Kupwara (Sogam / Lolab Valley)",
-    "authorizedChannels": ["whatsapp", "instagram"],
+    "authorizedChannels": [
+      "whatsapp",
+      "instagram"
+    ],
     "primaryHandle": "@lolab_green_poetry",
     "contactPerson": "Javeed Ahmad Shah",
     "contactChannel": "whatsapp",
@@ -691,7 +914,12 @@
     "consentGrantedAt": "2026-11-16T11:00:00.000Z",
     "estimatedCommunityReach": 15500,
     "trackingCode": "lolab_kpw",
-    "matchedReleaseThemes": ["allama_iqbal", "environmental", "lolab_valley", "meadow_preservation"],
+    "matchedReleaseThemes": [
+      "allama_iqbal",
+      "environmental",
+      "lolab_valley",
+      "meadow_preservation"
+    ],
     "metrics": {
       "campaignsReceived": 0,
       "campaignsAccepted": 0,
@@ -701,7 +929,9 @@
       "completedListens": 12
     },
     "createdAt": "2026-11-15T17:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_gabba_atg",
@@ -711,7 +941,10 @@
     "pillar": "artisan_craft_heritage",
     "district": "anantnag",
     "locationDetails": "Anantnag (Bijbehara / Khanabal Craft Hub)",
-    "authorizedChannels": ["whatsapp", "facebook"],
+    "authorizedChannels": [
+      "whatsapp",
+      "facebook"
+    ],
     "primaryHandle": "Anantnag Gabba Crafts",
     "contactPerson": "Mohammad Ashraf Dar",
     "contactChannel": "phone",
@@ -723,7 +956,12 @@
     "consentGrantedAt": "2026-11-16T14:00:00.000Z",
     "estimatedCommunityReach": 12200,
     "trackingCode": "gabba_atg",
-    "matchedReleaseThemes": ["artisan_heritage", "namda_craft", "footprints_behind", "south_kashmir"],
+    "matchedReleaseThemes": [
+      "artisan_heritage",
+      "namda_craft",
+      "footprints_behind",
+      "south_kashmir"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -733,7 +971,9 @@
       "completedListens": 19
     },
     "createdAt": "2026-11-16T10:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_zadibal_sgr",
@@ -743,7 +983,10 @@
     "pillar": "artisan_craft_heritage",
     "district": "srinagar",
     "locationDetails": "Srinagar (Zadibal / Mir Shams-ud-Din Iraqi Enclave)",
-    "authorizedChannels": ["whatsapp", "community_network"],
+    "authorizedChannels": [
+      "whatsapp",
+      "community_network"
+    ],
     "primaryHandle": "Zadibal Shawl Artisans",
     "contactPerson": "Agha Syed Sajjad",
     "contactChannel": "whatsapp",
@@ -755,7 +998,12 @@
     "consentGrantedAt": "2026-11-16T15:30:00.000Z",
     "estimatedCommunityReach": 18600,
     "trackingCode": "zadibal_shawl",
-    "matchedReleaseThemes": ["sozni_embroidery", "artisan_heritage", "footprints_behind", "living_dignity"],
+    "matchedReleaseThemes": [
+      "sozni_embroidery",
+      "artisan_heritage",
+      "footprints_behind",
+      "living_dignity"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -765,7 +1013,9 @@
       "completedListens": 33
     },
     "createdAt": "2026-11-16T12:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_baramulla_eco_brm",
@@ -775,7 +1025,10 @@
     "pillar": "ecological_conservation",
     "district": "baramulla",
     "locationDetails": "Baramulla (Eco Park / Khadanyar)",
-    "authorizedChannels": ["instagram", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "whatsapp"
+    ],
     "primaryHandle": "@green_baramulla",
     "contactPerson": "Tariq Ahmad Lone",
     "contactChannel": "whatsapp",
@@ -787,7 +1040,12 @@
     "consentGrantedAt": "2026-11-16T17:00:00.000Z",
     "estimatedCommunityReach": 17100,
     "trackingCode": "green_brm",
-    "matchedReleaseThemes": ["environmental", "chinar_heritage", "kab_tak_khamosh", "urban_ecology"],
+    "matchedReleaseThemes": [
+      "environmental",
+      "chinar_heritage",
+      "kab_tak_khamosh",
+      "urban_ecology"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -797,7 +1055,9 @@
       "completedListens": 24
     },
     "createdAt": "2026-11-16T14:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_youth_podcast_sgr",
@@ -807,7 +1067,11 @@
     "pillar": "youth_academic_thinkers",
     "district": "srinagar",
     "locationDetails": "Srinagar (Gogji Bagh Creative Studios)",
-    "authorizedChannels": ["instagram", "youtube", "whatsapp"],
+    "authorizedChannels": [
+      "instagram",
+      "youtube",
+      "whatsapp"
+    ],
     "primaryHandle": "@kashmir_youth_speaks",
     "contactPerson": "Irfan Majeed",
     "contactChannel": "instagram",
@@ -819,7 +1083,12 @@
     "consentGrantedAt": "2026-11-17T09:00:00.000Z",
     "estimatedCommunityReach": 42000,
     "trackingCode": "youth_speaks",
-    "matchedReleaseThemes": ["mental_peace", "contemporary_sufism", "kab_tak_khamosh", "footprints_behind"],
+    "matchedReleaseThemes": [
+      "mental_peace",
+      "contemporary_sufism",
+      "kab_tak_khamosh",
+      "footprints_behind"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -829,7 +1098,9 @@
       "completedListens": 84
     },
     "createdAt": "2026-11-16T16:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_saffron_plw",
@@ -839,7 +1110,10 @@
     "pillar": "artisan_craft_heritage",
     "district": "pulwama",
     "locationDetails": "Pulwama (Pampore Saffron Karewas)",
-    "authorizedChannels": ["facebook", "whatsapp"],
+    "authorizedChannels": [
+      "facebook",
+      "whatsapp"
+    ],
     "primaryHandle": "Pampore Saffron Heritage",
     "contactPerson": "Abdul Majeed Wani",
     "contactChannel": "whatsapp",
@@ -851,7 +1125,12 @@
     "consentGrantedAt": "2026-11-17T10:00:00.000Z",
     "estimatedCommunityReach": 15100,
     "trackingCode": "saffron_plw",
-    "matchedReleaseThemes": ["karewa_heritage", "soil_sacredness", "kab_tak_khamosh", "pampore"],
+    "matchedReleaseThemes": [
+      "karewa_heritage",
+      "soil_sacredness",
+      "kab_tak_khamosh",
+      "pampore"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -861,7 +1140,9 @@
       "completedListens": 20
     },
     "createdAt": "2026-11-16T17:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_hazratbal_sgr",
@@ -871,7 +1152,10 @@
     "pillar": "sacred_literature_sufi",
     "district": "srinagar",
     "locationDetails": "Srinagar (Hazratbal Dargah Esplanade)",
-    "authorizedChannels": ["whatsapp", "community_network"],
+    "authorizedChannels": [
+      "whatsapp",
+      "community_network"
+    ],
     "primaryHandle": "Hazratbal Devotional Circle",
     "contactPerson": "Molvi Mushtaq Farooqi",
     "contactChannel": "phone",
@@ -883,7 +1167,12 @@
     "consentGrantedAt": "2026-11-17T11:00:00.000Z",
     "estimatedCommunityReach": 28000,
     "trackingCode": "hazratbal_naat",
-    "matchedReleaseThemes": ["naat_sharif", "sacred_choral", "dal_lake_spirituality", "prophetic_love"],
+    "matchedReleaseThemes": [
+      "naat_sharif",
+      "sacred_choral",
+      "dal_lake_spirituality",
+      "prophetic_love"
+    ],
     "metrics": {
       "campaignsReceived": 0,
       "campaignsAccepted": 0,
@@ -893,7 +1182,9 @@
       "completedListens": 26
     },
     "createdAt": "2026-11-17T09:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_north_student_brm",
@@ -903,7 +1194,11 @@
     "pillar": "youth_academic_thinkers",
     "district": "baramulla",
     "locationDetails": "Baramulla (Degree College Corridor / Sopore)",
-    "authorizedChannels": ["telegram", "instagram", "whatsapp"],
+    "authorizedChannels": [
+      "telegram",
+      "instagram",
+      "whatsapp"
+    ],
     "primaryHandle": "@north_kashmir_students",
     "contactPerson": "Shahid Bashir",
     "contactChannel": "whatsapp",
@@ -915,7 +1210,12 @@
     "consentGrantedAt": "2026-11-17T11:30:00.000Z",
     "estimatedCommunityReach": 26000,
     "trackingCode": "north_students",
-    "matchedReleaseThemes": ["youth_responsibility", "intellectual_heritage", "kab_tak_khamosh", "footprints_behind"],
+    "matchedReleaseThemes": [
+      "youth_responsibility",
+      "intellectual_heritage",
+      "kab_tak_khamosh",
+      "footprints_behind"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -925,7 +1225,9 @@
       "completedListens": 46
     },
     "createdAt": "2026-11-17T10:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   },
   {
     "id": "kpn_south_dialogue_atg",
@@ -935,7 +1237,11 @@
     "pillar": "youth_academic_thinkers",
     "district": "anantnag",
     "locationDetails": "Anantnag (Khanabal Degree College & Literary Hub)",
-    "authorizedChannels": ["instagram", "whatsapp", "telegram"],
+    "authorizedChannels": [
+      "instagram",
+      "whatsapp",
+      "telegram"
+    ],
     "primaryHandle": "@south_kashmir_dialogue",
     "contactPerson": "Mohammad Umar Lone",
     "contactChannel": "whatsapp",
@@ -947,7 +1253,12 @@
     "consentGrantedAt": "2026-11-17T12:00:00.000Z",
     "estimatedCommunityReach": 22500,
     "trackingCode": "south_dialogue",
-    "matchedReleaseThemes": ["youth_dialogue", "cultural_continuity", "kab_tak_khamosh", "footprints_behind"],
+    "matchedReleaseThemes": [
+      "youth_dialogue",
+      "cultural_continuity",
+      "kab_tak_khamosh",
+      "footprints_behind"
+    ],
     "metrics": {
       "campaignsReceived": 1,
       "campaignsAccepted": 1,
@@ -957,6 +1268,8 @@
       "completedListens": 36
     },
     "createdAt": "2026-11-17T11:00:00.000Z",
-    "updatedAt": "2026-11-17T12:00:00.000Z"
+    "updatedAt": "2026-11-17T12:00:00.000Z",
+    "relationshipType": "independent_partner",
+    "geographicConfidence": "high_valley_verified"
   }
 ]

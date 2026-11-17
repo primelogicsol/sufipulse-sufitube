@@ -159,6 +159,8 @@ class KashmirPartnerStore {
       verifiedAt: partner.verificationStatus === 'verified' ? now : undefined,
       consentStatus: partner.consentStatus || 'permission_pending',
       estimatedCommunityReach: partner.estimatedCommunityReach || 5000,
+      relationshipType: partner.relationshipType || 'independent_partner',
+      geographicConfidence: partner.geographicConfidence || 'high_valley_verified',
       trackingCode: partner.trackingCode || newId.replace('kpn_', ''),
       matchedReleaseThemes: partner.matchedReleaseThemes || [],
       metrics: {
@@ -176,6 +178,19 @@ class KashmirPartnerStore {
     this.partners.push(newPartner);
     this.persist();
     return newPartner;
+  }
+
+  public verify(partnerId: string, notes?: string): boolean {
+    this.ensureInitialized();
+    const partner = this.partners.find((p) => p.id === partnerId);
+    if (!partner) return false;
+    partner.verificationStatus = 'verified';
+    partner.verifiedAt = new Date().toISOString();
+    partner.consentStatus = 'explicit_permission_granted';
+    if (notes) partner.verificationNotes = notes;
+    partner.updatedAt = new Date().toISOString();
+    this.persist();
+    return true;
   }
 
   public recordPublication(

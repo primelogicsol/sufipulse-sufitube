@@ -76,6 +76,8 @@ export interface KashmirPartner {
   consentStatus: PartnerConsentStatus;
   consentGrantedAt?: string;
   estimatedCommunityReach: number;      // Documented community/follower footprint
+  relationshipType: 'independent_partner' | 'affiliated_organization';
+  geographicConfidence?: 'high_valley_verified' | 'medium_regional' | 'unverified';
   trackingCode: string;                 // e.g. "ecowatch" -> generates ?utm_source=kpn&utm_partner=ecowatch
   matchedReleaseThemes: string[];       // e.g. ["environmental", "dal_lake", "river_preservation"]
   metrics: {
