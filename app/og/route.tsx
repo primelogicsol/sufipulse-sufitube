@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
           marginBottom: '24px',
           display: 'flex',
         }}>
-          SufiPulse
+          SufiPulse USA
         </div>
 
         {/* Arabic/Urdu decorative divider */}
