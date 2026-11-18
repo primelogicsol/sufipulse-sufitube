@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PageContainer } from '@/app/components/layout/PageContainer';
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { KashmirPartner, PartnerCampaignKit } from '@/server/types/kashmir-reach';
 
-export default function PartnerDashboardPage() {
+function PartnerDashboardContent() {
   const searchParams = useSearchParams();
   const partnerIdParam = searchParams.get('id');
 
@@ -354,5 +354,17 @@ export default function PartnerDashboardPage() {
         </div>
       </PageContainer>
     </div>
+  );
+}
+
+export default function PartnerDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+      </div>
+    }>
+      <PartnerDashboardContent />
+    </Suspense>
   );
 }
