@@ -33,7 +33,7 @@ export function PipelineSection() {
               Institutional Workflow
             </div>
             <h2 className="text-[var(--text-section)] font-bold text-[var(--color-text-primary)] mb-4 leading-[1.2]">
-              Production Pipeline
+              SufiPulse / SufiTube Production Pipeline
             </h2>
             <p className="text-[var(--text-base)] md:text-[var(--text-lg)] text-[var(--color-text-secondary)] max-w-3xl md:mx-auto leading-[var(--leading-relaxed)]">
               A standardized, multi-stage approval process governs all content from initial submission through public release.

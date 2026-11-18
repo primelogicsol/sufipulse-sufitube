@@ -74,6 +74,16 @@ const nextConfig = {
         destination: '/governance/production-oversight',
         permanent: true,
       },
+      {
+        source: '/studio/creative-asset-production',
+        destination: '/studio/creative-assets',
+        permanent: true,
+      },
+      {
+        source: '/studio/studio-operations',
+        destination: '/studio/operations',
+        permanent: true,
+      },
     ];
   },
   async headers() {

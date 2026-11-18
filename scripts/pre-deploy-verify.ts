@@ -360,6 +360,80 @@ async function verifyKashmirPartnerSecurity() {
   }
 }
 
+async function verifyGlobalReachCounterGate() {
+  console.log('\n--- 5. Automated Global Reach Counter & Growth Engine Gate ---');
+  const port = process.env.PORT || '3005';
+  const baseUrl = `http://localhost:${port}`;
+
+  try {
+    const {
+      globalReachGrowthEngine,
+      generateDeterministicSchedule,
+      RATE_BOUNDS,
+    } = require('../lib/global-reach-growth-engine');
+    const { generateAccessToken } = require('../server/services/auth');
+    const { usersRepository } = require('../server/db/repositories/users');
+
+    // 5.1 Schedule determinism
+    const s1 = generateDeterministicSchedule(4242, { views: 0.028, impressions: 0.035, watchHours: 0.022, geographies: 0.018 });
+    const s2 = generateDeterministicSchedule(4242, { views: 0.028, impressions: 0.035, watchHours: 0.022, geographies: 0.018 });
+    record('Global Reach: Deterministic seed produces invariant schedule', JSON.stringify(s1) === JSON.stringify(s2));
+
+    // 5.2 Bounds validation
+    const viewsOk = s1.views.every((r: number) => r >= RATE_BOUNDS.views.min && r <= RATE_BOUNDS.views.max);
+    const impOk = s1.impressions.every((r: number) => r >= RATE_BOUNDS.impressions.min && r <= RATE_BOUNDS.impressions.max);
+    record('Global Reach: Monthly rates strictly respect governance bounds', viewsOk && impOk);
+
+    // 5.3 Stopping logic: 24-month horizon freeze
+    const traj24 = globalReachGrowthEngine.calculateModeledTrajectory(24);
+    const traj30 = globalReachGrowthEngine.calculateModeledTrajectory(30);
+    record('Global Reach: Modeled growth freezes after 24 completed months', traj24.impressions === traj30.impressions);
+
+    // 5.4 Geographic reach invariant: Actual verified country count is NEVER capped
+    const testOverCap = { impressions: 1000000, views: 170000, watchHours: 11000, geographies: 145 };
+    const overCapRes = globalReachGrowthEngine.computeReconciledIndex(testOverCap);
+    record('Global Reach: Actual verified country count is never artificially capped', overCapRes.combinedIndex.geographies === 145 && overCapRes.modeledAdjustment.geographies === 0);
+
+    // 5.5 Real-growth reconciliation: growth reduces adjustment without negative values
+    const baseTest = { impressions: 994300, views: 160611, watchHours: 10410, geographies: 53 };
+    const grownTest = { impressions: 1014300, views: 165611, watchHours: 10610, geographies: 55 };
+    const r1 = globalReachGrowthEngine.computeReconciledIndex(baseTest);
+    const r2 = globalReachGrowthEngine.computeReconciledIndex(grownTest);
+    record('Global Reach: Real growth reduces modeled adjustment without negative values', r2.modeledAdjustment.impressions < r1.modeledAdjustment.impressions && r2.modeledAdjustment.impressions >= 0);
+
+    // 5.6 Non-overwrite rule: verified baseline remains untouched
+    const store = globalReachGrowthEngine.getStore();
+    record('Global Reach: Verified baseline records remain completely intact', store.baseline.metrics.impressions === 994300);
+
+    // 5.7 Public API integration & truth in labeling
+    const pubRes = await fetch(`${baseUrl}/api/public/youtube/global-reach`);
+    if (pubRes.status === 200) {
+      const pubData = await pubRes.json();
+      const hasIndex = !!pubData.globalReachIndex && pubData.globalReachIndex.label === 'Global Reach Index';
+      const noLeak = !('seed' in pubData.globalReachIndex) && !('savedMonthlySchedule' in pubData.globalReachIndex);
+      record('Global Reach: Public endpoint provides composite index without internal leak', hasIndex && noLeak);
+    } else {
+      record('Global Reach: Public endpoint responds HTTP 200', false, `status: ${pubRes.status}`);
+    }
+
+    // 5.8 Admin Security & Sync
+    const unauthGet = await fetch(`${baseUrl}/api/admin/youtube-analytics/global-reach`);
+    record('Security: Anonymous GET /api/admin/youtube-analytics/global-reach returns 401', unauthGet.status === 401, `status: ${unauthGet.status}`);
+
+    const adminUser = usersRepository.listAll().find((u: any) => u.role === 'admin' || u.role === 'super_admin');
+    if (adminUser) {
+      const adminToken = await generateAccessToken({ id: adminUser.id, role: adminUser.role, email: adminUser.email });
+      const authGet = await fetch(`${baseUrl}/api/admin/youtube-analytics/global-reach`, {
+        headers: { cookie: `access_token=${adminToken}` }
+      });
+      record('Security: Authenticated Admin access to Global Reach hub (HTTP 200)', authGet.status === 200, `status: ${authGet.status}`);
+    }
+
+  } catch (err: any) {
+    record('Global Reach Counter & Growth Engine Gate', false, err.message);
+  }
+}
+
 async function run() {
   console.log('====================================================');
   console.log(' SufiPulse Pre-Deploy Verification Gate');
@@ -370,6 +444,7 @@ async function run() {
     verifySocialShareAndCutdowns();
     await verifyRoutes();
     await verifyKashmirPartnerSecurity();
+    await verifyGlobalReachCounterGate();
   } finally {
     if (spawnedServer) {
       console.log('🧹 Terminating automated test server instance...');

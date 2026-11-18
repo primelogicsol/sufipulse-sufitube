@@ -216,12 +216,15 @@ export interface VideoRenderOptions {
   format: 'lyric_master' | 'clean_cinematic';
   orientation?: 'landscape' | 'portrait';
   durationSeconds?: number;
-  // Part A: Thumbnail Introduction (New)
+  // Part A: Thumbnail / Video Introduction
   partA?: {
     enabled?: boolean;
     durationSeconds?: number; // e.g. 5.0s
     imagePath?: string;
-    audioPolicy?: 'silence' | 'ambient' | 'suno_starts_at_part_b' | 'suno_starts_at_part_a';
+    mediaPath?: string;
+    mediaType?: 'image' | 'video';
+    hasAudio?: boolean;
+    audioPolicy?: 'silence' | 'ambient' | 'suno_starts_at_part_b' | 'suno_starts_at_part_a' | 'preserve_part_a_audio';
     playbackMode?: 'seamless_loop' | 'freeze_last_frame' | 'stretch' | 'custom_range';
     loopStartSeconds?: number;
     loopEndSeconds?: number;
@@ -455,17 +458,32 @@ export async function render1080pMusicVideo(
         escapedFontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/').replace(/:/g, '\\:');
       }
 
-      // 1. SEGMENT 0: Part A - Thumbnail Introduction
+      // 1. SEGMENT 0: Part A - Opener (Video or Image)
       if (hasPartA && partADuration > 0) {
-        ffmpegArgs.push('-loop', '1', '-t', String(partADuration), '-i', thumbnailPath);
-        const partAInputIdx = inputIdx++;
+        const partAPath = options.partA?.mediaPath || options.partA?.imagePath || thumbnailPath || '';
+        const isPartAVideo = options.partA?.mediaType === 'video' ||
+          ['.mp4', '.mov', '.webm', '.mkv'].some((ext) => partAPath.toLowerCase().endsWith(ext));
+
+        let partAInputIdx: number;
+        if (isPartAVideo) {
+          ffmpegArgs.push('-stream_loop', '-1', '-t', String(partADuration), '-i', partAPath);
+          partAInputIdx = inputIdx++;
+        } else {
+          ffmpegArgs.push('-loop', '1', '-t', String(partADuration), '-i', partAPath);
+          partAInputIdx = inputIdx++;
+        }
+
         let partAFilter = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30`;
         if (songStartsAtPartA && options.format === 'lyric_master' && escapedBurnedSubtitlePath && escapedFontsDir) {
           partAFilter += `,subtitles='${escapedBurnedSubtitlePath}':fontsdir='${escapedFontsDir}'`;
         }
         filterParts.push(`[${partAInputIdx}:v]${partAFilter}[v_part_a]`);
+
+        // Audio policy:
         if (songStartsAtPartA) {
           filterParts.push(`[${songAudioInputIdx}:a]atrim=start=0:end=${songStartOffset},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo[a_part_a]`);
+        } else if (isPartAVideo && options.partA?.audioPolicy === 'preserve_part_a_audio' && options.partA?.hasAudio) {
+          filterParts.push(`[${partAInputIdx}:a]atrim=start=0:end=${partADuration},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo[a_part_a]`);
         } else {
           filterParts.push(`aevalsrc=0:d=${partADuration}:s=48000:c=stereo[a_part_a]`);
         }

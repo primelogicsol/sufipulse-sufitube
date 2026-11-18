@@ -175,14 +175,15 @@ export interface PublishingTransactionRecord {
 export interface VideoPartAThumbnailConfig {
   enabled?: boolean;
   durationSeconds?: number; // Introductory screen duration, default: 5.0s
-  sourceType?: 'uploaded_image' | 'canva_image' | 'video_frame' | 'default_banner';
+  sourceType?: 'uploaded_image' | 'uploaded_video' | 'canva_image' | 'video_frame' | 'default_banner';
   filePath?: string;
   fileName?: string;
   thumbnailPath?: string;
   thumbnailMode?: 'first_frame' | 'custom_frame' | 'custom_upload';
   thumbnailTimestampSeconds?: number;
   independentYouTubeThumbnailPath?: string;
-  audioPolicy?: 'silence' | 'ambient' | 'suno_starts_at_part_b' | 'suno_starts_at_part_a';
+  audioPolicy?: 'silence' | 'ambient' | 'suno_starts_at_part_b' | 'suno_starts_at_part_a' | 'preserve_part_a_audio';
+  hasAudio?: boolean;
   uploadedAt?: string;
   // Legacy / visual fallbacks
   canvaDesignId?: string;

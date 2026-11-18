@@ -6,6 +6,7 @@ import { Section } from '../../../components/layout/Section';
 import { PrimaryButton } from '../../../components/primitives/PrimaryButton';
 import { StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 import Link from 'next/link';
+import { StudioSpecialistRoster } from '@/app/components/studio/StudioSpecialistRoster';
 
 export default function CreativeAssets() {
     const subdivisions = [
@@ -132,6 +133,7 @@ export default function CreativeAssets() {
                 </PageContainer>
             </Section>
 
+            <StudioSpecialistRoster areas={['creative-assets']} heading="Creative Asset Specialists" description="Visual identity, release artwork, motion design and creative production" />
             <StudioGovernancePanel 
                 title="Visual Integrity"
                 description="All creative assets are designed to elevate the sacred text without obscuring its meaning. We maintain a strict visual grammar across all platforms."

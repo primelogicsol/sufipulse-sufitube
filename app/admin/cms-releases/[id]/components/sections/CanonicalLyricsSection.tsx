@@ -33,6 +33,9 @@ export function CanonicalLyricsSection({
   onUpdate,
   isLocked = false,
 }: CanonicalLyricsProps) {
+  const [adminOverrideUnlocked, setAdminOverrideUnlocked] = useState(false);
+  const effectiveLocked = isLocked && !adminOverrideUnlocked;
+
   const [text, setText] = useState(initialLyrics?.text || "");
   const [primaryLanguage, setPrimaryLanguage] = useState(
     initialLyrics?.primaryLanguage || "ur",
@@ -43,11 +46,28 @@ export function CanonicalLyricsSection({
   const [status, setStatus] = useState<"DRAFT" | "REVIEWED" | "APPROVED">(
     initialLyrics?.status || "DRAFT",
   );
-  const displayedStatus = isLocked ? initialLyrics?.status || 'DRAFT' : status;
+
+  // Sync state if initialLyrics updates from server
+  useEffect(() => {
+    if (initialLyrics?.text && initialLyrics.text !== text) {
+      setText(initialLyrics.text);
+    }
+    if (initialLyrics?.primaryLanguage) {
+      setPrimaryLanguage(initialLyrics.primaryLanguage);
+    }
+    if (initialLyrics?.languages) {
+      setLanguages(initialLyrics.languages);
+    }
+    if (initialLyrics?.status) {
+      setStatus(initialLyrics.status);
+    }
+  }, [initialLyrics?.text, initialLyrics?.primaryLanguage, initialLyrics?.status]);
+
+  const displayedStatus = effectiveLocked ? initialLyrics?.status || 'DRAFT' : status;
 
   // If editor modifies text or language, demote to DRAFT immediately in UI.
   useEffect(() => {
-    if (isLocked) return;
+    if (effectiveLocked) return;
     const textModified = text !== (initialLyrics?.text || "");
     const primaryModified =
       primaryLanguage !== (initialLyrics?.primaryLanguage || "");
@@ -77,7 +97,7 @@ export function CanonicalLyricsSection({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, primaryLanguage, languages, status, isLocked]);
+  }, [text, primaryLanguage, languages, status, effectiveLocked]);
 
   const handleReview = () => {
     setStatus("REVIEWED");
@@ -103,9 +123,18 @@ export function CanonicalLyricsSection({
         </h2>
         <div className="flex items-center gap-2">
           {isLocked && (
-            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-              Locked to Studio Master
-            </span>
+            <button
+              type="button"
+              onClick={() => setAdminOverrideUnlocked(!adminOverrideUnlocked)}
+              className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                adminOverrideUnlocked
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                  : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'
+              }`}
+              title={adminOverrideUnlocked ? 'Click to re-lock to Studio Master' : 'Click to unlock for editorial edits'}
+            >
+              <span>{adminOverrideUnlocked ? '🔓 Editing Unlocked' : '🔒 Locked to Studio Master'}</span>
+            </button>
           )}
           <span
             className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
@@ -122,9 +151,33 @@ export function CanonicalLyricsSection({
       </div>
 
       <div className="space-y-4">
-        {isLocked && (
-          <div className="p-3.5 bg-purple-950/30 border border-purple-500/30 rounded-xl text-xs text-purple-200/90 leading-relaxed">
-            <strong>Immutable Production Lyrics:</strong> Canonical lyrics are approved and locked to the authoritative Studio vocal alignment. Modifications require creating a new revision in the Hybrid Studio Pipeline.
+        {effectiveLocked && (
+          <div className="p-3.5 bg-purple-950/30 border border-purple-500/30 rounded-xl text-xs text-purple-200/90 leading-relaxed flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <strong>Locked to Studio Master:</strong> Canonical lyrics are linked to the authoritative vocal alignment. Click unlock to make editorial modifications.
+            </div>
+            <button
+              type="button"
+              onClick={() => setAdminOverrideUnlocked(true)}
+              className="px-3 py-1.5 bg-purple-600/40 hover:bg-purple-600/60 text-purple-200 border border-purple-400/40 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+            >
+              🔓 Unlock for Editorial Edit
+            </button>
+          </div>
+        )}
+
+        {adminOverrideUnlocked && (
+          <div className="p-3.5 bg-amber-950/40 border border-amber-500/40 rounded-xl text-xs text-amber-200 leading-relaxed flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <strong>🔓 Editorial Edit Mode Active:</strong> You can freely edit the lyrics text, primary language, or language tracks below.
+            </div>
+            <button
+              type="button"
+              onClick={() => setAdminOverrideUnlocked(false)}
+              className="px-3 py-1.5 bg-amber-600/40 hover:bg-amber-600/60 text-amber-200 border border-amber-400/40 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+            >
+              🔒 Re-lock to Master
+            </button>
           </div>
         )}
 
@@ -134,13 +187,13 @@ export function CanonicalLyricsSection({
               Primary Language
             </label>
             <select
-              value={isLocked ? initialLyrics?.primaryLanguage || 'en-rom' : primaryLanguage}
-              disabled={isLocked}
+              value={effectiveLocked ? initialLyrics?.primaryLanguage || 'ur' : primaryLanguage}
+              disabled={effectiveLocked}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                 setPrimaryLanguage(e.target.value)
               }
               className={`w-full px-3 py-2.5 border rounded-lg text-sm ${
-                isLocked
+                effectiveLocked
                   ? 'bg-neutral-950/70 border-white/10 text-neutral-300 cursor-not-allowed'
                   : 'bg-neutral-950 border-white/10 text-white focus:border-amber-400'
               }`}
@@ -155,20 +208,20 @@ export function CanonicalLyricsSection({
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1.5">
-              {isLocked ? 'Approved Language Tracks (Not Sung Languages)' : 'All Sung Languages'}
+              {effectiveLocked ? 'Approved Language Tracks (Not Sung Languages)' : 'All Sung Languages'}
             </label>
             <div className="flex flex-wrap gap-2.5 mt-2">
-              {(isLocked ? AVAILABLE_LANGS.filter(lang => (initialLyrics?.languages || []).includes(lang.id)) : AVAILABLE_LANGS).map((lang) => (
+              {(effectiveLocked ? AVAILABLE_LANGS.filter(lang => (initialLyrics?.languages || []).includes(lang.id)) : AVAILABLE_LANGS).map((lang) => (
                 <label
                   key={lang.id}
                   className={`inline-flex items-center space-x-2 text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 ${
-                    isLocked ? 'cursor-not-allowed text-neutral-400' : 'cursor-pointer text-white hover:bg-white/10'
+                    effectiveLocked ? 'cursor-not-allowed text-neutral-400' : 'cursor-pointer text-white hover:bg-white/10'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={(isLocked ? initialLyrics?.languages || [] : languages).includes(lang.id)}
-                    disabled={isLocked}
+                    checked={(effectiveLocked ? initialLyrics?.languages || [] : languages).includes(lang.id)}
+                    disabled={effectiveLocked}
                     onChange={() => toggleLanguage(lang.id)}
                     className="rounded border-neutral-700 bg-neutral-900 text-amber-500 focus:ring-amber-500"
                   />
@@ -186,20 +239,20 @@ export function CanonicalLyricsSection({
           <textarea
             rows={14}
             placeholder="Paste canonical original lyrics here..."
-            value={isLocked ? initialLyrics?.text || '' : text}
-            readOnly={isLocked}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              setText(e.target.value)
-            }
+            value={effectiveLocked ? (initialLyrics?.text || text) : text}
+            readOnly={effectiveLocked}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+              setText(e.target.value);
+            }}
             className={`w-full px-4 py-3 border rounded-xl font-mono text-xs md:text-sm leading-relaxed outline-none transition-colors ${
-              isLocked
+              effectiveLocked
                 ? 'bg-black/40 border-white/10 text-neutral-200 cursor-default'
-                : 'bg-black/60 border-white/15 text-white focus:border-amber-400'
+                : 'bg-black/60 border-amber-500/50 text-white focus:border-amber-400 shadow-inner'
             }`}
           />
         </div>
 
-        {!isLocked && (
+        {!effectiveLocked && (
           <div className="flex justify-end space-x-2 pt-2">
             {status === "DRAFT" && text.trim().length > 0 && (
               <button
@@ -210,7 +263,7 @@ export function CanonicalLyricsSection({
                 Mark as Reviewed
               </button>
             )}
-            {status === "REVIEWED" && initialLyrics?.status === "REVIEWED" && (
+            {status === "REVIEWED" && (
               <button
                 type="button"
                 onClick={handleApprove}
@@ -218,11 +271,6 @@ export function CanonicalLyricsSection({
               >
                 Approve Canonical Lyrics
               </button>
-            )}
-            {status === "REVIEWED" && initialLyrics?.status !== "REVIEWED" && (
-              <span className="text-xs text-neutral-400 py-2 self-center">
-                Save changes to enable approval.
-              </span>
             )}
           </div>
         )}

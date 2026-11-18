@@ -76,6 +76,24 @@ export async function POST(
       if (body.audioAlignmentReviewed !== true) {
         return NextResponse.json({ error: 'Review the actual recording against every lyric cue and confirm audioAlignmentReviewed before saving synchronized captions.', code: 'AUDIO_REVIEW_REQUIRED' }, { status: 422 });
       }
+
+      // Auto-clamp word timestamps to parent line boundaries so millisecond jitter never rejects a valid cue
+      incomingLines.forEach((l: any) => {
+        const lStart = Number(l.startSeconds) || 0;
+        const lEnd = Number(l.endSeconds) || (lStart + 1.5);
+        if (Array.isArray(l.words)) {
+          l.words.forEach((w: any) => {
+            let wStart = Number.isFinite(Number(w.startSeconds)) ? Number(w.startSeconds) : lStart;
+            let wEnd = Number.isFinite(Number(w.endSeconds)) ? Number(w.endSeconds) : lEnd;
+            if (wStart < lStart) wStart = lStart;
+            if (wEnd > lEnd) wEnd = lEnd;
+            if (wEnd <= wStart) wEnd = Math.min(lEnd, Number((wStart + 0.05).toFixed(2)));
+            w.startSeconds = Number(wStart.toFixed(2));
+            w.endSeconds = Number(wEnd.toFixed(2));
+          });
+        }
+      });
+
       const invalid = incomingLines.find((l: any) =>
         !Number.isFinite(Number(l.startSeconds)) || !Number.isFinite(Number(l.endSeconds)) ||
         Number(l.startSeconds) < 0 || Number(l.endSeconds) <= Number(l.startSeconds) ||
@@ -88,7 +106,7 @@ export async function POST(
         )
       );
       if (invalid) {
-        return NextResponse.json({ error: 'Each reviewed lyric cue requires a valid timestamp and source-aligned word timestamps within the audio duration.', code: 'INVALID_WORD_ALIGNMENT' }, { status: 422 });
+        return NextResponse.json({ error: `Reviewed lyric cue #${invalid.vocalIndex || invalid.lineIndex || ''} ("${String(invalid.text || '').slice(0, 30)}") requires valid timestamps within audio duration.`, code: 'INVALID_WORD_ALIGNMENT' }, { status: 422 });
       }
       // Validate & clean incoming lines
       const cleaned = incomingLines.map((l: any, idx: number) => {
@@ -97,6 +115,22 @@ export async function POST(
           masterDuration,
           Math.max(start + 0.1, Number(l.endSeconds) || start + 1.5)
         );
+        const lineStart = Number(start.toFixed(2));
+        const lineEnd = Number(end.toFixed(2));
+
+        const words = Array.isArray(l.words) ? l.words.map((w: any) => {
+          let wStart = Math.max(lineStart, Number(w.startSeconds) || lineStart);
+          let wEnd = Math.min(lineEnd, Number(w.endSeconds) || lineEnd);
+          if (wEnd <= wStart) {
+            wEnd = Math.min(lineEnd, Number((wStart + 0.05).toFixed(2)));
+          }
+          return {
+            ...w,
+            text: String(w.text || '').trim(),
+            startSeconds: Number(wStart.toFixed(2)),
+            endSeconds: Number(wEnd.toFixed(2)),
+          };
+        }) : [];
 
         return {
           lineIndex: idx,
@@ -104,8 +138,8 @@ export async function POST(
           segmentId: l.segmentId || 'seg_vocal',
           sourceVariantId: l.sourceVariantId || 'primary',
           sourceLineIndex: l.sourceLineIndex ?? idx,
-          startSeconds: Number(start.toFixed(2)),
-          endSeconds: Number(end.toFixed(2)),
+          startSeconds: lineStart,
+          endSeconds: lineEnd,
           text: String(l.text || '').trim(),
           speaker: l.speaker || 'शायर',
           section: l.section || 'आग़ाज़',
@@ -115,7 +149,7 @@ export async function POST(
           romanUrdu: l.romanUrdu,
           devanagariUrdu: l.devanagariUrdu || l.text,
           isProductionDirection: false,
-          words: l.words || [],
+          words,
         };
       });
 
@@ -146,6 +180,19 @@ export async function POST(
         draft.canonicalLyrics.text,
         draft.primaryLanguage
       );
+
+      // Backfill any missing script versions onto cues so they never remain empty
+      if (Array.isArray(draft.masterTimeline?.lines)) {
+        pkg.lines.forEach((pl: any, i: number) => {
+          const cue: any = draft.masterTimeline!.lines[i];
+          if (!cue) return;
+          if (!cue.urduNastaliq && pl.urduNastaliq) cue.urduNastaliq = pl.urduNastaliq;
+          if (!cue.englishTranslation && pl.englishTranslation) cue.englishTranslation = pl.englishTranslation;
+          if (!cue.romanUrdu && pl.romanUrdu) cue.romanUrdu = pl.romanUrdu;
+          if (!cue.devanagariUrdu && pl.devanagariUrdu) cue.devanagariUrdu = pl.devanagariUrdu;
+        });
+      }
+
       exportAllSubtitles(pkg, subDir);
 
       draft.downstreamStatus.timestampsValid = true;

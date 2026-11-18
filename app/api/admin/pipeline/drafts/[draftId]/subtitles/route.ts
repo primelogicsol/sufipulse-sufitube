@@ -66,6 +66,17 @@ export async function POST(
 
     const exported = exportAllSubtitles(pkg, subDir);
 
+    if (Array.isArray(draft.masterTimeline?.lines)) {
+      pkg.lines.forEach((pl: any, i: number) => {
+        const cue: any = draft.masterTimeline!.lines[i];
+        if (!cue) return;
+        if (pl.urduNastaliq) cue.urduNastaliq = pl.urduNastaliq;
+        if (pl.englishTranslation) cue.englishTranslation = pl.englishTranslation;
+        if (pl.romanUrdu) cue.romanUrdu = pl.romanUrdu;
+        if (pl.devanagariUrdu) cue.devanagariUrdu = pl.devanagariUrdu;
+      });
+    }
+
     draft.downstreamStatus.subtitlesValid = true;
     pipelineDraftStorage.saveDraft(draft);
 

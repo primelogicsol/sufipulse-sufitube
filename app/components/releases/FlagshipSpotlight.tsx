@@ -42,7 +42,7 @@ export function FlagshipSpotlight({ featuredRelease }: FlagshipSpotlightProps) {
                     <div className="flex items-center gap-2 mb-6">
                         <Sparkles className="w-4 h-4 text-[var(--color-gold)]" />
                         <span className="text-xs font-black text-[var(--color-gold)] uppercase tracking-[0.3em]">
-                            Flagship Spotlight
+                            SufiPulse Flagship Spotlight
                         </span>
                     </div>
 

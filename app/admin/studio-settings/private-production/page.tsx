@@ -159,6 +159,9 @@ export default function PrivateProductionConnectionSettings() {
               Audio provider URL template (optional with Chrome)
               <input className={inputClass} value={form.streamUrlTemplate} onChange={e => setForm({ ...form, streamUrlTemplate: e.target.value })} placeholder="https://provider.example/audio/{assetId}" />
             </label>
+            <p className="text-xs text-amber-350/90 text-amber-300">
+              Note: Do not paste song links (e.g. <code>https://suno.com/song/...</code>) here. Paste individual song links directly inside your release drafts.
+            </p>
             <p className="text-xs text-white/65">Use the audio endpoint from your provider with {"{assetId}"}. Leave saved fields blank to keep their values.</p>
             <details className="rounded-lg border border-white/10 p-3">
               <summary className="cursor-pointer text-sm font-medium">Advanced settings</summary>

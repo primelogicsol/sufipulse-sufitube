@@ -67,11 +67,18 @@ export async function renderMasterVideoForDraft(draftId: string, body: MasterVid
   const defaultSub = path.join(subDir, 'master_dual_urdu_english.ass');
   const subPath = orientation === 'portrait' && fs.existsSync(portraitSub) ? portraitSub : defaultSub;
 
+  const partAPath = draft.video?.partA?.filePath || draft.video?.partA?.thumbnailPath;
+  const isPartAVideo = draft.video?.partA?.mediaType === 'video' ||
+    ['.mp4', '.mov', '.webm', '.mkv'].some(ext => (partAPath || '').toLowerCase().endsWith(ext));
+
   const partAConfig = {
     enabled: body.partAEnabled !== false && draft.video?.partA?.enabled !== false,
     durationSeconds: Number(body.partADurationSeconds || draft.video?.partA?.durationSeconds || 5.0),
-    imagePath: draft.video?.partA?.filePath || draft.video?.partA?.thumbnailPath,
-    audioPolicy: draft.video?.partA?.audioPolicy || 'suno_starts_at_part_b',
+    imagePath: partAPath,
+    mediaPath: partAPath,
+    mediaType: (isPartAVideo ? 'video' : 'image') as 'video' | 'image',
+    hasAudio: Boolean(draft.video?.partA?.hasAudio),
+    audioPolicy: (draft.video?.partA?.audioPolicy || (isPartAVideo && draft.video?.partA?.hasAudio ? 'preserve_part_a_audio' : 'suno_starts_at_part_b')) as any,
   };
 
   const songVisualCandidate = draft.video?.partB?.filePath;

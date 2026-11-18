@@ -17,6 +17,14 @@ import {
   alignVocalPhrasesToTimeline,
   FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON,
 } from './lyric-parser';
+import { FOOTPRINTS_BEHIND_LEXICON } from './footprints-behind-lexicon';
+import {
+  devanagariToRoman,
+  devanagariToUrdu,
+  toRomanUrdu,
+} from '@/lib/transliteration';
+
+export { devanagariToRoman, devanagariToUrdu, toRomanUrdu };
 
 export interface MultilingualLineEntry {
   lineIndex: number;
@@ -310,6 +318,11 @@ export function generateMultilingualPackage(
       FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON[rawText.replace(/[,\.?!।]$/, '')] ||
       Object.entries(FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON).find(
         ([key]) => normalizeLookup(key) === normalizedRaw
+      )?.[1] ||
+      FOOTPRINTS_BEHIND_LEXICON[rawText] ||
+      FOOTPRINTS_BEHIND_LEXICON[rawText.replace(/[,\.?!।]$/, '')] ||
+      Object.entries(FOOTPRINTS_BEHIND_LEXICON).find(
+        ([key]) => normalizeLookup(key) === normalizedRaw
       )?.[1];
 
     const containsArabic = /[\u0600-\u06FF]/.test(rawText);
@@ -327,7 +340,8 @@ export function generateMultilingualPackage(
     const urduNastaliq =
       (isArabicScript(line.urduNastaliq) ? line.urduNastaliq : '') ||
       lex?.urdu ||
-      (containsArabic ? rawText : '');
+      (containsArabic ? rawText : '') ||
+      (containsDevanagari ? devanagariToUrdu(rawText) : '');
     const english =
       (isLatinOnly(line.englishTranslation) ? line.englishTranslation : '') ||
       lex?.en ||
@@ -335,7 +349,8 @@ export function generateMultilingualPackage(
     const roman =
       (isLatinOnly(line.romanUrdu) ? line.romanUrdu : '') ||
       lex?.rom ||
-      (containsArabic ? urduToRomanUrdu(rawText) : '');
+      (containsArabic ? urduToRomanUrdu(rawText) : '') ||
+      (containsDevanagari ? devanagariToRoman(rawText) : '');
     const deva =
       (isDevanagariScript(line.devanagariUrdu) ? line.devanagariUrdu : '') ||
       lex?.deva ||

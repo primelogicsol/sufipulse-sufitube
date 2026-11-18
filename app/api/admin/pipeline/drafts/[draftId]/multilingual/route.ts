@@ -63,6 +63,19 @@ export async function POST(
         draft.primaryLanguage
       );
 
+      // Persist generated language fields onto draft.masterTimeline so cues are never empty
+      if (Array.isArray(draft.masterTimeline.lines)) {
+        pkg.lines.forEach((pl: any, i: number) => {
+          const cue: any = draft.masterTimeline!.lines[i];
+          if (!cue) return;
+          if (!cue.urduNastaliq && pl.urduNastaliq) cue.urduNastaliq = pl.urduNastaliq;
+          if (!cue.englishTranslation && pl.englishTranslation) cue.englishTranslation = pl.englishTranslation;
+          if (!cue.romanUrdu && pl.romanUrdu) cue.romanUrdu = pl.romanUrdu;
+          if (!cue.devanagariUrdu && pl.devanagariUrdu) cue.devanagariUrdu = pl.devanagariUrdu;
+        });
+        pipelineDraftStorage.saveDraft(draft);
+      }
+
       // Estimated phrase positions are previews, not verified source alignment.
       return NextResponse.json({ success: true, package: pkg, timingVerified: Boolean(draft.masterTimeline.lines.some(line => line.words?.length)), warning: 'Generated phrase times are estimates until synchronized against the recorded vocals.' });
     }

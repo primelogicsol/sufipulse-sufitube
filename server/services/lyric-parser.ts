@@ -22,6 +22,9 @@
  *      - Subtitles stop cleanly before Part B.
  */
 
+import { devanagariToRoman } from '@/lib/transliteration';
+import { FOOTPRINTS_BEHIND_LEXICON } from './footprints-behind-lexicon';
+
 export interface ParsedVocalLine {
   vocalIndex: number;
   lineIndex: number;
@@ -905,7 +908,11 @@ export function parseCanonicalPoemDocument(rawText: string): StructuredPoemDocum
     const vIndex = vocalLines.length + 1;
 
     // Check flagship lexicon for perfect 4-language mapping
-    const lex = FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON[cleanLyric] || FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON[cleanLyric.replace(/[,\.?!]$/, '')];
+    const lex =
+      FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON[cleanLyric] ||
+      FLAGSHIP_KAB_TAK_KHAMOSH_LEXICON[cleanLyric.replace(/[,\.?!।]$/, '')] ||
+      FOOTPRINTS_BEHIND_LEXICON[cleanLyric] ||
+      FOOTPRINTS_BEHIND_LEXICON[cleanLyric.replace(/[,\.?!।]$/, '')];
 
     const vocalEntry: ParsedVocalLine = {
       vocalIndex: vIndex,
@@ -915,7 +922,7 @@ export function parseCanonicalPoemDocument(rawText: string): StructuredPoemDocum
       text: cleanLyric,
       urduNastaliq: lex?.urdu,
       englishTranslation: lex?.en,
-      romanUrdu: lex?.rom,
+      romanUrdu: lex?.rom || devanagariToRoman(cleanLyric),
       devanagariUrdu: lex?.deva || cleanLyric,
       confidence: lex ? 0.98 : 0.85,
     };

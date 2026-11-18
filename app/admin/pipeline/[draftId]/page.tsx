@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Fragment } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -33,12 +33,14 @@ import {
   Info,
   Repeat,
   Image as ImageIcon,
+  Video as VideoIcon,
   Sliders,
   Volume2,
   RotateCcw,
   Save,
   Loader2,
 } from 'lucide-react';
+import { toRomanUrdu, devanagariToUrdu } from '@/lib/transliteration';
 
 type LangTab = 'ur' | 'en' | 'en-rom' | 'ur-deva';
 
@@ -182,13 +184,24 @@ export default function PipelineCockpitPage() {
     if (!draftId) return;
     try {
       setLoading(true);
-      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}`);
+      const res = await fetch(`/api/admin/pipeline/drafts/${draftId}?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(`Failed to load draft (${res.status}): ${d.error || res.statusText}`);
       }
       const data = await res.json();
       setDraft(data.draft);
+      if (data.draft?.productionStatus?.stage) {
+        const stageMap: Record<string, any> = {
+          align: 'aligning', subtitles: 'subtitles', render1: 'render1', render2: 'render2',
+          render3: 'render3', render4: 'render4', complete: 'complete', failed: 'failed',
+        };
+        const mapped = stageMap[data.draft.productionStatus.stage];
+        if (mapped) setProductionStage(mapped);
+      }
       if (data.draft?.downstreamStatus?.approvalStatus === 'approved_for_publishing') {
         setApprovalConfirmed(true);
       }
@@ -229,7 +242,23 @@ export default function PipelineCockpitPage() {
         setPartCAudioMode(data.draft.video.partC.audioMode);
       }
       if (data.draft?.masterTimeline?.lines) {
-        if (!timelineDirtyRef.current) setEditingLines(data.draft.masterTimeline.lines);
+        const serverLines = data.draft.masterTimeline.lines;
+        setEditingLines((prev) => {
+          if (!prev || prev.length === 0 || !timelineDirtyRef.current) {
+            return serverLines;
+          }
+          // If dirty, merge fresh multilingual translations into existing editingLines so translations don't stay empty!
+          return prev.map((l: any, idx: number) => {
+            const fresh = serverLines[idx] || {};
+            return {
+              ...l,
+              urduNastaliq: l.urduNastaliq?.trim() ? l.urduNastaliq : (fresh.urduNastaliq || ''),
+              englishTranslation: l.englishTranslation?.trim() ? l.englishTranslation : (fresh.englishTranslation || ''),
+              romanUrdu: l.romanUrdu?.trim() ? l.romanUrdu : (fresh.romanUrdu || ''),
+              devanagariUrdu: l.devanagariUrdu?.trim() ? l.devanagariUrdu : (fresh.devanagariUrdu || ''),
+            };
+          });
+        });
       }
       if (data.draft?.masterTimeline?.durationSeconds) {
         setAudioDuration(data.draft.masterTimeline.durationSeconds);
@@ -253,7 +282,10 @@ export default function PipelineCockpitPage() {
     if (!alignmentRunning || !draftId) return;
     const t = setInterval(async () => {
       try {
-        const res = await fetch(`/api/admin/pipeline/drafts/${draftId}`);
+        const res = await fetch(`/api/admin/pipeline/drafts/${draftId}?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
         if (!res.ok) return;
         const data = await res.json();
         if (data.draft?.alignmentStatus?.state !== 'running') {
@@ -420,7 +452,7 @@ export default function PipelineCockpitPage() {
     };
     const mapped = map[serverProduction.stage];
     if (mapped) setProductionStage(mapped);
-  }, [serverProduction?.stage, serverProduction?.state]);
+  }, [serverProduction?.stage, serverProduction?.state, serverProduction?.updatedAt]);
 
   const productionRunning = serverProduction?.state === 'running';
   useEffect(() => {
@@ -742,7 +774,7 @@ export default function PipelineCockpitPage() {
     }
   };
 
-  const handleUpdatePartAAudioPolicy = async (audioPolicy: 'suno_starts_at_part_b' | 'suno_starts_at_part_a') => {
+  const handleUpdatePartAAudioPolicy = async (audioPolicy: 'suno_starts_at_part_b' | 'suno_starts_at_part_a' | 'preserve_part_a_audio') => {
     try {
       const res = await fetch(`/api/admin/pipeline/drafts/${draftId}/part-a`, {
         method: 'POST',
@@ -759,7 +791,7 @@ export default function PipelineCockpitPage() {
     }
   };
 
-  // Upload Custom Thumbnail Image (Part A)
+  // Upload Custom Media (Part A: Image Cover or Video Opener)
   const handleUploadCustomThumbnail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customThumbFile) return;
@@ -776,14 +808,15 @@ export default function PipelineCockpitPage() {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || 'Failed to upload custom thumbnail');
+        throw new Error(d.error || 'Failed to upload custom media');
       }
       await fetchDraft();
-      alert('Custom thumbnail image attached successfully!');
+      const isVid = /\.(mp4|mov|webm|mkv)$/i.test(customThumbFile.name);
+      alert(isVid ? 'Part A intro video attached! Frame t=0 was extracted as the YouTube cover thumbnail.' : 'Custom cover image attached successfully!');
       setCustomThumbFile(null);
       setShowCustomThumbStudio(false);
     } catch (err: any) {
-      alert(`Thumbnail upload failed: ${err.message}`);
+      alert(`Media upload failed: ${err.message}`);
     } finally {
       setUploadingCustomThumb(false);
     }
@@ -1734,9 +1767,29 @@ export default function PipelineCockpitPage() {
                     {/* Active Singing Line Live Indicator */}
                     {(() => {
                       const activeLine = editingLines.find(
-                        (l) => audioCurrentTime >= l.startSeconds && audioCurrentTime <= l.endSeconds
+                        (l) => audioCurrentTime >= l.startSeconds && audioCurrentTime <= l.endSeconds && !l.isProductionDirection
                       );
-                      if (!activeLine) return <div className="text-xs text-white/30 italic">No vocals active</div>;
+                      if (!activeLine) {
+                        if (audioCurrentTime >= 101.50 && audioCurrentTime < 125.56) {
+                          const remaining = Math.max(0, Math.ceil(125.56 - audioCurrentTime));
+                          return (
+                            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-200 text-xs animate-pulse">
+                              <span className="font-bold text-purple-300 font-mono">🎵 INTERLUDE</span>
+                              <span className="text-[11px] text-white/80">Flute & Rebab Solo (Resumes in {remaining}s at #32)</span>
+                            </div>
+                          );
+                        }
+                        if (audioCurrentTime >= 189.78 && audioCurrentTime < 202.76) {
+                          const remaining = Math.max(0, Math.ceil(202.76 - audioCurrentTime));
+                          return (
+                            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-200 text-xs animate-pulse">
+                              <span className="font-bold text-purple-300 font-mono">🎵 BRIDGE</span>
+                              <span className="text-[11px] text-white/80">Instrumental Break (Resumes in {remaining}s at #55)</span>
+                            </div>
+                          );
+                        }
+                        return <div className="text-xs text-white/30 italic">No vocals active</div>;
+                      }
                       return (
                         <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
                           <span className="font-bold text-amber-400 font-mono">#{activeLine.vocalIndex || activeLine.lineIndex + 1}</span>
@@ -1749,7 +1802,9 @@ export default function PipelineCockpitPage() {
                                return speakerRoman[sp] || sp;
                              })()}
                           </span>
-                          <span className="truncate max-w-[280px] font-medium">{activeLine.romanUrdu || activeLine.text}</span>
+                          <span className="truncate max-w-[280px] font-medium" title={toRomanUrdu(activeLine.romanUrdu) || toRomanUrdu(activeLine.text)}>
+                            {toRomanUrdu(activeLine.romanUrdu) || toRomanUrdu(activeLine.text)}
+                          </span>
                         </div>
                       );
                     })()}
@@ -1879,6 +1934,18 @@ export default function PipelineCockpitPage() {
                   >
                     4. English
                   </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      timelineDirtyRef.current = false;
+                      setTimelineDirty(false);
+                      await fetchDraft();
+                    }}
+                    className="ml-auto my-auto px-2.5 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-semibold whitespace-nowrap"
+                    title="Reload fresh 4-language cues from the authoritative master lexicon"
+                  >
+                    ↻ Refresh 4-Language Cues
+                  </button>
                 </div>
               </div>
 
@@ -1914,37 +1981,40 @@ export default function PipelineCockpitPage() {
                     let isRtl = false;
 
                     if (selectedLang === 'ur') {
-                      displayText = line.urduNastaliq || line.text;
-                      fontClass = 'font-serif text-lg leading-relaxed text-amber-100';
+                      const ur = String(line.urduNastaliq || '').trim();
+                      displayText = (ur && /[\u0600-\u06FF]/.test(ur))
+                        ? ur
+                        : devanagariToUrdu(line.text);
+                      fontClass = 'font-nastaliq text-xl leading-[2.4] text-amber-100';
                       isRtl = true;
                     } else if (selectedLang === 'en') {
                       displayText = line.englishTranslation || '(Translating...)';
                       fontClass = 'italic text-sm text-emerald-300 leading-relaxed';
                     } else if (selectedLang === 'en-rom') {
                       const roman = String(line.romanUrdu || '').trim();
-                      displayText = roman && !/[\u0600-\u06FF\u0900-\u097F]/.test(roman)
+                      displayText = (roman && !/[\u0600-\u06FF\u0900-\u097F]/.test(roman))
                         ? roman
-                        : '(Roman Urdu unavailable)';
+                        : toRomanUrdu(line.text) || '(Roman Urdu unavailable)';
                       fontClass = 'text-sm text-amber-200';
                     } else if (selectedLang === 'ur-deva') {
                       const deva = String(line.devanagariUrdu || '').trim();
-                      displayText = deva && /[\u0900-\u097F]/.test(deva)
+                      displayText = (deva && /[\u0900-\u097F]/.test(deva))
                         ? deva
-                        : '(Devanagari unavailable)';
+                        : (line.text || '(Devanagari unavailable)');
                       fontClass = 'text-sm text-blue-200';
                     }
 
                     const isExpanded = expandedLineIndex === idx;
 
                     return (
-                      <div
-                        key={idx}
-                        className={`p-3.5 rounded-xl border transition-all duration-200 space-y-3 ${
-                          isActiveSinging
-                            ? 'border-amber-400 bg-amber-500/[0.08] shadow-lg shadow-amber-500/10'
-                            : 'border-white/10 bg-white/5 hover:border-white/20'
-                        }`}
-                      >
+                      <Fragment key={idx}>
+                        <div
+                          className={`p-3.5 rounded-xl border transition-all duration-200 space-y-3 ${
+                            isActiveSinging
+                              ? 'border-amber-400 bg-amber-500/[0.08] shadow-lg shadow-amber-500/10'
+                              : 'border-white/10 bg-white/5 hover:border-white/20'
+                          }`}
+                        >
                         {/* Header Row: Index, Speaker Badge, Section, Audition Button, Editable Timestamps */}
                         <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -1957,6 +2027,11 @@ export default function PipelineCockpitPage() {
                             {line.section && (
                               <span className="px-2 py-0.5 rounded bg-white/5 text-white/40 text-[10px] truncate max-w-[200px]">
                                 {line.section}
+                              </span>
+                            )}
+                            {line.isProductionDirection && (
+                              <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-semibold">
+                                Instrumental / Non-Vocal
                               </span>
                             )}
                             <button
@@ -2108,10 +2183,27 @@ export default function PipelineCockpitPage() {
                                   />
                                 </div>
                               </div>
+                              <div className="flex items-center justify-between pt-1 border-t border-white/10">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateLineField(idx, 'isProductionDirection', !line.isProductionDirection)}
+                                  className={`px-2.5 py-1 rounded text-[11px] font-medium border transition-colors ${
+                                    line.isProductionDirection
+                                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                                      : 'bg-white/5 text-white/50 border-white/10 hover:text-white'
+                                  }`}
+                                >
+                                  {line.isProductionDirection ? '✓ Marked as Instrumental (Omit from Subtitles)' : 'Mark as Instrumental (Omit from Subtitles)'}
+                                </button>
+                                <span className="text-[10px] text-white/40">
+                                  {line.isProductionDirection ? 'Line is preserved in poem text, but omitted from video subtitle burn.' : 'Line burns in video subtitle.'}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </div>
                       </div>
+                    </Fragment>
                     );
                   })}
                 </div>
@@ -2314,21 +2406,27 @@ export default function PipelineCockpitPage() {
                   </span>
                 </div>
 
-                {/* ─── PART A: THUMBNAIL INTRODUCTION (NEW) ───────────────────────── */}
+                {/* ─── PART A: OPENER / INTRODUCTION (VIDEO OR IMAGE) ───────────────── */}
                 <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3 text-xs">
                   <div className="flex items-center justify-between font-semibold text-amber-300">
                     <div className="flex items-center gap-1.5">
-                      <ImageIcon className="w-4 h-4 text-amber-400" />
-                      <span>PART A: Thumbnail Introduction (Opening Screen)</span>
+                      {draft?.video?.partA?.mediaType === 'video' ? (
+                        <VideoIcon className="w-4 h-4 text-amber-400" />
+                      ) : (
+                        <ImageIcon className="w-4 h-4 text-amber-400" />
+                      )}
+                      <span>PART A: {draft?.video?.partA?.mediaType === 'video' ? 'Video Opener' : 'Thumbnail Intro'} (Opening Screen)</span>
                     </div>
                     <span className="text-[10px] font-mono bg-amber-500/20 px-2 py-0.5 rounded border border-amber-400/30 text-amber-200">
-                      Duration: {partADuration.toFixed(1)}s • {draft?.video?.partA?.audioPolicy === 'suno_starts_at_part_a' ? 'Song + Captions' : 'Silent Audio'}
+                      {draft?.video?.partA?.mediaType === 'video' ? '🎬 Video' : '🖼️ Image'} • {partADuration.toFixed(1)}s • {draft?.video?.partA?.audioPolicy === 'suno_starts_at_part_a' ? 'Song + Captions' : draft?.video?.partA?.audioPolicy === 'preserve_part_a_audio' ? 'Video Audio' : 'Silent'}
                     </span>
                   </div>
 
                   <div className="text-[11px] text-white/70">
                     {draft?.video?.partA?.audioPolicy === 'suno_starts_at_part_a'
                       ? <>The Suno song and lyric captions begin immediately on Part A; Part B continues seamlessly at t = {partADuration.toFixed(1)}s without restarting.</>
+                      : draft?.video?.partA?.audioPolicy === 'preserve_part_a_audio'
+                      ? <>Part A plays the uploaded video with its original embedded audio; the Suno song and lyric captions begin when Part B starts at t = {partADuration.toFixed(1)}s.</>
                       : <>Opening visual screen is silent. The Suno song and lyric captions begin when Part B starts at t = {partADuration.toFixed(1)}s.</>}
                   </div>
 
@@ -2337,7 +2435,7 @@ export default function PipelineCockpitPage() {
                     <button
                       type="button"
                       onClick={() => handleUpdatePartAAudioPolicy('suno_starts_at_part_b')}
-                      className={`px-3 py-1 rounded-lg border text-[11px] font-medium ${draft?.video?.partA?.audioPolicy !== 'suno_starts_at_part_a' ? 'border-amber-400 bg-amber-500/20 text-white' : 'border-white/10 bg-white/5 text-white/60'}`}
+                      className={`px-3 py-1 rounded-lg border text-[11px] font-medium ${draft?.video?.partA?.audioPolicy === 'suno_starts_at_part_b' || (!draft?.video?.partA?.audioPolicy && draft?.video?.partA?.mediaType !== 'video') ? 'border-amber-400 bg-amber-500/20 text-white' : 'border-white/10 bg-white/5 text-white/60'}`}
                     >
                       Silent Intro
                     </button>
@@ -2348,6 +2446,15 @@ export default function PipelineCockpitPage() {
                     >
                       Song + Captions
                     </button>
+                    {draft?.video?.partA?.mediaType === 'video' && (
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePartAAudioPolicy('preserve_part_a_audio')}
+                        className={`px-3 py-1 rounded-lg border text-[11px] font-medium ${draft?.video?.partA?.audioPolicy === 'preserve_part_a_audio' ? 'border-amber-400 bg-amber-500/20 text-white' : 'border-white/10 bg-white/5 text-white/60'}`}
+                      >
+                        Original Video Audio
+                      </button>
+                    )}
                   </div>
 
                   {/* Configurable Duration Selector */}
@@ -2361,9 +2468,12 @@ export default function PipelineCockpitPage() {
                         { label: '3 sec', sec: 3 },
                         { label: '5 sec (Default)', sec: 5 },
                         { label: '10 sec', sec: 10 },
+                        ...(draft?.video?.partA?.mediaType === 'video' && draft?.video?.partA?.durationSeconds
+                          ? [{ label: `Video (${Number(draft.video.partA.durationSeconds).toFixed(1)}s)`, sec: Math.round(draft.video.partA.durationSeconds * 10) / 10 }]
+                          : []),
                       ].map((item) => (
                         <button
-                          key={item.sec}
+                          key={item.label}
                           type="button"
                           onClick={() => handleUpdatePartADuration(item.sec)}
                           className={`px-3 py-1 rounded-lg border text-[11px] font-medium transition-all ${
@@ -2395,30 +2505,43 @@ export default function PipelineCockpitPage() {
                     </div>
                   </div>
 
-                  {/* Active Thumbnail Visual Preview & Controls */}
+                  {/* Active Visual Preview & Controls */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-3 p-2.5 rounded-lg bg-black/40 border border-amber-500/20">
-                      <img
-                        src={`/api/admin/pipeline/drafts/${draftId}/media?asset=thumbnail&v=${encodeURIComponent(draft?.video?.partA?.uploadedAt || draft?.updatedAt || '')}`}
-                        alt="Active Thumbnail"
-                        className="w-28 h-16 object-cover rounded border border-white/10 shrink-0 bg-black/60"
-                      />
+                      {draft?.video?.partA?.mediaType === 'video' ? (
+                        <div className="relative w-28 h-16 rounded border border-white/10 shrink-0 bg-black overflow-hidden">
+                          <img
+                            src={`/api/admin/pipeline/drafts/${draftId}/media?asset=thumbnail&v=${encodeURIComponent(draft?.video?.partA?.uploadedAt || draft?.updatedAt || '')}`}
+                            alt="Active Video Thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute bottom-1 right-1 px-1 py-0.2 bg-black/80 text-[8px] font-mono text-amber-300 rounded border border-amber-400/30">
+                            VIDEO
+                          </span>
+                        </div>
+                      ) : (
+                        <img
+                          src={`/api/admin/pipeline/drafts/${draftId}/media?asset=thumbnail&v=${encodeURIComponent(draft?.video?.partA?.uploadedAt || draft?.updatedAt || '')}`}
+                          alt="Active Thumbnail"
+                          className="w-28 h-16 object-cover rounded border border-white/10 shrink-0 bg-black/60"
+                        />
+                      )}
                       <div className="space-y-1 min-w-0 text-[11px]">
                         <div className="text-white font-medium flex items-center gap-1.5">
-                          <span>Active Release Thumbnail & Video Opener</span>
+                          <span>{draft?.video?.partA?.mediaType === 'video' ? 'Active Video Opener & Cover' : 'Active Release Thumbnail & Video Opener'}</span>
                           <span className="text-emerald-400 font-mono text-[9px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-0.5">
                             <Check className="w-2.5 h-2.5" /> Verified
                           </span>
                         </div>
                         <div className="text-white/50 text-[10px]">
-                          Independent YouTube Cover & Opening Canvas ({partADuration.toFixed(1)}s {draft?.video?.partA?.audioPolicy === 'suno_starts_at_part_a' ? 'song + caption intro' : 'silent intro'})
+                          {draft?.video?.partA?.mediaType === 'video' ? 'Animated Video Opener' : 'Independent YouTube Cover'} ({partADuration.toFixed(1)}s • {draft?.video?.partA?.audioPolicy === 'suno_starts_at_part_a' ? 'song + caption intro' : draft?.video?.partA?.audioPolicy === 'preserve_part_a_audio' ? 'video audio' : 'silent intro'})
                         </div>
                         <button
                           type="button"
                           onClick={() => setShowCustomThumbStudio(!showCustomThumbStudio)}
                           className="text-[10px] text-amber-400 hover:text-amber-300 underline font-medium"
                         >
-                          {showCustomThumbStudio ? 'Hide Thumbnail Controls' : 'Change / Upload Thumbnail Image'}
+                          {showCustomThumbStudio ? 'Hide Upload / Thumbnail Controls' : 'Change / Upload Video Opener or Cover Image'}
                         </button>
                       </div>
                     </div>
@@ -2441,7 +2564,7 @@ export default function PipelineCockpitPage() {
                               type="number"
                               step="0.5"
                               min="0"
-                              max={draft?.masterAudio?.durationSeconds || 285}
+                              max={draft?.video?.partA?.mediaType === 'video' ? (draft?.video?.partA?.durationSeconds || 60) : (draft?.masterAudio?.durationSeconds || 285)}
                               value={customThumbTimestamp}
                               onChange={(e) => setCustomThumbTimestamp(e.target.value)}
                               className="w-14 px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-white font-mono text-[10px]"
@@ -2457,22 +2580,30 @@ export default function PipelineCockpitPage() {
                           </div>
                         </div>
 
-                        {/* Custom Thumbnail Upload Form */}
-                        <form onSubmit={handleUploadCustomThumbnail} className="pt-2 border-t border-white/10 grid grid-cols-1 sm:grid-cols-[auto,minmax(0,1fr),auto] items-center gap-2">
-                          <label className="text-[10px] text-white/50">Upload Cover Image:</label>
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            onChange={(e) => setCustomThumbFile(e.target.files?.[0] || null)}
-                            className="min-w-0 w-full max-w-full text-[10px] text-white/70 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:bg-white/10 file:text-white"
-                          />
-                          <button
-                            type="submit"
-                            disabled={!customThumbFile || uploadingCustomThumb}
-                            className="w-full sm:w-auto px-3 py-1.5 rounded bg-emerald-500 text-black text-[10px] font-semibold hover:bg-emerald-400 disabled:opacity-40"
-                          >
-                            {uploadingCustomThumb ? 'Uploading...' : 'Attach Image'}
-                          </button>
+                        {/* Custom Media Upload Form (Image or Video) */}
+                        <form onSubmit={handleUploadCustomThumbnail} className="pt-2 border-t border-white/10 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] text-white/70 font-semibold">Upload Image Cover or Video Opener:</label>
+                            <span className="text-[9px] text-white/40 font-mono">PNG, JPG, WebP, MP4, MOV, WebM</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr),auto] items-center gap-2">
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+                              onChange={(e) => setCustomThumbFile(e.target.files?.[0] || null)}
+                              className="min-w-0 w-full max-w-full text-[10px] text-white/70 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-[9px] file:bg-white/10 file:text-white file:font-semibold hover:file:bg-white/20"
+                            />
+                            <button
+                              type="submit"
+                              disabled={!customThumbFile || uploadingCustomThumb}
+                              className="w-full sm:w-auto px-3.5 py-1.5 rounded bg-emerald-500 text-black text-[10px] font-semibold hover:bg-emerald-400 disabled:opacity-40 transition-colors whitespace-nowrap"
+                            >
+                              {uploadingCustomThumb ? 'Uploading…' : customThumbFile && /\.(mp4|mov|webm|mkv)$/i.test(customThumbFile.name) ? 'Attach Video Opener' : 'Attach Cover Image'}
+                            </button>
+                          </div>
+                          <p className="text-[9px] text-white/50">
+                            💡 If you upload a video, it plays as the animated Part A opening hook and frame t=0 is automatically extracted as the YouTube cover thumbnail.
+                          </p>
                         </form>
                       </div>
                     )}

@@ -42,7 +42,16 @@ export async function GET(
     }
     // Fresh drafts automatically receive the shared Canva Part B background / verified Part C promo.
     if (applyDefaultVideoParts(draft)) pipelineDraftStorage.saveDraft(draft);
-    return NextResponse.json({ draft });
+    return NextResponse.json(
+      { draft },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (err: any) {
     return NextResponse.json({ error: err.message, code: 'DRAFT_STORAGE_UNAVAILABLE' }, { status: 500 });
   }

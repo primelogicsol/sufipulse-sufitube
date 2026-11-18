@@ -10,6 +10,7 @@ import { RegistryStatusMonitoring } from '../../components/ui/RegistryStatusMoni
 import { StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioWorkflowRoadmap, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { StudioSpecialistRoster } from '@/app/components/studio/StudioSpecialistRoster';
 import { HeroCTAGroup } from '../../components/ui/HeroCTAGroup';
 
 export default function Studio() {
@@ -257,6 +258,7 @@ export default function Studio() {
         </PageContainer>
       </Section>
 
+      <StudioSpecialistRoster areas={['cinematic-video']} heading="Cinematic Video Production Specialists" description="Full-length editing, lyric video composition, rendering and technical finishing" />
       <StudioGovernancePanel 
         title="Institutional Access"
         description="Studios may request inclusion within the SufiPulse production network. Admission is evaluated on technical readiness and governance alignment."

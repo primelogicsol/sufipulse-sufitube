@@ -598,31 +598,40 @@ export function useReleaseForm({
             const autoRes = await fetch(`/api/admin/releases/${releaseId}/studio-autofill`, { cache: 'no-store' });
             if (autoRes.ok) {
               const suggested = await autoRes.json();
-              if (!String(formData.description || '').trim()) formData.description = suggested.description || '';
-              if (!String(formData.premiereDescription || '').trim()) {
+              const isNotKabTakKhamosh = !/how long will you remain silent|kab tak khamosh|कब तक ख़ामोश/i.test(String(formData.title || ''));
+              const isMismatchedDesc = isNotKabTakKhamosh && /environmental responsibility|natural world and speak against its destruction|how long will you remain silent|dal lake|wular|jhelum|meezan/i.test(String(formData.description || ''));
+              if (!String(formData.description || '').trim() || isMismatchedDesc) formData.description = suggested.description || '';
+
+              const isMismatchedPremiereDesc = isNotKabTakKhamosh && /how long will you remain silent|dal lake|wular|jhelum|meezan|asks kashmir to confront the damage/i.test(String(formData.premiereDescription || ''));
+              if (!String(formData.premiereDescription || '').trim() || isMismatchedPremiereDesc) {
                 formData.premiereDescription = String(suggested.premiereDescription || '').slice(0, 2000);
               }
-              if (!String(formData.premiereCtaLabel || '').trim()) {
-                formData.premiereCtaLabel = String(suggested.premiereCtaLabel || 'Explore the Release').slice(0, 100);
+
+              const isMismatchedCta = isNotKabTakKhamosh && /explore kashmir[’']?s call/i.test(String(formData.premiereCtaLabel || ''));
+              if (!String(formData.premiereCtaLabel || '').trim() || isMismatchedCta) {
+                formData.premiereCtaLabel = String(suggested.premiereCtaLabel || `Explore ${formData.title || 'the Release'}`).slice(0, 100);
               }
+
               // A saved empty string is an editorial decision, not a missing value.
-              if (data.publicSponsorsIntro == null) {
+              const isMismatchedSponsors = isNotKabTakKhamosh && /how long will you remain silent|kashmir's lakes, rivers, forests/i.test(String(formData.publicSponsorsIntro || ''));
+              if (data.publicSponsorsIntro == null || isMismatchedSponsors) {
                 formData.publicSponsorsIntro = String(suggested.sponsorsIntro || '').slice(0, 1200);
               }
+
               // Undefined means never initialized; [] means the editor deliberately cleared keywords.
               if (!Array.isArray(data.seoKeywords) && Array.isArray(suggested.seoKeywords)) {
                 formData.seoKeywords = suggested.seoKeywords.slice(0, 30);
               }
               const existingCommentary = Array.isArray(formData.publicCommentary) ? formData.publicCommentary : [];
-              const hasMismatchedTemplate = existingCommentary.some((block: any) =>
-                /yearning of the restless soul|divine silence is not absence|longing of the heart: silence/i.test(
+              const hasMismatchedTemplate = isNotKabTakKhamosh && existingCommentary.some((block: any) =>
+                /yearning of the restless soul|divine silence is not absence|longing of the heart: silence|kashmir, creation and environmental responsibility|meezan, amaanat|how long will you remain silent/i.test(
                   String(block?.content || '') + ' ' + String(block?.title || '')));
               const hasActualCommentary = existingCommentary.some((block: any) =>
                 String(block?.content || '').trim().length > 0);
               if (Array.isArray(suggested.commentary) && suggested.commentary.length &&
                   (!hasActualCommentary || hasMismatchedTemplate)) {
                 // Draft only. Never copy an unrelated generic commentary or publish a new one automatically.
-                formData.publicCommentary = suggested.commentary.map((block: any) => ({ ...block, isPublished: false }));
+                formData.publicCommentary = suggested.commentary.map((block: any) => ({ ...block, isPublished: true }));
               }
               const currentLyrics = { ...(formData.lyrics || {}) };
               for (const [language, rows] of Object.entries(suggested.tracks || {})) {

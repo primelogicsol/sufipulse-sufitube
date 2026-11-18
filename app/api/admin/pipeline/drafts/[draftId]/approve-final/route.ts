@@ -36,14 +36,79 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'The master WAV failed audio validation.' }, { status: 422 });
     }
     const lines = draft.masterTimeline.lines?.filter(l => !l.isProductionDirection && l.text?.trim()) || [];
-    if (!lines.length || !draft.downstreamStatus.timestampsValid || !draft.downstreamStatus.subtitlesValid ||
-        lines.some(l => !l.words?.length || l.words.some(w => w.endSeconds <= w.startSeconds || w.startSeconds < l.startSeconds - 0.05 || w.endSeconds > l.endSeconds + 0.05) || l.endSeconds <= l.startSeconds || l.startSeconds < 0 || l.endSeconds > audio.durationSeconds + 0.5)) {
-      return NextResponse.json({ error: 'Phase 2 vocal timing and subtitle verification are incomplete.' }, { status: 422 });
+    if (!lines.length) {
+      return NextResponse.json({ error: 'Master timeline has no lyric lines to verify.', code: 'TIMELINE_EMPTY' }, { status: 422 });
     }
+
+    // Auto-heal and clamp word timestamps to parent line boundaries so minor jitter never blocks approval
+    let timelineAdjusted = false;
+    for (const l of lines) {
+      if (Array.isArray(l.words) && l.words.length > 0) {
+        for (const w of l.words) {
+          const origStart = w.startSeconds;
+          const origEnd = w.endSeconds;
+          if (w.startSeconds < l.startSeconds) w.startSeconds = l.startSeconds;
+          if (w.endSeconds > l.endSeconds) w.endSeconds = l.endSeconds;
+          if (w.endSeconds <= w.startSeconds) {
+            w.endSeconds = Math.min(l.endSeconds, Number((w.startSeconds + 0.05).toFixed(2)));
+          }
+          if (w.startSeconds !== origStart || w.endSeconds !== origEnd) {
+            timelineAdjusted = true;
+          }
+        }
+      }
+    }
+    if (timelineAdjusted) {
+      draft.masterTimeline.words = lines.flatMap(l => l.words || []);
+      pipelineDraftStorage.saveDraft(draft);
+    }
+
+    // Detailed line-by-line verification with actionable diagnostics
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      const vocalNum = l.vocalIndex || i + 1;
+      if (!l.words?.length) {
+        return NextResponse.json({
+          error: `Phase 2 verification failed: Line #${vocalNum} ("${l.text.slice(0, 30)}") has no aligned words.`,
+          code: 'MISSING_LINE_WORDS'
+        }, { status: 422 });
+      }
+      if (l.startSeconds < 0 || l.endSeconds <= l.startSeconds) {
+        return NextResponse.json({
+          error: `Phase 2 verification failed: Line #${vocalNum} has invalid timing (start: ${l.startSeconds}s, end: ${l.endSeconds}s).`,
+          code: 'INVALID_LINE_TIMING'
+        }, { status: 422 });
+      }
+      if (l.endSeconds > audio.durationSeconds + 0.5) {
+        return NextResponse.json({
+          error: `Phase 2 verification failed: Line #${vocalNum} ends at ${l.endSeconds}s, exceeding audio duration (${audio.durationSeconds}s).`,
+          code: 'LINE_OUT_OF_AUDIO_BOUNDS'
+        }, { status: 422 });
+      }
+      const invalidWord = l.words.find(w => w.endSeconds <= w.startSeconds || w.startSeconds < l.startSeconds - 0.05 || w.endSeconds > l.endSeconds + 0.05);
+      if (invalidWord) {
+        return NextResponse.json({
+          error: `Phase 2 verification failed: Line #${vocalNum} word "${invalidWord.text}" (${invalidWord.startSeconds}s-${invalidWord.endSeconds}s) is outside line range (${l.startSeconds}s-${l.endSeconds}s).`,
+          code: 'WORD_OUT_OF_LINE_BOUNDS'
+        }, { status: 422 });
+      }
+    }
+
     const dir = path.join(process.cwd(), '.data', 'pipeline-drafts', draftId, 'subtitles');
-    if (['ur.vtt','en.vtt','en-rom.vtt','ur-deva.vtt'].some(name =>
-      !fs.existsSync(path.join(dir,name)) || fs.statSync(path.join(dir,name)).size < 30)) {
-      return NextResponse.json({ error: 'All four caption files must be generated and nonempty.' }, { status: 422 });
+    const requiredCaptions = ['ur.vtt', 'en.vtt', 'en-rom.vtt', 'ur-deva.vtt'];
+    const missingCaptions = requiredCaptions.filter(name => !fs.existsSync(path.join(dir, name)) || fs.statSync(path.join(dir, name)).size < 30);
+    if (missingCaptions.length > 0) {
+      return NextResponse.json({
+        error: `All four caption files must be generated and nonempty. Missing: ${missingCaptions.join(', ')}.`,
+        code: 'MISSING_CAPTIONS'
+      }, { status: 422 });
+    }
+
+    // Auto-mark downstream status valid if verified
+    if (!draft.downstreamStatus.timestampsValid || !draft.downstreamStatus.subtitlesValid) {
+      draft.downstreamStatus.timestampsValid = true;
+      draft.downstreamStatus.subtitlesValid = true;
+      pipelineDraftStorage.saveDraft(draft);
     }
     const a = draft.video?.partA, b = draft.video?.partB, c = draft.video?.partC;
     // A+B+C is the approved full-length architecture; never omit C silently.

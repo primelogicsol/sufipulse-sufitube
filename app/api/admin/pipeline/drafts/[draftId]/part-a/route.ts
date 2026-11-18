@@ -45,51 +45,108 @@ export async function POST(
       request.headers.get('x-thumbnail-upload') === 'true' ||
       searchParams.get('asset') === 'thumbnail';
 
-    // ─── 1. DEDICATED THUMBNAIL UPLOAD (Custom Thumbnail) ─────────────────────
+    // ─── 1. DEDICATED PART A UPLOAD (Image Cover or Video Opener) ──────────────
     if (isThumbnailUpload) {
-      const requestedName = decodeURIComponent(request.headers.get('x-file-name') || 'thumbnail.jpg');
+      const requestedName = decodeURIComponent(request.headers.get('x-file-name') || 'opener.jpg');
       const requestedExt = path.extname(requestedName).toLowerCase();
-      const safeExt = ['.jpg', '.jpeg', '.png', '.webp'].includes(requestedExt) ? requestedExt : '.jpg';
-      const thumbFileName = `thumbnail_${Date.now()}${safeExt}`;
-      const thumbFilePath = path.join(videoDir, thumbFileName);
-      const canonicalThumb = path.join(videoDir, `thumbnail${safeExt}`);
+      const isVideo = ['.mp4', '.mov', '.webm', '.mkv'].includes(requestedExt);
+      const safeExt = isVideo
+        ? requestedExt
+        : (['.jpg', '.jpeg', '.png', '.webp'].includes(requestedExt) ? requestedExt : '.jpg');
+      const targetFileName = isVideo ? `part_a_video_${Date.now()}${safeExt}` : `thumbnail_${Date.now()}${safeExt}`;
+      const targetFilePath = path.join(videoDir, targetFileName);
 
       if (contentType.includes('multipart/form-data')) {
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
-        if (!file) return NextResponse.json({ error: 'No thumbnail file provided' }, { status: 400 });
-        const writeStream = fs.createWriteStream(thumbFilePath);
+        if (!file) return NextResponse.json({ error: 'No media file provided' }, { status: 400 });
+        const writeStream = fs.createWriteStream(targetFilePath);
         await pipeline(Readable.fromWeb(file.stream() as any), writeStream);
       } else if (request.body) {
-        const writeStream = fs.createWriteStream(thumbFilePath);
+        const writeStream = fs.createWriteStream(targetFilePath);
         await pipeline(Readable.fromWeb(request.body as any), writeStream);
       }
 
-      if (!fs.existsSync(thumbFilePath) || fs.statSync(thumbFilePath).size === 0) {
-        return NextResponse.json({ error: 'Empty thumbnail file received' }, { status: 400 });
+      if (!fs.existsSync(targetFilePath) || fs.statSync(targetFilePath).size === 0) {
+        return NextResponse.json({ error: 'Empty media file received' }, { status: 400 });
       }
 
-      try { fs.copyFileSync(thumbFilePath, canonicalThumb); } catch {}
+      let thumbFilePath: string = targetFilePath;
+      let durationSeconds = 5.0;
+      let width: number | undefined;
+      let height: number | undefined;
+      let hasAudio = false;
+
+      if (isVideo) {
+        // Probe video for duration, dimensions, and audio stream
+        try {
+          const probe = await probeMediaFile(targetFilePath);
+          if (probe.isValid) {
+            durationSeconds = probe.durationSeconds > 0 ? probe.durationSeconds : 5.0;
+            width = probe.width;
+            height = probe.height;
+            hasAudio = probe.hasAudio;
+          }
+        } catch (e) {
+          console.warn('[part-a] Probe error:', e);
+        }
+
+        // Extract frame at t=0 as canonical YouTube thumbnail
+        const extractedThumbName = `thumbnail_${Date.now()}.jpg`;
+        const extractedThumbPath = path.join(videoDir, extractedThumbName);
+        const canonicalThumb = path.join(videoDir, 'thumbnail.jpg');
+        try {
+          const ffBin = getFfmpegPath();
+          const proc = spawn(ffBin, [
+            '-ss', '0',
+            '-i', targetFilePath,
+            '-vframes', '1',
+            '-q:v', '2',
+            '-y',
+            extractedThumbPath,
+          ]);
+          await new Promise<void>((resolve) => {
+            proc.on('close', () => resolve());
+            proc.on('error', () => resolve());
+          });
+          if (fs.existsSync(extractedThumbPath) && fs.statSync(extractedThumbPath).size > 0) {
+            thumbFilePath = extractedThumbPath;
+            try { fs.copyFileSync(extractedThumbPath, canonicalThumb); } catch {}
+          }
+        } catch (thumbErr) {
+          console.warn('[part-a] Thumbnail extraction warning:', thumbErr);
+        }
+      } else {
+        const canonicalThumb = path.join(videoDir, `thumbnail${safeExt}`);
+        try { fs.copyFileSync(targetFilePath, canonicalThumb); } catch {}
+      }
 
       if (!draft.video.partA) {
         draft.video.partA = {
           enabled: true,
-          durationSeconds: 5.0,
-          sourceType: 'uploaded_image',
-          audioPolicy: 'suno_starts_at_part_b',
+          durationSeconds: isVideo ? durationSeconds : 5.0,
+          sourceType: isVideo ? 'uploaded_video' : 'uploaded_image',
+          audioPolicy: isVideo && hasAudio ? 'preserve_part_a_audio' : 'suno_starts_at_part_b',
           canvaDesignId: 'DAHa7St5CYs',
           canvaUrl: 'https://canva.link/ezqj8ymddv6yl2d',
-          title: 'Part A Background Theme',
+          title: 'Part A Opener',
         };
       }
       const partA = draft.video.partA!;
       partA.thumbnailPath = thumbFilePath;
-      partA.thumbnailMode = 'custom_upload';
-      // A custom Part A cover is also the actual opening visual, not merely a preview image.
-      partA.sourceType = 'uploaded_image';
-      partA.mediaType = 'image';
-      partA.filePath = thumbFilePath;
+      partA.thumbnailMode = isVideo ? 'first_frame' : 'custom_upload';
+      partA.sourceType = isVideo ? 'uploaded_video' : 'uploaded_image';
+      partA.mediaType = isVideo ? 'video' : 'image';
+      partA.filePath = targetFilePath;
       partA.fileName = requestedName;
+      // If video, default duration to probed video duration (up to 60s max) or preserve existing duration
+      partA.durationSeconds = isVideo ? Math.min(60, Math.max(1, durationSeconds)) : (partA.durationSeconds || 5.0);
+      partA.width = width || partA.width || 1920;
+      partA.height = height || partA.height || 1080;
+      partA.hasAudio = hasAudio;
+      if (isVideo && hasAudio && (!partA.audioPolicy || partA.audioPolicy === 'suno_starts_at_part_b')) {
+        partA.audioPolicy = 'preserve_part_a_audio';
+      }
       partA.validationStatus = 'VALID';
       partA.uploadedAt = new Date().toISOString();
 

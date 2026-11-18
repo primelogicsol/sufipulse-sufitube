@@ -266,14 +266,23 @@ async function alignOnce(draftId: string, options: { model?: string; language?: 
     text: String(l.text || '').trim(),
     confidence: Number(l.confidence || 0),
     isProductionDirection: false,
-    words: Array.isArray(l.words) ? l.words.map((w: any) => ({
-      text: String(w.text || '').trim(),
-      startSeconds: Number(w.startSeconds),
-      endSeconds: Number(w.endSeconds),
-      sourceVariantId: fresh.activeVariantId || 'primary',
-      sourceStartSeconds: Number(w.startSeconds),
-      sourceEndSeconds: Number(w.endSeconds),
-    })) : [],
+    words: Array.isArray(l.words) ? l.words.map((w: any) => {
+      const lineStart = Number(Number(l.startSeconds).toFixed(2));
+      const lineEnd = Number(Number(l.endSeconds).toFixed(2));
+      let wStart = Math.max(lineStart, Number(w.startSeconds) || lineStart);
+      let wEnd = Math.min(lineEnd, Number(w.endSeconds) || lineEnd);
+      if (wEnd <= wStart) {
+        wEnd = Math.min(lineEnd, Number((wStart + 0.05).toFixed(2)));
+      }
+      return {
+        text: String(w.text || '').trim(),
+        startSeconds: Number(wStart.toFixed(2)),
+        endSeconds: Number(wEnd.toFixed(2)),
+        sourceVariantId: fresh.activeVariantId || 'primary',
+        sourceStartSeconds: Number(wStart.toFixed(2)),
+        sourceEndSeconds: Number(wEnd.toFixed(2)),
+      };
+    }) : [],
   })).filter((l: any) => l.text && l.endSeconds > l.startSeconds && l.words.length);
 
   if (!cleanLines.length) throw new AutoAlignError('Alignment did not produce valid timestamped lyric words.', 422);

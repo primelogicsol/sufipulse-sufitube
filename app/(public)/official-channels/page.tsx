@@ -6,6 +6,7 @@ import { PrimaryButton } from '../../components/primitives/PrimaryButton';
 import { Video, Headphones, Globe, Shield, ExternalLink, Radio, Youtube, Music2, Music, Instagram, Twitter, Facebook, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { StudioSpecialistRoster } from '@/app/components/studio/StudioSpecialistRoster';
 import { StudioHero, StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../components/studio/StudioLayoutComponents';
 
 export default function OfficialChannels() {
@@ -335,6 +336,7 @@ export default function OfficialChannels() {
                 </PageContainer>
             </Section>
 
+            <StudioSpecialistRoster areas={['distribution']} heading="Global Distribution & Cultural Outreach Specialists" description="Official channel publishing, Kashmir cultural partnerships and community distribution" />
             <StudioGovernancePanel 
                 title="Structural Boundaries"
                 description="Official channels follow institutional protocols. No commercial brand partnerships or independent publications occur outside the documented governance workflow."

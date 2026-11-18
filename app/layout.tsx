@@ -4,7 +4,9 @@ import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ScrollToTop } from "@/app/components/navigation/ScrollToTop";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+// Production canonical identity must not inherit a localhost or preview URL.
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+const BASE_URL = IS_PRODUCTION ? 'https://sufipulse.com' : (process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com');
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
   keywords: [
     "Sufi music", "Sufi poetry", "kalam", "qawwali", "Kashmir music",
     "Islamic devotional music", "Sufi literature", "sacred music India",
-    "Urdu poetry", "Persian poetry", "Sufi artists", "SufiPulse",
+    "Urdu poetry", "Persian poetry", "Sufi artists", "SufiPulse", "Sufi Pulse", "SufiPulse USA", "SufiPulse.com",
     "devotional music", "spiritual music", "mystic poetry",
   ],
   authors: [{ name: "SufiPulse", url: BASE_URL }],
@@ -55,7 +57,6 @@ export const metadata: Metadata = {
     title: "SufiPulse — Sacred Sufi Music, Poetry & Kalam",
     description: "The premier platform for authentic Sufi music, sacred poetry, and literary works from Kashmir and the Indian Subcontinent.",
     images: ["/og?title=Sacred+Sufi+Music+%26+Poetry&subtitle=Discover+kalam%2C+qawwali+and+Sufi+literature"],
-    creator: "@sufipulse",
   },
   alternates: {
     canonical: BASE_URL,
@@ -126,8 +127,9 @@ const websiteSchema = {
   "@type": "WebSite",
   "@id": `${BASE_URL}/#website`,
   name: "SufiPulse",
+  alternateName: ["Sufi Pulse", "SufiPulse USA", "SufiPulse.com"],
   url: BASE_URL,
-  description: "Sacred Sufi music, poetry, and literary works from Kashmir and the Indian Subcontinent.",
+  description: "Official SufiPulse USA website for original Sufi music, poetry, lyrics, and releases rooted in Kashmir and shared worldwide.",
   publisher: {
     "@type": "Organization",
     "@id": "https://sufipulse.com/#organization"

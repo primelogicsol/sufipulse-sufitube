@@ -2,13 +2,14 @@
 import Image from 'next/image';
 import { PageContainer } from '../layout/PageContainer';
 import { CountUp } from '../ui/CountUp';
-import { HeroCTAGroup } from '../ui/HeroCTAGroup';
 
 interface HeroSectionProps {
   kpiStats: {
     releases: number;
     writers: number;
     institutions: number;
+    globalReachImpressions?: number;
+    countriesCount?: number;
   };
 }
 
@@ -37,25 +38,33 @@ export function HeroSection({ kpiStats }: HeroSectionProps) {
             <div className="mb-6 inline-flex items-center gap-2 px-4 py-1 border border-[var(--color-gold)]/30 rounded-full bg-[var(--color-midnight)]/80 backdrop-blur-md shadow-lg shadow-[var(--color-gold)]/5">
               <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" />
               <span className="text-[11px] md:text-xs text-[var(--color-gold)] uppercase tracking-widest font-semibold">
-                SufiPulse USA - Institutional Archive
+                Official Platform · Rooted in Kashmir, Created for the World
               </span>
             </div>
 
-            <h1 className="font-serif text-[var(--text-hero)] font-bold text-[var(--color-text-primary)] mb-6 leading-[1.1] tracking-tight drop-shadow-md">
-              The House of Sacred<br className="hidden md:block" />{" "}
-              <span className="bg-gradient-to-r from-[#FDE68A] via-[var(--color-gold)] to-[#FDE68A] bg-clip-text text-transparent">
-                Word, Voice and Stewardship
+            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold text-[var(--color-text-primary)] mb-6 leading-tight tracking-tight drop-shadow-md">
+              SufiPulse
+              <span className="block mt-3 font-sans text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--color-gold)] leading-snug">
+                The Official Home of Original Sufi Music &amp; Mystical Poetry
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-10 leading-[var(--leading-relaxed)] font-light drop-shadow">
-              SufiPulse Studio USA, managed by Dr. Kumar Foundation USA, is a disciplined institution dedicated to the authorship, performance, production, and entrusted release of sacred expression.
+            <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-4 leading-[var(--leading-relaxed)] font-light drop-shadow">
+              Discover original full-length Sufi recordings, sacred Kalam, Urdu poetry,
+              lyrical interpretations, and contemplative world-fusion arrangements.
             </p>
 
-            <div className="mb-16">
-              <HeroCTAGroup 
-                primary={{ label: "Governance Framework", href: "/governance" }} 
-              />
+            <p className="text-xs sm:text-sm text-[var(--color-text-tertiary)] max-w-3xl mx-auto mb-10 leading-relaxed tracking-wide">
+              The House of Sacred Word, Voice and Stewardship · Managed by Dr. Kumar Foundation USA
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+              <Link href="/releases" className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-[var(--color-gold)] px-8 py-3.5 text-sm font-bold text-[var(--color-midnight)] transition-colors hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-gold)]">
+                Explore Catalog &amp; Releases
+              </Link>
+              <Link href="/governance" className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl border border-white/25 bg-[var(--color-midnight)]/80 px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-gold)]">
+                Governance Framework
+              </Link>
             </div>
 
             {/* KPI Counter Strip */}
@@ -78,23 +87,23 @@ export function HeroSection({ kpiStats }: HeroSectionProps) {
                 </div>
               </div>
 
-              <div>
-                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)]">
-                  <CountUp target={100} suffix="%" style={{ color: 'var(--color-gold)' }} />
+              <Link href="/releases#global-reach-index" className="group block">
+                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform">
+                  <CountUp target={Math.max(1, Math.round((kpiStats.globalReachImpressions || 1048614) / 1000000))} suffix="M+" style={{ color: 'var(--color-gold)' }} />
                 </div>
-                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold">
-                  Transparency
+                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold group-hover:text-amber-400 transition-colors">
+                  Global Reach Index
                 </div>
-              </div>
+              </Link>
 
-              <div>
-                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)]">
-                  <CountUp target={kpiStats.institutions} style={{ color: 'var(--color-gold)' }} />
+              <Link href="/releases#global-reach-index" className="group block">
+                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform">
+                  <CountUp target={kpiStats.countriesCount || 55} suffix="+" style={{ color: 'var(--color-gold)' }} />
                 </div>
-                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold">
-                  Institutions
+                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold group-hover:text-amber-400 transition-colors">
+                  Countries Reached
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </PageContainer>

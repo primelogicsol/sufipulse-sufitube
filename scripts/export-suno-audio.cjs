@@ -1,11 +1,19 @@
 const { chromium } = require('playwright');
-const { spawn } = require('node:child_process');
+const { spawn, execSync } = require('node:child_process');
 const fs = require('node:fs/promises');
 const net = require('node:net');
 const path = require('node:path');
 
 const [assetId, output] = process.argv.slice(2);
 const timeout = 120_000;
+
+function killLingeringStudioChrome() {
+  if (process.platform === 'win32') {
+    try {
+      execSync('powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -match \'StudioChrome\' -and $_.Name -eq \'chrome.exe\') -or ($_.CommandLine -match \'connect-suno\\.cjs\') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"', { stdio: 'ignore', timeout: 5000 });
+    } catch {}
+  }
+}
 
 async function getFreePort() {
   return await new Promise((resolve, reject) => {
@@ -18,7 +26,7 @@ async function getFreePort() {
   });
 }
 
-async function waitForCdp(port, deadline = Date.now() + 20_000) {
+async function waitForCdp(port, deadline = Date.now() + 25_000) {
   const url = `http://127.0.0.1:${port}/json/version`;
   while (Date.now() < deadline) {
     try {
@@ -27,13 +35,16 @@ async function waitForCdp(port, deadline = Date.now() + 20_000) {
     } catch {}
     await new Promise(r => setTimeout(r, 350));
   }
-  throw new Error('Chrome debugging connection did not become ready.');
+  throw new Error('Chrome debugging connection did not become ready. Please close any open Suno sign-in window and retry.');
 }
 
 async function exportAudio() {
   if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(assetId || '') || !output || !process.env.LOCALAPPDATA) {
     throw new Error('Suno export requires a song ID and a local Windows Chrome profile.');
   }
+
+  // Ensure no lingering Chrome process holds the StudioChrome lock
+  killLingeringStudioChrome();
 
   const profile = path.join(process.env.LOCALAPPDATA, 'SufiPulse', 'StudioChrome');
   const chrome = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
@@ -103,7 +114,15 @@ async function exportAudio() {
     if ((await fs.stat(output)).size === 0) throw new Error('Suno returned an empty export.');
   } finally {
     if (browser) await browser.close().catch(() => undefined);
-    if (!chromeProcess.killed) chromeProcess.kill();
+    if (chromeProcess && chromeProcess.pid) {
+      try {
+        if (process.platform === 'win32') {
+          execSync(`taskkill /pid ${chromeProcess.pid} /T /F`, { stdio: 'ignore' });
+        } else {
+          chromeProcess.kill();
+        }
+      } catch {}
+    }
   }
 }
 

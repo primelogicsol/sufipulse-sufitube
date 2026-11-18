@@ -15,6 +15,9 @@ import { NetworkSection } from './components/home/NetworkSection';
 import { KnowledgeSection } from './components/home/KnowledgeSection';
 import { FlagshipSpotlight } from './components/releases/FlagshipSpotlight';
 import { PremiereRoomHomeSection } from './components/home/PremiereRoomHomeSection';
+import { HomeMusicDiscoveryStrip } from './components/home/HomeMusicDiscoveryStrip';
+import { HomeGlobalReachSection } from './components/home/HomeGlobalReachSection';
+import { globalReachGrowthEngine } from '@/lib/global-reach-growth-engine';
 
 // We can allow Next.js to revalidate this periodically 
 export const revalidate = 900; 
@@ -25,10 +28,20 @@ export default async function Home() {
   const writers = entityGetAll('writers');
   const partnerships = entityGetAll('partnerships');
 
+  const verifiedBaseline = {
+    impressions: 994300,
+    views: 160611,
+    watchHours: 10410,
+    geographies: 53,
+  };
+  const reachIndex = globalReachGrowthEngine.getPublicPayload(verifiedBaseline);
+
   const kpiStats = {
     releases: Array.isArray(rawReleases) && rawReleases.length > 0 ? rawReleases.length : 91,
     writers: Array.isArray(writers) && writers.length > 0 ? writers.length : literaryArticles.length,
     institutions: Array.isArray(partnerships) && partnerships.length > 0 ? partnerships.length : 4,
+    globalReachImpressions: reachIndex.combinedIndex.impressions,
+    countriesCount: reachIndex.combinedIndex.geographies,
   };
 
   const safeRawReleases = Array.isArray(rawReleases) ? rawReleases : [];
@@ -77,10 +90,28 @@ export default async function Home() {
   const featuredReleases = registryHighlights.map(toPublication);
   const recentReleases = recentRegistryEntries.map(toPublication);
 
+  const discoveryReleases = safeRawReleases.map((r: any) => ({
+    id: r.id,
+    slug: r.slug || r.youtubeId || r.id,
+    title: r.title,
+    canonicalTitle: r.canonicalTitle || r.title,
+    youtubeId: r.youtubeId || r.youtube_video_id || r.videoId || '',
+    thumbnailUrl: r.thumbnailUrl || r.thumbnail,
+    canonicalThumbnail: r.canonicalThumbnail,
+    durationFormatted: r.durationFormatted,
+    writer: typeof r.writer === 'string' ? resolveContributorPublicName(r.writer, r.writer) : (r.writer?.name || r.writer?.public_name || ''),
+    vocalist: typeof r.vocalist === 'string' ? resolveContributorPublicName(r.vocalist, r.vocalist) : (r.vocalist?.name || r.vocalist?.public_name || ''),
+    tags: Array.isArray(r.tags) ? r.tags : [],
+    themes: Array.isArray(r.themes) ? r.themes : [],
+    description: r.description,
+  }));
+
   return (
     <Layout>
       <HeroSection kpiStats={kpiStats} />
       
+      <HomeMusicDiscoveryStrip releases={discoveryReleases} />
+
       <FlagshipSpotlight featuredRelease={flagshipRelease} />
 
       <PremiereRoomHomeSection premieres={premiereReleases} />
@@ -90,6 +121,8 @@ export default async function Home() {
         recentReleases={recentReleases} 
         loading={false} 
       />
+
+      <HomeGlobalReachSection reachIndex={reachIndex} />
 
       <GovernanceSection />
       

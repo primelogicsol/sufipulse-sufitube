@@ -27,6 +27,32 @@ export interface PublicGlobalReachPayload {
     checkedAt: string | null;
     lastError: string | null;
   };
+  globalReachIndex?: {
+    enabled: boolean;
+    label: string;
+    description: string;
+    monthsElapsed: number;
+    isHorizonFrozen: boolean;
+    isGeographicCeilingReached: boolean;
+    combinedIndex: {
+      impressions: number;
+      views: number;
+      watchHours: number;
+      geographies: number;
+    };
+    modeledAdjustment: {
+      impressions: number;
+      views: number;
+      watchHours: number;
+      geographies: number;
+    };
+    verifiedTotal: {
+      impressions: number;
+      views: number;
+      watchHours: number;
+      geographies: number;
+    };
+  };
   lastUpdated: string;
   status: 'active' | 'stale' | 'error';
   errorMessage?: string;

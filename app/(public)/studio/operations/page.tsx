@@ -6,6 +6,7 @@ import { Section } from '../../../components/layout/Section';
 import { PrimaryButton } from '../../../components/primitives/PrimaryButton';
 import { StudioSectionHeader, StudioCardGrid, StudioLinkCard, StudioGovernancePanel } from '../../../components/studio/StudioLayoutComponents';
 import Link from 'next/link';
+import { StudioSpecialistRoster } from '@/app/components/studio/StudioSpecialistRoster';
 
 export default function StudioOperations() {
     const functions = [
@@ -161,6 +162,7 @@ export default function StudioOperations() {
                 </PageContainer>
             </Section>
 
+            <StudioSpecialistRoster areas={['studio-operations', 'platform-release']} heading="Studio Operations & Platform Specialists" description="Studio infrastructure, production workflow, platform integration and release delivery" />
             <StudioGovernancePanel 
                 title="Control & Authority"
                 description="Studio Operations guarantees that no asset reaches external distribution endpoints without rigorous internal validation and metadata lockdown."
