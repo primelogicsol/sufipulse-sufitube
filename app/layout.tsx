@@ -45,6 +45,12 @@ export const metadata: Metadata = {
     description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
     images: [
       {
+        url: "/banner1.png",
+        width: 1672,
+        height: 941,
+        alt: "SufiPulse Studio — Sacred Music & Recording Sessions",
+      },
+      {
         url: "/og?title=Sacred+Sufi+Music+%26+Poetry&subtitle=Discover+kalam%2C+qawwali+and+Sufi+literature",
         width: 1200,
         height: 630,
@@ -56,7 +62,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
     description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
-    images: ["/og?title=Sacred+Sufi+Music+%26+Poetry&subtitle=Discover+kalam%2C+qawwali+and+Sufi+literature"],
+    images: ["/banner1.png"],
   },
   alternates: {
     canonical: BASE_URL,
@@ -136,6 +142,7 @@ const websiteSchema = {
   name: "SufiPulse USA",
   alternateName: ["SufiPulse", "Sufi Pulse", "SufiPulse.com"],
   url: BASE_URL,
+  image: `${BASE_URL}/banner1.png`,
   description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
   publisher: {
     "@type": "Organization",

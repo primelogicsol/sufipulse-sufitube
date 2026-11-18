@@ -26,6 +26,20 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://sufipulse.com",
   },
+  openGraph: {
+    title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
+    description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+    url: "https://sufipulse.com",
+    siteName: "SufiPulse USA",
+    images: [
+      {
+        url: "/banner1.png",
+        width: 1672,
+        height: 941,
+        alt: "SufiPulse Studio — Sacred Music & Recording Sessions",
+      },
+    ],
+  },
 };
 
 // We can allow Next.js to revalidate this periodically 
