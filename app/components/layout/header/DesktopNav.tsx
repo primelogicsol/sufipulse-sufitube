@@ -13,7 +13,15 @@ export function DesktopNav() {
   return (
     <nav className="flex items-center justify-between w-full text-[14px] 2xl:text-[15px]">
       <div className="flex items-center gap-3 shrink-0">
-        <Link href="/" className="flex items-center shrink-0 hover:opacity-90 transition-opacity">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity">
+          <Image
+            src="/brand/sufitube-circular-logo.png"
+            alt="SufiPulse USA"
+            width={36}
+            height={36}
+            className="h-8 2xl:h-9 w-auto rounded-full object-contain shadow-sm"
+            priority
+          />
           <Image
             src="/sufipulse-logo-v5.png"
             alt="SufiPulse Studio"

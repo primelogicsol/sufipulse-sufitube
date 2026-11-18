@@ -64,20 +64,21 @@ export const metadata: Metadata = {
   category: "music",
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
-      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+      { url: '/favicon.ico?v=20261118', sizes: 'any' },
+      { url: '/icon.svg?v=20261118', type: 'image/svg+xml' },
+      { url: '/favicon-48x48.png?v=20261118', type: 'image/png', sizes: '48x48' },
+      { url: '/favicon-32x32.png?v=20261118', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16x16.png?v=20261118', type: 'image/png', sizes: '16x16' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/apple-touch-icon.png?v=20261118', sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
+    shortcut: '/favicon.ico?v=20261118',
     other: [
-      { rel: 'manifest', url: '/site.webmanifest' },
+      { rel: 'manifest', url: '/site.webmanifest?v=20261118' },
     ],
   },
-  manifest: '/site.webmanifest',
+  manifest: '/site.webmanifest?v=20261118',
 };
 
 const organizationSchema = {
@@ -87,7 +88,7 @@ const organizationSchema = {
   name: "SufiPulse USA",
   alternateName: ["SufiPulse", "Sufi Pulse"],
   url: BASE_URL,
-  logo: `${BASE_URL}/sufipulse-logo-v5.png`,
+  logo: `${BASE_URL}/brand/sufipulse-master-logo-512.png`,
   description: "The premier platform for authentic Sufi music, sacred poetry, and literary works from Kashmir and the Indian Subcontinent.",
   founder: {
     "@type": "Person",

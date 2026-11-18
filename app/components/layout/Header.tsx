@@ -44,7 +44,15 @@ export function Header() {
 
           {/* Mobile & Tablet View */}
           <div className="xl:hidden flex items-center justify-between w-full">
-            <Link href="/" className="shrink-0 flex items-center gap-2">
+            <Link href="/" className="shrink-0 flex items-center gap-2.5">
+              <Image
+                src="/brand/sufitube-circular-logo.png"
+                alt="SufiPulse USA"
+                width={36}
+                height={36}
+                className="h-8 sm:h-9 w-auto rounded-full object-contain shadow-sm"
+                priority
+              />
               <Image
                 src="/sufipulse-logo-v5.png"
                 alt="SufiPulse"
