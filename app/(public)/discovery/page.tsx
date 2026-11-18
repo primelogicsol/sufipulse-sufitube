@@ -4,8 +4,8 @@ import { DiscoveryBuilder } from '@/components/discovery/DiscoveryBuilder';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Global Sufi Music Intelligence | SufiPulse Discovery',
-  description: 'Explore the definitive cultural archive of Sufi music, qawwali, poets, and traditions.',
+  title: 'Global Sufi Music Intelligence & Discovery',
+  description: 'Explore the global cultural knowledge graph of Sufi music, qawwali masters, sacred poets, and Kashmiri spiritual traditions from SufiPulse USA.',
 };
 
 export default function DiscoveryHubPage() {

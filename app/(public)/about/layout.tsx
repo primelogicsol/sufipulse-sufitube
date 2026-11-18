@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "About SufiPulse",
-  description: "Learn about SufiPulse — a platform dedicated to preserving and promoting authentic Sufi music, sacred poetry (kalam), and the literary heritage of Kashmir and the Indian Subcontinent.",
+  title: "About SufiPulse USA | Sacred Music & Cultural Archive",
+  description: "Learn about SufiPulse USA — an institutional archive and sacred-media production platform preserving authentic Sufi music, mystical poetry, and Kashmiri cultural heritage.",
   openGraph: {
-    title: "About SufiPulse",
-    description: "Learn about the mission, vision, and team behind SufiPulse — the premier platform for authentic Sufi music and poetry.",
+    title: "About SufiPulse USA | Sacred Music & Cultural Archive",
+    description: "Learn about SufiPulse USA — an institutional archive and sacred-media production platform preserving authentic Sufi music, mystical poetry, and Kashmiri cultural heritage.",
     type: "website",
+  },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com'}/about`,
   },
 };
 

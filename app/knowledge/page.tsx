@@ -8,8 +8,16 @@ import { Layout } from '../components/layout/Layout';
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
 
 export const metadata: Metadata = {
-  title: "Sufi Knowledge Hub | SufiPulse USA",
-  description: "Explore the SufiPulse knowledge hub featuring Sufi music, kalam, poets, singers, spiritual concepts, traditions, and sacred sound archives.",
+  title: "Sufi Poetry & Kalam | Knowledge Archive",
+  description: "Explore classical Sufi poetry, Kashmiri mystic kalam, saint-poet biographies, spiritual concepts, translations, and historical literary archives at SufiPulse USA.",
+  openGraph: {
+    title: "Sufi Poetry & Kalam | Knowledge Archive | SufiPulse USA",
+    description: "Explore classical Sufi poetry, Kashmiri mystic kalam, saint-poet biographies, spiritual concepts, translations, and historical literary archives at SufiPulse USA.",
+    type: "website",
+  },
+  alternates: {
+    canonical: `${BASE_URL}/knowledge`,
+  },
 };
 
 export default async function KnowledgeHome() {

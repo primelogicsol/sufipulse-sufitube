@@ -4,12 +4,12 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Releases",
-  description: "Browse all SufiPulse releases — a curated collection of authentic Sufi music, qawwali, and devotional songs from Kashmir and the Indian Subcontinent. Stream, adopt, and support sacred music.",
-  keywords: ["Sufi releases", "qawwali songs", "devotional music", "Kashmir music releases", "Sufi kalam audio", "Islamic music"],
+  title: "Sufi Songs & Releases",
+  description: "Browse authentic Sufi songs, qawwali masters, and devotional music releases from SufiPulse USA. Stream full audio recordings, explore sacred lyrics, and support independent sacred musicians.",
+  keywords: ["Sufi songs", "Sufi releases", "qawwali recordings", "devotional music", "Kashmir music releases", "Sufi kalam audio", "Islamic sacred music"],
   openGraph: {
-    title: "Releases | SufiPulse",
-    description: "Browse all SufiPulse releases — authentic Sufi music, qawwali, and devotional songs from Kashmir and the Indian Subcontinent.",
+    title: "Sufi Songs & Releases | SufiPulse USA",
+    description: "Browse authentic Sufi songs, qawwali masters, and devotional music releases from SufiPulse USA. Stream full audio recordings, explore sacred lyrics, and support independent sacred musicians.",
     type: "website",
   },
   alternates: {

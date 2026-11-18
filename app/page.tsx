@@ -1,4 +1,5 @@
-﻿import { Layout } from './components/layout/Layout';
+﻿import type { Metadata } from 'next';
+import { Layout } from './components/layout/Layout';
 import { literaryArticles } from './data/literary-articles';
 import { getBestReleaseDate, resolveFlagshipRelease, resolvePremiereReleases, resolveRegistryHighlights, resolveRecentRegistryEntries, isPremiereRoomRelease } from '@/lib/release-utils';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
@@ -18,6 +19,14 @@ import { PremiereRoomHomeSection } from './components/home/PremiereRoomHomeSecti
 import { HomeMusicDiscoveryStrip } from './components/home/HomeMusicDiscoveryStrip';
 import { HomeGlobalReachSection } from './components/home/HomeGlobalReachSection';
 import { globalReachGrowthEngine } from '@/lib/global-reach-growth-engine';
+
+export const metadata: Metadata = {
+  title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
+  description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+  alternates: {
+    canonical: "https://sufipulse.com",
+  },
+};
 
 // We can allow Next.js to revalidate this periodically 
 export const revalidate = 900; 
