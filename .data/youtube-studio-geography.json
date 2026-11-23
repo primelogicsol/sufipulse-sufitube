@@ -1,0 +1,1616 @@
+{
+  "version": 1,
+  "source": "youtube_studio_geography_csv",
+  "sourceLabel": "YouTube Studio Geography CSV",
+  "displayMode": "published_verified_snapshot",
+  "liveApiConnection": false,
+  "channelId": "UCraDr3i5A3k0j7typ6tOOsQ",
+  "channelNameFromExport": "SufiPulse USA",
+  "channelIdIndependentlyConfirmedByCsv": false,
+  "channelVerificationNote": "YouTube Studio Geography CSV files do not embed a Channel ID column; export archive identifies \"SufiPulse USA\" and channel totals (160,696 views, 10412.8 watch hrs, 03:54 AVD) reconcile with configured channel UCraDr3i5A3k0j7typ6tOOsQ.",
+  "reportingPeriodStart": "2025-05-20",
+  "reportingPeriodEnd": "2026-11-23",
+  "reportingPeriodLabel": "May 20, 2025 – Nov 23, 2026",
+  "reportingPeriodSource": "zip_filename_and_yearly_csv",
+  "chartYears": [
+    "2025",
+    "2026"
+  ],
+  "importedAt": "2026-11-23T19:46:32.674Z",
+  "zipFileName": "Geography 2025-05-20_2026-11-23 SufiPulse USA.zip",
+  "zipSha256": "839a0904d73461e6ab4263cff270374b8f2117f1713f731592d64c091b6d79b5",
+  "extractedFiles": [
+    {
+      "fileName": "Table data.csv",
+      "byteLength": 1151,
+      "rowCount": 53,
+      "columns": [
+        "Geography",
+        "Views",
+        "Average view duration",
+        "Watch time (hours)"
+      ]
+    },
+    {
+      "fileName": "Chart data.csv",
+      "byteLength": 1666,
+      "rowCount": 104,
+      "columns": [
+        "Date",
+        "Geography",
+        "Average view duration"
+      ]
+    },
+    {
+      "fileName": "Totals.csv",
+      "byteLength": 53,
+      "rowCount": 2,
+      "columns": [
+        "Date",
+        "Average view duration"
+      ]
+    }
+  ],
+  "counts": {
+    "listedCountryRows": 52,
+    "measurableCountries": 48,
+    "zeroOrSuppressedRows": 4,
+    "zeroWatchTimeWithViewsRows": 2,
+    "baselineCountriesReachedPreserved": 53
+  },
+  "totals": {
+    "exportTotalRowViews": 160696,
+    "countryAttributedViews": 145261,
+    "unattributedViewsDelta": 15435,
+    "unattributedViewsPct": 9.61,
+    "exportTotalRowWatchTimeHours": 10412.7901,
+    "countryAttributedWatchTimeHours": 9923.7486,
+    "unattributedWatchTimeHoursDelta": 489.0415,
+    "unattributedWatchTimePct": 4.7,
+    "exportTotalRowAvgViewDurationRaw": "0:03:54",
+    "exportTotalRowAvgViewDurationFormatted": "03:54",
+    "exportTotalRowAvgViewDurationSecs": 234,
+    "yearlyChannelAvgViewDuration": {
+      "2025": {
+        "raw": "0:03:19",
+        "formatted": "03:19",
+        "seconds": 199
+      },
+      "2026": {
+        "raw": "0:04:41",
+        "formatted": "04:41",
+        "seconds": 281
+      }
+    }
+  },
+  "summary": {
+    "measurableCountries": 48,
+    "leadingByViews": {
+      "isoCode": "IN",
+      "countryName": "India",
+      "views": 73405,
+      "watchTimeHours": 4725.4144,
+      "avgViewDurationFormatted": "03:51",
+      "avgViewDurationSecs": 231,
+      "viewsShareAttributedPct": 50.53,
+      "watchTimeShareAttributedPct": 47.62,
+      "sampleClass": "established"
+    },
+    "leadingByWatchHours": {
+      "isoCode": "IN",
+      "countryName": "India",
+      "views": 73405,
+      "watchTimeHours": 4725.4144,
+      "avgViewDurationFormatted": "03:51",
+      "avgViewDurationSecs": 231,
+      "viewsShareAttributedPct": 50.53,
+      "watchTimeShareAttributedPct": 47.62,
+      "sampleClass": "established"
+    },
+    "leadingByAvgDurationAll": {
+      "isoCode": "ES",
+      "countryName": "Spain",
+      "views": 10,
+      "watchTimeHours": 1.7283,
+      "avgViewDurationFormatted": "10:22",
+      "avgViewDurationSecs": 622,
+      "viewsShareAttributedPct": 0.01,
+      "watchTimeShareAttributedPct": 0.02,
+      "sampleClass": "very_small"
+    },
+    "leadingByAvgDuration100Plus": {
+      "isoCode": "BD",
+      "countryName": "Bangladesh",
+      "views": 38911,
+      "watchTimeHours": 4230.7429,
+      "avgViewDurationFormatted": "06:31",
+      "avgViewDurationSecs": 391,
+      "viewsShareAttributedPct": 26.79,
+      "watchTimeShareAttributedPct": 42.63,
+      "sampleClass": "established"
+    },
+    "top10ViewsTotal": 143903,
+    "top10ViewsShareAttributedPct": 99.07,
+    "top10WatchHoursTotal": 9843.0943,
+    "top10WatchHoursShareAttributedPct": 99.19,
+    "countriesReachedComparisonNote": "The preserved Countries Reached card (53) reflects the channel-level verified snapshot (May 20, 2025 – Sep 11, 2026). This YouTube Studio Geography CSV (May 20, 2025 – Nov 23, 2026) lists 52 territories, of which 48 meet YouTube Studio's per-country reporting threshold (≥10 views) and 4 have privacy-suppressed zero-view rows."
+  },
+  "metricDefinitions": {
+    "views": "Verified lifetime views attributed to each country in YouTube Studio Table data.csv (excluding the aggregate Total row).",
+    "watchTimeHours": "Total lifetime watch time expressed strictly in hours from YouTube Studio Watch time (hours).",
+    "averageViewDuration": "Native YouTube Studio Average view duration formatted as MM:SS; blank cells on 0-view rows remain unavailable.",
+    "countryAttributedShare": "Country metric divided by the sum of all country-attributed rows (100% across measurable countries), with unattributed privacy-thresholded channel totals disclosed separately.",
+    "smallSampleFlag": "Countries below 25 views (\"Very Low Sample\") and 25–99 views (\"Low Sample\") are flagged because 1–2 long sessions can skew average viewing duration."
+  },
+  "reconciliation": {
+    "status": "verified_with_threshold_disclosure",
+    "isViewsReconciled": true,
+    "isWatchTimeReconciled": true,
+    "notes": [
+      "Export Total row reports 160,696 views vs 145,261 summed across 48 measurable countries (15,435 views / 9.61% unattributed due to YouTube Studio's per-country privacy threshold of ~10 views).",
+      "Export Total row reports 10412.7901 watch hours vs 9923.7486 summed across country rows (489.0415 hrs / 4.7% unattributed across thresholded territories).",
+      "4 listed territories (DR Congo (CD), Peru (PE), South Korea (KR), Ethiopia (ET)) have 0 reported views and blank average view duration in Table data.csv; excluded from Top-10 active rankings and preserved in the master table.",
+      "2 territories (Yemen (YE: 13 views), Benin (BJ: 20 views)) report measurable views with 0.0000 rounded watch hours and 00:00 native AVD due to brief/rounded impressions."
+    ]
+  },
+  "countries": [
+    {
+      "isoCode": "ES",
+      "countryName": "Spain",
+      "searchAliases": [
+        "Espana",
+        "España",
+        "ESP"
+      ],
+      "sourceRowOrder": 0,
+      "views": 10,
+      "avgViewDurationRaw": "0:10:22",
+      "avgViewDurationFormatted": "10:22",
+      "avgViewDurationSecs": 622,
+      "derivedAvgViewDurationSecs": 622.19,
+      "watchTimeHours": 1.7283,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0.02,
+      "watchTimeShareChannelTotalPct": 0.02,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 622,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "10:22",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "DE",
+      "countryName": "Germany",
+      "searchAliases": [
+        "Deutschland",
+        "DEU"
+      ],
+      "sourceRowOrder": 1,
+      "views": 50,
+      "avgViewDurationRaw": "0:08:54",
+      "avgViewDurationFormatted": "08:54",
+      "avgViewDurationSecs": 534,
+      "derivedAvgViewDurationSecs": 534.56,
+      "watchTimeHours": 7.4245,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0.07,
+      "watchTimeShareChannelTotalPct": 0.07,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 534,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "08:54",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "HK",
+      "countryName": "Hong Kong",
+      "searchAliases": [
+        "Hong Kong SAR",
+        "HKG"
+      ],
+      "sourceRowOrder": 2,
+      "views": 10,
+      "avgViewDurationRaw": "0:08:06",
+      "avgViewDurationFormatted": "08:06",
+      "avgViewDurationSecs": 486,
+      "derivedAvgViewDurationSecs": 486.58,
+      "watchTimeHours": 1.3516,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0.01,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 486,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "08:06",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "IT",
+      "countryName": "Italy",
+      "searchAliases": [
+        "Italia",
+        "ITA"
+      ],
+      "sourceRowOrder": 3,
+      "views": 78,
+      "avgViewDurationRaw": "0:07:20",
+      "avgViewDurationFormatted": "07:20",
+      "avgViewDurationSecs": 440,
+      "derivedAvgViewDurationSecs": 440.29,
+      "watchTimeHours": 9.5396,
+      "viewsShareAttributedPct": 0.05,
+      "viewsShareChannelTotalPct": 0.05,
+      "watchTimeShareAttributedPct": 0.1,
+      "watchTimeShareChannelTotalPct": 0.09,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 451,
+        "2026": 422
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "07:31",
+        "2026": "07:02"
+      }
+    },
+    {
+      "isoCode": "CL",
+      "countryName": "Chile",
+      "searchAliases": [
+        "CHL"
+      ],
+      "sourceRowOrder": 4,
+      "views": 46,
+      "avgViewDurationRaw": "0:07:14",
+      "avgViewDurationFormatted": "07:14",
+      "avgViewDurationSecs": 434,
+      "derivedAvgViewDurationSecs": 434.87,
+      "watchTimeHours": 5.5567,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0.06,
+      "watchTimeShareChannelTotalPct": 0.05,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 335,
+        "2026": 543
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "05:35",
+        "2026": "09:03"
+      }
+    },
+    {
+      "isoCode": "MV",
+      "countryName": "Maldives",
+      "searchAliases": [
+        "MDV"
+      ],
+      "sourceRowOrder": 5,
+      "views": 13,
+      "avgViewDurationRaw": "0:07:02",
+      "avgViewDurationFormatted": "07:02",
+      "avgViewDurationSecs": 422,
+      "derivedAvgViewDurationSecs": 422.78,
+      "watchTimeHours": 1.5267,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0.02,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 422,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "07:02",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "GR",
+      "countryName": "Greece",
+      "searchAliases": [
+        "Hellas",
+        "GRC"
+      ],
+      "sourceRowOrder": 6,
+      "views": 15,
+      "avgViewDurationRaw": "0:06:58",
+      "avgViewDurationFormatted": "06:58",
+      "avgViewDurationSecs": 418,
+      "derivedAvgViewDurationSecs": 418.8,
+      "watchTimeHours": 1.745,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0.02,
+      "watchTimeShareChannelTotalPct": 0.02,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 418,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "06:58",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "FR",
+      "countryName": "France",
+      "searchAliases": [
+        "FRA"
+      ],
+      "sourceRowOrder": 7,
+      "views": 44,
+      "avgViewDurationRaw": "0:06:42",
+      "avgViewDurationFormatted": "06:42",
+      "avgViewDurationSecs": 402,
+      "derivedAvgViewDurationSecs": 402.86,
+      "watchTimeHours": 4.9239,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0.05,
+      "watchTimeShareChannelTotalPct": 0.05,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 357,
+        "2026": 511
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "05:57",
+        "2026": "08:31"
+      }
+    },
+    {
+      "isoCode": "BD",
+      "countryName": "Bangladesh",
+      "searchAliases": [
+        "BGD",
+        "Bengal"
+      ],
+      "sourceRowOrder": 8,
+      "views": 38911,
+      "avgViewDurationRaw": "0:06:31",
+      "avgViewDurationFormatted": "06:31",
+      "avgViewDurationSecs": 391,
+      "derivedAvgViewDurationSecs": 391.42,
+      "watchTimeHours": 4230.7429,
+      "viewsShareAttributedPct": 26.79,
+      "viewsShareChannelTotalPct": 24.21,
+      "watchTimeShareAttributedPct": 42.63,
+      "watchTimeShareChannelTotalPct": 40.63,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 137,
+        "2026": 416
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "02:17",
+        "2026": "06:56"
+      }
+    },
+    {
+      "isoCode": "TH",
+      "countryName": "Thailand",
+      "searchAliases": [
+        "THA"
+      ],
+      "sourceRowOrder": 9,
+      "views": 15,
+      "avgViewDurationRaw": "0:06:06",
+      "avgViewDurationFormatted": "06:06",
+      "avgViewDurationSecs": 366,
+      "derivedAvgViewDurationSecs": 366.36,
+      "watchTimeHours": 1.5265,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0.02,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 366,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "06:06",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "NP",
+      "countryName": "Nepal",
+      "searchAliases": [
+        "NPL"
+      ],
+      "sourceRowOrder": 10,
+      "views": 1795,
+      "avgViewDurationRaw": "0:05:59",
+      "avgViewDurationFormatted": "05:59",
+      "avgViewDurationSecs": 359,
+      "derivedAvgViewDurationSecs": 359.08,
+      "watchTimeHours": 179.0417,
+      "viewsShareAttributedPct": 1.24,
+      "viewsShareChannelTotalPct": 1.12,
+      "watchTimeShareAttributedPct": 1.8,
+      "watchTimeShareChannelTotalPct": 1.72,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 378,
+        "2026": 57
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "06:18",
+        "2026": "00:57"
+      }
+    },
+    {
+      "isoCode": "GB",
+      "countryName": "United Kingdom",
+      "searchAliases": [
+        "UK",
+        "Great Britain",
+        "England",
+        "Scotland",
+        "Wales",
+        "GBR"
+      ],
+      "sourceRowOrder": 11,
+      "views": 133,
+      "avgViewDurationRaw": "0:05:50",
+      "avgViewDurationFormatted": "05:50",
+      "avgViewDurationSecs": 350,
+      "derivedAvgViewDurationSecs": 350.78,
+      "watchTimeHours": 12.9594,
+      "viewsShareAttributedPct": 0.09,
+      "viewsShareChannelTotalPct": 0.08,
+      "watchTimeShareAttributedPct": 0.13,
+      "watchTimeShareChannelTotalPct": 0.12,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 320,
+        "2026": 658
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "05:20",
+        "2026": "10:58"
+      }
+    },
+    {
+      "isoCode": "QA",
+      "countryName": "Qatar",
+      "searchAliases": [
+        "QAT"
+      ],
+      "sourceRowOrder": 12,
+      "views": 87,
+      "avgViewDurationRaw": "0:05:46",
+      "avgViewDurationFormatted": "05:46",
+      "avgViewDurationSecs": 346,
+      "derivedAvgViewDurationSecs": 346.8,
+      "watchTimeHours": 8.3809,
+      "viewsShareAttributedPct": 0.06,
+      "viewsShareChannelTotalPct": 0.05,
+      "watchTimeShareAttributedPct": 0.08,
+      "watchTimeShareChannelTotalPct": 0.08,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 376,
+        "2026": 318
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "06:16",
+        "2026": "05:18"
+      }
+    },
+    {
+      "isoCode": "KW",
+      "countryName": "Kuwait",
+      "searchAliases": [
+        "KWT"
+      ],
+      "sourceRowOrder": 13,
+      "views": 93,
+      "avgViewDurationRaw": "0:05:45",
+      "avgViewDurationFormatted": "05:45",
+      "avgViewDurationSecs": 345,
+      "derivedAvgViewDurationSecs": 345.37,
+      "watchTimeHours": 8.922,
+      "viewsShareAttributedPct": 0.06,
+      "viewsShareChannelTotalPct": 0.06,
+      "watchTimeShareAttributedPct": 0.09,
+      "watchTimeShareChannelTotalPct": 0.09,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 358,
+        "2026": 305
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "05:58",
+        "2026": "05:05"
+      }
+    },
+    {
+      "isoCode": "CA",
+      "countryName": "Canada",
+      "searchAliases": [
+        "CAN"
+      ],
+      "sourceRowOrder": 14,
+      "views": 40,
+      "avgViewDurationRaw": "0:05:39",
+      "avgViewDurationFormatted": "05:39",
+      "avgViewDurationSecs": 339,
+      "derivedAvgViewDurationSecs": 339.57,
+      "watchTimeHours": 3.773,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.02,
+      "watchTimeShareAttributedPct": 0.04,
+      "watchTimeShareChannelTotalPct": 0.04,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 339,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "05:39",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "OM",
+      "countryName": "Oman",
+      "searchAliases": [
+        "OMN"
+      ],
+      "sourceRowOrder": 15,
+      "views": 171,
+      "avgViewDurationRaw": "0:05:33",
+      "avgViewDurationFormatted": "05:33",
+      "avgViewDurationSecs": 333,
+      "derivedAvgViewDurationSecs": 333.87,
+      "watchTimeHours": 15.8588,
+      "viewsShareAttributedPct": 0.12,
+      "viewsShareChannelTotalPct": 0.11,
+      "watchTimeShareAttributedPct": 0.16,
+      "watchTimeShareChannelTotalPct": 0.15,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 281,
+        "2026": 384
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "04:41",
+        "2026": "06:24"
+      }
+    },
+    {
+      "isoCode": "MU",
+      "countryName": "Mauritius",
+      "searchAliases": [
+        "MUS"
+      ],
+      "sourceRowOrder": 16,
+      "views": 32,
+      "avgViewDurationRaw": "0:05:33",
+      "avgViewDurationFormatted": "05:33",
+      "avgViewDurationSecs": 333,
+      "derivedAvgViewDurationSecs": 333.61,
+      "watchTimeHours": 2.9654,
+      "viewsShareAttributedPct": 0.02,
+      "viewsShareChannelTotalPct": 0.02,
+      "watchTimeShareAttributedPct": 0.03,
+      "watchTimeShareChannelTotalPct": 0.03,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 333,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "05:33",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "MY",
+      "countryName": "Malaysia",
+      "searchAliases": [
+        "MYS"
+      ],
+      "sourceRowOrder": 17,
+      "views": 164,
+      "avgViewDurationRaw": "0:05:32",
+      "avgViewDurationFormatted": "05:32",
+      "avgViewDurationSecs": 332,
+      "derivedAvgViewDurationSecs": 332.36,
+      "watchTimeHours": 15.1408,
+      "viewsShareAttributedPct": 0.11,
+      "viewsShareChannelTotalPct": 0.1,
+      "watchTimeShareAttributedPct": 0.15,
+      "watchTimeShareChannelTotalPct": 0.15,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 324,
+        "2026": 341
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "05:24",
+        "2026": "05:41"
+      }
+    },
+    {
+      "isoCode": "SG",
+      "countryName": "Singapore",
+      "searchAliases": [
+        "SGP"
+      ],
+      "sourceRowOrder": 18,
+      "views": 16,
+      "avgViewDurationRaw": "0:04:51",
+      "avgViewDurationFormatted": "04:51",
+      "avgViewDurationSecs": 291,
+      "derivedAvgViewDurationSecs": 291.28,
+      "watchTimeHours": 1.2946,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0.01,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 291,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "04:51",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "MM",
+      "countryName": "Myanmar",
+      "searchAliases": [
+        "Burma",
+        "MMR"
+      ],
+      "sourceRowOrder": 19,
+      "views": 43,
+      "avgViewDurationRaw": "0:04:45",
+      "avgViewDurationFormatted": "04:45",
+      "avgViewDurationSecs": 285,
+      "derivedAvgViewDurationSecs": 285.66,
+      "watchTimeHours": 3.4121,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0.03,
+      "watchTimeShareChannelTotalPct": 0.03,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 285,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "04:45",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "BH",
+      "countryName": "Bahrain",
+      "searchAliases": [
+        "BHR"
+      ],
+      "sourceRowOrder": 20,
+      "views": 28,
+      "avgViewDurationRaw": "0:04:15",
+      "avgViewDurationFormatted": "04:15",
+      "avgViewDurationSecs": 255,
+      "derivedAvgViewDurationSecs": 255.24,
+      "watchTimeHours": 1.9852,
+      "viewsShareAttributedPct": 0.02,
+      "viewsShareChannelTotalPct": 0.02,
+      "watchTimeShareAttributedPct": 0.02,
+      "watchTimeShareChannelTotalPct": 0.02,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 476,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "07:56",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "LK",
+      "countryName": "Sri Lanka",
+      "searchAliases": [
+        "LKA",
+        "Ceylon"
+      ],
+      "sourceRowOrder": 21,
+      "views": 42,
+      "avgViewDurationRaw": "0:04:11",
+      "avgViewDurationFormatted": "04:11",
+      "avgViewDurationSecs": 251,
+      "derivedAvgViewDurationSecs": 251.82,
+      "watchTimeHours": 2.9379,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0.03,
+      "watchTimeShareChannelTotalPct": 0.03,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 564,
+        "2026": 17
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "09:24",
+        "2026": "00:17"
+      }
+    },
+    {
+      "isoCode": "IN",
+      "countryName": "India",
+      "searchAliases": [
+        "IND",
+        "Bharat",
+        "Hindustan"
+      ],
+      "sourceRowOrder": 22,
+      "views": 73405,
+      "avgViewDurationRaw": "0:03:51",
+      "avgViewDurationFormatted": "03:51",
+      "avgViewDurationSecs": 231,
+      "derivedAvgViewDurationSecs": 231.75,
+      "watchTimeHours": 4725.4144,
+      "viewsShareAttributedPct": 50.53,
+      "viewsShareChannelTotalPct": 45.68,
+      "watchTimeShareAttributedPct": 47.62,
+      "watchTimeShareChannelTotalPct": 45.38,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 247,
+        "2026": 178
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "04:07",
+        "2026": "02:58"
+      }
+    },
+    {
+      "isoCode": "US",
+      "countryName": "United States",
+      "searchAliases": [
+        "USA",
+        "United States of America",
+        "America"
+      ],
+      "sourceRowOrder": 23,
+      "views": 3380,
+      "avgViewDurationRaw": "0:03:26",
+      "avgViewDurationFormatted": "03:26",
+      "avgViewDurationSecs": 206,
+      "derivedAvgViewDurationSecs": 206.31,
+      "watchTimeHours": 193.7042,
+      "viewsShareAttributedPct": 2.33,
+      "viewsShareChannelTotalPct": 2.1,
+      "watchTimeShareAttributedPct": 1.95,
+      "watchTimeShareChannelTotalPct": 1.86,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 197,
+        "2026": 249
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "03:17",
+        "2026": "04:09"
+      }
+    },
+    {
+      "isoCode": "AU",
+      "countryName": "Australia",
+      "searchAliases": [
+        "AUS"
+      ],
+      "sourceRowOrder": 24,
+      "views": 63,
+      "avgViewDurationRaw": "0:03:14",
+      "avgViewDurationFormatted": "03:14",
+      "avgViewDurationSecs": 194,
+      "derivedAvgViewDurationSecs": 194.39,
+      "watchTimeHours": 3.4018,
+      "viewsShareAttributedPct": 0.04,
+      "viewsShareChannelTotalPct": 0.04,
+      "watchTimeShareAttributedPct": 0.03,
+      "watchTimeShareChannelTotalPct": 0.03,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 194,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "03:14",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "SA",
+      "countryName": "Saudi Arabia",
+      "searchAliases": [
+        "KSA",
+        "Kingdom of Saudi Arabia",
+        "SAU"
+      ],
+      "sourceRowOrder": 25,
+      "views": 935,
+      "avgViewDurationRaw": "0:03:11",
+      "avgViewDurationFormatted": "03:11",
+      "avgViewDurationSecs": 191,
+      "derivedAvgViewDurationSecs": 191.89,
+      "watchTimeHours": 49.8392,
+      "viewsShareAttributedPct": 0.64,
+      "viewsShareChannelTotalPct": 0.58,
+      "watchTimeShareAttributedPct": 0.5,
+      "watchTimeShareChannelTotalPct": 0.48,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 180,
+        "2026": 200
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "03:00",
+        "2026": "03:20"
+      }
+    },
+    {
+      "isoCode": "NL",
+      "countryName": "Netherlands",
+      "searchAliases": [
+        "Holland",
+        "NLD"
+      ],
+      "sourceRowOrder": 26,
+      "views": 37,
+      "avgViewDurationRaw": "0:03:05",
+      "avgViewDurationFormatted": "03:05",
+      "avgViewDurationSecs": 185,
+      "derivedAvgViewDurationSecs": 185.15,
+      "watchTimeHours": 1.9029,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.02,
+      "watchTimeShareAttributedPct": 0.02,
+      "watchTimeShareChannelTotalPct": 0.02,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 185,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "03:05",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "UG",
+      "countryName": "Uganda",
+      "searchAliases": [
+        "UGA"
+      ],
+      "sourceRowOrder": 27,
+      "views": 16,
+      "avgViewDurationRaw": "0:02:48",
+      "avgViewDurationFormatted": "02:48",
+      "avgViewDurationSecs": 168,
+      "derivedAvgViewDurationSecs": 168.68,
+      "watchTimeHours": 0.7497,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0.01,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 168,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "02:48",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "JP",
+      "countryName": "Japan",
+      "searchAliases": [
+        "JPN",
+        "Nippon"
+      ],
+      "sourceRowOrder": 28,
+      "views": 27,
+      "avgViewDurationRaw": "0:02:45",
+      "avgViewDurationFormatted": "02:45",
+      "avgViewDurationSecs": 165,
+      "derivedAvgViewDurationSecs": 165.49,
+      "watchTimeHours": 1.2412,
+      "viewsShareAttributedPct": 0.02,
+      "viewsShareChannelTotalPct": 0.02,
+      "watchTimeShareAttributedPct": 0.01,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 165,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "02:45",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "JO",
+      "countryName": "Jordan",
+      "searchAliases": [
+        "JOR"
+      ],
+      "sourceRowOrder": 29,
+      "views": 10,
+      "avgViewDurationRaw": "0:02:06",
+      "avgViewDurationFormatted": "02:06",
+      "avgViewDurationSecs": 126,
+      "derivedAvgViewDurationSecs": 126.86,
+      "watchTimeHours": 0.3524,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 0,
+        "2026": 126
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:00",
+        "2026": "02:06"
+      }
+    },
+    {
+      "isoCode": "AE",
+      "countryName": "United Arab Emirates",
+      "searchAliases": [
+        "UAE",
+        "Emirates",
+        "Dubai",
+        "Abu Dhabi"
+      ],
+      "sourceRowOrder": 30,
+      "views": 1017,
+      "avgViewDurationRaw": "0:01:51",
+      "avgViewDurationFormatted": "01:51",
+      "avgViewDurationSecs": 111,
+      "derivedAvgViewDurationSecs": 111.12,
+      "watchTimeHours": 31.3911,
+      "viewsShareAttributedPct": 0.7,
+      "viewsShareChannelTotalPct": 0.63,
+      "watchTimeShareAttributedPct": 0.32,
+      "watchTimeShareChannelTotalPct": 0.3,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 171,
+        "2026": 62
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "02:51",
+        "2026": "01:02"
+      }
+    },
+    {
+      "isoCode": "PH",
+      "countryName": "Philippines",
+      "searchAliases": [
+        "PHL"
+      ],
+      "sourceRowOrder": 31,
+      "views": 65,
+      "avgViewDurationRaw": "0:01:08",
+      "avgViewDurationFormatted": "01:08",
+      "avgViewDurationSecs": 68,
+      "derivedAvgViewDurationSecs": 68.44,
+      "watchTimeHours": 1.2358,
+      "viewsShareAttributedPct": 0.04,
+      "viewsShareChannelTotalPct": 0.04,
+      "watchTimeShareAttributedPct": 0.01,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 68,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "01:08",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "PK",
+      "countryName": "Pakistan",
+      "searchAliases": [
+        "PAK"
+      ],
+      "sourceRowOrder": 32,
+      "views": 23992,
+      "avgViewDurationRaw": "0:00:58",
+      "avgViewDurationFormatted": "00:58",
+      "avgViewDurationSecs": 58,
+      "derivedAvgViewDurationSecs": 58.37,
+      "watchTimeHours": 389.0018,
+      "viewsShareAttributedPct": 16.52,
+      "viewsShareChannelTotalPct": 14.93,
+      "watchTimeShareAttributedPct": 3.92,
+      "watchTimeShareChannelTotalPct": 3.74,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 82,
+        "2026": 9
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "01:22",
+        "2026": "00:09"
+      }
+    },
+    {
+      "isoCode": "SD",
+      "countryName": "Sudan",
+      "searchAliases": [
+        "SDN"
+      ],
+      "sourceRowOrder": 33,
+      "views": 13,
+      "avgViewDurationRaw": "0:00:44",
+      "avgViewDurationFormatted": "00:44",
+      "avgViewDurationSecs": 44,
+      "derivedAvgViewDurationSecs": 44.14,
+      "watchTimeHours": 0.1594,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 44,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:44",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "ID",
+      "countryName": "Indonesia",
+      "searchAliases": [
+        "IDN"
+      ],
+      "sourceRowOrder": 34,
+      "views": 119,
+      "avgViewDurationRaw": "0:00:42",
+      "avgViewDurationFormatted": "00:42",
+      "avgViewDurationSecs": 42,
+      "derivedAvgViewDurationSecs": 42.85,
+      "watchTimeHours": 1.4164,
+      "viewsShareAttributedPct": 0.08,
+      "viewsShareChannelTotalPct": 0.07,
+      "watchTimeShareAttributedPct": 0.01,
+      "watchTimeShareChannelTotalPct": 0.01,
+      "sampleClass": "established",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 46,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:46",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "EG",
+      "countryName": "Egypt",
+      "searchAliases": [
+        "EGY",
+        "Misr"
+      ],
+      "sourceRowOrder": 35,
+      "views": 59,
+      "avgViewDurationRaw": "0:00:20",
+      "avgViewDurationFormatted": "00:20",
+      "avgViewDurationSecs": 20,
+      "derivedAvgViewDurationSecs": 20.92,
+      "watchTimeHours": 0.3429,
+      "viewsShareAttributedPct": 0.04,
+      "viewsShareChannelTotalPct": 0.04,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 20,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:20",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "UZ",
+      "countryName": "Uzbekistan",
+      "searchAliases": [
+        "UZB"
+      ],
+      "sourceRowOrder": 36,
+      "views": 41,
+      "avgViewDurationRaw": "0:00:19",
+      "avgViewDurationFormatted": "00:19",
+      "avgViewDurationSecs": 19,
+      "derivedAvgViewDurationSecs": 19.21,
+      "watchTimeHours": 0.2188,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 19,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:19",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "UA",
+      "countryName": "Ukraine",
+      "searchAliases": [
+        "UKR"
+      ],
+      "sourceRowOrder": 37,
+      "views": 54,
+      "avgViewDurationRaw": "0:00:16",
+      "avgViewDurationFormatted": "00:16",
+      "avgViewDurationSecs": 16,
+      "derivedAvgViewDurationSecs": 16.08,
+      "watchTimeHours": 0.2412,
+      "viewsShareAttributedPct": 0.04,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 16,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:16",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "RU",
+      "countryName": "Russia",
+      "searchAliases": [
+        "Russian Federation",
+        "RUS"
+      ],
+      "sourceRowOrder": 38,
+      "views": 17,
+      "avgViewDurationRaw": "0:00:15",
+      "avgViewDurationFormatted": "00:15",
+      "avgViewDurationSecs": 15,
+      "derivedAvgViewDurationSecs": 15.8,
+      "watchTimeHours": 0.0746,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 15,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:15",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "MG",
+      "countryName": "Madagascar",
+      "searchAliases": [
+        "MDG"
+      ],
+      "sourceRowOrder": 39,
+      "views": 11,
+      "avgViewDurationRaw": "0:00:15",
+      "avgViewDurationFormatted": "00:15",
+      "avgViewDurationSecs": 15,
+      "derivedAvgViewDurationSecs": 15.71,
+      "watchTimeHours": 0.048,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 15,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:15",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "SY",
+      "countryName": "Syria",
+      "searchAliases": [
+        "Syrian Arab Republic",
+        "SYR"
+      ],
+      "sourceRowOrder": 40,
+      "views": 11,
+      "avgViewDurationRaw": "0:00:13",
+      "avgViewDurationFormatted": "00:13",
+      "avgViewDurationSecs": 13,
+      "derivedAvgViewDurationSecs": 13.78,
+      "watchTimeHours": 0.0421,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 13,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:13",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "VN",
+      "countryName": "Vietnam",
+      "searchAliases": [
+        "Viet Nam",
+        "VNM"
+      ],
+      "sourceRowOrder": 41,
+      "views": 29,
+      "avgViewDurationRaw": "0:00:10",
+      "avgViewDurationFormatted": "00:10",
+      "avgViewDurationSecs": 10,
+      "derivedAvgViewDurationSecs": 10.43,
+      "watchTimeHours": 0.084,
+      "viewsShareAttributedPct": 0.02,
+      "viewsShareChannelTotalPct": 0.02,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 10,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:10",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "TR",
+      "countryName": "Turkey",
+      "searchAliases": [
+        "Türkiye",
+        "Turkiye",
+        "TUR"
+      ],
+      "sourceRowOrder": 42,
+      "views": 47,
+      "avgViewDurationRaw": "0:00:09",
+      "avgViewDurationFormatted": "00:09",
+      "avgViewDurationSecs": 9,
+      "derivedAvgViewDurationSecs": 9.97,
+      "watchTimeHours": 0.1302,
+      "viewsShareAttributedPct": 0.03,
+      "viewsShareChannelTotalPct": 0.03,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": null,
+        "2026": 9
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": null,
+        "2026": "00:09"
+      }
+    },
+    {
+      "isoCode": "SO",
+      "countryName": "Somalia",
+      "searchAliases": [
+        "SOM"
+      ],
+      "sourceRowOrder": 43,
+      "views": 14,
+      "avgViewDurationRaw": "0:00:03",
+      "avgViewDurationFormatted": "00:03",
+      "avgViewDurationSecs": 3,
+      "derivedAvgViewDurationSecs": 3.14,
+      "watchTimeHours": 0.0122,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 3,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:03",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "NO",
+      "countryName": "Norway",
+      "searchAliases": [
+        "Norge",
+        "NOR"
+      ],
+      "sourceRowOrder": 44,
+      "views": 19,
+      "avgViewDurationRaw": "0:00:00",
+      "avgViewDurationFormatted": "00:00",
+      "avgViewDurationSecs": 0,
+      "derivedAvgViewDurationSecs": 0.89,
+      "watchTimeHours": 0.0047,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 0,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:00",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "AT",
+      "countryName": "Austria",
+      "searchAliases": [
+        "Osterreich",
+        "Österreich"
+      ],
+      "sourceRowOrder": 45,
+      "views": 11,
+      "avgViewDurationRaw": "0:00:00",
+      "avgViewDurationFormatted": "00:00",
+      "avgViewDurationSecs": 0,
+      "derivedAvgViewDurationSecs": 0.69,
+      "watchTimeHours": 0.0021,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 0,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:00",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "YE",
+      "countryName": "Yemen",
+      "searchAliases": [
+        "YEM"
+      ],
+      "sourceRowOrder": 46,
+      "views": 13,
+      "avgViewDurationRaw": "0:00:00",
+      "avgViewDurationFormatted": "00:00",
+      "avgViewDurationSecs": 0,
+      "derivedAvgViewDurationSecs": 0,
+      "watchTimeHours": 0,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 0,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:00",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "BJ",
+      "countryName": "Benin",
+      "searchAliases": [
+        "BEN"
+      ],
+      "sourceRowOrder": 47,
+      "views": 20,
+      "avgViewDurationRaw": "0:00:00",
+      "avgViewDurationFormatted": "00:00",
+      "avgViewDurationSecs": 0,
+      "derivedAvgViewDurationSecs": 0,
+      "watchTimeHours": 0,
+      "viewsShareAttributedPct": 0.01,
+      "viewsShareChannelTotalPct": 0.01,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "very_small",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 0,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:00",
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "CD",
+      "countryName": "DR Congo",
+      "searchAliases": [
+        "Democratic Republic of the Congo",
+        "DRC",
+        "Congo-Kinshasa"
+      ],
+      "sourceRowOrder": 48,
+      "views": 0,
+      "avgViewDurationRaw": null,
+      "avgViewDurationFormatted": null,
+      "avgViewDurationSecs": null,
+      "derivedAvgViewDurationSecs": null,
+      "watchTimeHours": 0,
+      "viewsShareAttributedPct": 0,
+      "viewsShareChannelTotalPct": 0,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "zero_suppressed",
+      "yearlyAvgViewDurationSecs": {
+        "2025": null,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": null,
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "PE",
+      "countryName": "Peru",
+      "searchAliases": [
+        "PER"
+      ],
+      "sourceRowOrder": 49,
+      "views": 0,
+      "avgViewDurationRaw": null,
+      "avgViewDurationFormatted": null,
+      "avgViewDurationSecs": null,
+      "derivedAvgViewDurationSecs": null,
+      "watchTimeHours": 0,
+      "viewsShareAttributedPct": 0,
+      "viewsShareChannelTotalPct": 0,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "zero_suppressed",
+      "yearlyAvgViewDurationSecs": {
+        "2025": null,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": null,
+        "2026": "00:00"
+      }
+    },
+    {
+      "isoCode": "KR",
+      "countryName": "South Korea",
+      "searchAliases": [
+        "Republic of Korea",
+        "Korea",
+        "ROK",
+        "KOR"
+      ],
+      "sourceRowOrder": 50,
+      "views": 0,
+      "avgViewDurationRaw": null,
+      "avgViewDurationFormatted": null,
+      "avgViewDurationSecs": null,
+      "derivedAvgViewDurationSecs": null,
+      "watchTimeHours": 0,
+      "viewsShareAttributedPct": 0,
+      "viewsShareChannelTotalPct": 0,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "zero_suppressed",
+      "yearlyAvgViewDurationSecs": {
+        "2025": 0,
+        "2026": null
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": "00:00",
+        "2026": null
+      }
+    },
+    {
+      "isoCode": "ET",
+      "countryName": "Ethiopia",
+      "searchAliases": [
+        "ETH"
+      ],
+      "sourceRowOrder": 51,
+      "views": 0,
+      "avgViewDurationRaw": null,
+      "avgViewDurationFormatted": null,
+      "avgViewDurationSecs": null,
+      "derivedAvgViewDurationSecs": null,
+      "watchTimeHours": 0,
+      "viewsShareAttributedPct": 0,
+      "viewsShareChannelTotalPct": 0,
+      "watchTimeShareAttributedPct": 0,
+      "watchTimeShareChannelTotalPct": 0,
+      "sampleClass": "zero_suppressed",
+      "yearlyAvgViewDurationSecs": {
+        "2025": null,
+        "2026": 0
+      },
+      "yearlyAvgViewDurationFormatted": {
+        "2025": null,
+        "2026": "00:00"
+      }
+    }
+  ],
+  "importHistory": [
+    {
+      "version": 1,
+      "importedAt": "2026-11-23T19:46:32.674Z",
+      "zipFileName": "Geography 2025-05-20_2026-11-23 SufiPulse USA.zip",
+      "zipSha256": "839a0904d73461e6ab4263cff270374b8f2117f1713f731592d64c091b6d79b5",
+      "reportingPeriodStart": "2025-05-20",
+      "reportingPeriodEnd": "2026-11-23",
+      "measurableCountries": 48,
+      "listedCountryRows": 52,
+      "countryAttributedViews": 145261,
+      "exportTotalRowViews": 160696,
+      "countryAttributedWatchTimeHours": 9923.7486,
+      "exportTotalRowWatchTimeHours": 10412.7901
+    }
+  ]
+}
