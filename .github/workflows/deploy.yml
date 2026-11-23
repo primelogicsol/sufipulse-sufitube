@@ -89,6 +89,8 @@ jobs:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
           PORT: '3005'
+          JWT_SECRET: 'ci-build-test-ephemeral-jwt-secret-key-32ch'
+          JWT_REFRESH_SECRET: 'ci-build-test-ephemeral-refresh-secret-32ch'
         run: |
           npm run verify:deploy
 
