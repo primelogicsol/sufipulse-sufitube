@@ -77,9 +77,9 @@ export async function DiscoveryGraphNodeView({
     );
   }
 
-  // 2. Fetch connected published releases
+  // 2. Fetch connected published public releases
   const releases = graphResolver.getReleasesForRegistry(slug, type);
-  const publishedReleases = releases.filter(r => r.status === 'published');
+  const publishedReleases = releases.filter(r => r.status === 'published' && r.visibility === 'public');
 
   // 3. Dynamically resolve Related Taxonomy Nodes
   // We scan the connected releases and find other nodes of the SAME type linked to those releases.

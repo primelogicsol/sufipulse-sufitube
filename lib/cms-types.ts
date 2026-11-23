@@ -29,7 +29,8 @@ export interface Release {
   subtitle?: string;
   slug: string;
   release_id?: string;
-  status: 'draft' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
+  status: 'draft' | 'queued' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
+  visibility?: 'public' | 'private' | 'unlisted';
   content_readiness_state?: 'draft' | 'editorial_ready' | 'web_published' | 'youtube_delivery_in_progress' | 'fully_delivered' | 'delivery_attention_required';
   workflow_stage?: string;
   release_type?: string;

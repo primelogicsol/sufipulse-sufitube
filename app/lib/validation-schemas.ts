@@ -191,56 +191,78 @@ export const lyricsRequestSchema = z.object({
 /**
  * CMS Release Schemas
  */
+const cmsCreditPersonSchema = z.union([
+  z.string().max(300),
+  z.object({
+    name: z.string().max(300).optional(),
+    nameUrdu: z.string().max(300).optional(),
+    public_name: z.string().max(300).optional(),
+    public_credit: z.string().max(300).optional(),
+    pen_name: z.string().max(300).optional(),
+  }).passthrough(),
+]).nullable().optional();
+
+export const cmsReleaseStatusTypes = ['draft', 'queued', 'in_review', 'approved', 'published', 'unpublished', 'archived'] as const;
+
+export const cmsReleaseStatusPatchSchema = z.object({
+  action: z.enum(['publish', 'unpublish', 'draft', 'queue', 'in_review', 'approve', 'archive', 'restore_draft', 'set_visibility', 'set_status']).optional(),
+  status: z.enum(cmsReleaseStatusTypes).optional(),
+  visibility: z.enum(['public', 'private', 'unlisted']).optional(),
+  reason: z.string().max(500).optional(),
+}).refine(
+  (data) => Boolean(data.action || data.status || data.visibility),
+  { message: 'At least one of action, status, or visibility must be provided' }
+);
+
 export const cmsReleaseSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(3, 'Title must be at least 3 characters').max(500, 'Title is too long'),
   slug: z.string().min(3, 'Slug must be at least 3 characters').max(500).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, and hyphens'),
-  canonicalTitle: z.string().max(500).optional().or(z.literal('')),
-  youtubeTitle: z.string().max(500).optional().or(z.literal('')),
-  youtubeTitleVariantA: z.string().max(500).optional(),
-  youtubeTitleVariantB: z.string().max(500).optional(),
-  youtubeTitleVariantC: z.string().max(500).optional(),
-  youtubeWinningVariant: z.enum(['A', 'B', 'C', 'pending']).optional(),
-  youtubeTitleLastSyncedAt: z.string().max(100).optional(),
-  youtubeContentType: z.enum(['SHORTS', 'VIDEO_ON_DEMAND', 'LIVE_STREAM', 'UNSPECIFIED']).optional(),
+  canonicalTitle: z.string().max(500).nullable().optional().or(z.literal('')),
+  youtubeTitle: z.string().max(500).nullable().optional().or(z.literal('')),
+  youtubeTitleVariantA: z.string().max(500).nullable().optional(),
+  youtubeTitleVariantB: z.string().max(500).nullable().optional(),
+  youtubeTitleVariantC: z.string().max(500).nullable().optional(),
+  youtubeWinningVariant: z.enum(['A', 'B', 'C', 'pending']).nullable().optional(),
+  youtubeTitleLastSyncedAt: z.string().max(100).nullable().optional(),
+  youtubeContentType: z.enum(['SHORTS', 'VIDEO_ON_DEMAND', 'LIVE_STREAM', 'UNSPECIFIED']).nullable().optional(),
   formatClassificationSource: z.enum([
     'youtube_analytics',
     'youtube_shorts_surface',
     'dashboard',
     'legacy',
     'inferred'
-  ]).optional(),
-  canonicalStatus: z.enum(['verified', 'inferred', 'unresolved']).optional(),
-  governanceOrigin: z.enum(['native_governed', 'legacy_registry', 'unresolved']).optional(),
-  metadataStatus: z.enum(['synced', 'drift_detected', 'overridden']).optional(),
-  canonicalThumbnail: z.string().optional(),
-  youtubeThumbnailUrl: z.string().optional(),
-  youtubeChannelId: z.string().optional(),
-  youtubeChannelUrl: z.string().optional(),
-  youtubePlaylistId: z.string().optional(),
-  youtubeId: z.string().max(100).optional().or(z.literal('')),
-  youtubeUrl: z.string().url('Invalid URL').max(500).optional().or(z.literal('')),
-  description: z.string().max(10000).optional(),
+  ]).nullable().optional(),
+  canonicalStatus: z.enum(['verified', 'inferred', 'unresolved']).or(z.string().max(50)).nullable().optional(),
+  governanceOrigin: z.enum(['native_governed', 'legacy_registry', 'unresolved']).nullable().optional(),
+  metadataStatus: z.enum(['synced', 'drift_detected', 'overridden']).nullable().optional(),
+  canonicalThumbnail: z.string().nullable().optional(),
+  youtubeThumbnailUrl: z.string().nullable().optional(),
+  youtubeChannelId: z.string().nullable().optional(),
+  youtubeChannelUrl: z.string().nullable().optional(),
+  youtubePlaylistId: z.string().nullable().optional(),
+  youtubeId: z.string().max(100).nullable().optional().or(z.literal('')),
+  youtubeUrl: z.string().url('Invalid URL').max(500).nullable().optional().or(z.literal('')),
+  description: z.string().max(10000).nullable().optional(),
   durationSeconds: z.number().finite().min(0).optional(),
-  durationFormatted: z.string().max(20).optional(),
-  status: z.enum(['draft', 'in_review', 'approved', 'published', 'unpublished', 'archived']).default('draft'),
-  releaseType: z.string().max(100).optional(),
-  category: z.string().max(100).optional(),
-  thumbnailUrl: z.string().max(500).refine(value => !value || /^https?:\/\//i.test(value) && z.url().safeParse(value).success || /^\/api\/admin\/pipeline\/drafts\/[a-zA-Z0-9_-]+\/assets\/part-a$/.test(value), 'Invalid thumbnail URL').optional(),
-  posterUrl: z.string().url('Invalid URL').max(500).optional().or(z.literal('')),
+  durationFormatted: z.string().max(20).nullable().optional(),
+  status: z.enum(cmsReleaseStatusTypes).default('draft'),
+  visibility: z.enum(['public', 'private', 'unlisted']).nullable().optional(),
+  contentReadinessState: z.string().max(100).nullable().optional(),
+  unpublishedAt: z.string().max(100).nullable().optional(),
+  unpublishedBy: z.string().max(200).nullable().optional(),
+  archivedAt: z.string().max(100).nullable().optional(),
+  archivedBy: z.string().max(200).nullable().optional(),
+  publicationOverride: z.boolean().optional(),
+  releaseType: z.string().max(100).nullable().optional(),
+  category: z.string().max(100).nullable().optional(),
+  thumbnailUrl: z.string().max(500).refine(value => !value || value.startsWith('/') || (/^https?:\/\//i.test(value) && z.url().safeParse(value).success), 'Invalid thumbnail URL').nullable().optional(),
+  posterUrl: z.string().url('Invalid URL').max(500).nullable().optional().or(z.literal('')),
   webOnly: z.boolean().optional(),
-  releaseDate: z.string().max(50).optional().or(z.literal('')),
-  writer: z.object({
-    name: z.string().max(120),
-    nameUrdu: z.string().max(120).optional(),
-  }).optional(),
-  vocalist: z.object({
-    name: z.string().max(120),
-    nameUrdu: z.string().max(120).optional(),
-  }).optional(),
-  producer: z.object({
-    name: z.string().max(120),
-  }).optional(),
+  releaseDate: z.string().max(50).nullable().optional().or(z.literal('')),
+  writer: cmsCreditPersonSchema,
+  vocalist: cmsCreditPersonSchema,
+  producer: cmsCreditPersonSchema,
 
   // Release Intelligence Fields
   targetRegions: z.array(z.string().refine(val => REGION_CODES.includes(val as any), "Invalid region code")).optional(),
@@ -256,37 +278,37 @@ export const cmsReleaseSchema = z.object({
   intelligenceUpdatedAt: z.string().max(100).optional(),
 
   // Premiere fields
-  releaseLifecycle: z.enum(['upcoming', 'teaser_live', 'premiere_scheduled', 'released', 'archived']).optional(),
-  officialReleaseAt: z.string().optional(),
-  premiereAnnouncedAt: z.string().optional(),
+  releaseLifecycle: z.enum(['upcoming', 'teaser_live', 'premiere_scheduled', 'released', 'archived']).nullable().optional(),
+  officialReleaseAt: z.string().nullable().optional(),
+  premiereAnnouncedAt: z.string().nullable().optional(),
   isFeaturedPremiere: z.boolean().optional(),
 
     premiereEnabled: z.boolean().optional(),
-    premiereStatus: z.enum(['coming_soon', 'scheduled', 'live', 'completed']).optional(),
-    premiereOrder: z.number().int().optional(),
-    premiereDate: z.string().optional(),
+    premiereStatus: z.enum(['coming_soon', 'scheduled', 'live', 'completed']).nullable().optional(),
+    premiereOrder: z.number().int().nullable().optional(),
+    premiereDate: z.string().nullable().optional(),
     premiereDateTba: z.boolean().optional(),
-    premiereDescription: z.string().max(2000).optional(),
-    premiereThumbnail: z.string().optional(),
-    premiereMobileThumbnail: z.string().optional(),
+    premiereDescription: z.string().max(2000).nullable().optional(),
+    premiereThumbnail: z.string().nullable().optional(),
+    premiereMobileThumbnail: z.string().nullable().optional(),
     premiumTeaserAvailable: z.boolean().optional(),
     commentaryAvailable: z.boolean().optional(),
     lyricsTranslationsAvailable: z.boolean().optional(),
     creditsNotesAvailable: z.boolean().optional(),
     notifyEnabled: z.boolean().optional(),
-    premiereCtaLabel: z.string().max(100).optional(),
-  premiereVisibility: z.enum(['public', 'private']).optional(),
+    premiereCtaLabel: z.string().max(100).nullable().optional(),
+  premiereVisibility: z.enum(['public', 'private']).nullable().optional(),
   preReleaseAssets: z.array(z.object({
-    id: z.string(),
+    id: z.string().optional(),
     type: z.enum(['premium_teaser', 'first_listen', 'trailer', 'premiere_announcement']),
-    title: z.string().optional(),
-    youtubeId: z.string().optional(),
-    youtubeUrl: z.string().optional(),
-    thumbnailUrl: z.string().optional(),
-    publishedAt: z.string().optional(),
-    scheduledAt: z.string().optional(),
+    title: z.string().nullable().optional(),
+    youtubeId: z.string().nullable().optional(),
+    youtubeUrl: z.string().nullable().optional(),
+    thumbnailUrl: z.string().nullable().optional(),
+    publishedAt: z.string().nullable().optional(),
+    scheduledAt: z.string().nullable().optional(),
     status: z.enum(['draft', 'scheduled', 'live', 'archived'])
-  })).optional(),
+  }).passthrough()).optional(),
 }).refine((data) => {
   // Prevent relatedReleases from containing the current release ID
   if (data.id && data.relatedReleases && data.relatedReleases.includes(data.id)) {
@@ -378,6 +400,9 @@ export const releasesQuerySchema = z.object({
   pageSize: z.string().optional(),
   limit: z.string().optional(),
   offset: z.string().optional(),
+  publicOnly: z.string().optional(),
+  refresh: z.string().optional(),
+  nocache: z.string().optional(),
   // NOTE: t and forceHydrate intentionally absent.
   // Public GET endpoints must never trigger storage hydration.
   // Hydration belongs only in authorized mutation/import code paths.

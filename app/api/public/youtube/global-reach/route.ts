@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { youtubeAnalyticsService } from '@/lib/youtube-analytics-service';
 import { syncYouTubeReachReports } from '@/lib/youtube-reach-reports';
 import { globalReachGrowthEngine } from '@/lib/global-reach-growth-engine';
+import { getYouTubeGeographySnapshot } from '@/lib/youtube-geography-import';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,13 @@ export async function GET(request: NextRequest) {
     }
 
     const globalReachIndex = globalReachGrowthEngine.getPublicPayload(verifiedMetrics);
+    const rawGeography = getYouTubeGeographySnapshot();
+    const geographyIntelligence = rawGeography
+      ? (() => {
+          const { importHistory: _history, ...publicGeo } = rawGeography;
+          return publicGeo;
+        })()
+      : null;
     
     // Return only public-safe fields from the Lifetime Snapshot
     const publicSafe = {
@@ -50,6 +58,7 @@ export async function GET(request: NextRequest) {
       performance: analytics.lifetimeSnapshot.performance,
       recommendationEngine: analytics.lifetimeSnapshot.recommendationEngine,
       geographies: analytics.lifetimeSnapshot.geographies,
+      geographyIntelligence,
       
       snapshotStatus: reach.isLifetimeReconciled
         ? 'Reconciled official YouTube daily thumbnail impressions'

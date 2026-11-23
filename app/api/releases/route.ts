@@ -4,13 +4,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
-import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
+import { requireAdmin, getAuthUser, checkIsAdmin } from '@/server/middleware/authenticate';
 import { validateRequestBody, validateQueryParams } from '@/app/lib/api-middleware';
 import { cmsReleaseSchema, releasesQuerySchema } from '@/app/lib/validation-schemas';
 
 
+export const dynamic = 'force-dynamic';
+
 const cacheHeaders = {
-  'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=3600',
+  'Cache-Control': 'public, max-age=0, s-maxage=0, must-revalidate',
 };
 
 export async function GET(request: NextRequest) {
@@ -23,7 +25,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(validationResult.error, { status: 400 });
     }
 
-    const { status, type, search, key, slug, youtubeId, governance, format, duration, year, sort } = validationResult.data;
+    const { status, type, search, key, slug, youtubeId, governance, format, duration, year, sort, publicOnly } = validationResult.data;
+    const forcePublicView = publicOnly === '1' || publicOnly === 'true';
 
     const lookupKey = key || slug || youtubeId;
     if (lookupKey) {
@@ -55,18 +58,18 @@ export async function GET(request: NextRequest) {
       if (release) {
         const canonical = toCanonicalCMSRelease(release);
         const auth = await getAuthUser(request);
-        const isAdmin = auth?.role === 'admin';
+        const isAdmin = checkIsAdmin(auth);
 
-        if (canonical.status !== 'published') {
+        if (canonical.status !== 'published' || canonical.visibility !== 'public') {
           if (!isAdmin) {
-            return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Release not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
           }
-          return NextResponse.json({ ...canonical, resolution_source: source });
+          return NextResponse.json({ ...canonical, resolution_source: source }, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
         }
 
         if (!isAdmin && ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(canonical.releaseLifecycle || '')) {
           if (canonical.visibility !== 'public' || canonical.premiereVisibility !== 'public') {
-            return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Release not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
           }
           return NextResponse.json({ ...toPublicPremiereRelease(canonical), resolution_source: source }, { headers: cacheHeaders });
         }
@@ -78,7 +81,7 @@ export async function GET(request: NextRequest) {
         // Return PublicRelease for published
         return NextResponse.json({ ...toPublicRelease(canonical), resolution_source: source }, { headers: cacheHeaders });
       }
-      return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Release not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
     }
 
     if (backend === 'postgres') {
@@ -90,7 +93,7 @@ export async function GET(request: NextRequest) {
       const offset = searchParams.has('offset') ? parseInt(searchParams.get('offset') || '0', 10) : undefined;
 
       const auth = await getAuthUser(request);
-      const isAdmin = auth?.role === 'admin';
+      const isAdmin = !forcePublicView && checkIsAdmin(auth);
 
       const result = await store.query({
         q: search || undefined,
@@ -141,7 +144,7 @@ export async function GET(request: NextRequest) {
     }
 
 // 1. status
-    let releases = status
+    let releases = (status && status !== 'all')
       ? cmsServerStorage.getAllReleases({ status })
       : cmsServerStorage.getAllReleases();
 
@@ -251,7 +254,7 @@ export async function GET(request: NextRequest) {
     const pageSizeParam = searchParams.get('pageSize') || searchParams.get('limit');
 
     const auth = await getAuthUser(request);
-    const isAdmin = auth?.role === 'admin';
+    const isAdmin = !forcePublicView && checkIsAdmin(auth);
     const headers = isAdmin ? { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } : cacheHeaders;
 
     let finalReleases = [];

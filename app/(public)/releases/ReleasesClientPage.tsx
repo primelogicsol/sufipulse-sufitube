@@ -438,6 +438,7 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
 
             const params = new URLSearchParams();
             params.set('status', 'published');
+            params.set('publicOnly', '1');
             params.set('page', String(pg));
             params.set('pageSize', String(ITEMS_PER_PAGE));
 

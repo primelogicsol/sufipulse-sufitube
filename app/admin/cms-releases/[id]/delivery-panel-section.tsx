@@ -43,9 +43,11 @@ type Props = {
   subtitleExportLanguages: string[];
   exportingZip: boolean;
   youtubeSyncing: boolean;
+  statusActionLoading?: boolean;
   youtubeIntegrationStatus: YouTubeIntegrationStatus;
   getTrackMeta: (language: string) => CaptionTrackMeta;
   toggleWebPublishState: () => Promise<void> | void;
+  runStatusAction?: (action: 'publish' | 'unpublish' | 'archive' | 'restore_draft') => Promise<void> | void;
   openPublicReleasePreview: () => void;
   updateReadinessState: (nextReadiness: ContentReadinessState) => Promise<void> | void;
   setForm: React.Dispatch<React.SetStateAction<Partial<CMSRelease>>>;
@@ -78,9 +80,11 @@ export function DeliveryPanelSection({
   subtitleExportLanguages,
   exportingZip,
   youtubeSyncing,
+  statusActionLoading = false,
   youtubeIntegrationStatus,
   getTrackMeta,
   toggleWebPublishState,
+  runStatusAction,
   openPublicReleasePreview,
   updateReadinessState,
   setForm,
@@ -91,19 +95,47 @@ export function DeliveryPanelSection({
   markManualDeliveryState,
   updateTrackMeta,
 }: Props) {
+  const effectiveVisibility = form.visibility || (form.status === 'published' ? 'public' : 'private');
+  const isPubliclyLive = form.status === 'published' && effectiveVisibility === 'public';
+
   return (
     <div className="mt-6 rounded-lg p-4" style={{ border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-primary)' }}>
       <div className="mb-4 rounded-lg p-3" style={{ border: '1px solid var(--dash-border)', backgroundColor: 'var(--dash-bg-secondary)' }}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold" style={{ color: 'var(--dash-text-primary)' }}>Web UI Delivery</h3>
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--dash-text-primary)' }}>Web UI Delivery &amp; Publication</h3>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              disabled={statusActionLoading}
               onClick={() => void toggleWebPublishState()}
-              className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm"
+              className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm disabled:opacity-50"
             >
-              {form.status === 'published' ? 'Set Unpublished' : 'Set Published'}
+              {statusActionLoading
+                ? 'Updating...'
+                : isPubliclyLive
+                  ? 'Set Unpublished (Private)'
+                  : 'Publish Publicly'}
             </button>
+            {runStatusAction && (form.status === 'unpublished' || form.status === 'archived') && (
+              <button
+                type="button"
+                disabled={statusActionLoading}
+                onClick={() => void runStatusAction('restore_draft')}
+                className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm disabled:opacity-50"
+              >
+                Restore to Draft
+              </button>
+            )}
+            {runStatusAction && form.status !== 'archived' && (
+              <button
+                type="button"
+                disabled={statusActionLoading}
+                onClick={() => void runStatusAction('archive')}
+                className="dashboard-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-sm disabled:opacity-50"
+              >
+                Archive
+              </button>
+            )}
             <button
               type="button"
               onClick={openPublicReleasePreview}
@@ -114,7 +146,8 @@ export function DeliveryPanelSection({
           </div>
         </div>
         <p className="text-xs mt-2" style={{ color: 'var(--dash-text-muted)' }}>
-          Slug: {String(form.slug || '').trim() || 'not set'} | Current web status: {String(form.status || 'draft')}
+          Slug: {String(form.slug || '').trim() || 'not set'} | CMS Status: <strong>{String(form.status || 'draft')}</strong> | Website Visibility: <strong>{effectiveVisibility}</strong>
+          {form.unpublishedAt ? ` | Unpublished: ${new Date(form.unpublishedAt).toLocaleString()}` : ''}
         </p>
       </div>
 

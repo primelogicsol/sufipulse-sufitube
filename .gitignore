@@ -32,9 +32,10 @@ frontend.env
 
 # File-based database — never commit user/financial/token data
 .data/
-# EXCEPTION: knowledge-registry.json is public reference data with no secrets.
-# It must be version-controlled so production always receives the correct dataset.
+# EXCEPTION: knowledge-registry.json and youtube-studio-geography.json are public reference data with no secrets.
+# They must be version-controlled so production always receives the correct dataset.
 !.data/knowledge-registry.json
+!.data/youtube-studio-geography.json
 
 .vscode/*
 !.vscode/extensions.json

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Globe, Users, TrendingUp, Loader2, RefreshCw, AlertCircle, CheckCircle, Sliders } from "lucide-react";
 import type { GlobalReachPayload } from "@/lib/analytics-storage";
 import { useAuth } from "@/app/contexts/AuthContext";
+import GlobalAudienceByCountrySection from "./GlobalAudienceByCountrySection";
 
 function fmt(n: number | null | undefined): string {
   if (n === null || n === undefined) return "—";
@@ -500,6 +501,11 @@ export default function GlobalReachStrip() {
               <FootprintCard g={data!.geographies} />
             </div>
           </div>
+
+          <GlobalAudienceByCountrySection
+            geography={data?.geographyIntelligence ?? null}
+            baselineCountriesReached={data!.geographies.totalCountries}
+          />
 
           <div className="mt-6 border border-neutral-800/50 rounded-xl bg-neutral-900/30 overflow-hidden">
             <div className="px-4 py-2 bg-neutral-800/20 border-b border-neutral-800/50 flex items-center gap-2">

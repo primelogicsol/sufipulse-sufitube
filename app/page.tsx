@@ -42,12 +42,15 @@ export const metadata: Metadata = {
   },
 };
 
-// We can allow Next.js to revalidate this periodically 
-export const revalidate = 900; 
+// Dynamic rendering ensures CMS publish/unpublish/visibility changes reflect immediately on `/`
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Home() {
-  // 1. Stats
-  const rawReleases = cmsServerStorage.getAllReleases({ status: 'published' });
+  // 1. Strictly published + public CMS releases only
+  const rawReleases = cmsServerStorage.getPublicReleases().filter(
+    (r) => r.status === 'published' && (r.visibility || 'public') === 'public'
+  );
   const writers = entityGetAll('writers');
   const partnerships = entityGetAll('partnerships');
 

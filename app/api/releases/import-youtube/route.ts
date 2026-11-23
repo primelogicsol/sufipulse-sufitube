@@ -292,12 +292,17 @@ export async function POST(request: NextRequest) {
         const existing = cmsServerStorage.getReleaseByYoutubeId(video.id);
         const mapped = mapVideoToRelease(video, existing, resolutions[video.id]);
 
-        // Never silently publish a Studio-governed release when fetching YouTube metadata.
-        // Private YouTube uploads are linked first; the CMS release has its own explicit publish gate.
-        if (existing?.source === 'studio_pipeline' && existing.visibility === 'private') {
+        // Preserve CMS editorial publication & visibility authority for all existing records.
+        // YouTube sync updates operational metadata/stats, never overrides CMS status or visibility.
+        if (existing) {
           mapped.status = existing.status;
-          mapped.visibility = 'private';
+          mapped.visibility = existing.visibility || (existing.status === 'published' ? 'public' : 'private');
           mapped.publishedAt = existing.publishedAt;
+          mapped.unpublishedAt = existing.unpublishedAt;
+          mapped.unpublishedBy = existing.unpublishedBy;
+          mapped.archivedAt = existing.archivedAt;
+          mapped.archivedBy = existing.archivedBy;
+          mapped.publicationOverride = existing.publicationOverride;
         } else {
           mapped.status = 'published';
           mapped.visibility = 'public';

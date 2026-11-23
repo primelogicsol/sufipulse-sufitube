@@ -21,6 +21,9 @@ import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import ReleasesClientPage, { type InitialRelease } from './ReleasesClientPage';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function fetchPublishedReleases(): Promise<InitialRelease[]> {
   try {
     const store = getReleaseReadStore();

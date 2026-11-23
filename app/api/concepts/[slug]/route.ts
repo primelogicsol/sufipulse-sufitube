@@ -26,9 +26,9 @@ export async function GET(
     // Get all releases linked to this concept
     const releases = graphResolver.getReleasesForRegistry(slug, 'concept');
     
-    // Filter to only include active/published releases for public consumption
+    // Filter to only include active/published public releases for public consumption
     const publicReleases = releases
-      .filter(r => r.status === 'published')
+      .filter(r => r.status === 'published' && r.visibility === 'public')
       .map(r => ({
         id: r.id,
         slug: r.slug,

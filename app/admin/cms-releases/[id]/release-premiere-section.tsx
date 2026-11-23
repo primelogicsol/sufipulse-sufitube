@@ -45,19 +45,27 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
     });
   };
 
-  const updateAsset = (id: string, field: string, value: any) => {
+  const updateAsset = (targetIndex: number, targetId: string | undefined, field: string, value: any) => {
     setForm({
       ...form,
-      preReleaseAssets: assets.map((a: any) => 
-        a.id === id ? { ...a, [field]: value } : a
-      )
+      preReleaseAssets: assets.map((a: any, idx: number) => {
+        const isMatch = targetId ? (a.id === targetId && idx === targetIndex) : idx === targetIndex;
+        if (!isMatch) return a;
+        return {
+          ...a,
+          id: a.id || `asset_${idx}_${a.type || 'item'}`,
+          [field]: value,
+        };
+      }),
     });
   };
 
-  const removeAsset = (id: string) => {
+  const removeAsset = (targetIndex: number, targetId: string | undefined) => {
     setForm({
       ...form,
-      preReleaseAssets: assets.filter((a: any) => a.id !== id)
+      preReleaseAssets: assets.filter((a: any, idx: number) =>
+        targetId ? !(a.id === targetId && idx === targetIndex) : idx !== targetIndex
+      ),
     });
   };
 
@@ -426,15 +434,18 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                 No pre-release assets configured.
               </div>
             ) : (
-              assets.map((asset: any) => (
-                <div key={asset.id} className="p-4 bg-neutral-900 rounded border border-neutral-800 space-y-4">
+              assets.map((asset: any, index: number) => (
+                <div
+                  key={asset.id ? `${asset.id}-${index}` : `prerelease-asset-${asset.type || 'item'}-${index}`}
+                  className="p-4 bg-neutral-900 rounded border border-neutral-800 space-y-4"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs text-neutral-500 block mb-1">Asset Type</label>
                         <select 
                           value={asset.type}
-                          onChange={(e) => updateAsset(asset.id, 'type', e.target.value)}
+                          onChange={(e) => updateAsset(index, asset.id, 'type', e.target.value)}
                           className="w-full bg-neutral-800 border border-neutral-700 text-white rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
                         >
                           <option value="premium_teaser">Premium Teaser</option>
@@ -447,7 +458,7 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                         <label className="text-xs text-neutral-500 block mb-1">Status</label>
                         <select 
                           value={asset.status}
-                          onChange={(e) => updateAsset(asset.id, 'status', e.target.value)}
+                          onChange={(e) => updateAsset(index, asset.id, 'status', e.target.value)}
                           className="w-full bg-neutral-800 border border-neutral-700 text-white rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
                         >
                           <option value="draft">Draft</option>
@@ -461,7 +472,7 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                         <input 
                           type="text"
                           value={asset.youtubeId || ''}
-                          onChange={(e) => updateAsset(asset.id, 'youtubeId', e.target.value)}
+                          onChange={(e) => updateAsset(index, asset.id, 'youtubeId', e.target.value)}
                           placeholder="e.g. dQw4w9WgXcQ"
                           className="w-full bg-neutral-800 border border-neutral-700 text-white rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
                         />
@@ -469,7 +480,7 @@ export function ReleasePremiereSection({ form, setForm }: { form: any, setForm: 
                     </div>
                     <button 
                       type="button"
-                      onClick={() => removeAsset(asset.id)}
+                      onClick={() => removeAsset(index, asset.id)}
                       className="ml-4 p-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
                       title="Remove asset"
                     >

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getAuthUser } from '@/server/middleware/authenticate';
+import { getAuthUser, checkIsAdmin } from '@/server/middleware/authenticate';
 import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import { privateProductionSourceStorage } from '@/server/storage/private-production-source-storage';
@@ -34,7 +34,7 @@ export async function GET(
 
   const canonical = toCanonicalCMSRelease(release);
   const auth = await getAuthUser(request);
-  const isAdmin = auth?.role === 'admin';
+  const isAdmin = checkIsAdmin(auth);
 
   if (!isAdmin && !isPublicReleaseEligible(canonical)) return notFound();
 
@@ -48,7 +48,7 @@ export async function GET(
         audioUrl: null,
         audioDownloadAllowed: false,
       },
-      { headers: { 'Cache-Control': isAdmin ? 'no-store' : 'public, s-maxage=30, stale-while-revalidate=300' } },
+      { headers: { 'Cache-Control': isAdmin ? 'no-store' : 'public, max-age=0, s-maxage=0, must-revalidate' } },
     );
   }
 

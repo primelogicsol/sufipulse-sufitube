@@ -250,9 +250,12 @@ export default function ReleaseEditorPage() {
                     className="w-full px-4 py-2 border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg-primary)] text-[var(--dash-text-primary)] focus:outline-none focus:border-[var(--dash-accent)]"
                   >
                     <option value="draft">Draft</option>
+                    <option value="queued">Queued</option>
                     <option value="in_review">In Review</option>
                     <option value="approved">Approved</option>
                     <option value="published">Published</option>
+                    <option value="unpublished">Unpublished</option>
+                    <option value="archived">Archived</option>
                   </select>
                 </div>
               </div>

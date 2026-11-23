@@ -1,4 +1,5 @@
 import { getTable, type YouTubeAnalyticsSnapshot } from './database-schema';
+import type { YouTubeGeographySnapshot } from './youtube-geography';
 
 export type GlobalReachPayload = PublicGlobalReachPayload;
 export type AnalyticsSnapshot = YouTubeAnalyticsSnapshot;
@@ -13,6 +14,7 @@ export interface PublicGlobalReachPayload {
   performance: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['performance'];
   recommendationEngine: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['recommendationEngine'];
   geographies: YouTubeAnalyticsSnapshot['lifetimeSnapshot']['geographies'];
+  geographyIntelligence?: YouTubeGeographySnapshot | null;
   snapshotStatus?: string;
   reach?: {
     baseline: number;

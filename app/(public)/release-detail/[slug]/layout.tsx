@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { permanentRedirect, notFound } from 'next/navigation';
 import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { verifyAccessToken } from '@/server/services/auth';
+import { usersRepository } from '@/server/db/repositories/users';
+import { checkIsAdmin } from '@/server/middleware/authenticate';
 
 async function getReleaseByKey(key: string): Promise<any | null> {
   try {
@@ -13,6 +17,32 @@ async function getReleaseByKey(key: string): Promise<any | null> {
   } catch (error) {
     console.error('[release-detail metadata] Failed to resolve release:', error);
     return null;
+  }
+}
+
+function isPubliclyEligibleRelease(release: any): boolean {
+  if (!release || release.status !== 'published' || release.visibility !== 'public') {
+    return false;
+  }
+  if (['upcoming', 'teaser_live', 'premiere_scheduled'].includes(release.releaseLifecycle || '')) {
+    return release.premiereVisibility === 'public';
+  }
+  return true;
+}
+
+async function isRequestAdmin(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+    if (!token) return false;
+    const payload = await verifyAccessToken(token);
+    if (!payload?.userId) return false;
+    const user = usersRepository.findById(String(payload.userId));
+    if (!user || user.is_blocked) return false;
+    const { password_hash: _pw, ...safeUser } = user;
+    return checkIsAdmin(safeUser);
+  } catch {
+    return false;
   }
 }
 
@@ -247,8 +277,8 @@ export async function generateMetadata(
   const canonicalKey = release?.slug || slug;
   const canonicalUrl = `${baseUrl}/release-detail/${canonicalKey}`;
 
-  if (!release) {
-    // Unknown identifier: no-index and minimal metadata.
+  if (!release || (!isPubliclyEligibleRelease(release) && !(await isRequestAdmin()))) {
+    // Unknown or non-public identifier: no-index and minimal metadata.
     // The layout component will call notFound() → HTTP 404.
     return {
       title: 'Release Not Found',
@@ -311,8 +341,8 @@ export default async function ReleaseDetailLayout({ children, params }: LayoutPr
 
   // Resolution order (per audit F-05/F-06):
   //
-  // 1. No release found → HTTP 404 (was: HTTP 200 empty shell)
-  if (!release) {
+  // 1. No release found or non-public release for anonymous visitor → HTTP 404
+  if (!release || (!isPubliclyEligibleRelease(release) && !(await isRequestAdmin()))) {
     notFound();
   }
 

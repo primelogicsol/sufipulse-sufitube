@@ -71,8 +71,10 @@ export default function CMSReleasesPage() {
   const isAdmin = user?.role?.includes('admin') ?? false;
   const [releases, setReleases] = useState<CMSRelease[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
+  const [filter, setFilter] = useState<'all' | 'published' | 'unpublished' | 'draft' | 'queued' | 'archived'>('all');
   const [showMenu, setShowMenu] = useState<React.ReactNode | null>(null);
+  const [actionInFlightId, setActionInFlightId] = useState<string | null>(null);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loadingYouTube, setLoadingYouTube] = useState(false);
   const [importingYouTube, setImportingYouTube] = useState(false);
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeImportVideo[]>([]);
@@ -144,60 +146,93 @@ export default function CMSReleasesPage() {
     }
   };
 
-  const handlePublish = async (release: CMSRelease) => {
+  const runReleaseStatusAction = async (
+    release: CMSRelease,
+    payload: { action: 'publish' | 'unpublish' | 'draft' | 'queue' | 'archive' | 'restore_draft'; visibility?: 'public' | 'private' },
+    actionLabel: string,
+  ) => {
+    if (actionInFlightId) return;
+    setActionInFlightId(release.id);
+    setActionFeedback(null);
+    setShowMenu(null);
     try {
-      const res = await fetch(`/api/releases/${release.id}`, {
-        method: 'PUT',
+      const res = await fetch(`/api/releases/${encodeURIComponent(release.id)}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...release, status: 'published', publishedAt: new Date().toISOString() })
+        body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        loadReleases();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const detailText = data?.details
+          ? ' — ' + Object.entries(data.details)
+              .filter(([k]) => k !== '_errors')
+              .map(([k, v]: [string, any]) => `${k}: ${v?._errors?.join(', ') || JSON.stringify(v)}`)
+              .join(' | ')
+          : '';
+        setActionFeedback({
+          type: 'error',
+          message: `${actionLabel} failed for "${release.title}" (HTTP ${res.status}): ${data?.error || 'Request rejected by server'}${detailText}`,
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Failed to publish:', error);
+
+      const updated: CMSRelease = data?.release || data;
+      setReleases((prev) => {
+        if (filter !== 'all' && updated.status !== filter) {
+          return prev.filter((item) => item.id !== release.id);
+        }
+        return prev.map((item) => (item.id === release.id ? { ...item, ...updated } : item));
+      });
+      setActionFeedback({
+        type: 'success',
+        message: `"${updated.title || release.title}" updated — Status: ${updated.status}, Website Visibility: ${updated.visibility || 'private'}.`,
+      });
+    } catch (error: any) {
+      console.error(`Failed to ${actionLabel}:`, error);
+      setActionFeedback({
+        type: 'error',
+        message: `${actionLabel} network error for "${release.title}": ${error?.message || 'Unknown error'}`,
+      });
+    } finally {
+      setActionInFlightId(null);
     }
   };
 
-  const handleUnpublish = async (release: CMSRelease) => {
-    try {
-      const res = await fetch(`/api/releases/${release.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...release, status: 'unpublished' })
-      });
-      if (res.ok) {
-        loadReleases();
-      }
-    } catch (error) {
-      console.error('Failed to unpublish:', error);
-    }
-  };
+  const handlePublish = (release: CMSRelease) => runReleaseStatusAction(release, { action: 'publish' }, 'Publish');
+  const handleUnpublish = (release: CMSRelease) => runReleaseStatusAction(release, { action: 'unpublish' }, 'Unpublish');
+  const handleQueue = (release: CMSRelease) => runReleaseStatusAction(release, { action: 'queue' }, 'Queue');
+  const handleArchive = (release: CMSRelease) => runReleaseStatusAction(release, { action: 'archive' }, 'Archive');
+  const handleRestoreDraft = (release: CMSRelease) => runReleaseStatusAction(release, { action: 'restore_draft' }, 'Set to Draft');
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this release?')) return;
+    if (!confirm('Are you sure you want to permanently delete this release? Use Unpublish or Archive if you want to preserve lyrics, credits, and metadata.')) return;
+    if (actionInFlightId) return;
+    setActionInFlightId(id);
+    setActionFeedback(null);
+    setShowMenu(null);
     try {
-      const res = await fetch(`/api/releases/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadReleases();
+      const res = await fetch(`/api/releases/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionFeedback({
+          type: 'error',
+          message: `Delete failed (HTTP ${res.status}): ${data?.error || 'Request rejected by server'}`,
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Failed to delete:', error);
-    }
-  };
-
-  const handleArchive = async (release: CMSRelease) => {
-    try {
-      const res = await fetch(`/api/releases/${release.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...release, status: 'archived' })
+      setReleases((prev) => prev.filter((r) => r.id !== id));
+      setActionFeedback({
+        type: 'success',
+        message: `Release "${id}" permanently deleted.`,
       });
-      if (res.ok) {
-        loadReleases();
-      }
-    } catch (error) {
-      console.error('Failed to archive:', error);
+    } catch (error: any) {
+      console.error('Failed to delete:', error);
+      setActionFeedback({
+        type: 'error',
+        message: `Delete network error: ${error?.message || 'Unknown error'}`,
+      });
+    } finally {
+      setActionInFlightId(null);
     }
   };
 
@@ -454,6 +489,7 @@ export default function CMSReleasesPage() {
   const statusColor: Record<string, string> = {
     published: 'var(--dash-status-approved)',
     draft: 'var(--dash-status-pending)',
+    queued: '#c084fc',
     archived: 'var(--dash-text-muted)',
     unpublished: 'var(--dash-status-rejected)',
     in_review: 'var(--dash-status-pending)',
@@ -495,9 +531,9 @@ export default function CMSReleasesPage() {
         <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-lg bg-blue-950/40 border border-blue-800/50 text-blue-300 text-sm">
           <span className="mt-0.5 flex-shrink-0">ℹ️</span>
           <span>
-            Releases managed here are stored server-side (filesystem) and appear on the{' '}
-            <strong>/release-detail/[slug]</strong> public pages. They are separate from the
-            localStorage CMS Dashboard (<a href="/admin/cms" className="underline hover:text-blue-200">/admin/cms</a>).
+            Releases managed here and in the{' '}
+            <a href="/admin/cms" className="underline hover:text-blue-200">CMS Dashboard (/admin/cms)</a>{' '}
+            share the unified server-persisted canonical registry and control live visibility across <strong>/</strong>, <strong>/releases</strong>, and <strong>/release-detail/[slug]</strong> immediately upon saving.
           </span>
         </div>
 
@@ -899,9 +935,33 @@ export default function CMSReleasesPage() {
           </p>
         </div>
 
+        {/* Action Feedback Banner */}
+        {actionFeedback && (
+          <div
+            role="alert"
+            className="mb-4 p-4 rounded-lg flex items-start justify-between gap-3 text-sm"
+            style={{
+              backgroundColor: actionFeedback.type === 'error' ? 'rgba(127, 29, 29, 0.35)' : 'rgba(6, 78, 59, 0.35)',
+              border: `1px solid ${actionFeedback.type === 'error' ? 'var(--dash-status-rejected, #ef4444)' : 'var(--dash-status-approved, #10b981)'}`,
+              color: actionFeedback.type === 'error' ? '#fecaca' : '#a7f3d0',
+            }}
+          >
+            <span>
+              <strong>{actionFeedback.type === 'error' ? 'Action Failed:' : 'Updated:'}</strong> {actionFeedback.message}
+            </span>
+            <button
+              type="button"
+              onClick={() => setActionFeedback(null)}
+              className="text-xs underline opacity-80 hover:opacity-100"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Filter Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {(['all', 'published', 'draft', 'archived'] as const).map((f) => (
+          {(['all', 'published', 'unpublished', 'draft', 'queued', 'archived'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -963,23 +1023,29 @@ export default function CMSReleasesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className="px-2 py-0.5 rounded text-xs font-medium capitalize"
-                        style={{
-                          color: statusColor[release.status] || 'var(--dash-text-muted)',
-                          backgroundColor: 'var(--dash-bg-secondary)',
-                          border: `1px solid ${statusColor[release.status] || 'var(--dash-border)'}`,
-                        }}
-                      >
-                        {release.status === 'published' && release.visibility === 'public'
-                          ? 'Published'
-                          : release.status === 'published'
-                            ? 'Saved'
-                            : release.status}
-                      </span>
-                      <span className="ml-2 inline-flex rounded border border-sky-500/40 px-2 py-0.5 text-xs font-medium text-sky-300">
-                        Saved
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className="px-2 py-0.5 rounded text-xs font-medium capitalize"
+                          style={{
+                            color: statusColor[release.status] || 'var(--dash-text-muted)',
+                            backgroundColor: 'var(--dash-bg-secondary)',
+                            border: `1px solid ${statusColor[release.status] || 'var(--dash-border)'}`,
+                          }}
+                        >
+                          {release.status}
+                        </span>
+                        <span
+                          className={`inline-flex rounded px-2 py-0.5 text-[11px] font-medium ${
+                            release.status === 'published' && (release.visibility || 'public') === 'public'
+                              ? 'border border-emerald-500/40 text-emerald-300 bg-emerald-500/10'
+                              : 'border border-amber-500/40 text-amber-300 bg-amber-500/10'
+                          }`}
+                        >
+                          {release.status === 'published' && (release.visibility || 'public') === 'public'
+                            ? 'Public'
+                            : 'Private'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -1021,25 +1087,27 @@ export default function CMSReleasesPage() {
                           </button>
                         </Link>
                         <button
+                          disabled={actionInFlightId === release.id}
                           onClick={() => setShowMenu(showMenu === release.id ? null : release.id)}
-                          className="p-1.5 rounded transition dashboard-btn-secondary"
+                          className="p-1.5 rounded transition dashboard-btn-secondary disabled:opacity-50"
                           title="More actions"
                         >
                           <MoreVertical size={14} />
                         </button>
                         {showMenu === release.id && (
                           <div
-                            className="absolute right-0 top-8 z-20 rounded-lg shadow-lg py-1 min-w-[160px]"
+                            className="absolute right-0 top-8 z-20 rounded-lg shadow-lg py-1 min-w-[180px]"
                             style={{
                               backgroundColor: 'var(--dash-bg-card, #1f2d4d)',
                               border: '1px solid var(--dash-border, #2f3e5f)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.35)',
                             }}
                           >
-                            {release.status !== 'published' && (
+                            {(release.status !== 'published' || (release.visibility || 'public') !== 'public') && (
                               <button
-                                onClick={() => { handlePublish(release); setShowMenu(null); }}
-                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition"
+                                disabled={actionInFlightId === release.id}
+                                onClick={() => { void handlePublish(release); }}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition disabled:opacity-50"
                                 style={{
                                   backgroundColor: 'var(--dash-bg-card, #1f2d4d)',
                                   color: 'var(--dash-status-approved)'
@@ -1051,13 +1119,14 @@ export default function CMSReleasesPage() {
                                   event.currentTarget.style.backgroundColor = 'var(--dash-bg-card, #1f2d4d)';
                                 }}
                               >
-                                <Eye size={14} /> Publish
+                                <Eye size={14} /> Publish (Public)
                               </button>
                             )}
-                            {release.status === 'published' && (
+                            {(release.status === 'published' || (release.visibility || 'public') === 'public') && release.status !== 'unpublished' && (
                               <button
-                                onClick={() => { handleUnpublish(release); setShowMenu(null); }}
-                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition"
+                                disabled={actionInFlightId === release.id}
+                                onClick={() => { void handleUnpublish(release); }}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition disabled:opacity-50"
                                 style={{
                                   backgroundColor: 'var(--dash-bg-card, #1f2d4d)',
                                   color: 'var(--dash-status-pending)'
@@ -1069,13 +1138,52 @@ export default function CMSReleasesPage() {
                                   event.currentTarget.style.backgroundColor = 'var(--dash-bg-card, #1f2d4d)';
                                 }}
                               >
-                                <EyeOff size={14} /> Unpublish
+                                <EyeOff size={14} /> Unpublish (Private)
+                              </button>
+                            )}
+                            {release.status !== 'draft' && (
+                              <button
+                                disabled={actionInFlightId === release.id}
+                                onClick={() => { void handleRestoreDraft(release); }}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition disabled:opacity-50"
+                                style={{
+                                  backgroundColor: 'var(--dash-bg-card, #1f2d4d)',
+                                  color: 'var(--dash-text-primary)'
+                                }}
+                                onMouseEnter={(event) => {
+                                  event.currentTarget.style.backgroundColor = 'var(--dash-bg-secondary, #182540)';
+                                }}
+                                onMouseLeave={(event) => {
+                                  event.currentTarget.style.backgroundColor = 'var(--dash-bg-card, #1f2d4d)';
+                                }}
+                              >
+                                <RefreshCw size={14} /> Set to Draft
+                              </button>
+                            )}
+                            {release.status !== 'queued' && (
+                              <button
+                                disabled={actionInFlightId === release.id}
+                                onClick={() => { void handleQueue(release); }}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition disabled:opacity-50"
+                                style={{
+                                  backgroundColor: 'var(--dash-bg-card, #1f2d4d)',
+                                  color: '#c084fc'
+                                }}
+                                onMouseEnter={(event) => {
+                                  event.currentTarget.style.backgroundColor = 'var(--dash-bg-secondary, #182540)';
+                                }}
+                                onMouseLeave={(event) => {
+                                  event.currentTarget.style.backgroundColor = 'var(--dash-bg-card, #1f2d4d)';
+                                }}
+                              >
+                                <RefreshCw size={14} /> Set to Queued
                               </button>
                             )}
                             {release.status !== 'archived' && (
                               <button
-                                onClick={() => { handleArchive(release); setShowMenu(null); }}
-                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition"
+                                disabled={actionInFlightId === release.id}
+                                onClick={() => { void handleArchive(release); }}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition disabled:opacity-50"
                                 style={{
                                   backgroundColor: 'var(--dash-bg-card, #1f2d4d)',
                                   color: 'var(--dash-text-secondary)'
@@ -1091,8 +1199,9 @@ export default function CMSReleasesPage() {
                               </button>
                             )}
                             <button
-                              onClick={() => { handleDelete(release.id); setShowMenu(null); }}
-                              className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition"
+                              disabled={actionInFlightId === release.id}
+                              onClick={() => { void handleDelete(release.id); }}
+                              className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition disabled:opacity-50"
                               style={{
                                 backgroundColor: 'var(--dash-bg-card, #1f2d4d)',
                                 color: 'var(--dash-status-rejected)'

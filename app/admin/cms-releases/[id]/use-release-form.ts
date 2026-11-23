@@ -221,6 +221,60 @@ export function useReleaseForm({
   // Undo / redo
   const [history, setHistory] = useState<Partial<CMSRelease>[]>([]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const [statusActionLoading, setStatusActionLoading] = useState(false);
+
+  const normalizeReleaseToForm = (data: any): Partial<CMSRelease> => {
+    const formData: Partial<CMSRelease> = {
+      ...data,
+      visibility: data.visibility || (data.status === 'published' ? 'public' : 'private'),
+      subtitleCues: data.subtitleCues || [],
+      subtitleTranslations: data.subtitleTranslations || {},
+      subtitleLanguageStatuses: data.subtitleLanguageStatuses || {},
+      subtitleLanguageAssignments: data.subtitleLanguageAssignments || {},
+      subtitleStylePacks: Object.keys(data.subtitleStylePacks || {}).length
+        ? data.subtitleStylePacks
+        : { [DEFAULT_STYLE_NAME]: { ...DEFAULT_STYLE_PACK } },
+      subtitleReviewLogs: data.subtitleReviewLogs || [],
+      youtubeSubtitleAutoSync: data.source === 'studio_pipeline' ? false : data.youtubeSubtitleAutoSync !== false,
+      youtubeCaptionTracks: data.youtubeCaptionTracks || {},
+      contentReadinessState: data.contentReadinessState || 'draft',
+      masterTimingVersion: data.masterTimingVersion || 1,
+      publicCommentary: Array.isArray(data.publicCommentary)
+        ? data.publicCommentary
+        : [
+            { id: 'context', title: 'Historical Context', content: '', isPublished: true },
+            { id: 'theme', title: 'Thematic Interpretation', content: '', isPublished: true },
+          ],
+      publicSponsorsIntro: data.publicSponsorsIntro || '',
+      publicSponsors: Array.isArray(data.publicSponsors)
+        ? data.publicSponsors.map((s: any, idx: number) => ({ ...s, id: s?.id || `sponsor_${idx}` }))
+        : [],
+      preReleaseAssets: Array.isArray(data.preReleaseAssets)
+        ? data.preReleaseAssets.map((a: any, idx: number) => ({ ...a, id: a?.id || `asset_${idx}_${a?.type || 'item'}` }))
+        : data.preReleaseAssets,
+      publicCredits: data.publicCredits || { artistic: {}, production: {}, visual: {}, literary: {}, rights: {} },
+      lyricsStructure: data.lyricsStructure || {},
+      targetRegions: Array.isArray(data.targetRegions) ? data.targetRegions : [...REGION_CODES],
+      targetDiaspora: Array.isArray(data.targetDiaspora) ? data.targetDiaspora : [...DIASPORA_CODES],
+      targetLanguages: Array.isArray(data.targetLanguages) ? data.targetLanguages : [...LANGUAGE_CODES],
+      sufiConcepts: Array.isArray(data.sufiConcepts) ? data.sufiConcepts : [...SUFI_CONCEPT_CODES],
+      themes: Array.isArray(data.themes) ? data.themes : [...THEME_CODES],
+      moods: Array.isArray(data.moods) ? data.moods : [...MOOD_CODES],
+    };
+
+    const existingBackgroundVocals = String((formData.publicCredits as any)?.artistic?.backgroundVocals || '').trim();
+    if (!existingBackgroundVocals && Array.isArray(data.chorusVocalists) && data.chorusVocalists.length > 0) {
+      formData.publicCredits = {
+        ...(formData.publicCredits || {}),
+        artistic: {
+          ...((formData.publicCredits as any)?.artistic || {}),
+          backgroundVocals: data.chorusVocalists.join(', '),
+        },
+      } as any;
+    }
+
+    return formData;
+  };
 
   // ── Refs ───────────────────────────────────────────────────────────────────
 
@@ -545,51 +599,7 @@ export function useReleaseForm({
       if (res.status === 404) { setNotFound(true); return; }
       if (res.ok) {
         const data = await res.json();
-        const formData = {
-          ...data,
-          subtitleCues: data.subtitleCues || [],
-          subtitleTranslations: data.subtitleTranslations || {},
-          subtitleLanguageStatuses: data.subtitleLanguageStatuses || {},
-          subtitleLanguageAssignments: data.subtitleLanguageAssignments || {},
-          subtitleStylePacks: Object.keys(data.subtitleStylePacks || {}).length
-            ? data.subtitleStylePacks
-            : { [DEFAULT_STYLE_NAME]: { ...DEFAULT_STYLE_PACK } },
-          subtitleReviewLogs: data.subtitleReviewLogs || [],
-          // Studio-approved YouTube caption tracks must not be overwritten by an ordinary CMS Save.
-          youtubeSubtitleAutoSync: data.source === 'studio_pipeline' ? false : data.youtubeSubtitleAutoSync !== false,
-          youtubeCaptionTracks: data.youtubeCaptionTracks || {},
-          contentReadinessState: data.contentReadinessState || 'draft',
-          masterTimingVersion: data.masterTimingVersion || 1,
-          publicCommentary: Array.isArray(data.publicCommentary)
-            ? data.publicCommentary
-            : [
-                { id: 'context', title: 'Historical Context', content: '', isPublished: true },
-                { id: 'theme', title: 'Thematic Interpretation', content: '', isPublished: true },
-              ],
-          publicSponsorsIntro: data.publicSponsorsIntro || '',
-          publicSponsors: Array.isArray(data.publicSponsors) ? data.publicSponsors : [],
-          publicCredits: data.publicCredits || { artistic: {}, production: {}, visual: {}, literary: {}, rights: {} },
-          lyricsStructure: data.lyricsStructure || {},
-          // Initialize absent intelligence categories to all options once.
-          // Explicitly saved arrays, including [], remain untouched on every reload.
-          targetRegions: Array.isArray(data.targetRegions) ? data.targetRegions : [...REGION_CODES],
-          targetDiaspora: Array.isArray(data.targetDiaspora) ? data.targetDiaspora : [...DIASPORA_CODES],
-          targetLanguages: Array.isArray(data.targetLanguages) ? data.targetLanguages : [...LANGUAGE_CODES],
-          sufiConcepts: Array.isArray(data.sufiConcepts) ? data.sufiConcepts : [...SUFI_CONCEPT_CODES],
-          themes: Array.isArray(data.themes) ? data.themes : [...THEME_CODES],
-          moods: Array.isArray(data.moods) ? data.moods : [...MOOD_CODES],
-        };
-
-        const existingBackgroundVocals = String((formData.publicCredits as any)?.artistic?.backgroundVocals || '').trim();
-        if (!existingBackgroundVocals && Array.isArray(data.chorusVocalists) && data.chorusVocalists.length > 0) {
-          formData.publicCredits = {
-            ...(formData.publicCredits || {}),
-            artistic: {
-              ...((formData.publicCredits as any)?.artistic || {}),
-              backgroundVocals: data.chorusVocalists.join(', '),
-            },
-          } as any;
-        }
+        const formData = normalizeReleaseToForm(data);
 
         // Studio-to-CMS contract: populate missing editorial fields from the approved
         // production assets, without overwriting any existing editor choices.
@@ -635,7 +645,7 @@ export function useReleaseForm({
               }
               const currentLyrics = { ...(formData.lyrics || {}) };
               for (const [language, rows] of Object.entries(suggested.tracks || {})) {
-                const existingLyrics = currentLyrics[language];
+                const existingLyrics: any = currentLyrics[language];
                 const hasSavedLyrics = typeof existingLyrics === 'string'
                   ? existingLyrics.trim().length > 0
                   : Array.isArray(existingLyrics) && existingLyrics.length > 0;
@@ -765,9 +775,22 @@ export function useReleaseForm({
        }
     }
     if (name === 'status') {
-      if (value === 'draft') updated.contentReadinessState = 'draft';
-      if (value === 'approved' || value === 'in_review') updated.contentReadinessState = 'editorial_ready';
-      if (value === 'published' && !updated.contentReadinessState) updated.contentReadinessState = 'web_published';
+      if (value === 'draft' || value === 'queued') {
+        updated.contentReadinessState = 'draft';
+        updated.visibility = 'private';
+      } else if (value === 'approved' || value === 'in_review') {
+        updated.contentReadinessState = 'editorial_ready';
+        updated.visibility = 'private';
+      } else if (value === 'unpublished' || value === 'archived') {
+        updated.visibility = 'private';
+      } else if (value === 'published') {
+        if (!updated.contentReadinessState || updated.contentReadinessState === 'draft') {
+          updated.contentReadinessState = 'web_published';
+        }
+        if (form.status !== 'published') {
+          updated.visibility = 'public';
+        }
+      }
     }
     if (name === 'title' && slugAutoGenerated) {
       updated.slug = finalValue.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -903,7 +926,11 @@ export function useReleaseForm({
 
       
         // Title Governance Enforcement
-        let payload = { ...form, chorusVocalists: normalizedChorus };
+        let payload: Record<string, any> = {
+          ...form,
+          chorusVocalists: normalizedChorus,
+          ...(!isNew && originalForm?.updatedAt ? { originalUpdatedAt: originalForm.updatedAt } : {}),
+        };
         const normalizeTitle = (t?: string | null) => (t || '').trim();
         
         if (payload.youtubeTitle) {
@@ -961,9 +988,13 @@ export function useReleaseForm({
           if (typeof window !== 'undefined') localStorage.setItem(CARRY_FORWARD_STORAGE_KEY, JSON.stringify(carryForwardPayload));
         } catch { /* ignore */ }
 
-        setOriginalForm(data);
-        setForm(data); // Ensure current form matches exactly what server returned
-        setSuccessMessage(`Release "${data.title}" saved successfully${data.youtubeSubtitleAutoSync ? ' and synced to YouTube' : ''}`);
+        const hydrated = normalizeReleaseToForm(data);
+        setForm(hydrated);
+        setOriginalForm(structuredClone(hydrated));
+        clearAutosave();
+        setSuccessMessage(
+          `Release "${data.title}" saved successfully (Status: ${hydrated.status}, Visibility: ${hydrated.visibility})${data.youtubeSubtitleAutoSync ? ' and synced to YouTube' : ''}`
+        );
 
         if (data.youtubeSubtitleAutoSync !== false) {
           await syncYouTubeSubtitles({ releaseId: data.id, mode: 'update-changed', silent: true });
@@ -976,8 +1007,30 @@ export function useReleaseForm({
           }, 1500);
         }
       } else {
-        const error = await res.json();
-        setErrorMessage(`Save failed: ${error.error || 'Unknown error'}${error.details ? ' | ' + Object.entries(error.details).filter(([key]) => key !== '_errors').map(([key, item]: [string, any]) => key + ': ' + (item?._errors?.join(', ') || JSON.stringify(item))).slice(0, 8).join(' | ') : ''}`);
+        const error = await res.json().catch(() => ({}));
+        if (error?.details && typeof error.details === 'object') {
+          const serverErrors: Record<string, string> = {};
+          for (const [key, item] of Object.entries(error.details)) {
+            if (key === '_errors') continue;
+            const msg = (item as any)?._errors?.join(', ');
+            if (msg) serverErrors[key] = msg;
+          }
+          if (Object.keys(serverErrors).length > 0) {
+            setFieldErrors((prev) => ({ ...prev, ...serverErrors }));
+          }
+        }
+        setErrorMessage(
+          `Save failed (HTTP ${res.status}): ${error.error || 'Unknown error'}${
+            error.details
+              ? ' | ' +
+                Object.entries(error.details)
+                  .filter(([key]) => key !== '_errors')
+                  .map(([key, item]: [string, any]) => key + ': ' + (item?._errors?.join(', ') || JSON.stringify(item)))
+                  .slice(0, 8)
+                  .join(' | ')
+              : ''
+          }`
+        );
       }
     } catch (error) {
       console.error('Failed to save:', error);
@@ -998,19 +1051,24 @@ export function useReleaseForm({
       const res = await fetch(`/api/releases/${releaseId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          ...(originalForm?.updatedAt ? { originalUpdatedAt: originalForm.updatedAt } : {}),
+        }),
       });
       if (res.ok) {
         const data = await res.json();
-        setOriginalForm(data);
-        setForm(data);
-        setSuccessMessage('Saved.');
+        const hydrated = normalizeReleaseToForm(data);
+        setForm(hydrated);
+        setOriginalForm(structuredClone(hydrated));
+        clearAutosave();
+        setSuccessMessage(`Saved (Status: ${hydrated.status}, Visibility: ${hydrated.visibility}).`);
         if (data.youtubeSubtitleAutoSync !== false) {
           await syncYouTubeSubtitles({ releaseId: data.id, mode: 'update-changed', silent: true });
         }
       } else {
-        const error = await res.json();
-        setErrorMessage(`Save failed: ${error.error || 'Unknown error'}${error.details ? ' | ' + Object.entries(error.details).filter(([key]) => key !== '_errors').map(([key, item]: [string, any]) => key + ': ' + (item?._errors?.join(', ') || JSON.stringify(item))).slice(0, 8).join(' | ') : ''}`);
+        const error = await res.json().catch(() => ({}));
+        setErrorMessage(`Save failed (HTTP ${res.status}): ${error.error || 'Unknown error'}${error.details ? ' | ' + Object.entries(error.details).filter(([key]) => key !== '_errors').map(([key, item]: [string, any]) => key + ': ' + (item?._errors?.join(', ') || JSON.stringify(item))).slice(0, 8).join(' | ') : ''}`);
       }
     } catch (error) {
       setErrorMessage(`Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -1721,7 +1779,9 @@ export function useReleaseForm({
     try {
       const response = await fetch(`/api/releases/${releaseId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ youtubeCaptionTracks: tracks, contentReadinessState: readinessState }) });
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || 'Failed to persist delivery state');
+      if (!response.ok) throw new Error(data?.error || `Failed to persist delivery state (${response.status})`);
+      setForm((prev) => ({ ...prev, updatedAt: data.updatedAt || prev.updatedAt }));
+      setOriginalForm((prev) => prev ? { ...prev, youtubeCaptionTracks: tracks, contentReadinessState: readinessState, updatedAt: data.updatedAt || prev.updatedAt } : prev);
       if (successText) setSuccessMessage(successText);
     } catch (error: any) {
       setErrorMessage(`Delivery state persistence failed: ${error?.message || 'Unknown error'}`);
@@ -1733,17 +1793,68 @@ export function useReleaseForm({
     try {
       const response = await fetch(`/api/releases/${releaseId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || 'Failed to persist release settings');
-      setForm((previous) => ({ ...previous, ...patch }));
+      if (!response.ok) throw new Error(data?.error || `Failed to persist release settings (${response.status})`);
+      setForm((previous) => ({ ...previous, ...patch, updatedAt: data.updatedAt || previous.updatedAt }));
+      setOriginalForm((previous) => previous ? { ...previous, ...patch, updatedAt: data.updatedAt || previous.updatedAt } : previous);
       if (successText) setSuccessMessage(successText);
     } catch (error: any) {
       setErrorMessage(`Failed to persist release settings: ${error?.message || 'Unknown error'}`);
     }
   };
 
+  const runStatusAction = async (action: 'publish' | 'unpublish' | 'archive' | 'restore_draft') => {
+    if (isNew || !releaseId) {
+      setErrorMessage('Save this new release before running publication status actions.');
+      return;
+    }
+    if (statusActionLoading) return;
+    setStatusActionLoading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      const response = await fetch(`/api/releases/${encodeURIComponent(releaseId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${data?.error || 'Failed to update release status'}`);
+      }
+      const updated = normalizeReleaseToForm(data?.release || data);
+      setForm((prev) => ({
+        ...prev,
+        status: updated.status,
+        visibility: updated.visibility,
+        publishedAt: updated.publishedAt,
+        unpublishedAt: updated.unpublishedAt,
+        archivedAt: updated.archivedAt,
+        publicationOverride: updated.publicationOverride,
+        updatedAt: updated.updatedAt,
+      }));
+      setOriginalForm((prev) => prev ? {
+        ...prev,
+        status: updated.status,
+        visibility: updated.visibility,
+        publishedAt: updated.publishedAt,
+        unpublishedAt: updated.unpublishedAt,
+        archivedAt: updated.archivedAt,
+        publicationOverride: updated.publicationOverride,
+        updatedAt: updated.updatedAt,
+      } : updated);
+      setSuccessMessage(
+        `Release status updated — Status: ${updated.status}, Website Visibility: ${updated.visibility}.`
+      );
+    } catch (error: any) {
+      setErrorMessage(`Status update failed: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setStatusActionLoading(false);
+    }
+  };
+
   const toggleWebPublishState = async () => {
-    const nextStatus = form.status === 'published' ? 'unpublished' : 'published';
-    await persistReleasePatch({ status: nextStatus, contentReadinessState: suggestReadinessState({ ...form, status: nextStatus }) }, `Web status set to ${nextStatus}.`);
+    const isCurrentlyPublic = form.status === 'published' && (form.visibility || 'public') === 'public';
+    await runStatusAction(isCurrentlyPublic ? 'unpublish' : 'publish');
   };
 
   const updateReadinessState = async (nextReadiness: ContentReadinessState) => {
@@ -1903,6 +2014,7 @@ export function useReleaseForm({
     saving,
     exportingZip,
     youtubeSyncing,
+    statusActionLoading,
     errorMessage, setErrorMessage,
     successMessage, setSuccessMessage,
     fieldErrors,
@@ -2055,6 +2167,7 @@ export function useReleaseForm({
     suggestReadinessState,
     persistDeliveryTracks,
     persistReleasePatch,
+    runStatusAction,
     toggleWebPublishState,
     updateReadinessState,
     updateTrackMeta,

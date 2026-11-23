@@ -137,9 +137,13 @@ async function verifyRoutes() {
     const rAppToken = await fetchRoute('/applications?token=verify_test');
     record('Route /applications?token=... returns 200', rAppToken.status === 200, `status: ${rAppToken.status}`);
 
-    // 1.3 Footprints Behind public page
+    // 1.3 Footprints Behind is intentionally unpublished/private -> must return 404 publicly
     const rFootprints = await fetchRoute('/release-detail/footprints-behind');
-    record('Route /release-detail/footprints-behind returns 200', rFootprints.status === 200, `status: ${rFootprints.status}`);
+    record('Route /release-detail/footprints-behind returns 404 while unpublished', rFootprints.status === 404, `status: ${rFootprints.status}`);
+
+    // 1.3b Homepage does not render unpublished Footprints Behind
+    const rHome = await fetchRoute('/');
+    record('Route / returns 200 and excludes unpublished footprints-behind', rHome.status === 200 && !rHome.body.includes('footprints-behind'), `status: ${rHome.status}`);
 
     // 1.4 Anonymous Auth me
     const rAuth = await fetchRoute('/api/auth/me');
@@ -171,8 +175,8 @@ function verifyCmsData() {
       record('Footprints Behind draft exists in Volume CMS', !!footprints, `ID: ${footprints?.id}`);
 
       if (footprints) {
-        record('Footprints volume status is published', footprints.status === 'published', `status: ${footprints.status}`);
-        record('Footprints volume visibility is public', footprints.visibility === 'public', `visibility: ${footprints.visibility}`);
+        record('Footprints volume status is unpublished (preserved, not deleted)', footprints.status === 'unpublished', `status: ${footprints.status}`);
+        record('Footprints volume visibility is private', footprints.visibility === 'private', `visibility: ${footprints.visibility}`);
         record('Footprints volume YouTube ID is G595CGkQ4jc', (footprints.youtubeVideoId || footprints.youtubeId) === 'G595CGkQ4jc', `youtube: ${footprints.youtubeVideoId || footprints.youtubeId}`);
       }
     } catch (err: any) {
@@ -194,8 +198,8 @@ function verifyCmsData() {
       record('Footprints Behind exists in Repo Seed catalog', !!seedFootprints, `ID: ${seedFootprints?.id}`);
 
       if (seedFootprints) {
-        record('Footprints seed status is published', seedFootprints.status === 'published', `status: ${seedFootprints.status}`);
-        record('Footprints seed visibility is public', seedFootprints.visibility === 'public', `visibility: ${seedFootprints.visibility}`);
+        record('Footprints seed status is unpublished (preserved, not deleted)', seedFootprints.status === 'unpublished', `status: ${seedFootprints.status}`);
+        record('Footprints seed visibility is private', seedFootprints.visibility === 'private', `visibility: ${seedFootprints.visibility}`);
         record('Footprints seed YouTube ID is G595CGkQ4jc', (seedFootprints.youtubeVideoId || seedFootprints.youtubeId) === 'G595CGkQ4jc', `youtube: ${seedFootprints.youtubeVideoId || seedFootprints.youtubeId}`);
       }
     } catch (err: any) {

@@ -72,8 +72,8 @@ export interface CMSRelease {
   durationFormatted: string;
   viewCount: number;
   likeCount: number;
-  status: 'draft' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
-  contentReadinessState?: 'draft' | 'editorial_ready' | 'web_published' | 'youtube_delivery_in_progress' | 'fully_delivered' | 'delivery_attention_required';
+  status: 'draft' | 'queued' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
+  contentReadinessState?: 'draft' | 'editorial_ready' | 'web_published' | 'published' | 'youtube_delivery_in_progress' | 'fully_delivered' | 'delivery_attention_required';
   category?: string;
   releaseType?: string;
   format?: 'video' | 'audio' | 'short' | 'live' | 'playlist';
@@ -81,6 +81,11 @@ export interface CMSRelease {
   webOnly?: boolean;
   source?: string;
   visibility?: 'public' | 'private' | 'unlisted';
+  unpublishedAt?: string | null;
+  unpublishedBy?: string | null;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
+  publicationOverride?: boolean;
 
   // Premiere Room & Pre-Release Lifecycle fields
   releaseLifecycle?: 'upcoming' | 'teaser_live' | 'premiere_scheduled' | 'released' | 'archived';
@@ -739,10 +744,14 @@ class CMSStorage {
     const release = this.releases.get(id);
     if (!release) return null;
 
+    const now = new Date().toISOString();
     const archived: CMSRelease = {
       ...release,
       status: 'archived',
-      updatedAt: new Date().toISOString()
+      visibility: 'private',
+      archivedAt: now,
+      publicationOverride: true,
+      updatedAt: now
     };
 
     this.releases.set(id, archived);
@@ -755,16 +764,20 @@ class CMSStorage {
     const release = this.releases.get(id);
     if (!release) return null;
 
-    // Enforcement: Official governed releases MUST have a youtubeId to be published
-    if (!release.youtubeId) {
+    const isPremiereAnnouncement = ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(release.releaseLifecycle || '');
+    if (!release.youtubeId && !isPremiereAnnouncement && release.format !== 'audio' && release.format !== 'playlist' && !release.webOnly) {
       throw new Error('Cannot publish an official governed release without a valid YouTube ID.');
     }
 
+    const now = new Date().toISOString();
     const published: CMSRelease = {
       ...release,
       status: 'published',
-      publishedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      visibility: 'public',
+      publishedAt: release.publishedAt || now,
+      unpublishedAt: null,
+      unpublishedBy: null,
+      updatedAt: now
     };
 
     this.releases.set(id, published);
@@ -777,10 +790,14 @@ class CMSStorage {
     const release = this.releases.get(id);
     if (!release) return null;
 
+    const now = new Date().toISOString();
     const unpublished: CMSRelease = {
       ...release,
       status: 'unpublished',
-      updatedAt: new Date().toISOString()
+      visibility: 'private',
+      unpublishedAt: now,
+      publicationOverride: true,
+      updatedAt: now
     };
 
     this.releases.set(id, unpublished);

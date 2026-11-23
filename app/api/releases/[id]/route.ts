@@ -6,20 +6,47 @@ import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { type CMSRelease } from '@/lib/cms-storage';
 import { auditLog } from '@/app/lib/audit-log';
 import { logger } from '@/app/lib/logger';
-import { requireAdmin, getAuthUser } from '@/server/middleware/authenticate';
+import { requireAdmin, getAuthUser, checkIsAdmin } from '@/server/middleware/authenticate';
 import { generateSocialShareKit } from '@/lib/social-share-generator';
 import { applyCanonicalLyricsWorkflow } from '@/server/services/canonical-lyrics-workflow';
 
 
-import { cmsReleaseSchema } from '@/app/lib/validation-schemas';
+import { cmsReleaseSchema, cmsReleaseStatusPatchSchema } from '@/app/lib/validation-schemas';
 
 export const dynamic = 'force-dynamic';
 
 const cacheHeaders = {
-  'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=3600',
+  'Cache-Control': 'public, max-age=0, s-maxage=0, must-revalidate',
+};
+
+const noStoreHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
 };
 
 const apiLogger = logger.api;
+
+function revalidateReleaseCaches(
+  slugs: Array<string | undefined | null>,
+  youtubeIds: Array<string | undefined | null>,
+) {
+  try {
+    revalidatePath('/');
+    revalidatePath('/releases');
+    revalidatePath('/release-premieres');
+    revalidatePath('/sitemap.xml');
+    revalidatePath('/release-detail/[slug]', 'page');
+    for (const s of new Set(slugs.filter(Boolean) as string[])) {
+      revalidatePath(`/release-detail/${s}`);
+    }
+    for (const yt of new Set(youtubeIds.filter(Boolean) as string[])) {
+      revalidatePath(`/release-detail/${yt}`);
+      revalidatePath(`/release-metadata/${yt}`);
+      revalidatePath(`/api/releases/youtube/${yt}`);
+    }
+  } catch (cacheErr) {
+    apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
+  }
+}
 
 /**
  * Normalize snake_case field names from the public page to camelCase
@@ -96,7 +123,7 @@ export async function GET(
     }
 
     const user = await getAuthUser(request);
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = checkIsAdmin(user);
 
     // Senior Logic: Dynamic Thumbnail Backfill
     if (!release.thumbnailUrl && release.youtubeId) {
@@ -105,26 +132,22 @@ export async function GET(
 
     const canonical = toCanonicalCMSRelease(release);
 
-    if (canonical.status !== 'published') {
+    if (canonical.status !== 'published' || canonical.visibility !== 'public') {
       if (!isAdmin) {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Not found' }, { status: 404, headers: noStoreHeaders });
       }
-      return NextResponse.json(canonical, {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
-        }
-      });
+      return NextResponse.json(canonical, { headers: noStoreHeaders });
     }
 
     if (!isAdmin && ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(canonical.releaseLifecycle || '')) {
       if (canonical.visibility !== 'public' || canonical.premiereVisibility !== 'public') {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Not found' }, { status: 404, headers: noStoreHeaders });
       }
       return NextResponse.json(toPublicPremiereRelease(canonical), { headers: cacheHeaders });
     }
 
     if (isAdmin) {
-      return NextResponse.json(canonical, { headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' } });
+      return NextResponse.json(canonical, { headers: noStoreHeaders });
     }
 
     return NextResponse.json(toPublicRelease(canonical), { headers: cacheHeaders });
@@ -193,10 +216,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Do not let a browser tab loaded before a Studio/YouTube reconciliation
     // overwrite the newer public metadata or publication state.
-    if (existing?.source === 'studio_pipeline' && existing.updatedAt && body.updatedAt &&
-        new Date(body.updatedAt).getTime() !== new Date(existing.updatedAt).getTime()) {
-      return NextResponse.json({ error: 'This release changed since the editor was opened. Reload the editor before saving to avoid overwriting the published record.', code: 'STALE_RELEASE' }, { status: 409 });
+    if (
+      existing?.source === 'studio_pipeline' &&
+      existing.updatedAt &&
+      body.originalUpdatedAt &&
+      new Date(body.originalUpdatedAt).getTime() !== new Date(existing.updatedAt).getTime()
+    ) {
+      return NextResponse.json(
+        {
+          error: 'This release changed since the editor was opened. Reload the editor before saving to avoid overwriting the published record.',
+          code: 'STALE_RELEASE',
+        },
+        { status: 409 }
+      );
     }
+    delete body.originalUpdatedAt;
 
     const userId = authResult.id || (authResult as any).email || 'system';
     const studioLocked = existing?.source === 'studio_pipeline' && Boolean(existing?.studioProduction?.approvedAt);
@@ -243,9 +277,39 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Preserve critical fields for existing releases unless explicitly changed and valid
     if (existing) {
-       merged.source = existing.source || merged.source;
-       merged.status = body.status || existing.status;
-       merged.visibility = body.visibility || existing.visibility;
+      merged.source = existing.source || merged.source;
+      merged.status = body.status || existing.status;
+      if (rawBody.visibility !== undefined) {
+        merged.visibility = body.visibility;
+      } else if (body.status && body.status !== existing.status) {
+        if (body.status === 'published') {
+          merged.visibility = 'public';
+        } else {
+          merged.visibility = 'private';
+        }
+      } else {
+        merged.visibility = existing.visibility || (merged.status === 'published' ? 'public' : 'private');
+      }
+    }
+
+    // Lifecycle audit timestamps & override protection
+    if (merged.status === 'unpublished' && existing?.status !== 'unpublished') {
+      merged.unpublishedAt = now;
+      merged.unpublishedBy = userId;
+      merged.publicationOverride = true;
+    } else if (merged.status === 'archived' && existing?.status !== 'archived') {
+      merged.archivedAt = now;
+      merged.archivedBy = userId;
+      merged.publicationOverride = true;
+    } else if (merged.status === 'published') {
+      merged.publishedAt = merged.publishedAt || existing?.publishedAt || now;
+      if (existing?.status === 'unpublished') {
+        merged.unpublishedAt = null;
+        merged.unpublishedBy = null;
+      }
+    }
+    if (merged.status !== 'published' || merged.visibility !== 'public') {
+      merged.publicationOverride = true;
     }
 
     // Run Zod validation schema
@@ -284,32 +348,30 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // --- CACHE INVALIDATION ---
-    try {
-      revalidatePath('/');
-      revalidatePath('/releases');
-      revalidatePath(`/release-detail/${nextSlug}`);
-      // Also revalidate the generic pattern
-      revalidatePath('/release-detail/[slug]', 'page');
-      revalidatePath('/release-premieres');
-    } catch (cacheErr) {
-      apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
-    }
+    revalidateReleaseCaches([existing?.slug, nextSlug], [existing?.youtubeId, nextYoutubeId]);
 
     // Audit log
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
-    apiLogger.info(`Release ${isNew ? 'created' : 'updated'} via PUT: ${id}`, { id, slug: nextSlug });
+    apiLogger.info(`Release ${isNew ? 'created' : 'updated'} via PUT: ${id}`, { id, slug: nextSlug, status: updated.status, visibility: updated.visibility });
     auditLog({
       userId: authResult.id,
       userEmail: authResult.email,
       action: isNew ? 'release_created' : 'release_updated',
       resourceType: 'release',
-      resourceId: id,
-      details: { title: merged.title, slug: nextSlug },
+      resourceId: updated.id,
+      details: {
+        title: merged.title,
+        slug: nextSlug,
+        previousStatus: existing?.status || null,
+        status: updated.status,
+        previousVisibility: existing?.visibility || null,
+        visibility: updated.visibility,
+      },
       ipAddress: ip,
     });
 
-    // Auto-notify subscribers when a release is first published
-    if ((!existing || existing.status !== 'published') && updated.status === 'published' && updated.youtubeId) {
+    // Auto-notify subscribers when a release is first published publicly
+    if ((!existing || existing.status !== 'published') && updated.status === 'published' && updated.visibility === 'public' && updated.youtubeId) {
       const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       fetch(`${base}/api/admin/notify-subscribers`, {
         method: 'POST',
@@ -353,10 +415,187 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    return NextResponse.json(updated);
+    return NextResponse.json(toCanonicalCMSRelease(updated), { headers: noStoreHeaders });
   } catch (error: any) {
     console.error(`[API /api/releases/${id}] PUT ERROR:`, error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// PATCH /api/releases/[id] — Narrowly scoped editorial status & visibility endpoint
+// Preserves all editorial content (title, lyrics, subtitles, credits, commentary, dates, YouTube ID)
+// without requiring full-object submission or risking legacy field validation failures.
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
+  const { id } = await params;
+  try {
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = cmsReleaseStatusPatchSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid status update payload', details: parsed.error.format() },
+        { status: 400 }
+      );
+    }
+
+    let existing = cmsServerStorage.getRelease(id);
+    if (!existing) {
+      existing = cmsServerStorage.getReleaseBySlug(id) || cmsServerStorage.getReleaseByYoutubeId(id);
+    }
+    if (!existing) {
+      return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+    }
+
+    const { action, status: requestedStatus, visibility: requestedVisibility, reason } = parsed.data;
+    const now = new Date().toISOString();
+    const actor = authResult.id || authResult.email || 'admin';
+
+    let nextStatus = existing.status || 'draft';
+    let nextVisibility: 'public' | 'private' | 'unlisted' = existing.visibility || 'public';
+
+    if (action === 'unpublish') {
+      nextStatus = 'unpublished';
+      nextVisibility = requestedVisibility || 'private';
+    } else if (action === 'archive') {
+      nextStatus = 'archived';
+      nextVisibility = requestedVisibility || 'private';
+    } else if (action === 'restore_draft' || action === 'draft') {
+      nextStatus = 'draft';
+      nextVisibility = requestedVisibility || 'private';
+    } else if (action === 'queue') {
+      nextStatus = 'queued';
+      nextVisibility = requestedVisibility || 'private';
+    } else if (action === 'in_review') {
+      nextStatus = 'in_review';
+      nextVisibility = requestedVisibility || 'private';
+    } else if (action === 'approve') {
+      nextStatus = 'approved';
+      nextVisibility = requestedVisibility || 'private';
+    } else if (action === 'publish') {
+      nextStatus = 'published';
+      nextVisibility = requestedVisibility || 'public';
+    } else if (action === 'set_visibility') {
+      nextStatus = requestedStatus || existing.status || 'draft';
+      nextVisibility = requestedVisibility || existing.visibility || 'private';
+    } else {
+      if (requestedStatus) {
+        nextStatus = requestedStatus;
+        if (requestedVisibility) {
+          nextVisibility = requestedVisibility;
+        } else if (requestedStatus === 'published') {
+          nextVisibility = 'public';
+        } else {
+          nextVisibility = 'private';
+        }
+      } else if (requestedVisibility) {
+        nextVisibility = requestedVisibility;
+      }
+    }
+
+    // Server-side publish readiness validation
+    if (nextStatus === 'published') {
+      if (!String(existing.title || '').trim() || String(existing.title || '').trim().length < 3) {
+        return NextResponse.json({ error: 'Cannot publish release: a valid title (at least 3 characters) is required.' }, { status: 400 });
+      }
+      if (!String(existing.slug || '').trim() || String(existing.slug || '').trim().length < 3) {
+        return NextResponse.json({ error: 'Cannot publish release: a valid URL slug is required.' }, { status: 400 });
+      }
+      const isPremiereAnnouncement = ['upcoming', 'teaser_live', 'premiere_scheduled'].includes(existing.releaseLifecycle || '');
+      if (!existing.youtubeId && !isPremiereAnnouncement && existing.format !== 'audio' && existing.format !== 'playlist' && !existing.webOnly) {
+        return NextResponse.json(
+          { error: 'Cannot publish release: a valid YouTube video ID is required unless in Premiere announcement or audio/playlist mode.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const patched: CMSRelease = {
+      ...existing,
+      status: nextStatus,
+      visibility: nextVisibility,
+      updatedAt: now,
+      publicationOverride: true,
+    };
+
+    if (nextStatus === 'unpublished') {
+      patched.unpublishedAt = now;
+      patched.unpublishedBy = actor;
+    } else if (nextStatus === 'archived') {
+      patched.archivedAt = now;
+      patched.archivedBy = actor;
+    } else if (nextStatus === 'published') {
+      patched.publishedAt = existing.publishedAt || now;
+      patched.unpublishedAt = null;
+      patched.unpublishedBy = null;
+      if ((!existing.socialShareKit) && existing.youtubeId) {
+        patched.socialShareKit = generateSocialShareKit(patched as any);
+      }
+    }
+
+    const updated = cmsServerStorage.saveRelease(patched);
+
+    // --- Postgres Replication ---
+    if (process.env.RELEASE_STORAGE_BACKEND === 'postgres') {
+      try {
+        const { PostgresReleaseRepository } = await import('@/server/db/release-repository');
+        const repo = new PostgresReleaseRepository();
+        await repo.bulkUpsert([updated as any]);
+      } catch (err) {
+        cmsServerStorage.saveRelease(existing);
+        apiLogger.error('Postgres replication failed during PATCH, rolled back registry', { err: String(err) });
+        throw new Error('Postgres replication failed: ' + String(err));
+      }
+    }
+
+    revalidateReleaseCaches([existing.slug, updated.slug], [existing.youtubeId, updated.youtubeId]);
+
+    const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
+    apiLogger.info(`Release status patched via PATCH: ${existing.id}`, {
+      id: existing.id,
+      slug: updated.slug,
+      action: action || 'direct_patch',
+      previousStatus: existing.status,
+      status: updated.status,
+      previousVisibility: existing.visibility,
+      visibility: updated.visibility,
+    });
+    const auditAction =
+      action === 'publish'
+        ? 'release_published'
+        : action === 'unpublish'
+          ? 'release_unpublished'
+          : action === 'archive'
+            ? 'release_archived'
+            : action === 'restore_draft'
+              ? 'release_restored_draft'
+              : action === 'set_visibility'
+                ? 'release_visibility_changed'
+                : 'release_updated';
+
+    auditLog({
+      userId: authResult.id,
+      userEmail: authResult.email,
+      action: auditAction,
+      resourceType: 'release',
+      resourceId: existing.id,
+      details: {
+        title: updated.title,
+        slug: updated.slug,
+        previousStatus: existing.status,
+        status: updated.status,
+        previousVisibility: existing.visibility || 'public',
+        visibility: updated.visibility,
+        reason: reason || null,
+      },
+      ipAddress: ip,
+    });
+
+    return NextResponse.json(toCanonicalCMSRelease(updated), { headers: noStoreHeaders });
+  } catch (error: any) {
+    console.error(`[API /api/releases/${id}] PATCH ERROR:`, error);
+    return NextResponse.json({ error: error.message || 'Status update failed' }, { status: 500 });
   }
 }
 
@@ -389,15 +628,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     // --- CACHE INVALIDATION ---
-    try {
-      revalidatePath('/');
-      revalidatePath('/releases');
-      revalidatePath('/release-premieres');
-      if (existing.slug) revalidatePath(`/release-detail/${existing.slug}`);
-      revalidatePath('/release-detail/[slug]', 'page');
-    } catch (cacheErr) {
-      apiLogger.warn('Cache revalidation failed', { err: String(cacheErr) });
-    }
+    revalidateReleaseCaches([existing.slug], [existing.youtubeId]);
 
     // Audit log
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';

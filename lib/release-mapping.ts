@@ -6,23 +6,23 @@ export function initializeCanonicalTitle(youtubeTitle: string): string {
   if (!youtubeTitle || !youtubeTitle.trim()) {
     throw new Error('Release validation failed: Missing canonical title');
   }
-  
+
   // 1. Normalize whitespace
   let title = youtubeTitle.replace(/\s+/g, ' ').trim();
-  
+
   // 2. Remove exact terminal channel branding
   if (title.endsWith(' | SufiPulse USA')) {
     title = title.replace(' | SufiPulse USA', '');
   }
-  
+
   // 3. Take leading identity segment before first spaced pipe separator
   const parts = title.split(' | ');
   const finalTitle = parts[0].trim();
-  
+
   if (!finalTitle) {
     throw new Error('Release validation failed: Missing canonical title after normalization');
   }
-  
+
   return finalTitle;
 }
 
@@ -37,7 +37,7 @@ export const slugify = (value: string): string => {
 
 export const buildUniqueSlug = (title: string, youtubeId: string, currentReleaseId?: string): string => {
   const base = slugify(title);
-  
+
   // 1. Try base slug
   const byBase = cmsServerStorage.getReleaseBySlug(base);
   if (!byBase || byBase.id === currentReleaseId) {
@@ -58,22 +58,25 @@ export const buildUniqueSlug = (title: string, youtubeId: string, currentRelease
 export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, resolution?: 'youtube' | 'cms'): CMSRelease => {
   const liveTitle = video.title || video.snippet?.title || '';
   const liveDescription = video.description || video.snippet?.description || '';
-  
+
   let titleOverride: boolean = !!existing?.titleOverride;
-    let descriptionOverride: boolean = !!existing?.descriptionOverride;
-  
+  let descriptionOverride: boolean = !!existing?.descriptionOverride;
+
   // If resolution is used from the UI (legacy, or if they force 'youtube')
-  if (resolution === 'youtube') { titleOverride = false; descriptionOverride = false; }
-  
+  if (resolution === 'youtube') {
+    titleOverride = false;
+    descriptionOverride = false;
+  }
+
   const finalCanonicalTitle = existing?.canonicalTitle || existing?.title || initializeCanonicalTitle(liveTitle);
   const finalTitle = existing?.title || finalCanonicalTitle;
-  
+
   const finalDescriptionText = descriptionOverride ? (existing?.description || liveDescription) : liveDescription;
 
   const id = existing?.id || `release_${Date.now()}_${video.id}`;
   const slug = existing?.slug || buildUniqueSlug(finalTitle, video.id, existing?.id);
   const now = new Date().toISOString();
-  
+
   const thumbnailUrl = video.thumbnailUrl || video.snippet?.thumbnails?.maxres?.url || video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || '';
   const durationFormatted = video.durationFormatted || '0:00';
   const durationSeconds = Number(video.durationSeconds || 0);
@@ -105,6 +108,13 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     liveBroadcastContent: video.liveBroadcastContent || video.snippet?.liveBroadcastContent || 'none',
   };
 
+  // Editorial status & visibility authority:
+  // If an existing CMS record exists, ALWAYS preserve its editorial status, visibility, and lifecycle timestamps.
+  const preservedStatus = existing ? existing.status : 'published';
+  const preservedVisibility = existing
+    ? (existing.visibility || (existing.status === 'published' ? 'public' : 'private'))
+    : 'public';
+
   return {
     ...(existing || {}),
     youtubeCategory: video.categoryId ? { id: video.categoryId, name: video.categoryName } : existing?.youtubeCategory,
@@ -118,7 +128,7 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     releaseDate: existing?.releaseDate || (publishedAt ? publishedAt.slice(0, 10) : undefined),
     publishedAt: existing?.publishedAt || publishedAt,
     defaultAudioLanguage: video.defaultAudioLanguage ?? existing?.defaultAudioLanguage,
-    
+
     youtubeCaptionTracks: (() => {
       const tracks = { ...(existing?.youtubeCaptionTracks || {}) };
       if (video.captionTracks) {
@@ -143,14 +153,14 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     slug,
     youtubeId: video.id,
     youtubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
-    
+
     // Title Governance
     titleOverride,
     titleOverrideAt: existing?.titleOverrideAt || null,
     titleOverrideBy: existing?.titleOverrideBy || null,
-      descriptionOverride,
-      descriptionOverrideAt: existing?.descriptionOverrideAt || null,
-      descriptionOverrideBy: existing?.descriptionOverrideBy || null,
+    descriptionOverride,
+    descriptionOverrideAt: existing?.descriptionOverrideAt || null,
+    descriptionOverrideBy: existing?.descriptionOverrideBy || null,
     title: finalTitle,
     canonicalTitle: finalCanonicalTitle,
     canonicalStatus: existing?.canonicalStatus || (existing ? 'verified' : 'inferred'),
@@ -167,25 +177,30 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
     })(),
     thumbnailUrl: existing?.canonicalThumbnail || existing?.thumbnailUrl || thumbnailUrl,
     canonicalThumbnail: existing?.canonicalThumbnail || existing?.thumbnailUrl || thumbnailUrl,
-    
+
     // YouTube distribution packaging
     youtubeTitle: liveTitle,
     youtubeThumbnailUrl: thumbnailUrl,
     youtubeDescription: liveDescription,
-    
+
     metadataStatus: titleOverride ? 'overridden' : 'synced',
     description: finalDescriptionText,
-    
+
     viewCount: youtubeStats.viewCount,
     likeCount: youtubeStats.likeCount,
     durationSeconds: youtubeStats.durationSeconds,
     durationFormatted: youtubeStats.duration,
-    
+
     youtubeStats,
     lastYoutubeSyncAt: now,
 
-    status: existing?.status || 'published',
-    visibility: existing?.visibility || 'public',
+    status: preservedStatus,
+    visibility: preservedVisibility,
+    unpublishedAt: existing?.unpublishedAt ?? null,
+    unpublishedBy: existing?.unpublishedBy ?? null,
+    archivedAt: existing?.archivedAt ?? null,
+    archivedBy: existing?.archivedBy ?? null,
+    publicationOverride: existing?.publicationOverride ?? false,
     source: existing?.source || 'youtube',
     releaseType,
     format: (() => {
@@ -196,12 +211,12 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
       return existing?.format || video.format || 'video';
     })(),
     formatClassificationSource: video.formatClassificationSource === 'youtube_analytics' ? 'youtube_analytics' : (existing?.formatClassificationSource || video.formatClassificationSource || 'inferred'),
-    
+
     availableLanguages: existing?.availableLanguages || ['en', 'ur'],
     defaultLanguage: existing?.defaultLanguage || 'en',
     createdAt: existing?.createdAt || now,
     updatedAt: now,
-    
+
     enableLyrics: existing?.enableLyrics || false,
     enableCommentary: existing?.enableCommentary !== false,
     enableSponsors: !!existing?.enableSponsors,
@@ -224,49 +239,60 @@ export const mapVideoToRelease = (video: any, existing?: CMSRelease | null, reso
 };
 
 export const mapPlaylistToRelease = (playlist: any, existing?: CMSRelease | null): CMSRelease => {
-    const slug = existing?.slug || slugify(playlist.title);
-    const id = existing?.id || `playlist_${Date.now()}_${playlist.id}`;
-    const now = new Date().toISOString();
+  const slug = existing?.slug || slugify(playlist.title);
+  const id = existing?.id || `playlist_${Date.now()}_${playlist.id}`;
+  const now = new Date().toISOString();
 
-    return {
-        ...(existing || {}),
-        id,
-        title: existing?.title || playlist.title,
-        slug,
-        youtubeId: '',
-        youtubePlaylistId: playlist.id,
-        youtubeUrl: `https://www.youtube.com/playlist?list=${playlist.id}`,
-        thumbnailUrl: existing?.thumbnailUrl || playlist.thumbnailUrl,
-        description: existing?.description || playlist.description || '',
-        releaseDate: (playlist.publishedDate || now).slice(0, 10),
-        durationSeconds: 0,
-        durationFormatted: '—',
-        viewCount: existing?.viewCount || 0,
-        likeCount: existing?.likeCount || 0,
-        status: existing?.status || 'published',
-        format: 'playlist',
-        availableLanguages: existing?.availableLanguages || ['en', 'ur'],
-        defaultLanguage: existing?.defaultLanguage || 'en',
-        createdAt: existing?.createdAt || now,
-        updatedAt: now,
-        enableLyrics: existing?.enableLyrics || false,
-        enableCommentary: existing?.enableCommentary !== false,
-        enableSponsors: !!existing?.enableSponsors,
-        enableAdoption: existing?.enableAdoption !== false,
-        enableCredits: existing?.enableCredits !== false,
-        distribution: existing?.distribution || getDefaultDistribution(),
+  const preservedStatus = existing ? existing.status : 'published';
+  const preservedVisibility = existing
+    ? (existing.visibility || (existing.status === 'published' ? 'public' : 'private'))
+    : 'public';
 
-        // Release Intelligence fields protected from YouTube Sync overwrites
-        targetRegions: existing?.targetRegions,
-        targetDiaspora: existing?.targetDiaspora,
-        targetLanguages: existing?.targetLanguages,
-        sufiConcepts: existing?.sufiConcepts,
-        themes: existing?.themes,
-        moods: existing?.moods,
-        seoKeywords: existing?.seoKeywords,
-        relatedReleases: existing?.relatedReleases,
-        relatedPlaylists: existing?.relatedPlaylists,
-        intelligenceStatus: existing?.intelligenceStatus,
-        intelligenceUpdatedAt: existing?.intelligenceUpdatedAt,
-    } as CMSRelease;
+  return {
+    ...(existing || {}),
+    id,
+    title: existing?.title || playlist.title,
+    slug,
+    youtubeId: '',
+    youtubePlaylistId: playlist.id,
+    youtubeUrl: `https://www.youtube.com/playlist?list=${playlist.id}`,
+    thumbnailUrl: existing?.thumbnailUrl || playlist.thumbnailUrl,
+    description: existing?.description || playlist.description || '',
+    releaseDate: existing?.releaseDate || (playlist.publishedDate || now).slice(0, 10),
+    durationSeconds: 0,
+    durationFormatted: '—',
+    viewCount: existing?.viewCount || 0,
+    likeCount: existing?.likeCount || 0,
+    status: preservedStatus,
+    visibility: preservedVisibility,
+    unpublishedAt: existing?.unpublishedAt ?? null,
+    unpublishedBy: existing?.unpublishedBy ?? null,
+    archivedAt: existing?.archivedAt ?? null,
+    archivedBy: existing?.archivedBy ?? null,
+    publicationOverride: existing?.publicationOverride ?? false,
+    format: 'playlist',
+    availableLanguages: existing?.availableLanguages || ['en', 'ur'],
+    defaultLanguage: existing?.defaultLanguage || 'en',
+    createdAt: existing?.createdAt || now,
+    updatedAt: now,
+    enableLyrics: existing?.enableLyrics || false,
+    enableCommentary: existing?.enableCommentary !== false,
+    enableSponsors: !!existing?.enableSponsors,
+    enableAdoption: existing?.enableAdoption !== false,
+    enableCredits: existing?.enableCredits !== false,
+    distribution: existing?.distribution || getDefaultDistribution(),
+
+    // Release Intelligence fields protected from YouTube Sync overwrites
+    targetRegions: existing?.targetRegions,
+    targetDiaspora: existing?.targetDiaspora,
+    targetLanguages: existing?.targetLanguages,
+    sufiConcepts: existing?.sufiConcepts,
+    themes: existing?.themes,
+    moods: existing?.moods,
+    seoKeywords: existing?.seoKeywords,
+    relatedReleases: existing?.relatedReleases,
+    relatedPlaylists: existing?.relatedPlaylists,
+    intelligenceStatus: existing?.intelligenceStatus,
+    intelligenceUpdatedAt: existing?.intelligenceUpdatedAt,
+  } as CMSRelease;
 };

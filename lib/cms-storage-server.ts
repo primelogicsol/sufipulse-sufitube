@@ -266,7 +266,12 @@ export const cmsServerStorage = {
 
   getPublishedReleases(limit?: number): CMSRelease[] {
     ensureHydrated();
-    return cmsStorage.getPublishedReleases(limit);
+    return cmsStorage.getPublicReleases(limit);
+  },
+
+  getPublicReleases(limit?: number): CMSRelease[] {
+    ensureHydrated();
+    return cmsStorage.getPublicReleases(limit);
   },
 
   saveRelease(release: CMSRelease): CMSRelease {

@@ -195,8 +195,8 @@ export function BasicInfoSection({
             <label className="block text-sm font-medium" style={{color: 'var(--dash-text-primary)'}}>
               Description
             </label>
-            <span className="text-xs" style={{color: (form.description || '').length > 500 ? 'var(--dash-status-pending)' : 'var(--dash-text-muted)'}}>
-              {(form.description || '').length} / 600
+            <span className="text-xs" style={{color: (form.description || '').length > 9000 ? 'var(--dash-status-pending)' : 'var(--dash-text-muted)'}}>
+              {(form.description || '').length} / 10,000
             </span>
           </div>
           <textarea
@@ -204,7 +204,7 @@ export function BasicInfoSection({
             value={form.description || ''}
             onChange={handleInputChange}
             rows={4}
-            maxLength={600}
+            maxLength={10000}
             className="form-input w-full"
             placeholder="Public-facing summary: theme, message, lyrical or spiritual context of the release"
           />
@@ -227,7 +227,7 @@ export function BasicInfoSection({
             </div>
           )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
               Release Date
@@ -255,7 +255,7 @@ export function BasicInfoSection({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
-              Status
+              CMS Workflow Status
             </label>
             <select
               ref={fieldRefs.status as any}
@@ -265,6 +265,7 @@ export function BasicInfoSection({
               className="form-input w-full"
             >
               <option value="draft">Draft</option>
+              <option value="queued">Queued</option>
               <option value="in_review">In Review</option>
               <option value="approved">Approved</option>
               <option value="published">Published</option>
@@ -272,7 +273,24 @@ export function BasicInfoSection({
               <option value="archived">Archived</option>
             </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{color: 'var(--dash-text-primary)'}}>
+              Public Website Visibility
+            </label>
+            <select
+              name="visibility"
+              value={form.visibility || (form.status === 'published' ? 'public' : 'private')}
+              onChange={handleInputChange}
+              className="form-input w-full"
+            >
+              <option value="public">Public (Visible when Published)</option>
+              <option value="private">Private (Hidden from Public Site)</option>
+            </select>
+          </div>
         </div>
+        <p className="text-xs" style={{color: 'var(--dash-text-muted)'}}>
+          Public access on SufiPulse.com requires both <strong>Status = Published</strong> and <strong>Visibility = Public</strong>. Changing website visibility does not alter YouTube video privacy.
+        </p>
       </div>
     </div>
   );

@@ -79,6 +79,7 @@ export default function EditReleasePage() {
     saving,
     exportingZip,
     youtubeSyncing,
+    statusActionLoading,
     errorMessage, setErrorMessage,
     successMessage, setSuccessMessage,
     fieldErrors,
@@ -182,6 +183,7 @@ export default function EditReleasePage() {
     getSubtitleExportLanguages,
     getTrackMeta,
     toggleWebPublishState,
+    runStatusAction,
     updateReadinessState,
     updateTrackMeta,
     markManualDeliveryState,
@@ -1234,9 +1236,11 @@ export default function EditReleasePage() {
                 subtitleExportLanguages={subtitleExportLanguages}
                 exportingZip={exportingZip}
                 youtubeSyncing={youtubeSyncing}
+                statusActionLoading={statusActionLoading}
                 youtubeIntegrationStatus={youtubeIntegrationStatus}
                 getTrackMeta={getTrackMeta}
                 toggleWebPublishState={toggleWebPublishState}
+                runStatusAction={runStatusAction}
                 openPublicReleasePreview={openPublicReleasePreview}
                 updateReadinessState={updateReadinessState}
                 setForm={setForm}

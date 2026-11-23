@@ -4,68 +4,30 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import { getAllReleases, publishRelease, unpublishRelease, archiveRelease } from '@/lib/cms-api';
+import { getAllReleases, setReleaseState } from '@/lib/cms-api';
 import type { Release } from '@/lib/cms-types';
-import { Plus, Edit3, Eye, Trash2, Archive, Check, X } from 'lucide-react';
+import { Plus, Edit3, Check, Save, RotateCcw, ExternalLink } from 'lucide-react';
+
+type ReleaseStatus = Release['status'];
+
+const STATUS_OPTIONS: Array<{ value: ReleaseStatus; label: string }> = [
+  { value: 'published', label: 'Published (Public)' },
+  { value: 'unpublished', label: 'Unpublished (Private)' },
+  { value: 'draft', label: 'Draft (Private)' },
+  { value: 'queued', label: 'Queued (Private)' },
+  { value: 'in_review', label: 'In Review (Private)' },
+  { value: 'approved', label: 'Approved (Private)' },
+  { value: 'archived', label: 'Archived (Private)' },
+];
 
 export default function ReleasesPage() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-
-  useEffect(() => {
-    loadReleases();
-  }, [selectedStatus]);
-
-  async function loadReleases() {
-    try {
-      setLoading(true);
-      const filters = selectedStatus !== 'all' ? { status: selectedStatus as any } : undefined;
-      const data = await getAllReleases(filters);
-      setReleases(data || []);
-    } catch (error) {
-      console.error('Error loading releases:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handlePublish(id: string) {
-    try {
-      await publishRelease(id);
-      loadReleases();
-    } catch (error) {
-      console.error('Error publishing:', error);
-    }
-  }
-
-  async function handleUnpublish(id: string) {
-    try {
-      await unpublishRelease(id);
-      loadReleases();
-    } catch (error) {
-      console.error('Error unpublishing:', error);
-    }
-  }
-
-  async function handleArchive(id: string) {
-    try {
-      await archiveRelease(id);
-      loadReleases();
-    } catch (error) {
-      console.error('Error archiving:', error);
-    }
-  }
-
-  const statusColors: Record<string, string> = {
-    'draft': 'bg-slate-50 border-slate-200',
-    'in_review': 'bg-blue-50 border-blue-200',
-    'approved': 'bg-green-50 border-green-200',
-    'published': 'bg-emerald-50 border-emerald-200',
-    'unpublished': 'bg-orange-50 border-orange-200',
-    'archived': 'bg-gray-50 border-gray-200'
-  };
-
+  const [pendingStatusById, setPendingStatusById] = useState<Record<string, ReleaseStatus>>({});
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const [rowUndo, setRowUndo] = useState<Record<string, Array<{ status: ReleaseStatus; visibility: 'public' | 'private' | 'unlisted' }>>>({});
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{
     fetched: number;
@@ -76,6 +38,73 @@ export default function ReleasesPage() {
     newestPublishedAt?: string;
   } | null>(null);
 
+  useEffect(() => {
+    void loadReleases();
+  }, [selectedStatus]);
+
+  async function loadReleases() {
+    try {
+      setLoading(true);
+      const filters = selectedStatus !== 'all' ? { status: selectedStatus } : undefined;
+      const data = await getAllReleases(filters);
+      setReleases(data || []);
+    } catch (error) {
+      console.error('Error loading releases:', error);
+      setFeedback({ type: 'error', message: 'Failed to load releases.' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function persistStatus(release: Release, nextStatus: ReleaseStatus, isUndo = false, explicitVis?: 'public' | 'private' | 'unlisted') {
+    const prevStatus = release.status;
+    const prevVis = release.visibility || (release.status === 'published' ? 'public' : 'private');
+    const targetVis = explicitVis ?? (nextStatus === 'published' ? 'public' : 'private');
+
+    setSavingIds((prev) => new Set(prev).add(release.id));
+    setFeedback(null);
+    try {
+      const updated = await setReleaseState(release.id, nextStatus, targetVis);
+      setPendingStatusById((prev) => {
+        const next = { ...prev };
+        delete next[release.id];
+        return next;
+      });
+      if (!isUndo && prevStatus !== updated.status) {
+        setRowUndo((prev) => ({
+          ...prev,
+          [release.id]: [{ status: prevStatus, visibility: prevVis }, ...(prev[release.id] || [])].slice(0, 15),
+        }));
+      }
+      setReleases((prev) => {
+        if (selectedStatus !== 'all' && updated.status !== selectedStatus) {
+          return prev.filter((r) => r.id !== release.id);
+        }
+        return prev.map((r) => (r.id === release.id ? { ...r, ...updated } : r));
+      });
+      setFeedback({
+        type: 'success',
+        message: `${isUndo ? 'Undone' : 'Saved'}: "${release.title}" → ${updated.status.toUpperCase()} (${updated.visibility || targetVis}).`,
+      });
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: `Failed to update "${release.title}": ${err?.message || 'Error'}` });
+    } finally {
+      setSavingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(release.id);
+        return next;
+      });
+    }
+  }
+
+  async function handleUndoRow(release: Release) {
+    const stack = rowUndo[release.id] || [];
+    if (!stack.length) return;
+    const [prev, ...rest] = stack;
+    setRowUndo((curr) => ({ ...curr, [release.id]: rest }));
+    await persistStatus(release, prev.status, true, prev.visibility);
+  }
+
   async function handleSync() {
     setSyncing(true);
     setSyncResult(null);
@@ -83,24 +112,24 @@ export default function ReleasesPage() {
       const res = await fetch('/api/releases/import-youtube', { method: 'POST' });
       if (!res.ok) throw new Error('Sync failed');
       const data = await res.json();
-      
+
       const items = data.items || [];
       const updated = items.filter((r: any) => r.updatedAt !== r.createdAt).length;
       const created = items.length - updated;
-      
+
       setSyncResult({
         fetched: data.importedCount || items.length,
         created,
         updated,
         total: items.length,
         newestTitle: items[0]?.title,
-        newestPublishedAt: items[0]?.publishedAt || items[0]?.releaseDate
+        newestPublishedAt: items[0]?.publishedAt || items[0]?.releaseDate,
       });
-      
-      loadReleases();
+
+      void loadReleases();
     } catch (error) {
       console.error('Error syncing:', error);
-      alert('Failed to sync with YouTube');
+      setFeedback({ type: 'error', message: 'Failed to sync with YouTube.' });
     } finally {
       setSyncing(false);
     }
@@ -108,37 +137,46 @@ export default function ReleasesPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto" style={{background: 'var(--dash-bg-primary)', color: 'var(--dash-text-primary)', padding: '2rem'}}>
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold" style={{color: 'var(--dash-text-primary)'}}>Release Management</h1>
+      <div className="max-w-7xl mx-auto" style={{ background: 'var(--dash-bg-primary)', color: 'var(--dash-text-primary)', padding: '2rem' }}>
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--dash-text-primary)' }}>Release Management</h1>
           <div className="flex gap-4">
             <button
-              onClick={handleSync}
+              onClick={() => void handleSync()}
               disabled={syncing}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition disabled:opacity-50"
               style={{
                 backgroundColor: 'var(--dash-bg-secondary)',
                 color: 'var(--dash-text-primary)',
                 border: '1px solid var(--dash-border)',
-                cursor: syncing ? 'not-allowed' : 'pointer'
+                cursor: syncing ? 'not-allowed' : 'pointer',
               }}
             >
               <Check size={20} className={syncing ? 'animate-spin' : ''} />
               {syncing ? 'Syncing...' : 'Sync Latest Videos'}
             </button>
             <Link
-              href="/admin/cms/releases/new/edit"
+              href="/admin/cms-releases/new"
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition"
-              style={{
-                backgroundColor: 'var(--dash-accent)',
-                color: '#000',
-                textDecoration: 'none'
-              }}
+              style={{ backgroundColor: 'var(--dash-accent)', color: '#000', textDecoration: 'none' }}
             >
               <Plus size={20} /> New Release
             </Link>
           </div>
         </div>
+
+        {feedback && (
+          <div
+            role="alert"
+            className={`mb-6 p-3.5 rounded-lg text-sm border ${
+              feedback.type === 'error'
+                ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+            }`}
+          >
+            {feedback.message}
+          </div>
+        )}
 
         {syncResult && (
           <div className="mb-8 p-6 rounded-lg border" style={{ backgroundColor: 'var(--dash-bg-secondary)', borderColor: 'var(--dash-accent-muted)' }}>
@@ -161,150 +199,148 @@ export default function ReleasesPage() {
                 <p className="text-xl font-bold">{syncResult.total}</p>
               </div>
             </div>
-            {syncResult.newestTitle && (
-              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--dash-border)' }}>
-                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>LATEST SYNCED</p>
-                <p className="font-bold">{syncResult.newestTitle}</p>
-                <p className="text-xs" style={{ color: 'var(--dash-text-secondary)' }}>{new Date(syncResult.newestPublishedAt!).toLocaleDateString()}</p>
-              </div>
-            )}
           </div>
         )}
 
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2" style={{borderBottom: '1px solid var(--dash-border)'}}>
-          {['all', 'draft', 'in_review', 'approved', 'published', 'archived'].map((status) => (
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2" style={{ borderBottom: '1px solid var(--dash-border)' }}>
+          {['all', 'published', 'unpublished', 'draft', 'queued', 'in_review', 'approved', 'archived'].map((status) => (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
               className="px-4 py-2 rounded-none font-semibold transition whitespace-nowrap"
               style={{
-                backgroundColor: selectedStatus === status ? 'transparent' : 'transparent',
+                backgroundColor: 'transparent',
                 color: selectedStatus === status ? 'var(--dash-accent)' : 'var(--dash-text-secondary)',
                 borderBottom: selectedStatus === status ? '3px solid var(--dash-accent)' : 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
-              {status === 'in_review' ? 'In Review' : status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+              {status === 'in_review' ? 'In Review' : status.charAt(0).toUpperCase() + status.slice(1)}
             </button>
           ))}
         </div>
 
-        <div className="rounded-lg overflow-hidden" style={{backgroundColor: 'var(--dash-bg-secondary)', border: '1px solid var(--dash-border)'}}>
+        <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--dash-bg-secondary)', border: '1px solid var(--dash-border)' }}>
           {loading ? (
             <div className="p-12 text-center">
-              <div className="w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4" style={{borderColor: 'var(--dash-border)', borderTopColor: 'var(--dash-accent)'}}></div>
-              <p style={{color: 'var(--dash-text-secondary)'}}>Loading releases...</p>
+              <div className="w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4" style={{ borderColor: 'var(--dash-border)', borderTopColor: 'var(--dash-accent)' }} />
+              <p style={{ color: 'var(--dash-text-secondary)' }}>Loading releases...</p>
             </div>
           ) : releases.length === 0 ? (
             <div className="p-12 text-center">
-              <p style={{color: 'var(--dash-text-secondary)'}}>No releases found</p>
+              <p style={{ color: 'var(--dash-text-secondary)' }}>No releases found</p>
             </div>
           ) : (
-            <div style={{borderTop: '1px solid var(--dash-border)'}}>
-              {releases.map((release) => (
-                <div
-                  key={release.id}
-                  className="p-6 border-l-4 transition"
-                  style={{
-                    borderLeft: '4px solid var(--dash-accent)',
-                    borderBottom: '1px solid var(--dash-border)',
-                    backgroundColor: 'var(--dash-bg-secondary)',
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold" style={{color: 'var(--dash-text-primary)'}}>{release.title}</h3>
-                      <p style={{color: 'var(--dash-text-secondary)', fontSize: '0.875rem'}}>/{release.slug}</p>
-                      {release.description && (
-                        <p style={{color: 'var(--dash-text-secondary)', marginTop: '0.5rem'}} className="line-clamp-2">{release.description}</p>
+            <div style={{ borderTop: '1px solid var(--dash-border)' }}>
+              {releases.map((release) => {
+                const staged = pendingStatusById[release.id];
+                const currentSelection = staged ?? release.status;
+                const hasStaged = staged !== undefined && staged !== release.status;
+                const isSaving = savingIds.has(release.id);
+                const isLive = release.status === 'published' && (release.visibility || 'public') === 'public';
+                const undoItems = rowUndo[release.id] || [];
+
+                return (
+                  <div
+                    key={release.id}
+                    className="p-6 border-l-4 transition"
+                    style={{
+                      borderLeft: '4px solid var(--dash-accent)',
+                      borderBottom: '1px solid var(--dash-border)',
+                      backgroundColor: 'var(--dash-bg-secondary)',
+                    }}
+                  >
+                    <div className="flex flex-wrap justify-between items-start gap-3 mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold" style={{ color: 'var(--dash-text-primary)' }}>{release.title}</h3>
+                        <p style={{ color: 'var(--dash-text-secondary)', fontSize: '0.875rem' }}>/{release.slug}</p>
+                        {release.description && (
+                          <p style={{ color: 'var(--dash-text-secondary)', marginTop: '0.5rem' }} className="line-clamp-2">{release.description}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--dash-accent-muted)', color: 'var(--dash-accent)' }}>
+                          {release.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                        <span className={`px-2.5 py-1 rounded text-xs font-semibold ${isLive ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40' : 'bg-neutral-800 text-neutral-400 border border-neutral-700'}`}>
+                          {isLive ? 'Live on Public Site' : 'Hidden from Public'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 items-center justify-end pt-2 border-t border-white/5">
+                      <select
+                        value={currentSelection}
+                        disabled={isSaving}
+                        onChange={(e) => {
+                          const next = e.target.value as ReleaseStatus;
+                          setPendingStatusById((prev) => {
+                            const copy = { ...prev };
+                            if (next === release.status) delete copy[release.id];
+                            else copy[release.id] = next;
+                            return copy;
+                          });
+                        }}
+                        className="form-input py-1.5 px-3 text-xs rounded-lg"
+                      >
+                        {STATUS_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+
+                      {hasStaged && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={isSaving}
+                            onClick={() => void persistStatus(release, staged)}
+                            className="dashboard-btn-primary px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                          >
+                            <Save size={14} /> {isSaving ? 'Saving...' : 'Save'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isSaving}
+                            onClick={() => setPendingStatusById((prev) => { const c = { ...prev }; delete c[release.id]; return c; })}
+                            className="dashboard-btn-secondary px-3 py-2 rounded-lg text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </>
                       )}
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{backgroundColor: 'var(--dash-accent-muted)', color: 'var(--dash-accent)'}}>
-                      {release.status.replace('_', ' ').toUpperCase()}
-                    </span>
-                  </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
-                    <div>
-                      <p style={{color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600'}}>DURATION</p>
-                      <p style={{color: 'var(--dash-text-primary)'}}>{release.duration_formatted || '—'}</p>
-                    </div>
-                    <div>
-                      <p style={{color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600'}}>VIEWS</p>
-                      <p style={{color: 'var(--dash-text-primary)'}}>{release.view_count.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p style={{color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600'}}>CATEGORY</p>
-                      <p style={{color: 'var(--dash-text-primary)'}}>{release.category || '—'}</p>
-                    </div>
-                    <div>
-                      <p style={{color: 'var(--dash-text-muted)', fontSize: '0.75rem', fontWeight: '600'}}>RELEASED</p>
-                      <p style={{color: 'var(--dash-text-primary)'}}>
-                        {release.release_date ? new Date(release.release_date).toLocaleDateString() : '—'}
-                      </p>
-                    </div>
-                  </div>
+                      {!hasStaged && undoItems.length > 0 && (
+                        <button
+                          type="button"
+                          disabled={isSaving}
+                          onClick={() => void handleUndoRow(release)}
+                          className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/40 text-amber-200 hover:bg-amber-500/25"
+                        >
+                          <RotateCcw size={14} /> Undo ({undoItems[0].status})
+                        </button>
+                      )}
 
-                  <div className="flex flex-wrap gap-2 justify-end">
-                    <Link
-                      href={`/admin/cms/releases/${release.id}/edit`}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
-                      style={{
-                        backgroundColor: 'var(--dash-bg-hover)',
-                        color: 'var(--dash-text-secondary)',
-                        textDecoration: 'none'
-                      }}
-                    >
-                      <Edit3 size={16} /> Edit
-                    </Link>
+                      {isLive && (
+                        <a
+                          href={`/release-detail/${release.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold dashboard-btn-secondary"
+                        >
+                          <ExternalLink size={14} /> View Live
+                        </a>
+                      )}
 
-                    {release.status !== 'published' && (
-                      <button
-                        onClick={() => handlePublish(release.id)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
-                        style={{
-                          backgroundColor: 'var(--dash-status-approved-bg)',
-                          color: 'var(--dash-status-approved)',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
+                      <Link
+                        href={`/admin/cms-releases/${release.id}`}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold dashboard-btn-secondary"
                       >
-                        <Check size={16} /> Publish
-                      </button>
-                    )}
-
-                    {release.status === 'published' && (
-                      <button
-                        onClick={() => handleUnpublish(release.id)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
-                        style={{
-                          backgroundColor: 'var(--dash-status-pending-bg)',
-                          color: 'var(--dash-status-pending)',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <X size={16} /> Unpublish
-                      </button>
-                    )}
-
-                    {release.status !== 'archived' && (
-                      <button
-                        onClick={() => handleArchive(release.id)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition"
-                        style={{
-                          backgroundColor: 'var(--dash-status-draft-bg)',
-                          color: 'var(--dash-status-draft)',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Archive size={16} /> Archive
-                      </button>
-                    )}
+                        <Edit3 size={14} /> Full Editor
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

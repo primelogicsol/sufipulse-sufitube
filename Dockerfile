@@ -79,10 +79,10 @@ COPY --from=builder --chown=node:node /app/scripts/sync-cms-releases.js ./script
 COPY --from=builder --chown=node:node /app/scripts/migrate.js ./scripts/migrate.js
 COPY --from=builder --chown=node:node /app/scripts/validate-env.mjs ./scripts/validate-env.mjs
 COPY --from=builder --chown=node:node /app/server/db/migrations ./server/db/migrations
-# Knowledge registry — version-controlled public reference data.
-# This file is committed to git and must be present in the image so the
-# deploy pipeline can sync it into the persistent volume on each release.
+# Knowledge registry & YouTube Studio Geography — version-controlled public reference data.
+# Committed to git and copied into the image so the deploy pipeline syncs them into the persistent volume.
 COPY --from=builder --chown=node:node /app/.data/knowledge-registry.json ./.data/knowledge-registry.json
+COPY --from=builder --chown=node:node /app/.data/youtube-studio-geography.json ./.data/youtube-studio-geography.json
 
 # Switch to non-root user
 USER node

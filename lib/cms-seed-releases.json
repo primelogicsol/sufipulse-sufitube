@@ -15964,8 +15964,8 @@
     "durationFormatted": "15:55",
     "viewCount": 0,
     "likeCount": 0,
-    "status": "published",
-    "visibility": "public",
+    "status": "unpublished",
+    "visibility": "private",
     "format": "video",
     "source": "studio_pipeline",
     "contentReadinessState": "published",
@@ -16034,7 +16034,7 @@
     "enableAdoption": false,
     "enableCredits": true,
     "createdAt": "2026-11-15T18:00:13.350Z",
-    "updatedAt": "2026-11-17T14:22:13.901Z",
+    "updatedAt": "2026-11-23T21:31:01.832Z",
     "studioProduction": {
       "draftId": "draft_1794752884539_0eb391d5",
       "format": "lyric_master",
@@ -16138,6 +16138,9 @@
     ],
     "publishedAt": "2026-11-17T16:14:38.492Z",
     "writer": "Dr. Zarf-e-Noori",
-    "vocalist": "SufiPulse Vocal Ensemble"
+    "vocalist": "SufiPulse Vocal Ensemble",
+    "unpublishedAt": "2026-11-23T21:31:00.012Z",
+    "unpublishedBy": "1785047409044-jc5kaobzu",
+    "publicationOverride": true
   }
 ]

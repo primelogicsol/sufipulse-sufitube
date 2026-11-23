@@ -23,7 +23,7 @@ export async function GET(
 
     const releases = graphResolver.getReleasesForRegistry(slug, 'region');
     const publicReleases = releases
-      .filter(r => r.status === 'published')
+      .filter(r => r.status === 'published' && r.visibility === 'public')
       .map(r => ({
         id: r.id,
         slug: r.slug,

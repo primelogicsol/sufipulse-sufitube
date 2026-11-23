@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease, toPublicRelease } from '@/server/storage/release-dto';
 
-const PUBLIC_CACHE = 'public, s-maxage=300, stale-while-revalidate=3600';
+const PUBLIC_CACHE = 'public, max-age=0, s-maxage=0, must-revalidate';
 
 export async function GET(
   _request: Request,

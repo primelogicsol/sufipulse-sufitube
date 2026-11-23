@@ -136,7 +136,7 @@ export function resolveFlagshipRelease(releases: any[]): any {
  * Used to strictly partition homepage sections.
  */
 export function isPremiereRoomRelease(r: any): boolean {
-  if (r.status === 'draft' || r.status === 'archived' || r.visibility === 'private' || r.visibility === 'internal') return false;
+  if (!r || r.status !== 'published' || r.visibility === 'private' || r.visibility === 'internal' || r.visibility === 'unlisted') return false;
 
   if (r.premiereEnabled && ['coming_soon', 'scheduled', 'live'].includes(r.premiereStatus)) {
     return true;

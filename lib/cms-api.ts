@@ -71,12 +71,14 @@ type CanonicalStorageEntry = [string, Record<string, any>];
 
 const mapAnyToRelease = (value: any): cms.Release => {
   const status = String(value?.status || 'draft') as cms.Release['status'];
+  const visibility = (value?.visibility || (status === 'published' ? 'public' : 'private')) as cms.Release['visibility'];
   return {
     id: String(value?.id || `${Date.now()}`),
     title: String(value?.title || 'Untitled'),
     subtitle: value?.subtitle,
     slug: String(value?.slug || `release-${Date.now()}`),
     status,
+    visibility,
     content_readiness_state: value?.content_readiness_state || value?.contentReadinessState,
     category: value?.category,
     release_type: value?.release_type || value?.releaseType,
@@ -173,6 +175,7 @@ const mapReleaseToApiPayload = (release: Partial<cms.Release>): Record<string, a
   if (release.subtitle !== undefined) payload.subtitle = release.subtitle;
   if (release.slug !== undefined) payload.slug = release.slug;
   if (release.status !== undefined) payload.status = release.status;
+  if (release.visibility !== undefined) payload.visibility = release.visibility;
   if (release.content_readiness_state !== undefined) payload.contentReadinessState = release.content_readiness_state;
   if (release.category !== undefined) payload.category = release.category;
   if (release.release_type !== undefined) payload.releaseType = release.release_type;
@@ -321,13 +324,13 @@ export async function getAllReleases(
   ensureCanonicalReleaseMigration();
 
   try {
-    const statusParam = filters?.status && filters.status !== 'all' ? `?status=${encodeURIComponent(filters.status)}` : '';
-    const response = await fetch(`/api/releases${statusParam}`);
+    const statusParam = filters?.status && filters.status !== 'all' ? `?status=${encodeURIComponent(filters.status)}&refresh=1` : '?refresh=1';
+    const response = await fetch(`/api/releases${statusParam}`, { cache: 'no-store' });
     if (!response.ok) {
       throw new Error(`Failed to fetch releases (${response.status})`);
     }
     const data = await response.json();
-    const apiRows = Array.isArray(data) ? data : [];
+    const apiRows = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
     const mapped = stripDemo(apiRows.map(mapAnyToRelease));
 
     for (const row of mapped) {
@@ -426,12 +429,12 @@ export async function updateRelease(id: string, updates: Partial<cms.Release>): 
     const response = await fetch(`/api/releases/${encodeURIComponent(id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mapReleaseToApiPayload({ ...updates, updated_at: new Date().toISOString() })),
+      body: JSON.stringify(mapReleaseToApiPayload(updates)),
     });
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data?.error || 'Error updating release');
+      throw new Error(data?.error || `Error updating release (${response.status})`);
     }
 
     const mapped = mapAnyToRelease(data);
@@ -441,6 +444,32 @@ export async function updateRelease(id: string, updates: Partial<cms.Release>): 
     console.error('Error updating release:', error);
     throw error;
   }
+}
+
+export async function patchReleaseStatus(
+  id: string,
+  payload: {
+    action?: 'publish' | 'unpublish' | 'draft' | 'queue' | 'in_review' | 'approve' | 'archive' | 'restore_draft' | 'set_visibility' | 'set_status';
+    status?: cms.Release['status'];
+    visibility?: 'public' | 'private' | 'unlisted';
+    reason?: string;
+  }
+): Promise<cms.Release> {
+  const response = await fetch(`/api/releases/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || `Failed to update release status (${response.status})`);
+  }
+
+  const releasePayload = data?.release || data;
+  const mapped = mapAnyToRelease(releasePayload);
+  upsertCanonicalMirror(mapped);
+  return mapped;
 }
 
 export async function deleteRelease(id: string): Promise<void> {
@@ -462,23 +491,31 @@ export async function deleteRelease(id: string): Promise<void> {
 }
 
 export async function publishRelease(id: string): Promise<cms.Release> {
-  return updateRelease(id, {
-    status: 'published',
-    published_at: new Date().toISOString(),
-  });
+  return patchReleaseStatus(id, { action: 'publish' });
 }
 
 export async function unpublishRelease(id: string): Promise<cms.Release> {
-  return updateRelease(id, {
-    status: 'unpublished',
-    unpublished_at: new Date().toISOString(),
-  });
+  return patchReleaseStatus(id, { action: 'unpublish' });
 }
 
 export async function archiveRelease(id: string): Promise<cms.Release> {
-  return updateRelease(id, {
-    status: 'archived',
-    archived_at: new Date().toISOString(),
+  return patchReleaseStatus(id, { action: 'archive' });
+}
+
+export async function restoreDraftRelease(id: string): Promise<cms.Release> {
+  return patchReleaseStatus(id, { action: 'restore_draft' });
+}
+
+export async function setReleaseState(
+  id: string,
+  status: cms.Release['status'],
+  visibility?: 'public' | 'private' | 'unlisted'
+): Promise<cms.Release> {
+  const resolvedVisibility = visibility ?? (status === 'published' ? 'public' : 'private');
+  return patchReleaseStatus(id, {
+    action: 'set_status',
+    status,
+    visibility: resolvedVisibility,
   });
 }
 

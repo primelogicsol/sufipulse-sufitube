@@ -122,19 +122,40 @@ function syncCmsReleases() {
       addedCount++;
       console.log(`  ➕ ADDED new release: "${seedRel.title}" (ID: ${seedRel.id}, Slug: ${seedRel.slug})`);
     } else {
-      // Release already exists in volume -> Update publication status if seed is published
+      // Release already exists in volume -> Reconcile publication status safely
       const existing = mergedReleases[existingIdx];
       let modified = false;
 
-      // If seed is published and public, ensure volume reflects this publication status
-      if (seedRel.status === 'published' && existing.status !== 'published') {
-        existing.status = 'published';
+      const seedTime = new Date(seedRel.updatedAt || seedRel.createdAt || 0).getTime();
+      const existingTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+
+      if (seedTime > existingTime) {
+        // Repo seed has a newer explicit editorial decision (e.g., unpublish/visibility update)
+        if (seedRel.status && existing.status !== seedRel.status) {
+          existing.status = seedRel.status;
+          modified = true;
+        }
+        if (seedRel.visibility && existing.visibility !== seedRel.visibility) {
+          existing.visibility = seedRel.visibility;
+          modified = true;
+        }
+        if (seedRel.unpublishedAt !== undefined) existing.unpublishedAt = seedRel.unpublishedAt;
+        if (seedRel.archivedAt !== undefined) existing.archivedAt = seedRel.archivedAt;
+        if (seedRel.publicationOverride !== undefined) existing.publicationOverride = seedRel.publicationOverride;
+        existing.updatedAt = seedRel.updatedAt;
         modified = true;
+      } else if (!existing.publicationOverride && existingTime === 0) {
+        // Legacy record with no runtime override or timestamp
+        if (seedRel.status === 'published' && existing.status !== 'published') {
+          existing.status = 'published';
+          modified = true;
+        }
+        if (seedRel.visibility === 'public' && existing.visibility !== 'public') {
+          existing.visibility = 'public';
+          modified = true;
+        }
       }
-      if (seedRel.visibility === 'public' && existing.visibility !== 'public') {
-        existing.visibility = 'public';
-        modified = true;
-      }
+
       // Ensure canonical video ID is synchronized if missing
       const seedYt = seedRel.youtubeVideoId || seedRel.youtubeId;
       const existingYt = existing.youtubeVideoId || existing.youtubeId;
@@ -146,7 +167,7 @@ function syncCmsReleases() {
 
       if (modified) {
         updatedCount++;
-        console.log(`  🔄 UPDATED publication fields for: "${existing.title}" (ID: ${existing.id})`);
+        console.log(`  🔄 UPDATED publication fields for: "${existing.title}" (ID: ${existing.id}, status=${existing.status}, visibility=${existing.visibility})`);
       }
     }
   }

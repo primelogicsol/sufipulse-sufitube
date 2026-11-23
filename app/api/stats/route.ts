@@ -4,7 +4,7 @@ import { entityGetAll } from '@/lib/entity-storage-server';
 
 export async function GET() {
   try {
-    const releases = cmsServerStorage.getAllReleases({ status: 'published' });
+    const releases = cmsServerStorage.getPublicReleases();
     const writers = entityGetAll('writers');
     const partnerships = entityGetAll('partnerships');
     const storageInfo = cmsServerStorage.getInfo();

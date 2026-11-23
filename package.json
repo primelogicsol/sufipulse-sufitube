@@ -25,6 +25,8 @@
     "seed:export": "node scripts/export-seed.js",
     "seed:export:dry": "node scripts/export-seed.js --dry-run",
     "suno:connect": "node scripts/connect-suno.cjs",
+    "geography:import": "npx tsx scripts/import-youtube-geography.ts",
+    "test:geography": "npx tsx scripts/test-youtube-geography.ts",
     "verify:deploy": "npx tsx scripts/pre-deploy-verify.ts"
   },
   "dependencies": {

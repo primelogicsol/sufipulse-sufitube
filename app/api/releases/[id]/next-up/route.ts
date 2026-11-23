@@ -1,15 +1,23 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { CMSRelease, getWriterDisplayName, getVocalistDisplayName } from '@/lib/cms-storage';
+import { getAuthUser, checkIsAdmin } from '@/server/middleware/authenticate';
+import { toCanonicalCMSRelease, toPublicRelease } from '@/server/storage/release-dto';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params;
-  const currentRelease = cmsServerStorage.getRelease(params.id);
+  const currentRelease = cmsServerStorage.getRelease(params.id) || cmsServerStorage.getReleaseBySlug(params.id);
   if (!currentRelease) {
     return NextResponse.json({ error: 'Release not found' }, { status: 404 });
+  }
+
+  const user = await getAuthUser(request);
+  const isAdmin = checkIsAdmin(user);
+  if (!isAdmin && (currentRelease.status !== 'published' || (currentRelease.visibility || 'public') !== 'public')) {
+    return NextResponse.json({ error: 'Release not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
   }
 
   const allReleases = cmsServerStorage.getPublishedReleases();
@@ -69,5 +77,7 @@ export async function GET(
     .sort((a, b) => b.score - a.score);
 
   const next = scored[0] || null;
-  return NextResponse.json(next);
+  return NextResponse.json(next ? toPublicRelease(toCanonicalCMSRelease(next)) : null, {
+    headers: { 'Cache-Control': 'public, max-age=0, s-maxage=0, must-revalidate' },
+  });
 }
