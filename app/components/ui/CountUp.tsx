@@ -4,12 +4,13 @@ import React, { useEffect, useRef, useState } from 'react';
 interface CountUpProps {
   target: number;
   suffix?: string;
+  decimals?: number;
   duration?: number; // ms
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function CountUp({ target, suffix = '', duration = 1400, className, style }: CountUpProps) {
+export function CountUp({ target, suffix = '', decimals = 0, duration = 1400, className, style }: CountUpProps) {
   // Initialize with the real target value so SSR renders the correct count.
   // The animation still runs client-side (0 → target) once the element enters
   // the viewport. Non-JS crawlers and SSR always see the honest catalog count.
@@ -42,8 +43,9 @@ export function CountUp({ target, suffix = '', duration = 1400, className, style
             
             // ease-out expo
             const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            const rawValue = startValue + (target - startValue) * eased;
             
-            setDisplay(Math.round(startValue + (target - startValue) * eased));
+            setDisplay(decimals > 0 ? Number(rawValue.toFixed(decimals)) : Math.round(rawValue));
             
             if (progress < 1) {
               requestAnimationFrame(tick);
@@ -57,11 +59,13 @@ export function CountUp({ target, suffix = '', duration = 1400, className, style
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [target, duration]);
+  }, [target, decimals, duration]);
+
+  const formatted = decimals > 0 ? display.toFixed(decimals) : String(Math.round(display));
 
   return (
     <span ref={ref} className={className} style={style}>
-      {display}{suffix}
+      {formatted}{suffix}
     </span>
   );
 }

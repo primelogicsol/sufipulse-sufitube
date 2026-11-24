@@ -76,36 +76,41 @@ export function HeroSection({ kpiStats }: HeroSectionProps) {
 
             {/* KPI Counter Strip */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 pt-10 border-t border-[var(--color-border-strong)] bg-[var(--color-midnight)]/60 rounded-2xl p-6 backdrop-blur-md shadow-2xl border border-white/5">
-              <div>
-                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)]">
-                  <CountUp target={kpiStats.releases} suffix="+" style={{ color: 'var(--color-gold)' }} />
+              <Link href="/releases" className="group block">
+                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform tabular-nums">
+                  <CountUp target={kpiStats.releases} style={{ color: 'var(--color-gold)' }} />
                 </div>
-                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold">
-                  Releases
+                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold group-hover:text-amber-400 transition-colors">
+                  Published Releases
                 </div>
-              </div>
+              </Link>
 
-              <div>
-                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)]">
-                  <CountUp target={kpiStats.writers} suffix="+" style={{ color: 'var(--color-gold)' }} />
+              <Link href="/literary-journal" className="group block">
+                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform tabular-nums">
+                  <CountUp target={kpiStats.writers} style={{ color: 'var(--color-gold)' }} />
                 </div>
-                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold">
+                <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold group-hover:text-amber-400 transition-colors">
                   Active Writers
                 </div>
-              </div>
+              </Link>
 
-              <Link href="/releases#global-reach-index" className="group block">
-                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform">
-                  <CountUp target={Math.max(1, Math.round((kpiStats.globalReachImpressions || 1048614) / 1000000))} suffix="M+" style={{ color: 'var(--color-gold)' }} />
+              <Link href="#global-reach-index" className="group block">
+                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform tabular-nums">
+                  <CountUp
+                    target={Number(((kpiStats.globalReachImpressions || 1048614) / 1_000_000).toFixed(2))}
+                    decimals={2}
+                    suffix="M"
+                    style={{ color: 'var(--color-gold)' }}
+                  />
                 </div>
                 <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold group-hover:text-amber-400 transition-colors">
                   Global Reach Index
                 </div>
               </Link>
 
-              <Link href="/releases#global-reach-index" className="group block">
-                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform">
-                  <CountUp target={kpiStats.countriesCount || 55} suffix="+" style={{ color: 'var(--color-gold)' }} />
+              <Link href="#global-reach-index" className="group block">
+                <div className="text-[var(--text-2xl)] md:text-[var(--text-3xl)] font-bold mb-1 text-[var(--color-gold)] group-hover:scale-105 transition-transform tabular-nums">
+                  <CountUp target={kpiStats.countriesCount || 55} style={{ color: 'var(--color-gold)' }} />
                 </div>
                 <div className="text-[10px] md:text-[var(--text-xs)] text-[var(--color-text-tertiary)] uppercase tracking-widest font-semibold group-hover:text-amber-400 transition-colors">
                   Countries Reached

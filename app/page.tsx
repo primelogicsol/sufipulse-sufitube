@@ -19,6 +19,8 @@ import { PremiereRoomHomeSection } from './components/home/PremiereRoomHomeSecti
 import { HomeMusicDiscoveryStrip } from './components/home/HomeMusicDiscoveryStrip';
 import { HomeGlobalReachSection } from './components/home/HomeGlobalReachSection';
 import { globalReachGrowthEngine } from '@/lib/global-reach-growth-engine';
+import { youtubeAnalyticsService } from '@/lib/youtube-analytics-service';
+import { syncYouTubeReachReports } from '@/lib/youtube-reach-reports';
 
 export const metadata: Metadata = {
   title: {
@@ -69,17 +71,68 @@ export default async function Home() {
   const writers = entityGetAll('writers');
   const partnerships = entityGetAll('partnerships');
 
-  const verifiedBaseline = {
+  let verifiedMetrics = {
     impressions: 994300,
     views: 160611,
     watchHours: 10410,
     geographies: 53,
   };
-  const reachIndex = globalReachGrowthEngine.getPublicPayload(verifiedBaseline);
+  try {
+    const [analytics, reach] = await Promise.all([
+      youtubeAnalyticsService.getLifetimeGlobalReachAnalytics(false),
+      syncYouTubeReachReports(false),
+    ]);
+    const liveImpressions =
+      reach.verifiedLifetimeImpressions ??
+      analytics.lifetimeSnapshot.performance.impressions ??
+      994300;
+    verifiedMetrics = {
+      impressions: liveImpressions || 994300,
+      views: analytics.lifetimeSnapshot.performance.views || 160611,
+      watchHours: analytics.lifetimeSnapshot.performance.watchTimeHours || 10410,
+      geographies: analytics.lifetimeSnapshot.geographies.totalCountries || 53,
+    };
+  } catch {
+    // Preserve verified snapshot fallback if YouTube Analytics service is temporarily unavailable
+  }
+  const reachIndex = globalReachGrowthEngine.getPublicPayload(verifiedMetrics);
+
+  // Deduplicated active writers across approved Kalam Writers registry, Ahl-e-Tahreer Literary Journal, and published CMS release credits
+  const GENERIC_WRITER_CREDITS = new Set([
+    'traditional sacred kalam',
+    'sufipulse editorial',
+    'ahl-e-tahreer archive',
+    'unknown',
+  ]);
+  const activeWriterNames = new Set<string>();
+  const addWriterCredit = (raw: unknown) => {
+    if (typeof raw !== 'string') return;
+    raw
+      .split(/[,&/]|feat\.|ft\./i)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 1 && !s.startsWith('writers_') && !GENERIC_WRITER_CREDITS.has(s.toLowerCase()))
+      .forEach((s) => activeWriterNames.add(s.toLowerCase()));
+  };
+
+  if (Array.isArray(writers)) {
+    for (const w of writers as any[]) {
+      if (w?.contributor_status === 'REJECTED' || w?.profile_status === 'rejected') continue;
+      addWriterCredit(w?.public_name || w?.public_credit || w?.name || w?.full_name);
+    }
+  }
+  for (const article of literaryArticles) {
+    addWriterCredit(article.author_name);
+  }
+  for (const r of rawReleases as any[]) {
+    const rawWriter = typeof r?.writer === 'string'
+      ? resolveContributorPublicName(r.writer, r.writer)
+      : (r?.writer?.public_name || r?.writer?.name || '');
+    addWriterCredit(rawWriter);
+  }
 
   const kpiStats = {
-    releases: Array.isArray(rawReleases) && rawReleases.length > 0 ? rawReleases.length : 91,
-    writers: Array.isArray(writers) && writers.length > 0 ? writers.length : literaryArticles.length,
+    releases: Array.isArray(rawReleases) ? rawReleases.length : 0,
+    writers: activeWriterNames.size,
     institutions: Array.isArray(partnerships) && partnerships.length > 0 ? partnerships.length : 4,
     globalReachImpressions: reachIndex.combinedIndex.impressions,
     countriesCount: reachIndex.combinedIndex.geographies,

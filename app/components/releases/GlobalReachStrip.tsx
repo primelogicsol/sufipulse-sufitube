@@ -9,7 +9,7 @@ import GlobalAudienceByCountrySection from "./GlobalAudienceByCountrySection";
 
 function fmt(n: number | null | undefined): string {
   if (n === null || n === undefined) return "—";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
@@ -313,7 +313,7 @@ function GlobalReachIndexCard({
   if (!index.enabled) return null;
 
   return (
-    <div className="mb-6 bg-gradient-to-r from-amber-950/20 via-neutral-900/40 to-neutral-900/20 border border-amber-400/30 rounded-xl p-5 shadow-lg shadow-black/20">
+    <div id="global-reach-index" className="mb-6 bg-gradient-to-r from-amber-950/20 via-neutral-900/40 to-neutral-900/20 border border-amber-400/30 rounded-xl p-5 shadow-lg shadow-black/20">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-amber-400/10 pb-3">
         <div className="flex items-center gap-2.5">
           <span className="p-1.5 rounded-lg bg-amber-400/10 text-amber-400 border border-amber-400/20">
