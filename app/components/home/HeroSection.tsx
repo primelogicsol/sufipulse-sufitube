@@ -55,7 +55,14 @@ export function HeroSection({ kpiStats }: HeroSectionProps) {
             </p>
 
             <p className="text-xs sm:text-sm text-[var(--color-text-tertiary)] max-w-3xl mx-auto mb-10 leading-relaxed tracking-wide">
-              The House of Sacred Word, Voice and Stewardship · Managed by Dr. Kumar Foundation USA
+              <Link href="/official-identity" className="hover:text-[var(--color-gold)] transition-colors">
+                Canonical Home of SufiPulse (Sufi Pulse) · SufiPulse USA · SufiPulse Studio USA
+              </Link>{' '}
+              ·{' '}
+              <Link href="/sufitube" className="hover:text-[var(--color-gold)] transition-colors">
+                SufiTube (Sufi Tube)
+              </Link>{' '}
+              · Managed by Dr. Kumar Foundation USA
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">

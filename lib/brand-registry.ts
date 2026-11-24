@@ -154,10 +154,10 @@ class BrandRegistryManager {
       case 'sufipulse':
         return {
           id: 'sufipulse',
-          name: 'SufiPulse',
+          name: 'SufiPulse (Sufi Pulse)',
           type: 'master_brand',
           url: CANONICAL_ORIGIN,
-          description: 'Central custodian ecosystem entity representing institutional Sufi music archiving.',
+          description: 'Institutional & creative media identity representing SufiPulse (and spaced search designation Sufi Pulse) at SufiPulse.com.',
           status: 'verified',
         };
       case 'sufipulse-com':
@@ -166,7 +166,7 @@ class BrandRegistryManager {
           name: 'SufiPulse.com',
           type: 'website',
           url: CANONICAL_ORIGIN,
-          description: 'Central semantic knowledge registry website and release catalog hub.',
+          description: 'Authoritative canonical website, release provenance registry, and knowledge hub for SufiPulse.',
           status: 'verified',
         };
       case 'sufipulse-usa':
@@ -175,25 +175,25 @@ class BrandRegistryManager {
           name: 'SufiPulse USA',
           type: 'youtube_channel',
           url: 'https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ',
-          description: 'Official YouTube primary full-length music release archive channel.',
+          description: 'Official public music & distribution identity and primary YouTube channel (@SufiPulse-USA).',
           status: 'verified',
         };
       case 'sufipulse-studio':
         return {
           id: 'sufipulse-studio',
-          name: 'SufiPulse Studio',
+          name: 'SufiPulse Studio USA',
           type: 'production_brand',
           url: `${CANONICAL_ORIGIN}/studio`,
-          description: 'Central recording, mastering, and production workflow label.',
+          description: 'Production & creative studio identity responsible for authorized SufiPulse recordings and release materials.',
           status: 'verified',
         };
       case 'sufitube':
         return {
           id: 'sufitube',
-          name: 'SufiTube',
+          name: 'SufiTube (Sufi Tube)',
           type: 'media_brand',
           url: `${CANONICAL_ORIGIN}/sufitube`,
-          description: 'Official audiovisual publishing identity of SufiPulse USA.',
+          description: 'Official video & sacred-media publishing identity (SufiTube / Sufi Tube) of SufiPulse USA.',
           status: 'verified',
         };
       case 'sufipulse-records':

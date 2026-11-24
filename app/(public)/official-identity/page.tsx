@@ -17,19 +17,32 @@ import {
   FileText,
   MessageSquare,
   Archive,
+  Search,
+  Video,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Official Identity | SufiPulse USA',
+  title: 'Official Identity — SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA & SufiTube',
   description:
-    'Verify the official identity, channels, releases, institutional relationships and public media properties of SufiPulse, SufiPulse USA and SufiPulse Studio USA.',
+    'Canonical brand and institutional verification at SufiPulse.com for SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube).',
+  keywords: [
+    'SufiPulse',
+    'Sufi Pulse',
+    'SufiPulse.com',
+    'SufiPulse USA',
+    'SufiPulse Studio USA',
+    'SufiTube',
+    'Sufi Tube',
+    'SufiPulse official website',
+    'Sufi Pulse official',
+  ],
   alternates: {
     canonical: 'https://sufipulse.com/official-identity',
   },
   openGraph: {
-    title: 'Official Identity | SufiPulse USA',
+    title: 'Official Identity — SufiPulse (Sufi Pulse), SufiPulse USA & SufiTube',
     description:
-      'The authoritative reference for SufiPulse identity, affiliation, channels, releases and institutional verification.',
+      'The authoritative reference at SufiPulse.com for SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube).',
     url: 'https://sufipulse.com/official-identity',
     siteName: 'SufiPulse',
     type: 'website',
@@ -38,13 +51,14 @@ export const metadata: Metadata = {
 
 const webPageSchema = {
   '@context': 'https://schema.org',
-  '@type': 'WebPage',
+  '@type': 'AboutPage',
   '@id': 'https://sufipulse.com/official-identity#webpage',
   url: 'https://sufipulse.com/official-identity',
-  name: 'Official Identity | SufiPulse USA',
+  name: 'Official Identity — SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA & SufiTube',
   description:
-    'The authoritative reference for SufiPulse identity, affiliation, channels, releases and institutional verification.',
+    'The authoritative canonical identity registry at SufiPulse.com defining SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube).',
   isPartOf: { '@type': 'WebSite', '@id': 'https://sufipulse.com/#website' },
+  mainEntity: { '@type': 'Organization', '@id': 'https://sufipulse.com/#organization' },
   about: { '@type': 'Organization', '@id': 'https://sufipulse.com/#organization' },
   breadcrumb: {
     '@type': 'BreadcrumbList',
@@ -145,7 +159,7 @@ export default function OfficialIdentityPage() {
             <div className="grid grid-cols-4 divide-x divide-white/10 py-6">
               <div className="px-6">
                 <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">1. CANONICAL IDENTITY</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">SufiPulse, SufiPulse USA and SufiPulse Studio USA — defined and authenticated here.</p>
+                <p className="text-neutral-400 text-sm leading-relaxed">SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA and SufiTube (Sufi Tube) — defined and authenticated here.</p>
               </div>
               <div className="px-6">
                 <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">2. OFFICIAL CHANNELS</h4>
@@ -174,14 +188,21 @@ export default function OfficialIdentityPage() {
               subtitle="SufiPulse is an institutional and creative media identity developed for the creation, documentation, interpretation, production and public presentation of contemporary Sufi-inspired music, kalam, poetry and associated cultural discourse."
             />
             {/* Inline cards — icon components rendered server-side, no prop crossing RSC boundary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
                   icon: <Layers className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
                   title: 'SufiPulse',
                   subtitle: 'Institutional & Creative Media Identity',
-                  description: 'The overarching identity through which SufiPulse creative, editorial, musical, scholarly and cultural activities are organized and presented.',
+                  description: 'The overarching identity through which SufiPulse creative, editorial, musical, scholarly and cultural activities are organized and presented at SufiPulse.com.',
                   tags: ['Institution', 'Creative Identity'],
+                },
+                {
+                  icon: <Search className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
+                  title: 'Sufi Pulse',
+                  subtitle: 'Recognized Spaced Brand & Public Search Designation',
+                  description: 'The recognized two-word public search and editorial form referring directly to SufiPulse (sufipulse.com), unifying global search queries across Google, Bing, YouTube, browsers and AI discovery engines with the canonical institution.',
+                  tags: ['Search Identity', 'Canonical Alias'],
                 },
                 {
                   icon: <Globe className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
@@ -196,6 +217,13 @@ export default function OfficialIdentityPage() {
                   subtitle: 'Production & Creative Studio Identity',
                   description: 'The production framework responsible for developing and coordinating authorized SufiPulse creative works, recordings, media and associated release materials.',
                   tags: ['Production', 'Studio'],
+                },
+                {
+                  icon: <Video className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
+                  title: 'SufiTube · Sufi Tube',
+                  subtitle: 'Official Video & Sacred-Media Publishing Identity',
+                  description: 'The official audiovisual and sacred-media publishing channel (recognized in both SufiTube and Sufi Tube forms) operating within the SufiPulse USA framework at sufipulse.com/sufitube and YouTube (@SufiPulse-USA).',
+                  tags: ['SufiTube', 'Sufi Tube', 'Video Channel'],
                 },
               ].map(({ icon, title, subtitle, description, tags }) => (
                 <div

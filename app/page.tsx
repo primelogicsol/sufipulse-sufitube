@@ -21,16 +21,31 @@ import { HomeGlobalReachSection } from './components/home/HomeGlobalReachSection
 import { globalReachGrowthEngine } from '@/lib/global-reach-growth-engine';
 
 export const metadata: Metadata = {
-  title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
-  description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+  title: {
+    absolute: "SufiPulse (Sufi Pulse) — Official Website | SufiPulse USA & SufiTube Sacred Music",
+  },
+  description:
+    "SufiPulse.com is the official website of SufiPulse (Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube). Explore original full-length Sufi music, sacred kalam, mystical poetry, and verified releases.",
+  keywords: [
+    "SufiPulse",
+    "Sufi Pulse",
+    "SufiPulse.com",
+    "SufiPulse USA",
+    "SufiPulse Studio USA",
+    "SufiTube",
+    "Sufi Tube",
+    "SufiPulse official website",
+    "Sufi Pulse music",
+  ],
   alternates: {
     canonical: "https://sufipulse.com",
   },
   openGraph: {
-    title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
-    description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+    title: "SufiPulse (Sufi Pulse) — Official Website | SufiPulse USA & SufiTube",
+    description:
+      "Official home of SufiPulse (Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube) — original full-length Sufi music, sacred kalam, and mystical poetry.",
     url: "https://sufipulse.com",
-    siteName: "SufiPulse USA",
+    siteName: "SufiPulse",
     images: [
       {
         url: "/banner1.png",

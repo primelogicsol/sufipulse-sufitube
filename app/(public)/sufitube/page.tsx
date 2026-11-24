@@ -5,16 +5,25 @@ import { PageContainer } from '../../components/layout/PageContainer';
 import { HeroCTAGroup } from '../../components/ui/HeroCTAGroup';
 
 export const metadata: Metadata = {
-  title: 'SufiTube | Official Video & Sacred-Media Channel | SufiPulse',
+  title: 'SufiTube (Sufi Tube) — Official Video & Sacred-Media Channel',
   description:
-    'SufiTube is the official video and sacred-media channel of SufiPulse USA — the audiovisual publishing identity for sacred music, kalam, Sufi poetry, premiere releases and contemplative visual works.',
+    'SufiTube (also searched as Sufi Tube) is the official video and sacred-media channel of SufiPulse (Sufi Pulse) and SufiPulse USA at SufiPulse.com — original full-length Sufi music, kalam, poetry and premieres.',
+  keywords: [
+    'SufiTube',
+    'Sufi Tube',
+    'SufiPulse',
+    'Sufi Pulse',
+    'SufiPulse USA',
+    'SufiPulse Studio USA',
+    'SufiTube official',
+  ],
   alternates: {
     canonical: 'https://sufipulse.com/sufitube',
   },
   openGraph: {
-    title: 'SufiTube — Official Video & Sacred-Media Channel | SufiPulse USA',
+    title: 'SufiTube (Sufi Tube) — Official Video & Sacred-Media Channel | SufiPulse',
     description:
-      'SufiTube is the official video and audiovisual publishing channel of SufiPulse USA.',
+      'SufiTube (Sufi Tube) is the official video and audiovisual publishing channel of SufiPulse USA at SufiPulse.com.',
     url: 'https://sufipulse.com/sufitube',
     siteName: 'SufiPulse',
     type: 'website',
@@ -26,13 +35,15 @@ const sufitubeSchema = {
   '@type': 'WebPage',
   '@id': 'https://sufipulse.com/sufitube#webpage',
   url: 'https://sufipulse.com/sufitube',
-  name: 'SufiTube — Official Video & Sacred-Media Channel',
+  name: 'SufiTube (Sufi Tube) — Official Video & Sacred-Media Channel',
   description:
-    'SufiTube is the official audiovisual publishing identity of SufiPulse USA.',
-  isPartOf: { '@id': 'https://sufipulse.com/#organization' },
+    'SufiTube (also searched as Sufi Tube) is the official audiovisual publishing identity of SufiPulse and SufiPulse USA.',
+  isPartOf: { '@id': 'https://sufipulse.com/#website' },
   about: {
     '@type': 'BroadcastChannel',
     name: 'SufiTube',
+    alternateName: ['Sufi Tube', 'SufiPulse YouTube', 'SufiPulse USA Channel'],
+    url: 'https://sufipulse.com/sufitube',
     broadcastChannelId: '@SufiPulse-USA',
     broadcastServiceTier: 'Premium',
     inBroadcastLineup: {

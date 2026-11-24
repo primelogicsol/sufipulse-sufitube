@@ -11,20 +11,20 @@ const BASE_URL = 'https://sufipulse.com';
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
-    template: "%s | SufiPulse USA",
+    default: "SufiPulse (Sufi Pulse) — Official Website | SufiPulse USA & SufiTube",
+    template: "%s | SufiPulse",
   },
-  description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+  description: "SufiPulse.com is the official website of SufiPulse (Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube) — discover original full-length Sufi music, sacred kalam, mystical poetry, and verified releases.",
   keywords: [
-    "Sufi music", "Sufi poetry", "kalam", "qawwali", "Kashmir music",
-    "Islamic devotional music", "Sufi literature", "sacred music India",
-    "Urdu poetry", "Persian poetry", "Sufi artists", "SufiPulse", "Sufi Pulse", "SufiPulse USA", "SufiPulse.com",
-    "devotional music", "spiritual music", "mystic poetry",
+    "SufiPulse", "Sufi Pulse", "SufiPulse.com", "SufiPulse USA", "SufiPulse Studio USA",
+    "SufiTube", "Sufi Tube", "Sufi music", "Sufi poetry", "kalam", "qawwali", "Kashmir music",
+    "Islamic devotional music", "Sufi literature", "Urdu poetry", "Persian poetry",
+    "Sufi artists", "devotional music", "spiritual music", "mystic poetry",
   ],
-  authors: [{ name: "SufiPulse USA", url: BASE_URL }],
-  creator: "SufiPulse USA",
+  authors: [{ name: "SufiPulse", url: BASE_URL }],
+  creator: "SufiPulse",
   publisher: "Prime Logic Solutions LLC",
-  applicationName: "SufiPulse USA",
+  applicationName: "SufiPulse",
   robots: {
     index: true,
     follow: true,
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "SufiPulse USA",
-    title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
-    description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+    siteName: "SufiPulse",
+    title: "SufiPulse (Sufi Pulse) — Official Website | SufiPulse USA & SufiTube",
+    description: "SufiPulse.com is the official website of SufiPulse (Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube) — original Sufi music, sacred kalam, and mystical poetry.",
     images: [
       {
         url: "/banner1.png",
@@ -53,14 +53,14 @@ export const metadata: Metadata = {
         url: "/og?title=Sacred+Sufi+Music+%26+Poetry&subtitle=Discover+kalam%2C+qawwali+and+Sufi+literature",
         width: 1200,
         height: 630,
-        alt: "SufiPulse USA — Sacred Sufi Music & Poetry",
+        alt: "SufiPulse — Sacred Sufi Music & Poetry",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
-    description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+    title: "SufiPulse (Sufi Pulse) — Official Website | SufiPulse USA & SufiTube",
+    description: "SufiPulse.com is the official website of SufiPulse (Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube).",
     images: ["/banner1.png"],
   },
   category: "music",
@@ -91,13 +91,27 @@ export const metadata: Metadata = {
 
 const organizationSchema = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": ["Organization", "MusicGroup"],
   "@id": "https://sufipulse.com/#organization",
-  name: "SufiPulse USA",
-  alternateName: ["SufiPulse", "Sufi Pulse"],
+  name: "SufiPulse",
+  legalName: "SufiPulse USA",
+  alternateName: [
+    "Sufi Pulse",
+    "SufiPulse USA",
+    "SufiPulse Studio USA",
+    "SufiTube",
+    "Sufi Tube",
+    "SufiPulse.com",
+  ],
   url: BASE_URL,
-  logo: `${BASE_URL}/brand/sufipulse-master-logo-512.png`,
-  description: "The premier platform for authentic Sufi music, sacred poetry, and literary works from Kashmir and the Indian Subcontinent.",
+  mainEntityOfPage: `${BASE_URL}/official-identity`,
+  logo: {
+    "@type": "ImageObject",
+    url: `${BASE_URL}/brand/sufipulse-master-logo-512.png`,
+    width: 512,
+    height: 512,
+  },
+  description: "SufiPulse (also searched as Sufi Pulse) is the official institutional and creative media platform at SufiPulse.com for original Sufi music, sacred kalam, mystical poetry, and cultural heritage, operating through SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube).",
   founder: {
     "@type": "Person",
     "@id": `${BASE_URL}/#founder`,
@@ -107,20 +121,64 @@ const organizationSchema = {
     "@type": "Place",
     name: "Virginia, USA",
   },
-  areaServed: ["US", "IN", "GB", "CA", "AE"],
+  brand: [
+    {
+      "@type": "Brand",
+      name: "SufiPulse",
+      alternateName: "Sufi Pulse",
+      url: BASE_URL,
+      description: "Institutional and creative media identity of SufiPulse at SufiPulse.com.",
+    },
+    {
+      "@type": "Brand",
+      name: "SufiPulse USA",
+      url: `${BASE_URL}/official-identity`,
+      description: "Official public music and distribution identity of SufiPulse.",
+    },
+    {
+      "@type": "Brand",
+      name: "SufiPulse Studio USA",
+      url: `${BASE_URL}/studio`,
+      description: "Production and creative studio identity of SufiPulse.",
+    },
+    {
+      "@type": "Brand",
+      name: "SufiTube",
+      alternateName: "Sufi Tube",
+      url: `${BASE_URL}/sufitube`,
+      description: "Official video and sacred-media publishing identity of SufiPulse USA.",
+    },
+  ],
+  subOrganization: [
+    {
+      "@type": "Organization",
+      name: "SufiPulse USA",
+      url: `${BASE_URL}/official-identity`,
+    },
+    {
+      "@type": "Organization",
+      name: "SufiPulse Studio USA",
+      url: `${BASE_URL}/studio`,
+    },
+    {
+      "@type": "Organization",
+      name: "SufiTube",
+      alternateName: "Sufi Tube",
+      url: `${BASE_URL}/sufitube`,
+    },
+  ],
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",
     url: `${BASE_URL}/contact`,
   },
-  // sameAs: ONLY genuinely verified and controlled properties.
-  // Unconfirmed social handles (Facebook, Instagram, X, LinkedIn) removed until
-  // account ownership/control can be demonstrated. Re-add with confirmed URLs only.
   sameAs: [
+    "https://sufipulse.com/official-identity",
+    "https://sufipulse.com/verification",
+    "https://sufipulse.com/sufitube",
     "https://www.youtube.com/@SufiPulse-USA",
     "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
     "https://dkf.sufisciencecenter.info",
-    "https://sufipulse.com/verification",
   ],
 };
 
@@ -141,11 +199,19 @@ const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "@id": `${BASE_URL}/#website`,
-  name: "SufiPulse USA",
-  alternateName: ["SufiPulse", "Sufi Pulse", "SufiPulse.com"],
+  name: "SufiPulse",
+  alternateName: [
+    "Sufi Pulse",
+    "SufiPulse USA",
+    "SufiPulse.com",
+    "SufiPulse Studio USA",
+    "SufiTube",
+    "Sufi Tube",
+  ],
   url: BASE_URL,
+  inLanguage: ["en", "ur", "ur-Latn", "hi"],
   image: `${BASE_URL}/banner1.png`,
-  description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
+  description: "Official website of SufiPulse (Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube) — original full-length Sufi music, sacred kalam, and mystical poetry.",
   publisher: {
     "@type": "Organization",
     "@id": "https://sufipulse.com/#organization"
@@ -169,6 +235,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#0F172A" />
+        <link
+          rel="search"
+          type="application/opensearchdescription+xml"
+          title="SufiPulse (Sufi Pulse)"
+          href="/opensearch.xml"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

@@ -18,20 +18,21 @@ import '../../styles/verification.css';
    ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
 const officialIdentity = [
-  { label: 'Official Brand', value: 'SufiPulse', icon: Shield },
-  { label: 'Official Website', value: 'SufiPulse.com', link: 'https://www.sufipulse.com', icon: Globe },
+  { label: 'Official Brand', value: 'SufiPulse (Sufi Pulse)', icon: Shield },
+  { label: 'Official Website', value: 'SufiPulse.com', link: 'https://sufipulse.com', icon: Globe },
+  { label: 'Official Public Identity', value: 'SufiPulse USA', link: 'https://sufipulse.com/official-identity', icon: Globe },
   { label: 'Official YouTube', value: '@SufiPulse-USA', link: 'https://www.youtube.com/@SufiPulse-USA', icon: Youtube },
-  { label: 'Official Studio', value: 'SufiPulse Studio USA', icon: Building2 },
-  { label: 'Official Distribution', value: 'SufiTube', icon: Radio },
+  { label: 'Official Studio', value: 'SufiPulse Studio USA', link: 'https://sufipulse.com/studio', icon: Building2 },
+  { label: 'Official Video Channel', value: 'SufiTube (Sufi Tube)', link: 'https://sufipulse.com/sufitube', icon: Radio },
   { label: 'Founding Institution', value: 'Dr Kumar Foundation USA', link: 'https://dkf.sufisciencecenter.info', icon: Landmark },
   { label: 'Research Institution', value: 'Sufi Science Center USA', icon: BookOpen },
 ];
 
 const verifiedAssets = [
-  { name: 'SufiPulse.com', type: 'Website', status: 'verified' as const, url: 'https://www.sufipulse.com' },
-  { name: '@SufiPulse-USA', type: 'YouTube Channel', status: 'verified' as const, url: 'https://www.youtube.com/@SufiPulse-USA' },
-  { name: 'SufiPulse Studio USA', type: 'Production Studio', status: 'verified' as const },
-  { name: 'SufiTube', type: 'Distribution Platform', status: 'verified' as const },
+  { name: 'SufiPulse.com (SufiPulse / Sufi Pulse)', type: 'Canonical Website', status: 'verified' as const, url: 'https://sufipulse.com' },
+  { name: 'SufiPulse USA (@SufiPulse-USA)', type: 'Official YouTube Channel', status: 'verified' as const, url: 'https://www.youtube.com/@SufiPulse-USA' },
+  { name: 'SufiPulse Studio USA', type: 'Production Studio', status: 'verified' as const, url: 'https://sufipulse.com/studio' },
+  { name: 'SufiTube (Sufi Tube)', type: 'Official Video & Media Channel', status: 'verified' as const, url: 'https://sufipulse.com/sufitube' },
   { name: 'Dr Kumar Foundation USA', type: 'Founding Institution', status: 'verified' as const, url: 'https://dkf.sufisciencecenter.info' },
   { name: 'Sufi Science Center USA', type: 'Research Institution', status: 'verified' as const },
 ];
@@ -87,10 +88,10 @@ const misidentificationWatch = {
    ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
 const digitalFootprint = [
-  { label: 'Official Website', value: 'SufiPulse.com', link: 'https://www.sufipulse.com', icon: Globe },
+  { label: 'Official Website', value: 'SufiPulse.com', link: 'https://sufipulse.com', icon: Globe },
   { label: 'Official YouTube', value: '@SufiPulse-USA', link: 'https://www.youtube.com/@SufiPulse-USA', icon: Youtube },
   { label: 'Official Studio', value: 'SufiPulse Studio USA', icon: Building2 },
-  { label: 'Official Distribution', value: 'SufiTube', icon: Radio },
+  { label: 'Official Distribution', value: 'SufiTube (Sufi Tube)', link: '/sufitube', icon: Radio, internal: true },
   { label: 'Official Publications', value: 'SufiPulse releases and publication archive', link: '/releases', icon: Disc3, internal: true },
   { label: 'Official Literary Journal', value: 'SufiPulse Literary Journal / Kalam Library', link: '/literary-journal', icon: BookMarked, internal: true },
   { label: 'Official Social Profiles', value: 'Pending official confirmation', icon: Users, note: 'Social profiles will be listed here once officially verified and confirmed.' },
@@ -243,15 +244,7 @@ function StatusBadge({ status }: { status: 'verified' | 'unverified' | 'independ
 export default function VerificationCenter() {
   return (
     <>
-      {/* Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
-      />
+      {/* Structured Data (sitewide #organization and #website are emitted canonically in app/layout.tsx) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}

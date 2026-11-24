@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>SufiPulse</ShortName>
+  <LongName>SufiPulse (Sufi Pulse) · SufiPulse USA · SufiTube Official Catalog</LongName>
+  <Description>Search official SufiPulse (Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube) sacred music, kalam, and poetry at SufiPulse.com</Description>
+  <Tags>SufiPulse "Sufi Pulse" SufiPulseUSA SufiTube "Sufi Tube" SufiMusic Kalam</Tags>
+  <InputEncoding>UTF-8</InputEncoding>
+  <OutputEncoding>UTF-8</OutputEncoding>
+  <Image width="48" height="48" type="image/png">https://sufipulse.com/favicon-48x48.png</Image>
+  <Image width="16" height="16" type="image/x-icon">https://sufipulse.com/favicon.ico</Image>
+  <Url type="text/html" method="get" template="https://sufipulse.com/releases?q={searchTerms}" />
+  <moz:SearchForm>https://sufipulse.com/releases</moz:SearchForm>
+</OpenSearchDescription>
