@@ -49,10 +49,13 @@ logs
 
 # Runtime data (mounted as volume — user/financial/token data must not be in image)
 .data
-# EXCEPTION: knowledge-registry.json and youtube-studio-geography.json are public reference data committed to git.
-# They must be present in the build context so the Dockerfile can COPY them into the image.
+# EXCEPTION: version-controlled public reference datasets committed to git (zero secrets or PII).
+# They must be present in the Docker build context so the Dockerfile can COPY them into the image.
 !.data/knowledge-registry.json
 !.data/youtube-studio-geography.json
+!.data/atlas_entities.json
+!.data/atlas_relationships.json
+!.data/registries.json
 
 # Tests
 __tests__

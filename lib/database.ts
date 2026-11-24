@@ -44,11 +44,23 @@ export class DatabaseTable<T extends { id: string }> {
   private data: Map<string, T> = new Map();
   private indexes: Map<string, Map<any, string[]>> = new Map();
   private lastBackup: number = 0;
+  private lastLoadedMtimeMs: number = 0;
 
   constructor(tableName: string) {
     this.tableName = tableName;
     this.filePath = path.join(DATA_DIR, `${tableName}.json`);
     this.load();
+  }
+
+  private ensureFresh(): void {
+    try {
+      if (fs.existsSync(this.filePath)) {
+        const mtime = fs.statSync(this.filePath).mtimeMs;
+        if (mtime !== this.lastLoadedMtimeMs) {
+          this.load();
+        }
+      }
+    } catch {}
   }
 
   /**
@@ -57,9 +69,11 @@ export class DatabaseTable<T extends { id: string }> {
   private load(): void {
     try {
       if (fs.existsSync(this.filePath)) {
+        const stat = fs.statSync(this.filePath);
         const raw = fs.readFileSync(this.filePath, 'utf-8');
         const records = JSON.parse(raw) as T[];
         this.data = new Map(records.map(r => [r.id, r]));
+        this.lastLoadedMtimeMs = stat.mtimeMs;
         this.rebuildIndexes();
       }
     } catch (error) {
@@ -78,6 +92,7 @@ export class DatabaseTable<T extends { id: string }> {
       const tempPath = this.filePath + '.tmp';
       fs.writeFileSync(tempPath, JSON.stringify(records, null, 2), 'utf-8');
       fs.renameSync(tempPath, this.filePath);
+      this.lastLoadedMtimeMs = fs.statSync(this.filePath).mtimeMs;
       this.rebuildIndexes();
     } catch (error) {
       console.error(`[Database] Error saving table ${this.tableName}:`, error);
@@ -147,6 +162,7 @@ export class DatabaseTable<T extends { id: string }> {
   }
 
   find(query: Partial<T>): T[] {
+    this.ensureFresh();
     const results: T[] = [];
     const queryKeys = Object.keys(query);
     if (queryKeys.length === 1) {
@@ -191,6 +207,7 @@ export class DatabaseTable<T extends { id: string }> {
   }
 
   findById(id: string): T | null {
+    this.ensureFresh();
     return this.data.get(id) || null;
   }
 
@@ -199,6 +216,7 @@ export class DatabaseTable<T extends { id: string }> {
    * Returns a snapshot array; callers cannot mutate the table's internal Map.
    */
   findAll(): T[] {
+    this.ensureFresh();
     return Array.from(this.data.values());
   }
 
@@ -241,11 +259,13 @@ export class DatabaseTable<T extends { id: string }> {
   }
 
   count(query?: Partial<T>): number {
+    this.ensureFresh();
     if (!query) return this.data.size;
     return this.find(query).length;
   }
 
   getAll(): T[] {
+    this.ensureFresh();
     return Array.from(this.data.values());
   }
 
