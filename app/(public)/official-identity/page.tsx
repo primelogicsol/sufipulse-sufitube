@@ -70,6 +70,38 @@ const webPageSchema = {
   },
 };
 
+const identityFaqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': 'https://sufipulse.com/official-identity#faq',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'What is the official website of SufiPulse (Sufi Pulse)?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'https://sufipulse.com is the single canonical official website and primary verification authority for SufiPulse (also searched as Sufi Pulse), SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube).',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How are SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA, and SufiTube (Sufi Tube) related?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'SufiPulse (and its recognized two-word search form Sufi Pulse) is the root institutional and creative identity anchored at SufiPulse.com. It produces works through SufiPulse Studio USA, publishes music as SufiPulse USA, and presents official videos and premieres through SufiTube (Sufi Tube) at sufipulse.com/sufitube and YouTube (@SufiPulse-USA).',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How can listeners and search engines verify authentic SufiPulse or SufiTube properties?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Only websites, releases, and channels directly linked from https://sufipulse.com, https://sufipulse.com/official-identity, and https://sufipulse.com/official-channels are officially affiliated with SufiPulse.',
+      },
+    },
+  ],
+};
+
 function Divider() {
   return <div className="border-t border-[var(--color-border-strong)] my-2" />;
 }
@@ -92,6 +124,10 @@ export default function OfficialIdentityPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(identityFaqSchema) }}
       />
 
       {/* 1. HERO — matches /release-premieres pattern */}
@@ -159,7 +195,7 @@ export default function OfficialIdentityPage() {
             <div className="grid grid-cols-4 divide-x divide-white/10 py-6">
               <div className="px-6">
                 <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">1. CANONICAL IDENTITY</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">SufiPulse, Sufi Pulse, SufiPulse USA, SufiPulse Studio USA and SufiTube (Sufi Tube) — defined and authenticated here.</p>
+                <p className="text-neutral-400 text-sm leading-relaxed">SufiPulse, Sufi Pulse, SufiPulse.com, SufiPulse USA, SufiPulse Studio USA and SufiTube (Sufi Tube) — defined and authenticated here.</p>
               </div>
               <div className="px-6">
                 <h4 className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-2">2. OFFICIAL CHANNELS</h4>
@@ -187,7 +223,7 @@ export default function OfficialIdentityPage() {
               title="Canonical Identity"
               subtitle="SufiPulse is an institutional and creative media identity developed for the creation, documentation, interpretation, production and public presentation of contemporary Sufi-inspired music, kalam, poetry and associated cultural discourse."
             />
-            {/* Inline cards — icon components rendered server-side, no prop crossing RSC boundary */}
+            {/* 6-card symmetrical Canonical Identity matrix */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
@@ -196,6 +232,7 @@ export default function OfficialIdentityPage() {
                   subtitle: 'Institutional & Creative Media Identity',
                   description: 'The overarching identity through which SufiPulse creative, editorial, musical, scholarly and cultural activities are organized and presented at SufiPulse.com.',
                   tags: ['Institution', 'Creative Identity'],
+                  href: '/',
                 },
                 {
                   icon: <Search className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
@@ -203,6 +240,15 @@ export default function OfficialIdentityPage() {
                   subtitle: 'Recognized Spaced Brand & Public Search Designation',
                   description: 'The recognized two-word public search and editorial form referring directly to SufiPulse (sufipulse.com), unifying global search queries across Google, Bing, YouTube, browsers and AI discovery engines with the canonical institution.',
                   tags: ['Search Identity', 'Canonical Alias'],
+                  href: '/',
+                },
+                {
+                  icon: <Shield className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
+                  title: 'SufiPulse.com',
+                  subtitle: 'Canonical Digital Home & Primary Verification Authority',
+                  description: 'The single primary website and root authority that search engines, browsers, researchers and listeners consult first to verify authentic SufiPulse releases, 4-script lyrics, Discovery Graph nodes and official channels.',
+                  tags: ['Primary Domain', 'Canonical Source'],
+                  href: '/',
                 },
                 {
                   icon: <Globe className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
@@ -210,6 +256,7 @@ export default function OfficialIdentityPage() {
                   subtitle: 'Official Public Music & Distribution Identity',
                   description: 'The public-facing music identity through which official releases, video publications, premiere activity and authenticated SufiPulse media are presented.',
                   tags: ['Public Identity', 'Distribution'],
+                  href: '/releases',
                 },
                 {
                   icon: <Archive className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
@@ -217,6 +264,7 @@ export default function OfficialIdentityPage() {
                   subtitle: 'Production & Creative Studio Identity',
                   description: 'The production framework responsible for developing and coordinating authorized SufiPulse creative works, recordings, media and associated release materials.',
                   tags: ['Production', 'Studio'],
+                  href: '/studio',
                 },
                 {
                   icon: <Video className="w-8 h-8 text-[var(--color-gold)] mb-4" />,
@@ -224,15 +272,17 @@ export default function OfficialIdentityPage() {
                   subtitle: 'Official Video & Sacred-Media Publishing Identity',
                   description: 'The official audiovisual and sacred-media publishing channel (recognized in both SufiTube and Sufi Tube forms) operating within the SufiPulse USA framework at sufipulse.com/sufitube and YouTube (@SufiPulse-USA).',
                   tags: ['SufiTube', 'Sufi Tube', 'Video Channel'],
+                  href: '/sufitube',
                 },
-              ].map(({ icon, title, subtitle, description, tags }) => (
-                <div
+              ].map(({ icon, title, subtitle, description, tags, href }) => (
+                <Link
                   key={title}
-                  className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 rounded-xl p-6 flex flex-col h-full"
+                  href={href}
+                  className="bg-[var(--color-midnight)]/30 border border-[var(--color-text-tertiary)]/10 hover:border-[var(--color-gold)]/35 rounded-xl p-6 flex flex-col h-full transition-colors group"
                 >
                   <div className="flex-1">
                     {icon}
-                    <h3 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)] mb-2">{title}</h3>
+                    <h3 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-gold)] transition-colors mb-2">{title}</h3>
                     <p className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">{subtitle}</p>
                     <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed">{description}</p>
                   </div>
@@ -243,7 +293,7 @@ export default function OfficialIdentityPage() {
                       </span>
                     ))}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -265,15 +315,15 @@ export default function OfficialIdentityPage() {
               </p>
             </div>
 
-            {/* ── Tier 1: SufiPulse ── */}
+            {/* ── Tier 1: SufiPulse / Sufi Pulse ── */}
             <div className="flex flex-col items-center">
               <div className="w-full max-w-2xl">
                 <div className="bg-[var(--color-slate)]/60 border border-[var(--color-gold)]/30 rounded-2xl p-6 text-center shadow-[0_0_30px_rgba(200,167,94,0.06)]">
-                  <p className="text-[var(--color-gold)] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Root Identity</p>
-                  <p className="text-white font-bold text-xl mb-1">SufiPulse</p>
-                  <p className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-3">Institutional &amp; Creative Framework</p>
+                  <p className="text-[var(--color-gold)] text-[10px] font-black uppercase tracking-[0.3em] mb-1">Root Identity · Primary Search Entity</p>
+                  <p className="text-white font-bold text-xl mb-1">SufiPulse <span className="text-[var(--color-gold)]/80 font-normal text-base">(Sufi Pulse)</span></p>
+                  <p className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-widest mb-3">Institutional &amp; Creative Framework · SufiPulse.com</p>
                   <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-lg mx-auto">
-                    The root identity governing editorial standards, release governance, cultural stewardship, contributor attribution and the wider SufiPulse ecosystem.
+                    The root identity (recognized in both single-word <strong>SufiPulse</strong> and two-word <strong>Sufi Pulse</strong> search forms) governing editorial standards, release governance, cultural stewardship, contributor attribution and the wider SufiPulse ecosystem anchored at <strong>SufiPulse.com</strong>.
                   </p>
                 </div>
               </div>
@@ -344,70 +394,70 @@ export default function OfficialIdentityPage() {
               {/* ── Tier 4: Three branches ── */}
               <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                {/* 4A — SufiTube */}
-                <div className="bg-[var(--color-midnight)]/80 border border-[var(--color-border-strong)] rounded-2xl p-5 flex flex-col">
+                {/* 4A — SufiTube / Sufi Tube */}
+                <Link href="/sufitube" className="bg-[var(--color-midnight)]/80 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/35 rounded-2xl p-5 flex flex-col transition-colors group">
                   <div className="mb-3">
                     <span className="text-[9px] text-[var(--color-gold)]/60 font-black uppercase tracking-[0.25em]">Video &amp; Audiovisual</span>
-                    <p className="text-white font-bold text-base mt-0.5">SufiTube</p>
+                    <p className="text-white group-hover:text-[var(--color-gold)] transition-colors font-bold text-base mt-0.5">SufiTube · Sufi Tube</p>
                     <p className="text-[var(--color-gold)] text-[10px] font-bold uppercase tracking-widest mt-0.5">Official Video &amp; Sacred-Media Channel</p>
                   </div>
                   <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed flex-1 mb-4">
-                    The SufiPulse video and audiovisual publishing identity. Official music videos, kalam, premieres, visual releases and selected sacred-media programming. Operated within the SufiPulse USA public-media framework.
+                    The SufiPulse video and audiovisual publishing identity (recognized as both <strong>SufiTube</strong> and <strong>Sufi Tube</strong>). Official full-length music videos, kalam, premieres, visual releases and sacred-media programming at <code>sufipulse.com/sufitube</code> and YouTube (<code>@SufiPulse-USA</code>).
                   </p>
                   <div className="border-t border-[var(--color-border)] pt-3 space-y-1">
-                    {['YouTube', 'Video Premieres', 'Visual Releases'].map(ep => (
+                    {['YouTube (@SufiPulse-USA)', 'SufiPulse.com/sufitube', 'Video Premieres & Visual Kalam'].map(ep => (
                       <div key={ep} className="flex items-center gap-2">
                         <span className="w-1 h-1 rounded-full bg-[var(--color-gold)]/50 flex-shrink-0" />
                         <span className="text-[11px] text-[var(--color-text-tertiary)]">{ep}</span>
                       </div>
                     ))}
                   </div>
-                </div>
+                </Link>
 
-                {/* 4B — DSP Distribution */}
-                <div className="bg-[var(--color-midnight)]/80 border border-[var(--color-border-strong)] rounded-2xl p-5 flex flex-col">
+                {/* 4B — DSP & Broadcast Distribution */}
+                <Link href="/official-channels" className="bg-[var(--color-midnight)]/80 border border-[var(--color-border-strong)] hover:border-[var(--color-gold)]/35 rounded-2xl p-5 flex flex-col transition-colors group">
                   <div className="mb-3">
-                    <span className="text-[9px] text-[var(--color-gold)]/60 font-black uppercase tracking-[0.25em]">Streaming &amp; Catalog</span>
-                    <p className="text-white font-bold text-base mt-0.5">Digital Music Distribution</p>
+                    <span className="text-[9px] text-[var(--color-gold)]/60 font-black uppercase tracking-[0.25em]">Streaming &amp; Broadcast</span>
+                    <p className="text-white group-hover:text-[var(--color-gold)] transition-colors font-bold text-base mt-0.5">Digital Music &amp; Radio Distribution</p>
                     <p className="text-[var(--color-gold)] text-[10px] font-bold uppercase tracking-widest mt-0.5">Official Streaming &amp; Catalog Endpoints</p>
                   </div>
                   <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed flex-1 mb-4">
-                    Authenticated SufiPulse USA releases distributed through approved DSPs and music services.
+                    Authenticated SufiPulse USA full-length releases distributed across global DSPs, 24/7 SufiPulse Radio broadcast, and verified social endpoints.
                   </p>
                   <div className="border-t border-[var(--color-border)] pt-3 space-y-1">
-                    {['Spotify', 'Apple Music', 'YouTube Music', 'Amazon Music', 'Other Approved DSPs'].map(ep => (
+                    {['SufiPulse Radio (24/7)', 'Spotify & Apple Music', 'YouTube Music & Amazon Music', 'Verified Official Channels'].map(ep => (
                       <div key={ep} className="flex items-center gap-2">
                         <span className="w-1 h-1 rounded-full bg-[var(--color-gold)]/50 flex-shrink-0" />
                         <span className="text-[11px] text-[var(--color-text-tertiary)]">{ep}</span>
                       </div>
                     ))}
                   </div>
-                </div>
+                </Link>
 
                 {/* 4C — SufiPulse.com */}
-                <div className="bg-[var(--color-midnight)]/80 border border-[var(--color-gold)]/15 rounded-2xl p-5 flex flex-col">
+                <Link href="/" className="bg-[var(--color-midnight)]/80 border border-[var(--color-gold)]/25 hover:border-[var(--color-gold)]/50 rounded-2xl p-5 flex flex-col transition-colors group">
                   <div className="mb-3">
-                    <span className="text-[9px] text-[var(--color-gold)]/60 font-black uppercase tracking-[0.25em]">Canonical Authority</span>
-                    <p className="text-white font-bold text-base mt-0.5">SufiPulse.com</p>
-                    <p className="text-[var(--color-gold)] text-[10px] font-bold uppercase tracking-widest mt-0.5">Canonical Digital &amp; Editorial Home</p>
+                    <span className="text-[9px] text-[var(--color-gold)]/80 font-black uppercase tracking-[0.25em]">Canonical Authority · Primary Destination</span>
+                    <p className="text-white group-hover:text-[var(--color-gold)] transition-colors font-bold text-base mt-0.5">SufiPulse.com</p>
+                    <p className="text-[var(--color-gold)] text-[10px] font-bold uppercase tracking-widest mt-0.5">Canonical Digital, Search &amp; Editorial Home</p>
                   </div>
                   <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed flex-1 mb-4">
-                    The authoritative web source for release provenance, Premiere Room activity, lyrics, translations, commentary, credits, institutional records and official-channel verification.
+                    The primary authoritative web destination consulted first by search engines, browsers and listeners for release provenance, 4-script lyrics, Discovery Graph nodes, Knowledge Encyclopedia, Literary Journal and official-channel verification.
                   </p>
                   <div className="border-t border-[var(--color-border)] pt-3 space-y-1">
-                    {['Premiere Room', 'Releases', 'Lyrics & Commentary', 'Credits', 'Verification'].map(ep => (
+                    {['Releases & Premiere Room', '4-Script Lyrics & Commentary', 'Discovery Hub & Knowledge Graph', 'Literary Journal & Verification'].map(ep => (
                       <div key={ep} className="flex items-center gap-2">
                         <span className="w-1 h-1 rounded-full bg-[var(--color-gold)]/50 flex-shrink-0" />
                         <span className="text-[11px] text-[var(--color-text-tertiary)]">{ep}</span>
                       </div>
                     ))}
                   </div>
-                </div>
+                </Link>
               </div>
 
               {/* Explanatory note */}
-              <p className="text-[var(--color-text-tertiary)] text-xs leading-relaxed text-center mt-6 max-w-2xl">
-                SufiTube is not the same identity as SufiPulse USA. SufiPulse USA is the authenticated artist and release identity. SufiTube is the branded video and audiovisual media channel operating within that public-media architecture.
+              <p className="text-[var(--color-text-tertiary)] text-xs leading-relaxed text-center mt-6 max-w-3xl">
+                <strong>SufiPulse</strong> and <strong>Sufi Pulse</strong> refer to the same root institution anchored canonically at <strong>SufiPulse.com</strong>. <strong>SufiPulse Studio USA</strong> is the production studio, <strong>SufiPulse USA</strong> is the authenticated artist and release identity, and <strong>SufiTube</strong> (<strong>Sufi Tube</strong>) is the official video and audiovisual channel operating within that public-media architecture.
               </p>
             </div>
           </div>
@@ -422,7 +472,7 @@ export default function OfficialIdentityPage() {
           <div className="max-w-4xl mx-auto">
             <StudioSectionHeader
               title="How Official SufiPulse Identity Is Verified"
-              subtitle={'Use of the words \u201cSufiPulse\u201d, \u201cSufi Pulse\u201d, \u201cSufiPulse USA\u201d or similar terminology alone does not establish affiliation with SufiPulse.'}
+              subtitle={'Use of the words \u201cSufiPulse\u201d, \u201cSufi Pulse\u201d, \u201cSufiPulse USA\u201d, \u201cSufiPulse Studio USA\u201d, \u201cSufiTube\u201d, \u201cSufi Tube\u201d or similar terminology alone does not establish affiliation with SufiPulse.'}
             />
             <div className="bg-[var(--color-midnight)]/60 border border-[var(--color-border-strong)] rounded-2xl p-6 md:p-8 mb-8">
               <p className="text-[var(--color-gold)] text-xs font-black uppercase tracking-widest mb-4">
@@ -588,7 +638,7 @@ export default function OfficialIdentityPage() {
                   <Shield className="w-4 h-4 text-[var(--color-gold)]" />
                 </div>
                 <p className="text-[var(--color-text-secondary)] text-base leading-relaxed">
-                  The presence of the words &ldquo;SufiPulse&rdquo;, &ldquo;Sufi Pulse&rdquo; or a similar designation should not by itself be interpreted as evidence of affiliation, authorization, sponsorship, endorsement, collaboration or catalog ownership.
+                  The presence of the words &ldquo;SufiPulse&rdquo;, &ldquo;Sufi Pulse&rdquo;, &ldquo;SufiPulse USA&rdquo;, &ldquo;SufiPulse Studio USA&rdquo;, &ldquo;SufiTube&rdquo;, &ldquo;Sufi Tube&rdquo; or a similar designation should not by itself be interpreted as evidence of affiliation, authorization, sponsorship, endorsement, collaboration or catalog ownership unless verified through <strong>SufiPulse.com</strong>.
                 </p>
               </div>
               <Divider />

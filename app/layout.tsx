@@ -178,6 +178,9 @@ const organizationSchema = {
     "https://sufipulse.com/sufitube",
     "https://www.youtube.com/@SufiPulse-USA",
     "https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ",
+    "https://www.instagram.com/sufipulseusa/",
+    "https://www.facebook.com/profile.php?id=61591758150138",
+    "https://www.facebook.com/groups/1100263345262190",
     "https://dkf.sufisciencecenter.info",
   ],
 };
