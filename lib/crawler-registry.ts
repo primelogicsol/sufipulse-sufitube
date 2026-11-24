@@ -1,12 +1,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+export interface CrawlerRecentHit {
+  path: string;
+  timestamp: string;
+  userAgent: string;
+}
+
 export interface CrawlerRecord {
   crawler: string;
+  category: 'search_engine' | 'ai_search' | 'social_preview';
   lastSeen: string;
   pagesCrawled: number;
-  frequency: number; // hits per hour (calculated based on timeframe)
+  frequency: number; // hits per hour since firstSeen
   firstSeen: string;
+  recentPaths?: CrawlerRecentHit[];
 }
 
 const resolveDataDir = () => {
@@ -20,17 +28,28 @@ const resolveDataDir = () => {
 const DATA_DIR = resolveDataDir();
 const CRAWLER_FILE = path.join(DATA_DIR, 'crawler-registry.json');
 
-const BOT_MAPPING = [
-  { name: 'Googlebot', pattern: 'googlebot' },
-  { name: 'GoogleOther', pattern: 'googleother' },
-  { name: 'Bingbot', pattern: 'bingbot' },
-  { name: 'GPTBot', pattern: 'gptbot' },
-  { name: 'ClaudeBot', pattern: 'claudebot' },
-  { name: 'PerplexityBot', pattern: 'perplexity' },
-  { name: 'Applebot', pattern: 'applebot' },
-  { name: 'FacebookExternalHit', pattern: 'facebookexternalhit' },
-  { name: 'LinkedInBot', pattern: 'linkedinbot' },
-  { name: 'DuckDuckBot', pattern: 'duckduckbot' }
+export const BOT_MAPPING: Array<{
+  name: string;
+  pattern: string;
+  category: CrawlerRecord['category'];
+}> = [
+  { name: 'Googlebot', pattern: 'googlebot', category: 'search_engine' },
+  { name: 'Google-Extended', pattern: 'google-extended', category: 'ai_search' },
+  { name: 'GoogleOther', pattern: 'googleother', category: 'search_engine' },
+  { name: 'Bingbot', pattern: 'bingbot', category: 'search_engine' },
+  { name: 'OAI-SearchBot', pattern: 'oai-searchbot', category: 'ai_search' },
+  { name: 'GPTBot', pattern: 'gptbot', category: 'ai_search' },
+  { name: 'ChatGPT-User', pattern: 'chatgpt-user', category: 'ai_search' },
+  { name: 'ClaudeBot', pattern: 'claudebot', category: 'ai_search' },
+  { name: 'Claude-Web', pattern: 'claude-web', category: 'ai_search' },
+  { name: 'anthropic-ai', pattern: 'anthropic-ai', category: 'ai_search' },
+  { name: 'PerplexityBot', pattern: 'perplexity', category: 'ai_search' },
+  { name: 'Applebot', pattern: 'applebot', category: 'search_engine' },
+  { name: 'DuckDuckBot', pattern: 'duckduckbot', category: 'search_engine' },
+  { name: 'YandexBot', pattern: 'yandexbot', category: 'search_engine' },
+  { name: 'FacebookExternalHit', pattern: 'facebookexternalhit', category: 'social_preview' },
+  { name: 'LinkedInBot', pattern: 'linkedinbot', category: 'social_preview' },
+  { name: 'Twitterbot', pattern: 'twitterbot', category: 'social_preview' },
 ];
 
 class CrawlerRegistry {
@@ -54,17 +73,29 @@ class CrawlerRegistry {
         const content = fs.readFileSync(CRAWLER_FILE, 'utf-8');
         const list = JSON.parse(content || '[]');
         this.records = {};
-        list.forEach((rec: CrawlerRecord) => {
-          this.records[rec.crawler] = rec;
-        });
-      } else {
-        this.seedInitialCrawlers();
-        this.persist();
+        if (Array.isArray(list)) {
+          list.forEach((rec: CrawlerRecord) => {
+            // Quarantine historical synthetic seed records stamped on 2026-06-05T08:17:45.084Z
+            if (rec.firstSeen === '2026-06-05T08:17:45.084Z') return;
+            const matched = BOT_MAPPING.find((b) => b.name === rec.crawler);
+            this.records[rec.crawler] = {
+              ...rec,
+              category: rec.category || matched?.category || 'search_engine',
+              recentPaths: Array.isArray(rec.recentPaths) ? rec.recentPaths : [],
+            };
+          });
+        }
       }
       this.initialized = true;
     } catch (error) {
       console.error('[CRAWLER-REGISTRY] Initialization failed:', error);
+      this.initialized = true;
     }
+  }
+
+  public forceHydrate(): void {
+    this.initialized = false;
+    this.init();
   }
 
   private persist(): void {
@@ -73,7 +104,6 @@ class CrawlerRegistry {
       const serialized = JSON.stringify(list, null, 2);
       fs.writeFileSync(CRAWLER_FILE, serialized, 'utf-8');
 
-      // Standalone double-write caching support (production Docker container mapping helper)
       const standaloneDataDir = path.join(process.cwd(), '.next', 'standalone', '.data');
       if (fs.existsSync(standaloneDataDir)) {
         const standaloneDataFile = path.join(standaloneDataDir, 'crawler-registry.json');
@@ -84,58 +114,47 @@ class CrawlerRegistry {
     }
   }
 
-  private seedInitialCrawlers(): void {
-    const now = new Date();
-    const subHours = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000).toISOString();
-
-    const seed: CrawlerRecord[] = [
-      { crawler: 'Googlebot', lastSeen: subHours(1), pagesCrawled: 342, frequency: 12.5, firstSeen: subHours(48) },
-      { crawler: 'GoogleOther', lastSeen: subHours(4), pagesCrawled: 84, frequency: 3.1, firstSeen: subHours(48) },
-      { crawler: 'Bingbot', lastSeen: subHours(2), pagesCrawled: 156, frequency: 6.2, firstSeen: subHours(48) },
-      { crawler: 'GPTBot', lastSeen: subHours(5), pagesCrawled: 215, frequency: 8.9, firstSeen: subHours(48) },
-      { crawler: 'ClaudeBot', lastSeen: subHours(3), pagesCrawled: 120, frequency: 4.8, firstSeen: subHours(48) },
-      { crawler: 'PerplexityBot', lastSeen: subHours(1), pagesCrawled: 95, frequency: 3.8, firstSeen: subHours(48) },
-      { crawler: 'Applebot', lastSeen: subHours(12), pagesCrawled: 42, frequency: 1.1, firstSeen: subHours(48) },
-      { crawler: 'FacebookExternalHit', lastSeen: subHours(8), pagesCrawled: 30, frequency: 0.8, firstSeen: subHours(48) },
-      { crawler: 'LinkedInBot', lastSeen: subHours(6), pagesCrawled: 24, frequency: 0.6, firstSeen: subHours(48) },
-      { crawler: 'DuckDuckBot', lastSeen: subHours(10), pagesCrawled: 52, frequency: 1.5, firstSeen: subHours(48) }
-    ];
-
-    seed.forEach(rec => {
-      this.records[rec.crawler] = rec;
-    });
-  }
-
   public isBot(userAgent: string): boolean {
-    const ua = userAgent.toLowerCase();
-    return BOT_MAPPING.some(b => ua.includes(b.pattern));
+    const ua = (userAgent || '').toLowerCase();
+    return BOT_MAPPING.some((b) => ua.includes(b.pattern));
   }
 
   public logVisit(userAgent: string, pathUrl?: string): void {
-    this.init();
-    const ua = userAgent.toLowerCase();
-    const matchedBot = BOT_MAPPING.find(b => ua.includes(b.pattern));
-    
+    this.forceHydrate();
+    const ua = (userAgent || '').toLowerCase();
+    const matchedBot = BOT_MAPPING.find((b) => ua.includes(b.pattern));
+
     if (!matchedBot) return;
 
     const crawlerName = matchedBot.name;
     const now = new Date().toISOString();
+    const cleanPath = (pathUrl || '/').split('?')[0] || '/';
+    const hitEntry: CrawlerRecentHit = {
+      path: cleanPath,
+      timestamp: now,
+      userAgent: (userAgent || '').slice(0, 180),
+    };
 
     if (this.records[crawlerName]) {
       const record = this.records[crawlerName];
       record.pagesCrawled++;
-      
-      // Calculate simple crawling frequency (hits/hr since first seen)
-      const hoursSinceFirstSeen = Math.max(1, (new Date(now).getTime() - new Date(record.firstSeen).getTime()) / (1000 * 60 * 60));
+      const hoursSinceFirstSeen = Math.max(
+        1,
+        (new Date(now).getTime() - new Date(record.firstSeen).getTime()) / (1000 * 60 * 60)
+      );
       record.frequency = parseFloat((record.pagesCrawled / hoursSinceFirstSeen).toFixed(2));
       record.lastSeen = now;
+      record.category = matchedBot.category;
+      record.recentPaths = [hitEntry, ...(record.recentPaths || [])].slice(0, 50);
     } else {
       this.records[crawlerName] = {
         crawler: crawlerName,
+        category: matchedBot.category,
         lastSeen: now,
         pagesCrawled: 1,
         frequency: 1,
-        firstSeen: now
+        firstSeen: now,
+        recentPaths: [hitEntry],
       };
     }
 
@@ -143,7 +162,7 @@ class CrawlerRegistry {
   }
 
   public getRecords(): CrawlerRecord[] {
-    this.init();
+    this.forceHydrate();
     return Object.values(this.records).sort((a, b) => b.pagesCrawled - a.pagesCrawled);
   }
 }

@@ -6,6 +6,8 @@ import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
 import { verifyAccessToken } from '@/server/services/auth';
 import { usersRepository } from '@/server/db/repositories/users';
 import { checkIsAdmin } from '@/server/middleware/authenticate';
+import { CANONICAL_ORIGIN, canonicalUrl, resolveCanonicalSongTitle, toIsoDuration } from '@/lib/canonical-seo';
+import { graphResolver } from '@/lib/graph-resolver';
 
 async function getReleaseByKey(key: string): Promise<any | null> {
   try {
@@ -21,7 +23,7 @@ async function getReleaseByKey(key: string): Promise<any | null> {
 }
 
 function isPubliclyEligibleRelease(release: any): boolean {
-  if (!release || release.status !== 'published' || release.visibility !== 'public') {
+  if (!release || release.status !== 'published' || (release.visibility || 'public') !== 'public') {
     return false;
   }
   if (['upcoming', 'teaser_live', 'premiere_scheduled'].includes(release.releaseLifecycle || '')) {
@@ -52,23 +54,6 @@ function personName(value: any): string | undefined {
   return value.name || value.displayName || value.fullName || undefined;
 }
 
-
-
-
-/**
- * Corpus-level authorship identity for SufiPulse.
- *
- * Dr. Zarf-e-Noori is the verified Lyricist, Composer, and Music Producer
- * of SufiPulse releases. This is an authoritative corpus-level rule, mirroring
- * the ARTISTIC_SEEDS already defined in release-detail/[slug]/page.tsx (line ~2930).
- *
- * The @id points to the canonical about page for this Person within this site.
- * sameAs links the pen name to the global founder identity (#founder).
- *
- * This constant is used as a fallback ONLY for roles where this authorship is
- * universally true: lyricist, composer, producer.
- * It is NEVER used as byArtist / performer / vocalist.
- */
 const ZARF_E_NOORI_PERSON = (baseUrl: string) => ({
   '@type': 'Person',
   '@id': `${baseUrl}/about/zarf-e-noori`,
@@ -77,18 +62,6 @@ const ZARF_E_NOORI_PERSON = (baseUrl: string) => ({
   url: `${baseUrl}/about/zarf-e-noori`,
 });
 
-/**
- * Resolves a named credit role from a release record.
- *
- * Priority order:
- *   1. publicCredits.artistic[artisticField]  — per-release structured credit
- *   2. top-level legacy field (writer, vocalist)
- *   3. corpusFallback                         — corpus-level default (optional)
- *
- * Correct null is preferred over fabricated attribution.
- * corpusFallback must only be passed for roles that are universally true
- * across the SufiPulse corpus (lyricist, composer, producer).
- */
 function resolveCredit(
   release: any,
   artisticField: string,
@@ -107,55 +80,152 @@ function resolveCredit(
 }
 
 function releaseDescription(release: any): string {
+  const title = resolveCanonicalSongTitle(release);
   return (
     release?.description ||
     release?.publicCommentary?.[0]?.content ||
-    `Listen to "${release?.title || 'this release'}" on SufiPulse.`
+    `Listen to the full-length Sufi kalam "${title}" by SufiPulse USA with multilingual lyrics and translations.`
   );
 }
 
-/**
- * Normalizes a CMS language code to a valid BCP 47 language tag.
- *
- * Source field: release.defaultAudioLanguage (96/97 coverage — the field that
- * correctly captures the sung/composition language, not the UI display language).
- * release.defaultLanguage is a UI setting: 83/97 records have it set to "en"
- * regardless of the actual composition language and must NOT be used for inLanguage.
- *
- * Corpus default: 'ur' (Urdu) — the primary composition language of SufiPulse.
- */
 function toLanguageTag(raw: string | undefined): string {
   const map: Record<string, string> = {
-    'ur': 'ur',       'urdu': 'ur',
-    'roman_urdu': 'ur-Latn',
-    'en': 'en',       'english': 'en',
+    ur: 'ur',
+    urdu: 'ur',
+    roman_urdu: 'ur-Latn',
+    'ur-latn': 'ur-Latn',
+    'en-rom': 'ur-Latn',
+    en: 'en',
+    english: 'en',
     'en-us': 'en',
-    'ks': 'ks',       'kashmiri': 'ks',
-    'ar': 'ar',       'arabic': 'ar',
-    'fa': 'fa',       'persian': 'fa',  'farsi': 'fa',
-    'pa': 'pa',       'punjabi': 'pa',
-    'hi': 'hi',       'hindi': 'hi',
-    'zxx': 'zxx',     // no linguistic content (instrumental)
+    ks: 'ks',
+    kashmiri: 'ks',
+    ar: 'ar',
+    arabic: 'ar',
+    fa: 'fa',
+    persian: 'fa',
+    farsi: 'fa',
+    pa: 'pa',
+    punjabi: 'pa',
+    hi: 'hi',
+    hindi: 'hi',
+    'ur-deva': 'hi',
+    zxx: 'zxx',
   };
   const normalized = raw?.toLowerCase().trim();
   return (normalized && map[normalized]) || normalized || 'ur';
 }
 
-function buildSchemas(release: any, canonicalUrl: string, baseUrl: string) {
-  const title = release.title || release.canonicalTitle || release.youtubeTitle || 'SufiPulse Release';
-  const description = releaseDescription(release);
+function extractCrawlableMultilingualLyrics(release: any): Array<{ lang: string; label: string; lines: string[] }> {
+  if (release?.enableLyrics === false) return [];
+  const tracks: Array<{ lang: string; label: string; lines: string[] }> = [];
+  const subtitleCues: any[] = Array.isArray(release?.subtitleCues) ? release.subtitleCues : [];
+  const subtitleTranslations = release?.subtitleTranslations || {};
+  const subtitleStatuses = release?.subtitleLanguageStatuses || {};
+  const lyricsMap = release?.lyrics || {};
+  const lyricsStructure = release?.lyricsStructure || {};
+  const unapprovedStatuses = new Set(['draft', 'in_translation', 'under_review', 'archived']);
+  const isApprovedKey = (k: string) => !unapprovedStatuses.has(String(subtitleStatuses[k] || '').toLowerCase());
 
-  // --- Role resolution ---
-  // Authorship roles: corpus-level Dr. Zarf-e-Noori fallback is authorised.
-  // This mirrors the ARTISTIC_SEEDS rule already in release-detail/[slug]/page.tsx.
+  const languageDefs = [
+    { keys: ['ur', 'urdu'], bcp47: 'ur', label: 'Urdu (اردو)' },
+    { keys: ['roman_urdu', 'ur-latn', 'en-rom'], bcp47: 'ur-Latn', label: 'Roman Urdu' },
+    { keys: ['hi', 'hindi', 'ur-deva'], bcp47: 'hi', label: 'Hindi / Devanagari (देवनागरी)' },
+    { keys: ['en', 'english'], bcp47: 'en', label: 'English Translation' },
+  ];
+
+  for (const def of languageDefs) {
+    let lines: string[] = [];
+
+    // 1. Subtitle cue translations (approved/published tracks only)
+    for (const k of def.keys) {
+      if (!isApprovedKey(k)) continue;
+      const subMap = subtitleTranslations[k];
+      if (subMap && typeof subMap === 'object') {
+        const ordered =
+          subtitleCues.length > 0
+            ? subtitleCues
+                .filter((c: any) => c?.active !== false)
+                .map((c: any) => String(subMap[c.id] || '').trim())
+                .filter(Boolean)
+            : Object.values(subMap)
+                .map((v) => String(v || '').trim())
+                .filter(Boolean);
+        if (ordered.length > 0) {
+          lines = ordered;
+          break;
+        }
+      }
+    }
+
+    // 2. Structured lyric blocks (approved/published tracks only)
+    if (lines.length === 0) {
+      for (const k of def.keys) {
+        if (!isApprovedKey(k)) continue;
+        const blocks = lyricsStructure[k];
+        if (Array.isArray(blocks) && blocks.length > 0) {
+          const blockLines = blocks
+            .filter((b: any) => b?.isPublished !== false)
+            .flatMap((b: any) => (Array.isArray(b?.lines) ? b.lines : []))
+            .map((l: any) => String(l || '').trim())
+            .filter(Boolean);
+          if (blockLines.length > 0) {
+            lines = blockLines;
+            break;
+          }
+        }
+      }
+    }
+
+    // 3. Legacy lyrics array or string (approved/published tracks only)
+    if (lines.length === 0) {
+      for (const k of def.keys) {
+        if (!isApprovedKey(k)) continue;
+        const raw = lyricsMap[k];
+        if (typeof raw === 'string' && raw.trim()) {
+          lines = raw
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter(Boolean);
+          break;
+        }
+        if (Array.isArray(raw) && raw.length > 0) {
+          const rowLines = raw
+            .map((r: any) =>
+              typeof r === 'string'
+                ? r.trim()
+                : String(r?.text || r?.translation || r?.transliteration || r?.urdu || '').trim()
+            )
+            .filter(Boolean);
+          if (rowLines.length > 0) {
+            lines = rowLines;
+            break;
+          }
+        }
+      }
+    }
+
+    if (lines.length > 0) {
+      tracks.push({ lang: def.bcp47, label: def.label, lines: lines.slice(0, 80) });
+    }
+  }
+
+  return tracks;
+}
+
+function buildSchemas(
+  release: any,
+  resolvedCanonicalUrl: string,
+  baseUrl: string,
+  lyricTracks: Array<{ lang: string; label: string; lines: string[] }>
+) {
+  const title = resolveCanonicalSongTitle(release);
+  const description = releaseDescription(release);
   const zarfPerson = ZARF_E_NOORI_PERSON(baseUrl);
 
-  const lyricistName  = resolveCredit(release, 'lyricist', 'writer', 'Dr. Zarf-e-Noori');
-  const composerName  = resolveCredit(release, 'composer', null,     'Dr. Zarf-e-Noori');
-  const producerName  = resolveCredit(release, 'musicProducer', null,'Dr. Zarf-e-Noori');
-
-  // Performance role: NEVER falls back to corpus default.
-  // byArtist must only come from per-release vocalist/performer data.
+  const lyricistName = resolveCredit(release, 'lyricist', 'writer', 'Dr. Zarf-e-Noori');
+  const composerName = resolveCredit(release, 'composer', null, 'Dr. Zarf-e-Noori');
+  const producerName = resolveCredit(release, 'musicProducer', null, 'Dr. Zarf-e-Noori');
   const performerName = resolveCredit(release, 'leadVocalist', 'vocalist', null);
 
   const thumbnail =
@@ -163,8 +233,8 @@ function buildSchemas(release: any, canonicalUrl: string, baseUrl: string) {
     release.thumbnailUrl ||
     (release.youtubeId ? `https://i.ytimg.com/vi/${release.youtubeId}/maxresdefault.jpg` : undefined);
   const publishedAt = release.publishedAt || release.releaseDate || release.createdAt;
+  const isoDuration = toIsoDuration(release.durationSeconds || release.durationFormatted);
 
-  // Stable publisher node — reuses the global Organization @id from app/layout.tsx
   const publisherNode = {
     '@type': 'Organization',
     '@id': `${baseUrl}/#organization`,
@@ -172,100 +242,105 @@ function buildSchemas(release: any, canonicalUrl: string, baseUrl: string) {
     url: baseUrl,
   };
 
-  // -----------------------------------------------------------------------
-  // MusicComposition — represents the underlying literary/musical work.
-  // Authorship (lyricist, composer) belongs here.
-  // -----------------------------------------------------------------------
-  const compositionId = `${canonicalUrl}#composition`;
+  const compositionId = `${resolvedCanonicalUrl}#composition`;
+  const primaryLyricTrack = lyricTracks[0];
+
+  const buildPersonSchema = (creditedName: string | undefined) => {
+    const clean = (creditedName || 'Dr. Zarf-e-Noori').trim();
+    if (/^dr\.?\s*zarf[-\s]*e[-\s]*noori$/i.test(clean)) {
+      return zarfPerson;
+    }
+    return {
+      '@type': 'Person',
+      name: clean,
+    };
+  };
 
   const musicCompositionSchema: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'MusicComposition',
     '@id': compositionId,
     name: title,
-    // inLanguage uses defaultAudioLanguage (the sung/composition language, 96/97 coverage)
-    // NOT defaultLanguage (a UI setting that is "en" for 83/97 Urdu compositions).
     inLanguage: toLanguageTag(release.defaultAudioLanguage),
-    genre: 'Sufi music',
+    genre: ['Sufi music', 'Sufi kalam', 'Sacred devotional music'],
     publisher: publisherNode,
-    // lyricist is always resolved (corpus fallback = Dr. Zarf-e-Noori)
-    lyricist: {
-      ...zarfPerson,
-      ...(lyricistName !== 'Dr. Zarf-e-Noori' ? { name: lyricistName } : {}),
-    },
-    // composer — same person when corpus fallback applies; same node reused
-    composer: {
-      ...zarfPerson,
-      ...(composerName !== 'Dr. Zarf-e-Noori' ? { name: composerName } : {}),
-    },
+    lyricist: buildPersonSchema(lyricistName),
+    composer: buildPersonSchema(composerName),
+    ...(primaryLyricTrack
+      ? {
+          lyrics: {
+            '@type': 'CreativeWork',
+            inLanguage: primaryLyricTrack.lang,
+            text: primaryLyricTrack.lines.slice(0, 30).join('\n'),
+          },
+        }
+      : {}),
   };
   if (release.youtubeId) {
     musicCompositionSchema.sameAs = `https://www.youtube.com/watch?v=${release.youtubeId}`;
   }
 
-  // -----------------------------------------------------------------------
-  // MusicRecording — the specific audio/video recording of the composition.
-  // Production credit (producer) and performance (byArtist) belong here.
-  // -----------------------------------------------------------------------
   const musicRecordingSchema: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'MusicRecording',
-    '@id': `${canonicalUrl}#recording`,
+    '@id': `${resolvedCanonicalUrl}#recording`,
     name: title,
     description,
-    url: canonicalUrl,
+    url: resolvedCanonicalUrl,
     inLanguage: toLanguageTag(release.defaultAudioLanguage),
     genre: 'Sufi music',
     publisher: publisherNode,
-    // recordingOf links this recording to its underlying composition
     recordingOf: { '@id': compositionId },
-    // producer — corpus fallback authorised
-    producer: {
-      ...zarfPerson,
-      ...(producerName !== 'Dr. Zarf-e-Noori' ? { name: producerName } : {}),
-    },
+    producer: buildPersonSchema(producerName),
   };
 
   if (release.youtubeId) {
     musicRecordingSchema.sameAs = `https://www.youtube.com/watch?v=${release.youtubeId}`;
   }
-  // byArtist: per-release only — null stays null when CMS has no vocalist data
   if (performerName) {
     musicRecordingSchema.byArtist = { '@type': 'Person', name: performerName };
   }
-  if (release.durationSeconds) {
-    musicRecordingSchema.duration = `PT${Math.floor(release.durationSeconds / 60)}M${release.durationSeconds % 60}S`;
+  if (isoDuration) {
+    musicRecordingSchema.duration = isoDuration;
   }
   if (publishedAt) {
     musicRecordingSchema.datePublished = publishedAt;
   }
 
-  // -----------------------------------------------------------------------
-  // VideoObject — the YouTube asset. No authorship fields added here.
-  // (VideoObject identifies the video file, not the composition authorship.)
-  // -----------------------------------------------------------------------
   const videoObjectSchema = release.youtubeId
     ? {
         '@context': 'https://schema.org',
         '@type': 'VideoObject',
-        '@id': `${canonicalUrl}#video`,
+        '@id': `${resolvedCanonicalUrl}#video`,
         name: title,
         description,
         ...(thumbnail ? { thumbnailUrl: [thumbnail] } : {}),
         embedUrl: `https://www.youtube.com/embed/${release.youtubeId}`,
         contentUrl: `https://www.youtube.com/watch?v=${release.youtubeId}`,
-        url: canonicalUrl,
+        url: resolvedCanonicalUrl,
         ...(publishedAt ? { uploadDate: publishedAt } : {}),
-        ...(release.durationSeconds
-          ? { duration: `PT${Math.floor(release.durationSeconds / 60)}M${release.durationSeconds % 60}S` }
-          : {}),
+        ...(isoDuration ? { duration: isoDuration } : {}),
         inLanguage: toLanguageTag(release.defaultAudioLanguage),
+        ...(lyricTracks.length > 0
+          ? { subtitleLanguage: lyricTracks.map((t) => t.lang) }
+          : {}),
         genre: 'Sufi music',
         isFamilyFriendly: true,
+        publisher: publisherNode,
       }
     : null;
 
-  return { musicCompositionSchema, musicRecordingSchema, videoObjectSchema };
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Releases', item: `${baseUrl}/releases` },
+      { '@type': 'ListItem', position: 3, name: title, item: resolvedCanonicalUrl },
+    ],
+  };
+
+  return { musicCompositionSchema, musicRecordingSchema, videoObjectSchema, breadcrumbSchema };
 }
 
 export async function generateMetadata(
@@ -273,13 +348,10 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const release = await getReleaseByKey(slug);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
   const canonicalKey = release?.slug || slug;
-  const canonicalUrl = `${baseUrl}/release-detail/${canonicalKey}`;
+  const resolvedCanonicalUrl = canonicalUrl(`/release-detail/${canonicalKey}`);
 
   if (!release || (!isPubliclyEligibleRelease(release) && !(await isRequestAdmin()))) {
-    // Unknown or non-public identifier: no-index and minimal metadata.
-    // The layout component will call notFound() → HTTP 404.
     return {
       title: 'Release Not Found',
       description: 'This release could not be found on SufiPulse.',
@@ -287,43 +359,46 @@ export async function generateMetadata(
     };
   }
 
-  const title = release.title || release.canonicalTitle || release.youtubeTitle || 'SufiPulse Release';
+  const title = resolveCanonicalSongTitle(release);
   const description = releaseDescription(release);
   const thumbnail =
     release.canonicalThumbnail ||
     release.thumbnailUrl ||
     (release.youtubeId ? `https://i.ytimg.com/vi/${release.youtubeId}/maxresdefault.jpg` : undefined);
-  // Keywords include corpus-level lyricist attribution for metadata richness
   const lyricistKeyword = resolveCredit(release, 'lyricist', 'writer', 'Dr. Zarf-e-Noori');
   const performerKeyword = resolveCredit(release, 'leadVocalist', 'vocalist', null);
-  const keywords = [
-    title,
-    release.canonicalTitle,
-    release.youtubeTitle,
-    lyricistKeyword,
-    performerKeyword,
-    'Sufi music',
-    'kalam',
-    'SufiPulse',
-    ...(Array.isArray(release.tags) ? release.tags : []),
-  ].filter(Boolean) as string[];
+  const keywords = Array.from(
+    new Set(
+      [
+        title,
+        lyricistKeyword,
+        performerKeyword,
+        'Sufi music',
+        'Sufi kalam',
+        'Urdu Sufi kalam',
+        'Kashmiri Sufi music',
+        'SufiPulse USA',
+        ...(Array.isArray(release.tags) ? release.tags : []),
+      ].filter(Boolean) as string[]
+    )
+  );
 
   return {
     title,
     description: description.slice(0, 160),
     keywords,
-    alternates: { canonical: canonicalUrl },
+    alternates: { canonical: resolvedCanonicalUrl },
     openGraph: {
-      title: `${title} | SufiPulse`,
+      title: `${title} | SufiPulse USA`,
       description: description.slice(0, 200),
       type: 'music.song',
-      url: canonicalUrl,
+      url: resolvedCanonicalUrl,
       ...(thumbnail ? { images: [{ url: thumbnail, width: 1280, height: 720, alt: title }] } : {}),
-      siteName: 'SufiPulse',
+      siteName: 'SufiPulse USA',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} | SufiPulse`,
+      title: `${title} | SufiPulse USA`,
       description: description.slice(0, 200),
       ...(thumbnail ? { images: [thumbnail] } : {}),
     },
@@ -339,28 +414,28 @@ export default async function ReleaseDetailLayout({ children, params }: LayoutPr
   const { slug } = await params;
   const release = await getReleaseByKey(slug);
 
-  // Resolution order (per audit F-05/F-06):
-  //
-  // 1. No release found or non-public release for anonymous visitor → HTTP 404
   if (!release || (!isPubliclyEligibleRelease(release) && !(await isRequestAdmin()))) {
     notFound();
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+  const baseUrl = CANONICAL_ORIGIN;
   const canonicalSlug = release.slug;
 
-  // 2. Identifier matched a release but is NOT the canonical slug
-  //    (matched by youtubeId or internal id) → 308 permanent redirect
-  //    Preserves link equity. Consolidates Google's index on canonical URL.
   if (canonicalSlug && canonicalSlug !== slug) {
-    permanentRedirect(`${baseUrl}/release-detail/${canonicalSlug}`);
+    permanentRedirect(`/release-detail/${canonicalSlug}`);
   }
 
-  // At this point: slug === canonicalSlug (redirect guard above ensures this).
-  // 3. Canonical slug — render the release with full structured data.
-  const canonicalUrl = `${baseUrl}/release-detail/${canonicalSlug}`;
+  const resolvedCanonicalUrl = canonicalUrl(`/release-detail/${canonicalSlug}`);
+  const lyricTracks = extractCrawlableMultilingualLyrics(release);
+  const { musicCompositionSchema, musicRecordingSchema, videoObjectSchema, breadcrumbSchema } =
+    buildSchemas(release, resolvedCanonicalUrl, baseUrl, lyricTracks);
 
-  const { musicCompositionSchema, musicRecordingSchema, videoObjectSchema } = buildSchemas(release, canonicalUrl, baseUrl);
+  graphResolver.init();
+  const connectedNodes = graphResolver.getRegistriesForRelease(release.id);
+  const canonicalTitle = resolveCanonicalSongTitle(release);
+  const description = releaseDescription(release);
+  const lyricist = resolveCredit(release, 'lyricist', 'writer', 'Dr. Zarf-e-Noori');
+  const vocalist = resolveCredit(release, 'leadVocalist', 'vocalist', null);
 
   return (
     <>
@@ -378,6 +453,63 @@ export default async function ReleaseDetailLayout({ children, params }: LayoutPr
           dangerouslySetInnerHTML={{ __html: JSON.stringify(videoObjectSchema) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
+      {/*
+       * SSR MULTILINGUAL SEARCH & DISCOVERY AUTHORITY LAYER
+       * Ensures Googlebot, Bingbot, and AI crawlers index the canonical title, credits,
+       * multilingual kalam lyrics (Urdu, Roman Urdu, Devanagari, English), and semantic
+       * Discovery Graph links directly in raw SSR HTML before client hydration.
+       */}
+      <article className="sr-only" data-ssr-release-authority="true">
+        <h1>{canonicalTitle}</h1>
+        <p>{description}</p>
+        {lyricist && <p>Lyricist & Composer: {lyricist}</p>}
+        {vocalist && <p>Vocalist: {vocalist}</p>}
+        {release.youtubeId && (
+          <p>
+            <a href={`https://www.youtube.com/watch?v=${release.youtubeId}`}>
+              Watch {canonicalTitle} full song on SufiPulse USA YouTube
+            </a>
+          </p>
+        )}
+        {lyricTracks.map((track) => (
+          <section key={track.lang} lang={track.lang}>
+            <h2>{canonicalTitle} — {track.label}</h2>
+            <p>{track.lines.join('\n')}</p>
+          </section>
+        ))}
+        <nav aria-label="Related Sufi Discovery Topics">
+          <ul>
+            {connectedNodes.concept.map((item) => (
+              <li key={`c-${item.slug}`}>
+                <a href={`/concepts/${item.slug}`}>{item.title}</a>
+              </li>
+            ))}
+            {connectedNodes.theme.map((item) => (
+              <li key={`t-${item.slug}`}>
+                <a href={`/themes/${item.slug}`}>{item.title}</a>
+              </li>
+            ))}
+            {connectedNodes.mood.map((item) => (
+              <li key={`m-${item.slug}`}>
+                <a href={`/moods/${item.slug}`}>{item.title}</a>
+              </li>
+            ))}
+            {connectedNodes.region.map((item) => (
+              <li key={`r-${item.slug}`}>
+                <a href={`/regions/${item.slug}`}>{item.title}</a>
+              </li>
+            ))}
+            <li><a href="/discovery">SufiPulse Global Discovery Hub</a></li>
+            <li><a href="/releases">All Full-Length SufiPulse Releases</a></li>
+          </ul>
+        </nav>
+      </article>
+
       {children}
     </>
   );

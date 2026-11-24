@@ -1,5 +1,47 @@
 import { PostgresReleaseRepository } from '../db/release-repository';
 import { cmsServerStorage } from '../../lib/cms-storage-server';
+import { toRomanUrdu } from '../../lib/transliteration';
+
+const UNAPPROVED_LYRIC_STATUSES = new Set(['draft', 'in_translation', 'under_review', 'archived']);
+
+export function extractApprovedPublicSearchableLyrics(r: any): string {
+  if (r?.enableLyrics === false) return '';
+  const statuses = r?.subtitleLanguageStatuses || {};
+  const chunks: string[] = [];
+
+  if (r?.canonicalLyrics?.status === 'APPROVED' && r.canonicalLyrics.rawText) {
+    chunks.push(String(r.canonicalLyrics.rawText));
+  }
+  if (r?.subtitleTranslations && typeof r.subtitleTranslations === 'object') {
+    for (const [lang, map] of Object.entries(r.subtitleTranslations)) {
+      if (UNAPPROVED_LYRIC_STATUSES.has(String(statuses[lang] || '').toLowerCase())) continue;
+      if (map && typeof map === 'object') {
+        chunks.push(Object.values(map).join(' '));
+      }
+    }
+  }
+  if (r?.lyricsStructure && typeof r.lyricsStructure === 'object') {
+    for (const [lang, blocks] of Object.entries(r.lyricsStructure)) {
+      if (UNAPPROVED_LYRIC_STATUSES.has(String(statuses[lang] || '').toLowerCase())) continue;
+      if (Array.isArray(blocks)) {
+        for (const b of blocks) {
+          if (b?.isPublished === false) continue;
+          if (Array.isArray(b?.lines)) chunks.push(b.lines.join(' '));
+        }
+      }
+    }
+  }
+  if (r?.lyrics && typeof r.lyrics === 'object') {
+    for (const [lang, raw] of Object.entries(r.lyrics)) {
+      if (UNAPPROVED_LYRIC_STATUSES.has(String(statuses[lang] || '').toLowerCase())) continue;
+      if (typeof raw === 'string') chunks.push(raw);
+      else if (Array.isArray(raw)) {
+        chunks.push(raw.map((x: any) => (typeof x === 'string' ? x : x?.text || x?.translation || x?.transliteration || '')).join(' '));
+      }
+    }
+  }
+  return chunks.join(' ');
+}
 
 export type ReleaseStorageBackend = 'filesystem' | 'postgres';
 
@@ -38,17 +80,30 @@ function filterFilesystemReleases(input: any) {
   }
   if (input?.q) {
     const q = String(input.q).trim().toLowerCase();
-    releases = releases.filter((r: any) => [
-      r.canonicalTitle,
-      r.title,
-      r.youtubeTitle,
-      r.description,
-      r.youtubeId,
-      r.slug,
-      typeof r.writer === 'string' ? r.writer : r.writer?.name,
-      typeof r.vocalist === 'string' ? r.vocalist : r.vocalist?.name,
-      Array.isArray(r.tags) ? r.tags.join(' ') : '',
-    ].filter(Boolean).join(' ').toLowerCase().includes(q));
+    const qRoman = toRomanUrdu(q).trim().toLowerCase();
+    releases = releases.filter((r: any) => {
+      const approvedLyrics = extractApprovedPublicSearchableLyrics(r);
+      const haystack = [
+        r.canonicalTitle,
+        r.title,
+        r.youtubeTitle,
+        r.description,
+        r.youtubeId,
+        r.slug,
+        typeof r.writer === 'string' ? r.writer : r.writer?.name,
+        typeof r.vocalist === 'string' ? r.vocalist : r.vocalist?.name,
+        Array.isArray(r.tags) ? r.tags.join(' ') : '',
+        Array.isArray(r.sufiConcepts) ? r.sufiConcepts.join(' ') : '',
+        Array.isArray(r.themes) ? r.themes.join(' ') : '',
+        approvedLyrics,
+      ].filter(Boolean).join(' ').toLowerCase();
+      if (haystack.includes(q)) return true;
+      if (qRoman && qRoman !== q) {
+        const romanHaystack = toRomanUrdu(haystack).toLowerCase();
+        if (haystack.includes(qRoman) || romanHaystack.includes(qRoman)) return true;
+      }
+      return false;
+    });
   }
   if (input?.year) {
     const year = Number(input.year);

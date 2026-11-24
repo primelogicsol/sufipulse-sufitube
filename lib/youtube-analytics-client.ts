@@ -55,9 +55,20 @@ export async function queryYouTubeAnalytics(
     ...extra,
   });
 
-  const res = await yt.fetch(`${ANALYTICS_BASE}?${params}`, {
-    cache: 'no-store',
-  });
+  let res: Response | null = null;
+  for (let attempt = 0; attempt <= 2; attempt++) {
+    res = await yt.fetch(`${ANALYTICS_BASE}?${params}`, {
+      cache: 'no-store',
+    });
+    if ((res.status === 429 || res.status >= 500) && attempt < 2) {
+      await new Promise((r) => setTimeout(r, 450 * (attempt + 1)));
+      continue;
+    }
+    break;
+  }
+  if (!res) {
+    throw new Error('YouTube Analytics API returned no response');
+  }
 
   if (!res.ok) {
     const body = await res.text();

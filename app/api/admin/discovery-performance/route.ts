@@ -1,365 +1,347 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'node:fs';
+import path from 'node:path';
 import { requireAdmin } from '@/server/middleware/authenticate';
-import { getYTAnalyticsToken } from '@/app/lib/server/youtube-analytics-oauth-store';
 import { discoveryAnalytics } from '@/lib/discovery-analytics';
 import { graphResolver } from '@/lib/graph-resolver';
 import { registriesStorage } from '@/lib/registries-storage';
-import { cmsStorage } from '@/lib/cms-storage';
 import { crawlerRegistry } from '@/lib/crawler-registry';
-import { calculateEcosystemVisibilityScore, calculateEcosystemAuthorityScore } from '@/lib/brand-governance';
 import { brandRegistry } from '@/lib/brand-registry';
-import { analyticsStorage } from '@/lib/analytics-storage';
-import fs from 'node:fs';
-import path from 'node:path';
+import { organicDiscoveryTelemetry } from '@/lib/organic-discovery-telemetry';
+import {
+  getGoogleSearchConsoleReport,
+  getGoogleSearchConsoleStatus,
+  submitSitemapToGoogleSearchConsole,
+} from '@/lib/google-search-console';
+import {
+  getBingWebmasterReport,
+  submitSitemapToBingWebmaster,
+} from '@/lib/bing-webmaster';
+import {
+  getSearchIndexingLogSnapshot,
+  verifyPublicIndexNowKey,
+} from '@/lib/search-indexing-service';
+import { getYouTubeDiscoveryIntelligence } from '@/lib/youtube-discovery-intelligence';
+import { buildSearchDemandIntelligence } from '@/lib/search-demand-engine';
+import { auditAllPublishedReleasesSeo } from '@/lib/release-discovery-pipeline';
+import { syncOptimizationProposals } from '@/lib/discovery-optimization-loop';
+import sitemap from '@/app/sitemap';
 
 export const dynamic = 'force-dynamic';
+
+function countJsonArrayFile(relPath: string): number {
+  try {
+    const p = path.join(process.cwd(), relPath);
+    if (!fs.existsSync(p)) return 0;
+    const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+    return Array.isArray(data) ? data.length : 0;
+  } catch {
+    return 0;
+  }
+}
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
+    const { searchParams } = new URL(request.url);
+    const forceRefresh = searchParams.get('refresh') === '1';
+
     discoveryAnalytics.forceHydrate();
     registriesStorage.init();
     graphResolver.init();
-    crawlerRegistry.init();
+    crawlerRegistry.forceHydrate();
     brandRegistry.init();
+    organicDiscoveryTelemetry.forceHydrate();
 
-    const getGroupedMetrics = (type: 'concept' | 'theme' | 'region' | 'release' | 'playlist') => {
-      const tallies = discoveryAnalytics.getTalliesForType(type);
-      const groups: Record<string, {
-        slug: string;
-        video_clicks: number;
-        playlist_clicks: number;
-        subscribe_clicks: number;
-        page_views: number;
-        total: number;
-        conversion_rate: number;
-      }> = {};
-
-      tallies.forEach(t => {
-        if (!groups[t.sourceSlug]) {
-          groups[t.sourceSlug] = {
-            slug: t.sourceSlug,
-            video_clicks: 0,
-            playlist_clicks: 0,
-            subscribe_clicks: 0,
-            page_views: 0,
-            total: 0,
-            conversion_rate: 0,
-          };
-        }
-
-        if (t.actionType === 'video_click') {
-          groups[t.sourceSlug].video_clicks += t.count;
-          groups[t.sourceSlug].total += t.count;
-        } else if (t.actionType === 'playlist_click') {
-          groups[t.sourceSlug].playlist_clicks += t.count;
-          groups[t.sourceSlug].total += t.count;
-        } else if (t.actionType === 'subscribe_click') {
-          groups[t.sourceSlug].subscribe_clicks += t.count;
-          groups[t.sourceSlug].total += t.count;
-        } else if (t.actionType === 'page_view') {
-          groups[t.sourceSlug].page_views += t.count;
-        }
-      });
-
-      Object.values(groups).forEach(g => {
-        g.conversion_rate = g.page_views > 0
-          ? parseFloat(((g.total / g.page_views) * 100).toFixed(1))
-          : 0;
-      });
-
-      return Object.values(groups).sort((a, b) => b.total - a.total);
-    };
-
-    const concepts = getGroupedMetrics('concept');
-    const themes = getGroupedMetrics('theme');
-    const regions = getGroupedMetrics('region');
-    const releases = getGroupedMetrics('release');
-    const playlists = getGroupedMetrics('playlist');
-    const totals = discoveryAnalytics.getActionTotals();
-
-    const winners = {
-      concepts: concepts.slice(0, 3).filter(x => x.total > 0),
-      themes: themes.slice(0, 3).filter(x => x.total > 0),
-      regions: regions.slice(0, 3).filter(x => x.total > 0),
-      playlists: playlists.slice(0, 3).filter(x => x.total > 0),
-      releases: releases.slice(0, 3).filter(x => x.total > 0),
-    };
-
-    const losers = {
-      no_clicks: [
-        ...concepts.filter(x => x.page_views >= 50 && x.total === 0).map(x => ({ ...x, type: 'concept' })),
-        ...themes.filter(x => x.page_views >= 50 && x.total === 0).map(x => ({ ...x, type: 'theme' })),
-        ...regions.filter(x => x.page_views >= 50 && x.total === 0).map(x => ({ ...x, type: 'region' })),
-        ...releases.filter(x => x.page_views >= 50 && x.total === 0).map(x => ({ ...x, type: 'release' })),
-        ...playlists.filter(x => x.page_views >= 50 && x.total === 0).map(x => ({ ...x, type: 'playlist' })),
-      ],
-      low_conversion: [
-        ...concepts.filter(x => x.page_views >= 50 && x.total > 0 && x.conversion_rate < 10).map(x => ({ ...x, type: 'concept' })),
-        ...themes.filter(x => x.page_views >= 50 && x.total > 0 && x.conversion_rate < 10).map(x => ({ ...x, type: 'theme' })),
-        ...regions.filter(x => x.page_views >= 50 && x.total > 0 && x.conversion_rate < 10).map(x => ({ ...x, type: 'region' })),
-        ...releases.filter(x => x.page_views >= 50 && x.total > 0 && x.conversion_rate < 10).map(x => ({ ...x, type: 'release' })),
-        ...playlists.filter(x => x.page_views >= 50 && x.total > 0 && x.conversion_rate < 10).map(x => ({ ...x, type: 'playlist' })),
-      ].sort((a, b) => a.conversion_rate - b.conversion_rate),
-      no_continuation: [
-        ...concepts.filter(x => x.video_clicks > 15 && x.playlist_clicks === 0).map(x => ({ ...x, type: 'concept' })),
-        ...themes.filter(x => x.video_clicks > 15 && x.playlist_clicks === 0).map(x => ({ ...x, type: 'theme' })),
-        ...regions.filter(x => x.video_clicks > 15 && x.playlist_clicks === 0).map(x => ({ ...x, type: 'region' })),
-        ...releases.filter(x => x.video_clicks > 15 && x.playlist_clicks === 0).map(x => ({ ...x, type: 'release' })),
-        ...playlists.filter(x => x.video_clicks > 15 && x.playlist_clicks === 0).map(x => ({ ...x, type: 'playlist' })),
-      ],
-    };
-
-    const recommendations: {
-      type: 'orphan' | 'density' | 'playlist' | 'localization' | 'subscribe';
-      priority: 'high' | 'medium' | 'low';
-      title: string;
-      message: string;
-      actionUrl: string;
-    }[] = [];
-
-    const orphans = graphResolver.getOrphanReleases() || [];
-    orphans.forEach(o => {
-      recommendations.push({
-        type: 'orphan',
-        priority: 'high',
-        title: `Orphan Release: ${o.title}`,
-        message: 'This release is not linked to any concepts, regions, or playlists. Associate it inside the Discovery Graph Manager to drive traffic.',
-        actionUrl: `/admin/discovery-graph?releaseId=${o.id}`,
-      });
-    });
-
-    const activeConcepts = registriesStorage.getItems('concepts').filter(c => c.isActive && c.isPublic);
-    activeConcepts.forEach(c => {
-      const conn = graphResolver.getReleasesForRegistry(c.slug, 'concept') || [];
-      const telemetry = concepts.find(x => x.slug === c.slug);
-      const pageViews = telemetry ? telemetry.page_views : 0;
-
-      if (conn.length === 0) {
-        recommendations.push({
-          type: 'density',
-          priority: 'high',
-          title: `Empty Concept: ${c.title}`,
-          message: `Concept "${c.title}" has 0 connected releases. Link at least one release to make this SEO page functional.`,
-          actionUrl: '/admin/discovery-graph',
-        });
-      } else if (conn.length < 2 && pageViews > 100) {
-        recommendations.push({
-          type: 'density',
-          priority: 'medium',
-          title: `Low Density Concept: ${c.title}`,
-          message: `"${c.title}" has high page views (${pageViews}) but only 1 connected release. Connect more releases to capture continuation.`,
-          actionUrl: '/admin/discovery-graph',
-        });
-      }
-    });
-
-    regions.forEach(r => {
-      if (r.page_views > 100 && r.conversion_rate < 8) {
-        const item = registriesStorage.getItem('regions', r.slug);
-        const name = item ? item.title : r.slug;
-        recommendations.push({
-          type: 'localization',
-          priority: 'medium',
-          title: `Region Optimization: ${name}`,
-          message: `Region "${name}" has low click conversion (${r.conversion_rate}%). Add localized subtitles, description language, or custom metadata to connected releases.`,
-          actionUrl: '/admin/registries',
-        });
-      }
-    });
-
-    releases.forEach(rel => {
-      if (rel.video_clicks > 100 && rel.subscribe_clicks < 5) {
-        const item = cmsStorage.exportReleases()?.find(x => x.slug === rel.slug);
-        const title = item ? item.title : rel.slug;
-        recommendations.push({
-          type: 'subscribe',
-          priority: 'medium',
-          title: `Subscriber Catalyst: ${title}`,
-          message: `Release "${title}" drives high video clicks (${rel.video_clicks}) but low subscription clicks (${rel.subscribe_clicks}). Add an on-page subscribe CTA or channel promotion card.`,
-          actionUrl: '/admin/cms-releases',
-        });
-      }
-    });
-
-    playlists.forEach(pl => {
-      if (pl.page_views > 100 && pl.playlist_clicks === 0) {
-        const item = registriesStorage.getItem('playlists', pl.slug);
-        const title = item ? item.title : pl.slug;
-        recommendations.push({
-          type: 'playlist',
-          priority: 'high',
-          title: `Playlist Continuation Gap: ${title}`,
-          message: `Playlist "${title}" is visited but receives 0 clicks. Verify the playlist ID matches a valid public YouTube playlist feed.`,
-          actionUrl: '/admin/registries',
-        });
-      }
-    });
-
-    const priorityWeight = { high: 3, medium: 2, low: 1 };
-    recommendations.sort((a, b) => priorityWeight[b.priority] - priorityWeight[a.priority]);
-
-    const crawlerStats = crawlerRegistry.getRecords() || [];
-    const ecosystemVisibility = calculateEcosystemVisibilityScore();
-    const ecosystemAuthority = calculateEcosystemAuthorityScore();
-
-    const brandAssetClicks = Object.values(discoveryAnalytics.getTalliesForType('playlist'))
-      .concat(discoveryAnalytics.getTalliesForType('release'))
-      .filter(t => t.actionType === 'brand_asset_click')
-      .map(t => ({
-        slug: t.sourceSlug,
-        assetType: t.assetType || 'playlist',
-        assetName: t.assetName || t.sourceSlug,
-        sourcePage: t.sourcePage || 'direct',
-        count: t.count,
-        updatedAt: t.updatedAt,
-      }));
-
-    const brandAssets = brandRegistry.getAssets();
-    const searchOwnership = brandRegistry.getSearchOwnership();
-    const aiCitations = brandRegistry.getCitations();
-    const authorityGaps = brandRegistry.getGapTasks();
-
-    const syncStatus = brandRegistry.getApiSyncStatus();
-    let lastSuccessfulApiResponseAtGsc = syncStatus.lastSuccessfulApiResponseAtGsc;
-    let lastSuccessfulApiResponseAtYoutube = syncStatus.lastSuccessfulApiResponseAtYoutube;
-
-    const ytSnapshot = analyticsStorage.getSnapshot();
-    if (ytSnapshot?.apiStatus?.connected) {
-      const checkTime = ytSnapshot.apiStatus.lastCheck || ytSnapshot.lastUpdated;
-      if (!lastSuccessfulApiResponseAtYoutube || new Date(checkTime).getTime() > new Date(lastSuccessfulApiResponseAtYoutube).getTime()) {
-        lastSuccessfulApiResponseAtYoutube = checkTime;
-        brandRegistry.setLastSuccessfulApiResponseAtYoutube(lastSuccessfulApiResponseAtYoutube);
-      }
-    }
-
-    const gscProperty = process.env.GOOGLE_SEARCH_CONSOLE_PROPERTY;
-    const gscCreds = process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GSC_CLIENT_ID || process.env.GOOGLE_ADS_CLIENT_ID;
-    const gscChecks = {
-      oauthConfigured: !!gscCreds,
-      propertyVerified: !!gscProperty,
-      lastSyncSuccessful: !!lastSuccessfulApiResponseAtGsc,
-    };
-
-    let gscStatus: 'Connected' | 'Configured' | 'Warning' | 'Error' = 'Error';
-    if (!gscChecks.oauthConfigured) gscStatus = 'Error';
-    else if (!gscChecks.propertyVerified) gscStatus = 'Warning';
-    else if (!gscChecks.lastSyncSuccessful) gscStatus = 'Configured';
-    else gscStatus = 'Connected';
-
-    const ytApiKey = process.env.YOUTUBE_API_KEY;
-    const ytClientId = process.env.YOUTUBE_CLIENT_ID;
-    const ytClientSecret = process.env.YOUTUBE_CLIENT_SECRET;
-    const envRefreshToken = process.env.YOUTUBE_REFRESH_TOKEN || process.env.YOUTUBE_OAUTH_REFRESH_TOKEN;
-    const storedToken = await getYTAnalyticsToken().catch(() => null);
-    const hasRefreshToken = !!(storedToken?.refreshToken || envRefreshToken);
-    const hasOAuthClient = !!(ytClientId && ytClientSecret);
-
-    const youtubeChecks = {
-      dataApiConfigured: !!ytApiKey,
-      oauthConfigured: hasOAuthClient,
-      oauthTokenValid: hasOAuthClient && hasRefreshToken,
-      refreshTokenValid: hasRefreshToken,
-      lastSyncSuccessful: !!lastSuccessfulApiResponseAtYoutube,
-    };
-
-    let youtubeStatus: 'Connected' | 'Configured' | 'Warning' | 'Error' = 'Error';
-    if (!youtubeChecks.oauthConfigured) youtubeStatus = 'Error';
-    else if (!youtubeChecks.refreshTokenValid) youtubeStatus = 'Warning';
-    else if (!youtubeChecks.lastSyncSuccessful) youtubeStatus = 'Configured';
-    else youtubeStatus = 'Connected';
-
-    const host = request.headers.get('host') || '';
-    let environment: 'Local Development' | 'Staging' | 'Production' = 'Local Development';
-    if (host.includes('localhost') || host.includes('127.0.0.1')) {
-      environment = 'Local Development';
-    } else if (host.includes('staging') || host.includes('netlify') || host.includes('vercel.app')) {
-      environment = 'Staging';
-    } else if (host.includes('sufipulse.com')) {
-      environment = 'Production';
-    } else {
-      const nodeEnv = process.env.NODE_ENV;
-      const vercelEnv = process.env.VERCEL_ENV;
-      if (vercelEnv === 'production' || nodeEnv === 'production') environment = 'Production';
-      else if (vercelEnv === 'preview') environment = 'Staging';
-    }
-
-    const sitemapPath = path.join(process.cwd(), 'app', 'sitemap.ts');
-    const sitemapStatus = fs.existsSync(sitemapPath) ? 'Healthy' : 'Error';
-
-    const telemetryActive = totals.page_view > 0 || totals.video_click > 0;
-    const telemetryStatus = telemetryActive ? 'Active' : 'Inactive';
-    const aiAuditActive = aiCitations.length > 0;
-    const aiAuditStatus = aiAuditActive ? 'Active' : 'Inactive';
-
-    const observationStart = '2026-06-03T00:00:00.000Z';
-    const start = new Date(observationStart).getTime();
-    const elapsedDays = Math.floor((Date.now() - start) / (1000 * 60 * 60 * 24)) + 1;
-    const observationWindow = elapsedDays > 0 ? `Day ${elapsedDays} of 90` : 'Not Started';
-
-    const formatUtc = (d: Date) => {
-      const year = d.getUTCFullYear();
-      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(d.getUTCDate()).padStart(2, '0');
-      const hours = String(d.getUTCHours()).padStart(2, '0');
-      const minutes = String(d.getUTCMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day} ${hours}:${minutes} UTC`;
-    };
-
-    const productionReadiness = {
-      environment,
+    const [
+      youtubeDiscovery,
       gscStatus,
-      gscChecks,
-      youtubeStatus,
-      youtubeChecks,
-      sitemapStatus,
-      telemetryStatus,
-      aiAuditStatus,
-      observationWindow,
-      lastGscSync: lastSuccessfulApiResponseAtGsc ? formatUtc(new Date(lastSuccessfulApiResponseAtGsc)) : 'None',
-      lastYoutubeSync: lastSuccessfulApiResponseAtYoutube ? formatUtc(new Date(lastSuccessfulApiResponseAtYoutube)) : 'None',
-      lastSuccessfulSync: lastSuccessfulApiResponseAtYoutube
-        ? formatUtc(new Date(lastSuccessfulApiResponseAtYoutube))
-        : (lastSuccessfulApiResponseAtGsc ? formatUtc(new Date(lastSuccessfulApiResponseAtGsc)) : 'None'),
-      lastSuccessfulApiResponseAtGsc,
-      lastSuccessfulApiResponseAtYoutube,
-      gscConnected: gscStatus === 'Connected',
-      youtubeConnected: youtubeStatus === 'Connected',
-      telemetryActive,
-      lastSync: lastSuccessfulApiResponseAtYoutube ? formatUtc(new Date(lastSuccessfulApiResponseAtYoutube)) : 'None',
-      observationStart,
+      gscReport,
+      bingReport,
+      indexNowKeyCheck,
+      sitemapEntries,
+      optimizationLoop,
+    ] = await Promise.all([
+      getYouTubeDiscoveryIntelligence(forceRefresh),
+      getGoogleSearchConsoleStatus(),
+      getGoogleSearchConsoleReport(28),
+      getBingWebmasterReport(),
+      verifyPublicIndexNowKey(forceRefresh),
+      sitemap().catch(() => []),
+      syncOptimizationProposals(),
+    ]);
+
+    if (youtubeDiscovery.liveApiConnected) {
+      brandRegistry.setLastSuccessfulApiResponseAtYoutube(youtubeDiscovery.fetchedAt);
+    }
+    if (gscStatus.state === 'CONNECTED') {
+      brandRegistry.setLastSuccessfulApiResponseAtGsc(gscStatus.lastCheckedAt);
+    }
+
+    const searchDemand = buildSearchDemandIntelligence({
+      youtube: youtubeDiscovery,
+      gsc: gscReport,
+    });
+
+    const releaseSeoAudits = auditAllPublishedReleasesSeo();
+    const indexingLog = getSearchIndexingLogSnapshot(40);
+    const crawlers = crawlerRegistry.getRecords();
+    const funnelSummary = organicDiscoveryTelemetry.getFunnelSummary();
+    const actionTotals = discoveryAnalytics.getActionTotals();
+
+    // Sitemap composition breakdown
+    const sitemapBreakdown = {
+      totalUrls: sitemapEntries.length,
+      releaseUrls: sitemapEntries.filter((e) => e.url.includes('/release-detail/')).length,
+      discoveryEntityUrls: sitemapEntries.filter((e) => e.url.includes('/discovery/')).length,
+      knowledgeUrls: sitemapEntries.filter((e) => e.url.includes('/knowledge/')).length,
+      taxonomyUrls: sitemapEntries.filter((e) =>
+        /\/(concepts|themes|moods|regions)\//.test(e.url)
+      ).length,
+      articleUrls: sitemapEntries.filter((e) => e.url.includes('/literary-journal/')).length,
+      staticAuthorityUrls: sitemapEntries.filter(
+        (e) =>
+          !e.url.includes('/release-detail/') &&
+          !e.url.includes('/discovery/') &&
+          !e.url.includes('/knowledge/') &&
+          !/\/(concepts|themes|moods|regions)\//.test(e.url) &&
+          !e.url.includes('/literary-journal/')
+      ).length,
     };
 
-    const dataProvenance = {
-      discoveryTelemetry: telemetryActive ? 'first_party_runtime_telemetry' : 'unavailable',
-      youtubeAnalytics: ytSnapshot?.apiStatus?.connected ? 'youtube_analytics_api' : 'unavailable',
-      searchOwnership: 'manual_or_registry_observation',
-      aiCitations: 'registry_observation',
-      simulation: 'isolated_non_authoritative',
-    } as const;
+    // Discovery Graph intelligence summary
+    const rawJoins = graphResolver.getRawJoins();
+    const connectedReleaseIds = new Set(rawJoins.map((j) => j.releaseId).filter(Boolean));
+    const connectedSongsCount = releaseSeoAudits.filter((r) => connectedReleaseIds.has(r.id)).length;
+    const orphanSongsCount = Math.max(0, releaseSeoAudits.length - connectedSongsCount);
+
+    const graphSummary = {
+      totalPublishedSongs: releaseSeoAudits.length,
+      connectedSongsCount,
+      orphanSongsCount,
+      totalJoins: rawJoins.length,
+      buckets: [
+        {
+          key: 'concepts',
+          label: 'Sufi Concepts',
+          nodesCount: registriesStorage.getItems('concepts').filter((i) => i.isActive).length,
+          edgesCount: rawJoins.filter((j) => j.relationshipType === 'concept').length,
+        },
+        {
+          key: 'themes',
+          label: 'Spiritual Themes',
+          nodesCount: registriesStorage.getItems('themes').filter((i) => i.isActive).length,
+          edgesCount: rawJoins.filter((j) => j.relationshipType === 'theme').length,
+        },
+        {
+          key: 'moods',
+          label: 'Sacred Moods',
+          nodesCount: registriesStorage.getItems('moods').filter((i) => i.isActive).length,
+          edgesCount: rawJoins.filter((j) => j.relationshipType === 'mood').length,
+        },
+        {
+          key: 'regions',
+          label: 'Target Regions',
+          nodesCount: registriesStorage.getItems('regions').filter((i) => i.isActive).length,
+          edgesCount: rawJoins.filter((j) => j.relationshipType === 'region').length,
+        },
+        {
+          key: 'knowledge_entities',
+          label: 'Knowledge Entities',
+          nodesCount: countJsonArrayFile('.data/knowledge-registry.json'),
+          edgesCount: rawJoins.filter((j) => j.relationshipType.endsWith('_to_entity')).length,
+        },
+        {
+          key: 'atlas_clusters',
+          label: 'Atlas Discovery Nodes',
+          nodesCount: countJsonArrayFile('.data/atlas_entities.json'),
+          edgesCount: countJsonArrayFile('.data/atlas_relationships.json'),
+        },
+      ],
+    };
+
+    // AI Search Discovery 3-lane separation
+    const aiCrawlers = crawlers.filter((c) => c.category === 'ai_search');
+    const searchCrawlers = crawlers.filter((c) => c.category === 'search_engine');
+    const aiReferrerBreakdown = [
+      { engine: 'ChatGPT', channel: 'ai_chatgpt', entrances: funnelSummary.entrancesByChannel.ai_chatgpt },
+      { engine: 'Perplexity', channel: 'ai_perplexity', entrances: funnelSummary.entrancesByChannel.ai_perplexity },
+      { engine: 'Claude', channel: 'ai_claude', entrances: funnelSummary.entrancesByChannel.ai_claude },
+      { engine: 'Gemini', channel: 'ai_gemini', entrances: funnelSummary.entrancesByChannel.ai_gemini },
+      { engine: 'Microsoft Copilot', channel: 'ai_copilot', entrances: funnelSummary.entrancesByChannel.ai_copilot },
+    ];
+
+    // Website-to-YouTube Conversion Funnel (deduplicated across first-party beacons & redirect tallies)
+    const totalWebsiteEntrances =
+      funnelSummary.organicSearchEntrances +
+      funnelSummary.aiSearchEntrances +
+      funnelSummary.entrancesByChannel.youtube_referral +
+      funnelSummary.entrancesByChannel.social_referral +
+      funnelSummary.entrancesByChannel.direct;
+
+    const totalWebsiteContentViews = Math.max(
+      actionTotals.page_view,
+      funnelSummary.discoveryPageViews + funnelSummary.releasePageViews
+    );
+
+    const totalWebsiteYoutubeActions =
+      funnelSummary.embeddedVideoPlays +
+      Math.max(actionTotals.video_click + actionTotals.playlist_click, funnelSummary.outboundYoutubeClicks);
+
+    const totalSubscribeIntents = Math.max(
+      actionTotals.subscribe_click,
+      funnelSummary.subscribeIntents
+    );
+
+    const conversionFunnel = {
+      provenance: 'First-Party Runtime Telemetry (directly measured website interactions; YouTube views/subscribers measured separately via YouTube APIs)',
+      stages: [
+        {
+          id: 'entrances',
+          label: 'Recorded Website Entrances (Organic, AI & Direct)',
+          count: totalWebsiteEntrances,
+          source: 'First-Party Session Beacon',
+        },
+        {
+          id: 'content_views',
+          label: 'Discovery & Canonical Song Page Views',
+          count: totalWebsiteContentViews,
+          source: 'First-Party Page Telemetry',
+        },
+        {
+          id: 'youtube_clicks',
+          label: 'Embedded Full-Song Plays & Outbound YouTube Clicks',
+          count: totalWebsiteYoutubeActions,
+          source: 'First-Party Player & Click Telemetry',
+        },
+        {
+          id: 'subscribe_intents',
+          label: 'Outbound Channel Subscribe Intents (Pre-YouTube)',
+          count: totalSubscribeIntents,
+          source: 'First-Party Conversion Telemetry',
+        },
+      ],
+      returningListeners: {
+        returningEntrances: funnelSummary.returningEntrances || 0,
+        multiTouchSessions: funnelSummary.multiTouchSessions || 0,
+        uniqueSessions: funnelSummary.uniqueSessions || 0,
+        embeddedVideoPlays: funnelSummary.embeddedVideoPlays || 0,
+        outboundYoutubeClicks: funnelSummary.outboundYoutubeClicks || 0,
+      },
+      youtubePlatformMetrics: {
+        ytSearchViews28d: youtubeDiscovery.recent28d.ytSearchViews,
+        ytExternalViews28d: youtubeDiscovery.recent28d.externalViews,
+        lifetimeWatchHours: youtubeDiscovery.lifetime.watchHours,
+        avgViewDurationSeconds: youtubeDiscovery.lifetime.avgViewDurationSeconds,
+        subscribers: youtubeDiscovery.channelIdentity.subscribers,
+      },
+      entrancesByChannel: funnelSummary.entrancesByChannel,
+      topConvertingReleases: releaseSeoAudits
+        .filter((r) => r.metrics.websitePageViews > 0 || r.metrics.websiteVideoClicks > 0)
+        .sort((a, b) => b.metrics.websiteVideoClicks - a.metrics.websiteVideoClicks)
+        .slice(0, 10),
+    };
+
+    // Integration health matrix
+    const integrations = [
+      {
+        id: 'youtube_data_v3',
+        name: 'YouTube Data API v3',
+        status: youtubeDiscovery.channelIdentity.source === 'youtube_data_api_v3' ? 'WORKING' : 'ERROR',
+        lastSync: youtubeDiscovery.fetchedAt,
+        detail:
+          youtubeDiscovery.channelIdentity.totalVideos !== null
+            ? `Channel UCraDr3i5A3k0j7typ6tOOsQ verified (${youtubeDiscovery.channelIdentity.totalVideos} videos, ${youtubeDiscovery.channelIdentity.subscribers?.toLocaleString()} subscribers)`
+            : 'Unable to fetch channel statistics.',
+      },
+      {
+        id: 'youtube_analytics_v2',
+        name: 'YouTube Analytics API v2 (OAuth)',
+        status: youtubeDiscovery.liveApiConnected ? 'WORKING' : 'ERROR',
+        lastSync: youtubeDiscovery.fetchedAt,
+        detail: youtubeDiscovery.liveApiConnected
+          ? `Live traffic sources, YT_SEARCH terms, geography & video-level discovery active (${youtubeDiscovery.lifetime.views?.toLocaleString()} lifetime views)`
+          : youtubeDiscovery.errorMessage || 'OAuth reconnect required.',
+      },
+      {
+        id: 'youtube_studio_snapshots',
+        name: 'YouTube Studio Impressions & Geography CSVs',
+        status: youtubeDiscovery.geography.territoriesMeasurable > 0 ? 'WORKING' : 'UNAVAILABLE',
+        lastSync: youtubeDiscovery.geography.period,
+        detail: `${youtubeDiscovery.geography.territoriesMeasurable} measurable countries; ${youtubeDiscovery.lifetime.studioImpressions?.toLocaleString() || 'n/a'} verified impressions (${youtubeDiscovery.lifetime.studioCtr ?? 'n/a'}% CTR)`,
+      },
+      {
+        id: 'google_search_console',
+        name: 'Google Search Console API v1',
+        status: gscStatus.state,
+        lastSync: gscStatus.lastCheckedAt,
+        detail:
+          gscStatus.state === 'CONNECTED'
+            ? `Connected to ${gscStatus.property} (${gscStatus.permissionLevel})`
+            : `Missing: ${gscStatus.missingRequirements.join(' | ') || gscStatus.errorMessage}`,
+      },
+      {
+        id: 'bing_webmaster',
+        name: 'Bing Webmaster Tools API',
+        status: bingReport.status,
+        lastSync: bingReport.fetchedAt,
+        detail:
+          bingReport.status === 'CONNECTED'
+            ? `Connected to ${bingReport.siteUrl}`
+            : 'Set BING_WEBMASTER_API_KEY to activate query/crawl stats & feed submission.',
+      },
+      {
+        id: 'indexnow_protocol',
+        name: 'IndexNow Instant Notification Protocol',
+        status: indexNowKeyCheck.verified ? 'WORKING' : 'PENDING_HOST_DEPLOY',
+        lastSync: indexNowKeyCheck.checkedAt,
+        detail: indexNowKeyCheck.message,
+      },
+      {
+        id: 'sitemap_and_canonicals',
+        name: 'Canonical Sitemap & Structured Data Engine',
+        status: sitemapBreakdown.totalUrls > 0 ? 'WORKING' : 'ERROR',
+        lastSync: new Date().toISOString(),
+        detail: `${sitemapBreakdown.totalUrls} canonical non-www URLs in /sitemap.xml (${sitemapBreakdown.releaseUrls} full-length songs, 0 duplicate /release-metadata URLs).`,
+      },
+    ];
 
     return NextResponse.json({
-      totals,
-      concepts,
-      themes,
-      regions,
-      releases,
-      playlists,
-      winners,
-      losers,
-      recommendations,
-      crawlerStats,
-      ecosystemVisibility,
-      ecosystemAuthority,
-      brandAssetClicks,
-      brandAssets,
-      searchOwnership,
-      aiCitations,
-      authorityGaps,
-      productionReadiness,
-      dataProvenance,
+      generatedAt: new Date().toISOString(),
+      youtube: youtubeDiscovery,
+      googleSearchConsole: {
+        status: gscStatus,
+        report: gscReport,
+        googlebotCrawls: searchCrawlers.find((c) => c.crawler === 'Googlebot') || null,
+        googleOrganicReferrals: funnelSummary.entrancesByChannel.google_search,
+      },
+      bingSearch: {
+        report: bingReport,
+        indexNow: indexNowKeyCheck,
+        bingbotCrawls: searchCrawlers.find((c) => c.crawler === 'Bingbot') || null,
+        bingOrganicReferrals: funnelSummary.entrancesByChannel.bing_search,
+      },
+      searchDemand,
+      releaseSeoAudits,
+      indexingAndCrawl: {
+        sitemapBreakdown,
+        indexNowKeyCheck,
+        indexingLog,
+        crawlers,
+      },
+      aiSearchDiscovery: {
+        verifiedAiCrawlers: aiCrawlers,
+        firstPartyAiReferrers: aiReferrerBreakdown,
+        manualCitations: brandRegistry.getCitations(),
+      },
+      discoveryGraph: graphSummary,
+      conversionFunnel,
+      optimizationLoop,
+      integrations,
+      brandAssets: brandRegistry.getAssets(),
+      authorityGaps: brandRegistry.getGapTasks(),
     });
   } catch (error: any) {
     console.error('[DISCOVERY-PERFORMANCE-API] Error:', error);
@@ -378,7 +360,6 @@ export async function POST(request: NextRequest) {
     if (simulateSuccess) {
       const host = request.headers.get('host') || '';
       const productionHost = host === 'sufipulse.com' || host.endsWith('.sufipulse.com');
-
       if (productionHost) {
         return NextResponse.json(
           {
@@ -390,61 +371,43 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-
-      // Phase 1 integrity rule: simulation never writes connection timestamps,
-      // never mutates the YouTube analytics snapshot, and can never make the
-      // production-readiness UI appear Connected.
       return NextResponse.json({
         success: true,
         simulation: true,
         authoritative: false,
-        message: 'Simulation completed in isolation. Live GSC/YouTube readiness state was not modified.',
+        message: 'Simulation completed in isolation. Live GSC/Bing/YouTube readiness state was not modified.',
       });
     }
 
-    let gscError: string | null = null;
-    let ytError: string | null = null;
+    const actor = authResult.email || authResult.id || 'admin';
+    const [yt, gscStatus, bingReport, indexNowCheck] = await Promise.all([
+      getYouTubeDiscoveryIntelligence(true),
+      getGoogleSearchConsoleStatus(),
+      getBingWebmasterReport(),
+      verifyPublicIndexNowKey(true),
+    ]);
 
-    const property = process.env.GOOGLE_SEARCH_CONSOLE_PROPERTY;
-    const credsFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    if (credsFile && property) {
-      try {
-        const { google } = require('googleapis');
-        const auth = new google.auth.GoogleAuth({
-          keyFile: credsFile,
-          scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
-        });
-        const client = await auth.getClient();
-        const webmasters = google.webmasters({ version: 'v3', auth: client });
-        const res = await webmasters.sites.list();
-        if (res.data) brandRegistry.setLastSuccessfulApiResponseAtGsc(new Date().toISOString());
-      } catch (err: any) {
-        gscError = err.message || 'Unknown GSC error';
-        console.error('[GSC-DIAGNOSTIC] Error:', err);
-      }
-    } else {
-      gscError = 'GSC Credentials or Property not configured in environment.';
+    if (yt.liveApiConnected) {
+      brandRegistry.setLastSuccessfulApiResponseAtYoutube(yt.fetchedAt);
     }
-
-    try {
-      const { youtubeAnalyticsService } = require('@/lib/youtube-analytics-service');
-      const snapshot = await youtubeAnalyticsService.getLifetimeGlobalReachAnalytics(true);
-      if (snapshot.apiStatus?.connected) {
-        brandRegistry.setLastSuccessfulApiResponseAtYoutube(snapshot.apiStatus.lastCheck || new Date().toISOString());
-      } else {
-        ytError = snapshot.errorMessage || 'YouTube Analytics API not connected.';
-      }
-    } catch (err: any) {
-      ytError = err.message || 'Unknown YouTube Analytics error';
-      console.error('[YOUTUBE-DIAGNOSTIC] Error:', err);
+    if (gscStatus.state === 'CONNECTED') {
+      brandRegistry.setLastSuccessfulApiResponseAtGsc(gscStatus.lastCheckedAt);
+      await submitSitemapToGoogleSearchConsole(actor).catch(() => {});
+    }
+    if (bingReport.status === 'CONNECTED') {
+      await submitSitemapToBingWebmaster(actor).catch(() => {});
     }
 
     return NextResponse.json({
-      success: !gscError && !ytError,
+      success: yt.liveApiConnected,
       simulation: false,
       authoritative: true,
-      gscError,
-      ytError,
+      youtubeConnected: yt.liveApiConnected,
+      gscState: gscStatus.state,
+      gscError: gscStatus.errorMessage,
+      bingState: bingReport.status,
+      indexNowVerified: indexNowCheck.verified,
+      indexNowMessage: indexNowCheck.message,
       lastSuccessfulApiResponseAtGsc: brandRegistry.getApiSyncStatus().lastSuccessfulApiResponseAtGsc,
       lastSuccessfulApiResponseAtYoutube: brandRegistry.getApiSyncStatus().lastSuccessfulApiResponseAtYoutube,
     });

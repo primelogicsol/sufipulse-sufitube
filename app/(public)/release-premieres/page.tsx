@@ -10,8 +10,17 @@ import { PremiereReleaseCard } from '@/app/components/releases/PremiereReleaseCa
 import { UpcomingPremiereCard } from './components/UpcomingPremiereCard';
 
 export const metadata = {
-  title: 'The Premiere Room | SufiPulse Studio USA',
-  description: 'Upcoming Releases, Premium Teasers, and First Listens from SufiPulse Studio.',
+  title: 'The Premiere Room — Upcoming Sacred Releases',
+  description: 'Upcoming full-length sacred music releases, premieres, and first listens from SufiPulse Studio USA.',
+  alternates: {
+    canonical: 'https://sufipulse.com/release-premieres',
+  },
+  openGraph: {
+    title: 'The Premiere Room | SufiPulse Studio USA',
+    description: 'Upcoming full-length sacred music releases, premieres, and first listens from SufiPulse Studio USA.',
+    url: 'https://sufipulse.com/release-premieres',
+    type: 'website',
+  },
 };
 
 export const revalidate = 60;

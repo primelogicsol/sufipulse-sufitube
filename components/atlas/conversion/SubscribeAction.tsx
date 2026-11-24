@@ -5,17 +5,42 @@ import { useState } from 'react';
 
 export function SubscribeAction() {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setStatus('loading');
-    // Simulate API call
-    setTimeout(() => {
-      setStatus('success');
-      setEmail('');
-    }, 1000);
+    setMessage('');
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'discovery_hub' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setStatus('success');
+        setMessage(data.message || 'Subscribed to SufiPulse release updates.');
+        setEmail('');
+        fetch('/api/public/discovery-telemetry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'subscribe_intent',
+            path: window.location.pathname,
+          }),
+        }).catch(() => {});
+      } else {
+        setStatus('error');
+        setMessage(data.error || 'Unable to subscribe right now.');
+      }
+    } catch {
+      setStatus('error');
+      setMessage('Network error while subscribing.');
+    }
   };
 
   return (
@@ -27,30 +52,33 @@ export function SubscribeAction() {
         <h3 className="text-xl font-bold text-white">Join SufiPulse</h3>
       </div>
       <p className="text-sm text-slate-300 mb-6">
-        Get weekly insights on Sufi music, translations, and exclusive original releases.
+        Receive alerts when new full-length SufiPulse USA sacred recordings and translations are published.
       </p>
-      
+
       {status === 'success' ? (
         <div className="bg-emerald-500/10 border border-emerald-500/50 rounded-lg p-4 text-center">
-          <p className="text-emerald-400 font-medium">Thank you for subscribing!</p>
+          <p className="text-emerald-400 font-medium text-sm">{message}</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="flex space-x-2">
-          <input 
-            type="email" 
-            placeholder="Your email address" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-            required
-          />
-          <button 
-            type="submit" 
-            disabled={status === 'loading'}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-          >
-            {status === 'loading' ? 'Joining...' : 'Subscribe'}
-          </button>
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <div className="flex space-x-2">
+            <input
+              type="email"
+              placeholder="Your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              required
+            />
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {status === 'loading' ? 'Joining...' : 'Subscribe'}
+            </button>
+          </div>
+          {status === 'error' && <p className="text-xs text-red-400">{message}</p>}
         </form>
       )}
     </div>

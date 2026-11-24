@@ -9,7 +9,7 @@ import {
 } from '@/app/lib/server/adoption-google-oauth-store';
 import { upsertGoogleAdsCampaign } from '@/app/lib/server/google-ads-campaign-store';
 import { getValidStudioAccessToken } from '@/app/lib/server/google-ads-studio-oauth-store';
-import { requireAuth } from '@/server/middleware/authenticate';
+import { requireAuth, requireAdmin, checkIsAdmin } from '@/server/middleware/authenticate';
 import { rateLimiters, applyRateLimit } from '@/server/middleware/rate-limit';
 
 /**
@@ -239,6 +239,15 @@ export async function POST(request: NextRequest) {
     dry_run = true,
   } = body;
 
+  const isAdminUser = checkIsAdmin(authResult);
+  if (methodType === 'managed_sufitube') {
+    const adminCheck = await requireAdmin(request);
+    if (adminCheck instanceof NextResponse) return adminCheck;
+  }
+
+  // Prevent IDOR: non-admin callers can only act on their own authenticated user ID
+  const effectiveUserId = isAdminUser && userId ? userId : authResult.id;
+
   const isDryRun = dry_run || CREATE_MODE === 'draft';
   const resolvedDuration = durationDays && durationDays > 0
     ? durationDays
@@ -270,7 +279,7 @@ export async function POST(request: NextRequest) {
     const record = await upsertGoogleAdsCampaign({
       adoptionId,
       releaseId,
-      userId,
+      userId: effectiveUserId,
       selectedCustomerId: selectedCustomerId ?? '',
       youtubeVideoId,
       budgetAmount,
@@ -320,7 +329,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = await resolveUserAccessToken(userId, adoptionId);
+    const token = await resolveUserAccessToken(effectiveUserId, isAdminUser ? adoptionId : '');
     if (!token) {
       return NextResponse.json(
         { error: 'Google OAuth token not found. Complete the Google Ads connection step first.', classification: 'TOKEN_REFRESH_FAILED' },
@@ -437,7 +446,7 @@ export async function POST(request: NextRequest) {
     const campaignRecord = await upsertGoogleAdsCampaign({
       adoptionId,
       releaseId,
-      userId,
+      userId: effectiveUserId,
       selectedCustomerId: customerId,
       youtubeVideoId,
       budgetAmount,
@@ -467,7 +476,7 @@ export async function POST(request: NextRequest) {
     await upsertGoogleAdsCampaign({
       adoptionId,
       releaseId,
-      userId,
+      userId: effectiveUserId,
       selectedCustomerId: customerId,
       youtubeVideoId,
       budgetAmount,

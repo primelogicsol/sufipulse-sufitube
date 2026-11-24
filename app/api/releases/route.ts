@@ -165,9 +165,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 4. search — full parity: canonical title, YouTube title, description, vocalist, writer, tags, youtubeId, slug
+    // 4. search — full parity: canonical title, YouTube title, description, vocalist, writer, tags, youtubeId, slug,
+    //    plus approved public 4-script lyrics (Roman Urdu, Nastaliq, Devanagari, English) and cross-script normalization.
+    //    Unapproved/draft/private lyrics are NEVER searched or exposed publicly.
     if (search && search.trim()) {
+      const { extractApprovedPublicSearchableLyrics } = await import('@/server/storage/release-read-backend');
+      const { toRomanUrdu } = await import('@/lib/transliteration');
       const q = search.trim().toLowerCase();
+      const qRoman = toRomanUrdu(q).trim().toLowerCase();
       releases = releases.filter(r => {
         const canonical = ((r as any).canonicalTitle || r.title || '').toLowerCase();
         const youtube  = ((r as any).youtubeTitle || (r as any).youtubeStats?.title || '').toLowerCase();
@@ -181,11 +186,28 @@ export async function GET(request: NextRequest) {
         const tags     = Array.isArray((r as any).tags)
           ? (r as any).tags.join(' ').toLowerCase()
           : '';
+        const concepts = Array.isArray((r as any).sufiConcepts) ? (r as any).sufiConcepts.join(' ').toLowerCase() : '';
+        const themes   = Array.isArray((r as any).themes) ? (r as any).themes.join(' ').toLowerCase() : '';
         const ytId     = (r.youtubeId || '').toLowerCase();
         const slug     = (r.slug || '').toLowerCase();
-        return canonical.includes(q) || youtube.includes(q) || desc.includes(q) ||
-               vocalist.includes(q) || writer.includes(q) || tags.includes(q) ||
-               ytId.includes(q) || slug.includes(q);
+        const approvedLyrics = (r.status === 'published' && r.visibility === 'public')
+          ? extractApprovedPublicSearchableLyrics(r).toLowerCase()
+          : '';
+
+        const directMatch =
+          canonical.includes(q) || youtube.includes(q) || desc.includes(q) ||
+          vocalist.includes(q) || writer.includes(q) || tags.includes(q) ||
+          concepts.includes(q) || themes.includes(q) ||
+          ytId.includes(q) || slug.includes(q) || approvedLyrics.includes(q);
+        if (directMatch) return true;
+
+        if (qRoman && qRoman !== q) {
+          const combined = `${canonical} ${youtube} ${desc} ${tags} ${approvedLyrics}`;
+          if (combined.includes(qRoman) || toRomanUrdu(combined).toLowerCase().includes(qRoman)) {
+            return true;
+          }
+        }
+        return false;
       });
     }
 
@@ -371,14 +393,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // --- CACHE INVALIDATION ---
+    // --- CACHE INVALIDATION & ORGANIC SEARCH DISCOVERY PIPELINE ---
     try {
       revalidatePath('/');
       revalidatePath('/releases');
+      revalidatePath('/sitemap.xml');
+      revalidatePath('/discovery');
       revalidatePath(`/release-detail/${slug}`);
       revalidatePath('/release-detail/[slug]', 'page');
     } catch (cacheErr) {
       console.warn('Cache revalidation failed during POST:', cacheErr);
+    }
+
+    if (saved.status === 'published' && (saved.visibility || 'public') === 'public') {
+      import('@/lib/release-discovery-pipeline')
+        .then(({ runPublishedReleaseDiscoveryPipeline }) =>
+          runPublishedReleaseDiscoveryPipeline(saved.id, authResult.email || authResult.id || 'admin_post')
+        )
+        .catch((err) => console.warn('Post-create search discovery pipeline warning:', err));
     }
 
     // Auto-notify subscribers when a release is first published

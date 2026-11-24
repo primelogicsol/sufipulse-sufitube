@@ -11,6 +11,9 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import type { KnowledgeEntity, KnowledgeEntityType } from '@/lib/knowledge-storage';
 
 const ENTITY_TABS: { key: KnowledgeEntityType; label: string }[] = [
+  { key: 'saint_poet', label: 'Saint-Poets' },
+  { key: 'singer', label: 'Singers & Vocalists' },
+  { key: 'traditional_poet', label: 'Traditional Poets' },
   { key: 'poet', label: 'Poets' },
   { key: 'saint', label: 'Saints' },
   { key: 'scholar', label: 'Scholars' },
@@ -18,7 +21,7 @@ const ENTITY_TABS: { key: KnowledgeEntityType; label: string }[] = [
   { key: 'quranicTheme', label: 'Quranic Themes' },
   { key: 'spiritualState', label: 'Spiritual States' },
   { key: 'musicalTradition', label: 'Musical Traditions' },
-  { key: 'literaryTradition', label: 'Literary Traditions' }
+  { key: 'literaryTradition', label: 'Literary Traditions' },
 ];
 
 export default function KnowledgeRegistryAdminPage() {
@@ -32,7 +35,7 @@ export default function KnowledgeRegistryAdminPage() {
     }
   }, [user, isAdmin]);
 
-  const [activeTab, setActiveTab] = useState<KnowledgeEntityType>('poet');
+  const [activeTab, setActiveTab] = useState<KnowledgeEntityType>('saint_poet');
   const [entities, setEntities] = useState<KnowledgeEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

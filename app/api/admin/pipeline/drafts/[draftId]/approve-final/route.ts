@@ -235,13 +235,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     (draft.downstreamStatus as any).cmsReleaseId = saved.id;
     pipelineDraftStorage.saveDraft(draft);
 
-    // Top-tier automated viral trigger: Generate 9:16 cutdowns and dispatch search indexing
-    generateViralCutdowns(draftId).catch(err => {
-      console.error('[ApproveFinal] Background viral cutdowns error:', err.message);
-    });
-    dispatchReleaseSyndication(saved.id).catch(err => {
-      console.error('[ApproveFinal] Background syndication dispatch error:', err.message);
-    });
+    // GOVERNANCE RULE (Phase 5):
+    // Do NOT create/publish Shorts cutdowns or ping IndexNow while the release is still
+    // status='approved', visibility='private' (HTTP 404 publicly). Search indexing and
+    // Discovery Graph sync trigger ONLY when a human admin publishes the full-length release publicly.
 
     return NextResponse.json({
       success: true,

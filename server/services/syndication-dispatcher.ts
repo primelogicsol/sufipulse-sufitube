@@ -42,13 +42,22 @@ export async function dispatchReleaseSyndication(
     throw new Error(`Release ${releaseId} not found in CMS storage`);
   }
 
-  const title = release.title || 'Sacred Kalam';
+  const title = release.canonicalTitle || release.title || 'Sacred Kalam';
   const slug = release.slug || releaseId;
-  const canonicalUrl = `https://www.sufipulse.com/release-detail/${slug}`;
+  const canonicalUrl = `https://sufipulse.com/release-detail/${slug}`;
   const now = new Date().toISOString();
 
-  // 1. Instant Search Engine Indexing (Google & IndexNow)
-  const indexing = await submitInstantIndexing(canonicalUrl);
+  // Enforce public eligibility before pinging search engines
+  const indexing: IndexingResult =
+    release.status === 'published' && (release.visibility || 'public') === 'public'
+      ? await submitInstantIndexing(canonicalUrl)
+      : {
+          url: canonicalUrl,
+          indexNowStatus: 'skipped',
+          googlePingStatus: 'skipped',
+          timestamp: now,
+          details: `Skipped search submission: release status="${release.status}", visibility="${release.visibility || 'private'}"`,
+        };
 
   // 2. Generate Multi-Platform Text Kits
   const shareKit = generateSocialShareKit(release);

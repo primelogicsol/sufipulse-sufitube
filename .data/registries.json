@@ -1,0 +1,423 @@
+{
+  "concepts": [
+    {
+      "slug": "fana",
+      "title": "Fana (Annihilation)",
+      "description": "Master concept definition for Fana (Annihilation).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "baqa",
+      "title": "Baqa (Subsistence)",
+      "description": "Master concept definition for Baqa (Subsistence).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "ishq",
+      "title": "Ishq (Divine Love)",
+      "description": "Master concept definition for Ishq (Divine Love).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "sabr",
+      "title": "Sabr (Patience)",
+      "description": "Master concept definition for Sabr (Patience).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "tawakkul",
+      "title": "Tawakkul (Trust in God)",
+      "description": "Master concept definition for Tawakkul (Trust in God).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "tasawwuf",
+      "title": "Tasawwuf (Sufism)",
+      "description": "Master concept definition for Tasawwuf (Sufism).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "dhikr",
+      "title": "Dhikr (Remembrance)",
+      "description": "Master concept definition for Dhikr (Remembrance).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "rida",
+      "title": "Rida (Contentment)",
+      "description": "Master concept definition for Rida (Contentment).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "shukr",
+      "title": "Shukr (Gratitude)",
+      "description": "Master concept definition for Shukr (Gratitude).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "faqr",
+      "title": "Faqr (Spiritual Poverty)",
+      "description": "Master concept definition for Faqr (Spiritual Poverty).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "marifa",
+      "title": "Ma'rifa (Gnosis)",
+      "description": "Master concept definition for Ma'rifa (Gnosis).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "haqiqa",
+      "title": "Haqiqa (Ultimate Truth)",
+      "description": "Master concept definition for Haqiqa (Ultimate Truth).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    }
+  ],
+  "themes": [
+    {
+      "slug": "divine-love",
+      "title": "Divine Love",
+      "description": "Master theme definition for Divine Love.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "seeking-union",
+      "title": "Seeking Union",
+      "description": "Master theme definition for Seeking Union.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "praise-hamd",
+      "title": "Praise & Adoration (Hamd)",
+      "description": "Master theme definition for Praise & Adoration (Hamd).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "devotion-naat",
+      "title": "Prophetic Devotion (Naat)",
+      "description": "Master theme definition for Prophetic Devotion (Naat).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "spiritual-journey",
+      "title": "The Spiritual Journey",
+      "description": "Master theme definition for The Spiritual Journey.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "annihilation-fana",
+      "title": "Annihilation of Self",
+      "description": "Master theme definition for Annihilation of Self.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "repentance-tawbah",
+      "title": "Repentance (Tawbah)",
+      "description": "Master theme definition for Repentance (Tawbah).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "cosmic-order",
+      "title": "Cosmic Spiritual Order",
+      "description": "Master theme definition for Cosmic Spiritual Order.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    }
+  ],
+  "moods": [
+    {
+      "slug": "ecstatic",
+      "title": "Ecstatic (Wajd)",
+      "description": "Master mood definition for Ecstatic (Wajd).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "contemplative",
+      "title": "Contemplative (Fikr)",
+      "description": "Master mood definition for Contemplative (Fikr).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "longing",
+      "title": "Longing (Shawq)",
+      "description": "Master mood definition for Longing (Shawq).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "serene",
+      "title": "Serene (Itminan)",
+      "description": "Master mood definition for Serene (Itminan).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "triumphant",
+      "title": "Triumphant (Fath)",
+      "description": "Master mood definition for Triumphant (Fath).",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "reflective",
+      "title": "Reflective",
+      "description": "Master mood definition for Reflective.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "melancholic",
+      "title": "Melancholic/Sorrowful",
+      "description": "Master mood definition for Melancholic/Sorrowful.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "celebratory",
+      "title": "Celebratory",
+      "description": "Master mood definition for Celebratory.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    }
+  ],
+  "regions": [
+    {
+      "slug": "pk",
+      "title": "Pakistan",
+      "description": "Target region definition for Pakistan.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "in",
+      "title": "India",
+      "description": "Target region definition for India.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "bd",
+      "title": "Bangladesh",
+      "description": "Target region definition for Bangladesh.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "tr",
+      "title": "Turkey",
+      "description": "Target region definition for Turkey.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "id",
+      "title": "Indonesia",
+      "description": "Target region definition for Indonesia.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "my",
+      "title": "Malaysia",
+      "description": "Target region definition for Malaysia.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "uk",
+      "title": "United Kingdom",
+      "description": "Target region definition for United Kingdom.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "us",
+      "title": "United States",
+      "description": "Target region definition for United States.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "ca",
+      "title": "Canada",
+      "description": "Target region definition for Canada.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "de",
+      "title": "Germany",
+      "description": "Target region definition for Germany.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "me",
+      "title": "Middle East",
+      "description": "Target region definition for Middle East.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    }
+  ],
+  "languages": [
+    {
+      "slug": "en",
+      "title": "English",
+      "description": "Master language definition for English.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "ur",
+      "title": "Urdu",
+      "description": "Master language definition for Urdu.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "tr",
+      "title": "Turkish",
+      "description": "Master language definition for Turkish.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "fa",
+      "title": "Persian",
+      "description": "Master language definition for Persian.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "ar",
+      "title": "Arabic",
+      "description": "Master language definition for Arabic.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "pa",
+      "title": "Punjabi",
+      "description": "Master language definition for Punjabi.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "bn",
+      "title": "Bengali",
+      "description": "Master language definition for Bengali.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    }
+  ],
+  "diasporaMarkets": [
+    {
+      "slug": "urdu-diaspora",
+      "title": "Urdu Diaspora",
+      "description": "Diaspora focus for Urdu Diaspora.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "punjabi-diaspora",
+      "title": "Punjabi Diaspora",
+      "description": "Diaspora focus for Punjabi Diaspora.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "turkish-diaspora",
+      "title": "Turkish Diaspora",
+      "description": "Diaspora focus for Turkish Diaspora.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "arabic-diaspora",
+      "title": "Arabic Diaspora",
+      "description": "Diaspora focus for Arabic Diaspora.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    },
+    {
+      "slug": "bengali-diaspora",
+      "title": "Bengali Diaspora",
+      "description": "Diaspora focus for Bengali Diaspora.",
+      "isActive": true,
+      "isPublic": true,
+      "createdAt": "2026-06-07T08:17:44.913Z"
+    }
+  ],
+  "playlists": []
+}

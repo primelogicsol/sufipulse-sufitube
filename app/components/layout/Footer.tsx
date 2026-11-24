@@ -152,6 +152,7 @@ export function Footer() {
             {/* SufiTube -> dedicated brand identity page */}
             <FooterLink href="/sufitube">SufiTube</FooterLink>
             <FooterLink href="/releases">Releases</FooterLink>
+            <FooterLink href="/discovery">Sufi Discovery Hub</FooterLink>
             <FooterLink href="/release-premieres">Premiere Room</FooterLink>
           </FooterSection>
 

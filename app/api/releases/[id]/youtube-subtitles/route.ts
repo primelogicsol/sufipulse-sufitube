@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
 import { logger } from '@/app/lib/logger';
 import { requireAdmin } from '@/server/middleware/authenticate';
+import { getYouTubeConnection } from '@/lib/youtube-connection';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,8 @@ type ContentReadinessState =
   | 'fully_delivered'
   | 'delivery_attention_required';
 
-const YOUTUBE_API_BASE = 'https://youtube.googleapis.com/youtube/v3';
+const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
+const YOUTUBE_UPLOAD_API_BASE = 'https://www.googleapis.com/upload/youtube/v3';
 
 const deriveReadinessState = (
   currentState: string | undefined,
@@ -129,6 +131,10 @@ const getOAuthConfig = () => {
 let cachedToken: { accessToken: string; expiresAt: number } | null = null;
 
 const getAccessToken = async (): Promise<string> => {
+  const yt = await getYouTubeConnection();
+  const storedToken = await yt.getAccessToken();
+  if (storedToken) return storedToken;
+
   if (cachedToken && Date.now() < cachedToken.expiresAt) {
     return cachedToken.accessToken;
   }
@@ -215,8 +221,8 @@ const upsertCaption = async (args: {
   ].join('\r\n');
 
   const url = args.captionId
-    ? `${YOUTUBE_API_BASE}/captions?part=snippet&id=${encodeURIComponent(args.captionId)}`
-    : `${YOUTUBE_API_BASE}/captions?part=snippet`;
+    ? `${YOUTUBE_UPLOAD_API_BASE}/captions?uploadType=multipart&part=snippet&id=${encodeURIComponent(args.captionId)}`
+    : `${YOUTUBE_UPLOAD_API_BASE}/captions?uploadType=multipart&part=snippet`;
 
   const method = args.captionId ? 'PUT' : 'POST';
 

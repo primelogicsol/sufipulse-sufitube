@@ -1,34 +1,45 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { CANONICAL_ORIGIN } from './canonical-seo';
 
 // 1. Official Brand Asset Interface
 export interface BrandAssetRecord {
   id: string;
   name: string;
-  type: 'master_brand' | 'website' | 'youtube_channel' | 'production_brand' | 'media_brand' | 'release_brand' | 'knowledge_brand';
+  type:
+    | 'master_brand'
+    | 'website'
+    | 'youtube_channel'
+    | 'production_brand'
+    | 'media_brand'
+    | 'release_brand'
+    | 'knowledge_brand';
   url: string;
   description: string;
   status: 'verified' | 'monitoring' | 'pending';
 }
 
-// 2. SERP Search Ownership Interface
+// 2. SERP Search Ownership Interface (Manual Observation Only — never conflated with API metrics)
 export interface SearchOwnershipRecord {
   keyword: string;
   platform: 'google' | 'bing' | 'youtube';
   ownedResultsCount: number;
   rankingUrls: string[];
-  occupancyPercent: number; // e.g. 40% of page 1
+  occupancyPercent: number;
   lastChecked: string;
+  source?: 'manual_observation' | 'verified_api';
 }
 
-// 3. AI Citation Tracker Interface
+// 3. AI Citation Observation Interface (Manual Observation Only — strictly separated from crawler/referrer logs)
 export interface AiCitationRecord {
   engine: 'ChatGPT' | 'Gemini' | 'Claude' | 'Perplexity';
   citationCount: number;
   lastCitedDate: string;
   sampleQuery: string;
-  citationConfidence: number; // 0-100%
+  citationConfidence: number;
   trend: 'increasing' | 'stable' | 'decreasing';
+  source?: 'manual_observation';
+  verifiedBy?: string;
 }
 
 // 4. Authority Gap Task Interface
@@ -52,6 +63,7 @@ const resolveDataDir = () => {
 
 const DATA_DIR = resolveDataDir();
 const REGISTRY_FILE = path.join(DATA_DIR, 'brand-registry.json');
+const SYNTHETIC_SEED_DATE = '2026-06-07T08:17:45.299Z';
 
 class BrandRegistryManager {
   private assets: BrandAssetRecord[] = [];
@@ -78,19 +90,46 @@ class BrandRegistryManager {
       if (fs.existsSync(REGISTRY_FILE)) {
         const content = fs.readFileSync(REGISTRY_FILE, 'utf-8');
         const parsed = JSON.parse(content || '{}');
-        this.assets = parsed.assets || [];
-        this.searchOwnership = parsed.searchOwnership || [];
-        this.citations = parsed.citations || [];
+        let dirty = false;
+
+        this.assets = (parsed.assets || []).map((a: BrandAssetRecord) => {
+          const normalizedUrl = a.url ? a.url.replace('https://www.sufipulse.com', CANONICAL_ORIGIN) : a.url;
+          if (normalizedUrl !== a.url) dirty = true;
+          return { ...a, url: normalizedUrl };
+        });
+
+        // Quarantine historical synthetic June 2026 SERP/AI citation counts
+        this.searchOwnership = (parsed.searchOwnership || []).filter((s: SearchOwnershipRecord) => {
+          if (s.lastChecked === SYNTHETIC_SEED_DATE) {
+            dirty = true;
+            return false;
+          }
+          return true;
+        });
+
+        this.citations = (parsed.citations || []).filter((c: AiCitationRecord) => {
+          if (c.lastCitedDate === SYNTHETIC_SEED_DATE) {
+            dirty = true;
+            return false;
+          }
+          return true;
+        });
+
         this.gapTasks = parsed.gapTasks || [];
         this.lastSuccessfulApiResponseAtGsc = parsed.lastSuccessfulApiResponseAtGsc || null;
         this.lastSuccessfulApiResponseAtYoutube = parsed.lastSuccessfulApiResponseAtYoutube || null;
+
+        if (dirty) {
+          this.persist();
+        }
       } else {
-        this.seedInitialData();
+        this.seedAssetsOnly();
         this.persist();
       }
       this.initialized = true;
     } catch (err) {
       console.error('[BRAND-REGISTRY] Initialization failed:', err);
+      this.initialized = true;
     }
   }
 
@@ -102,7 +141,7 @@ class BrandRegistryManager {
         citations: this.citations,
         gapTasks: this.gapTasks,
         lastSuccessfulApiResponseAtGsc: this.lastSuccessfulApiResponseAtGsc,
-        lastSuccessfulApiResponseAtYoutube: this.lastSuccessfulApiResponseAtYoutube
+        lastSuccessfulApiResponseAtYoutube: this.lastSuccessfulApiResponseAtYoutube,
       };
       fs.writeFileSync(REGISTRY_FILE, JSON.stringify(payload, null, 2), 'utf-8');
     } catch (err) {
@@ -111,70 +150,96 @@ class BrandRegistryManager {
   }
 
   private getSeedAsset(id: string): BrandAssetRecord | null {
-    const now = new Date().toISOString();
     switch (id) {
       case 'sufipulse':
-        return { id: 'sufipulse', name: 'SufiPulse', type: 'master_brand', url: 'https://www.sufipulse.com', description: 'Central custodian ecosystem entity representing institutional Sufi music archiving.', status: 'verified' };
+        return {
+          id: 'sufipulse',
+          name: 'SufiPulse',
+          type: 'master_brand',
+          url: CANONICAL_ORIGIN,
+          description: 'Central custodian ecosystem entity representing institutional Sufi music archiving.',
+          status: 'verified',
+        };
       case 'sufipulse-com':
-        return { id: 'sufipulse-com', name: 'SufiPulse.com', type: 'website', url: 'https://www.sufipulse.com', description: 'Central semantic knowledge registry website and release catalog hub.', status: 'verified' };
+        return {
+          id: 'sufipulse-com',
+          name: 'SufiPulse.com',
+          type: 'website',
+          url: CANONICAL_ORIGIN,
+          description: 'Central semantic knowledge registry website and release catalog hub.',
+          status: 'verified',
+        };
       case 'sufipulse-usa':
-        return { id: 'sufipulse-usa', name: 'SufiPulse-USA', type: 'youtube_channel', url: 'https://www.youtube.com/@SufiPulse-USA', description: 'Official YouTube primary visual release archive channel.', status: 'verified' };
+        return {
+          id: 'sufipulse-usa',
+          name: 'SufiPulse USA',
+          type: 'youtube_channel',
+          url: 'https://www.youtube.com/channel/UCraDr3i5A3k0j7typ6tOOsQ',
+          description: 'Official YouTube primary full-length music release archive channel.',
+          status: 'verified',
+        };
       case 'sufipulse-studio':
-        return { id: 'sufipulse-studio', name: 'SufiPulse Studio', type: 'production_brand', url: 'https://www.sufipulse.com/studio', description: 'Central recording, mastering, and production workflow label.', status: 'verified' };
+        return {
+          id: 'sufipulse-studio',
+          name: 'SufiPulse Studio',
+          type: 'production_brand',
+          url: `${CANONICAL_ORIGIN}/studio`,
+          description: 'Central recording, mastering, and production workflow label.',
+          status: 'verified',
+        };
       case 'sufitube':
-        return { id: 'sufitube', name: 'SufiTube', type: 'media_brand', url: 'https://www.sufipulse.com/official-channels', description: 'Ecosystem media outreach archiving platform.', status: 'verified' };
+        return {
+          id: 'sufitube',
+          name: 'SufiTube',
+          type: 'media_brand',
+          url: `${CANONICAL_ORIGIN}/sufitube`,
+          description: 'Official audiovisual publishing identity of SufiPulse USA.',
+          status: 'verified',
+        };
       case 'sufipulse-records':
-        return { id: 'sufipulse-records', name: 'SufiPulse Records', type: 'release_brand', url: 'https://www.sufipulse.com/releases', description: 'Official music publication, publishing, and digital distribution division.', status: 'verified' };
+        return {
+          id: 'sufipulse-records',
+          name: 'SufiPulse Records',
+          type: 'release_brand',
+          url: `${CANONICAL_ORIGIN}/releases`,
+          description: 'Official music publication, publishing, and digital distribution division.',
+          status: 'verified',
+        };
       case 'sufipulse-encyclopedia':
-        return { id: 'sufipulse-encyclopedia', name: 'SufiPulse Encyclopedia', type: 'knowledge_brand', url: 'https://www.sufipulse.com/concepts', description: 'Ecosystem semantic glossary, theology node indexes, and Wikidata bindings catalog.', status: 'verified' };
+        return {
+          id: 'sufipulse-encyclopedia',
+          name: 'SufiPulse Discovery',
+          type: 'knowledge_brand',
+          url: `${CANONICAL_ORIGIN}/discovery`,
+          description: 'Ecosystem semantic discovery hub, Sufi terminology nodes, and knowledge graph.',
+          status: 'verified',
+        };
       default:
         return null;
     }
   }
 
-  private seedInitialData(): void {
-    const now = new Date().toISOString();
-    
-    // Seed 1: Brand Asset Registry (7 distinct assets representing all brand types)
-    this.assets = [
-      { id: 'sufipulse', name: 'SufiPulse', type: 'master_brand', url: 'https://www.sufipulse.com', description: 'Central custodian ecosystem entity representing institutional Sufi music archiving.', status: 'verified' },
-      { id: 'sufipulse-com', name: 'SufiPulse.com', type: 'website', url: 'https://www.sufipulse.com', description: 'Central semantic knowledge registry website and release catalog hub.', status: 'verified' },
-      { id: 'sufipulse-usa', name: 'SufiPulse-USA', type: 'youtube_channel', url: 'https://www.youtube.com/@SufiPulse-USA', description: 'Official YouTube primary visual release archive channel.', status: 'verified' },
-      { id: 'sufipulse-studio', name: 'SufiPulse Studio', type: 'production_brand', url: 'https://www.sufipulse.com/studio', description: 'Central recording, mastering, and production workflow label.', status: 'verified' },
-      { id: 'sufitube', name: 'SufiTube', type: 'media_brand', url: 'https://www.sufipulse.com/official-channels', description: 'Ecosystem media outreach archiving platform.', status: 'verified' },
-      { id: 'sufipulse-records', name: 'SufiPulse Records', type: 'release_brand', url: 'https://www.sufipulse.com/releases', description: 'Official music publication, publishing, and digital distribution division.', status: 'verified' },
-      { id: 'sufipulse-encyclopedia', name: 'SufiPulse Encyclopedia', type: 'knowledge_brand', url: 'https://www.sufipulse.com/concepts', description: 'Ecosystem semantic glossary, theology node indexes, and Wikidata bindings catalog.', status: 'verified' }
+  private seedAssetsOnly(): void {
+    const ids = [
+      'sufipulse',
+      'sufipulse-com',
+      'sufipulse-usa',
+      'sufipulse-studio',
+      'sufitube',
+      'sufipulse-records',
+      'sufipulse-encyclopedia',
     ];
-
-    // Seed 2: Search Ownership Tracking (SERP Occupancy)
-    this.searchOwnership = [
-      { keyword: 'SufiPulse', platform: 'google', ownedResultsCount: 4, rankingUrls: ['Homepage', 'Official Channels page', 'Releases List', 'Mithaq Governance page'], occupancyPercent: 40, lastChecked: now },
-      { keyword: 'SufiPulse', platform: 'bing', ownedResultsCount: 3, rankingUrls: ['Homepage', 'Official Channels page', 'About Us'], occupancyPercent: 30, lastChecked: now },
-      { keyword: 'SufiPulse', platform: 'youtube', ownedResultsCount: 6, rankingUrls: ['SufiPulse-USA Channel', 'Aahista Aahista Release Video', 'Ya Ali Video Release', 'Kalam Playlists'], occupancyPercent: 60, lastChecked: now },
-      { keyword: 'SufiTube', platform: 'google', ownedResultsCount: 2, rankingUrls: ['Official Channels page', 'Founding Charter'], occupancyPercent: 20, lastChecked: now },
-      { keyword: 'SufiPulse Studio', platform: 'google', ownedResultsCount: 1, rankingUrls: ['Studio page'], occupancyPercent: 10, lastChecked: now }
-    ];
-
-    // Seed 3: AI Citations
-    this.citations = [
-      { engine: 'ChatGPT', citationCount: 412, lastCitedDate: now, sampleQuery: 'What is SufiPulse and where can I find their verified releases?', citationConfidence: 85, trend: 'increasing' },
-      { engine: 'Gemini', citationCount: 384, lastCitedDate: now, sampleQuery: 'Show me the official SufiPulse music archive and governance model.', citationConfidence: 90, trend: 'increasing' },
-      { engine: 'Claude', citationCount: 198, lastCitedDate: now, sampleQuery: 'Does SufiPulse have a music production studio program?', citationConfidence: 80, trend: 'stable' },
-      { engine: 'Perplexity', citationCount: 520, lastCitedDate: now, sampleQuery: 'Who is the founder of SufiPulse and what is their release process?', citationConfidence: 92, trend: 'increasing' }
-    ];
-
-    // Seed 4: Initial dynamic detection override
+    this.assets = ids.map((id) => this.getSeedAsset(id)!).filter(Boolean);
+    // STRICT GOVERNANCE: Do NOT pre-seed synthetic SERP occupancy or fabricated AI citation counts.
+    this.searchOwnership = [];
+    this.citations = [];
     this.gapTasks = this.detectDynamicGaps();
   }
 
-  /**
-   * Automatically detects authority gaps by inspecting page files, schema strings, and route configurations in the workspace.
-   */
   public detectDynamicGaps(): AuthorityGapTask[] {
     const gaps: AuthorityGapTask[] = [];
 
     try {
-      // 1. Check if SufiPulse Studio page exists (app/(public)/studio/page.tsx)
       const studioPagePath = path.join(process.cwd(), 'app', '(public)', 'studio', 'page.tsx');
       const hasStudioPage = fs.existsSync(studioPagePath);
       gaps.push({
@@ -182,36 +247,36 @@ class BrandRegistryManager {
         targetAsset: 'SufiPulse Studio',
         gapType: 'missing_page',
         message: hasStudioPage
-          ? 'Studio page is active at /studio, but requires detailed production unit bios.'
+          ? 'Studio page is active at /studio with canonical metadata.'
           : 'SufiPulse Studio has no dedicated indexable authority subpage on SufiPulse.com.',
         priority: 'high',
         resolved: hasStudioPage,
-        actionUrl: '/admin/registries'
+        actionUrl: '/studio',
       });
 
-      // 2. Check if FAQ page exists (app/(public)/faq/page.tsx or sufitube-faq)
-      const faqPath1 = path.join(process.cwd(), 'app', '(public)', 'faq', 'page.tsx');
-      const faqPath2 = path.join(process.cwd(), 'app', '(public)', 'sufitube-faq', 'page.tsx');
-      const hasFaqPage = fs.existsSync(faqPath1) || fs.existsSync(faqPath2);
+      const sufitubePath = path.join(process.cwd(), 'app', '(public)', 'sufitube', 'page.tsx');
+      const hasSufiTubePage = fs.existsSync(sufitubePath);
       gaps.push({
         id: 'gap-sufitube-faq',
         targetAsset: 'SufiTube',
         gapType: 'missing_faq',
-        message: hasFaqPage
-          ? 'SufiTube FAQ page verified and marked up.'
-          : 'SufiTube has no dedicated, schema-marked FAQ page explaining its media distribution role.',
+        message: hasSufiTubePage
+          ? 'SufiTube dedicated authority page & BroadcastChannel schema active at /sufitube.'
+          : 'SufiTube has no dedicated schema-marked authority page.',
         priority: 'medium',
-        resolved: hasFaqPage,
-        actionUrl: '/admin/cms'
+        resolved: hasSufiTubePage,
+        actionUrl: '/sufitube',
       });
 
-      // 3. Check for MusicChannel schema markup on official channels page
       const channelPagePath = path.join(process.cwd(), 'app', '(public)', 'official-channels', 'page.tsx');
+      const channelLayoutPath = path.join(process.cwd(), 'app', '(public)', 'official-channels', 'layout.tsx');
       let hasMusicChannelSchema = false;
-      if (fs.existsSync(channelPagePath)) {
-        const content = fs.readFileSync(channelPagePath, 'utf-8');
-        if (content.includes('MusicChannel') || content.includes('schema.org/MusicChannel') || content.includes('MusicGroup')) {
-          hasMusicChannelSchema = true;
+      for (const p of [channelPagePath, channelLayoutPath]) {
+        if (fs.existsSync(p)) {
+          const content = fs.readFileSync(p, 'utf-8');
+          if (content.includes('BroadcastChannel') || content.includes('MusicGroup') || content.includes('CollectionPage')) {
+            hasMusicChannelSchema = true;
+          }
         }
       }
       gaps.push({
@@ -219,15 +284,13 @@ class BrandRegistryManager {
         targetAsset: 'Official Channel',
         gapType: 'missing_schema',
         message: hasMusicChannelSchema
-          ? 'Primary YouTube channel schema.org markup bindings verified.'
-          : 'The primary YouTube channel lacks schema.org/MusicChannel markup bindings.',
+          ? 'Official channels page structured data bindings verified.'
+          : 'Official channels page lacks structured data markup bindings.',
         priority: 'high',
         resolved: hasMusicChannelSchema,
-        actionUrl: '/admin/cms-releases'
+        actionUrl: '/official-channels',
       });
 
-      // 4. Check for capture page targeting keyword "Official SufiPulse"
-      // If we have app/(public)/official-channels/page.tsx, it acts as a branded query capture page
       const capturePagePath = path.join(process.cwd(), 'app', '(public)', 'official-channels', 'page.tsx');
       const hasCapturePage = fs.existsSync(capturePagePath);
       gaps.push({
@@ -236,34 +299,32 @@ class BrandRegistryManager {
         gapType: 'missing_capture',
         message: hasCapturePage
           ? 'Capture page for official ecosystem queries is active at /official-channels.'
-          : 'No capture or landing page exists to intercept and verification-stamp branded queries.',
+          : 'No capture or landing page exists to intercept branded queries.',
         priority: 'medium',
         resolved: hasCapturePage,
-        actionUrl: '/admin/registries'
+        actionUrl: '/official-channels',
       });
-
     } catch (err) {
       console.error('[BRAND-REGISTRY] Dynamic gap detection failed:', err);
-      // Fallbacks if fs operations fail
-      gaps.push(
-        { id: 'gap-studio-page', targetAsset: 'SufiPulse Studio', gapType: 'missing_page', message: 'SufiPulse Studio has no dedicated indexable authority subpage on SufiPulse.com.', priority: 'high', resolved: false, actionUrl: '/admin/registries' },
-        { id: 'gap-sufitube-faq', targetAsset: 'SufiTube', gapType: 'missing_faq', message: 'SufiTube has no dedicated, schema-marked FAQ page explaining its media distribution role.', priority: 'medium', resolved: false, actionUrl: '/admin/cms' },
-        { id: 'gap-channel-schema', targetAsset: 'Official Channel', gapType: 'missing_schema', message: 'The primary YouTube channel lacks schema.org/MusicChannel markup bindings.', priority: 'high', resolved: false, actionUrl: '/admin/cms-releases' },
-        { id: 'gap-capture-page', targetAsset: 'Keyword: Official SufiPulse', gapType: 'missing_capture', message: 'No capture or landing page exists to intercept and verification-stamp branded queries.', priority: 'medium', resolved: false, actionUrl: '/admin/registries' }
-      );
     }
 
     return gaps;
   }
 
-  // Getters
   public getAssets(): BrandAssetRecord[] {
     this.init();
-    // Ensure all 7 asset types are present even if file was already created
-    const requiredSlugs = ['sufipulse', 'sufipulse-com', 'sufipulse-usa', 'sufipulse-studio', 'sufitube', 'sufipulse-records', 'sufipulse-encyclopedia'];
+    const requiredSlugs = [
+      'sufipulse',
+      'sufipulse-com',
+      'sufipulse-usa',
+      'sufipulse-studio',
+      'sufitube',
+      'sufipulse-records',
+      'sufipulse-encyclopedia',
+    ];
     let modified = false;
-    requiredSlugs.forEach(slug => {
-      if (!this.assets.some(a => a.id === slug)) {
+    requiredSlugs.forEach((slug) => {
+      if (!this.assets.some((a) => a.id === slug)) {
         const seeded = this.getSeedAsset(slug);
         if (seeded) {
           this.assets.push(seeded);
@@ -271,9 +332,7 @@ class BrandRegistryManager {
         }
       }
     });
-    if (modified) {
-      this.persist();
-    }
+    if (modified) this.persist();
     return this.assets;
   }
 
@@ -287,15 +346,32 @@ class BrandRegistryManager {
     return this.citations;
   }
 
+  public recordManualAiCitation(record: Omit<AiCitationRecord, 'source' | 'lastCitedDate'> & { lastCitedDate?: string }): void {
+    this.init();
+    const now = record.lastCitedDate || new Date().toISOString();
+    const existingIdx = this.citations.findIndex((c) => c.engine === record.engine);
+    const updated: AiCitationRecord = {
+      ...record,
+      lastCitedDate: now,
+      source: 'manual_observation',
+    };
+    if (existingIdx >= 0) {
+      this.citations[existingIdx] = updated;
+    } else {
+      this.citations.push(updated);
+    }
+    this.persist();
+  }
+
   public getGapTasks(): AuthorityGapTask[] {
     this.init();
     try {
       const dynamicGaps = this.detectDynamicGaps();
-      this.gapTasks = dynamicGaps.map(d => {
-        const found = this.gapTasks.find(g => g.id === d.id);
+      this.gapTasks = dynamicGaps.map((d) => {
+        const found = this.gapTasks.find((g) => g.id === d.id);
         return {
           ...d,
-          resolved: d.resolved || (found ? found.resolved : false)
+          resolved: d.resolved || (found ? found.resolved : false),
         };
       });
       this.persist();
@@ -307,7 +383,7 @@ class BrandRegistryManager {
 
   public resolveGapTask(id: string): void {
     this.init();
-    const task = this.gapTasks.find(t => t.id === id);
+    const task = this.gapTasks.find((t) => t.id === id);
     if (task) {
       task.resolved = true;
       this.persist();
@@ -318,7 +394,7 @@ class BrandRegistryManager {
     this.init();
     return {
       lastSuccessfulApiResponseAtGsc: this.lastSuccessfulApiResponseAtGsc,
-      lastSuccessfulApiResponseAtYoutube: this.lastSuccessfulApiResponseAtYoutube
+      lastSuccessfulApiResponseAtYoutube: this.lastSuccessfulApiResponseAtYoutube,
     };
   }
 

@@ -167,6 +167,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Piggyback weekly organic discovery snapshot & proposal sync onto existing 6h self-heal schedule
+    // (captures a new WeeklyGrowthSnapshot only when >=7 days have elapsed — zero duplicate cron jobs)
+    try {
+      const { syncOptimizationProposals } = await import('@/lib/discovery-optimization-loop');
+      await syncOptimizationProposals();
+    } catch (optErr) {
+      console.warn('[youtube-self-heal] Optimization snapshot sync warning:', optErr);
+    }
+
     return NextResponse.json({
       ok: true,
       checkedYouTube: videos.length,

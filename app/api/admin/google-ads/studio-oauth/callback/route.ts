@@ -1,23 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { upsertStudioOAuthRecord, getStudioOAuthRecord } from '@/app/lib/server/google-ads-studio-oauth-store';
+import { requireAdmin } from '@/server/middleware/authenticate';
 
 /**
  * GET /api/admin/google-ads/studio-oauth/callback
  *
  * Google OAuth2 callback for the SufiTube managed ads account.
+ * Requires authenticated admin session + cryptographic OAuth state match.
  * Receives the authorization code, exchanges for tokens, and stores
  * refresh + access token in .data/google-ads-studio-oauth.json.
  */
 export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const returnedState = searchParams.get('state') || '';
+  const expectedState = request.cookies.get('sp_studio_ads_oauth_state')?.value || '';
+
+  const stateValid =
+    returnedState.length >= 16 &&
+    returnedState.length === expectedState.length &&
+    crypto.timingSafeEqual(Buffer.from(returnedState), Buffer.from(expectedState));
+
+  if (!stateValid) {
+    const invalidRes = NextResponse.json(
+      { error: 'Invalid or missing OAuth state parameter', code: 'INVALID_OAUTH_STATE' },
+      { status: 403 }
+    );
+    invalidRes.cookies.delete('sp_studio_ads_oauth_state');
+    return invalidRes;
+  }
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
   const adminUrl = `${appUrl}/admin/google-ads`;
 
   if (error || !code) {
-    return NextResponse.redirect(`${adminUrl}?studio_oauth=denied`);
+    const deniedRes = NextResponse.redirect(`${adminUrl}?studio_oauth=denied`);
+    deniedRes.cookies.delete('sp_studio_ads_oauth_state');
+    return deniedRes;
   }
 
   const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
@@ -73,11 +97,15 @@ export async function GET(request: NextRequest) {
       googleEmail,
     });
 
-    return NextResponse.redirect(`${adminUrl}?studio_oauth=success`);
+    const successRes = NextResponse.redirect(`${adminUrl}?studio_oauth=success`);
+    successRes.cookies.delete('sp_studio_ads_oauth_state');
+    return successRes;
   } catch (err: any) {
     console.error('[studio-oauth/callback]', err);
-    return NextResponse.redirect(
+    const errRes = NextResponse.redirect(
       `${adminUrl}?studio_oauth=error&reason=${encodeURIComponent(err.message)}`
     );
+    errRes.cookies.delete('sp_studio_ads_oauth_state');
+    return errRes;
   }
 }

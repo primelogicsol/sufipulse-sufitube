@@ -60,12 +60,9 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p .data
-          echo "{}" > .data/registries.json
-          echo "{}" > .data/brand-registry.json
-          echo "[]" > .data/crawler-registry.json
-          echo "[]" > .data/discovery-analytics.json
-          for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
-          # Reconcile version-controlled releases into .data for build accuracy
+          for obj in registries brand-registry; do [ -s .data/$obj.json ] || echo "{}" > .data/$obj.json; done
+          for f in crawler-registry discovery-analytics constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do [ -s .data/$f.json ] || echo "[]" > .data/$f.json; done
+          # Reconcile version-controlled releases & taxonomy joins into .data for build accuracy
           node scripts/sync-cms-releases.js
           npm run build 2>&1 | tee /tmp/build-output.log
           BUILD_STATUS=${PIPESTATUS[0]}
@@ -265,23 +262,87 @@ jobs:
             # Ensure mounted volume has correct ownership so the app and seed-admin can write to it
             docker compose -p sufipulse_new exec -T -u root app chown -R node:node /app/.data
 
-            # ── SYNC KNOWLEDGE REGISTRY FROM IMAGE → VOLUME ─────────────────
+            # ── SYNC REFERENCE REGISTRIES & DISCOVERY GRAPH → VOLUME ─────────
             # The volume (app-data) shadows /app/.data in the image.
-            # knowledge-registry.json is version-controlled in the image.
-            # We explicitly copy it into the volume after every deploy so the
-            # running container always serves the git-committed registry.
-            # Runtime data files (users, adoptions, tokens) are NOT touched.
+            # Reference datasets (knowledge-registry, youtube-studio-geography, atlas_entities,
+            # atlas_relationships, registries) are version-controlled in the image.
+            # We non-destructively merge/sync them into the persistent volume with pre-sync backups
+            # so empty fallbacks can NEVER wipe live production data and custom production nodes survive.
             _s="sync-knowledge-registry"
-            docker compose -p sufipulse_new exec -T -u root app \
-              cp /app/.data/knowledge-registry.json /app/.data/knowledge-registry.json \
-              2>/dev/null || true
-            # The image file is at the build path; copy from a temp container to be safe:
             docker run --rm \
               -v sufipulse_new_data:/target \
+              -u root \
               --entrypoint="" \
               "${SUFIPULSE_IMAGE}" \
-              sh -c "cp /app/.data/knowledge-registry.json /target/knowledge-registry.json && cp /app/.data/youtube-studio-geography.json /target/youtube-studio-geography.json"
-            echo "knowledge-registry.json and youtube-studio-geography.json synced to volume"
+              node -e '
+                const fs = require("fs");
+                const path = require("path");
+                const srcDir = "/app/.data";
+                const dstDir = "/target";
+                const backupDir = "/target/backups";
+                fs.mkdirSync(backupDir, { recursive: true });
+                const ts = new Date().toISOString().replace(/[:.]/g, "-");
+                const backupIfPresent = (name) => {
+                  const p = path.join(dstDir, name);
+                  if (fs.existsSync(p) && fs.statSync(p).size > 4) {
+                    fs.copyFileSync(p, path.join(backupDir, name.replace(".json", "") + "-pre-sync-" + ts + ".json"));
+                  }
+                };
+                for (const exact of ["knowledge-registry.json", "youtube-studio-geography.json"]) {
+                  const sp = path.join(srcDir, exact);
+                  if (fs.existsSync(sp) && fs.statSync(sp).size > 10) {
+                    backupIfPresent(exact);
+                    fs.copyFileSync(sp, path.join(dstDir, exact));
+                  }
+                }
+                const mergeArrayByKey = (name, keyFn) => {
+                  const sp = path.join(srcDir, name);
+                  const dp = path.join(dstDir, name);
+                  if (!fs.existsSync(sp)) return;
+                  const seed = JSON.parse(fs.readFileSync(sp, "utf8") || "[]");
+                  if (!Array.isArray(seed) || seed.length === 0) return;
+                  let cur = [];
+                  if (fs.existsSync(dp)) {
+                    try { const p = JSON.parse(fs.readFileSync(dp, "utf8") || "[]"); if (Array.isArray(p)) cur = p; } catch {}
+                  }
+                  backupIfPresent(name);
+                  const map = new Map(cur.map(x => [keyFn(x), x]));
+                  for (const item of seed) {
+                    const k = keyFn(item);
+                    if (!map.has(k)) map.set(k, item);
+                    else map.set(k, { ...item, ...map.get(k), isPublic: item.isPublic ?? map.get(k).isPublic, status: map.get(k).status || item.status });
+                  }
+                  fs.writeFileSync(dp, JSON.stringify(Array.from(map.values()), null, 2), "utf8");
+                };
+                mergeArrayByKey("atlas_entities.json", x => x.slug || x.id);
+                mergeArrayByKey("atlas_relationships.json", x => `${x.sourceEntityId}_${x.targetEntityId}_${x.relationshipType}`);
+                const regSrc = path.join(srcDir, "registries.json");
+                const regDst = path.join(dstDir, "registries.json");
+                if (fs.existsSync(regSrc)) {
+                  const seedReg = JSON.parse(fs.readFileSync(regSrc, "utf8") || "{}");
+                  if (Object.keys(seedReg).length > 0) {
+                    let curReg = {};
+                    if (fs.existsSync(regDst)) {
+                      try { curReg = JSON.parse(fs.readFileSync(regDst, "utf8") || "{}") || {}; } catch {}
+                    }
+                    backupIfPresent("registries.json");
+                    const mergedReg = { ...curReg };
+                    for (const [sec, items] of Object.entries(seedReg)) {
+                      if (!Array.isArray(items)) continue;
+                      const existingArr = Array.isArray(curReg[sec]) ? curReg[sec] : [];
+                      const bySlug = new Map(existingArr.map(i => [i.slug || i.id, i]));
+                      for (const item of items) {
+                        const k = item.slug || item.id;
+                        if (!bySlug.has(k)) bySlug.set(k, item);
+                      }
+                      mergedReg[sec] = Array.from(bySlug.values());
+                    }
+                    fs.writeFileSync(regDst, JSON.stringify(mergedReg, null, 2), "utf8");
+                  }
+                }
+              '
+            docker compose -p sufipulse_new exec -T -u root app chown -R node:node /app/.data
+            echo "Reference registries and discovery graph non-destructively synced to persistent volume"
 
             # ── SYNC CMS RELEASES FROM IMAGE → PERSISTENT VOLUME ─────────────
             _s="sync-cms-releases"
@@ -349,8 +410,11 @@ jobs:
             test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/mithaq)" = "308" || { echo "FATAL: /mithaq failed redirect"; exit 1; }
             test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/legal/terms-of-service)" = "308" || { echo "FATAL: /legal/terms-of-service failed redirect"; exit 1; }
             test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/production)" = "308" || { echo "FATAL: /production failed redirect"; exit 1; }
-            # Check 200 public routes & 404 enforcement on unpublished release
+            # Check 200 public routes, discovery persistence, IndexNow key & 404 enforcement on unpublished release
             test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/applications)" = "200" || { echo "FATAL: /applications returned non-200"; exit 1; }
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/discovery)" = "200" || { echo "FATAL: /discovery returned non-200"; exit 1; }
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/discovery/traditions/qawwali)" = "200" || { echo "FATAL: /discovery/traditions/qawwali returned non-200"; exit 1; }
+            test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/a7f3c9e2d4b841f69e0c5a2d8b7e4f1a.txt)" = "200" || { echo "FATAL: IndexNow key file returned non-200"; exit 1; }
             test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/release-detail/footprints-behind)" = "404" || { echo "FATAL: /release-detail/footprints-behind leaked publicly (expected 404)"; exit 1; }
             test "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/releases)" = "200" || { echo "FATAL: /releases returned non-200"; exit 1; }
             echo "LIVE ROUTE & RELEASE VERIFICATION: ALL PASSED"

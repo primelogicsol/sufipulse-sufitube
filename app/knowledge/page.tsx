@@ -5,7 +5,7 @@ import KnowledgeClient from './KnowledgeClient';
 import { Metadata } from 'next';
 import { Layout } from '../components/layout/Layout';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+const BASE_URL = 'https://sufipulse.com';
 
 export const metadata: Metadata = {
   title: "Sufi Poetry & Kalam | Knowledge Archive",
@@ -43,12 +43,26 @@ export default async function KnowledgeHome() {
     console.error('[Knowledge] knowledge-registry.json is empty or missing. Metrics will show 0.');
   }
 
-  // Calculate stats from real data only — no fallback fabrication.
+  // Calculate stats strictly from real persisted graph edges — zero fallback fabrication.
+  let realEdgesCount = 0;
+  try {
+    const joinsPath = path.join(process.cwd(), '.data', 'joins.json');
+    if (fs.existsSync(joinsPath)) {
+      const joins = JSON.parse(fs.readFileSync(joinsPath, 'utf-8'));
+      if (Array.isArray(joins)) realEdgesCount += joins.length;
+    }
+    const atlasRelsPath = path.join(process.cwd(), '.data', 'atlas_relationships.json');
+    if (fs.existsSync(atlasRelsPath)) {
+      const rels = JSON.parse(fs.readFileSync(atlasRelsPath, 'utf-8'));
+      if (Array.isArray(rels)) realEdgesCount += rels.length;
+    }
+  } catch {}
+
   const total = entities.length;
   const stats = {
     totalEntities: total,
     atlasNodes: total,
-    relationships: total > 0 ? total * 5 + 45 : 0,
+    relationships: realEdgesCount,
     releases: entities.filter((e: any) => e.class === 'release').length,
     singers: entities.filter((e: any) => e.class === 'singer').length,
     songs: entities.filter((e: any) => e.class === 'song' || e.class === 'kalam').length,
@@ -63,7 +77,7 @@ export default async function KnowledgeHome() {
     "@type": "ListItem",
     "position": index + 1,
     "url": `${BASE_URL}/knowledge/${entity.class}/${entity.slug}`,
-    "name": entity.title
+    "name": entity.name || entity.title || entity.slug
   }));
 
   const jsonLd = {

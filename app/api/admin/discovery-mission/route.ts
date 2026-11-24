@@ -1,97 +1,144 @@
-import { NextResponse } from 'next/server';
-import { sessionStore, pageviewStore, eventStore, getClusterFunnel } from '@/lib/atlas/atlas-telemetry';
+import { NextRequest, NextResponse } from 'next/server';
+import fs from 'node:fs';
+import path from 'node:path';
+import { requireAdmin } from '@/server/middleware/authenticate';
+import { organicDiscoveryTelemetry } from '@/lib/organic-discovery-telemetry';
+import { discoveryAnalytics } from '@/lib/discovery-analytics';
+import { graphResolver } from '@/lib/graph-resolver';
+import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { syncOptimizationProposals } from '@/lib/discovery-optimization-loop';
 
-export async function GET() {
-  // Querying raw telemetry database directly
-  const nfakMetrics = getClusterFunnel('nusrat-fateh-ali-khan');
-  const allSessions = sessionStore.findAll();
-  const allPageviews = pageviewStore.findAll();
-  const allEvents = eventStore.findAll();
+export const dynamic = 'force-dynamic';
 
-  // Aggregate Metrics Across Entire Ecosystem
-  const searchEntrances = allSessions.filter(s => (s.referrer || '').includes('google')).length;
-  const aiReferrals = allSessions.filter(s => {
-    const ref = (s.referrer || '').toLowerCase();
-    return ref.includes('chatgpt') || ref.includes('perplexity') || ref.includes('claude');
-  }).length;
-  const directEntrances = allSessions.length - searchEntrances - aiReferrals;
-
-  // Authority
-  const entityCounts: Record<string, number> = {};
-  allPageviews.filter(p => p.path.includes('/discovery/')).forEach(p => {
-    if (p.entitySlug) {
-      entityCounts[p.entitySlug] = (entityCounts[p.entitySlug] || 0) + 1;
+function countRealNewsletterSubscribers(): number {
+  try {
+    const file = path.join(process.cwd(), '.data', 'subscribers.json');
+    if (fs.existsSync(file)) {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (Array.isArray(parsed)) return parsed.filter((s: any) => s?.active !== false).length;
     }
-  });
-  
-  const mostVisitedEntities = Object.entries(entityCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(e => ({ name: e[0].split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '), views: e[1] }));
+  } catch {}
+  return 0;
+}
 
-  // Mocking some other publications since we only seeded NFAK right now, 
-  // but structuring it to dynamically pull when more data is seeded
-  const pubCounts: Record<string, number> = {};
-  allPageviews.filter(p => p.path.includes('/article/')).forEach(p => {
-    pubCounts[p.path] = (pubCounts[p.path] || 0) + 1;
-  });
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
 
-  const mostReadPublications = Object.entries(pubCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(e => ({ name: e[0].split('/').pop()?.split('-').join(' ') || 'Publication', reads: e[1] }));
+  const funnel = organicDiscoveryTelemetry.getFunnelSummary();
+  const actionTotals = discoveryAnalytics.getActionTotals();
+  const loop = await syncOptimizationProposals();
 
-  // Conversion
-  const releaseOpens = allPageviews.filter(p => p.path.includes('/release/')).length;
-  const videoClicks = allEvents.filter(e => e.eventType === 'click_youtube_play').length;
-  const youtubeTransfers = allEvents.filter(e => e.eventType === 'click_outbound_youtube').length;
+  graphResolver.init();
+  const joins = graphResolver.getRawJoins();
+  const publicReleases = cmsServerStorage
+    .getPublicReleases()
+    .filter((r) => r.status === 'published' && (r.visibility || 'public') === 'public');
+  const connectedIds = new Set(joins.map((j) => j.releaseId).filter(Boolean));
+  const orphanReleasesCount = publicReleases.filter((r) => !connectedIds.has(r.id)).length;
+  const orphanRate =
+    publicReleases.length > 0
+      ? Number(((orphanReleasesCount / publicReleases.length) * 100).toFixed(1))
+      : 0;
 
-  // Discovery Mission Score Calculation
-  // Organic Search (30) + Pub Engagement (20) + Release Conversion (20) + YT Transfer (20) + Returning (10)
-  // For telemetry seeding proof, we normalize to a 0-100 scale based on funnel success percentages
-  const searchGrowthFactor = Math.min(30, (searchEntrances / 1000) * 30);
-  const pubEngagementFactor = Math.min(20, (allPageviews.filter(p => p.path.includes('/article/')).length / allSessions.length) * 20);
-  const releaseConvFactor = Math.min(20, (releaseOpens / allSessions.length) * 20);
-  const ytTransferFactor = Math.min(20, (youtubeTransfers / allSessions.length) * 20 * 2); // Multiplier for difficulty
-  const returningFactor = 8; // Stubbed returning visitor factor out of 10
-  
-  const currentDiscoveryScore = Math.round(searchGrowthFactor + pubEngagementFactor + releaseConvFactor + ytTransferFactor + returningFactor);
+  // Entity & article tallies strictly from first-party runtime events (zero seeded demo numbers)
+  const entityTallies = discoveryAnalytics
+    .getAllTallies()
+    .filter((t) => t.actionType === 'page_view' && t.sourceType !== 'release')
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+    .map((t) => ({
+      name: `${t.sourceType}: ${t.sourceSlug}`,
+      views: t.count,
+    }));
 
-  const data = {
+  const articleTallies = discoveryAnalytics
+    .getTalliesForType('article')
+    .filter((t) => t.actionType === 'page_view')
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+    .map((t) => ({
+      name: t.sourceSlug,
+      reads: t.count,
+    }));
+
+  const releaseOpens = actionTotals.page_view + funnel.releasePageViews;
+  const videoClicks = actionTotals.video_click + funnel.embeddedVideoPlays;
+  const youtubeTransfers =
+    actionTotals.subscribe_click + actionTotals.playlist_click + funnel.outboundYoutubeClicks;
+
+  const returningPercent =
+    funnel.uniqueSessions > 0
+      ? Number(((funnel.multiTouchSessions / funnel.uniqueSessions) * 100).toFixed(1))
+      : 0;
+
+  // Compute transparent readiness/conversion score (0..100) from real measured counts
+  const graphCoveragePts =
+    publicReleases.length > 0
+      ? Math.round(((publicReleases.length - orphanReleasesCount) / publicReleases.length) * 40)
+      : 0;
+  const searchEntrancePts = Math.min(20, funnel.organicSearchEntrances + funnel.aiSearchEntrances);
+  const releaseEngagementPts = Math.min(20, Math.round(releaseOpens / 5));
+  const youtubeTransferPts = Math.min(20, youtubeTransfers * 2);
+  const currentScore = Math.min(
+    100,
+    graphCoveragePts + searchEntrancePts + releaseEngagementPts + youtubeTransferPts
+  );
+
+  const weeklyHistory = loop.weeklySnapshots
+    .slice(0, 6)
+    .reverse()
+    .map((snap) => ({
+      week: snap.weekEnding,
+      score:
+        snap.connectedReleasesCount > 0
+          ? Math.min(
+              100,
+              Math.round(
+                (snap.connectedReleasesCount /
+                  Math.max(1, snap.connectedReleasesCount + snap.orphanReleasesCount)) *
+                  40
+              ) + Math.min(60, snap.websiteToYoutubeClicks)
+            )
+          : currentScore,
+    }));
+
+  return NextResponse.json({
+    provenance: 'verified_first_party_telemetry_only',
     discoveryScore: {
-      current: currentDiscoveryScore,
-      weeklyHistory: [
-        { week: 'Week 1', score: 41 },
-        { week: 'Week 2', score: 47 },
-        { week: 'Week 3', score: 53 },
-        { week: 'Week 4', score: currentDiscoveryScore }
-      ]
+      current: currentScore,
+      weeklyHistory:
+        weeklyHistory.length > 0 ? weeklyHistory : [{ week: new Date().toISOString().split('T')[0], score: currentScore }],
     },
     acquisition: {
-      searchEntrances,
-      aiReferrals,
-      directEntrances
+      searchEntrances: funnel.organicSearchEntrances,
+      aiReferrals: funnel.aiSearchEntrances,
+      directEntrances: funnel.entrancesByChannel.direct,
     },
     authority: {
-      mostVisitedEntities,
-      mostReadPublications
+      mostVisitedEntities: entityTallies,
+      mostReadPublications: articleTallies,
     },
     exploration: {
-      averageGraphDepth: nfakMetrics.graphDepth.averageDepth, // Pulling from seeded NFAK funnel for demo
-      topRoutes: nfakMetrics.graphDepth.topPaths.map((path, idx) => ({ path, count: 850 - (idx * 210) })), // Adding mock count to the real paths 
-      orphanExits: nfakMetrics.graphDepth.orphanExits
+      averageGraphDepth:
+        funnel.uniqueSessions > 0
+          ? Number((funnel.totalEvents / funnel.uniqueSessions).toFixed(1))
+          : 0,
+      topRoutes: funnel.perReleaseConversion.slice(0, 5).map((r) => ({
+        path: `/release-detail/${r.slug}`,
+        count: r.releaseViews + r.embeddedPlays + r.outboundClicks,
+      })),
+      orphanExits: orphanRate,
     },
     conversion: {
       releaseOpens,
       videoClicks,
-      youtubeTransfers
+      youtubeTransfers,
     },
     growth: {
-      returningVisitors: 12, // Needs user_id tracking which is out of scope for anonymous telemetry
-      emailSignups: 45,
-      channelTransfers: youtubeTransfers
-    }
-  };
-
-  return NextResponse.json(data);
+      returningVisitors: returningPercent,
+      emailSignups: countRealNewsletterSubscribers(),
+      channelTransfers: youtubeTransfers,
+    },
+  });
 }

@@ -1,481 +1,1777 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  AlertCircle,
+  Activity,
   AlertTriangle,
   ArrowRight,
-  Award,
+  BarChart3,
+  Bot,
   CheckCircle2,
-  Cpu,
+  Clock,
+  Compass,
   ExternalLink,
-  Eye,
-  ListMusic,
-  MousePointerClick,
+  FileSearch,
+  Globe,
+  Layers,
+  Network,
   PlayCircle,
   RefreshCw,
   Search,
+  Send,
   ShieldCheck,
   Sparkles,
-  TrendingDown,
+  Target,
   TrendingUp,
-  UserPlus,
+  Youtube,
 } from 'lucide-react';
 import DashboardLayout from '@/app/components/layout/DashboardLayout';
 import { useAuth } from '@/app/contexts/AuthContext';
 
-interface ClickMetricItem {
-  slug: string;
-  video_clicks: number;
-  playlist_clicks: number;
-  subscribe_clicks: number;
-  page_views: number;
-  total: number;
-  conversion_rate: number;
-  type?: string;
+type ModuleFilter =
+  | 'all'
+  | '01_overview'
+  | '02_google'
+  | '03_bing'
+  | '04_youtube'
+  | '05_keywords'
+  | '06_geography'
+  | '07_releases'
+  | '08_indexing'
+  | '09_ai_search'
+  | '10_graph'
+  | '11_funnel'
+  | '12_optimization'
+  | '13_health';
+
+const MODULE_NAV: Array<{ id: ModuleFilter; num: string; label: string }> = [
+  { id: 'all', num: 'ALL', label: 'All 13 Modules' },
+  { id: '01_overview', num: '01', label: 'Executive Overview' },
+  { id: '02_google', num: '02', label: 'Google Search' },
+  { id: '03_bing', num: '03', label: 'Bing & IndexNow' },
+  { id: '04_youtube', num: '04', label: 'YouTube Search' },
+  { id: '05_keywords', num: '05', label: 'Keyword Demand (4-Script)' },
+  { id: '06_geography', num: '06', label: 'Global Geography' },
+  { id: '07_releases', num: '07', label: 'Release SEO' },
+  { id: '08_indexing', num: '08', label: 'Indexing & Crawl' },
+  { id: '09_ai_search', num: '09', label: 'AI Search Discovery' },
+  { id: '10_graph', num: '10', label: 'Discovery Graph' },
+  { id: '11_funnel', num: '11', label: 'Web → YouTube Funnel' },
+  { id: '12_optimization', num: '12', label: 'Optimization Loop' },
+  { id: '13_health', num: '13', label: 'Integration Health' },
+];
+
+function fmtSecs(secs?: number | null): string {
+  if (secs === null || secs === undefined || !Number.isFinite(secs)) return '—';
+  const m = Math.floor(secs / 60);
+  const s = Math.round(secs % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-interface RecommendationItem {
-  type: 'orphan' | 'density' | 'playlist' | 'localization' | 'subscribe';
-  priority: 'high' | 'medium' | 'low';
-  title: string;
-  message: string;
-  actionUrl: string;
-}
-
-interface CrawlerStatItem {
-  crawler: string;
-  lastSeen: string;
-  pagesCrawled: number;
-  frequency: number;
-  firstSeen: string;
-}
-
-interface BrandAssetItem {
-  id: string;
-  name: string;
-  type: 'master_brand' | 'website' | 'youtube_channel' | 'production_brand' | 'media_brand' | 'release_brand' | 'knowledge_brand';
-  url: string;
-  description: string;
-  status: 'verified' | 'monitoring' | 'pending';
-}
-
-interface SearchOwnershipItem {
-  keyword: string;
-  platform: 'google' | 'bing' | 'youtube';
-  ownedResultsCount: number;
-  rankingUrls: string[];
-  occupancyPercent: number;
-  lastChecked: string;
-}
-
-interface AiCitationItem {
-  engine: 'ChatGPT' | 'Gemini' | 'Claude' | 'Perplexity';
-  citationCount: number;
-  lastCitedDate: string;
-  sampleQuery: string;
-  citationConfidence: number;
-  trend: 'increasing' | 'stable' | 'decreasing';
-}
-
-interface AuthorityGapTask {
-  id: string;
-  targetAsset: string;
-  gapType: 'missing_page' | 'missing_schema' | 'missing_faq' | 'missing_capture';
-  message: string;
-  priority: 'high' | 'medium' | 'low';
-  resolved: boolean;
-  actionUrl: string;
-}
-
-interface ProductionReadiness {
-  environment: 'Local Development' | 'Staging' | 'Production';
-  gscStatus: 'Connected' | 'Configured' | 'Warning' | 'Error';
-  gscChecks: {
-    oauthConfigured: boolean;
-    propertyVerified: boolean;
-    lastSyncSuccessful: boolean;
-  };
-  youtubeStatus: 'Connected' | 'Configured' | 'Warning' | 'Error';
-  youtubeChecks: {
-    dataApiConfigured?: boolean;
-    oauthConfigured?: boolean;
-    oauthTokenValid: boolean;
-    refreshTokenValid: boolean;
-    lastSyncSuccessful: boolean;
-  };
-  sitemapStatus: 'Healthy' | 'Error';
-  telemetryStatus: 'Active' | 'Inactive';
-  aiAuditStatus: 'Active' | 'Inactive';
-  observationWindow: string;
-  lastGscSync: string;
-  lastYoutubeSync: string;
-  lastSuccessfulSync: string;
-}
-
-interface DiscoveryPerformanceData {
-  totals: {
-    video_click: number;
-    playlist_click: number;
-    subscribe_click: number;
-    page_view: number;
-  };
-  concepts: ClickMetricItem[];
-  themes: ClickMetricItem[];
-  regions: ClickMetricItem[];
-  releases: ClickMetricItem[];
-  playlists: ClickMetricItem[];
-  winners: {
-    concepts: ClickMetricItem[];
-    themes: ClickMetricItem[];
-    regions: ClickMetricItem[];
-    playlists: ClickMetricItem[];
-    releases: ClickMetricItem[];
-  };
-  losers: {
-    no_clicks: ClickMetricItem[];
-    low_conversion: ClickMetricItem[];
-    no_continuation: ClickMetricItem[];
-  };
-  recommendations: RecommendationItem[];
-  crawlerStats: CrawlerStatItem[];
-  ecosystemVisibility: {
-    score: number;
-    breakdown: {
-      impressionsFactor: number;
-      outboundClicksFactor: number;
-      crawlerFactor: number;
-      diversityFactor: number;
-    };
-  };
-  ecosystemAuthority: {
-    score: number;
-    breakdown: {
-      indexedAssetsFactor: number;
-      knowledgeDensityFactor: number;
-      entityRelationshipsFactor: number;
-      brandOccupancyFactor: number;
-      aiCitationsFactor: number;
-    };
-  };
-  brandAssets: BrandAssetItem[];
-  searchOwnership: SearchOwnershipItem[];
-  aiCitations: AiCitationItem[];
-  authorityGaps: AuthorityGapTask[];
-  productionReadiness?: ProductionReadiness;
-  dataProvenance?: {
-    discoveryTelemetry: 'first_party_runtime_telemetry' | 'unavailable';
-    youtubeAnalytics: 'youtube_analytics_api' | 'unavailable';
-    searchOwnership: 'manual_or_registry_observation';
-    aiCitations: 'registry_observation';
-    simulation: 'isolated_non_authoritative';
-  };
-}
-
-const TABS = [
-  { key: 'concepts', label: 'Concepts' },
-  { key: 'themes', label: 'Themes' },
-  { key: 'regions', label: 'Regions' },
-  { key: 'releases', label: 'Releases' },
-  { key: 'playlists', label: 'Playlists' },
-  { key: 'brand_assets', label: 'Brand Registry' },
-  { key: 'serp_occupancy', label: 'Search Occupancy' },
-  { key: 'ai_citations', label: 'AI Citations' },
-  { key: 'crawlers', label: 'AI Crawlers' },
-] as const;
-
-type TabKey = typeof TABS[number]['key'];
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
-}
-
-function statusClass(status: string): string {
-  if (status === 'Connected' || status === 'Healthy' || status === 'Active') {
-    return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-  }
-  if (status === 'Configured') return 'bg-blue-500/10 border-blue-500/20 text-blue-400';
-  if (status === 'Warning' || status === 'Inactive') return 'bg-amber-500/10 border-amber-500/20 text-amber-400';
-  return 'bg-red-500/10 border-red-500/20 text-red-400';
-}
-
-function ProvenanceBadge({ children, tone = 'green' }: { children: React.ReactNode; tone?: 'green' | 'sky' | 'amber' | 'neutral' }) {
-  const classes = {
-    green: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
-    sky: 'bg-sky-500/10 border-sky-500/20 text-sky-300',
-    amber: 'bg-amber-500/10 border-amber-500/20 text-amber-300',
+function ProvenanceTag({
+  source,
+  period,
+  syncAt,
+  tone = 'emerald',
+}: {
+  source: string;
+  period?: string | null;
+  syncAt?: string | null;
+  tone?: 'emerald' | 'teal' | 'blue' | 'amber' | 'neutral';
+}) {
+  const colors: Record<string, string> = {
+    emerald: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300',
+    teal: 'bg-teal-500/10 border-teal-500/25 text-teal-300',
+    blue: 'bg-blue-500/10 border-blue-500/25 text-blue-300',
+    amber: 'bg-amber-500/10 border-amber-500/25 text-amber-300',
     neutral: 'bg-neutral-800 border-neutral-700 text-neutral-400',
-  }[tone];
-  return <span className={`px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-wider ${classes}`}>{children}</span>;
-}
-
-function KpiCard({ label, value, description, icon, provenance }: { label: string; value: string; description: string; icon: React.ReactNode; provenance: React.ReactNode }) {
+  };
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">{label}</p>
-          {provenance}
-        </div>
-        <span className="p-2 bg-white/5 rounded-lg text-amber-400">{icon}</span>
-      </div>
-      <p className="text-3xl font-black text-white font-mono">{value}</p>
-      <p className="text-[10px] text-neutral-500">{description}</p>
+    <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+      <span className={`px-2 py-0.5 rounded border font-bold uppercase tracking-wider ${colors[tone]}`}>
+        {source}
+      </span>
+      {period && <span className="text-neutral-500 font-mono">{period}</span>}
+      {syncAt && (
+        <span className="text-neutral-500 font-mono">
+          Sync: {new Date(syncAt).toLocaleDateString()}
+        </span>
+      )}
     </div>
   );
 }
 
-export default function DiscoveryPerformanceDashboard() {
+function ProportionalBar({
+  rank,
+  label,
+  sublabel,
+  value,
+  maxValue,
+  formattedValue,
+  highlightTop = true,
+}: {
+  rank?: number;
+  label: string;
+  sublabel?: string;
+  value: number;
+  maxValue: number;
+  formattedValue: string;
+  highlightTop?: boolean;
+}) {
+  const pct = maxValue > 0 ? Math.max(2, Math.min(100, (value / maxValue) * 100)) : 0;
+  const isLeader = highlightTop && rank === 1;
+  return (
+    <div className="space-y-1.5" title={`${label}: ${formattedValue}`}>
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          {rank !== undefined && (
+            <span
+              className={`font-mono font-bold text-[11px] w-6 shrink-0 ${
+                isLeader ? 'text-amber-400' : 'text-neutral-500'
+              }`}
+            >
+              #{rank}
+            </span>
+          )}
+          <span className="font-semibold text-neutral-200 truncate">{label}</span>
+          {sublabel && <span className="text-[10px] text-neutral-500 truncate">{sublabel}</span>}
+        </div>
+        <span className="font-mono text-xs font-bold text-neutral-300 shrink-0">{formattedValue}</span>
+      </div>
+      <div className="h-2.5 w-full bg-neutral-900 rounded-full overflow-hidden border border-white/5">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${
+            isLeader
+              ? 'bg-gradient-to-r from-amber-500 to-amber-300'
+              : 'bg-gradient-to-r from-teal-600 to-emerald-400'
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function OrganicSearchDiscoveryCommandCenter() {
   const router = useRouter();
   const { user } = useAuth();
-  const isAdmin = user?.role.includes('admin') ?? false;
-  const [activeTab, setActiveTab] = useState<TabKey>('concepts');
-  const [data, setData] = useState<DiscoveryPerformanceData | null>(null);
+  const isAdmin = Boolean(user?.role && user.role.includes('admin'));
+
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [diagnosing, setDiagnosing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [tableSearch, setTableSearch] = useState('');
+  const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const [activeModule, setActiveModule] = useState<ModuleFilter>('all');
+  const [ytWindow, setYtWindow] = useState<'28d' | 'lifetime'>('28d');
+  const [geoTab, setGeoTab] = useState<'views' | 'watchHours' | 'avgDuration'>('views');
+  const [releaseQuery, setReleaseQuery] = useState('');
+  const [releaseFilter, setReleaseFilter] = useState<'all' | 'needs_graph' | 'needs_scripts' | 'source_recovery' | 'staged_drafts' | 'low_ctr'>('all');
+  const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
+
+  // Manual AI citation observation form
+  const [citationEngine, setCitationEngine] = useState<'ChatGPT' | 'Gemini' | 'Claude' | 'Perplexity'>('Perplexity');
+  const [citationQuery, setCitationQuery] = useState('');
+  const [savingCitation, setSavingCitation] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin && user) router.push('/admin');
+    if (user && !isAdmin) {
+      router.push('/admin');
+    }
   }, [user, isAdmin, router]);
 
-  const fetchPerformanceData = useCallback(async () => {
-    setLoading(true);
+  const loadDashboard = useCallback(async (force = false) => {
+    if (force) setRefreshing(true);
+    else setLoading(true);
     setError(null);
+
     try {
-      const res = await fetch('/api/admin/discovery-performance', { cache: 'no-store' });
+      const res = await fetch(`/api/admin/discovery-performance${force ? '?refresh=1' : ''}`, {
+        cache: 'no-store',
+      });
+      const json = await res.json();
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Failed to fetch performance data: ${text || res.statusText}`);
+        throw new Error(json.error || `HTTP ${res.status}`);
       }
-      setData(await res.json() as DiscoveryPerformanceData);
-    } catch (error: unknown) {
-      setError(errorMessage(error, 'Error connecting to analytics performance endpoint.'));
+      setData(json);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load Organic Search Discovery Engine.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    if (isAdmin) void fetchPerformanceData();
-  }, [isAdmin, fetchPerformanceData]);
+    if (isAdmin) {
+      loadDashboard(false);
+    }
+  }, [isAdmin, loadDashboard]);
 
-  const runDiagnostics = async () => {
-    setDiagnosing(true);
-    setError(null);
-    setNotice(null);
+  const runLiveDiagnostics = async () => {
+    setRefreshing(true);
+    setFeedback(null);
     try {
-      const res = await fetch('/api/admin/discovery-performance', { method: 'POST' });
-      const result = await res.json() as { success?: boolean; gscError?: string | null; ytError?: string | null };
-      if (!res.ok) throw new Error(result.ytError || result.gscError || `Diagnostics failed with HTTP ${res.status}`);
-      setNotice(result.success
-        ? 'Live diagnostics completed successfully. Verified integration timestamps were refreshed.'
-        : `Diagnostics completed with integration warnings. GSC: ${result.gscError || 'OK'} · YouTube: ${result.ytError || 'OK'}`);
-      await fetchPerformanceData();
-    } catch (error: unknown) {
-      setError(errorMessage(error, 'Live diagnostics could not be completed.'));
-    } finally {
-      setDiagnosing(false);
+      const res = await fetch('/api/admin/discovery-performance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const json = await res.json();
+      setFeedback({
+        ok: Boolean(json.youtubeConnected),
+        message: `Live diagnostics complete — YouTube API: ${json.youtubeConnected ? 'CONNECTED' : 'ERROR'} · GSC: ${json.gscState} · Bing: ${json.bingState} · IndexNow Key: ${json.indexNowVerified ? 'VERIFIED' : 'PENDING HOST DEPLOY'}`,
+      });
+      await loadDashboard(true);
+    } catch (err: any) {
+      setFeedback({ ok: false, message: err?.message || 'Diagnostics request failed.' });
+      setRefreshing(false);
     }
   };
 
-  const clickRows = useMemo(() => {
-    if (!data) return [];
-    const source = activeTab === 'concepts' ? data.concepts
-      : activeTab === 'themes' ? data.themes
-        : activeTab === 'regions' ? data.regions
-          : activeTab === 'releases' ? data.releases
-            : activeTab === 'playlists' ? data.playlists
-              : [];
-    const search = tableSearch.toLowerCase();
-    return source.filter(item => item.slug.toLowerCase().includes(search));
-  }, [data, activeTab, tableSearch]);
+  const handleOptimizationDecision = async (
+    proposalId: string,
+    decision: 'approve_and_implement' | 'dismiss' | 'reopen'
+  ) => {
+    setBusyProposalId(proposalId);
+    setFeedback(null);
+    try {
+      const res = await fetch('/api/admin/discovery-optimization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposalId, decision }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setFeedback({ ok: false, message: json.error || 'Optimization action failed.' });
+      } else {
+        setFeedback({ ok: true, message: json.message || 'Optimization updated.' });
+        await loadDashboard(false);
+      }
+    } catch (err: any) {
+      setFeedback({ ok: false, message: err?.message || 'Network error.' });
+    } finally {
+      setBusyProposalId(null);
+    }
+  };
 
-  const filteredBrands = useMemo(() => {
-    if (!data) return [];
-    const search = tableSearch.toLowerCase();
-    return data.brandAssets.filter(item => item.name.toLowerCase().includes(search) || item.type.toLowerCase().includes(search));
-  }, [data, tableSearch]);
+  const handleLogManualCitation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!citationQuery.trim()) return;
+    setSavingCitation(true);
+    try {
+      const res = await fetch('/api/admin/discovery-optimization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'record_manual_citation',
+          engine: citationEngine,
+          citationCount: 1,
+          sampleQuery: citationQuery.trim(),
+          citationConfidence: 100,
+          trend: 'stable',
+        }),
+      });
+      if (res.ok) {
+        setCitationQuery('');
+        setFeedback({ ok: true, message: `Logged verified manual ${citationEngine} citation check.` });
+        await loadDashboard(false);
+      }
+    } finally {
+      setSavingCitation(false);
+    }
+  };
 
-  const filteredSearch = useMemo(() => {
-    if (!data) return [];
-    const search = tableSearch.toLowerCase();
-    return data.searchOwnership.filter(item => item.keyword.toLowerCase().includes(search) || item.platform.toLowerCase().includes(search));
-  }, [data, tableSearch]);
+  const filteredReleases = useMemo(() => {
+    const list: any[] = data?.releaseSeoAudits || [];
+    return list.filter((r) => {
+      if (releaseQuery.trim()) {
+        const q = releaseQuery.toLowerCase();
+        const hit =
+          r.canonicalTitle.toLowerCase().includes(q) ||
+          r.slug.toLowerCase().includes(q) ||
+          (r.youtubeId || '').toLowerCase().includes(q);
+        if (!hit) return false;
+      }
+      if (releaseFilter === 'needs_graph') return r.graphLinksCount < 3;
+      if (releaseFilter === 'needs_scripts') return !r.checks.hasFourScriptLyrics;
+      if (releaseFilter === 'source_recovery') return Boolean(r.sourceRecoveryRequired);
+      if (releaseFilter === 'staged_drafts') return Number(r.scriptCoverage?.draftPreparedCount || 0) > 0;
+      if (releaseFilter === 'low_ctr') return r.metrics.studioCtr !== null && r.metrics.studioCtr < 5.0;
+      return true;
+    });
+  }, [data, releaseQuery, releaseFilter]);
 
-  const filteredCitations = useMemo(() => {
-    if (!data) return [];
-    const search = tableSearch.toLowerCase();
-    return data.aiCitations.filter(item => item.engine.toLowerCase().includes(search));
-  }, [data, tableSearch]);
+  const showSection = (id: ModuleFilter) => activeModule === 'all' || activeModule === id;
 
-  const filteredCrawlers = useMemo(() => {
-    if (!data) return [];
-    const search = tableSearch.toLowerCase();
-    return data.crawlerStats.filter(item => item.crawler.toLowerCase().includes(search));
-  }, [data, tableSearch]);
-
-  if (!isAdmin) {
-    return <div className="min-h-screen bg-black flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" /></div>;
+  if (loading && !data) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-3">
+          <RefreshCw className="w-8 h-8 text-amber-400 animate-spin mx-auto" />
+          <p className="text-sm text-neutral-300 font-semibold">
+            Synchronizing Verified Search, YouTube, Geography, Sitemap & Discovery Graph Intelligence...
+          </p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
-  const telemetryAvailable = data?.dataProvenance?.discoveryTelemetry === 'first_party_runtime_telemetry';
-  const totalClicks = data ? data.totals.video_click + data.totals.playlist_click + data.totals.subscribe_click : 0;
-  const avgConversionRate = data && data.totals.page_view > 0 ? ((totalClicks / data.totals.page_view) * 100).toFixed(1) : '—';
+  const yt = data?.youtube;
+  const gsc = data?.googleSearchConsole;
+  const bing = data?.bingSearch;
+  const demand = data?.searchDemand;
+  const idxCrawl = data?.indexingAndCrawl;
+  const aiSearch = data?.aiSearchDiscovery;
+  const graph = data?.discoveryGraph;
+  const funnel = data?.conversionFunnel;
+  const loop = data?.optimizationLoop;
+  const integrations: any[] = data?.integrations || [];
+
+  const activeTrafficRows: any[] =
+    ytWindow === '28d' ? yt?.recent28d?.trafficSources || [] : yt?.lifetime?.trafficSources || [];
+  const maxTrafficViews = Math.max(1, ...activeTrafficRows.map((r) => r.views || 0));
+
+  const activeGeoRows: any[] =
+    geoTab === 'views'
+      ? yt?.geography?.topByViews || []
+      : geoTab === 'watchHours'
+        ? yt?.geography?.topByWatchHours || []
+        : yt?.geography?.topByAvgDuration || [];
+  const maxGeoVal = Math.max(
+    1,
+    ...activeGeoRows.map((r) =>
+      geoTab === 'views'
+        ? r.views
+        : geoTab === 'watchHours'
+          ? r.watchTimeHours
+          : r.avgViewDurationSeconds
+    )
+  );
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 p-4 md:p-8 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-neutral-400 text-xs font-bold uppercase tracking-widest">
-              <ShieldCheck size={14} className="text-amber-500" /> Authority & Brand Command Center
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8 overflow-x-hidden min-w-0">
+        {/* COMMAND HEADER */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">
+              <Compass className="w-4 h-4" /> SufiPulse USA · Global Organic Search Discovery Engine
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">Ecosystem Governance</h1>
-            <p className="text-sm text-neutral-400 max-w-2xl">Verified discovery telemetry, registry observations, integration readiness and optimization diagnostics.</p>
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+              Organic Search, Multilingual Demand & Conversion Intelligence
+            </h1>
+            <p className="text-sm text-neutral-400 mt-1 max-w-3xl">
+              Unified measurement across YouTube Search, Google Search Console, Bing & IndexNow, 4-script Sufi kalam demand, 52 listener geographies, and full-song conversions toward 1,000,000 organic listeners.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => void fetchPerformanceData()} disabled={loading} className="flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-neutral-300 rounded-xl disabled:opacity-50">
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh Telemetry
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => loadDashboard(true)}
+              disabled={refreshing}
+              className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-white/10 rounded-xl text-xs font-bold text-neutral-200 flex items-center gap-2 transition"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh Live Data
             </button>
-            <button onClick={() => void runDiagnostics()} disabled={diagnosing} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 text-xs font-semibold text-amber-300 rounded-xl disabled:opacity-50">
-              <ShieldCheck size={14} /> {diagnosing ? 'Running…' : 'Run Live Diagnostics'}
+            <button
+              type="button"
+              onClick={runLiveDiagnostics}
+              disabled={refreshing}
+              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl text-xs font-black flex items-center gap-2 transition"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Verify All Integrations
             </button>
           </div>
         </div>
 
-        <div className="bg-sky-500/5 border border-sky-500/20 rounded-2xl p-4 flex items-start gap-3">
-          <ShieldCheck className="text-sky-400 shrink-0 mt-0.5" size={16} />
-          <div className="space-y-2">
-            <h2 className="text-xs font-bold text-sky-300 uppercase tracking-wider">Authoritative Data Provenance</h2>
-            <p className="text-[11px] text-neutral-300 leading-relaxed">Simulation is isolated and non-authoritative. It cannot update readiness timestamps, Analytics snapshots, Graph scoring, reconciliation or optimization state. This dashboard displays measured telemetry, verified API state, registry observations, or unavailable status only.</p>
-            <div className="flex flex-wrap gap-2">
-              <ProvenanceBadge tone={telemetryAvailable ? 'green' : 'neutral'}>{telemetryAvailable ? 'FIRST-PARTY TELEMETRY' : 'TELEMETRY UNAVAILABLE'}</ProvenanceBadge>
-              <ProvenanceBadge tone={data?.dataProvenance?.youtubeAnalytics === 'youtube_analytics_api' ? 'green' : 'neutral'}>{data?.dataProvenance?.youtubeAnalytics === 'youtube_analytics_api' ? 'YOUTUBE LIVE API' : 'YOUTUBE UNAVAILABLE'}</ProvenanceBadge>
-              <ProvenanceBadge tone="amber">SEARCH: MANUAL / REGISTRY</ProvenanceBadge>
-              <ProvenanceBadge tone="amber">AI CITATIONS: REGISTRY OBSERVATION</ProvenanceBadge>
-            </div>
-          </div>
-        </div>
-
-        {error && <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-300 flex gap-2"><AlertCircle size={16} className="shrink-0 mt-0.5" />{error}</div>}
-        {notice && <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-sm text-emerald-300 flex gap-2"><CheckCircle2 size={16} className="shrink-0 mt-0.5" />{notice}</div>}
-
-        {data && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <KpiCard label="Page Views" value={data.totals.page_view.toLocaleString()} description="Discovery node page loads" icon={<Eye size={16} />} provenance={<ProvenanceBadge tone={telemetryAvailable ? 'green' : 'neutral'}>{telemetryAvailable ? 'RUNTIME' : 'UNAVAILABLE'}</ProvenanceBadge>} />
-            <KpiCard label="Video Clicks" value={data.totals.video_click.toLocaleString()} description="Outbound video redirects" icon={<PlayCircle size={16} />} provenance={<ProvenanceBadge tone={telemetryAvailable ? 'green' : 'neutral'}>{telemetryAvailable ? 'RUNTIME' : 'UNAVAILABLE'}</ProvenanceBadge>} />
-            <KpiCard label="Playlist Clicks" value={data.totals.playlist_click.toLocaleString()} description="Playlist outbound redirects" icon={<ListMusic size={16} />} provenance={<ProvenanceBadge tone={telemetryAvailable ? 'green' : 'neutral'}>{telemetryAvailable ? 'RUNTIME' : 'UNAVAILABLE'}</ProvenanceBadge>} />
-            <KpiCard label="Subscribe Clicks" value={data.totals.subscribe_click.toLocaleString()} description="Subscribe prompt interactions" icon={<UserPlus size={16} />} provenance={<ProvenanceBadge tone={telemetryAvailable ? 'green' : 'neutral'}>{telemetryAvailable ? 'RUNTIME' : 'UNAVAILABLE'}</ProvenanceBadge>} />
-            <KpiCard label="Conversion" value={`${avgConversionRate}${avgConversionRate === '—' ? '' : '%'}`} description="Clicks ÷ measured page views" icon={<MousePointerClick size={16} />} provenance={<ProvenanceBadge tone={telemetryAvailable ? 'green' : 'neutral'}>{telemetryAvailable ? 'DERIVED FROM RUNTIME' : 'UNAVAILABLE'}</ProvenanceBadge>} />
+        {error && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-200 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
-        {data && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between gap-3"><h3 className="font-black text-white flex items-center gap-2"><Sparkles size={16} className="text-amber-400" /> Ecosystem Visibility Score</h3><ProvenanceBadge tone={telemetryAvailable ? 'green' : 'neutral'}>{telemetryAvailable ? 'MIXED VERIFIED INPUTS' : 'PARTIAL INPUTS'}</ProvenanceBadge></div>
-              <p className="text-5xl font-black text-amber-400 font-mono">{data.ecosystemVisibility.score}</p>
-              <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemVisibility.breakdown.impressionsFactor}/30</b><p className="text-neutral-500">Views</p></div>
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemVisibility.breakdown.outboundClicksFactor}/30</b><p className="text-neutral-500">Clicks</p></div>
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemVisibility.breakdown.crawlerFactor}/30</b><p className="text-neutral-500">Crawls</p></div>
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemVisibility.breakdown.diversityFactor}/10</b><p className="text-neutral-500">Diversity</p></div>
-              </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between gap-3"><h3 className="font-black text-white flex items-center gap-2"><Award size={16} className="text-purple-400" /> Ecosystem Authority Score</h3><ProvenanceBadge tone="amber">REGISTRY / OBSERVATION</ProvenanceBadge></div>
-              <p className="text-5xl font-black text-purple-400 font-mono">{data.ecosystemAuthority.score}</p>
-              <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemAuthority.breakdown.indexedAssetsFactor}/20</b><p className="text-neutral-500">Assets</p></div>
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemAuthority.breakdown.knowledgeDensityFactor}/20</b><p className="text-neutral-500">Density</p></div>
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemAuthority.breakdown.entityRelationshipsFactor}/20</b><p className="text-neutral-500">Relations</p></div>
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemAuthority.breakdown.brandOccupancyFactor}/20</b><p className="text-neutral-500">SERP</p></div>
-                <div className="bg-black/20 rounded-lg p-2"><b>{data.ecosystemAuthority.breakdown.aiCitationsFactor}/20</b><p className="text-neutral-500">Citations</p></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {data?.productionReadiness && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-5">
-            <div className="flex items-center justify-between"><h3 className="font-black text-white flex items-center gap-2"><ShieldCheck size={16} className="text-amber-400" /> Production Readiness</h3><ProvenanceBadge tone="green">LIVE STATUS</ProvenanceBadge></div>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-              {[
-                ['Environment', data.productionReadiness.environment],
-                ['YouTube Analytics', data.productionReadiness.youtubeStatus],
-                ['Search Console', data.productionReadiness.gscStatus],
-                ['Sitemap', data.productionReadiness.sitemapStatus],
-                ['Telemetry', data.productionReadiness.telemetryStatus],
-                ['AI Audit', data.productionReadiness.aiAuditStatus],
-              ].map(([label, status]) => (
-                <div key={label} className="bg-black/20 border border-white/5 rounded-xl p-3"><p className="text-[9px] text-neutral-500 uppercase font-bold">{label}</p><span className={`inline-flex mt-2 px-2 py-0.5 border rounded text-[9px] font-black uppercase ${statusClass(status)}`}>{status}</span></div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-              <div className="bg-black/20 rounded-xl p-3 space-y-1"><b className="text-neutral-300">YouTube checks</b><p className="text-neutral-500">OAuth configured: {data.productionReadiness.youtubeChecks.oauthConfigured ? 'Yes' : 'No'} · Refresh token: {data.productionReadiness.youtubeChecks.refreshTokenValid ? 'Yes' : 'No'} · Last live sync: {data.productionReadiness.youtubeChecks.lastSyncSuccessful ? 'Yes' : 'No'}</p></div>
-              <div className="bg-black/20 rounded-xl p-3 space-y-1"><b className="text-neutral-300">Search checks</b><p className="text-neutral-500">OAuth configured: {data.productionReadiness.gscChecks.oauthConfigured ? 'Yes' : 'No'} · Property verified: {data.productionReadiness.gscChecks.propertyVerified ? 'Yes' : 'No'} · Last sync: {data.productionReadiness.gscChecks.lastSyncSuccessful ? 'Yes' : 'No'}</p></div>
-              <div className="bg-black/20 rounded-xl p-3 space-y-1"><b className="text-neutral-300">Last successful integration</b><p className="text-neutral-500 font-mono">{data.productionReadiness.lastSuccessfulSync}</p></div>
-            </div>
-          </div>
-        )}
-
-        {data && (data.authorityGaps.length > 0 || data.recommendations.length > 0) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h3 className="font-black text-white flex items-center gap-2"><AlertTriangle size={16} className="text-red-400" /> Authority Gaps</h3>
-              {data.authorityGaps.length === 0 ? <p className="text-sm text-neutral-500">No unresolved authority gaps.</p> : data.authorityGaps.map(task => (
-                <div key={task.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between gap-4"><div><p className="text-[9px] uppercase text-red-400 font-black">{task.priority} · {task.gapType.replaceAll('_', ' ')}</p><h4 className="text-sm font-bold text-white mt-1">{task.targetAsset}</h4><p className="text-xs text-neutral-400 mt-1">{task.message}</p></div><Link href={task.actionUrl} className="self-center text-xs text-amber-400 whitespace-nowrap">Fix <ArrowRight size={11} className="inline" /></Link></div>
-              ))}
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-black text-white flex items-center gap-2"><Sparkles size={16} className="text-amber-400" /> Discovery Recommendations</h3>
-              {data.recommendations.length === 0 ? <p className="text-sm text-neutral-500">No current optimization recommendations.</p> : data.recommendations.slice(0, 8).map((rec, index) => (
-                <div key={`${rec.type}-${index}`} className="bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between gap-4"><div><p className="text-[9px] uppercase text-amber-400 font-black">{rec.priority} · {rec.type}</p><h4 className="text-sm font-bold text-white mt-1">{rec.title}</h4><p className="text-xs text-neutral-400 mt-1">{rec.message}</p></div><Link href={rec.actionUrl} className="self-center text-xs text-amber-400 whitespace-nowrap">Open <ArrowRight size={11} className="inline" /></Link></div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {data && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3"><h3 className="font-black text-white flex items-center gap-2"><TrendingUp size={16} className="text-emerald-400" /> Top Measured Pathways</h3>{[
-              ['Concept', data.winners.concepts[0]], ['Theme', data.winners.themes[0]], ['Region', data.winners.regions[0]], ['Release', data.winners.releases[0]], ['Playlist', data.winners.playlists[0]],
-            ].map(([label, row]) => <div key={String(label)} className="flex justify-between text-xs border-b border-white/5 pb-2"><span className="text-neutral-500">{String(label)}</span><span className="text-neutral-200 font-mono">{typeof row === 'object' && row ? `${row.slug} · ${row.total}` : 'No measured activity'}</span></div>)}</div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3"><h3 className="font-black text-white flex items-center gap-2"><TrendingDown size={16} className="text-red-400" /> Underperforming Measured Pathways</h3><p className="text-xs text-neutral-500">Zero-click nodes: {data.losers.no_clicks.length}</p><p className="text-xs text-neutral-500">Low-conversion nodes: {data.losers.low_conversion.length}</p><p className="text-xs text-neutral-500">No-continuation nodes: {data.losers.no_continuation.length}</p></div>
-          </div>
-        )}
-
-        {data && (
-          <div className="space-y-5 border-t border-white/10 pt-8">
-            <div className="flex flex-col xl:flex-row justify-between gap-4">
-              <div className="flex overflow-x-auto gap-1 pb-1">
-                {TABS.map(tab => <button key={tab.key} onClick={() => { setActiveTab(tab.key); setTableSearch(''); }} className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg whitespace-nowrap ${activeTab === tab.key ? 'bg-amber-500/15 border border-amber-500/30 text-amber-400' : 'border border-transparent text-neutral-500 hover:text-neutral-300'}`}>{tab.label}</button>)}
-              </div>
-              <div className="relative"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600" /><input value={tableSearch} onChange={event => setTableSearch(event.target.value)} placeholder={`Search ${TABS.find(tab => tab.key === activeTab)?.label.toLowerCase()}…`} className="w-full xl:w-72 bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/30" /></div>
-            </div>
-
-            <div className="overflow-x-auto bg-white/5 border border-white/10 rounded-2xl">
-              {(activeTab === 'concepts' || activeTab === 'themes' || activeTab === 'regions' || activeTab === 'releases' || activeTab === 'playlists') && (
-                <table className="w-full text-xs"><thead><tr className="text-[9px] uppercase text-neutral-500 border-b border-white/10"><th className="text-left p-4">Entity</th><th>Page Views</th><th>Video Clicks</th><th>Playlist Clicks</th><th>Subscribe</th><th>Conversion</th><th /></tr></thead><tbody>{clickRows.map(row => {
-                  const href = activeTab === 'playlists' ? `https://www.youtube.com/playlist?list=${row.slug}` : activeTab === 'releases' ? `/release-detail/${row.slug}` : `/${activeTab}/${row.slug}`;
-                  return <tr key={row.slug} className="border-b border-white/5"><td className="p-4 font-bold text-white">{row.slug}</td><td className="text-center font-mono">{row.page_views}</td><td className="text-center font-mono">{row.video_clicks}</td><td className="text-center font-mono">{row.playlist_clicks}</td><td className="text-center font-mono">{row.subscribe_clicks}</td><td className="text-center font-mono">{row.conversion_rate}%</td><td className="p-4 text-right"><a href={href} target="_blank" rel="noopener noreferrer" className="text-amber-400">View <ExternalLink size={10} className="inline" /></a></td></tr>;
-                })}</tbody></table>
+        {feedback && (
+          <div
+            className={`p-4 rounded-xl border text-xs font-medium flex items-center justify-between gap-3 ${
+              feedback.ok
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              {feedback.ok ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
               )}
-
-              {activeTab === 'brand_assets' && <table className="w-full text-xs"><thead><tr className="text-[9px] uppercase text-neutral-500 border-b border-white/10"><th className="text-left p-4">Asset</th><th>Type</th><th className="text-left">Description</th><th>Status</th><th /></tr></thead><tbody>{filteredBrands.map(item => <tr key={item.id} className="border-b border-white/5"><td className="p-4 font-bold text-white">{item.name}</td><td className="text-center font-mono">{item.type.replaceAll('_', ' ')}</td><td className="text-neutral-400 p-3">{item.description}</td><td className="text-center">{item.status}</td><td className="p-4 text-right"><a href={item.url} target="_blank" rel="noopener noreferrer" className="text-amber-400">Open <ExternalLink size={10} className="inline" /></a></td></tr>)}</tbody></table>}
-
-              {activeTab === 'serp_occupancy' && <table className="w-full text-xs"><thead><tr className="text-[9px] uppercase text-neutral-500 border-b border-white/10"><th className="text-left p-4">Keyword</th><th>Platform</th><th>Owned Results</th><th>Occupancy</th><th>Last Observed</th></tr></thead><tbody>{filteredSearch.map(item => <tr key={`${item.platform}-${item.keyword}`} className="border-b border-white/5"><td className="p-4 font-bold text-white">{item.keyword}</td><td className="text-center">{item.platform}</td><td className="text-center font-mono">{item.ownedResultsCount}</td><td className="text-center font-mono">{item.occupancyPercent}%</td><td className="text-center font-mono text-neutral-500">{new Date(item.lastChecked).toLocaleDateString()}</td></tr>)}</tbody></table>}
-
-              {activeTab === 'ai_citations' && <table className="w-full text-xs"><thead><tr className="text-[9px] uppercase text-neutral-500 border-b border-white/10"><th className="text-left p-4">Engine</th><th>Citations</th><th>Confidence</th><th>Trend</th><th className="text-left">Sample Query</th></tr></thead><tbody>{filteredCitations.map(item => <tr key={item.engine} className="border-b border-white/5"><td className="p-4 font-bold text-white">{item.engine}</td><td className="text-center font-mono">{item.citationCount}</td><td className="text-center font-mono">{item.citationConfidence}%</td><td className="text-center">{item.trend}</td><td className="p-3 text-neutral-400">{item.sampleQuery}</td></tr>)}</tbody></table>}
-
-              {activeTab === 'crawlers' && <table className="w-full text-xs"><thead><tr className="text-[9px] uppercase text-neutral-500 border-b border-white/10"><th className="text-left p-4">Crawler</th><th>First Seen</th><th>Last Seen</th><th>Hits</th><th>Frequency</th></tr></thead><tbody>{filteredCrawlers.map(item => <tr key={`${item.crawler}-${item.firstSeen}`} className="border-b border-white/5"><td className="p-4 font-bold text-white flex items-center gap-2"><Cpu size={12} className="text-amber-400" />{item.crawler}</td><td className="text-center font-mono">{new Date(item.firstSeen).toLocaleDateString()}</td><td className="text-center font-mono">{new Date(item.lastSeen).toLocaleString()}</td><td className="text-center font-mono">{item.pagesCrawled}</td><td className="text-center font-mono">{item.frequency.toFixed(1)} req/hr</td></tr>)}</tbody></table>}
+              <span>{feedback.message}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setFeedback(null)}
+              className="text-neutral-400 hover:text-white text-[11px]"
+            >
+              Dismiss
+            </button>
           </div>
+        )}
+
+        {/* STICKY 13-MODULE NAVIGATION */}
+        <div className="w-full max-w-full bg-neutral-950/90 backdrop-blur border border-white/10 rounded-2xl p-2 overflow-x-auto">
+          <div className="flex items-center gap-1.5 min-w-max">
+            {MODULE_NAV.map((m) => {
+              const active = activeModule === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setActiveModule(m.id)}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                    active
+                      ? 'bg-amber-500 text-neutral-950'
+                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span className={`font-mono text-[10px] ${active ? 'text-neutral-900' : 'text-amber-400/80'}`}>
+                    {m.num}
+                  </span>
+                  <span>{m.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            01. EXECUTIVE ORGANIC DISCOVERY OVERVIEW
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {showSection('01_overview') && (
+          <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                  Module 01 · Executive Organic Discovery Overview
+                </span>
+                <h2 className="text-xl font-black text-white mt-0.5">
+                  Verified Cross-Platform Reach & Search Discovery Baseline
+                </h2>
+              </div>
+              <ProvenanceTag
+                source="YouTube API v2/v3 + Studio CSV + First-Party Telemetry"
+                syncAt={data?.generatedAt}
+                tone="emerald"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  Lifetime Channel Views
+                </div>
+                <div className="text-3xl font-black text-white font-mono">
+                  {yt?.lifetime?.views !== null && yt?.lifetime?.views !== undefined
+                    ? yt.lifetime.views.toLocaleString()
+                    : 'UNAVAILABLE'}
+                </div>
+                <div className="text-xs text-neutral-400">
+                  {yt?.lifetime?.watchHours?.toLocaleString() ?? '—'} watch hrs · AVD{' '}
+                  {fmtSecs(yt?.lifetime?.avgViewDurationSeconds)}
+                </div>
+                <ProvenanceTag source="YT Analytics API v2" period="Lifetime" syncAt={yt?.fetchedAt} tone="emerald" />
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  YouTube Search Views (28d)
+                </div>
+                <div className="text-3xl font-black text-amber-400 font-mono">
+                  {yt?.recent28d?.ytSearchViews !== null && yt?.recent28d?.ytSearchViews !== undefined
+                    ? yt.recent28d.ytSearchViews.toLocaleString()
+                    : 'UNAVAILABLE'}
+                </div>
+                <div className="text-xs text-neutral-400">
+                  {yt?.recent28d?.ytSearchSharePercent ?? 0}% of {yt?.recent28d?.totalViews ?? 0} 28d views (Lifetime:{' '}
+                  {yt?.lifetime?.ytSearchViews?.toLocaleString() ?? '—'} · {yt?.lifetime?.ytSearchSharePercent ?? 0}%)
+                </div>
+                <ProvenanceTag
+                  source="YT Analytics API v2"
+                  period={
+                    yt?.recent28d?.startDate ? `${yt.recent28d.startDate}..${yt.recent28d.endDate}` : '28d'
+                  }
+                  tone="emerald"
+                />
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  Subscribers & Full Songs
+                </div>
+                <div className="text-3xl font-black text-emerald-400 font-mono">
+                  {yt?.channelIdentity?.subscribers?.toLocaleString() ?? 'UNAVAILABLE'}
+                </div>
+                <div className="text-xs text-neutral-400">
+                  {yt?.channelIdentity?.totalVideos ?? '—'} YT videos · {graph?.totalPublishedSongs ?? 0} public canonical songs
+                </div>
+                <ProvenanceTag source="YT Data API v3 + CMS" syncAt={yt?.fetchedAt} tone="emerald" />
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  Thumbnail Impressions & CTR
+                </div>
+                <div className="text-3xl font-black text-teal-300 font-mono">
+                  {yt?.lifetime?.studioImpressions
+                    ? yt.lifetime.studioImpressions.toLocaleString()
+                    : 'UNAVAILABLE'}
+                </div>
+                <div className="text-xs text-neutral-400">
+                  Verified CTR: <strong>{yt?.lifetime?.studioCtr ?? '—'}%</strong> ·{' '}
+                  {yt?.geography?.territoriesMeasurable ?? 0} measurable countries
+                </div>
+                <ProvenanceTag
+                  source="Studio CSV Snapshot"
+                  period={yt?.lifetime?.studioPeriod}
+                  tone="teal"
+                />
+              </div>
+            </div>
+
+            {/* Progress bar toward 1M genuine listeners */}
+            <div className="p-4 rounded-xl bg-neutral-900/80 border border-white/10 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="font-bold text-neutral-200 flex items-center gap-2">
+                  <Target className="w-4 h-4 text-amber-400" /> Long-Horizon Organic Growth Objective: 1,000,000 Verified Views
+                </span>
+                <span className="font-mono font-bold text-amber-300">
+                  {yt?.lifetime?.views
+                    ? `${((yt.lifetime.views / 1_000_000) * 100).toFixed(2)}% (${yt.lifetime.views.toLocaleString()} / 1,000,000)`
+                    : 'UNAVAILABLE'}
+                </span>
+              </div>
+              <div className="h-3 bg-neutral-950 rounded-full overflow-hidden border border-white/10">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 via-emerald-400 to-teal-400 rounded-full"
+                  style={{
+                    width: `${Math.min(100, Math.max(1, ((yt?.lifetime?.views || 0) / 1_000_000) * 100))}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            02. GOOGLE SEARCH PERFORMANCE & 03. BING SEARCH PERFORMANCE
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {(showSection('02_google') || showSection('03_bing')) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {showSection('02_google') && (
+              <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                      Module 02 · Google Search Performance
+                    </span>
+                    <h2 className="text-lg font-black text-white mt-0.5">
+                      Google Search Console & Googlebot Activity
+                    </h2>
+                  </div>
+                  <ProvenanceTag
+                    source={`GSC API: ${gsc?.status?.state || 'NOT_CONFIGURED'}`}
+                    syncAt={gsc?.status?.lastCheckedAt}
+                    tone={gsc?.status?.state === 'CONNECTED' ? 'emerald' : 'neutral'}
+                  />
+                </div>
+
+                {gsc?.report?.status === 'CONNECTED' && gsc?.report?.totals ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                      <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <div className="text-[10px] text-neutral-400 uppercase">Clicks (28d)</div>
+                        <div className="text-xl font-black text-white font-mono">{gsc.report.totals.clicks}</div>
+                      </div>
+                      <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <div className="text-[10px] text-neutral-400 uppercase">Impressions</div>
+                        <div className="text-xl font-black text-white font-mono">
+                          {gsc.report.totals.impressions.toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <div className="text-[10px] text-neutral-400 uppercase">CTR</div>
+                        <div className="text-xl font-black text-emerald-400 font-mono">{gsc.report.totals.ctr}%</div>
+                      </div>
+                      <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <div className="text-[10px] text-neutral-400 uppercase">Non-Branded</div>
+                        <div className="text-xl font-black text-amber-400 font-mono">
+                          {gsc.report.totals.nonBrandedClicks}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2.5">
+                      {gsc.report.topQueries.slice(0, 6).map((q: any, idx: number) => (
+                        <ProportionalBar
+                          key={q.query}
+                          rank={idx + 1}
+                          label={q.query}
+                          sublabel={q.intentType === 'non_branded' ? 'Non-Branded' : 'Branded'}
+                          value={q.impressions}
+                          maxValue={gsc.report.topQueries[0]?.impressions || 1}
+                          formattedValue={`${q.clicks} clicks · ${q.impressions} imp`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3 text-xs">
+                    <div className="flex items-center gap-2 font-bold text-amber-300">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      Google Search Console API is {gsc?.status?.state || 'NOT_CONFIGURED'} — Showing Zero Synthetic Data
+                    </div>
+                    <p className="text-neutral-400 leading-relaxed">
+                      Official Search Analytics, Sitemaps, and URL Inspection clients are implemented in{' '}
+                      <code className="text-neutral-200">lib/google-search-console.ts</code>. Configure property credentials to populate live query impressions, CTR, and average position:
+                    </p>
+                    <ul className="space-y-1 text-neutral-300 list-disc pl-5">
+                      {(gsc?.status?.setupInstructions || []).map((step: string) => (
+                        <li key={step}>{step}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/10 text-xs">
+                  <div className="p-3 bg-neutral-900/70 rounded-xl border border-white/5">
+                    <div className="text-neutral-400 text-[10px] uppercase font-bold">Verified Googlebot Hits</div>
+                    <div className="text-lg font-black text-white font-mono mt-1">
+                      {gsc?.googlebotCrawls?.pagesCrawled ?? 0}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">First-Party Server Crawler Log</div>
+                  </div>
+                  <div className="p-3 bg-neutral-900/70 rounded-xl border border-white/5">
+                    <div className="text-neutral-400 text-[10px] uppercase font-bold">Google Search Entrances</div>
+                    <div className="text-lg font-black text-emerald-400 font-mono mt-1">
+                      {gsc?.googleOrganicReferrals ?? 0}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">First-Party Referrer Telemetry</div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {showSection('03_bing') && (
+              <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                      Module 03 · Bing Search & IndexNow Performance
+                    </span>
+                    <h2 className="text-lg font-black text-white mt-0.5">
+                      Bing Webmaster Tools & IndexNow Protocol
+                    </h2>
+                  </div>
+                  <ProvenanceTag
+                    source={`Bing API: ${bing?.report?.status || 'NOT_CONFIGURED'}`}
+                    syncAt={bing?.report?.fetchedAt}
+                    tone={bing?.report?.status === 'CONNECTED' ? 'emerald' : 'neutral'}
+                  />
+                </div>
+
+                {bing?.report?.status === 'CONNECTED' && bing?.report?.totals ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <div className="text-[10px] text-neutral-400 uppercase">Clicks</div>
+                        <div className="text-xl font-black text-white font-mono">{bing.report.totals.clicks}</div>
+                      </div>
+                      <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <div className="text-[10px] text-neutral-400 uppercase">Impressions</div>
+                        <div className="text-xl font-black text-white font-mono">
+                          {bing.report.totals.impressions.toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                        <div className="text-[10px] text-neutral-400 uppercase">Indexed Pages</div>
+                        <div className="text-xl font-black text-teal-300 font-mono">
+                          {bing.report.totals.inIndex ?? '—'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-2.5 text-xs">
+                    <div className="flex items-center gap-2 font-bold text-amber-300">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      Bing Webmaster API is NOT CONFIGURED — Ready for BING_WEBMASTER_API_KEY
+                    </div>
+                    <ul className="space-y-1 text-neutral-300 list-disc pl-5">
+                      {(bing?.report?.setupInstructions || []).map((step: string) => (
+                        <li key={step}>{step}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="p-3.5 rounded-xl bg-neutral-900/90 border border-white/10 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white">IndexNow Verification Key File</span>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        bing?.indexNow?.verified
+                          ? 'bg-emerald-500/15 text-emerald-300'
+                          : 'bg-amber-500/15 text-amber-300'
+                      }`}
+                    >
+                      {bing?.indexNow?.verified ? 'LIVE HTTP 200' : 'LOCAL READY · PENDING DEPLOY'}
+                    </span>
+                  </div>
+                  <div className="font-mono text-[11px] text-neutral-400 break-all">
+                    {bing?.indexNow?.keyLocation}
+                  </div>
+                  <p className="text-[11px] text-neutral-400">{bing?.indexNow?.message}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
+                  <div className="p-3 bg-neutral-900/70 rounded-xl border border-white/5">
+                    <div className="text-neutral-400 text-[10px] uppercase font-bold">Verified Bingbot Hits</div>
+                    <div className="text-lg font-black text-white font-mono mt-1">
+                      {bing?.bingbotCrawls?.pagesCrawled ?? 0}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">First-Party Server Crawler Log</div>
+                  </div>
+                  <div className="p-3 bg-neutral-900/70 rounded-xl border border-white/5">
+                    <div className="text-neutral-400 text-[10px] uppercase font-bold">Bing Search Entrances</div>
+                    <div className="text-lg font-black text-teal-300 font-mono mt-1">
+                      {bing?.bingOrganicReferrals ?? 0}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">First-Party Referrer Telemetry</div>
+                  </div>
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            04. YOUTUBE SEARCH PERFORMANCE
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {showSection('04_youtube') && (
+          <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                  Module 04 · YouTube Search & Traffic Discovery
+                </span>
+                <h2 className="text-xl font-black text-white mt-0.5">
+                  Traffic Source Distribution, Search Terms & Video-Level Search Winners
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setYtWindow('28d')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                    ytWindow === '28d' ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-900 text-neutral-400'
+                  }`}
+                >
+                  Latest 28 Days ({yt?.recent28d?.totalViews ?? 0} views)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setYtWindow('lifetime')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                    ytWindow === 'lifetime' ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-900 text-neutral-400'
+                  }`}
+                >
+                  Lifetime ({yt?.lifetime?.views?.toLocaleString() ?? 0} views)
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Proportional Traffic Sources Chart */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Youtube className="w-4 h-4 text-red-500" />
+                    {ytWindow === '28d'
+                      ? `Traffic Sources (${yt?.recent28d?.startDate || ''} to ${yt?.recent28d?.endDate || ''})`
+                      : 'Lifetime Traffic Sources'}
+                  </h3>
+                  <ProvenanceTag source="YT Analytics API v2" tone="emerald" />
+                </div>
+                <div className="space-y-3">
+                  {activeTrafficRows.slice(0, 8).map((row: any, i: number) => (
+                    <ProportionalBar
+                      key={row.sourceRaw}
+                      rank={i + 1}
+                      label={row.label}
+                      sublabel={`${row.sharePercent}%`}
+                      value={row.views}
+                      maxValue={maxTrafficViews}
+                      formattedValue={`${row.views.toLocaleString()} views · ${row.watchHours}h`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Search Term Intent Diagnostics */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Search className="w-4 h-4 text-amber-400" />
+                    Actual YouTube Search Queries (insightTrafficSourceDetail)
+                  </h3>
+                  <ProvenanceTag source="YT_SEARCH Filter" tone="emerald" />
+                </div>
+
+                <div className="p-4 bg-neutral-900/80 border border-white/10 rounded-xl space-y-3">
+                  <div className="text-xs font-bold text-neutral-300">
+                    Latest 28-Day Observed Search Queries
+                  </div>
+                  {(yt?.recent28d?.searchTerms || []).length === 0 ? (
+                    <p className="text-xs text-neutral-500">No search term rows returned by YouTube API for this 28d window.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {(yt?.recent28d?.searchTerms || []).slice(0, 6).map((t: any, idx: number) => (
+                        <div
+                          key={`${t.term}-${idx}`}
+                          className="flex items-center justify-between text-xs p-2 rounded-lg bg-neutral-950 border border-white/5"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${
+                                t.category === 'non_branded_sufi'
+                                  ? 'bg-emerald-500/15 text-emerald-300'
+                                  : t.category === 'branded_sufipulse'
+                                    ? 'bg-amber-500/15 text-amber-300'
+                                    : 'bg-neutral-800 text-neutral-400'
+                              }`}
+                            >
+                              {t.category === 'non_branded_sufi'
+                                ? 'Non-Branded Sufi'
+                                : t.category === 'branded_sufipulse'
+                                  ? 'Branded'
+                                  : 'Legacy/Noise'}
+                            </span>
+                            <span className="font-medium text-neutral-200 truncate">{t.term}</span>
+                          </div>
+                          <span className="font-mono text-neutral-300 shrink-0">{t.views} views</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="border-t border-white/10 pt-3 text-[11px] text-neutral-400 leading-relaxed">
+                    <strong>Forensic Insight:</strong> In the latest 28 days, non-branded Sufi queries (
+                    <em>khwaja mere khwaja</em>, <em>bulla ki jaana main kaun</em>, <em>meri zaat zarra-e-benishan</em>)
+                    are emerging, while historical lifetime top search queries include{' '}
+                    <strong>{(yt?.lifetimeSearchTerms?.offTopicLegacyViews || 0).toLocaleString()}</strong> legacy
+                    off-topic serial views vs{' '}
+                    <strong>{(yt?.lifetimeSearchTerms?.brandedViews || 0).toLocaleString()}</strong> branded{' '}
+                    <code>sufipulse-usa</code> views. Strengthening Sufi/Kashmir/Urdu metadata across all 97 songs re-anchors channel search authority.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Videos by YouTube Search Views */}
+            {(yt?.topSearchVideos || []).length > 0 && (
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <h3 className="text-sm font-bold text-white">
+                  Top SufiPulse Full-Length Videos Discovered via YouTube Search (Lifetime YT_SEARCH)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(yt?.topSearchVideos || []).slice(0, 8).map((v: any, idx: number) => (
+                    <ProportionalBar
+                      key={v.youtubeId}
+                      rank={idx + 1}
+                      label={v.canonicalTitle}
+                      sublabel={v.studioCtr !== null ? `Studio CTR ${v.studioCtr}%` : undefined}
+                      value={v.searchViews}
+                      maxValue={yt.topSearchVideos[0]?.searchViews || 1}
+                      formattedValue={`${v.searchViews.toLocaleString()} search views`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            05. KEYWORD OPPORTUNITIES (4-SCRIPT MULTILINGUAL DEMAND ENGINE)
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {showSection('05_keywords') && (
+          <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                  Module 05 · Multilingual Search Demand & Existing-Song Mapping
+                </span>
+                <h2 className="text-xl font-black text-white mt-0.5">
+                  11 Sufi, Kashmiri & Urdu Kalam Demand Clusters Across 4 Scripts
+                </h2>
+              </div>
+              <ProvenanceTag
+                source="Corpus + Graph + Live YT_SEARCH (Zero Invented Search Volumes)"
+                syncAt={demand?.generatedAt}
+                tone="blue"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(demand?.clusters || []).map((cluster: any) => {
+                const matchedCount = cluster.existingCatalogCoverage.matchedReleasesCount;
+                const fourScriptCount = cluster.existingCatalogCoverage.fourScriptReadyCount;
+                const scriptPct = matchedCount > 0 ? Math.round((fourScriptCount / matchedCount) * 100) : 0;
+
+                return (
+                  <div
+                    key={cluster.clusterId}
+                    className="p-5 rounded-xl bg-neutral-900/60 border border-white/10 space-y-4 flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                            {cluster.domain}
+                          </span>
+                          <h3 className="text-base font-bold text-white">{cluster.title}</h3>
+                        </div>
+                        <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-mono font-bold text-amber-300 shrink-0">
+                          {matchedCount} Existing Songs
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-neutral-400 leading-relaxed">{cluster.intentSummary}</p>
+
+                      {/* 4-script query pills */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                        <div className="p-2 rounded bg-neutral-950 border border-white/5">
+                          <span className="text-[9px] uppercase font-bold text-neutral-500 block">English</span>
+                          <span className="text-neutral-200">{cluster.multilingualQueries.english[0]}</span>
+                        </div>
+                        <div className="p-2 rounded bg-neutral-950 border border-white/5">
+                          <span className="text-[9px] uppercase font-bold text-neutral-500 block">Roman Urdu</span>
+                          <span className="text-neutral-200">{cluster.multilingualQueries.romanUrdu[0]}</span>
+                        </div>
+                        <div className="p-2 rounded bg-neutral-950 border border-white/5" dir="rtl">
+                          <span className="text-[9px] uppercase font-bold text-neutral-500 block" dir="ltr">
+                            Urdu Nastaliq (اردو)
+                          </span>
+                          <span className="text-amber-200 font-serif">{cluster.multilingualQueries.urduNastaliq[0]}</span>
+                        </div>
+                        <div className="p-2 rounded bg-neutral-950 border border-white/5">
+                          <span className="text-[9px] uppercase font-bold text-neutral-500 block">
+                            Devanagari (देवनागरी)
+                          </span>
+                          <span className="text-teal-200">{cluster.multilingualQueries.devanagari[0]}</span>
+                        </div>
+                      </div>
+
+                      {/* 4-Script Readiness Bar */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-neutral-400">
+                          <span>4-Script Lyric Readiness ({fourScriptCount}/{matchedCount} songs)</span>
+                          <span className="font-mono font-bold text-neutral-300">{scriptPct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-neutral-950 rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${scriptPct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-white/5 space-y-2">
+                      {cluster.matchedReleases?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {cluster.matchedReleases.slice(0, 3).map((rel: any) => (
+                            <Link
+                              key={rel.id}
+                              href={`/admin/cms-releases/${rel.id}`}
+                              className="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] text-emerald-300 font-medium truncate max-w-[200px]"
+                            >
+                              {rel.canonicalTitle}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-[11px] text-amber-200/90 leading-snug">
+                        <strong>Action:</strong> {cluster.recommendedAction}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            06. GLOBAL GEOGRAPHIC DISCOVERY
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {showSection('06_geography') && (
+          <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                  Module 06 · Global Geographic Discovery ({yt?.geography?.territoriesMeasurable ?? 0} Measurable Territories)
+                </span>
+                <h2 className="text-xl font-black text-white mt-0.5">
+                  Top 10 Countries by Views, Watch Hours & Contemplative Retention
+                </h2>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {[
+                  { key: 'views', label: 'Most Views' },
+                  { key: 'avgDuration', label: 'Longest Avg Viewing (≥100 views)' },
+                  { key: 'watchHours', label: 'Most Watch Hours' },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setGeoTab(t.key as any)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                      geoTab === t.key ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-900 text-neutral-400'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <ProvenanceTag
+                source={yt?.geography?.source || 'Studio Geography CSV'}
+                period={yt?.geography?.period}
+                tone="teal"
+              />
+            </div>
+
+            <div className="space-y-3">
+              {activeGeoRows.map((row: any, idx: number) => {
+                const rawVal =
+                  geoTab === 'views'
+                    ? row.views
+                    : geoTab === 'watchHours'
+                      ? row.watchTimeHours
+                      : row.avgViewDurationSeconds;
+                const formatted =
+                  geoTab === 'views'
+                    ? `${row.views.toLocaleString()} views`
+                    : geoTab === 'watchHours'
+                      ? `${row.watchTimeHours.toLocaleString()} hrs`
+                      : fmtSecs(row.avgViewDurationSeconds);
+                return (
+                  <ProportionalBar
+                    key={row.countryCode}
+                    rank={idx + 1}
+                    label={row.countryName}
+                    sublabel={row.countryCode}
+                    value={rawVal}
+                    maxValue={maxGeoVal}
+                    formattedValue={formatted}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            07. RELEASE-LEVEL SEO PERFORMANCE
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {showSection('07_releases') && (
+          <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                  Module 07 · Release-Level SEO & Multilingual Readiness
+                </span>
+                <h2 className="text-xl font-black text-white mt-0.5">
+                  Full-Length Song Search Readiness ({filteredReleases.length} of {(data?.releaseSeoAudits || []).length} Public Songs)
+                </h2>
+              </div>
+              <ProvenanceTag source="CMS + Studio CSV + First-Party Telemetry" tone="emerald" />
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={releaseQuery}
+                  onChange={(e) => setReleaseQuery(e.target.value)}
+                  placeholder="Filter full-length songs by canonical title, slug, or YouTube ID..."
+                  className="w-full bg-neutral-900 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { id: 'all', label: 'All Songs' },
+                  { id: 'source_recovery', label: `Source Recovery (${demand?.summary?.songsRequiringSourceRecovery ?? 0})` },
+                  { id: 'staged_drafts', label: `Staged Drafts (${demand?.summary?.songsWithStagedDraftScripts ?? 0})` },
+                  { id: 'needs_scripts', label: 'Missing 4-Script Lyrics' },
+                  { id: 'needs_graph', label: '<3 Graph Links' },
+                  { id: 'low_ctr', label: 'Studio CTR < 5%' },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setReleaseFilter(f.id as any)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold ${
+                      releaseFilter === f.id
+                        ? 'bg-amber-500 text-neutral-950'
+                        : 'bg-neutral-900 text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
+              {filteredReleases.slice(0, 30).map((item: any) => (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-xl bg-neutral-900/60 border border-white/5 hover:border-white/15 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1.5 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/admin/cms-releases/${item.id}`}
+                        className="text-sm font-bold text-white hover:text-amber-400 truncate"
+                      >
+                        {item.canonicalTitle}
+                      </Link>
+                      <a
+                        href={`/release-detail/${item.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-mono text-neutral-500 hover:text-emerald-400 flex items-center gap-1"
+                      >
+                        /release-detail/{item.slug} <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+
+                    {/* 4-script & graph badges */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                      {[
+                        { ok: item.scriptCoverage.english, label: 'EN' },
+                        { ok: item.scriptCoverage.romanUrdu, label: 'ROM-UR' },
+                        { ok: item.scriptCoverage.urduNastaliq, label: 'اردو' },
+                        { ok: item.scriptCoverage.devanagari, label: 'देव' },
+                      ].map((s) => (
+                        <span
+                          key={s.label}
+                          className={`px-1.5 py-0.5 rounded font-bold border ${
+                            s.ok
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                              : 'bg-neutral-950 border-neutral-800 text-neutral-600'
+                          }`}
+                        >
+                          {s.label}
+                        </span>
+                      ))}
+                      <span className="px-2 py-0.5 rounded bg-white/5 text-neutral-300 font-mono">
+                        Graph: {item.graphLinksCount} links
+                      </span>
+                      {item.sourceRecoveryRequired && (
+                        <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold">
+                          Source Recovery Required
+                        </span>
+                      )}
+                      {Number(item.scriptCoverage?.draftPreparedCount || 0) > 0 && (
+                        <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-300 font-bold">
+                          {item.scriptCoverage.draftPreparedCount} Staged Draft(s) · Approval Gate
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 rounded bg-white/5 text-neutral-400 font-mono">
+                        {item.indexingState}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-5 shrink-0 text-xs">
+                    <div className="text-right">
+                      <div className="text-[10px] text-neutral-500 uppercase">YT Views</div>
+                      <div className="font-mono font-bold text-white">
+                        {item.metrics.youtubeViews.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-neutral-500 uppercase">Studio CTR</div>
+                      <div className="font-mono font-bold text-teal-300">
+                        {item.metrics.studioCtr !== null ? `${item.metrics.studioCtr}%` : '—'}
+                      </div>
+                    </div>
+                    <div className="w-32 space-y-1">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-neutral-400">SEO Score</span>
+                        <span className="font-mono font-bold text-amber-300">{item.readinessScore}%</span>
+                      </div>
+                      <div className="h-2 bg-neutral-950 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full"
+                          style={{ width: `${item.readinessScore}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            08. INDEXING & CRAWL DIAGNOSTICS & 09. AI SEARCH DISCOVERY
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {(showSection('08_indexing') || showSection('09_ai_search')) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {showSection('08_indexing') && (
+              <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                      Module 08 · Indexing & Crawl Diagnostics
+                    </span>
+                    <h2 className="text-lg font-black text-white mt-0.5">
+                      Canonical Sitemap ({idxCrawl?.sitemapBreakdown?.totalUrls ?? 0} URLs) & Bot Logs
+                    </h2>
+                  </div>
+                  <ProvenanceTag source="Live Sitemap + First-Party Logs" tone="blue" />
+                </div>
+
+                <div className="space-y-2.5">
+                  {[
+                    { label: 'Canonical Full-Song Pages (/release-detail/*)', count: idxCrawl?.sitemapBreakdown?.releaseUrls || 0 },
+                    { label: 'Taxonomy Nodes (/concepts, /themes, /moods, /regions)', count: idxCrawl?.sitemapBreakdown?.taxonomyUrls || 0 },
+                    { label: 'Knowledge Registry Entities (/knowledge/*/*)', count: idxCrawl?.sitemapBreakdown?.knowledgeUrls || 0 },
+                    { label: 'Static Authority & Governance Pages', count: idxCrawl?.sitemapBreakdown?.staticAuthorityUrls || 0 },
+                    { label: 'Atlas Discovery Entities (/discovery/*/*)', count: idxCrawl?.sitemapBreakdown?.discoveryEntityUrls || 0 },
+                    { label: 'Literary Journal Essays (/literary-journal/*)', count: idxCrawl?.sitemapBreakdown?.articleUrls || 0 },
+                  ].map((item, idx) => (
+                    <ProportionalBar
+                      key={item.label}
+                      rank={idx + 1}
+                      label={item.label}
+                      value={item.count}
+                      maxValue={idxCrawl?.sitemapBreakdown?.releaseUrls || 100}
+                      formattedValue={`${item.count} URLs`}
+                    />
+                  ))}
+                </div>
+
+                <div className="pt-3 border-t border-white/10 space-y-2">
+                  <div className="text-xs font-bold text-neutral-300">
+                    Verified Search & Social Crawler Log ({(idxCrawl?.crawlers || []).length} Active Bots)
+                  </div>
+                  {(idxCrawl?.crawlers || []).length === 0 ? (
+                    <p className="text-xs text-neutral-500">
+                      Historical synthetic June 2026 crawler rows have been purged. Real bot hits on public pages are logged automatically via middleware.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {(idxCrawl?.crawlers || []).map((c: any) => (
+                        <div
+                          key={c.crawler}
+                          className="p-2 rounded bg-neutral-900 border border-white/5 flex items-center justify-between text-xs"
+                        >
+                          <span className="font-semibold text-white">{c.crawler}</span>
+                          <span className="font-mono text-neutral-400">
+                            {c.pagesCrawled} hits · Last: {new Date(c.lastSeen).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {showSection('09_ai_search') && (
+              <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                      Module 09 · AI Search Discovery
+                    </span>
+                    <h2 className="text-lg font-black text-white mt-0.5">
+                      AI Crawlers, AI Referrers & Manual Citation Checks
+                    </h2>
+                  </div>
+                  <ProvenanceTag source="3-Lane Strict Separation" tone="blue" />
+                </div>
+
+                {/* Lane A & B */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-neutral-900 border border-white/10 space-y-2">
+                    <div className="font-bold text-blue-300 flex items-center gap-1.5">
+                      <Bot className="w-4 h-4" /> Lane A · Verified AI Crawlers
+                    </div>
+                    {(aiSearch?.verifiedAiCrawlers || []).length === 0 ? (
+                      <p className="text-[11px] text-neutral-400">
+                        0 verified AI bot hits recorded since synthetic seed purge (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot allowed in /robots.txt).
+                      </p>
+                    ) : (
+                      (aiSearch?.verifiedAiCrawlers || []).map((bot: any) => (
+                        <div key={bot.crawler} className="flex justify-between font-mono text-[11px]">
+                          <span className="text-white">{bot.crawler}</span>
+                          <span className="text-emerald-400">{bot.pagesCrawled} hits</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-neutral-900 border border-white/10 space-y-2">
+                    <div className="font-bold text-emerald-300 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4" /> Lane B · AI Referrer Entrances
+                    </div>
+                    <div className="space-y-1">
+                      {(aiSearch?.firstPartyAiReferrers || []).map((r: any) => (
+                        <div key={r.engine} className="flex justify-between text-[11px]">
+                          <span className="text-neutral-300">{r.engine}</span>
+                          <span className="font-mono font-bold text-white">{r.entrances}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lane C: Manual Citation Observations */}
+                <div className="p-4 rounded-xl bg-neutral-900/60 border border-amber-500/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-300">
+                      Lane C · Manual AI Citation Observations (Non-Automated)
+                    </span>
+                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">
+                      MANUAL OBSERVATION
+                    </span>
+                  </div>
+
+                  {(aiSearch?.manualCitations || []).length === 0 ? (
+                    <p className="text-[11px] text-neutral-400">
+                      Unverified synthetic citation numbers (412 / 384 / 198 / 520) have been removed. Log real timestamped manual prompt checks below:
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {(aiSearch?.manualCitations || []).map((c: any) => (
+                        <div
+                          key={c.engine}
+                          className="p-2 rounded bg-neutral-950 border border-white/5 text-[11px] flex items-center justify-between gap-2"
+                        >
+                          <span className="font-bold text-white">{c.engine}</span>
+                          <span className="text-neutral-400 truncate flex-1">{c.sampleQuery}</span>
+                          <span className="font-mono text-neutral-500 shrink-0">
+                            {new Date(c.lastCitedDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLogManualCitation} className="flex flex-col sm:flex-row gap-2 pt-1">
+                    <select
+                      value={citationEngine}
+                      onChange={(e) => setCitationEngine(e.target.value as any)}
+                      className="bg-neutral-950 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    >
+                      <option value="Perplexity">Perplexity</option>
+                      <option value="ChatGPT">ChatGPT</option>
+                      <option value="Gemini">Gemini</option>
+                      <option value="Claude">Claude</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={citationQuery}
+                      onChange={(e) => setCitationQuery(e.target.value)}
+                      placeholder="Verified prompt where SufiPulse.com was cited..."
+                      className="flex-1 bg-neutral-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                    <button
+                      type="submit"
+                      disabled={savingCitation}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs rounded-lg shrink-0"
+                    >
+                      Log Check
+                    </button>
+                  </form>
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            10. DISCOVERY GRAPH INTELLIGENCE & 11. WEBSITE-TO-YOUTUBE FUNNEL
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {(showSection('10_graph') || showSection('11_funnel')) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {showSection('10_graph') && (
+              <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                      Module 10 · Discovery Graph Intelligence
+                    </span>
+                    <h2 className="text-lg font-black text-white mt-0.5">
+                      Connected Songs ({graph?.connectedSongsCount ?? 0}/{graph?.totalPublishedSongs ?? 0}) & Taxonomy Density
+                    </h2>
+                  </div>
+                  <Link
+                    href="/admin/discovery-graph"
+                    className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1"
+                  >
+                    Graph Editor <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                    <div className="text-[10px] text-neutral-400 uppercase">Connected Songs</div>
+                    <div className="text-2xl font-black text-emerald-400 font-mono">
+                      {graph?.connectedSongsCount ?? 0}
+                    </div>
+                  </div>
+                  <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                    <div className="text-[10px] text-neutral-400 uppercase">Orphan Songs</div>
+                    <div className="text-2xl font-black text-amber-400 font-mono">
+                      {graph?.orphanSongsCount ?? 0}
+                    </div>
+                  </div>
+                  <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+                    <div className="text-[10px] text-neutral-400 uppercase">Verified Joins</div>
+                    <div className="text-2xl font-black text-white font-mono">{graph?.totalJoins ?? 0}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {(graph?.buckets || []).map((b: any, idx: number) => (
+                    <ProportionalBar
+                      key={b.key}
+                      rank={idx + 1}
+                      label={b.label}
+                      sublabel={`${b.nodesCount} active nodes`}
+                      value={Math.max(1, b.edgesCount)}
+                      maxValue={Math.max(10, ...(graph?.buckets || []).map((x: any) => x.edgesCount || 0))}
+                      formattedValue={`${b.edgesCount} edges`}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {showSection('11_funnel') && (
+              <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                      Module 11 · Website-to-YouTube Conversion Funnel
+                    </span>
+                    <h2 className="text-lg font-black text-white mt-0.5">
+                      First-Party Attribution: SufiPulse.com → YouTube Listener
+                    </h2>
+                  </div>
+                  <ProvenanceTag source="First-Party Runtime Telemetry" tone="blue" />
+                </div>
+
+                <div className="space-y-3">
+                  {(funnel?.stages || []).map((stage: any, idx: number) => {
+                    const maxStage = Math.max(
+                      1,
+                      ...((funnel?.stages || []).map((s: any) => s.count || 0))
+                    );
+                    return (
+                      <ProportionalBar
+                        key={stage.id}
+                        rank={idx + 1}
+                        label={stage.label}
+                        value={stage.count}
+                        maxValue={maxStage}
+                        formattedValue={`${stage.count.toLocaleString()} events`}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 text-center text-xs pt-1">
+                  <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+                    <div className="text-[10px] text-neutral-400 uppercase">Returning Entrances</div>
+                    <div className="text-lg font-black text-emerald-400 font-mono">
+                      {funnel?.returningListeners?.returningEntrances ?? 0}
+                    </div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+                    <div className="text-[10px] text-neutral-400 uppercase">Embedded Plays</div>
+                    <div className="text-lg font-black text-amber-300 font-mono">
+                      {funnel?.returningListeners?.embeddedVideoPlays ?? 0}
+                    </div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+                    <div className="text-[10px] text-neutral-400 uppercase">Multi-Touch Sessions</div>
+                    <div className="text-lg font-black text-white font-mono">
+                      {funnel?.returningListeners?.multiTouchSessions ?? 0}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-neutral-900/70 border border-white/5 text-[11px] text-neutral-400 leading-relaxed">
+                  <strong className="text-neutral-200">Attribution Integrity:</strong> Stages above measure direct first-party interactions on{' '}
+                  <code className="text-neutral-300">sufipulse.com</code> (including embedded YouTube IFrame API playback). Completed YouTube views ({funnel?.youtubePlatformMetrics?.ytSearchViews28d ?? '—'} 28d YT Search views), watch time ({funnel?.youtubePlatformMetrics?.lifetimeWatchHours?.toLocaleString() ?? '—'} hrs), and net subscribers ({funnel?.youtubePlatformMetrics?.subscribers?.toLocaleString() ?? '—'}) are measured separately via YouTube APIs and never conflated with outbound clicks.
+                </div>
+
+                {(funnel?.topConvertingReleases || []).length > 0 && (
+                  <div className="pt-3 border-t border-white/10 space-y-2">
+                    <div className="text-xs font-bold text-neutral-300">
+                      Measured Song Page Views & Outbound Clicks (Real Runtime Only)
+                    </div>
+                    <div className="space-y-1.5">
+                      {(funnel?.topConvertingReleases || []).slice(0, 5).map((r: any) => (
+                        <div
+                          key={r.id}
+                          className="p-2 rounded bg-neutral-900 border border-white/5 flex items-center justify-between text-xs"
+                        >
+                          <span className="text-neutral-200 font-medium truncate">{r.canonicalTitle}</span>
+                          <span className="font-mono text-neutral-400 shrink-0">
+                            {r.metrics.websitePageViews} views · {r.metrics.websiteVideoClicks} YT clicks
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            12. AUTOMATED OPTIMIZATION ACTIONS (HUMAN-APPROVED LOOP)
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {showSection('12_optimization') && (
+          <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                  Module 12 · Organic Growth Optimization Loop
+                </span>
+                <h2 className="text-xl font-black text-white mt-0.5">
+                  Observe → Diagnose → Recommend → Human Approve → Implement → Measure
+                </h2>
+              </div>
+              <ProvenanceTag source="Human-Governed Execution Ledger" tone="amber" />
+            </div>
+
+            <div className="space-y-4">
+              {(loop?.proposals || []).map((p: any) => {
+                const isMeasuring = p.stage === 'measuring' || p.stage === 'approved_implemented';
+                const isDismissed = p.stage === 'dismissed';
+
+                return (
+                  <div
+                    key={p.id}
+                    className={`p-5 rounded-xl border space-y-3 ${
+                      isMeasuring
+                        ? 'bg-emerald-950/15 border-emerald-500/30'
+                        : isDismissed
+                          ? 'bg-neutral-900/30 border-white/5 opacity-60'
+                          : 'bg-neutral-900/70 border-white/10'
+                    }`}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                            p.priority === 'critical'
+                              ? 'bg-red-500/20 text-red-300'
+                              : p.priority === 'high'
+                                ? 'bg-amber-500/20 text-amber-300'
+                                : 'bg-blue-500/20 text-blue-300'
+                          }`}
+                        >
+                          {p.priority}
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-white/5 text-[10px] font-mono uppercase text-neutral-300">
+                          Stage: {p.stage}
+                        </span>
+                        <h3 className="text-sm md:text-base font-bold text-white">{p.title}</h3>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {p.stage === 'recommended' && (
+                          <>
+                            <button
+                              type="button"
+                              disabled={busyProposalId === p.id}
+                              onClick={() => handleOptimizationDecision(p.id, 'approve_and_implement')}
+                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition"
+                            >
+                              {busyProposalId === p.id
+                                ? 'Applying...'
+                                : p.automatedExecutionSupported
+                                  ? 'Approve & Apply Now'
+                                  : 'Approve & Lock Baseline'}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busyProposalId === p.id}
+                              onClick={() => handleOptimizationDecision(p.id, 'dismiss')}
+                              className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium rounded-lg transition"
+                            >
+                              Dismiss
+                            </button>
+                          </>
+                        )}
+                        {isDismissed && (
+                          <button
+                            type="button"
+                            onClick={() => handleOptimizationDecision(p.id, 'reopen')}
+                            className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs rounded-lg"
+                          >
+                            Reopen
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                      <div className="p-3 rounded-lg bg-neutral-950 border border-white/5">
+                        <span className="text-[10px] uppercase font-bold text-neutral-500 block mb-1">
+                          1. Observation
+                        </span>
+                        <p className="text-neutral-300 leading-relaxed">{p.observation}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-neutral-950 border border-white/5">
+                        <span className="text-[10px] uppercase font-bold text-neutral-500 block mb-1">
+                          2. Diagnosis
+                        </span>
+                        <p className="text-neutral-300 leading-relaxed">{p.diagnosis}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-neutral-950 border border-white/5">
+                        <span className="text-[10px] uppercase font-bold text-neutral-500 block mb-1">
+                          3. Governed Action
+                        </span>
+                        <p className="text-amber-200/90 leading-relaxed">{p.recommendation}</p>
+                      </div>
+                    </div>
+
+                    {p.implementationSummary && (
+                      <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span>
+                          <strong>Implemented ({p.approvedBy}):</strong> {p.implementationSummary}
+                        </span>
+                        {p.baselineAtImplementation && (
+                          <span className="font-mono text-[11px] text-emerald-300 shrink-0">
+                            Baseline locked: {p.baselineAtImplementation.ytSearchViews28d ?? 0} 28d YT Search views ·{' '}
+                            {p.baselineAtImplementation.orphanReleasesCount} orphans
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            13. INTEGRATION HEALTH & AUDIT LOGS
+           ═══════════════════════════════════════════════════════════════════════ */}
+        {showSection('13_health') && (
+          <section className="bg-neutral-950 border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400">
+                  Module 13 · Integration Health & Submission Audit Logs
+                </span>
+                <h2 className="text-xl font-black text-white mt-0.5">
+                  Live API Verification Matrix & Recent Indexing Ledger
+                </h2>
+              </div>
+              <ProvenanceTag source="Real Runtime Health Checks" syncAt={data?.generatedAt} tone="emerald" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {integrations.map((intg: any) => {
+                const ok = intg.status === 'WORKING' || intg.status === 'CONNECTED';
+                const unconfigured =
+                  intg.status === 'NOT_CONFIGURED' || intg.status === 'PENDING_HOST_DEPLOY';
+                return (
+                  <div
+                    key={intg.id}
+                    className="p-4 rounded-xl bg-neutral-900/70 border border-white/10 space-y-2"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-white">{intg.name}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                          ok
+                            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                            : unconfigured
+                              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                              : 'bg-red-500/15 text-red-300 border border-red-500/30'
+                        }`}
+                      >
+                        {intg.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 leading-relaxed">{intg.detail}</p>
+                    {intg.lastSync && (
+                      <div className="text-[10px] font-mono text-neutral-500">
+                        Checked: {intg.lastSync}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Indexing Audit Ledger */}
+            <div className="pt-4 border-t border-white/10 space-y-2">
+              <div className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-amber-400" /> Recent Search Submission & Verification Audit Entries
+              </div>
+              {(idxCrawl?.indexingLog?.entries || []).length === 0 ? (
+                <p className="text-xs text-neutral-500">
+                  No IndexNow or Search Console API submissions triggered yet in this environment.
+                </p>
+              ) : (
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                  {(idxCrawl?.indexingLog?.entries || []).slice(0, 12).map((entry: any) => (
+                    <div
+                      key={entry.id}
+                      className="p-2.5 rounded-lg bg-neutral-900 border border-white/5 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2"
+                    >
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <span className="px-1.5 py-0.5 rounded bg-white/5 font-mono text-[10px] uppercase text-amber-300">
+                          {entry.protocol}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-white/5 font-mono text-[10px] text-neutral-300">
+                          {entry.state}
+                        </span>
+                        <span className="font-mono text-[11px] text-neutral-200 truncate">{entry.url}</span>
+                      </div>
+                      <span className="text-[11px] text-neutral-400 shrink-0 font-mono">
+                        {entry.httpStatus ? `HTTP ${entry.httpStatus} · ` : ''}
+                        {new Date(entry.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
         )}
       </div>
     </DashboardLayout>

@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { youtubeService } from '@/lib/youtube-service';
 import { cmsServerStorage } from '@/lib/cms-storage-server';
+import { requireAdmin } from '@/server/middleware/authenticate';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const configuredApiKey = process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
     const channelId = process.env.YOUTUBE_CHANNEL_ID || process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID || 'UCraDr3i5A3k0j7typ6tOOsQ';
@@ -39,10 +43,9 @@ export async function GET() {
       uploadsPlaylistId,
       apiKeyPresent,
       latestVideosFromYouTube: latestVideosFromYouTube.map((v: any) => v.id || v.error),
-      cmsFilePath,
       cmsWritable,
       cmsTotalRecords: allReleases.length,
-      note: 'Diagnostic route exposes configuration presence only; API key values are never returned.',
+      note: 'Admin-authenticated diagnostic route; API keys and server filesystem paths are never returned.',
       lastImportResult: 'Check server logs for POST /api/releases/import-youtube',
       lastAnalyticsRefreshResult: 'Check server logs for POST /api/admin/youtube-analytics/global-reach/refresh',
     });

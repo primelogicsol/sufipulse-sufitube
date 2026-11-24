@@ -121,13 +121,14 @@ class GraphResolver {
         });
       }
 
-      // 2. Themes
+      // 2. Themes (CMSRelease.themes uses underscore THEME_CODES; registries.json uses hyphenated slugs)
       if (release.themes) {
         release.themes.forEach(slug => {
+          const registrySlug = slug.replace(/_/g, '-');
           seededJoins.push({
-            id: `${releaseId}_${slug}_theme`,
+            id: `${releaseId}_${registrySlug}_theme`,
             releaseId,
-            registryId: slug,
+            registryId: registrySlug,
             relationshipType: 'theme',
             confidence: 1.0,
             createdAt: now,
@@ -468,7 +469,7 @@ class GraphResolver {
       release.sufiConcepts.forEach(c => desiredJoins.push({ registryId: c, type: 'concept' }));
     }
     if (release.themes) {
-      release.themes.forEach(t => desiredJoins.push({ registryId: t, type: 'theme' }));
+      release.themes.forEach(t => desiredJoins.push({ registryId: t.replace(/_/g, '-'), type: 'theme' }));
     }
     if (release.moods) {
       release.moods.forEach(m => desiredJoins.push({ registryId: m, type: 'mood' }));
@@ -617,40 +618,25 @@ class GraphResolver {
   ): {
     totalReleases: number;
     totalViews: number;
-    totalWatchTime: number; // in hours
-    averageCtr: number; // in percentage
+    totalWatchTime: number | null; // null unless backed by verified analytics
+    averageCtr: number | null; // null unless backed by verified Studio impressions/CTR
     discoveryScore: number;
     authorityScore: number;
   } {
-    const connectedReleases = this.getReleasesForRegistry(registryId, relationshipType);
+    const connectedReleases = this.getReleasesForRegistry(registryId, relationshipType).filter(
+      r => r.status === 'published' && (r.visibility || 'public') === 'public'
+    );
     
     if (connectedReleases.length === 0) {
-      return { totalReleases: 0, totalViews: 0, totalWatchTime: 0, averageCtr: 0, discoveryScore: 0, authorityScore: 0 };
+      return { totalReleases: 0, totalViews: 0, totalWatchTime: null, averageCtr: null, discoveryScore: 0, authorityScore: 0 };
     }
 
     let totalViews = 0;
-    let totalWatchTime = 0;
-    let totalCtr = 0;
     const connectedReleaseIds = connectedReleases.map(r => r.id);
 
     connectedReleases.forEach(release => {
-      // 1. Sum up views
       const views = release.viewCount || 0;
       totalViews += views;
-
-      // 2. Sum up watch time.
-      // If we don't have explicit watch time hours in CMSRelease, we estimate:
-      // watch time (hours) = views * average_duration_seconds * average_retention_ratio (e.g. 45%) / 3600 seconds.
-      const durationSeconds = release.durationSeconds || 0;
-      const estimatedWatchTime = (views * durationSeconds * 0.45) / 3600;
-      totalWatchTime += estimatedWatchTime;
-
-      // 3. Sum up CTR.
-      // Since CTR is not direct, we generate a stable, deterministic CTR based on the release
-      // to ensure consistency (e.g., between 4.5% and 8.5%)
-      const baseVal = (release.title.charCodeAt(0) + release.title.charCodeAt(release.title.length - 1)) || 0;
-      const ctr = ((baseVal % 40) / 10) + 4.5;
-      totalCtr += ctr;
     });
 
     const baseViewsScore = totalViews > 0 ? Math.min(60, Math.log10(totalViews) * 10) : 0;
@@ -702,8 +688,8 @@ class GraphResolver {
     return {
       totalReleases: connectedReleases.length,
       totalViews,
-      totalWatchTime: Math.round(totalWatchTime * 10) / 10,
-      averageCtr: Math.round((totalCtr / connectedReleases.length) * 100) / 100,
+      totalWatchTime: null,
+      averageCtr: null,
       discoveryScore,
       authorityScore
     };

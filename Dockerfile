@@ -41,13 +41,11 @@ ENV NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=$NEXT_PUBLIC_YOUTUBE_CHANNEL_ID
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS=$NEXT_PUBLIC_ENABLE_USER_GOOGLE_ADS
 ENV NEXT_PUBLIC_APP_COMMIT=$NEXT_PUBLIC_APP_COMMIT
-# Stub out .data JSON files so Next.js static evaluation doesn't throw ENOENT
+# Stub out missing .data JSON files without overwriting version-controlled reference data, then sync CMS seed for SSG accuracy
 RUN mkdir -p .data \
-    && echo "{}" > .data/registries.json \
-    && echo "{}" > .data/brand-registry.json \
-    && echo "[]" > .data/crawler-registry.json \
-    && echo "[]" > .data/discovery-analytics.json \
-    && for f in constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do echo "[]" > .data/$f.json; done
+    && for obj in registries brand-registry; do [ -s .data/$obj.json ] || echo "{}" > .data/$obj.json; done \
+    && for f in crawler-registry discovery-analytics constitutional_core unified_knowledge cms-releases articles atlas_entities atlas_relationships knowledge audit payout-accounts subscribers adoptions users; do [ -s .data/$f.json ] || echo "[]" > .data/$f.json; done \
+    && node scripts/sync-cms-releases.js
 
 # Build the application
 RUN npm run build
@@ -79,10 +77,13 @@ COPY --from=builder --chown=node:node /app/scripts/sync-cms-releases.js ./script
 COPY --from=builder --chown=node:node /app/scripts/migrate.js ./scripts/migrate.js
 COPY --from=builder --chown=node:node /app/scripts/validate-env.mjs ./scripts/validate-env.mjs
 COPY --from=builder --chown=node:node /app/server/db/migrations ./server/db/migrations
-# Knowledge registry & YouTube Studio Geography — version-controlled public reference data.
+# Knowledge registry, Discovery graph, Taxonomy registries & YouTube Studio Geography — version-controlled public reference data.
 # Committed to git and copied into the image so the deploy pipeline syncs them into the persistent volume.
 COPY --from=builder --chown=node:node /app/.data/knowledge-registry.json ./.data/knowledge-registry.json
 COPY --from=builder --chown=node:node /app/.data/youtube-studio-geography.json ./.data/youtube-studio-geography.json
+COPY --from=builder --chown=node:node /app/.data/atlas_entities.json ./.data/atlas_entities.json
+COPY --from=builder --chown=node:node /app/.data/atlas_relationships.json ./.data/atlas_relationships.json
+COPY --from=builder --chown=node:node /app/.data/registries.json ./.data/registries.json
 
 # Switch to non-root user
 USER node

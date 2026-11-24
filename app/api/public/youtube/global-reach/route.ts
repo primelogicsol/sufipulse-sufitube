@@ -3,6 +3,7 @@ import { youtubeAnalyticsService } from '@/lib/youtube-analytics-service';
 import { syncYouTubeReachReports } from '@/lib/youtube-reach-reports';
 import { globalReachGrowthEngine } from '@/lib/global-reach-growth-engine';
 import { getYouTubeGeographySnapshot } from '@/lib/youtube-geography-import';
+import { getAuthUser, checkIsAdmin } from '@/server/middleware/authenticate';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,9 @@ const cacheHeaders = {
 // GET /api/public/youtube/global-reach
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const refresh = searchParams.get('refresh') === '1';
+  const requestedRefresh = searchParams.get('refresh') === '1';
+  const user = requestedRefresh ? await getAuthUser(request) : null;
+  const refresh = requestedRefresh && checkIsAdmin(user);
 
   try {
     const [analytics, reach] = await Promise.all([

@@ -2,6 +2,7 @@ import React from 'react';
 import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { Layout } from '../../../components/layout/Layout';
 import { Section } from '../../../components/layout/Section';
@@ -9,7 +10,21 @@ import { PageContainer } from '../../../components/layout/PageContainer';
 import { Card } from '../../../components/primitives/Card';
 import { Badge } from '../../../components/primitives/Badge';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+const BASE_URL = 'https://sufipulse.com';
+
+function mapKnowledgeTypeToRouteClass(rawType: string): string {
+  const t = (rawType || '').toLowerCase();
+  if (['saint_poet', 'traditional_poet', 'poet', 'saint', 'scholar'].includes(t)) return 'poets';
+  if (['singer'].includes(t)) return 'singers';
+  if (['song', 'kalam'].includes(t)) return 'songs';
+  if (['album'].includes(t)) return 'albums';
+  if (['release'].includes(t)) return 'releases';
+  if (['musicaltradition', 'literarytradition', 'order', 'tradition'].includes(t)) return 'traditions';
+  return 'concepts';
+}
+
+// Slugs whose primary song-connected taxonomy hub lives at /concepts/[slug]
+const REGISTRY_CONCEPT_AUTHORITY_SLUGS = new Set(['dhikr']);
 
 function getEntity(slug: string) {
   const dataPath = path.join(process.cwd(), '.data', 'knowledge-registry.json');
@@ -28,29 +43,36 @@ function getEntity(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ class: string, slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const { class: urlClass, slug } = resolvedParams;
+  const { slug } = resolvedParams;
   const { entity } = getEntity(slug);
 
-  if (!entity) {
+  if (!entity || entity.isActive === false || entity.isPublic === false) {
     return {
-      title: 'Entity Not Found | SufiPulse Knowledge'
+      title: 'Entity Not Found',
+      robots: { index: false, follow: false },
     };
   }
 
-  const title = `${entity.title} - ${entity.class.charAt(0).toUpperCase() + entity.class.slice(1)} | SufiPulse`;
-  const description = entity.summary || entity.sections?.overview || `Explore knowledge about ${entity.title} on SufiPulse.`;
-  const url = `${BASE_URL}/knowledge/${urlClass}/${slug}`;
+  const expectedClass = mapKnowledgeTypeToRouteClass(entity.class || entity.type);
+  const canonicalSlug = entity.slug || slug;
+  const displayName = entity.name || entity.title || canonicalSlug;
+  const classLabel = (entity.class || 'entity').replace(/_/g, ' ');
+  const title = `${displayName} — ${classLabel.charAt(0).toUpperCase() + classLabel.slice(1)}`;
+  const description = entity.shortDescription || entity.summary || entity.sections?.overview || `Explore knowledge about ${displayName} on SufiPulse USA.`;
+  const authoritativeUrl = REGISTRY_CONCEPT_AUTHORITY_SLUGS.has(canonicalSlug)
+    ? `${BASE_URL}/concepts/${canonicalSlug}`
+    : `${BASE_URL}/knowledge/${expectedClass}/${canonicalSlug}`;
 
   return {
     title,
     description,
     alternates: {
-      canonical: url,
+      canonical: authoritativeUrl,
     },
     openGraph: {
-      title,
+      title: `${title} | SufiPulse USA`,
       description,
-      url,
+      url: authoritativeUrl,
       type: 'article',
     }
   };
@@ -62,18 +84,14 @@ export default async function KnowledgeEntityPage({ params }: { params: Promise<
   
   const { entity, all: entities } = getEntity(slug);
 
-  if (!entity) {
-    return (
-      <Layout>
-        <Section background="midnight" className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)] mb-4">Entity Not Found</h1>
-            <p className="text-[var(--color-text-secondary)] mb-8">This entity is not present in the current knowledge graph.</p>
-            <Link href="/knowledge" className="text-[var(--color-gold)] hover:underline">Return to Knowledge Hub</Link>
-          </div>
-        </Section>
-      </Layout>
-    );
+  if (!entity || entity.isActive === false || entity.isPublic === false) {
+    notFound();
+  }
+
+  const expectedClass = mapKnowledgeTypeToRouteClass(entity.class || entity.type);
+  const canonicalSlug = entity.slug || slug;
+  if (urlClass !== expectedClass || slug !== canonicalSlug) {
+    permanentRedirect(`/knowledge/${expectedClass}/${canonicalSlug}`);
   }
 
   // Find relationships mapped dynamically
@@ -98,15 +116,27 @@ export default async function KnowledgeEntityPage({ params }: { params: Promise<
   else if (['concept', 'practice', 'spiritualstate'].includes(entityClass)) schemaType = "DefinedTerm";
   else if (['tradition', 'musicaltradition', 'order'].includes(entityClass)) schemaType = "CreativeWork";
 
+  const pageUrl = `${BASE_URL}/knowledge/${expectedClass}/${canonicalSlug}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": schemaType,
     "name": entity.name || entity.title,
     "description": entity.shortDescription || entity.summary || entity.sections?.overview,
-    "url": `${BASE_URL}/knowledge/${urlClass}/${slug}`,
+    "url": pageUrl,
     ...(schemaType === "Person" && {
       "alternateName": entity.alternateNames || entity.aliases || []
     })
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": BASE_URL },
+      { "@type": "ListItem", "position": 2, "name": "Knowledge", "item": `${BASE_URL}/knowledge` },
+      { "@type": "ListItem", "position": 3, "name": expectedClass.charAt(0).toUpperCase() + expectedClass.slice(1), "item": `${BASE_URL}/knowledge/${expectedClass}` },
+      { "@type": "ListItem", "position": 4, "name": entity.name || entity.title, "item": pageUrl },
+    ]
   };
 
   return (
@@ -115,6 +145,10 @@ export default async function KnowledgeEntityPage({ params }: { params: Promise<
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Section background="midnight" spacing="normal" className="pt-24 md:pt-32 pb-24">
         <PageContainer>
           <div className="mb-4 text-[var(--text-xs)] uppercase tracking-wider font-medium text-[var(--color-text-secondary)]">
@@ -122,7 +156,7 @@ export default async function KnowledgeEntityPage({ params }: { params: Promise<
             <span className="mx-2 opacity-50">&gt;</span>
             <Link href="/knowledge" className="hover:text-[var(--color-gold)] transition-colors">Knowledge</Link>
             <span className="mx-2 opacity-50">&gt;</span>
-            <Link href={`/knowledge/${entity.class}`} className="hover:text-[var(--color-gold)] transition-colors capitalize">{entity.class}</Link>
+            <Link href={`/knowledge/${expectedClass}`} className="hover:text-[var(--color-gold)] transition-colors capitalize">{expectedClass}</Link>
             <span className="mx-2 opacity-50">&gt;</span>
             <span className="text-[var(--color-gold)]">{entity.name || entity.title}</span>
           </div>

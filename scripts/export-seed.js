@@ -25,18 +25,105 @@ console.log("[export-seed] Disk records:", disk.length);
 const currentSeed = JSON.parse(fs.readFileSync(SEED_FILE, "utf8"));
 const seedFieldSet = new Set();
 currentSeed.forEach(r => Object.keys(r).forEach(k => seedFieldSet.add(k)));
-seedFieldSet.add("defaultAudioLanguage");
+[
+  "defaultAudioLanguage",
+  "sufiConcepts",
+  "themes",
+  "moods",
+  "targetRegions",
+  "targetLanguages",
+  "availableLanguages",
+  "lyrics",
+  "lyricsStructure",
+  "subtitleTranslations",
+  "subtitleLanguageStatuses",
+  "unpublishedAt",
+  "archivedAt",
+  "publicationOverride"
+].forEach(k => seedFieldSet.add(k));
 console.log("[export-seed] Seed field contract:", seedFieldSet.size, "fields");
 
+// Include published records AND explicit unpublished/private governance overrides (e.g., footprints-behind)
+// so production volume sync preserves explicit editorial suppression while excluding internal test drafts.
+const exportableRecords = disk.filter(
+  r => r.status === "published" || r.publicationOverride === true
+);
 const publishedRecords = disk.filter(r => r.status === "published");
-const draftRecords = disk.filter(r => r.status !== "published");
-console.log("[export-seed] Published:", publishedRecords.length, "| Excluded drafts:", draftRecords.length);
-draftRecords.forEach(r => console.log("  [EXCLUDED DRAFT] slug=" + r.slug));
+const excludedRecords = disk.filter(
+  r => r.status !== "published" && r.publicationOverride !== true
+);
+console.log(
+  "[export-seed] Published:",
+  publishedRecords.length,
+  "| Explicit Overrides:",
+  exportableRecords.length - publishedRecords.length,
+  "| Excluded drafts:",
+  excludedRecords.length
+);
+excludedRecords.forEach(r => console.log("  [EXCLUDED DRAFT] slug=" + r.slug));
 
-const exported = publishedRecords.map(r => {
+const UNAPPROVED_TRACK_STATUSES = new Set(["draft", "in_translation", "under_review", "archived"]);
+const PRIVATE_OVERRIDE_SAFE_FIELDS = new Set([
+  "id",
+  "slug",
+  "title",
+  "canonicalTitle",
+  "youtubeId",
+  "youtubeVideoId",
+  "status",
+  "visibility",
+  "unpublishedAt",
+  "archivedAt",
+  "publicationOverride",
+  "releaseType",
+  "format",
+  "source",
+  "govType",
+  "governanceOrigin",
+  "writer",
+  "createdAt",
+  "updatedAt",
+]);
+
+const exported = exportableRecords.map(r => {
+  const isPrivateOverride = r.status !== "published" || r.visibility === "private";
   const projected = {};
   for (const field of seedFieldSet) {
-    if (field in r) projected[field] = r[field];
+    if (!(field in r)) continue;
+    // Strip private lyrics, commentary, and internal assets from unpublished governance override records in seed
+    if (isPrivateOverride && !PRIVATE_OVERRIDE_SAFE_FIELDS.has(field)) {
+      continue;
+    }
+    // Never export unapproved draft subtitle tracks into public repo seed
+    if (field === "subtitleTranslations" && r.subtitleTranslations && typeof r.subtitleTranslations === "object") {
+      const statuses = r.subtitleLanguageStatuses || {};
+      const cleanTranslations = {};
+      for (const [lang, val] of Object.entries(r.subtitleTranslations)) {
+        if (!UNAPPROVED_TRACK_STATUSES.has(statuses[lang])) {
+          cleanTranslations[lang] = val;
+        }
+      }
+      if (Object.keys(cleanTranslations).length > 0) {
+        projected[field] = cleanTranslations;
+      }
+      continue;
+    }
+    if (field === "subtitleLanguageStatuses" && r.subtitleLanguageStatuses && typeof r.subtitleLanguageStatuses === "object") {
+      const cleanStatuses = {};
+      for (const [lang, st] of Object.entries(r.subtitleLanguageStatuses)) {
+        if (!UNAPPROVED_TRACK_STATUSES.has(st)) {
+          cleanStatuses[lang] = st;
+        }
+      }
+      if (Object.keys(cleanStatuses).length > 0) {
+        projected[field] = cleanStatuses;
+      }
+      continue;
+    }
+    projected[field] = r[field];
+  }
+  if (!isPrivateOverride && r.canonicalLyrics && r.canonicalLyrics.status === "APPROVED") {
+    projected.canonicalLyrics = r.canonicalLyrics;
   }
   return projected;
 });

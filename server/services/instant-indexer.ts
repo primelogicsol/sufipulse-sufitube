@@ -1,12 +1,18 @@
 /**
  * server/services/instant-indexer.ts
  *
- * Real-time Instant Search Engine Indexing Engine.
- * Submits published releases and discovery pages directly to IndexNow (Bing, Yahoo,
- * Yandex, Seznam, Perplexity) and Google Search Console endpoints for sub-15-minute crawling.
+ * Authoritative Search Engine Submission Bridge.
+ * Delegates to lib/search-indexing-service.ts so:
+ *   1. Non-public / draft / approved / unpublished URLs are strictly blocked.
+ *   2. Canonical non-www https://sufipulse.com URLs are enforced.
+ *   3. Google's retired /ping?sitemap= endpoint (HTTP 404 since 2023) is never called.
+ *   4. IndexNow keyLocation reachability is verified before claiming submission.
  */
 
 import { logger } from '@/app/lib/logger';
+import { canonicalUrl } from '@/lib/canonical-seo';
+import { submitUrlsViaIndexNow } from '@/lib/search-indexing-service';
+import { submitSitemapToGoogleSearchConsole } from '@/lib/google-search-console';
 
 export interface IndexingResult {
   url: string;
@@ -17,74 +23,30 @@ export interface IndexingResult {
 }
 
 export async function submitInstantIndexing(targetUrl: string): Promise<IndexingResult> {
-  const host = 'www.sufipulse.com';
-  const cleanUrl = targetUrl.startsWith('http') ? targetUrl : `https://${host}${targetUrl}`;
+  const cleanUrl = canonicalUrl(targetUrl);
   const now = new Date().toISOString();
 
-  let indexNowStatus: 'submitted' | 'skipped' | 'failed' = 'skipped';
-  let googlePingStatus: 'submitted' | 'skipped' | 'failed' = 'skipped';
-  const detailLogs: string[] = [];
+  const indexNowRes = await submitUrlsViaIndexNow([cleanUrl], 'instant_indexer');
+  const gscRes = await submitSitemapToGoogleSearchConsole('instant_indexer');
 
-  // 1. IndexNow API (Supported by Bing, Yahoo, Yandex, Seznam, and used by AI search engines)
-  try {
-    const indexNowKey = process.env.INDEXNOW_KEY || 'sufipulse-discovery-indexnow-key-2026';
-    const indexNowPayload = {
-      host,
-      key: indexNowKey,
-      keyLocation: `https://${host}/${indexNowKey}.txt`,
-      urlList: [cleanUrl],
-    };
+  const indexNowStatus: IndexingResult['indexNowStatus'] = indexNowRes.accepted
+    ? 'submitted'
+    : indexNowRes.state === 'NOT_CONFIGURED' || indexNowRes.state === 'NOT_ELIGIBLE_PRIVATE'
+      ? 'skipped'
+      : 'failed';
 
-    const res = await fetch('https://api.indexnow.org/indexnow', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-      },
-      body: JSON.stringify(indexNowPayload),
-      signal: AbortSignal.timeout(6000),
-    });
-
-    if (res.ok || res.status === 200 || res.status === 202) {
-      indexNowStatus = 'submitted';
-      detailLogs.push(`IndexNow accepted URL: HTTP ${res.status}`);
-    } else {
-      indexNowStatus = 'failed';
-      detailLogs.push(`IndexNow returned HTTP ${res.status}`);
-    }
-  } catch (err: any) {
-    indexNowStatus = 'failed';
-    detailLogs.push(`IndexNow network error: ${err.message}`);
-  }
-
-  // 2. Google Sitemap Ping endpoint
-  try {
-    const sitemapUrl = encodeURIComponent(`https://${host}/sitemap.xml`);
-    const googlePingUrl = `https://www.google.com/ping?sitemap=${sitemapUrl}`;
-
-    const gRes = await fetch(googlePingUrl, {
-      method: 'GET',
-      signal: AbortSignal.timeout(6000),
-    });
-
-    if (gRes.ok || gRes.status === 200) {
-      googlePingStatus = 'submitted';
-      detailLogs.push('Google sitemap ping accepted');
-    } else {
-      googlePingStatus = 'failed';
-      detailLogs.push(`Google ping HTTP ${gRes.status}`);
-    }
-  } catch (err: any) {
-    // In local dev without internet or on rate limits, fallback gracefully
-    googlePingStatus = 'skipped';
-    detailLogs.push(`Google ping notice: ${err.message}`);
-  }
+  const googlePingStatus: IndexingResult['googlePingStatus'] = gscRes.success
+    ? 'submitted'
+    : gscRes.state === 'NOT_CONFIGURED' || gscRes.state === 'CONFIGURED_UNVERIFIED'
+      ? 'skipped'
+      : 'failed';
 
   const result: IndexingResult = {
     url: cleanUrl,
     indexNowStatus,
     googlePingStatus,
     timestamp: now,
-    details: detailLogs.join(' | '),
+    details: `${indexNowRes.message} | GSC: ${gscRes.message}`,
   };
 
   logger.api.info(`[InstantIndexer] Processed ${cleanUrl}: ${result.details}`);

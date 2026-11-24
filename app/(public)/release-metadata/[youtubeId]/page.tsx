@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getReleaseReadStore } from '@/server/storage/release-read-backend';
 import { toCanonicalCMSRelease } from '@/server/storage/release-dto';
+import { CANONICAL_ORIGIN, canonicalUrl, resolveCanonicalSongTitle } from '@/lib/canonical-seo';
 
 async function resolveRelease(youtubeId: string) {
   if (!/^[A-Za-z0-9_-]{11}$/.test(youtubeId)) return null;
@@ -10,7 +11,7 @@ async function resolveRelease(youtubeId: string) {
   const raw = await store.getByYoutubeId(youtubeId);
   if (!raw) return null;
   const release = toCanonicalCMSRelease(raw);
-  if (release.status !== 'published' || release.visibility !== 'public') return null;
+  if (release.status !== 'published' || (release.visibility || 'public') !== 'public') return null;
   return release;
 }
 
@@ -25,17 +26,20 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { youtubeId } = await params;
   const release = await resolveRelease(youtubeId);
-  if (!release) return { title: 'Release metadata | SufiPulse', robots: { index: false, follow: true } };
+  if (!release) {
+    return { title: 'Release Metadata', robots: { index: false, follow: false } };
+  }
 
-  const title = release.title || release.canonicalTitle || release.youtubeTitle || 'SufiPulse Release';
-  const description = release.description || `Canonical metadata for ${title} on SufiPulse.`;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+  const title = resolveCanonicalSongTitle(release);
+  const description = release.description || `Canonical metadata for ${title} on SufiPulse USA.`;
+  const detailCanonical = canonicalUrl(`/release-detail/${release.slug || youtubeId}`);
 
+  // Consolidate search index authority onto /release-detail/[slug] to prevent duplicate VideoObject cannibalization
   return {
-    title: `${title} | Canonical Release Metadata | SufiPulse`,
+    title: `${title} — Release Metadata`,
     description: description.slice(0, 160),
-    alternates: { canonical: `${baseUrl}/release-metadata/${youtubeId}` },
-    robots: { index: true, follow: true },
+    alternates: { canonical: detailCanonical },
+    robots: { index: false, follow: true },
   };
 }
 
@@ -46,33 +50,16 @@ export default async function ReleaseMetadataPage(
   const release = await resolveRelease(youtubeId);
   if (!release) notFound();
 
-  const title = release.title || release.canonicalTitle || release.youtubeTitle || 'SufiPulse Release';
+  const title = resolveCanonicalSongTitle(release);
   const description = release.description || '';
   const writer = getName(release.writer);
   const vocalist = getName(release.vocalist);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
   const detailUrl = `/release-detail/${release.slug || youtubeId}`;
   const apiUrl = `/api/releases/youtube/${youtubeId}`;
   const publishedAt = release.publishedAt || release.releaseDate;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'VideoObject',
-    name: title,
-    description,
-    ...(release.thumbnailUrl || release.canonicalThumbnail
-      ? { thumbnailUrl: [release.canonicalThumbnail || release.thumbnailUrl] }
-      : { thumbnailUrl: [`https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`] }),
-    contentUrl: `https://www.youtube.com/watch?v=${youtubeId}`,
-    embedUrl: `https://www.youtube.com/embed/${youtubeId}`,
-    ...(publishedAt ? { uploadDate: publishedAt } : {}),
-    url: `${baseUrl}${detailUrl}`,
-    ...(writer ? { creator: { '@type': 'Person', name: writer } } : {}),
-  };
-
   return (
     <main className="mx-auto max-w-4xl px-6 py-16 text-neutral-200">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <article>
         <p className="mb-3 text-xs uppercase tracking-[0.2em] text-neutral-500">SufiPulse Canonical Release Metadata</p>
         <h1 className="text-3xl font-semibold text-white">{title}</h1>
@@ -82,6 +69,7 @@ export default async function ReleaseMetadataPage(
 
         <dl className="mt-8 grid gap-3 text-sm sm:grid-cols-2">
           <div><dt className="text-neutral-500">YouTube ID</dt><dd>{youtubeId}</dd></div>
+          <div><dt className="text-neutral-500">Canonical URL</dt><dd>{CANONICAL_ORIGIN}{detailUrl}</dd></div>
           {writer && <div><dt className="text-neutral-500">Writer / Lyricist</dt><dd>{writer}</dd></div>}
           {vocalist && <div><dt className="text-neutral-500">Vocalist</dt><dd>{vocalist}</dd></div>}
           {publishedAt && <div><dt className="text-neutral-500">Published</dt><dd>{String(publishedAt)}</dd></div>}
@@ -93,7 +81,7 @@ export default async function ReleaseMetadataPage(
         </section>
 
         <nav className="mt-10 flex flex-wrap gap-4 text-sm">
-          <Link className="underline" href={detailUrl}>Full SufiPulse release page</Link>
+          <Link className="underline text-amber-400" href={detailUrl}>Full SufiPulse release page</Link>
           <Link className="underline" href={apiUrl}>Machine-readable JSON</Link>
           <a className="underline" href={`https://www.youtube.com/watch?v=${youtubeId}`} rel="noopener noreferrer">YouTube</a>
         </nav>

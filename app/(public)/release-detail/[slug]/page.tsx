@@ -2666,9 +2666,13 @@ function Release() {
                               <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Sufi Concepts</span>
                               <div className="flex flex-wrap gap-2">
                                 {release.sufiConcepts.map((code: string) => (
-                                  <span key={code} className="px-3 py-1 text-xs rounded-full bg-amber-950/30 text-amber-300 border border-amber-800/20 font-medium">
+                                  <Link
+                                    key={code}
+                                    href={`/concepts/${encodeURIComponent(code)}`}
+                                    className="px-3 py-1 text-xs rounded-full bg-amber-950/30 text-amber-300 border border-amber-800/20 hover:border-amber-500/50 hover:bg-amber-900/40 transition-colors font-medium"
+                                  >
                                     {getConceptLabel(code)}
-                                  </span>
+                                  </Link>
                                 ))}
                               </div>
                             </div>
@@ -2678,9 +2682,13 @@ function Release() {
                               <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Spiritual Themes</span>
                               <div className="flex flex-wrap gap-2">
                                 {release.themes.map((code: string) => (
-                                  <span key={code} className="px-3 py-1 text-xs rounded-full bg-neutral-800/50 text-neutral-300 border border-neutral-700/50 font-medium">
+                                  <Link
+                                    key={code}
+                                    href={`/themes/${encodeURIComponent(code.replace(/_/g, '-'))}`}
+                                    className="px-3 py-1 text-xs rounded-full bg-neutral-800/50 text-neutral-300 border border-neutral-700/50 hover:border-amber-500/40 hover:text-amber-300 transition-colors font-medium"
+                                  >
                                     {getThemeLabel(code)}
-                                  </span>
+                                  </Link>
                                 ))}
                               </div>
                             </div>
@@ -2690,9 +2698,13 @@ function Release() {
                               <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Mood & Atmosphere</span>
                               <div className="flex flex-wrap gap-2">
                                 {release.moods.map((code: string) => (
-                                  <span key={code} className="px-3 py-1 text-xs rounded-full bg-neutral-800/50 text-neutral-300 border border-neutral-700/50 font-medium">
+                                  <Link
+                                    key={code}
+                                    href={`/moods/${encodeURIComponent(code)}`}
+                                    className="px-3 py-1 text-xs rounded-full bg-neutral-800/50 text-neutral-300 border border-neutral-700/50 hover:border-amber-500/40 hover:text-amber-300 transition-colors font-medium"
+                                  >
                                     {getMoodLabel(code)}
-                                  </span>
+                                  </Link>
                                 ))}
                               </div>
                             </div>
@@ -2718,9 +2730,13 @@ function Release() {
                               <span className="text-[11px] text-neutral-500 uppercase tracking-widest block mb-2">Target Geographies</span>
                               <div className="flex flex-wrap gap-2">
                                 {release.targetRegions.map((code: string) => (
-                                  <span key={code} className="px-3 py-1 text-xs rounded bg-neutral-800/30 text-neutral-400 border border-neutral-800 font-medium">
+                                  <Link
+                                    key={code}
+                                    href={`/regions/${encodeURIComponent(code)}`}
+                                    className="px-3 py-1 text-xs rounded bg-neutral-800/30 text-neutral-400 border border-neutral-800 hover:border-amber-500/40 hover:text-amber-300 transition-colors font-medium"
+                                  >
                                     {getRegionLabel(code)}
-                                  </span>
+                                  </Link>
                                 ))}
                               </div>
                             </div>

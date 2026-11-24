@@ -3,10 +3,10 @@ import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ScrollToTop } from "@/app/components/navigation/ScrollToTop";
+import { OrganicDiscoveryTracker } from "@/app/components/seo/OrganicDiscoveryTracker";
 
-// Production canonical identity must not inherit a localhost or preview URL.
-const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-const BASE_URL = IS_PRODUCTION ? 'https://sufipulse.com' : (process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com');
+// Canonical authority always resolves to https://sufipulse.com (non-www).
+const BASE_URL = 'https://sufipulse.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -39,7 +39,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: BASE_URL,
     siteName: "SufiPulse USA",
     title: "SufiPulse USA | Sacred Sufi Music, Poetry & Kalam",
     description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
@@ -64,10 +63,13 @@ export const metadata: Metadata = {
     description: "Discover original Sufi music, mystical poetry and Kashmiri kalam from SufiPulse USA. Watch full-length recordings and explore sacred music, lyrics and cultural heritage.",
     images: ["/banner1.png"],
   },
-  alternates: {
-    canonical: BASE_URL,
-  },
   category: "music",
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION
+      ? { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } }
+      : {}),
+  },
   icons: {
     icon: [
       { url: '/favicon.ico?v=20261118', sizes: 'any' },
@@ -214,6 +216,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <ScrollToTop />
+        <OrganicDiscoveryTracker />
         <AuthProvider>
           {children}
         </AuthProvider>

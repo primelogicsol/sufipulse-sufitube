@@ -243,10 +243,45 @@ export function toPublicRelease(release: any): PublicRelease {
     producer: safeResolve(release.producer),
     publicCredits: release.enableCredits !== false ? release.publicCredits : undefined,
     canonicalLyrics: release.enableLyrics !== false && release.canonicalLyrics?.status === 'APPROVED' ? release.canonicalLyrics : undefined,
-    lyrics: release.enableLyrics !== false ? release.lyrics : undefined,
-    lyricsStructure: release.enableLyrics !== false ? release.lyricsStructure : undefined,
+    lyrics: (() => {
+      if (release.enableLyrics === false || !release.lyrics || typeof release.lyrics !== 'object') return undefined;
+      const statuses = release.subtitleLanguageStatuses || {};
+      const unapproved = new Set(['draft', 'in_translation', 'under_review', 'archived']);
+      const filtered: Record<string, any> = {};
+      for (const [lang, val] of Object.entries(release.lyrics)) {
+        if (!unapproved.has(String(statuses[lang] || '').toLowerCase())) {
+          filtered[lang] = val;
+        }
+      }
+      return Object.keys(filtered).length > 0 ? filtered : undefined;
+    })(),
+    lyricsStructure: (() => {
+      if (release.enableLyrics === false || !release.lyricsStructure || typeof release.lyricsStructure !== 'object') return undefined;
+      const statuses = release.subtitleLanguageStatuses || {};
+      const unapproved = new Set(['draft', 'in_translation', 'under_review', 'archived']);
+      const filtered: Record<string, any> = {};
+      for (const [lang, blocks] of Object.entries(release.lyricsStructure)) {
+        if (unapproved.has(String(statuses[lang] || '').toLowerCase())) continue;
+        if (Array.isArray(blocks)) {
+          const pubBlocks = blocks.filter((b: any) => b?.isPublished !== false);
+          if (pubBlocks.length > 0) filtered[lang] = pubBlocks;
+        }
+      }
+      return Object.keys(filtered).length > 0 ? filtered : undefined;
+    })(),
     subtitleCues: release.enableLyrics !== false ? release.subtitleCues : undefined,
-    subtitleTranslations: release.enableLyrics !== false ? release.subtitleTranslations : undefined,
+    subtitleTranslations: (() => {
+      if (release.enableLyrics === false || !release.subtitleTranslations || typeof release.subtitleTranslations !== 'object') return undefined;
+      const statuses = release.subtitleLanguageStatuses || {};
+      const unapproved = new Set(['draft', 'in_translation', 'under_review', 'archived']);
+      const filtered: Record<string, any> = {};
+      for (const [lang, cues] of Object.entries(release.subtitleTranslations)) {
+        if (!unapproved.has(String(statuses[lang] || '').toLowerCase())) {
+          filtered[lang] = cues;
+        }
+      }
+      return Object.keys(filtered).length > 0 ? filtered : undefined;
+    })(),
     subtitleCueMetadata: release.enableLyrics !== false ? release.subtitleCueMetadata : undefined,
     subtitleStylePacks: release.enableLyrics !== false ? release.subtitleStylePacks : undefined,
     languageStyleOverrides: release.enableLyrics !== false ? release.languageStyleOverrides : undefined,

@@ -180,8 +180,15 @@ function StudioFunnelCard({
   recommendationShareOfImpressions: number | null;
   monthsElapsed?: number;
 }) {
-  const targetSeconds = getMonthlyAvgViewDurationSeconds(monthsElapsed ?? 2);
-  const targetRecommendationShare = getMonthlyRecommendationShare(monthsElapsed ?? 2);
+  const realAvgSec = (p as any)?.averageViewDurationSeconds ?? (p as any)?.avgViewDurationSeconds ?? null;
+  const targetSeconds =
+    typeof realAvgSec === 'number' && realAvgSec > 0
+      ? Math.round(realAvgSec)
+      : getMonthlyAvgViewDurationSeconds(monthsElapsed ?? 2);
+  const targetRecommendationShare =
+    typeof recommendationShareOfImpressions === 'number' && recommendationShareOfImpressions > 0
+      ? recommendationShareOfImpressions
+      : getMonthlyRecommendationShare(monthsElapsed ?? 2);
 
   return (
     <Card

@@ -9,6 +9,7 @@ import { logger } from '@/app/lib/logger';
 import { requireAdmin, getAuthUser, checkIsAdmin } from '@/server/middleware/authenticate';
 import { generateSocialShareKit } from '@/lib/social-share-generator';
 import { applyCanonicalLyricsWorkflow } from '@/server/services/canonical-lyrics-workflow';
+import { runPublishedReleaseDiscoveryPipeline } from '@/lib/release-discovery-pipeline';
 
 
 import { cmsReleaseSchema, cmsReleaseStatusPatchSchema } from '@/app/lib/validation-schemas';
@@ -347,8 +348,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    // --- CACHE INVALIDATION ---
+    // --- CACHE INVALIDATION & ORGANIC SEARCH DISCOVERY PIPELINE ---
     revalidateReleaseCaches([existing?.slug, nextSlug], [existing?.youtubeId, nextYoutubeId]);
+    if (updated.status === 'published' && (updated.visibility || 'public') === 'public') {
+      runPublishedReleaseDiscoveryPipeline(updated.id, authResult.email || authResult.id || 'admin_put').catch((err) =>
+        apiLogger.warn('Post-publish search discovery pipeline warning', { err: String(err) })
+      );
+    }
 
     // Audit log
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
@@ -550,6 +556,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     revalidateReleaseCaches([existing.slug, updated.slug], [existing.youtubeId, updated.youtubeId]);
+    if (updated.status === 'published' && (updated.visibility || 'public') === 'public') {
+      runPublishedReleaseDiscoveryPipeline(updated.id, actor).catch((err) =>
+        apiLogger.warn('Post-patch search discovery pipeline warning', { err: String(err) })
+      );
+    }
 
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
     apiLogger.info(`Release status patched via PATCH: ${existing.id}`, {

@@ -1,14 +1,21 @@
 import { Suspense } from 'react';
-import { Layout } from '../../components/layout/Layout';
+import type { Metadata } from 'next';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Section } from '../../components/layout/Section';
 import { RegistryStatusMonitoring } from '../../components/ui/RegistryStatusMonitoring';
-import { Shield, Sparkles, BookOpen, Music, Mic, Building2, FileText } from 'lucide-react';
+import { Shield, BookOpen, Music, Mic, Building2, FileText } from 'lucide-react';
 import Link from 'next/link';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Application Registry & Status Lookup | SufiPulse USA',
   description: 'Track the status of your contributor application or access the SufiPulse institutional registry for writers, vocalists, producers, and studios.',
+  alternates: {
+    canonical: 'https://sufipulse.com/applications',
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function ApplicationsIndexPage() {
@@ -28,7 +35,7 @@ export default function ApplicationsIndexPage() {
   ];
 
   return (
-    <Layout>
+    <>
       <Section className="py-16 border-b border-white/5 bg-gradient-to-b from-neutral-950 to-neutral-900/50">
         <PageContainer>
           <div className="max-w-3xl space-y-4">
@@ -94,6 +101,6 @@ export default function ApplicationsIndexPage() {
           </div>
         </PageContainer>
       </Section>
-    </Layout>
+    </>
   );
 }

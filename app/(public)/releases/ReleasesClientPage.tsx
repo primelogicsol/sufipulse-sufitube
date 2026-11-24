@@ -395,6 +395,21 @@ export default function Releases({ initialReleases }: { initialReleases?: Initia
     // Server-returned year facets — covers full filtered catalogue, not just current page
     const [facetYears, setFacetYears] = useState<number[]>([]);
 
+    // Hydrate search (?q= from WebSite SearchAction JSON-LD or ?search=) and pagination (?page=) from URL
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        const urlQuery = (params.get('q') || params.get('search') || '').trim();
+        const urlPage = parseInt(params.get('page') || '1', 10);
+        if (urlQuery) {
+            setSearchQuery(urlQuery);
+            setDurationFilter('all');
+        }
+        if (!Number.isNaN(urlPage) && urlPage > 1) {
+            setCurrentPage(urlPage);
+        }
+    }, []);
+
 
 
 

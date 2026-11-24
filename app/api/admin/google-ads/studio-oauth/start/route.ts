@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { requireAdmin } from '@/server/middleware/authenticate';
 
 /**
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
   const redirectUri = `${appUrl}/api/admin/google-ads/studio-oauth/callback`;
+  const state = crypto.randomBytes(24).toString('hex');
 
   const oauthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   oauthUrl.searchParams.set('client_id', clientId);
@@ -33,7 +35,15 @@ export async function POST(request: NextRequest) {
   // Force the account chooser screen even if already authenticated
   oauthUrl.searchParams.set('prompt', 'select_account consent');
   oauthUrl.searchParams.set('include_granted_scopes', 'true');
-  oauthUrl.searchParams.set('state', 'studio');
+  oauthUrl.searchParams.set('state', state);
 
-  return NextResponse.json({ authUrl: oauthUrl.toString(), redirect_uri: redirectUri });
+  const response = NextResponse.json({ authUrl: oauthUrl.toString(), redirect_uri: redirectUri });
+  response.cookies.set('sp_studio_ads_oauth_state', state, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/api/admin/google-ads/studio-oauth',
+    maxAge: 600,
+  });
+  return response;
 }

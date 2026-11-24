@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   alternates: {
-    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com'}/contact`,
+    canonical: 'https://sufipulse.com/contact',
   },
 };
 

@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const assetName = searchParams.get('assetName') || undefined;
     const sourcePage = searchParams.get('sourcePage') || undefined;
 
-    const validSourceTypes: DiscoverySourceType[] = ['concept', 'theme', 'region', 'release', 'playlist'];
+    const validSourceTypes: DiscoverySourceType[] = ['concept', 'theme', 'mood', 'region', 'release', 'playlist', 'discovery_entity'];
     const validActionTypes: DiscoveryActionType[] = ['video_click', 'playlist_click', 'subscribe_click', 'page_view', 'brand_asset_click'];
 
     const userAgent = request.headers.get('user-agent') || '';

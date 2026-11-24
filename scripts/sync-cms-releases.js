@@ -34,8 +34,8 @@ function syncCmsReleases() {
   try {
     const rawSeed = fs.readFileSync(seedFile, 'utf8');
     seedReleases = JSON.parse(rawSeed || '[]');
-    if (!Array.isArray(seedReleases)) {
-      throw new Error('Seed JSON is not an array');
+    if (!Array.isArray(seedReleases) || seedReleases.length === 0) {
+      throw new Error('Seed JSON is empty or not an array — aborting to protect persistent volume');
     }
     console.log(`📦 Loaded ${seedReleases.length} releases from repo seed (${path.basename(seedFile)})`);
   } catch (err) {
@@ -165,9 +165,54 @@ function syncCmsReleases() {
         modified = true;
       }
 
+      // Non-destructively backfill missing taxonomy & approved multilingual fields from repo seed
+      for (const arrField of ['sufiConcepts', 'themes', 'moods', 'targetLanguages', 'availableLanguages']) {
+        if (
+          Array.isArray(seedRel[arrField]) &&
+          seedRel[arrField].length > 0 &&
+          (!Array.isArray(existing[arrField]) || existing[arrField].length === 0)
+        ) {
+          existing[arrField] = seedRel[arrField];
+          modified = true;
+        }
+      }
+
+      // Clean legacy auto-injected default listener country tags (['in','pk','bd','us']) when seed cleared them
+      if (
+        Array.isArray(existing.targetRegions) &&
+        existing.targetRegions.length === 4 &&
+        ['bd', 'in', 'pk', 'us'].every(c => existing.targetRegions.includes(c)) &&
+        Array.isArray(seedRel.targetRegions) &&
+        seedRel.targetRegions.length === 0
+      ) {
+        existing.targetRegions = [];
+        modified = true;
+      }
+
+      if (seedRel.defaultAudioLanguage && !existing.defaultAudioLanguage) {
+        existing.defaultAudioLanguage = seedRel.defaultAudioLanguage;
+        modified = true;
+      }
+
+      for (const objField of ['subtitleTranslations', 'subtitleLanguageStatuses', 'lyricsStructure', 'lyrics']) {
+        if (seedRel[objField] && typeof seedRel[objField] === 'object') {
+          if (!existing[objField] || typeof existing[objField] !== 'object') {
+            existing[objField] = seedRel[objField];
+            modified = true;
+          } else {
+            for (const [k, v] of Object.entries(seedRel[objField])) {
+              if (!(k in existing[objField])) {
+                existing[objField][k] = v;
+                modified = true;
+              }
+            }
+          }
+        }
+      }
+
       if (modified) {
         updatedCount++;
-        console.log(`  🔄 UPDATED publication fields for: "${existing.title}" (ID: ${existing.id}, status=${existing.status}, visibility=${existing.visibility})`);
+        console.log(`  🔄 UPDATED publication/taxonomy fields for: "${existing.title}" (ID: ${existing.id}, status=${existing.status}, visibility=${existing.visibility})`);
       }
     }
   }
@@ -184,6 +229,59 @@ function syncCmsReleases() {
     }
     console.error(`❌ FATAL: Failed writing target file: ${err.message}`);
     process.exit(1);
+  }
+
+  // 7. Reconcile .data/joins.json for active public releases so Discovery Graph links persist across restarts
+  const joinsFile = path.join(dataDir, 'joins.json');
+  try {
+    let existingJoins = [];
+    if (fs.existsSync(joinsFile)) {
+      try {
+        const parsedJoins = JSON.parse(fs.readFileSync(joinsFile, 'utf8') || '[]');
+        if (Array.isArray(parsedJoins)) existingJoins = parsedJoins;
+      } catch {}
+    }
+    const publicIds = new Set(
+      mergedReleases
+        .filter(r => r && r.status === 'published' && (r.visibility || 'public') === 'public')
+        .map(r => r.id)
+    );
+    // Preserve any manual non-orphaned playlist joins while rebuilding canonical taxonomy joins
+    const nextJoins = existingJoins.filter(
+      j => j && publicIds.has(j.releaseId) && j.relationshipType === 'playlist'
+    );
+    const seenJoinIds = new Set(nextJoins.map(j => j.id));
+    const nowIso = new Date().toISOString();
+    const pushJoin = (releaseId, registryId, relationshipType) => {
+      if (!registryId) return;
+      const cleanReg = relationshipType === 'theme' ? String(registryId).replace(/_/g, '-') : String(registryId);
+      const id = `${releaseId}_${cleanReg}_${relationshipType}`;
+      if (seenJoinIds.has(id)) return;
+      seenJoinIds.add(id);
+      nextJoins.push({
+        id,
+        releaseId,
+        registryId: cleanReg,
+        relationshipType,
+        confidence: 1,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    };
+    for (const r of mergedReleases) {
+      if (!r || !publicIds.has(r.id)) continue;
+      (r.sufiConcepts || []).forEach(c => pushJoin(r.id, c, 'concept'));
+      (r.themes || []).forEach(t => pushJoin(r.id, t, 'theme'));
+      (r.moods || []).forEach(m => pushJoin(r.id, m, 'mood'));
+      (r.targetRegions || []).forEach(reg => pushJoin(r.id, reg, 'region'));
+      (r.targetLanguages || []).forEach(lang => pushJoin(r.id, lang, 'language'));
+    }
+    const joinsTmp = `${joinsFile}.tmp.${Date.now()}`;
+    fs.writeFileSync(joinsTmp, JSON.stringify(nextJoins, null, 2), 'utf8');
+    fs.renameSync(joinsTmp, joinsFile);
+    console.log(`🔗 Reconciled ${nextJoins.length} active Discovery Graph joins in ${joinsFile}`);
+  } catch (joinErr) {
+    console.warn(`⚠️ Warning reconciling joins.json: ${joinErr.message}`);
   }
 
   console.log('----------------------------------------------------');

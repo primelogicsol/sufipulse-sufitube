@@ -75,6 +75,7 @@ export interface CMSRelease {
   status: 'draft' | 'queued' | 'in_review' | 'approved' | 'published' | 'unpublished' | 'archived';
   contentReadinessState?: 'draft' | 'editorial_ready' | 'web_published' | 'published' | 'youtube_delivery_in_progress' | 'fully_delivered' | 'delivery_attention_required';
   category?: string;
+  tags?: string[];
   releaseType?: string;
   format?: 'video' | 'audio' | 'short' | 'live' | 'playlist';
   audioUrl?: string;

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://sufipulse.com';
+const BASE_URL = 'https://sufipulse.com';
 
 export const metadata: Metadata = {
   title: "SufiPulse Verification Center | Official SufiPulse, SufiPulse-USA & Institutional Registry",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     images: ["/og?title=SufiPulse+Verification+Center&subtitle=Official+SufiPulse+%26+SufiPulse-USA+Institutional+Registry"],
   },
   alternates: {
-    canonical: "https://www.sufipulse.com/verification",
+    canonical: "https://sufipulse.com/verification",
   },
 };
 

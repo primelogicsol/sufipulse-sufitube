@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from 'next/link';
+import { trackEvent } from "@/app/lib/analytics";
 
 declare global {
   interface Window {
@@ -15,16 +15,48 @@ interface SufiPulsePlayerProps {
   releaseId: string;
 }
 
+function emitPlaybackTelemetry(payload: Record<string, any>) {
+  try {
+    const body = JSON.stringify(payload);
+    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+      const blob = new Blob([body], { type: "application/json" });
+      navigator.sendBeacon("/api/public/discovery-telemetry", blob);
+      return;
+    }
+    fetch("/api/public/discovery-telemetry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+}
+
 export default function SufiPulsePlayer({
   youtubeId,
   releaseId,
 }: SufiPulsePlayerProps) {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const activeYoutubeIdRef = useRef<string>(youtubeId);
+  const loggedPlayVideosRef = useRef<Set<string>>(new Set());
+  const milestonesFiredRef = useRef<Set<string>>(new Set());
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   const [continuousPlay, setContinuousPlay] = useState(false);
   const [nextRelease, setNextRelease] = useState<any>(null);
   const [apiReady, setApiReady] = useState(false);
+
+  const stopProgressPolling = () => {
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    activeYoutubeIdRef.current = youtubeId;
+  }, [youtubeId]);
 
   useEffect(() => {
     const saved = localStorage.getItem("sufipulse-continuous-play");
@@ -95,12 +127,61 @@ export default function SufiPulsePlayer({
     }
 
     return () => {
+      stopProgressPolling();
       playerRef.current?.destroy?.();
     };
   }, [youtubeId]);
 
   async function handleStateChange(event: any) {
-    if (event.data !== window.YT.PlayerState.ENDED) return;
+    const currentVideoId = activeYoutubeIdRef.current || youtubeId;
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
+    const slugMatch = currentPath.match(/^\/release-detail\/([^/]+)/);
+    const releaseSlug = slugMatch ? decodeURIComponent(slugMatch[1]) : undefined;
+
+    if (event.data === window.YT?.PlayerState?.PLAYING) {
+      if ( !currentPath.startsWith("/admin") && !loggedPlayVideosRef.current.has(currentVideoId)) {
+        loggedPlayVideosRef.current.add(currentVideoId);
+        emitPlaybackTelemetry({
+          eventType: "embedded_video_play",
+          path: currentPath,
+          releaseSlug,
+          youtubeId: currentVideoId,
+        });
+        trackEvent("Embedded_Video_Play", { youtubeId: currentVideoId, releaseSlug: releaseSlug || releaseId });
+      }
+
+      if (!progressTimerRef.current) {
+        progressTimerRef.current = setInterval(() => {
+          try {
+            const p = playerRef.current;
+            const dur = Number(p?.getDuration?.() || 0);
+            const cur = Number(p?.getCurrentTime?.() || 0);
+            if (dur <= 0) return;
+            const pct = (cur / dur) * 100;
+            for (const milestone of [25, 50, 70] as const) {
+              const key = `${currentVideoId}:${milestone}`;
+              if (pct >= milestone && !milestonesFiredRef.current.has(key)) {
+                milestonesFiredRef.current.add(key);
+                trackEvent(`Video_${milestone}`, { youtubeId: currentVideoId, releaseSlug: releaseSlug || releaseId });
+              }
+            }
+          } catch {}
+        }, 1500);
+      }
+      return;
+    }
+
+    if (
+      event.data === window.YT?.PlayerState?.PAUSED ||
+      event.data === window.YT?.PlayerState?.BUFFERING ||
+      event.data === window.YT?.PlayerState?.CUED
+    ) {
+      stopProgressPolling();
+      return;
+    }
+
+    if (event.data !== window.YT?.PlayerState?.ENDED) return;
+    stopProgressPolling();
 
     if (!continuousPlay) return;
 
@@ -113,6 +194,7 @@ export default function SufiPulsePlayer({
     if (!next?.youtubeId) return;
 
     // Keep playback inside the same visible YouTube player.
+    activeYoutubeIdRef.current = next.youtubeId;
     playerRef.current.loadVideoById(next.youtubeId);
 
     setNextRelease(next);

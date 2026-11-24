@@ -645,6 +645,7 @@ export default function EditReleasePage() {
           {/* Premiere & Pre-Release */}
           <ReleaseViralSyndicationSection
             releaseId={String(params.id || form.id || '')}
+            releaseData={form}
             draftId={form.studioProduction?.draftId}
             slug={form.slug}
             title={form.title}

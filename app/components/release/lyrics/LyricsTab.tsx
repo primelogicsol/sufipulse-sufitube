@@ -147,7 +147,7 @@ export function LyricsTab({
         </div>
 
         {/* Lyrics Body */}
-        <div className={`space-y-6 min-h-[400px] ${direction === 'rtl' ? 'text-right font-urdu' : 'text-left'}`} dir={direction}>
+        <div className={`space-y-6 min-h-[400px] ${direction === 'rtl' ? 'text-right font-nastaliq' : 'text-left'}`} dir={direction}>
           {track.fullLyrics.map((stanzaBlock, sIdx) => (
             <div key={sIdx} className="space-y-2">
               {stanzaBlock.lines.map((lineText, lIdx) => {
